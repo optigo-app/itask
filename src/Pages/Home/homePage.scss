@@ -1,0 +1,50 @@
+@import '../../theme/variable.scss';
+
+.HomePageCom {
+    font-family: $font-family !important;
+    color: $text2ndColor !important;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important;
+    border-radius: 8px !important;
+
+    .cardTitle {
+        padding: 16px 16px 10px 16px !important;
+        font-weight: 500 !important;
+        color: $titleColor;
+        font-size: 20px;
+    }
+
+    .MuiTypography-root,
+    .MuiButton-root,
+    .MuiTableCell-root,
+    .MuiCard-root,
+    .MuiCardContent-root {
+        font-family: $font-family !important;
+        // color: $text2ndColor;
+        color: $titleColor;
+    }
+
+    .MuiTableCell-root {
+        border-bottom: 1px solid rgba(224, 224, 224, 0.2);
+    }
+
+    .muiCardTeam {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        flex-direction: column !important;
+        padding: 16px;
+    }
+    .HomePageCom{
+        background-color: #fcfbf9;
+    }
+
+    .muiList {
+        margin: 10px;
+    }
+
+    .commentListItem {
+        background-color: #fcfbf9;
+        border-radius: 15px;
+        margin-bottom: 10px;
+    }
+}

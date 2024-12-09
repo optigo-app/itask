@@ -1,0 +1,65 @@
+@import '../../theme/variable.scss';
+
+.MainDrawer {
+    .drawer-container {
+        width: 650px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 0px;
+        font-family: $font-family !important;
+        /* background-color: #f9f9f9; */
+    }
+
+    .drawer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .drawer-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: $titleColor !important;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: $titleColor !important;
+        margin-bottom: 8px;
+        display: block;
+        font-family: $font-family !important;
+    }
+
+    .drawer-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .primary-btn {
+        background-color: $button-Bgcolor !important;
+        color: $button-color!important;
+        font-family: $font-family !important;
+    }
+
+    .primary-btn:hover {
+        background-color: $button-color-hover !important;
+    }
+
+    .secondary-btn {
+        border-color: $button-Bgcolor !important;
+        color: $button-Bgcolor !important;
+        font-family: $font-family !important;
+    }
+
+    .secondary-btn:hover {
+        border-color: $button-Bordercolor;
+        color: $button-color !important;
+    }
+}

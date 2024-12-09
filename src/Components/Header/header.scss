@@ -1,0 +1,30 @@
+@import '../../theme/variable.scss';
+
+.headerContainer {
+    font-family: $font-family;
+    margin-bottom: 30px !important;
+    // border: 1px solid #8c8c8c26 !important;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important;
+    border-radius: 8px !important;
+}
+
+.headerTitle {
+    font-size: 30px !important;
+    font-weight: 400px !important;
+    color: $titleColor !important;
+    font-family: $font-family;
+}
+
+.headerSubtitle {
+    font-size: 18px !important;
+    color: $titleColor !important;
+    opacity: .6 !important;
+    line-height: 1 !important;
+    font-family: $font-family;
+}
+
+@media only screen and (max-width: 767px) {
+    .headerContainer {
+       margin-top: 20px !important;
+    }
+}
