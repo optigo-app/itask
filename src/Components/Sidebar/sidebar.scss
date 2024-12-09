@@ -1,0 +1,103 @@
+@import '../../theme/variable.scss';
+
+.itask_sidebarDrawer {
+    display: flex;
+    box-shadow: 0 .125rem .5rem 0 rgba(47, 43, 61, .12);
+    font-family: $font-family;
+}
+
+.itask_drawerButton {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1300;
+}
+
+.itask_drawerButtonOpen {
+    left: calc(280px - 40px);
+}
+
+.itask_drawerListItem {
+    padding: 5px 0 !important;
+    border-radius: 8px !important;
+    justify-content: center !important;
+}
+
+.itask_drawerItemActive {
+    background: $sidebar-Activebg;
+    box-shadow: 0px 2px 6px 0px rgba(115, 103, 240, .3) !important;
+    color: #fff !important;
+}
+
+.itask_drawerItemActive .MuiTypography-root {
+    color: #fff !important;
+}
+
+.itask_drawerItemIcon {
+    min-width: 40px;
+    justify-content: center !important;
+}
+
+.itask_drawerItemText {
+    margin-bottom: 0px;
+}
+
+.itask_drawerItemText .MuiTypography-root {
+    color: $titleColor;
+    font-size: 15px;
+    font-family: $font-family;
+}
+
+.itask_checkbox {
+    color: $button-Bordercolor;
+}
+
+.itask_checkboxChecked {
+    color: $button-Bordercolor;
+}
+
+/* Styles for active button */
+.itask_drawerHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.itask_logoWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.itask_logo {
+    width: 32px;
+    height: 22px;
+}
+
+.itask_separator {
+    margin-block: 10px;
+    border: 1px solid #7d7f85;
+    border-style: dashed;
+    opacity: 0.3;
+}
+
+.itask_drawerItemTextOpen {
+    color: $titleColor !important;
+}
+
+.iconActive {
+    color: #fff !important;
+}
+
+.iconUnactive {
+    color: #7d7f85 !important;
+}
+
+@media (max-width: 767px) {
+    .itask_drawerButton {
+        justify-content: start !important;
+        align-items: start !important;
+        text-align: center !important;
+    }
+}
