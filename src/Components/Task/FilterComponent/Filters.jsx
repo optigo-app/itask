@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Box, TextField, Typography, MenuItem, InputAdornment, IconButton, Menu, Checkbox, ListItemText } from "@mui/material";
+import { Box, TextField, Typography, MenuItem, InputAdornment, IconButton, Menu, Checkbox, ListItemText, Button } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { SearchIcon, MoreVerticalIcon } from "lucide-react";
 
@@ -67,6 +67,7 @@ const Filters = ({
   }, [handleVisibilityChange, handleVisibilityChange]);
 
   const handleFilterChange = (key, value) => {
+    console.log(key, value);
     setFilters((prev) => ({ ...prev, [key]: value }));
     onFilterChange(key, value);
   };
@@ -77,6 +78,18 @@ const Filters = ({
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleClearFilter = () => {
+    setFilters({
+      priority: "",
+      status: "",
+      assignee: "",
+      department: "",
+      project: "",
+      dueDate: null,
+    });
+    onFilterChange("clearFilter", null);
   };
 
 
@@ -158,106 +171,163 @@ const Filters = ({
   };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 2,
-        justifyContent: "space-between",
-        alignItems: "end",
-        marginBottom: 2,
-        padding: "8px",
-        borderRadius: "8px",
-        "@media (max-width: 600px)": {
-          flexDirection: "column",
-        },
-      }}
-    >
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-        {[{
-          label: "Status",
-          key: "status",
-          data: statusData,
-        },
-        {
-          label: "Priority",
-          key: "priority",
-          data: priorityData,
-        },
-        {
-          label: "Department",
-          key: "department",
-          data: taskDepartment,
-        },
-        {
-          label: "Assignee",
-          key: "assignee",
-          data: assigneeData,
-        },
-        {
-          label: "Project",
-          key: "project",
-          data: taskProject,
-        }].map((filter) => (
-          filterVisibility[filter.key] && (
-            <Box key={filter.key} className="form-group">
-              <Typography variant="subtitle1" id={filter?.label}>{filter?.label}</Typography>
-              <TextField
-                aria-labelledby={filter?.label}
-                aria-expanded="false"
-                id={filter?.label}
-                labelid={filter?.label}
-                name={filter?.key}
-                value={filters[filter?.key]}
-                onChange={(e) => handleFilterChange(filter?.key, e.target.value)}
-                {...commonSelectProps}
-                ref={filterRefs[filter?.key]}
-                className="textfieldsClass"
-                aria-label={`Select ${filter?.label}`}
-              >
-                {/* <MenuItem value={`Select All ${filter?.label}`} onClick={() => handleSelectAllChange(filter?.key)}>
+    <Box>
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 2,
+          justifyContent: "space-between",
+          alignItems: "end",
+          marginBottom: 2,
+          padding: "8px",
+          borderRadius: "8px",
+          "@media (max-width: 600px)": {
+            flexDirection: "column",
+          },
+        }}
+      >
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+          {[{
+            label: "Status",
+            key: "status",
+            data: statusData,
+          },
+          {
+            label: "Priority",
+            key: "priority",
+            data: priorityData,
+          },
+          {
+            label: "Department",
+            key: "department",
+            data: taskDepartment,
+          },
+          {
+            label: "Assignee",
+            key: "assignee",
+            data: assigneeData,
+          },
+          {
+            label: "Project",
+            key: "project",
+            data: taskProject,
+          }].map((filter) => (
+            filterVisibility[filter.key] && (
+              <Box key={filter.key} className="form-group">
+                <Typography variant="subtitle1" id={filter?.label}>{filter?.label}</Typography>
+                <TextField
+                  aria-labelledby={filter?.label}
+                  aria-expanded="false"
+                  id={filter?.label}
+                  labelid={filter?.label}
+                  name={filter?.key}
+                  value={filters[filter?.key]}
+                  onChange={(e) => handleFilterChange(filter?.key, e.target.value)}
+                  {...commonSelectProps}
+                  ref={filterRefs[filter?.key]}
+                  className="textfieldsClass"
+                  aria-label={`Select ${filter?.label}`}
+                >
+                  {/* <MenuItem value={`Select All ${filter?.label}`} onClick={() => handleSelectAllChange(filter?.key)}>
                   Select All {filter?.label}
                 </MenuItem> */}
-                <MenuItem value={`Select ${filter?.label}`}>
-                  <span className="notranslate">Select {filter?.label}</span>
-                </MenuItem>
-                {filter.data?.map((item) => (
-                  <MenuItem key={item?.id} value={item?.labelname}>
-                    {item?.labelname}
+                  <MenuItem value={`Select ${filter?.label}`}>
+                    <span className="notranslate">Select {filter?.label}</span>
                   </MenuItem>
-                ))}
-              </TextField>
+                  {filter.data?.map((item) => (
+                    <MenuItem key={item?.id} value={item?.labelname}>
+                      {item?.labelname}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+            )
+          ))}
+
+          {/* Due Date Filter */}
+          {dueDateVisible && (
+            <Box className="form-group">
+              <Typography variant="subtitle1">Due Date</Typography>
+              <DatePicker
+                name="startDateTime"
+                value={filters.dueDate}
+                onChange={(newDate) => handleFilterChange("dueDate", newDate)}
+                className="textfieldsClass"
+                {...customDatePickerProps}
+                sx={{ padding: '0' }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    size="small"
+                    fullWidth
+                    className="textfieldsClass"
+                    sx={{ padding: '0' }}
+                  />
+                )}
+              />
             </Box>
-          )
-        ))}
+          )}
+        </Box>
 
-        {/* Due Date Filter */}
-        {dueDateVisible && (
-          <Box className="form-group">
-            <Typography variant="subtitle1">Due Date</Typography>
-            <DatePicker
-              name="startDateTime"
-              value={filters.dueDate}
-              onChange={(newDate) => handleFilterChange("dueDate", newDate)}
-              className="textfieldsClass"
-              {...customDatePickerProps}
-              sx={{ padding: '0' }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  size="small"
-                  fullWidth
-                  className="textfieldsClass"
-                  sx={{ padding: '0' }}
-                />
-              )}
-            />
-          </Box>
-        )}
+        <Box>
+          {/* Search Field */}
+          {/* <TextField
+          placeholder="Search tasks..."
+          value={searchTerm}
+          onChange={(e) => onFilterChange("searchTerm", e.target.value)}
+          size="small"
+          className="textfieldsClass"
+          sx={{
+            minWidth: 250,
+            "@media (max-width: 600px)": { minWidth: "100%" },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon size={20} color="#7d7f85" opacity={0.5} />
+              </InputAdornment>
+            ),
+          }}
+          aria-label='Search tasks...'
+        /> */}
+
+
+
+          {/* More Filter Menu (3 dots) */}
+          {/* <IconButton onClick={handleMenuOpen}>
+            <MoreVerticalIcon size={24} />
+          </IconButton> */}
+          <Button size='medium' className="buttonClassname" variant="contained" onClick={handleMenuOpen} sx={{ marginRight: '10px' }}>Show Filter</Button>
+          <Menu
+            anchorEl={anchorEl}
+            open={openMenu}
+            onClose={handleMenuClose}
+          >
+            {[
+              { label: "Status", key: "status" },
+              { label: "Priority", key: "priority" },
+              { label: "Department", key: "department" },
+              { label: "Assignee", key: "assignee" },
+              { label: "Project", key: "project" }
+            ].map(({ key, label }) => (
+              <MenuItem key={key} onClick={() => handleVisibilityChange(key)}>
+                <Checkbox checked={filterVisibility[key]} style={{ color: '#7367f0' }} />
+                <ListItemText primary={label} />
+              </MenuItem>
+            ))}
+            {/* Due Date Visibility Toggle */}
+            <MenuItem>
+              <Checkbox checked={dueDateVisible} onChange={handleDueDateVisibilityChange} style={{ color: '#7367f0' }} />
+              <ListItemText primary="Due Date" />
+            </MenuItem>
+          </Menu>
+          <Button size='medium' className="buttonClassname" variant="contained" onClick={handleClearFilter}>
+            All
+          </Button>
+        </Box>
       </Box>
-
-      <Box>
-        {/* Search Field */}
+      <Box sx={{ display: 'flex', justifyContent: 'end' }}>
         <TextField
           placeholder="Search tasks..."
           value={searchTerm}
@@ -277,34 +347,6 @@ const Filters = ({
           }}
           aria-label='Search tasks...'
         />
-
-        {/* More Filter Menu (3 dots) */}
-        <IconButton onClick={handleMenuOpen}>
-          <MoreVerticalIcon size={24} />
-        </IconButton>
-        <Menu
-          anchorEl={anchorEl}
-          open={openMenu}
-          onClose={handleMenuClose}
-        >
-          {[
-            { label: "Status", key: "status" },
-            { label: "Priority", key: "priority" },
-            { label: "Department", key: "department" },
-            { label: "Assignee", key: "assignee" },
-            { label: "Project", key: "project" }
-          ].map(({ key, label }) => (
-            <MenuItem key={key} onClick={() => handleVisibilityChange(key)}>
-              <Checkbox checked={filterVisibility[key]} style={{ color: '#7367f0' }} />
-              <ListItemText primary={label} />
-            </MenuItem>
-          ))}
-          {/* Due Date Visibility Toggle */}
-          <MenuItem>
-            <Checkbox checked={dueDateVisible} onChange={handleDueDateVisibilityChange} style={{ color: '#7367f0' }} />
-            <ListItemText primary="Due Date" />
-          </MenuItem>
-        </Menu>
       </Box>
     </Box>
   );

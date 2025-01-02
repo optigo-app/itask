@@ -10,6 +10,7 @@ import {
     CircularProgress,
     Box,
     InputAdornment,
+    Pagination,
 } from "@mui/material";
 import { DataGrid } from '@mui/x-data-grid';
 import { ArchiveRestore, Pencil, SearchIcon, Trash } from 'lucide-react';
@@ -25,6 +26,11 @@ const CategoryCards = () => {
         page: 0,
         pageSize: 10,
     });
+
+
+    // State for pagination
+    const [page, setPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     const fetchMasterData = async () => {
         setIsLoading(true);
@@ -53,8 +59,10 @@ const CategoryCards = () => {
                 acc[category.id] = {
                     newRow: { labelname: "" },
                     rows: category.rows || [],
+                    page: 1,
+                    rowsPerPage: 10,
                     editMode: null,
-                    searchValue: "", // Add searchValue state here
+                    searchValue: "",
                 };
                 return acc;
             }, {});
@@ -148,20 +156,42 @@ const CategoryCards = () => {
         }
     };
 
+    // Handle Search Change
     const handleSearchChange = (categoryId, value) => {
         setCategoryStates((prev) => ({
             ...prev,
-            [categoryId]: { ...prev[categoryId], searchValue: value },
+            [categoryId]: {
+                ...prev[categoryId],
+                searchValue: value,
+                page: 1,
+            },
         }));
     };
 
-    const getFilteredRows = (categoryId) => {
-        const { rows, searchValue } = categoryStates[categoryId];
-        return rows?.filter((row) =>
-            row?.labelname?.toLowerCase()?.includes(searchValue?.toLowerCase())
-        );
+    // Handle Pagination
+    const handlePageChange = (categoryId, newPage) => {
+        setCategoryStates((prev) => ({
+            ...prev,
+            [categoryId]: {
+                ...prev[categoryId],
+                page: newPage,
+            },
+        }));
     };
 
+    const getPaginatedRows = (categoryId) => {
+        const { rows, searchValue, page, rowsPerPage } = categoryStates[categoryId] || {};
+
+        // Filter rows based on search
+        const filteredRows = rows?.filter((row) =>
+            row?.labelname?.toLowerCase().includes(searchValue.toLowerCase())
+        ) || [];
+
+        // Paginate rows
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        return filteredRows.slice(start, end);
+    };
 
     const columns = (categoryId, category) => [
         {
@@ -215,14 +245,45 @@ const CategoryCards = () => {
         },
     ];
 
+    // Custom Footer Component for Pagination
+    const CustomFooter = ({ totalRows, categoryId }) => {
+        const { page, rowsPerPage } = categoryStates[categoryId];
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+
+        return (
+            <Box className="TablePaginationBox" sx={{ borderTop: '1px solid rgba(224, 224, 224, 1)' }}>
+                <Typography variant="body2" className="paginationText" sx={{ paddingLeft: '10px' }}>
+                    Showing {(page - 1) * rowsPerPage + 1} to{" "}
+                    {Math.min(page * rowsPerPage, totalRows)} of {totalRows} entries
+                </Typography>
+                <Pagination
+                    size="medium"
+                    count={totalPages}
+                    page={page}
+                    onChange={(e, value) => handlePageChange(categoryId, value)}
+                    color="primary"
+                    variant="outlined"
+                    shape="rounded"
+                    siblingCount={1}
+                    boundaryCount={1}
+                    className="pagination"
+                    sx={{
+                        '.MuiPaginationItem-root': {
+                            minHeight: '30px !important'
+                        }
+                    }}
+                />
+            </Box>
+        );
+    };
 
     return (
         <div className="customDataGridWrapper">
             {isLoading ? (
-               <LoadingBackdrop isLoading={isLoading}/>
+                <LoadingBackdrop isLoading={isLoading} />
             ) : (
                 <Grid container spacing={2}>
-                    {formattedData.map((category) => (
+                    {formattedData?.map((category) => (
                         <Grid item xs={12} sm={6} key={category.id}>
                             <Card>
                                 <CardContent className="masterCardContent">
@@ -241,7 +302,7 @@ const CategoryCards = () => {
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
-                                                            <SearchIcon  size={20} color="#7d7f85" opacity={.5}/>
+                                                            <SearchIcon size={20} color="#7d7f85" opacity={.5} />
                                                         </InputAdornment>
                                                     ),
                                                 }}
@@ -294,18 +355,26 @@ const CategoryCards = () => {
                                     </div>
                                     <div className="DataGridContainer" >
                                         <DataGrid
-                                            rows={getFilteredRows(category.id)}
-                                            columns={columns(category.id, category)}
-                                            initialState={{
-                                                pagination: {
-                                                    paginationModel: {
-                                                        pageSize: 5,
-                                                    },
-                                                },
-                                            }}
+                                            rows={getPaginatedRows(category.id)}
+                                            columns={columns(category.id)}
                                             disableSelectionOnClick
                                             disableColumnMenu
-                                            pageSizeOptions={[5, 10, 20, 30, 50]}
+                                            paginationMode="server"
+                                            rowCount={categoryStates[category.id]?.rows.length || 0}
+                                            slots={{
+                                                footer: () => (
+                                                    <CustomFooter
+                                                        totalRows={categoryStates[category.id]?.rows.length || 0}
+                                                        categoryId={category.id}
+                                                    />
+                                                ),
+                                            }}
+                                            slotProps={{
+                                                pagination: {
+                                                    pageSize: categoryStates[category.id]?.rowsPerPage,
+                                                    page: categoryStates[category.id]?.page - 1,
+                                                },
+                                            }}
                                         />
                                     </div>
                                 </CardContent>

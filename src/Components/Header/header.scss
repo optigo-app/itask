@@ -17,10 +17,13 @@
 
 .headerSubtitle {
     font-size: 18px !important;
-    color: $titleColor !important;
-    opacity: .6 !important;
+    color: $placeholderColor !important;
     line-height: 1 !important;
     font-family: $font-family;
+}
+
+.pMTypo{
+    font-size: 15px !important;
 }
 
 @media only screen and (max-width: 767px) {

@@ -79,17 +79,22 @@ const Sidebar = () => {
         }
     };
 
+
+    useEffect(() => {
+        setFormValues({
+            workSpace: 1 ?? "",
+        });
+    }, []);
+
     useEffect(() => {
         const path = location?.pathname?.split('/')[1];
         setActiveItem(path.charAt(0)?.toUpperCase() + path?.slice(1) || 'Home');
     }, [location])
 
     useEffect(() => {
-        const masterData = localStorage.getItem('masterData');
-        const result = masterData ? JSON.parse(masterData) : [];
-        const workSpace = result?.find((item) => item.id === 6);
+        const workSpace = JSON?.parse(sessionStorage?.getItem("workspaceData"));
         if (workSpace) {
-            setWorkSpaceData(workSpace?.rows?.filter((row) => row?.isdelete === 0));
+            setWorkSpaceData(workSpace);
         }
     }, []);
 
@@ -162,7 +167,7 @@ const Sidebar = () => {
                             }} />}
                         </div>
                         <div>
-                            {!isMobile && isDrawerOpen && (
+                            {/* {!isMobile && isDrawerOpen && (
                                 <Checkbox
                                     id="sidebar-toggle"
                                     aria-label="open sidebar"
@@ -173,7 +178,7 @@ const Sidebar = () => {
                                     icon={<RadioButtonUncheckedIcon />}
                                     checkedIcon={<RadioButtonCheckedIcon />}
                                 />
-                            )}
+                            )} */}
                         </div>
                     </Box>
                 </ListItemButton>
@@ -183,7 +188,7 @@ const Sidebar = () => {
                 <Typography variant="subtitle1" id='status'>Work Spaces</Typography>
                 <TextField
                     name="status"
-                    value={formValues?.status || ""}
+                    value={formValues?.workSpace || ""}
                     onChange={handleChange}
                     select
                     {...commonTextFieldProps}

@@ -57,7 +57,7 @@ $divider-color: #e0e0e0;
 
 .MuiTypography-root {
     font-family: $font-family !important;
-    color: $titleColor !important;
+    color: $titleColor;
 }
 
 .textfieldsClass {

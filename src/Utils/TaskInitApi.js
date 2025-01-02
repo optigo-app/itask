@@ -3,13 +3,14 @@ import axios from 'axios';
 export const taskInit = async () => {
     const APIURL = (window.location.hostname === 'localhost' || window.location.hostname === 'zen')
         ? "http://zen/api/report.aspx"
-        : "https://api.optigoapps.com/ReactStore/ReactStore.aspx";
+        : "https://api.optigoapps.com/ALL/report.aspx";
 
     const headers = {
         Authorization: '',
-        YearCode: 'e3t6ZW59fXt7MjB9fXt7b3JhaWwyNX19e3tvcmFpbDI1fX0=',
+        YearCode: (window.location.hostname === 'localhost' || window.location.hostname === 'zen') ?
+        'e3t6ZW59fXt7MjB9fXt7b3JhaWwyNX19e3tvcmFpbDI1fX0=' : 'e3tsaXZlLm9wdGlnb2FwcHMuY29tfX17ezIwfX17e3Byb2l0YXNrfX17e3Byb2l0YXNrfX0=',
         version: 'v4',
-        sv: 0
+        sv: (window.location.hostname === 'localhost' || window.location.hostname === 'zen') ? '0' : '1'
     };
 
     try {

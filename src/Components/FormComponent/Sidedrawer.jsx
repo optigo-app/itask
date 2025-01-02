@@ -32,6 +32,7 @@ const SidebarDrawer = ({
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
 
     const [formValues, setFormValues] = React.useState({});
+    console.log('formValues: ', formValues);
 
     const [comments, setComments] = React.useState([]);
 
