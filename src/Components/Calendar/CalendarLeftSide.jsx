@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Button, Divider, Typography, Checkbox, FormControlLabel } from '@mui/material';
 import { Plus } from 'lucide-react';
 import { StaticDatePicker } from '@mui/x-date-pickers/StaticDatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
-import { Padding } from '@mui/icons-material';
+import { useSetRecoilState } from 'recoil';
+import { calendarM, CalEventsFilter, CalformData } from '../../Recoil/atom';
+import CalendarForm from './SideBar/CalendarForm';
 
 const CalendarLeftSide = () => {
     const calendarsColor = {
@@ -16,7 +18,15 @@ const CalendarLeftSide = () => {
         ETC: 'info',
     };
 
-    const [selectedCalendars, setSelectedCalendars] = useState(['Personal', 'Business']);
+    const [selectedCalendars, setSelectedCalendars] = useState(['Personal', 'Business', 'Family', 'Holiday', 'ETC']);
+    const setSelectedCaleFilters = useSetRecoilState(CalEventsFilter);
+    const setSelectedMon = useSetRecoilState(calendarM);
+    const setCalFormData = useSetRecoilState(CalformData)
+    const [caledrawerOpen, setCaledrawerOpen] = useState(false);
+
+    useEffect(() => {
+       setSelectedCaleFilters(selectedCalendars)
+    }, []);
 
     const handleCalendarChange = (calendar) => {
         setSelectedCalendars((prev) =>
@@ -24,13 +34,19 @@ const CalendarLeftSide = () => {
                 ? prev.filter((item) => item !== calendar)
                 : [...prev, calendar]
         );
+        setSelectedCaleFilters(prev =>
+            prev.includes(calendar) ?
+                prev.filter(item => item !== calendar)
+                : [...prev, calendar])
     };
 
     const handleViewAllToggle = () => {
         if (selectedCalendars.length === Object.keys(calendarsColor).length) {
             setSelectedCalendars([]);
+            setSelectedCaleFilters([])
         } else {
             setSelectedCalendars(Object.keys(calendarsColor));
+            setSelectedCaleFilters(Object.keys(calendarsColor))
         }
     };
 
@@ -85,6 +101,7 @@ const CalendarLeftSide = () => {
             color: '#fff',
         },
     };
+
     const renderFilters = Object.entries(calendarsColor).length
         ? Object.entries(calendarsColor).map(([key, value]) => {
             return (
@@ -104,10 +121,39 @@ const CalendarLeftSide = () => {
         })
         : null;
 
+    const handleAddEvent = () => {
+        setCaledrawerOpen(true);
+    };
+
+    const handleDrawerToggle = () => {
+        setCaledrawerOpen(!caledrawerOpen);
+    };
+
+
+    const handleCaleFormSubmit = async (formValues) => {
+        setCalFormData(formValues)
+        localStorage.setItem('calformData', JSON.stringify(formValues))
+    };
+
+
+    const calendarMonthChange = (date) => {
+        setSelectedMon(date);
+    };
+
     return (
         <div className="calendarLeftMain">
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '20px', width: '100%' }}>
-                <Button fullWidth variant="contained" className="buttonClassname" sx={{ width: '230px', borderRadius: '8px', textTransform: 'capitalize' }}>
+                <Button
+                    fullWidth
+                    variant="contained"
+                    className="buttonClassname"
+                    sx={{
+                        width: '230px',
+                        borderRadius: '8px',
+                        textTransform: 'capitalize'
+                    }}
+                    onClick={handleAddEvent}
+                >
                     <Plus style={{ marginRight: '5px', opacity: '.9' }} size={20} />
                     Add Event
                 </Button>
@@ -116,11 +162,12 @@ const CalendarLeftSide = () => {
             <div>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <StaticDatePicker
-                        defaultValue={dayjs('2022-04-17')}
+                        defaultValue={dayjs()}
                         sx={customDatePickerStyles}
                         slots={{
                             actionBar: () => null,
                         }}
+                        onChange={calendarMonthChange}
                     />
                 </LocalizationProvider>
             </div>
@@ -131,7 +178,7 @@ const CalendarLeftSide = () => {
                 </Typography>
                 <FormControlLabel
                     label="View All"
-                    sx={{ '& .MuiFormControlLabel-label': { color: 'text.secondary' } }}
+                    sx={{ '& .MuiButtonBase-root': { color: 'red' } }}
                     control={
                         <Checkbox
                             color="default"
@@ -142,6 +189,16 @@ const CalendarLeftSide = () => {
                 />
                 {renderFilters}
             </Box>
+            <CalendarForm
+                open={caledrawerOpen}
+                onClose={handleDrawerToggle}
+                onSubmit={handleCaleFormSubmit}
+            // isLoading={isLoading}
+            // masterData={masterData}
+            // priorityData={priorityData}
+            // projectData={projectData}
+            // statusData={statusData}
+            />
         </div>
     );
 };

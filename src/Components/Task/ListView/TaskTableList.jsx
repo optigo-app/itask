@@ -30,6 +30,7 @@ import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
 import TaskDetail from "./TaskDetails";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import LoadingBackdrop from "../../../Utils/LoadingBackdrop";
+import { formatDate } from "../../../Utils/globalfun";
 
 const TableView = ({ data, onAddSubtask, isLoading }) => {
     const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
@@ -48,7 +49,7 @@ const TableView = ({ data, onAddSubtask, isLoading }) => {
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [columnWidths] = useState({
-        name: 250,
+        name: 350,
         status: 150,
         assignee: 150,
         due: 150,
@@ -144,8 +145,6 @@ const TableView = ({ data, onAddSubtask, isLoading }) => {
             backgroundColor: "#fff3e0", // Light orange background
         },
     };
-
-
 
     const handleTaskModalClose = () => {
         setTaskDetailModalOpen(false);
@@ -324,16 +323,6 @@ const TableView = ({ data, onAddSubtask, isLoading }) => {
         (page - 1) * rowsPerPage,
         page * rowsPerPage
     );
-
-
-    const formatDate = (dateStr) => {
-        const date = new Date(dateStr);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-
-        return `${day}/${month}/${year}`;
-    }
 
 
     const renderSubtasks = (subtasks, parentIndex) => {
@@ -650,30 +639,35 @@ const TableView = ({ data, onAddSubtask, isLoading }) => {
                                 </Button>
                             </TableCell>
                         </TableRow>
-                        <TableRow>
-                            <TableCell colSpan={7} >
-                                {data?.length !== 0 &&
-                                    <Box className="TablePaginationBox">
-                                        <Typography className="paginationText">
-                                            Showing {(page - 1) * rowsPerPage + 1} to{' '}
-                                            {Math?.min(page * rowsPerPage, data?.length)} of {data?.length} entries
-                                        </Typography>
-                                        <Pagination
-                                            size="large"
-                                            count={totalPages && totalPages}
-                                            page={page}
-                                            onChange={handleChangePage}
-                                            color="primary"
-                                            variant="outlined"
-                                            shape="rounded"
-                                            siblingCount={1}
-                                            boundaryCount={1}
-                                            className="pagination"
-                                        />
-                                    </Box>
-                                }
-                            </TableCell>
-                        </TableRow>
+                        {!isLoading &&
+                            <TableRow>
+                                <TableCell colSpan={7} >
+                                    {currentData?.length !== 0 && (
+                                        <Box className="TablePaginationBox">
+                                            <Typography className="paginationText">
+                                                Showing {(page - 1) * rowsPerPage + 1} to{' '}
+                                                {Math.min(page * rowsPerPage, data?.length)} of {data?.length} entries
+                                            </Typography>
+                                            {totalPages > 0 && (
+                                                <Pagination
+                                                    size="large"
+                                                    count={totalPages}
+                                                    page={page}
+                                                    onChange={handleChangePage}
+                                                    color="primary"
+                                                    variant="outlined"
+                                                    shape="rounded"
+                                                    siblingCount={1}
+                                                    boundaryCount={1}
+                                                    className="pagination"
+                                                />
+                                            )}
+                                        </Box>
+                                    )}
+
+                                </TableCell>
+                            </TableRow>
+                        }
                     </TableBody>
                 </Table>
             </TableContainer>

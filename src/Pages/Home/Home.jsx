@@ -1,11 +1,12 @@
 import React from 'react'
 import { Grid } from '@mui/material'
-import Card1 from './Card1'
-import Card2 from './Card2'
-import Card3 from './Card3'
-import Card4_1 from './Card4.1'
-import Card4_2 from './Card4.2'
+import Card1 from './Agenda'
+import Card2 from './Projects'
+import Card3 from './UrgentTasks'
+import Card4_1 from './Comments'
+import Card4_2 from './Teams'
 import './homePage.scss'
+import { getRandomAvatarColor } from '../../Utils/globalfun'
 
 const Home = () => {
   const Project = [
@@ -21,7 +22,7 @@ const Home = () => {
           "userId": "t1",
           "name": "John Doe",
           "role": "Frontend Developer",
-          "avatar": "https://example.com/john-doe.jpg"
+          "avatar": "https://via.placeholder.com/150"
         },
         {
           "userId": "t2",
@@ -215,7 +216,7 @@ const Home = () => {
   ]
 
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={2}>
       <Grid item xs={12} md={4}>
         <Grid container direction="column" spacing={2}>
           <Grid item>
@@ -241,7 +242,7 @@ const Home = () => {
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <Card4_2 team={teamDir} />
+                <Card4_2 teamData={teamDir} />
               </Grid>
             </Grid>
           </Grid>

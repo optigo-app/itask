@@ -10,6 +10,12 @@ export const formData = atom({
   default: {}
 })
 
+export const masterDataValue = atom({
+  key: 'masterDataValue',
+  default: []
+})
+
+
 export const TaskData = atom({
   key: 'TaskData',
   default: []
@@ -34,3 +40,19 @@ export const selectedRowData = atom({
   key: 'selectedRowData',
   default: {}
 })
+
+export const calendarM = atom({
+  key: 'calendarM',
+  default: {}
+})
+
+export const CalformData = atom({
+  key: 'CalformData',
+  default: []
+})
+
+export const CalEventsFilter = atom({
+  key: 'CalEventsFilter',
+  default: []
+})
+

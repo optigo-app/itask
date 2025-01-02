@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Box, useMediaQuery } from '@mui/material';
 import Sidebar from './Components/Sidebar/Sidebar';
@@ -19,18 +19,62 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ModalContent from './Components/Task/ListView/TaskDetails';
 import PaginatedTable from './Backup/demoTable';
+import { fetchMasterGlFunc } from './Utils/globalfun';
+import PagenotFound from './Pages/404Page/PagenotFound';
 
 
 const App = () => {
     const isMobile = useMediaQuery('(max-width:768px)');
 
-    useEffect(() => {
-        taskInit()
+    const [isLoading, setIsLoading] = useState(false);
 
-    }, [])
+    useEffect(() => {
+        const init = async () => {
+            const result = await taskInit();
+            console.log('init result: ', result);
+            if (result?.Data?.rd) {
+                fetchMasterGlFunc();
+            }
+        };
+        init();
+    }, []);
+
+
+    // const fetchMasterData = async () => {
+    //     debugger
+    //     setIsLoading(true);
+    //     try {
+    //         // const masterData = localStorage.getItem('masterData');
+    //         // const result = JSON.parse(masterData);
+    //         // if (!result) {
+    //             const masterData = await fetchMaster();
+    //             const result = Object.keys(masterData)
+    //                 .filter((key) => key.startsWith("rd") && key !== "rd")
+    //                 .map((key) => {
+    //                     const rdIndex = parseInt(key.replace("rd", ""), 10);
+    //                     const rdItem = masterData.rd.find((item) => item.id === rdIndex);
+    //                     return {
+    //                         id: rdItem?.id,
+    //                         table_name: rdItem?.table_name,
+    //                         Table_Title: rdItem?.title,
+    //                         rows: masterData[key].map((item) => ({
+    //                             ...item,
+    //                             table_id: rdItem?.id,
+    //                         })),
+    //                     };
+    //                 });
+
+    //             localStorage?.setItem('masterData', JSON.stringify(result));
+    //         // }
+    //     } catch (error) {
+    //         console.error(error);
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
 
     const toastStyle = {
-        borderRadius: '8px',    
+        borderRadius: '8px',
         backgroundColor: '#fff',
         fontFamily: '"Public Sans", sans-serif',
         fontWeight: '500',
@@ -70,6 +114,7 @@ const App = () => {
                                         <Route path="/masters" element={<Masters />} />
                                         <Route path="/taskDetails" element={<ModalContent />} />
                                         <Route path="/pagination" element={<PaginatedTable />} />
+                                        <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Box>
                             </Box>

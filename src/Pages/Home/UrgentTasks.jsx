@@ -39,16 +39,16 @@ const Card3 = ({ urgentTask }) => {
                                 <TableCell>
                                     <div style={{
                                         color: priorityColors[task?.priority]?.color,
-                                        // backgroundColor: priorityColors[task?.priority]?.backgroundColor,
-                                        // width: 'fit-content',
-                                        // padding: '0.2rem 0.8rem',
-                                        // borderRadius: '5px',
-                                        // textAlign: 'center',
-                                        // fontSize: '13.5px',
-                                        // fontWeight: '500',
-                                        // display: 'flex',
-                                        // justifyContent: 'center',
-                                        // alignItems: 'center',
+                                        backgroundColor: priorityColors[task?.priority]?.backgroundColor,
+                                        width: 'fit-content',
+                                        padding: '0.2rem 0.8rem',
+                                        borderRadius: '5px',
+                                        textAlign: 'center',
+                                        fontSize: '13.5px',
+                                        fontWeight: '500',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
                                     }}>
                                         {task.priority}
                                     </div>

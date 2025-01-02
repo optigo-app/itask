@@ -2,11 +2,12 @@ import React, { Suspense, useEffect, useState } from "react";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, CircularProgress } from "@mui/material";
-import { fetchMaster } from "../../Api/MasterApi/MasterApi";
 import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
-import { useRecoilValue } from "recoil";
-import { fetchlistApiCall, rootSubrootflag, selectedRowData } from "../../Recoil/atom";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { fetchlistApiCall, masterDataValue, rootSubrootflag, selectedRowData } from "../../Recoil/atom";
 import LoadingBackdrop from "../../Utils/LoadingBackdrop";
+import { format } from 'date-fns';
+import { fetchMasterGlFunc } from "../../Utils/globalfun";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
@@ -17,9 +18,10 @@ const Task = () => {
   const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
   const selectedRow = useRecoilValue(selectedRowData);
   const [isLoading, setIsLoading] = useState(false);
-  const [masterData, setMasterData] = useState([]);
+  const [masterData, setMasterData] = useRecoilState(masterDataValue);
   const [priorityData, setPriorityData] = useState();
   const [statusData, setStatusData] = useState();
+  console.log('statusData: ', statusData);
   const [assigneeData, setAssigneeData] = useState();
   const [taskDepartment, setTaskDepartment] = useState();
   const [taskProject, setTaskProject] = useState();
@@ -34,57 +36,30 @@ const Task = () => {
   // Sample data for tasks
   const [tasks, setTasks] = useState();
 
+  const retrieveAndSetData = (key, setter) => {
+    const data = sessionStorage.getItem(key);
+    if (data) {
+      setter(JSON.parse(data));
+    }
+  };
+
   const fetchMasterData = async () => {
     setIsLoading(true);
     try {
-      const masterData = localStorage.getItem('masterData');
+      const masterData = sessionStorage.getItem('masterData');
       const result = JSON.parse(masterData);
       if (!result) {
-        const masterData = await fetchMaster();
-        const result = Object.keys(masterData)
-          .filter((key) => key.startsWith("rd") && key !== "rd")
-          .map((key) => {
-            const rdIndex = parseInt(key.replace("rd", ""), 10);
-            const rdItem = masterData.rd.find((item) => item.id === rdIndex);
-            return {
-              id: rdItem?.id,
-              table_name: rdItem?.table_name,
-              Table_Title: rdItem?.title,
-              rows: masterData[key].map((item) => ({
-                ...item,
-                table_id: rdItem?.id,
-              })),
-            };
-          });
-
-        localStorage?.setItem('masterData', JSON.stringify(result));
+        fetchMasterGlFunc();
       } else {
 
         setMasterData(result);
-        const taskAssigneeData = result?.find((item) => item.id === 1);
-        if (taskAssigneeData) {
-          setAssigneeData(taskAssigneeData?.rows?.filter((row) => row?.isdelete === 0));
-        }
 
-        const taskStatusData = result?.find((item) => item.id === 2);
-        if (taskStatusData) {
-          setStatusData(taskStatusData?.rows?.filter((row) => row?.isdelete === 0));
-        }
 
-        const taskPriorityData = result?.find((item) => item.id === 3);
-        if (taskPriorityData) {
-          setPriorityData(taskPriorityData?.rows?.filter((row) => row?.isdelete === 0));
-        }
-
-        const taskDepartmentData = result?.find((item) => item.id === 4);
-        if (taskDepartmentData) {
-          setTaskDepartment(taskDepartmentData?.rows?.filter((row) => row?.isdelete === 0));
-        }
-
-        const taskProjectData = result?.find((item) => item.id === 5);
-        if (taskProjectData) {
-          setTaskProject(taskProjectData?.rows?.filter((row) => row?.isdelete === 0));
-        }
+        retrieveAndSetData('taskAssigneeData', setAssigneeData);
+        retrieveAndSetData('taskStatusData', setStatusData);
+        retrieveAndSetData('taskPriorityData', setPriorityData);
+        retrieveAndSetData('taskDepartmentData', setTaskDepartment);
+        retrieveAndSetData('taskProjectData', setTaskProject);
       }
     } catch (error) {
       console.error(error);
@@ -331,30 +306,52 @@ const Task = () => {
 
   // Filter change handler
   const handleFilterChange = (key, value) => {
+    if (key === 'clearFilter' && value == null) {
+      setFilters([]);
+      return;
+    }
     setFilters((prevFilters) => ({
       ...prevFilters,
       [key]: value,
     }));
   };
 
-  // Filtered data logic
   const filteredData = tasks?.filter((task) => {
-    const { statusFilter, priorityFilter, assigneeFilter, searchTerm } = filters;
-    // Normalize the search term to lowercase for case-insensitive matching
+    const { status, priority, assignee, searchTerm, dueDate } = filters;
+
     const normalizedSearchTerm = searchTerm?.toLowerCase();
-    return (
-      (statusFilter ? (task?.status)?.toLocaleLowerCase() === (statusFilter)?.toLocaleLowerCase() : true) &&
-      (priorityFilter ? (task?.priority)?.toLocaleLowerCase() === (priorityFilter)?.toLocaleLowerCase() : true) &&
-      (assigneeFilter ? (task?.assignee)?.toLocaleLowerCase() === (assigneeFilter)?.toLocaleLowerCase() : true) &&
-      (!searchTerm ||
-        task?.taskname?.toLowerCase()?.includes(normalizedSearchTerm) ||
-        task?.summary?.toLowerCase()?.includes(normalizedSearchTerm) ||
-        task?.assignee?.toLowerCase()?.includes(normalizedSearchTerm))
-    );
+
+    const matchesFilters = (task) => {
+      const matches =
+        (status ? task?.status?.toLocaleLowerCase() === status?.toLocaleLowerCase() : true) &&
+        (priority ? task?.priority?.toLocaleLowerCase() === priority?.toLocaleLowerCase() : true) &&
+        (assignee ? task?.assignee?.toLocaleLowerCase() === assignee?.toLocaleLowerCase() : true) &&
+        (!searchTerm ||
+          task?.taskname?.toLowerCase().includes(normalizedSearchTerm) ||
+          task?.status?.toLowerCase().includes(normalizedSearchTerm) ||
+          task?.priority?.toLowerCase().includes(normalizedSearchTerm) ||
+          task?.assignee?.toLowerCase().includes(normalizedSearchTerm) ||
+          task?.description?.toLowerCase().includes(normalizedSearchTerm) ||
+          task?.DeadLineDate?.toLowerCase().includes(normalizedSearchTerm) ||
+          task?.taskPr?.toLowerCase().includes(normalizedSearchTerm) ||
+          task?.taskDpt?.toLowerCase().includes(normalizedSearchTerm)) &&
+        (dueDate
+          ? format(new Date(task?.DeadLineDate), 'yyyy-MM-dd') === format(new Date(dueDate), 'yyyy-MM-dd')
+          : true);
+
+      if (matches) {
+        return true;
+      }
+
+      if (task?.subtasks?.length > 0) {
+        return task.subtasks.some(matchesFilters);
+      }
+
+      return false;
+    };
+
+    return matchesFilters(task);
   });
-
-
-
 
   // const handleAddSubtask = (parentTask) => {
   //   if (!parentTask) {
