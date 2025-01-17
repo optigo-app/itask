@@ -28,7 +28,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/event1",
             "guests": ["John Doe", "Jane Smith"],
             "location": "John's House",
-            "description": "A fun family gathering to celebrate the holidays."
+            "description": "A fun family gathering to celebrate the holidays.",
+            "allDay": true
         },
         {
             "title": "Personal Event 2",
@@ -38,7 +39,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/event2",
             "guests": ["Alice Brown", "Charlie Davis"],
             "location": "Alice's House",
-            "description": "A birthday party for Alice."
+            "description": "A birthday party for Alice.",
+            "allDay": true
         },
         {
             "title": "Personal Event 3",
@@ -48,7 +50,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/event3",
             "guests": ["Eve Harris", "Tom Jackson"],
             "location": "Eve's House",
-            "description": "A casual dinner to catch up."
+            "description": "A casual dinner to catch up.",
+            "allDay": true
         },
         {
             "title": "Personal Event 4",
@@ -58,7 +61,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/event4",
             "guests": ["Luke Martin", "Olivia White"],
             "location": "Olivia's House",
-            "description": "A movie night with friends."
+            "description": "A movie night with friends.",
+            "allDay": true
         },
         {
             "title": "Business Event 1",
@@ -68,7 +72,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/business-event1",
             "guests": ["Sam Green", "David Lee"],
             "location": "Office",
-            "description": "Year-end business review meeting."
+            "description": "Year-end business review meeting.",
+            "allDay": true
         },
         {
             "title": "Business Event 2",
@@ -78,7 +83,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/business-event2",
             "guests": ["Emma Taylor", "William Hall"],
             "location": "Conference Room A",
-            "description": "Team strategy meeting."
+            "description": "Team strategy meeting.",
+            "allDay": true
         },
         {
             "title": "Business Event 3",
@@ -88,7 +94,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/business-event3",
             "guests": ["Sophia Clark", "Michael Lewis"],
             "location": "Office",
-            "description": "Client presentation."
+            "description": "Client presentation.",
+            "allDay": true
         },
         {
             "title": "Business Event 4",
@@ -98,7 +105,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/business-event4",
             "guests": ["Daniel Scott", "Emily King"],
             "location": "Board Room",
-            "description": "Board meeting."
+            "description": "Board meeting.",
+            "allDay": true
         },
         {
             "title": "Family Event 1",
@@ -108,7 +116,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/family-event1",
             "guests": ["Lucas Adams", "Ava Carter"],
             "location": "Family Home",
-            "description": "Holiday dinner with family."
+            "description": "Holiday dinner with family.",
+            "allDay": true
         },
         {
             "title": "Family Event 2",
@@ -118,7 +127,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/family-event2",
             "guests": ["Grace Martinez", "James Anderson"],
             "location": "Grandparents' House",
-            "description": "Christmas gift exchange."
+            "description": "Christmas gift exchange.",
+            "allDay": true
         },
         {
             "title": "Family Event 2",
@@ -128,7 +138,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/family-event2",
             "guests": ["Grace Martinez", "James Anderson"],
             "location": "Grandparents' House",
-            "description": "Christmas gift exchange."
+            "description": "Christmas gift exchange.",
+            "allDay": true
         },
         {
             "title": "Family Event 2",
@@ -138,7 +149,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/family-event2",
             "guests": ["Grace Martinez", "James Anderson"],
             "location": "Grandparents' House",
-            "description": "Christmas gift exchange."
+            "description": "Christmas gift exchange.",
+            "allDay": true
         },
         {
             "title": "Family Event 2",
@@ -148,7 +160,8 @@ const Calendar = () => {
             "eventUrl": "https://example.com/family-event2",
             "guests": ["Grace Martinez", "James Anderson"],
             "location": "Grandparents' House",
-            "description": "Christmas gift exchange."
+            "description": "Christmas gift exchange.",
+            "allDay": true
         },
     ];
 
@@ -214,6 +227,7 @@ const Calendar = () => {
         },
         editable: true,
         eventResizableFromStart: true,
+        resizable: true, 
         dragScroll: true,
         dayMaxEvents: 2,
         navLinks: true,
@@ -277,7 +291,7 @@ const Calendar = () => {
             alert(`Event updated to: ${updatedEvent.start}`);
         },
         eventResize({ event: resizedEvent }) {
-            alert(`Event resized to: ${resizedEvent.start.toString()} - ${resizedEvent.end.toString()}`);
+            // alert(`Event resized to: ${resizedEvent.start.toString()} - ${resizedEvent.end.toString()}`);
         },
         ref: calendarRef,
     };

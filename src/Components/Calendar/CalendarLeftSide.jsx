@@ -25,7 +25,7 @@ const CalendarLeftSide = () => {
     const [caledrawerOpen, setCaledrawerOpen] = useState(false);
 
     useEffect(() => {
-       setSelectedCaleFilters(selectedCalendars)
+        setSelectedCaleFilters(selectedCalendars)
     }, []);
 
     const handleCalendarChange = (calendar) => {
@@ -112,7 +112,7 @@ const CalendarLeftSide = () => {
                     control={
                         <Checkbox
                             color={value}
-                            checked={selectedCalendars.includes(key)}
+                            checked={selectedCalendars?.includes(key)}
                             onChange={() => handleCalendarChange(key)}
                         />
                     }

@@ -204,7 +204,7 @@ const TaskDetail = ({ open, onClose }) => {
                                 <Grid item xs={3}><Typography className='tasklable'>Tags</Typography></Grid>
                                 <Grid item xs={9}>
                                     <Grid container spacing={1}>
-                                        {tags.map((tag, index) => (
+                                        {tags?.map((tag, index) => (
                                             <Grid item key={index}>
                                                 <span className="tag">{tag}</span>
                                             </Grid>
@@ -243,7 +243,7 @@ const TaskDetail = ({ open, onClose }) => {
                                 </Grid>
                                 <Grid item xs={12}>
                                     <Grid container spacing={2}>
-                                        {[...Array(count)].map((_, index) => (
+                                        {[...Array(count)]?.map((_, index) => (
                                             <Grid item xs={6} key={index}>
                                                 <Card className="attachment-card">
                                                     <CardMedia
@@ -264,7 +264,7 @@ const TaskDetail = ({ open, onClose }) => {
                                 <Grid item xs={12}>
                                     <Tabs value={activeTab} onChange={handleTabChange} className='muiTaskTabs'>
                                         <Tab label={`Subtasks`} />
-                                        <Tab label={`Comments (${comments.length})`} />
+                                        <Tab label={`Comments (${comments?.length})`} />
                                         <Tab label="Activities" />
                                     </Tabs>
                                     <Box className="tab-content">

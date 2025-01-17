@@ -8,6 +8,7 @@ import { fetchlistApiCall, masterDataValue, rootSubrootflag, selectedRowData } f
 import LoadingBackdrop from "../../Utils/LoadingBackdrop";
 import { format } from 'date-fns';
 import { fetchMasterGlFunc } from "../../Utils/globalfun";
+import { useLocation } from "react-router-dom";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Project/ListView/TableList"));
@@ -15,7 +16,9 @@ const KanbanView = React.lazy(() => import("../../Components/Task/KanbanView/Kan
 const CardView = React.lazy(() => import("../../Components/Task/CardView/CardView"));
 
 const Task = () => {
+  const location = useLocation();
   const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
+  console.log('callFetchTaskApi: ', callFetchTaskApi);
   const selectedRow = useRecoilValue(selectedRowData);
   const [isLoading, setIsLoading] = useState(false);
   const [masterData, setMasterData] = useRecoilState(masterDataValue);
@@ -50,10 +53,7 @@ const Task = () => {
       if (!result) {
         fetchMasterGlFunc();
       } else {
-
         setMasterData(result);
-
-
         retrieveAndSetData('taskAssigneeData', setAssigneeData);
         retrieveAndSetData('taskStatusData', setStatusData);
         retrieveAndSetData('taskPriorityData', setPriorityData);
@@ -200,7 +200,7 @@ const Task = () => {
     if (init) {
       fetchMasterData();
     }
-  }, []);
+  }, [location]);
 
   useEffect(() => {
     if (priorityData && statusData && taskProject && taskDepartment) {
@@ -208,7 +208,7 @@ const Task = () => {
         fetchTaskData(selectedRow);
       }
     }
-  }, [priorityData, statusData, taskProject, taskDepartment, callFetchTaskApi]);
+  }, [location, priorityData, statusData, taskProject, taskDepartment, callFetchTaskApi]);
 
   // Filter change handler
   const handleFilterChange = (key, value) => {

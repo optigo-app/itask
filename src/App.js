@@ -26,12 +26,10 @@ import PagenotFound from './Pages/404Page/PagenotFound';
 const App = () => {
     const isMobile = useMediaQuery('(max-width:768px)');
 
-    const [isLoading, setIsLoading] = useState(false);
-
+    // for init and master api
     useEffect(() => {
         const init = async () => {
             const result = await taskInit();
-            console.log('init result: ', result);
             if (result?.Data?.rd) {
                 fetchMasterGlFunc();
             }
@@ -39,40 +37,7 @@ const App = () => {
         init();
     }, []);
 
-
-    // const fetchMasterData = async () => {
-    //     debugger
-    //     setIsLoading(true);
-    //     try {
-    //         // const masterData = localStorage.getItem('masterData');
-    //         // const result = JSON.parse(masterData);
-    //         // if (!result) {
-    //             const masterData = await fetchMaster();
-    //             const result = Object.keys(masterData)
-    //                 .filter((key) => key.startsWith("rd") && key !== "rd")
-    //                 .map((key) => {
-    //                     const rdIndex = parseInt(key.replace("rd", ""), 10);
-    //                     const rdItem = masterData.rd.find((item) => item.id === rdIndex);
-    //                     return {
-    //                         id: rdItem?.id,
-    //                         table_name: rdItem?.table_name,
-    //                         Table_Title: rdItem?.title,
-    //                         rows: masterData[key].map((item) => ({
-    //                             ...item,
-    //                             table_id: rdItem?.id,
-    //                         })),
-    //                     };
-    //                 });
-
-    //             localStorage?.setItem('masterData', JSON.stringify(result));
-    //         // }
-    //     } catch (error) {
-    //         console.error(error);
-    //     } finally {
-    //         setIsLoading(false);
-    //     }
-    // };
-
+    // for custome toast message
     const toastStyle = {
         borderRadius: '8px',
         backgroundColor: '#fff',

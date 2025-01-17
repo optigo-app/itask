@@ -24,7 +24,7 @@ import {
 } from "@mui/icons-material";
 import { CircleChevronRight, CirclePlus, Edit, GitMerge, Pencil } from "lucide-react";
 import "react-resizable/css/styles.css";
-import { useRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData } from "../../../Recoil/atom";
 import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
 import TaskDetail from "./TaskDetails";
@@ -33,13 +33,13 @@ import LoadingBackdrop from "../../../Utils/LoadingBackdrop";
 import { formatDate } from "../../../Utils/globalfun";
 
 const TableView = ({ data, onAddSubtask, isLoading }) => {
-    const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
+    const  setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
-    const [rootSubroot, setRootSubroot] = useRecoilState(rootSubrootflag);
+    const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const [hoveredTaskId, setHoveredTaskId] = useState(null);
     const [hoveredSubtaskId, setHoveredSubtaskId] = useState(null);
-    const [openChildTask, setOpenChildTask] = useRecoilState(fetchlistApiCall);
-    const [selectedTask, setSelectedTask] = useRecoilState(selectedRowData);
+    const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
+    const  setSelectedTask = useSetRecoilState(selectedRowData);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedAction, setSelectedAction] = useState("");
     const [selectedItem, setSelectedItem] = useState(null);

@@ -26,12 +26,10 @@ import {
     ChevronLeft as ChevronLeftIcon,
 } from "@mui/icons-material";
 
-import { Asterisk, CalendarCheck, Component, FileCheck, House, Inbox, SquareChartGantt } from 'lucide-react';
+import {CalendarCheck, Component, FileCheck, Folders, House, Inbox, SquareChartGantt } from 'lucide-react';
 
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import './sidebar.scss';
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -92,10 +90,12 @@ const Sidebar = () => {
     }, [location])
 
     useEffect(() => {
-        const workSpace = JSON?.parse(sessionStorage?.getItem("workspaceData"));
-        if (workSpace) {
-            setWorkSpaceData(workSpace);
-        }
+        setTimeout(() => {
+            const workSpace = JSON?.parse(sessionStorage?.getItem("workspaceData"));
+            if (workSpace) {
+                setWorkSpaceData(workSpace);
+            }
+        }, 200);
     }, []);
 
     const commonSelectProps = {
@@ -187,10 +187,13 @@ const Sidebar = () => {
             <ListItem sx={{ display: 'block' }}>
                 <Typography variant="subtitle1" id='status'>Work Spaces</Typography>
                 <TextField
-                    name="status"
+                    name="workSpace"
                     value={formValues?.workSpace || ""}
                     onChange={handleChange}
                     select
+                    aria-label="Select work space"
+                    {...commonTextFieldProps}
+                    {...commonSelectProps}
                     {...commonTextFieldProps}
                     {...commonSelectProps}
                 >
@@ -211,7 +214,7 @@ const Sidebar = () => {
                     <ListItemIcon className="itask_drawerItemIcon">
                         <House className={activeItem === 'Home' ? "iconActive" : 'iconUnactive'} size={22} />
                     </ListItemIcon>
-                    {isDrawerOpen && <ListItemText className="itask_drawerItemText" primary="Home" />}
+                    {<ListItemText className="itask_drawerItemText" primary="Home" />}
                 </ListItemButton>
             </ListItem>
 
@@ -221,7 +224,7 @@ const Sidebar = () => {
                     <ListItemIcon className="itask_drawerItemIcon">
                         <FileCheck className={activeItem === 'Task' ? "iconActive" : 'iconUnactive'} size={22} />
                     </ListItemIcon>
-                    {isDrawerOpen && <ListItemText className="itask_drawerItemText" primary="Task" />}
+                    {<ListItemText className="itask_drawerItemText" primary="Task" />}
                 </ListItemButton>
             </ListItem>
 
@@ -231,7 +234,7 @@ const Sidebar = () => {
                     <ListItemIcon className="itask_drawerItemIcon">
                         <SquareChartGantt className={activeItem === 'Project' ? "iconActive" : 'iconUnactive'} size={22} />
                     </ListItemIcon>
-                    {isDrawerOpen && <ListItemText className="itask_drawerItemText" primary="Project" />}
+                    {<ListItemText className="itask_drawerItemText" primary="Project" />}
                 </ListItemButton>
             </ListItem>
 
@@ -241,7 +244,7 @@ const Sidebar = () => {
                     <ListItemIcon className="itask_drawerItemIcon">
                         <Inbox className={activeItem === 'Inbox' ? "iconActive" : 'iconUnactive'} size={22} />
                     </ListItemIcon>
-                    {isDrawerOpen && <ListItemText className="itask_drawerItemText" primary="Inbox" />}
+                    {<ListItemText className="itask_drawerItemText" primary="Inbox" />}
                 </ListItemButton>
             </ListItem>
 
@@ -251,7 +254,7 @@ const Sidebar = () => {
                     <ListItemIcon className="itask_drawerItemIcon">
                         <Component className={activeItem === 'Meeting' ? "iconActive" : 'iconUnactive'} size={22} />
                     </ListItemIcon>
-                    {isDrawerOpen && <ListItemText className="itask_drawerItemText" primary="Meeting" />}
+                    {<ListItemText className="itask_drawerItemText" primary="Meeting" />}
                 </ListItemButton>
             </ListItem>
 
@@ -261,7 +264,7 @@ const Sidebar = () => {
                     <ListItemIcon className="itask_drawerItemIcon">
                         <CalendarCheck className={activeItem === 'Calendar' ? "iconActive" : 'iconUnactive'} size={22} />
                     </ListItemIcon>
-                    {isDrawerOpen && <ListItemText className="itask_drawerItemText" primary="Calendar" />}
+                    {<ListItemText className="itask_drawerItemText" primary="Calendar" />}
                 </ListItemButton>
             </ListItem>
 
@@ -269,12 +272,12 @@ const Sidebar = () => {
             <ListItem onClick={() => handleItemClick('Masters', '/masters')}>
                 <ListItemButton className={`itask_drawerListItem ${activeItem === 'Masters' ? 'itask_drawerItemActive' : ''}`}>
                     <ListItemIcon className="itask_drawerItemIcon">
-                        <Asterisk className={activeItem === 'Masters' ? "iconActive" : 'iconUnactive'} size={22} />
+                        <Folders   className={activeItem === 'Masters' ? "iconActive" : 'iconUnactive'} size={22} />
                     </ListItemIcon>
-                    {isDrawerOpen && <ListItemText className="itask_drawerItemText" primary="Masters" />}
+                    {<ListItemText className="itask_drawerItemText" primary="Masters" />}
                 </ListItemButton>
             </ListItem>
-        </List>
+        </List> 
     );
 
     return (

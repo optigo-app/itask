@@ -2,6 +2,13 @@
   text-align: center;
 }
 
+.fc-event-resizer {
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  border-radius: 50%;
+}
+
 /* .Toastify__toast-container {
   display: flex;
   flex-direction: column;
