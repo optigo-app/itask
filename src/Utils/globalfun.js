@@ -43,13 +43,13 @@ export const getRandomAvatarColor = (name) => {
 
 
 export const fetchMasterGlFunc = async () => {
-    // setIsLoading(true);
     try {
-        const masterData = sessionStorage.getItem('masterData');
-        const result = JSON.parse(masterData);
+        const storedMasterData = sessionStorage.getItem('masterData');
+        let result = JSON.parse(storedMasterData);
+
         if (!result) {
             const masterData = await fetchMaster();
-            const result = Object.keys(masterData)
+            result = Object.keys(masterData)
                 .filter((key) => key.startsWith("rd") && key !== "rd")
                 .map((key) => {
                     const rdIndex = parseInt(key.replace("rd", ""), 10);
@@ -65,39 +65,27 @@ export const fetchMasterGlFunc = async () => {
                     };
                 });
 
-            sessionStorage?.setItem('masterData', JSON.stringify(result));
-        } else {
-
-            const taskAssigneeData = result?.find((item) => item.id === 1);
-            if (taskAssigneeData) {
-                sessionStorage.setItem('taskAssigneeData', JSON.stringify(taskAssigneeData?.rows?.filter((row) => row?.isdelete === 0)));
-            }
-
-            const taskStatusData = result?.find((item) => item.id === 2);
-            if (taskStatusData) {
-                sessionStorage.setItem('taskStatusData', JSON.stringify(taskStatusData?.rows?.filter((row) => row?.isdelete === 0)));
-            }
-
-            const taskPriorityData = result?.find((item) => item.id === 3);
-            if (taskPriorityData) {
-                sessionStorage.setItem('taskPriorityData', JSON.stringify(taskPriorityData?.rows?.filter((row) => row?.isdelete === 0)));
-            }
-
-            const taskDepartmentData = result?.find((item) => item.id === 4);
-            if (taskDepartmentData) {
-                sessionStorage.setItem('taskDepartmentData', JSON.stringify(taskDepartmentData?.rows?.filter((row) => row?.isdelete === 0)));
-            }
-
-            const taskProjectData = result?.find((item) => item.id === 5);
-            if (taskProjectData) {
-                sessionStorage.setItem('taskProjectData', JSON.stringify(taskProjectData?.rows?.filter((row) => row?.isdelete === 0)));
-            }
-            const workspaceData = result?.find((item) => item.id === 6);
-            if (workspaceData) {
-                sessionStorage.setItem('workspaceData', JSON.stringify(workspaceData?.rows?.filter((row) => row?.isdelete === 0)));
-            }
+            sessionStorage.setItem('masterData', JSON.stringify(result));
         }
+
+        const setFilteredData = (id, key) => {
+            const data = result?.find((item) => item.id === id);
+            if (data) {
+                sessionStorage.setItem(
+                    key,
+                    JSON.stringify(data.rows.filter((row) => row?.isdelete === 0))
+                );
+            }
+        };
+
+        setFilteredData(1, 'taskAssigneeData');
+        setFilteredData(2, 'taskStatusData');
+        setFilteredData(3, 'taskPriorityData');
+        setFilteredData(4, 'taskDepartmentData');
+        setFilteredData(5, 'taskProjectData');
+        setFilteredData(6, 'workspaceData');
     } catch (error) {
-        console.error(error);
+        console.error("Error fetching master data:", error);
     }
 };
+

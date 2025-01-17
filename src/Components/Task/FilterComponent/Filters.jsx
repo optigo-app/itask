@@ -217,21 +217,15 @@ const Filters = ({
               <Box key={filter.key} className="form-group">
                 <Typography variant="subtitle1" id={filter?.label}>{filter?.label}</Typography>
                 <TextField
-                  aria-labelledby={filter?.label}
-                  aria-expanded="false"
-                  id={filter?.label}
-                  labelid={filter?.label}
-                  name={filter?.key}
-                  value={filters[filter?.key]}
-                  onChange={(e) => handleFilterChange(filter?.key, e.target.value)}
-                  {...commonSelectProps}
-                  ref={filterRefs[filter?.key]}
-                  className="textfieldsClass"
-                  aria-label={`Select ${filter?.label}`}
+                   aria-label={`Select ${filter?.label}`}
+                   id={filter?.label}
+                   name={filter?.key}
+                   value={filters[filter?.key]}
+                   onChange={(e) => handleFilterChange(filter?.key, e.target.value)}
+                   {...commonSelectProps}
+                   ref={filterRefs[filter?.key]}
+                   className="textfieldsClass"
                 >
-                  {/* <MenuItem value={`Select All ${filter?.label}`} onClick={() => handleSelectAllChange(filter?.key)}>
-                  Select All {filter?.label}
-                </MenuItem> */}
                   <MenuItem value={`Select ${filter?.label}`}>
                     <span className="notranslate">Select {filter?.label}</span>
                   </MenuItem>
