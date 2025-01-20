@@ -1,6 +1,8 @@
 # iTask Task Management Software
 
 iTask is a robust and user-friendly task management software designed to streamline task organization, team collaboration, and productivity tracking. It helps individuals and teams efficiently manage their workflows, prioritize tasks, and meet deadlines.
+## Sample Image
+![image](https://github.com/user-attachments/assets/26ed89c9-1e84-4a22-a1ca-407ce2558247)
 
 ## Features
 
