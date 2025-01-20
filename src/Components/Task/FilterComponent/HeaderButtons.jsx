@@ -3,16 +3,16 @@ import { Box, Button } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 import SidebarDrawer from "../../FormComponent/Sidedrawer";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData } from "../../../Recoil/atom";
 import { toast } from "react-toastify";
 
 const HeaderButtons = ({ activeButton, onButtonClick, isLoading, masterData, priorityData, projectData, statusData }) => {
   const buttonNames = ["Table", "Kanban"];
-  const [rootSubroot, setRootSubroot] = useRecoilState(rootSubrootflag);
-  const [formDataValue, setFormDataValue] = useRecoilState(formData);
-  const [openChildTask, setOpenChildTask] = useRecoilState(fetchlistApiCall);
-  const [selectedTask, setSelectedTask] = useRecoilState(selectedRowData);
+  const setRootSubroot = useSetRecoilState(rootSubrootflag);
+  const setFormDataValue = useSetRecoilState(formData);
+  const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
+  const setSelectedTask = useSetRecoilState(selectedRowData);
   const rootSubrootflagval = useRecoilValue(rootSubrootflag)
 
 
@@ -32,7 +32,7 @@ const HeaderButtons = ({ activeButton, onButtonClick, isLoading, masterData, pri
     const addTaskApi = await AddTaskDataApi(formValues ?? {}, formDataValue ?? {}, rootSubrootflagval ?? {});
     if (addTaskApi) {
       setFormDrawerOpen(false);
-      setOpenChildTask(true);
+      // setOpenChildTask(true);
       setSelectedTask({})
       setTimeout(() => {
         if (rootSubrootflagval?.Task === "SubTask") {

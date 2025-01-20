@@ -26,6 +26,9 @@ const CommentList = ({ comments }) => {
                                     sx={{
                                         background: background(comment?.author),
                                         transition: 'transform 0.3s ease-in-out',
+                                        width: 35,
+                                        height: 35,
+                                        cursor: 'pointer',
                                         '&:hover': {
                                             transform: 'translateY(-8px)',
                                         }

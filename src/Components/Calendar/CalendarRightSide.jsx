@@ -10,13 +10,13 @@ import { calendarM, calendarSideBarOpen, CalEventsFilter, CalformData } from '..
 import CalendarForm from './SideBar/CalendarForm';
 
 const Calendar = () => {
-    const [sidebarToggle, setSidebarToggle] = useRecoilState(calendarSideBarOpen);
+    const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
     const calendarRef = useRef();
     const [calendarApi, setCalendarApi] = useState(null);
     const date = useRecoilValue(calendarM);
     const setCalFormData = useSetRecoilState(CalformData);
-    const selectedEventfileter = useRecoilValue(CalEventsFilter)
-    console.log('selectedEventfileter: ', selectedEventfileter);
+    const selectedEventfilter = useRecoilValue(CalEventsFilter)
+    console.log('selectedEventfilter: ', selectedEventfilter);
     const [caledrawerOpen, setCaledrawerOpen] = useState(false);
 
     const events = [
@@ -183,7 +183,7 @@ const Calendar = () => {
         return events.filter((event) => selectedCalendars.includes(event.category));
     };
 
-    const filteredEvents = filterEvents(data, selectedEventfileter);
+    const filteredEvents = filterEvents(data, selectedEventfilter);
     console.log('filteredEvents: ', filteredEvents);
     console.log('data: ', data);
 

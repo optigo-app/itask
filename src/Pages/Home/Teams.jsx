@@ -28,8 +28,9 @@ const Card4_2 = ({ teamData }) => {
                                             alt={team.name}
                                             src={team.avatar}
                                             sx={{
-                                                width: 30,
-                                                height: 30,
+                                                width: 35,
+                                                height: 35,
+                                                cursor: 'pointer',
                                                 background: background(team),
                                                 transition: 'transform 0.3s ease-in-out',
                                                 '&:hover': {

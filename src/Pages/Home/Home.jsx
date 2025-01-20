@@ -6,7 +6,6 @@ import Card3 from './UrgentTasks'
 import Card4_1 from './Comments'
 import Card4_2 from './Teams'
 import './homePage.scss'
-import { getRandomAvatarColor } from '../../Utils/globalfun'
 
 const Home = () => {
   const Project = [
@@ -22,21 +21,27 @@ const Home = () => {
           "userId": "t1",
           "name": "John Doe",
           "role": "Frontend Developer",
-          "avatar": "https://via.placeholder.com/150"
+          "avatar": "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/10.png"
         },
         {
           "userId": "t2",
           "name": "Jane Smith",
           "role": "Backend Developer",
-          "avatar": ""
+          "avatar": "	https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/3.png"
         },
         {
           "userId": "t3",
           "name": "Michael Lee",
           "role": "Project Manager",
-          "avatar": "https://example.com/michael-lee.jpg"
-        }
-      ],
+          "avatar": "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/2.png"
+        },
+        {
+          "userId": "t4",
+          "name": "Alice Brown",
+          "role": "UI/UX Designer",
+          "avatar": "URL_ADDRESS"
+        },
+        ],
       "tasks": ["t1", "t2", "t3"]
     },
     {
@@ -141,7 +146,7 @@ const Home = () => {
       author: {
         userId: "u1",
         name: "John Doe",
-        image: "https://via.placeholder.com/150"
+        image: "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/10.png"
       },
       createdAt: "2024-12-05T14:30:00Z"
     },
@@ -163,7 +168,7 @@ const Home = () => {
       author: {
         userId: "u3",
         name: "Michael Lee",
-        image: "https://via.placeholder.com/150"
+        image: "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/5.png"
       },
       createdAt: "2024-12-03T16:45:00Z"
     }

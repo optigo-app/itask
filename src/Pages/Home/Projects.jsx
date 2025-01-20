@@ -32,12 +32,13 @@ const Card2 = ({ projects }) => {
                                         justifyContent: 'center',
                                         gap: '0px'
                                     }}>
-                                        <AvatarGroup max={2}
+                                        <AvatarGroup max={3}
                                             sx={{
                                                 '& .MuiAvatar-root': {
-                                                    width: 30,
-                                                    height: 30,
-                                                    cursor:'pointer',
+                                                    width: 35,
+                                                    height: 35,
+                                                    cursor: 'pointer',
+                                                    border: 'none',
                                                     transition: 'transform 0.3s ease-in-out',
                                                     '&:hover': {
                                                         transform: 'translateY(-8px)',

@@ -11,6 +11,12 @@
     // border: 1px solid black;
     border-radius: 8px !important;
 
+    .MuiPickersLayout-root {
+        display: block !important;
+    }
+
+    .MuiPickersLayout-root {}
+
     .calendarRightMain {
         .fc {
             font-weight: normal !important;
@@ -100,7 +106,8 @@
                             border: 0;
                             color: $button-Bgcolor !important;
                             padding: 0.485rem 1.27rem;
-                            background-color: rgba(115, 103, 240, 0.16) !important;
+                            background-color: #fff !important;
+                            border: 1px solid rgba(115, 103, 240, 0.16) !important;
 
                             &.fc-button-active,
                             &:hover {
@@ -549,7 +556,7 @@
             }
 
             // ** Media Queries
-            @media (min-width: 960px) {
+            @media (min-width: 1420px) {
                 .fc-sidebarToggle-button {
                     display: none;
                 }
