@@ -30,3 +30,17 @@ Follow these steps to set up and run iTask locally:
    ```bash
    git clone https://github.com/your-username/itask.git
    cd itask
+npm install
+PORT=5000
+MONGO_URI=your-mongodb-connection-string
+JWT_SECRET=your-secret-key
+npm run start
+
+#Technologies Used
+Frontend: React.js, Tailwind CSS
+Backend: Node.js, Express.js
+Database: MongoDB
+Authentication: JSON Web Tokens (JWT)
+Real-Time Updates: Socket.IO
+Styling: SCSS, Tailwind CSS
+Deployment: Docker, AWS (or other cloud services)
