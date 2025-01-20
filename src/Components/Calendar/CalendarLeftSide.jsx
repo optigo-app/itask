@@ -51,6 +51,11 @@ const CalendarLeftSide = () => {
     };
 
     const customDatePickerStyles = {
+        '& .MuiPickersLayout-root': {
+            minWidth: '300px',
+            width: '300px',
+            margin: '0 auto',
+        },
         '& .MuiDatePickerToolbar-root': {
             padding: '10px !important',
         },
@@ -63,7 +68,6 @@ const CalendarLeftSide = () => {
             borderRadius: '8px',
             fontFamily: '"Public Sans", sans-serif',
             color: '#444050',
-            // margin:'0'
             maxHeight: '300px'
         },
         '& .MuiPickersYear-root': {
@@ -142,7 +146,14 @@ const CalendarLeftSide = () => {
 
     return (
         <div className="calendarLeftMain">
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '20px', width: '100%' }}>
+            <Box 
+            sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                position:'relative', 
+                marginBottom: '20px', 
+                width: '100%' }}>
                 <Button
                     fullWidth
                     variant="contained"

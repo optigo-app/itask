@@ -46,11 +46,16 @@ const App = () => {
         fontSize: '15px',
         lineHeight: '19px',
         color: '#444050',
-        boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;',
+        boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px',
         minWidth: '0px',
         width: 'fit-content !important',
-        padding: '0px 6px !important'
+        padding: '0px 6px !important',
+        border: '2px solid transparent',
+        backgroundImage: 'linear-gradient(#fff, #fff), linear-gradient(45deg, #6a11cb, #2575fc)',
+        backgroundOrigin: 'border-box',
+        backgroundClip: 'padding-box, border-box'
     };
+    
 
     return (
         <>

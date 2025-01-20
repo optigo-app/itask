@@ -26,7 +26,7 @@ import {
     ChevronLeft as ChevronLeftIcon,
 } from "@mui/icons-material";
 
-import {CalendarCheck, Component, FileCheck, Folders, House, Inbox, SquareChartGantt } from 'lucide-react';
+import { CalendarCheck, Component, FileCheck, Folders, House, Inbox, SquareChartGantt } from 'lucide-react';
 
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -37,7 +37,7 @@ const Sidebar = () => {
     const theme = useTheme();
     const navigate = useNavigate()
     const location = useLocation();
-    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     const [workspaceData, setWorkSpaceData] = useState();
     const [formValues, setFormValues] = React.useState({});
     const [isDrawerOpen, setDrawerOpen] = useState(true);
@@ -76,7 +76,6 @@ const Sidebar = () => {
             setDrawerOpen(false);
         }
     };
-
 
     useEffect(() => {
         setFormValues({
@@ -150,7 +149,7 @@ const Sidebar = () => {
         <List>
             <ListItem className="itask_drawerHeader">
                 <ListItemButton className="itask_drawerListItem">
-                    <Box className="itask_drawerHeader" sx={{ justifyContent: isDrawerOpen ? "space-between" : "center !important" }}>
+                    <Box className="itask_drawerHeader" sx={{ justifyContent: isDrawerOpen ? "space-between" : "space-between !important" }}>
                         <div className="itask_logoWrapper">
                             <svg className="itask_logo" viewBox="0 0 32 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path fillRule="evenodd" clipRule="evenodd" d="M0.00172773 0V6.85398C0.00172773 6.85398 -0.133178 9.01207 1.98092 10.8388L13.6912 21.9964L19.7809 21.9181L18.8042 9.88248L16.4951 7.17289L9.23799 0H0.00172773Z" fill="#7367F0"></path>
@@ -158,13 +157,13 @@ const Sidebar = () => {
                                 <path opacity="0.06" fillRule="evenodd" clipRule="evenodd" d="M8.07751 15.9175L13.9419 4.63989L16.5849 7.28475L8.07751 15.9175Z" fill="#161616"></path>
                                 <path fillRule="evenodd" clipRule="evenodd" d="M7.77295 16.3566L23.6563 0H32V6.88383C32 6.88383 31.8262 9.17836 30.6591 10.4057L19.7824 22H13.6938L7.77295 16.3566Z" fill="#7367F0"></path>
                             </svg>
-                            {isDrawerOpen && <ListItemText primary="Itask" sx={{
+                            <ListItemText primary="Itask" sx={{
                                 '& .MuiTypography-root': {
                                     fontSize: '20px !important',
                                     fontWeight: 'bold',
                                     fontFamily: '"Public Sans", sans-serif !important'
                                 },
-                            }} />}
+                            }} />
                         </div>
                         <div>
                             {/* {!isMobile && isDrawerOpen && (
@@ -272,12 +271,12 @@ const Sidebar = () => {
             <ListItem onClick={() => handleItemClick('Masters', '/masters')}>
                 <ListItemButton className={`itask_drawerListItem ${activeItem === 'Masters' ? 'itask_drawerItemActive' : ''}`}>
                     <ListItemIcon className="itask_drawerItemIcon">
-                        <Folders   className={activeItem === 'Masters' ? "iconActive" : 'iconUnactive'} size={22} />
+                        <Folders className={activeItem === 'Masters' ? "iconActive" : 'iconUnactive'} size={22} />
                     </ListItemIcon>
                     {<ListItemText className="itask_drawerItemText" primary="Masters" />}
                 </ListItemButton>
             </ListItem>
-        </List> 
+        </List>
     );
 
     return (

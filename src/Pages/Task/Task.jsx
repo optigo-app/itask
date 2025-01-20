@@ -52,10 +52,7 @@ const Task = () => {
       if (!result) {
         fetchMasterGlFunc();
       } else {
-
         setMasterData(result);
-
-
         retrieveAndSetData('taskAssigneeData', setAssigneeData);
         retrieveAndSetData('taskStatusData', setStatusData);
         retrieveAndSetData('taskPriorityData', setPriorityData);
