@@ -8,6 +8,7 @@ import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { calendarM, calendarSideBarOpen, CalEventsFilter, CalformData } from '../../Recoil/atom';
 import CalendarForm from './SideBar/CalendarForm';
+import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
 
 const Calendar = () => {
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
@@ -15,186 +16,41 @@ const Calendar = () => {
     const [calendarApi, setCalendarApi] = useState(null);
     const date = useRecoilValue(calendarM);
     const setCalFormData = useSetRecoilState(CalformData);
+    const calFormData = useRecoilValue(CalformData);
     const selectedEventfilter = useRecoilValue(CalEventsFilter)
-    console.log('selectedEventfilter: ', selectedEventfilter);
     const [caledrawerOpen, setCaledrawerOpen] = useState(false);
-
-    const events = [
-        {
-            "title": "Personal Event 1",
-            "start": "2025-01-17",
-            "end": "2025-01-17T23:59:59",
-            "category": "Personal",
-            "eventUrl": "https://example.com/event1",
-            "guests": ["John Doe", "Jane Smith"],
-            "location": "John's House",
-            "description": "A fun family gathering to celebrate the holidays.",
-            "allDay": true
-        },
-        {
-            "title": "Personal Event 2",
-            "start": "2025-01-18T10:00:00",
-            "end": "2025-01-18T12:00:00",
-            "category": "Personal",
-            "eventUrl": "https://example.com/event2",
-            "guests": ["Alice Brown", "Charlie Davis"],
-            "location": "Alice's House",
-            "description": "A birthday party for Alice.",
-            "allDay": true
-        },
-        {
-            "title": "Personal Event 3",
-            "start": "2025-01-19T15:00:00",
-            "end": "2025-01-19T17:00:00",
-            "category": "Personal",
-            "eventUrl": "https://example.com/event3",
-            "guests": ["Eve Harris", "Tom Jackson"],
-            "location": "Eve's House",
-            "description": "A casual dinner to catch up.",
-            "allDay": true
-        },
-        {
-            "title": "Personal Event 4",
-            "start": "2025-01-20T20:00:00",
-            "end": "2025-01-20T22:00:00",
-            "category": "Personal",
-            "eventUrl": "https://example.com/event4",
-            "guests": ["Luke Martin", "Olivia White"],
-            "location": "Olivia's House",
-            "description": "A movie night with friends.",
-            "allDay": true
-        },
-        {
-            "title": "Business Event 1",
-            "start": "2025-01-17",
-            "end": "2025-01-17T23:59:59",
-            "category": "Business",
-            "eventUrl": "https://example.com/business-event1",
-            "guests": ["Sam Green", "David Lee"],
-            "location": "Office",
-            "description": "Year-end business review meeting.",
-            "allDay": true
-        },
-        {
-            "title": "Business Event 2",
-            "start": "2025-01-18T10:00:00",
-            "end": "2025-01-18T12:00:00",
-            "category": "Business",
-            "eventUrl": "https://example.com/business-event2",
-            "guests": ["Emma Taylor", "William Hall"],
-            "location": "Conference Room A",
-            "description": "Team strategy meeting.",
-            "allDay": true
-        },
-        {
-            "title": "Business Event 3",
-            "start": "2025-01-19T15:00:00",
-            "end": "2025-01-19T17:00:00",
-            "category": "Business",
-            "eventUrl": "https://example.com/business-event3",
-            "guests": ["Sophia Clark", "Michael Lewis"],
-            "location": "Office",
-            "description": "Client presentation.",
-            "allDay": true
-        },
-        {
-            "title": "Business Event 4",
-            "start": "2025-01-20T20:00:00",
-            "end": "2025-01-20T22:00:00",
-            "category": "Business",
-            "eventUrl": "https://example.com/business-event4",
-            "guests": ["Daniel Scott", "Emily King"],
-            "location": "Board Room",
-            "description": "Board meeting.",
-            "allDay": true
-        },
-        {
-            "title": "Family Event 1",
-            "start": "2025-01-18T10:00:00",
-            "end": "2025-01-17T23:59:59",
-            "category": "Family",
-            "eventUrl": "https://example.com/family-event1",
-            "guests": ["Lucas Adams", "Ava Carter"],
-            "location": "Family Home",
-            "description": "Holiday dinner with family.",
-            "allDay": true
-        },
-        {
-            "title": "Family Event 2",
-            "start": "2025-01-18T10:00:00",
-            "end": "2025-01-18T12:00:00",
-            "category": "Family",
-            "eventUrl": "https://example.com/family-event2",
-            "guests": ["Grace Martinez", "James Anderson"],
-            "location": "Grandparents' House",
-            "description": "Christmas gift exchange.",
-            "allDay": true
-        },
-        {
-            "title": "Family Event 2",
-            "start": "2025-01-05T10:00:00",
-            "end": "2025-01-05T12:00:00",
-            "category": "ETC",
-            "eventUrl": "https://example.com/family-event2",
-            "guests": ["Grace Martinez", "James Anderson"],
-            "location": "Grandparents' House",
-            "description": "Christmas gift exchange.",
-            "allDay": true
-        },
-        {
-            "title": "Family Event 2",
-            "start": "2025-01-07T10:00:00",
-            "end": "2025-01-07T12:00:00",
-            "category": "Holiday",
-            "eventUrl": "https://example.com/family-event2",
-            "guests": ["Grace Martinez", "James Anderson"],
-            "location": "Grandparents' House",
-            "description": "Christmas gift exchange.",
-            "allDay": true
-        },
-        {
-            "title": "Family Event 2",
-            "start": "2025-01-18T10:00:00",
-            "end": "2025-01-18T12:00:00",
-            "category": "Family",
-            "eventUrl": "https://example.com/family-event2",
-            "guests": ["Grace Martinez", "James Anderson"],
-            "location": "Grandparents' House",
-            "description": "Christmas gift exchange.",
-            "allDay": true
-        },
-    ];
+    const [opencnfDialogOpen, setCnfDialogOpen] = useState(false);
+    const [formData, setFormData] = useState();
+    const [calEvData, setCalEvData] = useState([]);
 
     const handleDrawerToggle = () => {
         setCaledrawerOpen(!caledrawerOpen);
     };
 
     const handleCaleFormSubmit = async (formValues) => {
-        console.log('formValues: ', formValues);
-        setCalFormData(formValues)
-        localStorage.setItem('calformData', JSON.stringify(formValues))
+        setCalFormData(formValues);
+        const existingData = JSON.parse(localStorage.getItem('calformData')) || [];
+        const existingEventIndex = existingData.findIndex(event => event.id === formValues.id);
+        let updatedData;
+        if (existingEventIndex !== -1) {
+            updatedData = existingData.map((event, index) =>
+                index === existingEventIndex ? formValues : event
+            );
+        } else {
+            updatedData = [...existingData, formValues];
+        }
+        localStorage.setItem('calformData', JSON.stringify(updatedData));
     };
 
-    const eventss = JSON.parse(localStorage?.getItem('calformData')) ?? {}
+    // for set events
+    useEffect(() => {
+        const storedData = localStorage.getItem('calformData');
+        if (storedData) {
+            setCalEvData(JSON.parse(storedData));
+        }
+    }, [calFormData]);
 
-    let data = [...events, eventss];
-
-    const filterEvents = (events, selectedCalendars) => {
-        return events.filter((event) => selectedCalendars.includes(event.category));
-    };
-
-    const filteredEvents = filterEvents(data, selectedEventfilter);
-    console.log('filteredEvents: ', filteredEvents);
-    console.log('data: ', data);
-
-    const calendarsColor = {
-        Personal: 'error',
-        Business: 'primary',
-        Family: 'warning',
-        Holiday: 'success',
-        ETC: 'info',
-    };
-
+    // for get events Data
     useEffect(() => {
         if (calendarRef?.current) {
             setCalendarApi(calendarRef?.current?.getApi());
@@ -212,6 +68,23 @@ const Calendar = () => {
         }
     }, [date, calendarApi]);
 
+    const filterEvents = (events, selectedCalendars) => {
+        return events && events?.filter((event) => selectedCalendars?.includes(event?.category));
+    };
+
+    // filter fun according to events
+    const filteredEvents = filterEvents(calEvData, selectedEventfilter);
+
+    // calendar colors
+    const calendarsColor = {
+        Personal: 'error',
+        Business: 'primary',
+        Family: 'warning',
+        Holiday: 'success',
+        ETC: 'info',
+    };
+
+    // calendar options
     const calendarOptions = {
         events: filteredEvents,
         plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
@@ -227,7 +100,7 @@ const Calendar = () => {
         },
         editable: true,
         eventResizableFromStart: true,
-        resizable: true, 
+        resizable: true,
         dragScroll: true,
         dayMaxEvents: 2,
         navLinks: true,
@@ -240,14 +113,16 @@ const Calendar = () => {
             const startDate = clickedEvent?.start;
             const endDate = clickedEvent?.end ?? startDate;
             const eventDetails = {
+                id: clickedEvent?.id,
                 title: clickedEvent?.title,
                 start: startDate?.toISOString(),
                 end: endDate?.toISOString(),
                 location: clickedEvent?.extendedProps?.location,
                 description: clickedEvent?.extendedProps?.description,
-                guests: clickedEvent?.extendedProps?.guests?.map(guest => guest.label)?.join(', '),
+                guests: clickedEvent?.extendedProps?.guests,
                 eventUrl: clickedEvent?.extendedProps?.eventUrl,
-                category: clickedEvent?.extendedProps?.category
+                category: clickedEvent?.extendedProps?.category,
+                allDay: clickedEvent?.allDay,
             };
             setCalFormData(eventDetails);
             setCaledrawerOpen(true);
@@ -280,20 +155,54 @@ const Calendar = () => {
                 category: droppedEvent.extendedProps.category,
                 guests: droppedEvent.extendedProps.guests,
                 eventUrl: droppedEvent.extendedProps.eventUrl,
+                allDay: droppedEvent.allDay,
             };
-
             // Update the event in local storage
-            const updatedEvents = data?.map(event =>
+            const updatedEvents = filteredEvents?.map(event =>
                 event.id === updatedEvent.id ? updatedEvent : event
             );
-
-            console.log('Event updated: ', updatedEvent);
-            alert(`Event updated to: ${updatedEvent.start}`);
+            localStorage.setItem('calformData', JSON.stringify(updatedEvents));
         },
         eventResize({ event: resizedEvent }) {
-            // alert(`Event resized to: ${resizedEvent.start.toString()} - ${resizedEvent.end.toString()}`);
+            const startDate = resizedEvent?.start;
+            const endDate = resizedEvent?.end ?? startDate;
+            const updatedEvent = {
+                id: resizedEvent.id,
+                title: resizedEvent.title,
+                start: startDate?.toISOString(),
+                end: endDate?.toISOString(),
+                location: resizedEvent.extendedProps.location,
+                description: resizedEvent.extendedProps.description,
+                category: resizedEvent.extendedProps.category,
+                guests: resizedEvent.extendedProps.guests,
+                eventUrl: resizedEvent.extendedProps.eventUrl,
+                allDay: resizedEvent.allDay,
+            };
+            // Update the event in local storage
+            const updatedEvents = filteredEvents?.map(event =>
+                event.id === updatedEvent.id ? updatedEvent : event
+            );
+            localStorage.setItem('calformData', JSON.stringify(updatedEvents));
         },
         ref: calendarRef,
+    };
+
+    // remove event
+    const handleRemove = (formValue) => {
+        setFormData(formValue)
+        setCnfDialogOpen(true);
+    };
+    // cnf remove event
+    const handleConfirmRemoveAll = () => {
+        const updatedData = filteredEvents?.filter(event => event?.id !== formData?.id);
+        setCalFormData(updatedData)
+        localStorage.setItem('calformData', JSON.stringify(updatedData));
+        setCnfDialogOpen(false);
+        setCaledrawerOpen(false);
+    };
+    // close remove dialog
+    const handleCloseDialog = () => {
+        setCnfDialogOpen(false);
     };
 
     return (
@@ -303,11 +212,14 @@ const Calendar = () => {
                 open={caledrawerOpen}
                 onClose={handleDrawerToggle}
                 onSubmit={handleCaleFormSubmit}
-            // isLoading={isLoading}
-            // masterData={masterData}
-            // priorityData={priorityData}
-            // projectData={projectData}
-            // statusData={statusData}
+                onRemove={handleRemove}
+            />
+            <ConfirmationDialog
+                open={opencnfDialogOpen}
+                onClose={handleCloseDialog}
+                onConfirm={handleConfirmRemoveAll}
+                title="Confirm"
+                content="Are you sure you want to remove this Event?"
             />
         </>
     );

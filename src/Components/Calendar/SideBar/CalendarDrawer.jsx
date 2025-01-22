@@ -64,8 +64,8 @@ const CalendarDrawer = () => {
                     onClick={handleClose}
                     sx={{
                         position: 'absolute',
-                        top: '-9px',
-                        right: '-9px',
+                        top: '-8px',
+                        right: '-8px',
                         cursor: 'pointer'
                     }}>
                     <CircleX />

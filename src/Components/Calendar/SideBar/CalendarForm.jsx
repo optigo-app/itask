@@ -10,26 +10,29 @@ import {
     Grid,
     ListItemIcon,
     Autocomplete,
+    Stack,
+    Switch,
 } from "@mui/material";
 import { CircleX } from "lucide-react";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 // import "./SidebarDrawer.scss";
 import { useRecoilValue } from "recoil";
-import { CalformData, formData, openFormDrawer, rootSubrootflag } from "../../../Recoil/atom";
-import dayjs from 'dayjs';
-import { useTheme } from '@mui/material/styles';
+import { CalformData } from "../../../Recoil/atom";
+import { styled, useTheme } from '@mui/material/styles';
+import CustomDateTimePicker from "../../../Utils/DateComponent/CustomDateTimePicker"
+import { convertToIST } from "../../../Utils/convertToIST";
 
 const CalendarForm = ({
     open,
     onClose,
     onSubmit,
+    onRemove,
     isLoading,
 }) => {
     const theme = useTheme();
     const CalformDataValue = useRecoilValue(CalformData);
 
     const [formValues, setFormValues] = React.useState({
-        id: '1',
+        id: '',
         title: "",
         category: "",
         eventUrl: "",
@@ -37,8 +40,8 @@ const CalendarForm = ({
         end: null,
         guests: [],
         description: "",
+        allDay: false
     });
-    console.log('formValues: ', formValues);
 
     const filterRefs = {
         category: useRef(),
@@ -46,10 +49,12 @@ const CalendarForm = ({
     };
 
     const guestOptions = [
-        { label: 'John Doe', value: 'user1' },
-        { label: 'Jane Smith', value: 'user2' },
-        { label: 'Alice Johnson', value: 'user3' },
-        { label: 'Bob Brown', value: 'user4' }
+        { id: 1, label: 'John Doe', value: 'user1' },
+        { id: 2, label: 'James Anderson', value: 'user2' },
+        { id: 3, label: 'Alice Johnson', value: 'user3' },
+        { id: 4, label: 'Bob Brown', value: 'user4' },
+        { id: 5, label: 'Grace Martinez', value: 'user5' },
+        { id: 6, label: 'Daniel Scott', value: 'user6' }
     ];
 
     const calendarsColor = {
@@ -60,23 +65,27 @@ const CalendarForm = ({
         ETC: theme.palette.info.main,
     };
 
+    // set value when edit
     useEffect(() => {
         setTimeout(() => {
             if (CalformDataValue) {
+                console.log('CalformDataValue: ', CalformDataValue);
                 setFormValues({
                     id: CalformDataValue?.id ?? "",
                     title: CalformDataValue?.title ?? "",
-                    category: CalformDataValue?.category ?? "",
+                    category: CalformDataValue?.category ?? "Personal",
                     eventUrl: CalformDataValue?.eventUrl ?? "",
                     start: CalformDataValue?.start ?? null,
                     end: CalformDataValue?.end ?? null,
-                    guests: CalformDataValue?.guestsid ?? [],
+                    guests: CalformDataValue?.guests ?? [],
                     description: CalformDataValue?.description ?? "",
+                    allDay: CalformDataValue?.allDay ?? false
                 });
             }
         }, 300);
     }, [open, CalformDataValue]);
 
+    // set placeholder in select menu
     useEffect(() => {
         setTimeout(() => {
             if (open && CalformDataValue) {
@@ -91,7 +100,7 @@ const CalendarForm = ({
                 });
             }
         }, 300);
-    }, [open,CalformDataValue]);
+    }, [open, CalformDataValue]);
 
     // Handle form value changes
     const generateRandomId = () => {
@@ -107,12 +116,12 @@ const CalendarForm = ({
         }));
     };
 
-
-
     // Handle form submission
     const handleSubmit = () => {
-        onSubmit(formValues);
-        handleClear();
+        if (formValues?.category !== '' && formValues?.title !== '' && formValues?.start !== null && formValues?.end !== null) {
+            onSubmit(formValues);
+            handleClear();
+        }
     };
 
     // for close and clear form
@@ -126,40 +135,9 @@ const CalendarForm = ({
             end: null,
             guests: [],
             description: "",
+            allDay: false
         });
     }
-
-    // DatePicker custom styles
-    const customDatePickerProps = {
-        slotProps: {
-            popper: {
-                sx: {
-                    '& .MuiDateCalendar-root': {
-                        borderRadius: '8px',
-                        fontFamily: '"Public Sans", sans-serif',
-                    },
-                    '& .MuiButtonBase-root, .MuiPickersCalendarHeader-label, .MuiPickersYear-yearButton': {
-                        color: '#444050',
-                        fontFamily: '"Public Sans", sans-serif',
-                    },
-                    '& .MuiPickersDay-root, .MuiPickersYear-yearButton': {
-                        '&:hover': {
-                            backgroundColor: '#7367f0',
-                            color: '#fff',
-                        },
-                    },
-                    '& .MuiPickersDay-root.Mui-selected, .Mui-selected ': {
-                        backgroundColor: '#7367f0',
-                        color: '#fff',
-                    },
-                    '& .MuiPickersDay-root.Mui-selected, .MuiPickersYear-yearButton:hover': {
-                        backgroundColor: '#7367f0',
-                        color: '#fff',
-                    },
-                },
-            },
-        },
-    };
 
     // Common TextField style properties
     const commonTextFieldProps = {
@@ -168,6 +146,7 @@ const CalendarForm = ({
         className: "textfieldsClass",
     };
 
+    // custom select style properties
     const commonSelectProps = {
         select: true,
         fullWidth: true,
@@ -210,6 +189,53 @@ const CalendarForm = ({
         },
     };
 
+    // for switch button
+    const AntSwitch = styled(Switch)(({ theme }) => ({
+        width: 40,
+        height: 22,
+        padding: 0,
+        display: 'flex',
+        '&:active': {
+            '& .MuiSwitch-thumb': {
+                width: 18,
+            },
+            '& .MuiSwitch-switchBase.Mui-checked': {
+                transform: 'translateX(15px)',
+            },
+        },
+        '& .MuiSwitch-switchBase': {
+            padding: 3,
+            '&.Mui-checked': {
+                transform: 'translateX(18px)',
+                color: '#fff',
+                '& + .MuiSwitch-track': {
+                    opacity: 1,
+                    backgroundColor: '#7367f0',
+                },
+            },
+        },
+        '& .MuiSwitch-thumb': {
+            boxShadow: '0 2px 4px 0 rgb(0 35 11 / 20%)',
+            width: 16,
+            height: 16,
+            borderRadius: 9,
+            transition: theme.transitions.create(['width'], {
+                duration: 200,
+            }),
+        },
+        '& .MuiSwitch-track': {
+            borderRadius: 12,
+            opacity: 1,
+            backgroundColor: 'rgba(0,0,0,.25)',
+            boxSizing: 'border-box',
+        },
+    }));
+
+    // remove event
+    const handleRemoveEvent = () => {
+        onRemove(formValues);
+        handleClear();
+    };
 
     return (
         <Drawer anchor="right" open={open} onClose={handleClear} className="MainDrawer">
@@ -217,7 +243,7 @@ const CalendarForm = ({
                 {/* Header */}
                 <Box className="drawer-header">
                     <Typography variant="h6" className="drawer-title">
-                        Add Event
+                        {CalformDataValue?.id && CalformDataValue?.id != '' ? "Update Event" : "Add Event"}
                     </Typography>
                     <IconButton onClick={handleClear}>
                         <CircleX />
@@ -231,7 +257,7 @@ const CalendarForm = ({
                         opacity: 0.3,
                     }}
                 />
-                <Grid container spacing={2} className="form-row">
+                <Grid container spacing={1} className="form-row">
                     {/* Task Name and Due Date */}
                     <Grid item xs={12}>
                         <Box className="form-group">
@@ -263,27 +289,54 @@ const CalendarForm = ({
                                 Guests
                             </Typography>
                             <Autocomplete
-                                id="guests"
                                 multiple
-                                limitTags={2}
+                                disableCloseOnSelect
                                 options={guestOptions}
-                                getOptionLabel={(option) => option?.label || ""}
+                                getOptionLabel={(option) => option.label}
                                 value={formValues.guests || []}
+                                isOptionEqualToValue={(option, value) => option.id === value.id}
                                 onChange={(event, newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
+                                limitTags={2}
+                                {...commonTextFieldProps}
+                                renderOption={(props, option, { selected }) => (
+                                    <li
+                                        {...props}
+                                        style={{
+                                            fontFamily: '"Public Sans", sans-serif',
+                                            margin: '5px 10px',
+                                            borderRadius: "8px",
+                                            backgroundColor: selected
+                                                ? 'rgba(0, 0, 0, 0.05)'
+                                                : 'transparent',
+                                            cursor: 'pointer',
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = selected
+                                                ? '#7367f0'
+                                                : '#7367f0';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = selected
+                                                ? 'rgba(0, 0, 0, 0.05)'
+                                                : 'transparent';
+                                        }}
+                                    >
+                                        {option.label}
+                                    </li>
+                                )}
                                 renderInput={(params) => (
                                     <TextField
                                         {...params}
                                         name="guests"
-                                        placeholder="Select guests"
                                         {...commonTextFieldProps}
-                                        // ref={filterRefs.guests}
+                                        placeholder={!formValues.guests || formValues.guests.length === 0 ? 'Select guests' : ''}
                                     />
                                 )}
-                                sx={{ width: '400px' }}
                             />
                         </Box>
                     </Grid>
 
+                    {/* Event category */}
                     <Grid item xs={12}>
                         <Box className="form-group">
                             <Typography
@@ -301,6 +354,7 @@ const CalendarForm = ({
                                 {...commonTextFieldProps}
                                 {...commonSelectProps}
                                 ref={filterRefs.category}
+                                required
                                 sx={{
                                     '& .MuiSelect-select': {
                                         display: 'flex',
@@ -339,64 +393,69 @@ const CalendarForm = ({
 
                     {/* Progress, Start Date, Repeat */}
                     <Grid item xs={12}>
-                        <Box className="form-group">
-                            <Typography className="form-label" variant="subtitle1">
-                                Start Date
-                            </Typography>
-                            <DatePicker
-                                name="startDate"
-                                value={formValues.start ? dayjs(formValues.start) : null}
-                                className="textfieldsClass"
-                                onChange={(value) =>
+                        <CustomDateTimePicker
+                            label="Start Date & Time"
+                            name="startDateTime"
+                            value={formValues.start}
+                            styleprops={commonTextFieldProps}
+                            onChange={(value) => {
+                                if (value) {
+                                    const isIst = convertToIST(value);
                                     setFormValues((prev) => ({
                                         ...prev,
-                                        start: value,
+                                        start: isIst,
                                     }))
                                 }
-                                sx={{ minWidth: 400 }}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        size="small"
-                                        fullWidth
-                                        className="textfieldsClass"
-                                        sx={{ padding: "0" }}
-                                    />
-                                )}
-                                {...customDatePickerProps}
-                            />
-                        </Box>
+                            }}
+                        />
                     </Grid>
-
                     <Grid item xs={12}>
-                        <Box className="form-group">
-                            <Typography className="form-label" variant="subtitle1">
-                                Due Date
-                            </Typography>
-                            <DatePicker
-                                name="dueDate"
-                                value={formValues.end ? dayjs(formValues.end) : null}
-                                className="textfieldsClass"
-                                onChange={(value) =>
+                        <CustomDateTimePicker
+                            label="End Date & Time"
+                            name="endDateTime"
+                            value={formValues.end}
+                            styleprops={commonTextFieldProps}
+                            onChange={(value) => {
+                                if (value) {
+                                    const isIst = convertToIST(value);
                                     setFormValues((prev) => ({
                                         ...prev,
-                                        end: value,
+                                        end: isIst,
                                     }))
                                 }
-                                sx={{ minWidth: 400 }}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        size="small"
-                                        fullWidth
-                                        className="textfieldsClass"
-                                        sx={{ padding: "0" }}
-                                    />
-                                )}
-                                {...customDatePickerProps}
-                            />
-                        </Box>
+                            }}
+                        />
                     </Grid>
+                </Grid>
+
+                {/* all day flag for drag and drop */}
+                <Grid item xs={12}>
+                    <Box className="form-group">
+                        <Typography
+                            variant="subtitle1"
+                            className="form-label"
+                            htmlFor="title"
+                        >
+                        </Typography>
+                        <Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{ alignItems: 'center' }}
+                        >
+                            <AntSwitch
+                                checked={formValues.allDay}
+                                inputProps={{ 'aria-label': 'ant design' }}
+                                onChange={(event) => {
+                                    console.log('ssssss', formValues.allDay);
+                                    setFormValues((prev) => ({
+                                        ...prev,
+                                        allDay: event.target.checked,
+                                    }))
+                                }}
+                            />
+                            <Typography>All Day</Typography>
+                        </Stack>
+                    </Box>
                 </Grid>
 
                 {/* Comment & description */}
@@ -418,24 +477,41 @@ const CalendarForm = ({
                 </Grid>
 
                 {/* Submit Button */}
-                <Grid item xs={12} sx={{ textAlign: "right" }}>
-                    <Button
-                        variant="outlined"
-                        onClick={handleClear}
-                        sx={{ marginRight: "10px" }}
-                        className="secondary-btn"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                        className="primary-btn"
-                    >
-                        {isLoading ? "Adding..." : "Add"}
-                    </Button>
+                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                    <Box>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleSubmit}
+                            disabled={isLoading}
+                            className="primary-btn"
+                        >
+                            {CalformDataValue?.id && CalformDataValue?.id !== ''
+                                ? (isLoading ? "Updating..." : "Update")
+                                : (isLoading ? "Adding..." : "Add")
+                            }
+
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            onClick={handleClear}
+                            sx={{ marginLeft: "10px" }}
+                            className="secondary-btn"
+                        >
+                            Cancel
+                        </Button>
+                    </Box>
+                    {CalformDataValue?.id && CalformDataValue?.id != '' &&
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => handleRemoveEvent(formValues)}
+                            disabled={isLoading}
+                            className="danger-btn"
+                        >
+                            Delete
+                        </Button>
+                    }
                 </Grid>
             </Box>
         </Drawer>
