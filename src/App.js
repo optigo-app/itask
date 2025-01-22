@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Box, useMediaQuery } from '@mui/material';
-import Sidebar from './Components/Sidebar/Sidebar';
+import Sidebar from './Components/NavSidebar/Sidebar';
 import Header from './Components/Header/Header';
 import Home from './Pages/Home/Home';
 import Inbox from './Pages/Inbox/Inbox';
@@ -21,6 +21,8 @@ import ModalContent from './Components/Task/ListView/TaskDetails';
 import PaginatedTable from './Backup/demoTable';
 import { fetchMasterGlFunc } from './Utils/globalfun';
 import PagenotFound from './Pages/404Page/PagenotFound';
+import DemoAutocomplete from './DemoCode/DemoAutocomplete';
+import DatePickerWithIST from './DemoCode/DatePickerWithIST';
 
 
 const App = () => {
@@ -85,6 +87,10 @@ const App = () => {
                                         <Route path="/taskDetails" element={<ModalContent />} />
                                         <Route path="/pagination" element={<PaginatedTable />} />
                                         <Route path="*" element={<PagenotFound />} />
+
+
+                                        {/* test routes */}
+                                        <Route path="/test" element={<DatePickerWithIST  />} />
                                     </Routes>
                                 </Box>
                             </Box>

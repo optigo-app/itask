@@ -10,6 +10,7 @@ import { calendarM, CalEventsFilter, CalformData } from '../../Recoil/atom';
 import CalendarForm from './SideBar/CalendarForm';
 
 const CalendarLeftSide = () => {
+
     const calendarsColor = {
         Personal: 'error',
         Business: 'primary',
@@ -23,6 +24,7 @@ const CalendarLeftSide = () => {
     const setSelectedMon = useSetRecoilState(calendarM);
     const setCalFormData = useSetRecoilState(CalformData)
     const [caledrawerOpen, setCaledrawerOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(dayjs());
 
     useEffect(() => {
         setSelectedCaleFilters(selectedCalendars)
@@ -97,12 +99,16 @@ const CalendarLeftSide = () => {
             },
         },
         '& .MuiPickersDay-root.Mui-selected': {
-            backgroundColor: '#7367f0',
-            color: '#fff',
+            backgroundColor: '#7367f0 !important',
+            color: '#fff !important',
         },
         '& .MuiPickersDay-root.Mui-selected:hover': {
             backgroundColor: '#7367f0',
             color: '#fff',
+        },
+        '& .MuiPickersYear-yearButton.Mui-selected': {
+            backgroundColor: '#7367f0 !important',
+            color: '#fff !important',
         },
     };
 
@@ -118,6 +124,16 @@ const CalendarLeftSide = () => {
                             color={value}
                             checked={selectedCalendars?.includes(key)}
                             onChange={() => handleCalendarChange(key)}
+                            sx={{
+                                '& .MuiSvgIcon-root': {
+                                    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                                    borderRadius: '8px',
+                                    transition: 'box-shadow 0.3s ease',
+                                    '&:hover': {
+                                        boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
+                                    },
+                                },
+                            }}
                         />
                     }
                 />
@@ -125,35 +141,55 @@ const CalendarLeftSide = () => {
         })
         : null;
 
-    const handleAddEvent = () => {
+    const handleAddEvent = (formValues) => {
         setCaledrawerOpen(true);
+        const updatedFormValues = {
+            ...formValues,
+            start: selectedDate
+        };
+        console.log('updatedFormValues: ', updatedFormValues);
+        setCalFormData(updatedFormValues);
     };
 
     const handleDrawerToggle = () => {
         setCaledrawerOpen(!caledrawerOpen);
     };
 
-
     const handleCaleFormSubmit = async (formValues) => {
-        setCalFormData(formValues)
-        localStorage.setItem('calformData', JSON.stringify(formValues))
+        const updatedFormValues = {
+            ...formValues,
+            start: selectedDate
+        };
+        setCalFormData(updatedFormValues);
+        const existingData = JSON.parse(localStorage.getItem('calformData')) || [];
+        const existingEventIndex = existingData.findIndex(event => event.id === updatedFormValues.id);
+        let updatedData;
+        if (existingEventIndex !== -1) {
+            updatedData = existingData.map((event, index) =>
+                index === existingEventIndex ? updatedFormValues : event
+            );
+        } else {
+            updatedData = [...existingData, updatedFormValues];
+        }
+        localStorage.setItem('calformData', JSON.stringify(updatedData));
     };
 
-
     const calendarMonthChange = (date) => {
+        setSelectedDate(date);
         setSelectedMon(date);
     };
 
     return (
         <div className="calendarLeftMain">
-            <Box 
-            sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                position:'relative', 
-                marginBottom: '20px', 
-                width: '100%' }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    position: 'relative',
+                    marginBottom: '20px',
+                    width: '100%'
+                }}>
                 <Button
                     fullWidth
                     variant="contained"
@@ -183,7 +219,7 @@ const CalendarLeftSide = () => {
                 </LocalizationProvider>
             </div>
             <Divider sx={{ width: '100%', m: '0 !important' }} />
-            <Box sx={{ padding: '20px 60px', width: '100%', display: 'flex', alignItems: 'flex-start', flexDirection: 'column' }}>
+            <Box sx={{ padding: '20px 60px', display: 'flex', alignItems: 'flex-start', flexDirection: 'column' }}>
                 <Typography variant="body2" sx={{ mb: 2, color: 'text.disabled', textTransform: 'uppercase', fontWeight: 'bold', fontSize: '15px' }}>
                     Filters
                 </Typography>
@@ -195,6 +231,16 @@ const CalendarLeftSide = () => {
                             color="default"
                             checked={selectedCalendars.length === Object.keys(calendarsColor).length}
                             onChange={handleViewAllToggle}
+                            sx={{
+                                '& .MuiSvgIcon-root': {
+                                    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                                    borderRadius: '8px',
+                                    transition: 'box-shadow 0.3s ease',
+                                    '&:hover': {
+                                        boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
+                                    },
+                                },
+                            }}
                         />
                     }
                 />
@@ -204,11 +250,6 @@ const CalendarLeftSide = () => {
                 open={caledrawerOpen}
                 onClose={handleDrawerToggle}
                 onSubmit={handleCaleFormSubmit}
-            // isLoading={isLoading}
-            // masterData={masterData}
-            // priorityData={priorityData}
-            // projectData={projectData}
-            // statusData={statusData}
             />
         </div>
     );

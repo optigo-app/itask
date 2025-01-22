@@ -44,8 +44,9 @@
 
     .primary-btn {
         background-color: $button-Bgcolor !important;
-        color: $button-color!important;
+        color: $button-color !important;
         font-family: $font-family !important;
+        border-radius: 8px !important;
     }
 
     .primary-btn:hover {
@@ -56,10 +57,18 @@
         border-color: $button-Bgcolor !important;
         color: $button-Bgcolor !important;
         font-family: $font-family !important;
+        border-radius: 8px !important;
     }
 
     .secondary-btn:hover {
         border-color: $button-Bordercolor;
         color: $button-color !important;
+    }
+
+    .danger-btn {
+        background-color: $button-DangerBgcolor !important;
+        color: $button-Dangercolor !important;
+        font-family: $font-family !important;
+        border-radius: 8px !important;
     }
 }
