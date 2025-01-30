@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { Box, Card, CardContent, Typography, IconButton, Avatar, AvatarGroup, Button } from "@mui/material";
+import { Box, Card, CardContent, Typography, IconButton, Avatar, AvatarGroup, Button, LinearProgress } from "@mui/material";
 import { Circle, CircleCheck, CircleDotDashed, CirclePlus, CircleX, Plus, StickyNote, Target, Volleyball, Workflow } from "lucide-react";
-import { formatDate, formatDate2, getRandomAvatarColor, priorityColors } from "../../../Utils/globalfun";
+import { formatDate, formatDate2, getRandomAvatarColor, getStatusColor, priorityColors } from "../../../Utils/globalfun";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi"
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag } from "../../../Recoil/atom";
 import { useRecoilState, useSetRecoilState } from "recoil";
-import KanbanCardSkeleton from "./KanbanSkelton";
 import LoadingBackdrop from "../../../Utils/LoadingBackdrop";
 
 function KanbanView({
@@ -185,7 +184,7 @@ function KanbanView({
     setFormDrawerOpen(true);
     setSelectedTask(null);
   }
-  
+
   const handleEditTask = async (task, additionalInfo) => {
     setRootSubroot(additionalInfo);
     setFormDataValue(task);
@@ -245,7 +244,7 @@ function KanbanView({
                           <Box display="flex" justifyContent="space-between" alignItems="center">
                             <Box display="flex" alignItems="center" gap={1}>
                               {column.icon}
-                              <Typography variant="h6" fontSize={18} fontWeight={600}>{column.title}</Typography>
+                              <Typography variant="h6" fontSize={16} fontWeight={600}>{column.title}</Typography>
                               <Typography
                                 variant="body2"
                                 sx={{
@@ -303,7 +302,7 @@ function KanbanView({
                                       <StickyNote size={18} style={{ marginRight: '8px', marginTop: '2px' }} />
                                       <Box>
                                         <Typography variant="subtitle1" sx={{ lineHeight: 1.4, flex: 1 }}>
-                                          {task.taskname}
+                                          {task.taskPr}
                                         </Typography>
                                         <Typography variant="caption" sx={{ lineHeight: 1.4, flex: 1 }}>
                                           {formatDate2(task.DeadLineDate)}
@@ -311,7 +310,7 @@ function KanbanView({
                                       </Box>
                                     </Box>
                                     <div className="itask_separator" />
-                                    <Box display="flex" alignItems="center" mt={1}>
+                                    <Box display="flex" alignItems="center" my={1}>
                                       <AvatarGroup max={10}
                                         sx={{
                                           '& .MuiAvatar-root': {
@@ -341,10 +340,6 @@ function KanbanView({
                                         ))}
                                       </AvatarGroup>
                                     </Box>
-                                    <Box display="flex" alignItems="center" my={.5}>
-                                      <Target size={13} style={{ marginRight: '5px' }} />
-                                      <Typography variant="subtitle1">{task.taskPr}</Typography>
-                                    </Box>
                                     <Typography
                                       variant="body2"
                                       color="text.secondary"
@@ -364,8 +359,27 @@ function KanbanView({
                                     >
                                       {task.priority}
                                     </Typography>
+                                    <Box display="flex" alignItems="center" my={.5} gap={1}>
+                                      <Box width="100%" position="relative">
+                                        <LinearProgress
+                                          variant="determinate"
+                                          value={100}
+                                          sx={{
+                                            height: 5,
+                                            borderRadius: 5,
+                                            backgroundColor: "#e0e0e0",
+                                            "& .MuiLinearProgress-bar": {
+                                              backgroundColor: getStatusColor(100),
+                                            },
+                                          }}
+                                        />
+                                      </Box>
+                                      <Typography variant="body2" minWidth={100}>
+                                        {`${100}%`}
+                                      </Typography>
+                                    </Box>
                                   </Box>
-                                  <Box position="relative">
+                                  {/* <Box position="relative">
                                     {task?.subtasks?.slice(0, showAll ? task.subtasks.length : 5).map((subtask, index) => (
                                       <Box
                                         key={subtask.taskid}
@@ -400,8 +414,8 @@ function KanbanView({
                                         {showAll ? 'Show Less' : 'Show More'}
                                       </Button>
                                     )}
-                                  </Box>
-                                  <Button
+                                  </Box> */}
+                                  {/* <Button
                                     onClick={() => handleAddTask(task, { Task: 'subroot' })}
                                     className="buttonClassname"
                                     sx={{
@@ -419,7 +433,7 @@ function KanbanView({
                                     }}
                                   >
                                     Add Subtask
-                                  </Button>
+                                  </Button> */}
                                 </CardContent>
                                 <IconButton
                                   size="small"

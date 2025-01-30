@@ -1,4 +1,4 @@
-import { CommonAPI } from "../../Utils/CommonApi";
+import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const fetchMaster = async () => {
     try {
@@ -23,7 +23,7 @@ export const fetchMaster = async () => {
 
 export const addEditDelMaster = async (mode, masterName, newRow, editMode) => {
     try {
-        const init = JSON.parse(localStorage.getItem('taskInit'));
+        const init = JSON.parse(sessionStorage.getItem('taskInit'));
         const combinedValue = JSON.stringify({
             master_table: `${masterName ?? ''}`,
             master_mode: `${mode ?? ''}`,

@@ -81,6 +81,7 @@ const TableView = ({ data, onAddSubtask, isLoading }) => {
 
     const handleAddTask = (task, additionalInfo) => {
         setRootSubroot(additionalInfo);
+        setOpenChildTask(true);
         setFormDataValue(task);
         setFormDrawerOpen(true);
         setSelectedTask(null);
@@ -88,6 +89,7 @@ const TableView = ({ data, onAddSubtask, isLoading }) => {
 
     const handleAddSubtask = (subtask, additionalInfo) => {
         setRootSubroot(additionalInfo);
+        setOpenChildTask(true);
         setFormDataValue(subtask);
         setFormDrawerOpen(true);
         setSelectedTask(null);
@@ -144,7 +146,6 @@ const TableView = ({ data, onAddSubtask, isLoading }) => {
 
         handleMenuClose();
     };
-
 
     const handleMenuClose = () => {
         setAnchorEl(null);

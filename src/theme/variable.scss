@@ -1,17 +1,18 @@
-$button-Bgcolor: #7367f0;
-$button-color: #fff !important;
-$button-color-hover: #685dd8 !important;
-$button-Bordercolor: #685dd8 !important;
+$button-Bgcolor: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%);
+$button-color: #fff;
+$button-color-hover: #685dd8;
+$button-Bordercolor: #685dd8;
 $button-DangerBgcolor: #e65b65;
 $button-Dangercolor: #ffffff;
 
 $sidebar-Activebg: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%) !important;
-;
 $font-family: "Public Sans", sans-serif, '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif', '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"';
 $titleColor: #444050;
+$secondaryColor: #7D7f85;
 $text2ndColor: #6D6B77;
 $placeholderColor: #808080;
 $box-shadow-value: 'rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px';
+$paper-shadow-value: '0px 5px 5px -3px rgba(0, 0, 0, 0.2), 0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12)';
 $transition-duration: 200ms;
 
 
@@ -49,13 +50,13 @@ $divider-color: #e0e0e0;
 
 .buttonClassname {
     font-family: $font-family !important;
-    background: $button-Bgcolor !important;
-    color: $button-color !important;
-    border-color: $button-Bordercolor !important;
+    background: $button-Bgcolor;
+    color: $button-color;
+    border-color: $button-Bordercolor;
 
     &:hover {
-        background-color: $button-color-hover !important;
-        border-color: $button-Bordercolor !important;
+        background-color: $button-color-hover;
+        border-color: $button-Bordercolor;
     }
 }
 
@@ -123,13 +124,15 @@ $divider-color: #e0e0e0;
         }
     }
 
+
+
     // Apply to Chips
     .MuiChip-root {
         font-family: $font-family !important;
         cursor: pointer;
 
         &:hover {
-            background-color: $button-Bgcolor !important;
+            background: $button-Bgcolor !important;
             color: $button-color;
         }
 
@@ -154,4 +157,32 @@ $divider-color: #e0e0e0;
 .notranslate {
     color: #9e9e9e;
     font-size: 15px !important;
+}
+
+// mui autocomplete
+.MuiAutocomplete-popper {
+    .MuiPaper-root {
+        box-shadow: $paper-shadow-value;
+        border-radius: 8px !important;
+
+        .MuiAutocomplete-listbox {
+            .MuiAutocomplete-option {
+                font-family: $font-family !important;
+                color: $titleColor !important;
+                border-radius: 8px !important;
+                margin: 5px 10px !important;
+                font-size: 15px !important;
+
+                &[aria-selected="true"] {
+                    background: $button-color-hover;
+                    color: $button-color !important;
+                }
+
+                &:hover {
+                    background-color: $button-color-hover;
+                    color: $button-color !important;
+                }
+            }
+        }
+    }
 }

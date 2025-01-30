@@ -21,7 +21,9 @@ import LoadingBackdrop from "../../Utils/LoadingBackdrop";
 const CategoryCards = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [formattedData, setFormattedData] = useState([]);
+    console.log('formattedData: ', formattedData);
     const [categoryStates, setCategoryStates] = useState({});
+    console.log('categoryStates: ', categoryStates);
     const [paginationModel, setPaginationModel] = useState({
         page: 0,
         pageSize: 10,
@@ -63,6 +65,7 @@ const CategoryCards = () => {
                     rowsPerPage: 10,
                     editMode: null,
                     searchValue: "",
+                    table_name: category?.table_name
                 };
                 return acc;
             }, {});
@@ -122,12 +125,13 @@ const CategoryCards = () => {
         }));
     };
 
-    const handleDeleteRow = async (categoryId, category, rowId) => {
+    const handleDeleteRow = async (categoryId, rowId) => {
+        let tableName = categoryStates[categoryId]?.table_name
         const updatedRows = categoryStates[categoryId].rows.map((row) =>
             row.id === rowId ? { ...row, isdelete: 1 } : row
         );
         let mode = 'del';
-        const deleteRow = await addEditDelMaster(mode, category?.table_name, null, rowId);
+        const deleteRow = await addEditDelMaster(mode, tableName, null, rowId);
         if (deleteRow && deleteRow[0]?.stat !== 0) {
             setCategoryStates((prev) => ({
                 ...prev,
@@ -139,12 +143,13 @@ const CategoryCards = () => {
         }
     };
 
-    const handleRestoreRow = async (categoryId, category, rowId) => {
+    const handleRestoreRow = async (categoryId, rowId) => {
+        let tableName = categoryStates[categoryId]?.table_name
         const updatedRows = categoryStates[categoryId].rows.map((row) =>
             row.id === rowId ? { ...row, isdelete: 0 } : row
         );
         let mode = 'restore';
-        const deleteRow = await addEditDelMaster(mode, category?.table_name, null, rowId);
+        const deleteRow = await addEditDelMaster(mode, tableName, null, rowId);
         if (deleteRow && deleteRow[0]?.stat !== 0) {
             setCategoryStates((prev) => ({
                 ...prev,
@@ -230,14 +235,14 @@ const CategoryCards = () => {
                             className="iconDelete"
                             size={18}
                             style={{ cursor: "pointer", color: "#ab003c" }}
-                            onClick={() => handleDeleteRow(categoryId, category, params.row.id)}
+                            onClick={() => handleDeleteRow(categoryId, params.row.id)}
                         />
                     ) : (
                         <ArchiveRestore
                             className="iconRestore"
                             size={18}
                             style={{ cursor: "pointer", color: "#ab003c" }}
-                            onClick={() => handleRestoreRow(categoryId, category, params.row.id)}
+                            onClick={() => handleRestoreRow(categoryId, params.row.id)}
                         />
                     )}
                 </>

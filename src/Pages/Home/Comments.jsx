@@ -17,6 +17,7 @@ const CommentList = ({ comments }) => {
                 <Typography className='cardTitle' component="div" variant="h5">
                     Comments
                 </Typography>
+                {/* <div className="itask_separator" /> */}
                 <List className='muiList'>
                     {comments?.map((comment) => (
                         <ListItem key={comment.commentId} alignItems="flex-start" className='commentListItem'>

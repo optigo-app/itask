@@ -6,6 +6,7 @@ import Card3 from './UrgentTasks'
 import Card4_1 from './Comments'
 import Card4_2 from './Teams'
 import './homePage.scss'
+import SummaryDashnoard from './TaskSummary'
 
 const Home = () => {
   const Project = [
@@ -41,7 +42,7 @@ const Home = () => {
           "role": "UI/UX Designer",
           "avatar": "URL_ADDRESS"
         },
-        ],
+      ],
       "tasks": ["t1", "t2", "t3"]
     },
     {
@@ -221,39 +222,44 @@ const Home = () => {
   ]
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12} md={4}>
-        <Grid container direction="column" spacing={2}>
-          <Grid item>
-            <Card1 agenda={agenda}/>
-          </Grid>
+    <>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <SummaryDashnoard />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Grid container direction="column" spacing={2}>
+            <Grid item>
+              <Card1 agenda={agenda} />
+            </Grid>
 
-          <Grid item>
-            <Card2 projects={Project} />
+            <Grid item>
+              <Card2 projects={Project} />
+            </Grid>
           </Grid>
         </Grid>
-      </Grid>
 
-      <Grid item xs={12} md={8}>
-        <Grid container direction="column" spacing={2}>
-          <Grid item>
-            <Card3 urgentTask={urgentTask} />
-          </Grid>
+        <Grid item xs={12} md={8}>
+          <Grid container direction="column" spacing={2}>
+            <Grid item>
+              <Card3 urgentTask={urgentTask} />
+            </Grid>
 
-          <Grid item>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <Card4_1 comments={newComment} />
-              </Grid>
+            <Grid item>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Card4_1 comments={newComment} />
+                </Grid>
 
-              <Grid item xs={12} md={6}>
-                <Card4_2 teamData={teamDir} />
+                <Grid item xs={12} md={6}>
+                  <Card4_2 teamData={teamDir} />
+                </Grid>
               </Grid>
             </Grid>
           </Grid>
         </Grid>
       </Grid>
-    </Grid>
+    </>
   )
 }
 

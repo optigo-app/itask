@@ -1,13 +1,11 @@
 import React, { Suspense, useEffect, useState } from "react";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
-import { Box, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
 import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { fetchlistApiCall, masterDataValue, rootSubrootflag, selectedRowData } from "../../Recoil/atom";
-import LoadingBackdrop from "../../Utils/LoadingBackdrop";
-import { format } from 'date-fns';
-import { fetchMasterGlFunc } from "../../Utils/globalfun";
+import { fetchlistApiCall, masterDataValue, selectedRowData } from "../../Recoil/atom";
+import { fetchMasterGlFunc, formatDate, formatDate2 } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 
 
@@ -20,22 +18,21 @@ const Task = () => {
   const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
   const selectedRow = useRecoilValue(selectedRowData);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTaskLoading, setIsTaskLoading] = useState(false);
   const [masterData, setMasterData] = useRecoilState(masterDataValue);
   const [priorityData, setPriorityData] = useState();
   const [statusData, setStatusData] = useState();
   const [assigneeData, setAssigneeData] = useState();
   const [taskDepartment, setTaskDepartment] = useState();
   const [taskProject, setTaskProject] = useState();
-  const [activeButton, setActiveButton] = useState("Table");
-  const [filters, setFilters] = useState({
-    statusFilter: "",
-    priorityFilter: "",
-    assigneeFilter: "",
-    searchTerm: "",
-  });
+ 
+  const [taskCategory, setTaskCategory] = useState();
+  const [activeButton, setActiveButton] = useState("table");
+  const [filters, setFilters] = useState({});
 
   // Sample data for tasks
   const [tasks, setTasks] = useState();
+  console.log('tasks: ', tasks);
 
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
@@ -44,7 +41,9 @@ const Task = () => {
     }
   };
 
+  // master data fetching and setting
   const fetchMasterData = async () => {
+    debugger
     setIsLoading(true);
     try {
       const masterData = sessionStorage.getItem('masterData');
@@ -58,6 +57,7 @@ const Task = () => {
         retrieveAndSetData('taskPriorityData', setPriorityData);
         retrieveAndSetData('taskDepartmentData', setTaskDepartment);
         retrieveAndSetData('taskProjectData', setTaskProject);
+        retrieveAndSetData('taskCategoryData', setTaskCategory);
       }
     } catch (error) {
       console.error(error);
@@ -65,7 +65,7 @@ const Task = () => {
       setIsLoading(false);
     }
   };
-
+  console.log('taskProject: ', taskProject);
   // const fetchTaskData = async (selectedRow) => {
   //   setIsLoading(true);
   //   try {
@@ -160,13 +160,12 @@ const Task = () => {
   // };
 
   const fetchTaskData = async (selectedRow) => {
-    debugger
     if (!tasks) {
-      setIsLoading(true);
+      setIsTaskLoading(true);
     }
     try {
       if (!priorityData || !statusData || !taskProject || !taskDepartment) {
-        setIsLoading(false);
+        setIsTaskLoading(false);
         return;
       }
 
@@ -178,6 +177,8 @@ const Task = () => {
         const status = statusData?.find(item => item?.id == task?.statusid);
         const project = taskProject?.find(item => item?.id == task?.projectid);
         const department = taskDepartment?.find(item => item?.id == task?.departmentid);
+        const category = taskCategory?.find(item => item?.id == task?.workcategoryid);
+        const assignee = ['shivam', 'shyam', "ram", "shiv", 'jeet', 'karan', 'kamal'];
 
         const enhancedSubtasks = task?.subtasks?.map((subtask) => ({
           ...enhanceTask(subtask),
@@ -192,6 +193,8 @@ const Task = () => {
           taskPr: project ? project?.labelname : '',
           taskDpt: department ? department?.labelname : '',
           subtasks: enhancedSubtasks || [],
+          assignee: assignee,
+          category: category?.labelname,
           subtaskflag: 0,
           isUpdated: false,
         };
@@ -241,7 +244,7 @@ const Task = () => {
     } catch (error) {
       console.error(error);
     } finally {
-      setIsLoading(false);
+      setIsTaskLoading(false);
     }
   };
   function mapTaskLabels(data) {
@@ -288,22 +291,25 @@ const Task = () => {
     return taskData;
   }
 
+  // master api call
   useEffect(() => {
-    const init = localStorage.getItem('taskInit');
+    const init = sessionStorage.getItem('taskInit');
     if (init) {
       fetchMasterData();
     }
   }, []);
 
+  // task api call
   useEffect(() => {
-   setTimeout(() => {
-    if (priorityData && statusData && taskProject && taskDepartment) {
-      if (callFetchTaskApi) {
-        fetchTaskData(selectedRow);
+    debugger
+    setTimeout(() => {
+      if (priorityData && statusData && taskProject && taskDepartment) {
+        if (callFetchTaskApi) {
+          fetchTaskData(selectedRow);
+        }
       }
-    }
-   }, 100);
-  }, [location,priorityData, statusData, taskProject, taskDepartment, callFetchTaskApi]);
+    }, 200);
+  }, [location?.pathname, priorityData, statusData, taskProject, taskDepartment, callFetchTaskApi]);
 
   // Filter change handler
   const handleFilterChange = (key, value) => {
@@ -317,28 +323,49 @@ const Task = () => {
     }));
   };
 
+  // filter functions
   const filteredData = tasks?.filter((task) => {
-    const { status, priority, assignee, searchTerm, dueDate } = filters;
+    const { status, priority, assignee, searchTerm, dueDate, department, project, category } = filters;
+    console.log('filters: ', filters);
 
     const normalizedSearchTerm = searchTerm?.toLowerCase();
 
+    const resetInvalidFilters = () => {
+      Object.keys(filters).forEach((key) => {
+        const value = filters[key];
+        if (value === "Select Department" || value === "Select Status" || value === "Select Priority" || value === "Select Assignee" || value === "Select Project") {
+          filters[key] = "";
+        }
+      });
+    };
+    // Reset filters before applying them
+    resetInvalidFilters();
+
     const matchesFilters = (task) => {
       const matches =
-        (status ? task?.status?.toLocaleLowerCase() === status?.toLocaleLowerCase() : true) &&
-        (priority ? task?.priority?.toLocaleLowerCase() === priority?.toLocaleLowerCase() : true) &&
-        (assignee ? task?.assignee?.toLocaleLowerCase() === assignee?.toLocaleLowerCase() : true) &&
+        (category ? (task?.category)?.toLocaleLowerCase() === (category)?.toLocaleLowerCase() : true) &&
+        (status ? (task?.status)?.toLocaleLowerCase() === (status)?.toLocaleLowerCase() : true) &&
+        (priority ? (task?.priority)?.toLocaleLowerCase() === (priority)?.toLocaleLowerCase() : true) &&
+        (department ? (task?.taskDpt)?.toLocaleLowerCase() === (department)?.toLocaleLowerCase() : true) &&
+        (project ? (task?.taskPr)?.toLocaleLowerCase() === (project)?.toLocaleLowerCase() : true) &&
+        (dueDate ? formatDate2(task?.DeadLineDate) === formatDate2(dueDate) : true) &&
+        (assignee
+          ? Array.isArray(task?.assignee)
+            ? task.assignee.some((a) => a.toLocaleLowerCase() === assignee.toLocaleLowerCase())
+            : task?.assignee?.toLocaleLowerCase() === assignee.toLocaleLowerCase()
+          : true) &&
         (!searchTerm ||
           task?.taskname?.toLowerCase().includes(normalizedSearchTerm) ||
           task?.status?.toLowerCase().includes(normalizedSearchTerm) ||
           task?.priority?.toLowerCase().includes(normalizedSearchTerm) ||
-          task?.assignee?.toLowerCase().includes(normalizedSearchTerm) ||
+          (Array.isArray(task?.assignee)
+            ? task.assignee.some((a) => a.toLowerCase().includes(normalizedSearchTerm))
+            : task?.assignee?.toLowerCase().includes(normalizedSearchTerm)) ||
           task?.description?.toLowerCase().includes(normalizedSearchTerm) ||
           task?.DeadLineDate?.toLowerCase().includes(normalizedSearchTerm) ||
           task?.taskPr?.toLowerCase().includes(normalizedSearchTerm) ||
           task?.taskDpt?.toLowerCase().includes(normalizedSearchTerm)) &&
-        (dueDate
-          ? format(new Date(task?.DeadLineDate), 'yyyy-MM-dd') === format(new Date(dueDate), 'yyyy-MM-dd')
-          : true);
+        (dueDate ? formatDate(task?.DeadLineDate) === formatDate(dueDate) : true);
 
       if (matches) {
         return true;
@@ -354,24 +381,17 @@ const Task = () => {
     return matchesFilters(task);
   });
 
-  // const handleAddSubtask = (parentTask) => {
-  //   if (!parentTask) {
-  //     const newTask = {
-  //       name: `New Task ${tasks.length + 1}`,
-  //       status: "Not Started",
-  //       assignee: "",
-  //       due: "",
-  //       priority: "Low",
-  //       summary: "",
-  //       subtasks: [],
-  //     };
-  //     setTasks([...tasks, newTask]);
-  //   } else {
-  //     const updatedTasks = addSubtask(tasks, parentTask);
-  //     setTasks(updatedTasks);
-  //   }
-  // };
+  const handleTabBtnClick = (button) => {
+    setActiveButton(button);
+    localStorage?.setItem('activeTaskTab', button);
+  }
 
+  useEffect(() => {
+    const activeTab = localStorage?.getItem('activeTaskTab');
+    if (activeTab) {
+      setActiveButton(activeTab);
+    }
+  }, []);
 
   return (
     <Box
@@ -379,17 +399,20 @@ const Task = () => {
         boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
         padding: "30px 20px",
         borderRadius: "5px",
+        overflow: "hidden !important",
       }}
     >
       {/* Header Buttons */}
       <HeaderButtons
         activeButton={activeButton}
-        onButtonClick={setActiveButton}
+        onButtonClick={handleTabBtnClick}
+        onFilterChange={handleFilterChange}
         isLoading={isLoading}
         masterData={masterData}
         priorityData={priorityData}
         projectData={taskProject}
         statusData={statusData}
+        taskCategory={taskCategory}
       />
 
       {/* Divider */}
@@ -411,6 +434,7 @@ const Task = () => {
         assigneeData={assigneeData}
         taskDepartment={taskDepartment}
         taskProject={taskProject}
+        taskCategory={taskCategory}
       />
 
       {/* Divider */}
@@ -424,18 +448,27 @@ const Task = () => {
 
       {/* View Components */}
       <Suspense fallback={<></>}>
-        {activeButton === "Table" && (
+        {activeButton === "table" && (
           <TaskTable
-            data={filteredData}
-            isLoading={isLoading}
+            data={!isTaskLoading ? filteredData : []}
+            isLoading={isTaskLoading}
             masterData={masterData} />
         )}
-        {activeButton === "Kanban" && <KanbanView
-          isLoading={isLoading}
-          masterData={masterData} />}
-        {activeButton === "Card" && <CardView
-          isLoading={isLoading}
-          masterData={masterData} />}
+
+        {activeButton === "kanban" &&
+          <KanbanView
+            taskdata={!isTaskLoading ? filteredData : []}
+            isLoading={isTaskLoading}
+            masterData={masterData}
+            statusData={statusData}
+          />
+        }
+
+        {activeButton === "card" &&
+          <CardView
+            isLoading={isTaskLoading}
+            masterData={masterData} />
+        }
       </Suspense>
     </Box>
   );

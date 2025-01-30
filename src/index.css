@@ -6,20 +6,52 @@ body {
   background: #fff !important;
 }
 
+/* Target Vertical Scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
 }
 
 ::-webkit-scrollbar-track {
   background-color: #f1f1f1;
-  border-radius: 20px;
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
   background-color: #b6b6b6;
-  border-radius: 20px;
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background-color: #888;
+}
+
+/* Target Horizontal Scrollbar */
+::-webkit-scrollbar:horizontal {
+  height: 10px;
+  /* For horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track:horizontal {
+  background-color: #f1f1f1;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+  background-color: #b6b6b6;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:horizontal:hover {
+  background-color: #888;
+}
+
+/* Ensure the container allows scrolling */
+.scrollable-container {
+  overflow: auto;
+}
+
+
+/* Skeleton Loading Color */
+.MuiSkeleton-root {
+  background-color: rgba(0, 0, 0, 0.08) !important;
 }

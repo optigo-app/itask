@@ -150,7 +150,10 @@ const Sidebar = () => {
             <ListItem className="itask_drawerHeader">
                 <ListItemButton className="itask_drawerListItem">
                     <Box className="itask_drawerHeader" sx={{ justifyContent: isDrawerOpen ? "space-between" : "space-between !important" }}>
-                        <div className="itask_logoWrapper">
+                        <div className="itask_logoWrapper" onClick={() => {
+                            navigate('/');
+                            toggleDrawer();
+                        }}>
                             <svg className="itask_logo" viewBox="0 0 32 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path fillRule="evenodd" clipRule="evenodd" d="M0.00172773 0V6.85398C0.00172773 6.85398 -0.133178 9.01207 1.98092 10.8388L13.6912 21.9964L19.7809 21.9181L18.8042 9.88248L16.4951 7.17289L9.23799 0H0.00172773Z" fill="#7367F0"></path>
                                 <path opacity="0.06" fillRule="evenodd" clipRule="evenodd" d="M7.69824 16.4364L12.5199 3.23696L16.5541 7.25596L7.69824 16.4364Z" fill="#161616"></path>
@@ -218,20 +221,20 @@ const Sidebar = () => {
             </ListItem>
 
             {/* Task */}
-            <ListItem onClick={() => handleItemClick('Task', '/task')}>
-                <ListItemButton className={`itask_drawerListItem ${activeItem === 'Task' ? 'itask_drawerItemActive' : ''}`}>
+            <ListItem onClick={() => handleItemClick('Task', '/tasks')}>
+                <ListItemButton className={`itask_drawerListItem ${activeItem === 'Tasks' ? 'itask_drawerItemActive' : ''}`}>
                     <ListItemIcon className="itask_drawerItemIcon">
-                        <FileCheck className={activeItem === 'Task' ? "iconActive" : 'iconUnactive'} size={22} />
+                        <FileCheck className={activeItem === 'Tasks' ? "iconActive" : 'iconUnactive'} size={22} />
                     </ListItemIcon>
                     {<ListItemText className="itask_drawerItemText" primary="Task" />}
                 </ListItemButton>
             </ListItem>
 
             {/* Project */}
-            <ListItem onClick={() => handleItemClick('Project', '/project')}>
-                <ListItemButton className={`itask_drawerListItem ${activeItem === 'Project' ? 'itask_drawerItemActive' : ''}`}>
+            <ListItem onClick={() => handleItemClick('Project', '/projects')}>
+                <ListItemButton className={`itask_drawerListItem ${activeItem === 'Projects' ? 'itask_drawerItemActive' : ''}`}>
                     <ListItemIcon className="itask_drawerItemIcon">
-                        <SquareChartGantt className={activeItem === 'Project' ? "iconActive" : 'iconUnactive'} size={22} />
+                        <SquareChartGantt className={activeItem === 'Projects' ? "iconActive" : 'iconUnactive'} size={22} />
                     </ListItemIcon>
                     {<ListItemText className="itask_drawerItemText" primary="Project" />}
                 </ListItemButton>
@@ -248,10 +251,10 @@ const Sidebar = () => {
             </ListItem>
 
             {/* Meeting */}
-            <ListItem onClick={() => handleItemClick('Meeting', '/meeting')}>
-                <ListItemButton className={`itask_drawerListItem ${activeItem === 'Meeting' ? 'itask_drawerItemActive' : ''}`}>
+            <ListItem onClick={() => handleItemClick('Meeting', '/meetings')}>
+                <ListItemButton className={`itask_drawerListItem ${activeItem === 'Meetings' ? 'itask_drawerItemActive' : ''}`}>
                     <ListItemIcon className="itask_drawerItemIcon">
-                        <Component className={activeItem === 'Meeting' ? "iconActive" : 'iconUnactive'} size={22} />
+                        <Component className={activeItem === 'Meetings' ? "iconActive" : 'iconUnactive'} size={22} />
                     </ListItemIcon>
                     {<ListItemText className="itask_drawerItemText" primary="Meeting" />}
                 </ListItemButton>

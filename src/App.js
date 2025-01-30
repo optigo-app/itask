@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Box, useMediaQuery } from '@mui/material';
 import Sidebar from './Components/NavSidebar/Sidebar';
@@ -10,34 +10,39 @@ import Meeting from './Pages/Meeting/Meeting';
 import Task from './Pages/Task/Task';
 import Project from './Pages/Project/Project';
 import Masters from './Pages/Master/Masters';
-import { taskInit } from './Utils/TaskInitApi';
+import { taskInit } from './Api/InitialApi/TaskInitApi';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { RecoilRoot } from 'recoil';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import ModalContent from './Components/Task/ListView/TaskDetails';
+import TaskDetails from './Components/Task/TaskDetails/TaskDetails';
 import PaginatedTable from './Backup/demoTable';
 import { fetchMasterGlFunc } from './Utils/globalfun';
 import PagenotFound from './Pages/404Page/PagenotFound';
-import DemoAutocomplete from './DemoCode/DemoAutocomplete';
-import DatePickerWithIST from './DemoCode/DatePickerWithIST';
+import MetaDataSet from './Utils/MetaData/MetaDataSet';
 
 
 const App = () => {
     const isMobile = useMediaQuery('(max-width:768px)');
 
     // for init and master api
-    useEffect(() => {
-        const init = async () => {
-            const result = await taskInit();
-            if (result?.Data?.rd) {
-                fetchMasterGlFunc();
-            }
-        };
-        init();
-    }, []);
+    const checkAndInit = async () => {
+        const token = sessionStorage.getItem("taskInit");
+        if (!token) {
+          const result = await taskInit();
+          if (result?.Data?.rd) {
+            fetchMasterGlFunc();
+          } else {
+            setTimeout(checkAndInit, 1000);
+          }
+        }
+      };
+      
+      useEffect(() => {
+        checkAndInit();
+      }, []);
 
     // for custome toast message
     const toastStyle = {
@@ -57,7 +62,7 @@ const App = () => {
         backgroundOrigin: 'border-box',
         backgroundClip: 'padding-box, border-box'
     };
-    
+
 
     return (
         <>
@@ -72,25 +77,27 @@ const App = () => {
                 <Router>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <DemoContainer components={['DateTimePicker']}>
-                            <Box sx={{ display: isMobile ? 'block' : 'flex' }}>
+                            <Box sx={{ display: isMobile ? 'block' : 'flex', overflow: "hidden !important" }}>
                                 <Sidebar />
-                                <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '20px' }}>
+                                <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '20px', width: isMobile ? '94%' : '80%' }}>
                                     <Header />
+                                    <MetaDataSet />
                                     <Routes>
                                         <Route path="/" element={<Home />} />
                                         <Route path="/inbox" element={<Inbox />} />
                                         <Route path="/calendar" element={<Calendar />} />
-                                        <Route path="/meeting" element={<Meeting />} />
-                                        <Route path="/task" element={<Task />} />
-                                        <Route path="/project" element={<Project />} />
+                                        <Route path="/meetings" element={<Meeting />} />
+                                        <Route path="/tasks" element={<Task />} />
+                                        <Route path="/projects" element={<Project />} />
                                         <Route path="/masters" element={<Masters />} />
-                                        <Route path="/taskDetails" element={<ModalContent />} />
+                                        <Route path="/taskDetails" element={<TaskDetails />} />
                                         <Route path="/pagination" element={<PaginatedTable />} />
                                         <Route path="*" element={<PagenotFound />} />
 
 
                                         {/* test routes */}
-                                        <Route path="/test" element={<DatePickerWithIST  />} />
+                                        {/* <Route path="/test" element={<TaskApp />} /> */}
+                                        {/* <Route path="/test1" element={<AssigneeAutocomplete />} /> */}
                                     </Routes>
                                 </Box>
                             </Box>

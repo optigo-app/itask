@@ -1,5 +1,6 @@
 import { fetchMaster } from "../Api/MasterApi/MasterApi";
 
+// output like 01/01/2023
 export const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     const day = String(date.getDate()).padStart(2, '0');
@@ -8,6 +9,37 @@ export const formatDate = (dateStr) => {
 
     return `${day}/${month}/${year}`;
 }
+// output like 01 Jan 2023
+export function formatDate2(dateStr) {
+    const dateObj = new Date(dateStr);
+    const day = dateObj.getDate();
+    const month = dateObj.toLocaleString('default', { month: 'short' });
+    const year = dateObj.getFullYear();
+    return `${day} ${month} ${year}`;
+}
+
+export const priorityColors = {
+    Low: {
+        color: "#4caf50",
+        backgroundColor: "#e8f5e9",
+    },
+    Medium: {
+        color: "#ff9800",
+        backgroundColor: "#fff3e0",
+    },
+    High: {
+        color: "#f44336",
+        backgroundColor: "#ffebee",
+    },
+    Urgent: {
+        color: "#d32f2f",
+        backgroundColor: "#ffcccb",
+    },
+    Critical: {
+        color: "#ffffff",
+        backgroundColor: "#b71c1c",
+    },
+};
 
 // progress color
 export const getStatusColor = (value) => {
@@ -24,6 +56,70 @@ export const getStatusColor = (value) => {
     }
 };
 
+// Task Status color
+export const statusColors = {
+    "Pending": {
+        color: "#ff9800", // Orange text color
+        backgroundColor: "#fff3e0", // Light orange background
+    },
+    "Just Started": {
+        color: "#4caf50", // Green text color
+        backgroundColor: "#e8f5e9", // Light green background
+    },
+    "Running": {
+        color: "#2196f3", // Blue text color
+        backgroundColor: "#e3f2fd", // Light blue background
+    },
+    "On Hold": {
+        color: "#ff5722", // Red-orange text color
+        backgroundColor: "#ffccbc", // Light red-orange background
+    },
+    "On Hold With Challenge": {
+        color: "#f44336", // Red text color
+        backgroundColor: "#ffebee", // Light red background
+    },
+    "Challenge Running": {
+        color: "#d32f2f", // Dark red text color
+        backgroundColor: "#ffcccb", // Light dark red background
+    },
+    "Doc Started": {
+        color: "#8e24aa", // Purple text color
+        backgroundColor: "#f3e5f5", // Light purple background
+    },
+    "Doc Completed": {
+        color: "#9c27b0", // Purple text color
+        backgroundColor: "#fce4ec", // Light purple background
+    },
+    "Code Started": {
+        color: "#3f51b5", // Indigo text color
+        backgroundColor: "#e8eaf6", // Light indigo background
+    },
+    "Code Completed": {
+        color: "#3949ab", // Dark indigo text color
+        backgroundColor: "#c5cae9", // Light dark indigo background
+    },
+    "Test Started": {
+        color: "#f44336", // Red text color
+        backgroundColor: "#ffebee", // Light red background
+    },
+    "Test Completed": {
+        color: "#8bc34a", // Light green text color
+        backgroundColor: "#c8e6c9", // Light green background
+    },
+    "Completed": {
+        color: "#4caf50", // Green text color
+        backgroundColor: "#e8f5e9", // Light green background
+    },
+    "Delivered": {
+        color: "#3f51b5", // Indigo text color
+        backgroundColor: "#e8eaf6", // Light indigo background
+    },
+    "In Testing": {
+        color: "#ff9800", // Orange text color
+        backgroundColor: "#fff3e0", // Light orange background
+    },
+};
+
 
 // colors.js (Global colors)
 export const colors = [
@@ -35,13 +131,13 @@ export const colors = [
 
 export const getRandomAvatarColor = (name) => {
     const charSum = name
-        .split("")
-        .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+        ?.split("")
+        ?.reduce((sum, char) => sum + char?.charCodeAt(0), 0);
     return colors[charSum % colors.length];
 };
 
 
-
+// make structure master data function
 export const fetchMasterGlFunc = async () => {
     try {
         const storedMasterData = sessionStorage.getItem('masterData');
@@ -58,10 +154,12 @@ export const fetchMasterGlFunc = async () => {
                         id: rdItem?.id,
                         table_name: rdItem?.table_name,
                         Table_Title: rdItem?.title,
-                        rows: masterData[key].map((item) => ({
-                            ...item,
-                            table_id: rdItem?.id,
-                        })),
+                        rows: masterData[key]
+                            .map((item) => ({
+                                ...item,
+                                table_id: rdItem?.id,
+                            }))
+                            .sort((a, b) => a.displayorder - b.displayorder),
                     };
                 });
 
@@ -73,12 +171,16 @@ export const fetchMasterGlFunc = async () => {
             if (data) {
                 sessionStorage.setItem(
                     key,
-                    JSON.stringify(data.rows.filter((row) => row?.isdelete === 0))
+                    JSON.stringify(
+                        data.rows
+                            .filter((row) => row?.isdelete === 0)
+                            .sort((a, b) => a.displayorder - b.displayorder)
+                    )
                 );
             }
         };
 
-        setFilteredData(1, 'taskAssigneeData');
+        setFilteredData(1, 'taskCategoryData');
         setFilteredData(2, 'taskStatusData');
         setFilteredData(3, 'taskPriorityData');
         setFilteredData(4, 'taskDepartmentData');
@@ -88,4 +190,5 @@ export const fetchMasterGlFunc = async () => {
         console.error("Error fetching master data:", error);
     }
 };
+
 

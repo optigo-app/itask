@@ -41,6 +41,11 @@ export const selectedRowData = atom({
   default: {}
 })
 
+export const selectedCategoryAtom = atom({
+  key: 'selectedCategoryAtom',
+  default: []
+})
+
 export const calendarM = atom({
   key: 'calendarM',
   default: {}
@@ -55,4 +60,6 @@ export const CalEventsFilter = atom({
   key: 'CalEventsFilter',
   default: []
 })
+
+
 

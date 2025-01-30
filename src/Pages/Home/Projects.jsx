@@ -17,6 +17,7 @@ const Card2 = ({ projects }) => {
                 <Typography className='cardTitle' component="div" variant="h5">
                     Projects
                 </Typography>
+                {/* <div className="itask_separator" /> */}
                 <Table>
                     <TableBody>
                         {projects?.map((project, idx) => (

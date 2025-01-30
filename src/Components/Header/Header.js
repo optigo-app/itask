@@ -30,15 +30,15 @@ const Header = ({ avatarSrc = "" }) => {
             title: "Calendar",
             subtitle: "Keep track of your events and tasks",
         },
-        "/meeting": {
+        "/meetings": {
             title: "Meetings",
             subtitle: "Manage and schedule your meetings",
         },
-        "/task": {
+        "/tasks": {
             title: "My Tasks",
             subtitle: "View all of your tasks here",
         },
-        "/project": {
+        "/projects": {
             title: "Projects",
             subtitle: "Manage and monitor your projects",
         },
@@ -215,9 +215,10 @@ const Header = ({ avatarSrc = "" }) => {
                                 paddingTop: '0 !important',
                                 paddingBottom: '0 !important',
                             }
-                        },
+                        },  
                     },
                 }}
+                aria-hidden={open ? 'false' : 'true'}
             >
                 <Box p={2} display="flex" justifyContent="space-between" sx={{ borderBottom: '1px solid #e0e0e0' }}>
                     <Typography variant="subtitle1" fontWeight={'bold'}>Notification</Typography>
@@ -260,6 +261,7 @@ const Header = ({ avatarSrc = "" }) => {
                         },
                     },
                 }}
+                aria-hidden={open ? 'false' : 'true'}
             >
                 {menuItems.map((item, index) => (
                     <MenuItem

@@ -3,7 +3,7 @@ import axios from "axios";
 const APIURL = (window.location.hostname === 'localhost' || window.location.hostname === 'zen') ? "http://zen/api/report.aspx" : 'https://api.optigoapps.com/ALL/report.aspx';
 
 export const CommonAPI = async (body) => {
-    const init = JSON.parse(localStorage.getItem('taskInit'));
+    const init = JSON.parse(sessionStorage.getItem('taskInit'));
     try {
         const YearCode = init?.YearCode ?? (window.location.hostname === 'localhost' || window.location.hostname === 'zen') ?
             'e3t6ZW59fXt7MjB9fXt7b3JhaWwyNX19e3tvcmFpbDI1fX0=' : 'e3tsaXZlLm9wdGlnb2FwcHMuY29tfX17ezIwfX17e3Byb2l0YXNrfX17e3Byb2l0YXNrfX0='

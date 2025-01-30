@@ -43,30 +43,30 @@
     }
 
     .primary-btn {
-        background-color: $button-Bgcolor !important;
+        background: $button-Bgcolor !important;
         color: $button-color !important;
         font-family: $font-family !important;
         border-radius: 8px !important;
     }
 
     .primary-btn:hover {
-        background-color: $button-color-hover !important;
+        background: $button-color-hover !important;
     }
 
     .secondary-btn {
-        border-color: $button-Bgcolor !important;
-        color: $button-Bgcolor !important;
+        border-color: $button-Bordercolor !important;
+        color: $button-Bordercolor !important;
         font-family: $font-family !important;
         border-radius: 8px !important;
     }
 
     .secondary-btn:hover {
         border-color: $button-Bordercolor;
-        color: $button-color !important;
+        color: $button-Bordercolor !important;
     }
 
     .danger-btn {
-        background-color: $button-DangerBgcolor !important;
+        background: $button-DangerBgcolor !important;
         color: $button-Dangercolor !important;
         font-family: $font-family !important;
         border-radius: 8px !important;

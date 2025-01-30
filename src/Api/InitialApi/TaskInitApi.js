@@ -24,7 +24,7 @@ export const taskInit = async () => {
 
         if (response?.data?.Data?.rd) {
             const rdData = response.data.Data.rd[0];
-            localStorage.setItem('taskInit', JSON.stringify(rdData));
+            sessionStorage.setItem('taskInit', JSON.stringify(rdData));
         } else {
             console.warn('No `rd` data found in response:', response);
         }

@@ -104,14 +104,15 @@
                     .fc-button-primary {
                         &:not(.fc-prev-button):not(.fc-next-button):not(.fc-sidebarToggle-button) {
                             border: 0;
-                            color: $button-Bgcolor !important;
+                            color: $titleColor !important;
                             padding: 0.485rem 1.27rem;
-                            background-color: #fff !important;
+                            background-color: rgba(115, 103, 240, 0.16) !important;
                             border: 1px solid rgba(115, 103, 240, 0.16) !important;
 
                             &.fc-button-active,
                             &:hover {
-                                background-color: rgba(115, 103, 240, 0.24) !important;
+                                background-color: #7367F0 !important;
+                                color: #fff !important;
                             }
                         }
                     }
