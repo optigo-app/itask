@@ -4,13 +4,14 @@ import {
     Avatar,
 } from '@mui/material';
 import { CircleX, Expand, Shrink, Download, Send, Edit } from 'lucide-react';
-import './ProjectDetails.scss';
+import './TaskDetails.scss';
 import { useRecoilValue } from 'recoil';
 import { formData } from '../../../Recoil/atom';
 import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
+import AttachmentImg from "../../../Assests/Attachment.jpg"
 
 const TaskDetail = ({ open, onClose }) => {
     const taskData = useRecoilValue(formData);
@@ -20,7 +21,7 @@ const TaskDetail = ({ open, onClose }) => {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [activeTab, setActiveTab] = useState(0);
-    const placeholderImage = "https://via.placeholder.com/60";
+    const placeholderImage = AttachmentImg;
 
     const assignees = [
         { name: "John Doe", avatar: "https://via.placeholder.com/30" },
@@ -310,7 +311,7 @@ const TaskDetail = ({ open, onClose }) => {
                                                 ))}
 
                                                 {/* Add New Comment Section */}
-                                                <Box sx={{ position: 'relative' }}>
+                                                <Box sx={{ position: 'sticky', bottom: '0', background: '#fff' }}>
                                                     <TextareaAutosize
                                                         value={newComment}
                                                         onChange={handleCommentChange}

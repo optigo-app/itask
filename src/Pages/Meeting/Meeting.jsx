@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import AvatarGroup from "@mui/material/AvatarGroup";
 import dayjs from "dayjs";
-import { SearchIcon } from "lucide-react";
+import { Plus, SearchIcon } from "lucide-react";
 import { getRandomAvatarColor } from "../../Utils/globalfun";
 
 // Sample Meeting Data
@@ -112,7 +112,9 @@ const MeetingPage = () => {
             ),
           }}
         />
-        <Button variant="contained" className="buttonClassname">Add Meeting</Button>
+        <Button variant="contained" className="buttonClassname">
+          <Plus style={{ marginRight: '5px', opacity: '.9' }} size={20} />
+          Add Meeting</Button>
       </Box>
 
       {/* Meeting Cards */}
@@ -124,7 +126,7 @@ const MeetingPage = () => {
                 borderRadius: "8px",
                 boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
                 backgroundColor: "#fff",
-                height:'220px'
+                height: '220px'
               }}
             >
               <CardContent>
@@ -171,7 +173,7 @@ const MeetingPage = () => {
                   target="_blank"
                   className="buttonClassname"
                   sx={{
-                    backgroundColor: "#7d7f85 !important",
+                    background: "#7d7f85 !important",
                     "&:hover": { backgroundColor: "#5a56d6" },
                   }}
                 >

@@ -133,7 +133,7 @@
             }
 
             &.Mui-selected {
-                background-color: #7367f0;
+                background-color: $secondaryColor;
                 color: #fff !important;
                 border: none;
             }
@@ -147,7 +147,7 @@
 
     // Buttons
     .primary-btn {
-        background-color: $button-Bgcolor !important;
+        background: $button-Bgcolor !important;
         color: #fff !important;
         border-radius: 8px !important;
 

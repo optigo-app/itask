@@ -7,6 +7,7 @@ const CustomDateTimePicker = ({
     label,
     name,
     value,
+    width,
     styleprops,
     onChange,
     customProps = {},
@@ -79,7 +80,7 @@ const CustomDateTimePicker = ({
                 {...customDateTimePickerProps}
                 {...customProps}
                 {...styleprops}
-                sx={{ minWidth: 400, ...sx }}
+                sx={{ minWidth: width, ...sx }}
                 renderInput={(params) => (
                     <TextField
                         {...params}

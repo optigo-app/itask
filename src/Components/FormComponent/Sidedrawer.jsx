@@ -8,6 +8,8 @@ import {
     Typography,
     IconButton,
     Grid,
+    Backdrop,
+    useTheme,
 } from "@mui/material";
 import { CircleX } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -15,6 +17,7 @@ import "./SidebarDrawer.scss";
 import { useRecoilValue } from "recoil";
 import { formData, openFormDrawer, rootSubrootflag } from "../../Recoil/atom";
 import dayjs from 'dayjs';
+import { useLocation } from "react-router-dom";
 
 const SidebarDrawer = ({
     open,
@@ -24,15 +27,18 @@ const SidebarDrawer = ({
     masterData,
     priorityData,
     projectData,
+    taskCategory,
     statusData,
 }) => {
-
+    
+    const location = useLocation();
+    const theme = useTheme();
+    let pathname = location.pathname;
     const formDataValue = useRecoilValue(formData);
     const formdrawerOpen = useRecoilValue(openFormDrawer);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
 
     const [formValues, setFormValues] = React.useState({});
-    console.log('formValues: ', formValues);
 
     const [comments, setComments] = React.useState([]);
 
@@ -42,7 +48,7 @@ const SidebarDrawer = ({
         assignee: useRef(),
         progress: useRef(),
         status: useRef(),
-        repeat: useRef(),
+        category: useRef(),
     };
 
     useEffect(() => {
@@ -59,7 +65,7 @@ const SidebarDrawer = ({
                 comment: "",
                 progress: formDataValue?.progress ?? "",
                 startDate: formDataValue?.entrydate ?? null,
-                repeat: formDataValue?.repeatid ?? "",
+                category: formDataValue?.workcategoryid ?? "",
             });
         }
     }, [open, formDataValue, rootSubrootflagval]);
@@ -221,293 +227,310 @@ const SidebarDrawer = ({
             },
         },
     };
-
+   
     return (
-        <Drawer anchor="right" open={open} onClose={handleClear} className="MainDrawer">
-            <Box className="drawer-container">
-                {/* Header */}
-                <Box className="drawer-header">
-                    <Typography variant="h6" className="drawer-title">
-                        Add Task
-                    </Typography>
-                    <IconButton onClick={handleClear}>
-                        <CircleX />
-                    </IconButton>
-                </Box>
-
-                <div
-                    style={{
-                        margin: "20px 0",
-                        border: "1px dashed #7d7f85",
-                        opacity: 0.3,
-                    }}
-                />
-                <Grid container spacing={2} className="form-row">
-                    {/* Task Name and Due Date */}
-                    <Grid item xs={6}>
-                        <Box className="form-group">
-                            <Typography
-                                variant="subtitle1"
-                                className="form-label"
-                                htmlFor="taskName"
-                            >
-                                Task Name
-                            </Typography>
-                            <TextField
-                                name="taskName"
-                                placeholder="Enter task name"
-                                value={formValues.taskName}
-                                onChange={handleChange}
-                                {...commonTextFieldProps}
-                            />
-                        </Box>
-                    </Grid>
-
-                    {/* Assignee and Priority */}
-                    <Grid item xs={6}>
-                        <Box className="form-group">
-                            <Typography
-                                variant="subtitle1"
-                                className="form-label"
-                                htmlFor="assignee"
-                            >
-                                Assignee
-                            </Typography>
-                            <TextField
-                                name="assignee"
-                                value={formValues.assignee}
-                                onChange={handleChange}
-                                select
-                                {...commonTextFieldProps}
-                                {...commonSelectProps}
-                                ref={filterRefs.assignee}
-                            >
-                                <MenuItem value="">
-                                    <em>Select Assignee</em>
-                                </MenuItem>
-                                <MenuItem value="user1">John Doe</MenuItem>
-                                <MenuItem value="user2">Jane Smith</MenuItem>
-                                <MenuItem value="user3">Alice Johnson</MenuItem>
-                                <MenuItem value="user4">Bob Brown</MenuItem>
-                            </TextField>
-                        </Box>
-                    </Grid>
-
-                    <Grid item xs={6}>
-                        <Box className="form-group">
-                            <Typography variant="subtitle1" className="form-label" htmlFor="status">
-                                Status
-                            </Typography>
-                            <TextField
-                                name="status"
-                                value={formValues?.status || ""}
-                                onChange={handleChange}
-                                select
-                                {...commonTextFieldProps}
-                                {...commonSelectProps}
-                                ref={filterRefs?.status}
-                            >
-                                <MenuItem value="">
-                                    <em>Select Status</em>
-                                </MenuItem>
-                                {statusData?.map((status) => (
-                                    <MenuItem name={status?.id} key={status?.id} value={status?.id}>
-                                        {status?.labelname}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                        </Box>
-                    </Grid>
-
-                    <Grid item xs={6}>
-                        <Box className="form-group">
-                            <Typography variant="subtitle1" className="form-label" htmlFor="priority">
-                                Priority
-                            </Typography>
-                            <TextField
-                                name="priority"
-                                value={formValues?.priority || ""}
-                                onChange={handleChange}
-                                select
-                                {...commonTextFieldProps}
-                                {...commonSelectProps}
-                                ref={filterRefs?.priority}
-                            >
-                                <MenuItem value="">
-                                    <em>Select Priority</em>
-                                </MenuItem>
-                                {priorityData?.map((priority) => (
-                                    <MenuItem name={priority?.id} key={priority?.id} value={priority?.id}>
-                                        {priority?.labelname}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                        </Box>
-                    </Grid>
-
-                    {/* Progress, Start Date, Repeat */}
-                    <Grid item xs={6}>
-                        <Box className="form-group">
-                            <Typography
-                                variant="subtitle1"
-                                className="form-label"
-                                htmlFor="progress"
-                            >
-                                Project
-                            </Typography>
-                            <TextField
-                                name="project"
-                                value={formValues?.project || ""}
-                                onChange={handleChange}
-                                select
-                                {...commonTextFieldProps}
-                                {...commonSelectProps}
-                                ref={filterRefs?.project}
-                            >
-                                <MenuItem value="">
-                                    <em>Select project</em>
-                                </MenuItem>
-                                {projectData?.map((project) => (
-                                    <MenuItem name={project?.id} key={project?.id} value={project?.id}>
-                                        {project?.labelname}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <Box className="form-group">
-                            <Typography className="form-label" variant="subtitle1">
-                                Start Date
-                            </Typography>
-                            <DatePicker
-                                name="startDate"
-                                value={formValues.startDate ? dayjs(formValues.startDate) : null}
-                                className="textfieldsClass"
-                                onChange={(value) =>
-                                    setFormValues((prev) => ({
-                                        ...prev,
-                                        startDate: value,
-                                    }))
-                                }
-                                sx={{ minWidth: 320 }}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        size="small"
-                                        fullWidth
-                                        className="textfieldsClass"
-                                        sx={{ padding: "0" }}
-                                    />
-                                )}
-                                {...customDatePickerProps}
-                            />
-                        </Box>
-                    </Grid>
-
-                    <Grid item xs={6}>
-                        <Box className="form-group">
-                            <Typography className="form-label" variant="subtitle1">
-                                Due Date
-                            </Typography>
-                            <DatePicker
-                                name="dueDate"
-                                value={formValues.dueDate ? dayjs(formValues.dueDate) : null}
-                                className="textfieldsClass"
-                                onChange={(value) =>
-                                    setFormValues((prev) => ({
-                                        ...prev,
-                                        dueDate: value,
-                                    }))
-                                }
-                                sx={{ minWidth: 320 }}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        size="small"
-                                        fullWidth
-                                        className="textfieldsClass"
-                                        sx={{ padding: "0" }}
-                                    />
-                                )}
-                                {...customDatePickerProps}
-                            />
-                        </Box>
-                    </Grid>
-
-                    <Grid item xs={6}>
-                        <Box className="form-group">
-                            <Typography className="form-label" variant="subtitle1">
-                                Repeat
-                            </Typography>
-                            <TextField
-                                name="repeat"
-                                value={formValues.repeat}
-                                onChange={handleChange}
-                                select
-                                {...commonTextFieldProps}
-                                {...commonSelectProps}
-                                ref={filterRefs.repeat}
-                            >
-                                <MenuItem value="">
-                                    <em>Select Repeat Option</em>
-                                </MenuItem>
-                                {priorityData?.map((priority) => (
-                                    <MenuItem key={priority.id} value={priority.id}>
-                                        {priority.labelname}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                        </Box>
-                    </Grid>
-                </Grid>
-
-                {/* Comment & Remark */}
-                <Grid item xs={12}>
-                    <Box className="form-group">
-                        <Typography variant="subtitle1" className="form-label">
-                            Remark
+        <>
+            <Backdrop
+                sx={{
+                    color: '#fff',
+                    zIndex: theme.zIndex.drawer + 1,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                }}
+                open={open}
+                onClick={handleClear}
+            />
+            <Drawer
+                anchor="right"
+                open={open}
+                variant="persistent"
+                onClose={handleClear}
+                className="MainDrawer"
+                sx={{ display: open == true ? 'block' : 'none', zIndex: theme.zIndex.drawer + 2, }}
+            >
+                <Box className="drawer-container">
+                    {/* Header */}
+                    <Box className="drawer-header">
+                        <Typography variant="h6" className="drawer-title">
+                            {pathname == '/projects' ? "Add Project" : "Add Task"}
                         </Typography>
-                        <TextField
-                            name="remark"
-                            value={formValues.remark}
-                            onChange={handleChange}
-                            multiline
-                            rows={2}
-                            placeholder="Add a remark"
-                            {...commonTextFieldProps}
-                        />
+                        <IconButton onClick={handleClear}>
+                            <CircleX />
+                        </IconButton>
                     </Box>
-                </Grid>
 
-                {/* File Upload */}
-                <Grid item xs={12}>
-                    <Box className="form-group">
-                        <Typography
-                            variant="subtitle1"
-                            className="form-label"
-                            htmlFor="attachment"
-                        >
-                            Attachment
-                        </Typography>
-                        <Button variant="outlined" component="label" className="secondary-btn">
-                            Upload File
-                            <input
-                                type="file"
-                                hidden
-                                name="attachment"
-                                onChange={handleFileChange}
-                            />
-                        </Button>
-                        {formValues.attachment && (
-                            <Typography variant="body2" sx={{ marginTop: "8px" }}>
-                                {formValues.attachment.name}
+                    <div
+                        style={{
+                            margin: "20px 0",
+                            border: "1px dashed #7d7f85",
+                            opacity: 0.3,
+                        }}
+                    />
+                    <Grid container spacing={2} className="form-row">
+                        {/* Task Name and Due Date */}
+                        <Grid item xs={6}>
+                            <Box className="form-group">
+                                <Typography
+                                    variant="subtitle1"
+                                    className="form-label"
+                                    htmlFor="taskName"
+                                >
+                                    Task Name
+                                </Typography>
+                                <TextField
+                                    name="taskName"
+                                    placeholder="Enter task name"
+                                    value={formValues.taskName}
+                                    onChange={handleChange}
+                                    {...commonTextFieldProps}
+                                />
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={6}>
+                            <Box className="form-group">
+                                <Typography className="form-label" variant="subtitle1">
+                                    Category
+                                </Typography>
+                                <TextField
+                                    name="repeat"
+                                    value={formValues.category || ""}
+                                    onChange={handleChange}
+                                    select
+                                    {...commonTextFieldProps}
+                                    {...commonSelectProps}
+                                    ref={filterRefs.category}
+                                >
+                                    <MenuItem value="">
+                                        <em>Select Category</em>
+                                    </MenuItem>
+                                    {taskCategory?.map((category) => (
+                                        <MenuItem name={category?.id} key={category?.id} value={category?.id}>
+                                            {category.labelname}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            </Box>
+                        </Grid>
+                        {/* Assignee and Priority */}
+                        <Grid item xs={6}>
+                            <Box className="form-group">
+                                <Typography
+                                    variant="subtitle1"
+                                    className="form-label"
+                                    htmlFor="assignee"
+                                >
+                                    Assignee
+                                </Typography>
+                                <TextField
+                                    name="assignee"
+                                    value={formValues.assignee}
+                                    onChange={handleChange}
+                                    select
+                                    {...commonTextFieldProps}
+                                    {...commonSelectProps}
+                                    ref={filterRefs.assignee}
+                                >
+                                    <MenuItem value="">
+                                        <em>Select Assignee</em>
+                                    </MenuItem>
+                                    <MenuItem value="user1">John Doe</MenuItem>
+                                    <MenuItem value="user2">Jane Smith</MenuItem>
+                                    <MenuItem value="user3">Alice Johnson</MenuItem>
+                                    <MenuItem value="user4">Bob Brown</MenuItem>
+                                </TextField>
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={6}>
+                            <Box className="form-group">
+                                <Typography variant="subtitle1" className="form-label" htmlFor="status">
+                                    Status
+                                </Typography>
+                                <TextField
+                                    name="status"
+                                    value={formValues?.status || ""}
+                                    onChange={handleChange}
+                                    select
+                                    {...commonTextFieldProps}
+                                    {...commonSelectProps}
+                                    ref={filterRefs?.status}
+                                >
+                                    <MenuItem value="">
+                                        <em>Select Status</em>
+                                    </MenuItem>
+                                    {statusData?.map((status) => (
+                                        <MenuItem name={status?.id} key={status?.id} value={status?.id}>
+                                            {status?.labelname}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={6}>
+                            <Box className="form-group">
+                                <Typography variant="subtitle1" className="form-label" htmlFor="priority">
+                                    Priority
+                                </Typography>
+                                <TextField
+                                    name="priority"
+                                    value={formValues?.priority || ""}
+                                    onChange={handleChange}
+                                    select
+                                    {...commonTextFieldProps}
+                                    {...commonSelectProps}
+                                    ref={filterRefs?.priority}
+                                >
+                                    <MenuItem value="">
+                                        <em>Select Priority</em>
+                                    </MenuItem>
+                                    {priorityData?.map((priority) => (
+                                        <MenuItem name={priority?.id} key={priority?.id} value={priority?.id}>
+                                            {priority?.labelname}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            </Box>
+                        </Grid>
+
+                        {/* Progress, Start Date, Repeat */}
+                        <Grid item xs={6}>
+                            <Box className="form-group">
+                                <Typography
+                                    variant="subtitle1"
+                                    className="form-label"
+                                    htmlFor="progress"
+                                >
+                                    Project
+                                </Typography>
+                                <TextField
+                                    name="project"
+                                    value={formValues?.project || ""}
+                                    onChange={handleChange}
+                                    select
+                                    {...commonTextFieldProps}
+                                    {...commonSelectProps}
+                                    ref={filterRefs?.project}
+                                >
+                                    <MenuItem value="">
+                                        <em>Select project</em>
+                                    </MenuItem>
+                                    {projectData?.map((project) => (
+                                        <MenuItem name={project?.id} key={project?.id} value={project?.id}>
+                                            {project?.labelname}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={6}>
+                            <Box className="form-group">
+                                <Typography className="form-label" variant="subtitle1">
+                                    Start Date
+                                </Typography>
+                                <DatePicker
+                                    name="startDate"
+                                    value={formValues.startDate ? dayjs(formValues.startDate) : null}
+                                    className="textfieldsClass"
+                                    onChange={(value) =>
+                                        setFormValues((prev) => ({
+                                            ...prev,
+                                            startDate: value,
+                                        }))
+                                    }
+                                    sx={{ minWidth: 320 }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            size="small"
+                                            fullWidth
+                                            className="textfieldsClass"
+                                            sx={{ padding: "0" }}
+                                        />
+                                    )}
+                                    {...customDatePickerProps}
+                                />
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={6}>
+                            <Box className="form-group">
+                                <Typography className="form-label" variant="subtitle1">
+                                    Due Date
+                                </Typography>
+                                <DatePicker
+                                    name="dueDate"
+                                    value={formValues.dueDate ? dayjs(formValues.dueDate) : null}
+                                    className="textfieldsClass"
+                                    onChange={(value) =>
+                                        setFormValues((prev) => ({
+                                            ...prev,
+                                            dueDate: value,
+                                        }))
+                                    }
+                                    sx={{ minWidth: 320 }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            size="small"
+                                            fullWidth
+                                            className="textfieldsClass"
+                                            sx={{ padding: "0" }}
+                                        />
+                                    )}
+                                    {...customDatePickerProps}
+                                />
+                            </Box>
+                        </Grid>
+                    </Grid>
+
+                    {/* Comment & Remark */}
+                    <Grid item xs={12}>
+                        <Box className="form-group">
+                            <Typography variant="subtitle1" className="form-label">
+                                Remark
                             </Typography>
-                        )}
-                    </Box>
-                </Grid>
+                            <TextField
+                                name="remark"
+                                value={formValues.remark}
+                                onChange={handleChange}
+                                multiline
+                                rows={2}
+                                placeholder="Add a remark"
+                                {...commonTextFieldProps}
+                            />
+                        </Box>
+                    </Grid>
 
-                {/* <Grid item xs={12}>
+                    {/* File Upload */}
+                    <Grid item xs={12}>
+                        <Box className="form-group">
+                            <Typography
+                                variant="subtitle1"
+                                className="form-label"
+                                htmlFor="attachment"
+                            >
+                                Attachment
+                            </Typography>
+                            <Button variant="outlined" component="label" className="secondary-btn">
+                                Upload File
+                                <input
+                                    type="file"
+                                    hidden
+                                    name="attachment"
+                                    onChange={handleFileChange}
+                                />
+                            </Button>
+                            {formValues.attachment && (
+                                <Typography variant="body2" sx={{ marginTop: "8px" }}>
+                                    {formValues.attachment.name}
+                                </Typography>
+                            )}
+                        </Box>
+                    </Grid>
+
+                    {/* <Grid item xs={12}>
                     <Box className="form-group" sx={{ position: 'relative' }}>
                         <Typography variant="subtitle1" className="form-label">
                             Comment
@@ -548,28 +571,29 @@ const SidebarDrawer = ({
                     )}
                 </Grid> */}
 
-                {/* Submit Button */}
-                <Grid item xs={12} sx={{ textAlign: "right" }}>
-                    <Button
-                        variant="outlined"
-                        onClick={handleClear}
-                        sx={{ marginRight: "10px" }}
-                        className="secondary-btn"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                        className="primary-btn"
-                    >
-                        {isLoading ? "Saving..." : "Save Task"}
-                    </Button>
-                </Grid>
-            </Box>
-        </Drawer>
+                    {/* Submit Button */}
+                    <Grid item xs={12} sx={{ textAlign: "right" }}>
+                        <Button
+                            variant="outlined"
+                            onClick={handleClear}
+                            sx={{ marginRight: "10px" }}
+                            className="secondary-btn"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleSubmit}
+                            disabled={isLoading}
+                            className="primary-btn"
+                        >
+                            {isLoading ? "Saving..." : "Save Task"}
+                        </Button>
+                    </Grid>
+                </Box>
+            </Drawer>
+        </>
     );
 };
 

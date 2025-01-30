@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Box, TextField, Typography, MenuItem, InputAdornment, IconButton, Menu, Checkbox, ListItemText, Button } from "@mui/material";
+import { Box, TextField, Typography, MenuItem, Menu, Checkbox, ListItemText, Button } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { SearchIcon, MoreVerticalIcon } from "lucide-react";
+import { useSetRecoilState } from "recoil";
+import { selectedCategoryAtom } from "../../../Recoil/atom";
 
 const Filters = ({
   searchTerm,
@@ -10,8 +11,10 @@ const Filters = ({
   assigneeData,
   statusData,
   taskProject,
+  taskCategory,
   taskDepartment,
 }) => {
+  const setSelectedCategory = useSetRecoilState(selectedCategoryAtom)
   const [filters, setFilters] = React.useState({
     priority: "",
     status: "",
@@ -31,7 +34,7 @@ const Filters = ({
   });
 
   const [anchorEl, setAnchorEl] = useState(null);
-  const [dueDateVisible, setDueDateVisible] = useState(true); // New state for Due Date visibility
+  const [dueDateVisible, setDueDateVisible] = useState(true);
 
   const openMenu = Boolean(anchorEl);
 
@@ -88,10 +91,11 @@ const Filters = ({
       department: "",
       project: "",
       dueDate: null,
+      category: null
     });
     onFilterChange("clearFilter", null);
+    setSelectedCategory(null)
   };
-
 
   const commonSelectProps = {
     select: true,
@@ -217,14 +221,14 @@ const Filters = ({
               <Box key={filter.key} className="form-group">
                 <Typography variant="subtitle1" id={filter?.label}>{filter?.label}</Typography>
                 <TextField
-                   aria-label={`Select ${filter?.label}`}
-                   id={filter?.label}
-                   name={filter?.key}
-                   value={filters[filter?.key]}
-                   onChange={(e) => handleFilterChange(filter?.key, e.target.value)}
-                   {...commonSelectProps}
-                   ref={filterRefs[filter?.key]}
-                   className="textfieldsClass"
+                  aria-label={`Select ${filter?.label}`}
+                  id={filter?.label}
+                  name={filter?.key}
+                  value={filters[filter?.key]}
+                  onChange={(e) => handleFilterChange(filter?.key, e.target.value)}
+                  {...commonSelectProps}
+                  ref={filterRefs[filter?.key]}
+                  className="textfieldsClass"
                 >
                   <MenuItem value={`Select ${filter?.label}`}>
                     <span className="notranslate">Select {filter?.label}</span>
@@ -321,7 +325,7 @@ const Filters = ({
           </Button>
         </Box>
       </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+      {/* <Box sx={{ display: 'flex', justifyContent: 'end' }}>
         <TextField
           placeholder="Search tasks..."
           value={searchTerm}
@@ -341,7 +345,7 @@ const Filters = ({
           }}
           aria-label='Search tasks...'
         />
-      </Box>
+      </Box> */}
     </Box>
   );
 };

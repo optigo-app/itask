@@ -1,29 +1,9 @@
 import React from 'react'
 import { Card, CardContent, Typography, Table, TableBody, TableCell, TableRow } from '@mui/material'
+import { priorityColors } from '../../Utils/globalfun'
 
 const Card3 = ({ urgentTask }) => {
-    const priorityColors = {
-        Low: {
-            color: "#4caf50",
-            backgroundColor: "#e8f5e9",
-        },
-        Medium: {
-            color: "#ff9800",
-            backgroundColor: "#fff3e0",
-        },
-        High: {
-            color: "#f44336",
-            backgroundColor: "#ffebee",
-        },
-        Urgent: {
-            color: "#d32f2f",
-            backgroundColor: "#ffcccb",
-        },
-        Critical: {
-            color: "#ffffff",
-            backgroundColor: "#b71c1c",
-        },
-    };
+ 
 
     return (
         <Card className='HomePageCom'>
@@ -31,6 +11,7 @@ const Card3 = ({ urgentTask }) => {
                 <Typography className='cardTitle' component="div" variant="h5">
                     Urgent Task
                 </Typography>
+                {/* <div className="itask_separator" /> */}
                 <Table>
                     <TableBody>
                         {urgentTask?.map((task) => (

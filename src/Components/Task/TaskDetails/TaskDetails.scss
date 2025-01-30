@@ -1,23 +1,8 @@
 @import '../../../theme/variable.scss';
 
 .modal-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 800px;
-  height: 800px;
-  background-color: #fff;
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  overflow: auto;
-  color: $titleColor !important;
-  font-family: $font-family !important;
-
   &.full-screen {
-    width: 100vw;
+    width: 50vw;
     height: 100vh;
   }
 }
@@ -76,8 +61,8 @@
       align-items: center;
 
       .avatar {
-        width: 40px;
-        height: 40px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
         margin-right: 10px;
       }
@@ -85,10 +70,9 @@
 
     .tag {
       display: inline-block;
-      background-color: #007bff;
       color: #fff;
       padding: 5px 10px;
-      border-radius: 5px;
+      border-radius: 8px;
     }
 
     .textarea {
@@ -101,6 +85,9 @@
       color: $titleColor !important;
       font-family: $font-family !important;
       font-size: 15px;
+      &:focus {
+        outline-color: $primary-main;
+      }
     }
   }
 
@@ -141,11 +128,13 @@
   }
 
   .tab-content {
-    padding: 10px 0px;
+    // padding: 10px 0px;
+    max-height: 40vh;
+    overflow: auto;
 
     .comment-card,
     .subtask-card {
-      margin-bottom: 10px;
+      margin: 10px;
       border-radius: 8px;
       box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
     }

@@ -1,4 +1,4 @@
-import { CommonAPI } from "../../Utils/CommonApi";
+import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const fetchTaskDataApi = async (selectedRow) => {
     try {

@@ -20,6 +20,7 @@ import { CalformData } from "../../../Recoil/atom";
 import { styled, useTheme } from '@mui/material/styles';
 import CustomDateTimePicker from "../../../Utils/DateComponent/CustomDateTimePicker"
 import { convertToIST } from "../../../Utils/convertToIST";
+import MultiSelectChipWithLimit from "../../../DemoCode/AssigneeAutocomplete";
 
 const CalendarForm = ({
     open,
@@ -239,7 +240,7 @@ const CalendarForm = ({
 
     return (
         <Drawer anchor="right" open={open} onClose={handleClear} className="MainDrawer">
-            <Box className="drawer-container" sx={{ width: '400px !important' }}>
+            <Box className="drawer-container" sx={{ width: '440px !important' }}>
                 {/* Header */}
                 <Box className="drawer-header">
                     <Typography variant="h6" className="drawer-title">
@@ -280,7 +281,7 @@ const CalendarForm = ({
 
                     {/* guests and Priority */}
                     <Grid item xs={12}>
-                        <Box className="form-group">
+                        {/* <Box className="form-group">
                             <Typography
                                 variant="subtitle1"
                                 className="form-label"
@@ -333,7 +334,15 @@ const CalendarForm = ({
                                     />
                                 )}
                             />
-                        </Box>
+                        </Box> */}
+                        <MultiSelectChipWithLimit
+                            options={guestOptions}
+                            label="Assign To"
+                            placeholder="Select assignees"
+                            limitTags={3}
+                            onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
+                        />
+
                     </Grid>
 
                     {/* Event category */}
@@ -342,7 +351,7 @@ const CalendarForm = ({
                             <Typography
                                 variant="subtitle1"
                                 className="form-label"
-                                htmlFor="guests"
+                                htmlFor="category"
                             >
                                 Label
                             </Typography>
@@ -397,6 +406,7 @@ const CalendarForm = ({
                             label="Start Date & Time"
                             name="startDateTime"
                             value={formValues.start}
+                            width='440px'
                             styleprops={commonTextFieldProps}
                             onChange={(value) => {
                                 if (value) {
@@ -414,6 +424,7 @@ const CalendarForm = ({
                             label="End Date & Time"
                             name="endDateTime"
                             value={formValues.end}
+                            width='440px'
                             styleprops={commonTextFieldProps}
                             onChange={(value) => {
                                 if (value) {

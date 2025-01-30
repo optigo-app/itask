@@ -69,7 +69,7 @@ const CategoryCards = () => {
     };
 
     useEffect(() => {
-        const getInit = JSON.parse(localStorage.getItem("taskInit"));
+        const getInit = JSON.parse(sessionStorage.getItem("taskInit"));
         if (getInit) {
             fetchMasterData();
         }
