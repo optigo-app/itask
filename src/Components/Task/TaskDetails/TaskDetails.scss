@@ -5,6 +5,20 @@
     width: 50vw;
     height: 100vh;
   }
+
+  @media (max-width: 768px) {
+    &.full-screen {
+      width: 75vw;
+      height: 100vh;
+    }
+  }
+
+  @media (max-width: 480px) {
+    &.full-screen {
+      width: 100vw;
+      height: 100vh;
+    }
+  }
 }
 
 .modal-header {
@@ -33,8 +47,11 @@
     font-family: $font-family !important;
   }
 
-  .task-title {
-    margin-bottom: 20px;
+  .titlebox{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
   }
 
   .tag {
@@ -85,6 +102,7 @@
       color: $titleColor !important;
       font-family: $font-family !important;
       font-size: 15px;
+
       &:focus {
         outline-color: $primary-main;
       }
@@ -129,7 +147,7 @@
 
   .tab-content {
     // padding: 10px 0px;
-    max-height: 40vh;
+    max-height: 42vh;
     overflow: auto;
 
     .comment-card,

@@ -10,6 +10,11 @@ export const formData = atom({
   default: {}
 })
 
+export const flowRemember = atom({
+  key: 'flowRemember',
+  default: []
+})
+
 export const masterDataValue = atom({
   key: 'masterDataValue',
   default: []

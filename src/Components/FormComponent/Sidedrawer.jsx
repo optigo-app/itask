@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Drawer,
     Box,
@@ -14,10 +14,14 @@ import {
 import { CircleX } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import "./SidebarDrawer.scss";
-import { useRecoilValue } from "recoil";
-import { formData, openFormDrawer, rootSubrootflag } from "../../Recoil/atom";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData } from "../../Recoil/atom";
 import dayjs from 'dayjs';
 import { useLocation } from "react-router-dom";
+import { deleteTaskDataApi } from "../../Api/TaskApi/DeleteTaskApi";
+import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
+import { toast } from "react-toastify";
+import EstimateInput from "../../Utils/EstimateInput";
 
 const SidebarDrawer = ({
     open,
@@ -30,15 +34,21 @@ const SidebarDrawer = ({
     taskCategory,
     statusData,
 }) => {
-    
+
     const location = useLocation();
     const theme = useTheme();
     let pathname = location.pathname;
-    const formDataValue = useRecoilValue(formData);
-    const formdrawerOpen = useRecoilValue(openFormDrawer);
+    const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
+    const [formDataValue, setFormDataValue] = useRecoilState(formData);
+    const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
+    const setSelectedTask = useSetRecoilState(selectedRowData);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
+    const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
+    const [estimateValues, setEstimateValues] = useState([""]);
+    const [actualValues, setActualValues] = useState([""]);
 
     const [formValues, setFormValues] = React.useState({});
+    console.log('formValues: ', formValues);
 
     const [comments, setComments] = React.useState([]);
 
@@ -66,6 +76,8 @@ const SidebarDrawer = ({
                 progress: formDataValue?.progress ?? "",
                 startDate: formDataValue?.entrydate ?? null,
                 category: formDataValue?.workcategoryid ?? "",
+                estimate: formDataValue?.estimate ?? [""],
+                actual: formDataValue?.actual ?? [""],
             });
         }
     }, [open, formDataValue, rootSubrootflagval]);
@@ -87,6 +99,32 @@ const SidebarDrawer = ({
         }, 300);
     }, [open]);
 
+    const handleRemoveEvent = () => {
+        setCnfDialogOpen(true);
+    };
+
+    const handleConfirmRemoveAll = async () => {
+        setCnfDialogOpen(false);
+        try {
+            const deleteTaskApi = await deleteTaskDataApi(formDataValue);
+            if (deleteTaskApi) {
+                setOpenChildTask(true);
+                setSelectedTask(null);
+                setFormDrawerOpen(false);
+                setFormDataValue(null);
+                toast.success("Task deleted successfully!");
+            } else {
+                console.error("Failed to delete task");
+            }
+        } catch (error) {
+            console.error("Error while deleting task:", error);
+        }
+    };
+
+    const handleCloseDialog = () => {
+        setCnfDialogOpen(false);
+    };
+
     // Handle form value changes
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -95,6 +133,24 @@ const SidebarDrawer = ({
             [name]: value,
         }));
     }
+
+    // estimated and actual estimate
+
+    const handleEstimateChange = (newValues) => {
+        setEstimateValues(newValues);
+        setFormValues((prev) => ({
+            ...prev,
+            estimate: newValues,
+        }));
+    };
+
+    const handleActualChange = (newValues) => {
+        setActualValues(newValues);
+        setFormValues((prev) => ({
+            ...prev,
+            actual: newValues,
+        }));
+    };
 
     // Handle file upload
     const handleFileChange = (e) => {
@@ -227,7 +283,7 @@ const SidebarDrawer = ({
             },
         },
     };
-   
+
     return (
         <>
             <Backdrop
@@ -485,6 +541,24 @@ const SidebarDrawer = ({
                         </Grid>
                     </Grid>
 
+                    <Grid container spacing={2} className="form-row">
+                        <Grid item xs={6}>
+                            <Box className="form-group">
+                                <Typography className="form-label" variant="subtitle1">
+                                    Estimate
+                                </Typography>
+                                <EstimateInput onChanges={handleEstimateChange} />
+                            </Box>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <Box className="form-group">
+                                <Typography className="form-label" variant="subtitle1">
+                                    Actual Estimate
+                                </Typography>
+                                <EstimateInput onChanges={handleActualChange} />
+                            </Box>
+                        </Grid>
+                    </Grid>
                     {/* Comment & Remark */}
                     <Grid item xs={12}>
                         <Box className="form-group">
@@ -530,69 +604,48 @@ const SidebarDrawer = ({
                         </Box>
                     </Grid>
 
-                    {/* <Grid item xs={12}>
-                    <Box className="form-group" sx={{ position: 'relative' }}>
-                        <Typography variant="subtitle1" className="form-label">
-                            Comment
-                        </Typography>
-                        <TextField
-                            name="comment"
-                            value={formValues.comment}
-                            onChange={handleChange}
-                            multiline
-                            rows={2}
-                            placeholder="Add a comment"
-                            {...commonTextFieldProps}
-                            sx={{ width: '100%' }}
-                        />
-                        <Button
-                            variant="outlined"
-                            component="label"
-                            className="secondary-btn"
-                            sx={{
-                                position: 'absolute',
-                                bottom: '8px',
-                                right: '8px',
-                            }}
-                            onClick={handleSendComment}
-                        >
-                            Send
-                        </Button>
-                    </Box>
-
-                    {comments.length > 0 && (
-                        <Box sx={{ marginTop: 2 }}>
-                            {comments.map((comment) => (
-                                <Box key={comment.id} sx={{ marginBottom: 1 }}>
-                                    <Typography>{comment.text}</Typography>
-                                </Box>
-                            ))}
-                        </Box>
-                    )}
-                </Grid> */}
-
                     {/* Submit Button */}
                     <Grid item xs={12} sx={{ textAlign: "right" }}>
-                        <Button
-                            variant="outlined"
-                            onClick={handleClear}
-                            sx={{ marginRight: "10px" }}
-                            className="secondary-btn"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={handleSubmit}
-                            disabled={isLoading}
-                            className="primary-btn"
-                        >
-                            {isLoading ? "Saving..." : "Save Task"}
-                        </Button>
+                        <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
+                            {/* <Button
+                                variant="contained"
+                                onClick={() => handleRemoveEvent(formValues)}
+                                sx={{ marginRight: "10px" }}
+                                className="danger-btn"  
+                                disabled={isLoading}
+                            >
+                                Delete
+                            </Button> */}
+                            <Box>
+                                <Button
+                                    variant="outlined"
+                                    onClick={handleClear}
+                                    sx={{ marginRight: "10px" }}
+                                    className="secondary-btn"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={handleSubmit}
+                                    disabled={isLoading}
+                                    className="primary-btn"
+                                >
+                                    {isLoading ? "Saving..." : "Save Task"}
+                                </Button>
+                            </Box>
+                        </Box>
                     </Grid>
                 </Box>
             </Drawer>
+            <ConfirmationDialog
+                open={cnfDialogOpen}
+                onClose={handleCloseDialog}
+                onConfirm={handleConfirmRemoveAll}
+                title="Confirm"
+                content="Are you sure you want to remove this task?"
+            />
         </>
     );
 };

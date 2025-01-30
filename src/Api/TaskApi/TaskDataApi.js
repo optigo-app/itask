@@ -4,8 +4,10 @@ export const fetchTaskDataApi = async (selectedRow) => {
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
+        const id = JSON?.parse(sessionStorage.getItem('taskId'));
+
         const combinedValue = JSON.stringify({
-            taskid: `${selectedRow?.taskid ?? '0'}`,
+            taskid: `${selectedRow?.taskid ?? id}`,
         });
 
         const body = {

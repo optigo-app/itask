@@ -4,7 +4,7 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box } from "@mui/material";
 import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { fetchlistApiCall, masterDataValue, selectedRowData } from "../../Recoil/atom";
+import { fetchlistApiCall, flowRemember, masterDataValue, selectedRowData } from "../../Recoil/atom";
 import { fetchMasterGlFunc, formatDate, formatDate2 } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 
@@ -25,7 +25,8 @@ const Task = () => {
   const [assigneeData, setAssigneeData] = useState();
   const [taskDepartment, setTaskDepartment] = useState();
   const [taskProject, setTaskProject] = useState();
- 
+  const flowRememberdata = useRecoilValue(flowRemember);
+  console.log('flowRememberdata: ', flowRememberdata);
   const [taskCategory, setTaskCategory] = useState();
   const [activeButton, setActiveButton] = useState("table");
   const [filters, setFilters] = useState({});
@@ -43,7 +44,6 @@ const Task = () => {
 
   // master data fetching and setting
   const fetchMasterData = async () => {
-    debugger
     setIsLoading(true);
     try {
       const masterData = sessionStorage.getItem('masterData');
@@ -160,6 +160,7 @@ const Task = () => {
   // };
 
   const fetchTaskData = async (selectedRow) => {
+    debugger
     if (!tasks) {
       setIsTaskLoading(true);
     }
@@ -169,7 +170,7 @@ const Task = () => {
         return;
       }
 
-      const taskData = await fetchTaskDataApi(selectedRow ?? {});
+      const taskData = await fetchTaskDataApi(selectedRow ?? {},);
       const labeledTasks = mapTaskLabels(taskData);
 
       const enhanceTask = (task) => {
