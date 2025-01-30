@@ -8,14 +8,17 @@ import {
 } from '@mui/material';
 import { CircleX, Expand, Shrink, Download, Send, Edit } from 'lucide-react';
 import './TaskDetails.scss';
-import { useRecoilValue } from 'recoil';
-import { formData } from '../../../Recoil/atom';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { fetchlistApiCall, formData, openFormDrawer, selectedRowData } from '../../../Recoil/atom';
 import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
 import AttachmentImg from "../../../Assests/Attachment.jpg"
 import { getRandomAvatarColor, priorityColors, statusColors } from '../../../Utils/globalfun';
+import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
+import { toast } from 'react-toastify';
+import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
 
 const TaskDetail = ({ open, onClose }) => {
     const theme = useTheme();
@@ -28,6 +31,11 @@ const TaskDetail = ({ open, onClose }) => {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [activeTab, setActiveTab] = useState(0);
+    const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
+    const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
+    const [formDataValue, setFormDataValue] = useRecoilState(formData);
+    const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
+    const setSelectedTask = useSetRecoilState(selectedRowData);
     const placeholderImage = AttachmentImg;
 
     const assignees = [
@@ -35,18 +43,35 @@ const TaskDetail = ({ open, onClose }) => {
         { name: "Jane Smith", avatar: "https://via.placeholder.com/30" },
     ];
 
-    const tags = ["Dashboard", "KPI", "Employee"];
-
     const colors = [
         '#FF5722', '#4CAF50', '#2196F3', '#FFC107',
         '#E91E63', '#9C27B0', '#3F51B5', '#00BCD4'
     ];
 
-    const background = (tag) => {
-        const avatarBackgroundColor = tag?.avatar
-            ? "transparent"
-            : getRandomAvatarColor(tag);
-        return avatarBackgroundColor;
+    const handleRemoveEvent = () => {
+        setCnfDialogOpen(true);
+    };
+
+    const handleConfirmRemoveAll = async () => {
+        setCnfDialogOpen(false);
+        try {
+            const deleteTaskApi = await deleteTaskDataApi(formDataValue);
+            if (deleteTaskApi) {
+                setOpenChildTask(true);
+                setSelectedTask(null);
+                setFormDrawerOpen(false);
+                setFormDataValue(null);
+                toast.success("Task deleted successfully!");
+            } else {
+                console.error("Failed to delete task");
+            }
+        } catch (error) {
+            console.error("Error while deleting task:", error);
+        }
+    };
+
+    const handleCloseDialog = () => {
+        setCnfDialogOpen(false);
     };
 
     const handleShowEditDesc = () => {
@@ -183,17 +208,27 @@ const TaskDetail = ({ open, onClose }) => {
                             }}
                         />
                         <Box className="modal-body">
-                            <Typography variant="h4" className="task-title">{taskData?.taskname}</Typography>
+                            <Box className="titlebox">
+                                <Typography variant="h4" className="task-title">{taskData?.taskname}</Typography>
+                                <Button
+                                    variant="contained"
+                                    onClick={() => handleRemoveEvent()}
+                                    sx={{ marginRight: "10px" }}
+                                    className="danger-btn"
+                                // disabled={isLoading}
+                                >
+                                    Delete
+                                </Button>
+                            </Box>
                             <Grid container rowSpacing={2} className="task-details">
                                 <Grid container spacing={2}>
                                     <Grid item xs={3}>
                                         <Typography className="tasklable">Status</Typography>
                                     </Grid>
-                                    <Grid item xs={3}>
+                                    <Grid item xs={9}>
                                         <Typography
-                                            className="taskValue"
                                             sx={{
-                                                color: statusColors[taskData?.status]?.color,
+                                                color: `${statusColors[taskData?.status]?.color} !important`,
                                                 backgroundColor: statusColors[taskData?.status]?.backgroundColor,
                                                 width: 'fit-content',
                                                 padding: '0.2rem 0.8rem',
@@ -211,11 +246,10 @@ const TaskDetail = ({ open, onClose }) => {
                                     <Grid item xs={3}>
                                         <Typography className="tasklable">Priority</Typography>
                                     </Grid>
-                                    <Grid item xs={3}>
+                                    <Grid item xs={9}>
                                         <Typography
-                                            className="taskValue"
                                             sx={{
-                                                color: priorityColors[taskData?.priority]?.color,
+                                                color: `${priorityColors[taskData?.priority]?.color} !important`,
                                                 backgroundColor: priorityColors[taskData?.priority]?.backgroundColor,
                                                 width: 'fit-content',
                                                 padding: '0.2rem 0.8rem',
@@ -342,7 +376,7 @@ const TaskDetail = ({ open, onClose }) => {
                                     <Tabs value={activeTab} onChange={handleTabChange} className='muiTaskTabs'>
                                         <Tab label={`Subtasks`} />
                                         <Tab label={`Comments (${comments?.length})`} />
-                                        <Tab label="Activities" />
+                                        {/* <Tab label="Activities" /> */}
                                     </Tabs>
                                     <Box className="tab-content">
                                         {activeTab === 0 &&
@@ -411,7 +445,7 @@ const TaskDetail = ({ open, onClose }) => {
                                                 </Box>
                                             </>
                                         )}
-                                        {activeTab === 2 && <Typography>Activities content...</Typography>}
+                                        {/* {activeTab === 2 && <Typography>Activities content...</Typography>} */}
                                     </Box>
                                 </Grid>
                             </Grid>
@@ -419,6 +453,13 @@ const TaskDetail = ({ open, onClose }) => {
                     </div>
                 </Box>
             </Drawer>
+            <ConfirmationDialog
+                open={cnfDialogOpen}
+                onClose={handleCloseDialog}
+                onConfirm={handleConfirmRemoveAll}
+                title="Confirm"
+                content="Are you sure you want to remove this task?"
+            />
         </div>
     );
 };

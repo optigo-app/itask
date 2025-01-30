@@ -27,8 +27,8 @@ import {
 } from "@mui/icons-material";
 import { CircleChevronRight, CirclePlus, Edit, Eye, GitMerge, Pencil } from "lucide-react";
 import "react-resizable/css/styles.css";
-import { useRecoilState, useSetRecoilState } from "recoil";
-import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData } from "../../../Recoil/atom";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { fetchlistApiCall, flowRemember, formData, openFormDrawer, rootSubrootflag, selectedRowData } from "../../../Recoil/atom";
 import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
@@ -37,6 +37,9 @@ import { formatDate2, getRandomAvatarColor, statusColors } from "../../../Utils/
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
 const TableView = ({ data, onAddSubtask, isLoading }) => {
+    const setTrackFlowData = useSetRecoilState(flowRemember);
+    const flowRememberdata = useRecoilValue(flowRemember);
+    console.log('flowRememberdata: ', flowRememberdata);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
@@ -210,6 +213,16 @@ const TableView = ({ data, onAddSubtask, isLoading }) => {
 
             if (!isCurrentlyVisible) {
                 const task = findTask(data, taskIndex);
+                console.log('task: ', task?.subtasks?.length == 0);
+
+                setTrackFlowData((prev) => {
+                        return {
+                            ...prev,
+                            ...task,
+                        };
+                    return prev;
+                });
+
                 setTimeout(() => {
                     setOpenChildTask(true);
                     setSelectedTask(task);
