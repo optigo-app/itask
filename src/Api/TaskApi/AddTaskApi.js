@@ -1,6 +1,8 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
-export const AddTaskDataApi = async (formValues, formDataValue, rootSubrootflagval) => {
+export const AddTaskDataApi = async (formValues, formDataValue, rootSubrootflagval, mode) => {
+    debugger
+    console.log('mode: ', mode?.mode);
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
@@ -18,9 +20,9 @@ export const AddTaskDataApi = async (formValues, formDataValue, rootSubrootflagv
             "taskid": taskid,
             "projectid": formValues?.project ?? "",
             "taskname": formValues?.taskName ?? "",
-            "StartDate": formDataValue?.StartDate ?? "",
+            "StartDate": formDataValue?.StartDate ?? '',
             "estimate_hrs": formDataValue?.estimate_hrs ?? "0.0",
-            "DeadLineDate": formValues?.dueDate ?? "",
+            "DeadLineDate": formValues?.dueDate ?? '',
             "priorityid": formValues?.priority ?? "0",
             "statusid": formValues?.status ?? "0",
             "workcategoryid": formDataValue?.workcategoryid ?? "",

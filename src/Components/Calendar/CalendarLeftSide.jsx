@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Divider, Typography, Checkbox, FormControlLabel } from '@mui/material';
+import { Box, Button, Divider, Typography, Checkbox, FormControlLabel, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import { Plus } from 'lucide-react';
 import { StaticDatePicker } from '@mui/x-date-pickers/StaticDatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -8,23 +8,23 @@ import dayjs from 'dayjs';
 import { useSetRecoilState } from 'recoil';
 import { calendarM, CalEventsFilter, CalformData } from '../../Recoil/atom';
 import CalendarForm from './SideBar/CalendarForm';
+import { customDatePickerStyles } from '../../Utils/globalfun';
+import TasklistForCal from './TasklistForCal';
 
-const CalendarLeftSide = () => {
-
-    const calendarsColor = {
-        Personal: 'error',
-        Business: 'primary',
-        Family: 'warning',
-        Holiday: 'success',
-        ETC: 'info',
-    };
-
+const CalendarLeftSide = ({ calendarsColor }) => {
     const [selectedCalendars, setSelectedCalendars] = useState(['Personal', 'Business', 'Family', 'Holiday', 'ETC']);
     const setSelectedCaleFilters = useSetRecoilState(CalEventsFilter);
     const setSelectedMon = useSetRecoilState(calendarM);
     const setCalFormData = useSetRecoilState(CalformData)
     const [caledrawerOpen, setCaledrawerOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState(dayjs());
+    const [view, setView] = useState("filter");
+
+    const handleChange = (event, newView) => {
+        if (newView !== null) {
+            setView(newView);
+        }
+    }
 
     useEffect(() => {
         setSelectedCaleFilters(selectedCalendars)
@@ -52,68 +52,8 @@ const CalendarLeftSide = () => {
         }
     };
 
-    const customDatePickerStyles = {
-        '& .MuiPickersLayout-root': {
-            minWidth: '300px',
-            width: '300px',
-            margin: '0 auto',
-        },
-        '& .MuiDatePickerToolbar-root': {
-            padding: '10px !important',
-        },
-        '& .MuiPickersToolbar-content': {
-            '& .MuiTypography-root': {
-                fontSize: '24px'
-            },
-        },
-        '& .MuiDateCalendar-root': {
-            borderRadius: '8px',
-            fontFamily: '"Public Sans", sans-serif',
-            color: '#444050',
-            maxHeight: '300px'
-        },
-        '& .MuiPickersYear-root': {
-            '& .MuiPickersYear-yearButton': {
-                fontFamily: '"Public Sans", sans-serif',
-                color: '#444050',
-                '&:hover': {
-                    backgroundColor: '#7367f0',
-                    color: '#fff',
-                    borderRadius: '50px',
-                },
-            },
-        },
-        '& .css-6mw38q-MuiTypography-root': {
-            display: 'none',
-        },
-        '& .MuiPickersCalendarHeader-label': {
-            fontFamily: '"Public Sans", sans-serif',
-            color: "#444050",
-        },
-        '& .MuiPickersDay-root': {
-            fontFamily: '"Public Sans", sans-serif',
-            color: '#444050',
-            '&:hover': {
-                backgroundColor: '#7367f0',
-                color: '#fff',
-            },
-        },
-        '& .MuiPickersDay-root.Mui-selected': {
-            backgroundColor: '#7367f0 !important',
-            color: '#fff !important',
-        },
-        '& .MuiPickersDay-root.Mui-selected:hover': {
-            backgroundColor: '#7367f0',
-            color: '#fff',
-        },
-        '& .MuiPickersYear-yearButton.Mui-selected': {
-            backgroundColor: '#7367f0 !important',
-            color: '#fff !important',
-        },
-    };
-
-    const renderFilters = Object.entries(calendarsColor).length
-        ? Object.entries(calendarsColor).map(([key, value]) => {
+    const renderFilters = Object?.entries(calendarsColor)?.length
+        ? Object?.entries(calendarsColor)?.map(([key, value]) => {
             return (
                 <FormControlLabel
                     key={key}
@@ -147,7 +87,6 @@ const CalendarLeftSide = () => {
             ...formValues,
             start: selectedDate
         };
-        console.log('updatedFormValues: ', updatedFormValues);
         setCalFormData(updatedFormValues);
     };
 
@@ -187,71 +126,102 @@ const CalendarLeftSide = () => {
                     justifyContent: 'center',
                     alignItems: 'center',
                     position: 'relative',
-                    marginBottom: '20px',
+                    marginBlock: '20px',
                     width: '100%'
                 }}>
-                <Button
-                    fullWidth
-                    variant="contained"
-                    className="buttonClassname"
-                    sx={{
-                        width: '230px',
-                        borderRadius: '8px',
-                        textTransform: 'capitalize'
-                    }}
-                    onClick={handleAddEvent}
+                <ToggleButtonGroup
+                    value={view}
+                    exclusive
+                    onChange={handleChange}
+                    aria-label="toggle filter or task list"
+                    className='toggle-button-group'
+                    size='small'
+                    sx={{ borderRadius: '8px' }}
                 >
-                    <Plus style={{ marginRight: '5px', opacity: '.9' }} size={20} />
-                    Add Event
-                </Button>
+                    <ToggleButton value="filter" aria-label="filter" className='toggleBtnCal'>
+                        Filter
+                    </ToggleButton>
+                    <ToggleButton value="tasklist" aria-label="task list" className='toggleBtnCal'>
+                        Task List
+                    </ToggleButton>
+                </ToggleButtonGroup>
             </Box>
             <Divider sx={{ width: '100%', m: '0 !important' }} />
-            <div>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <StaticDatePicker
-                        defaultValue={dayjs()}
-                        sx={customDatePickerStyles}
-                        slots={{
-                            actionBar: () => null,
-                        }}
-                        onChange={calendarMonthChange}
-                    />
-                </LocalizationProvider>
-            </div>
-            <Divider sx={{ width: '100%', m: '0 !important' }} />
-            <Box sx={{ padding: '20px 60px', display: 'flex', alignItems: 'flex-start', flexDirection: 'column' }}>
-                <Typography variant="body2" sx={{ mb: 2, color: 'text.disabled', textTransform: 'uppercase', fontWeight: 'bold', fontSize: '15px' }}>
-                    Filters
-                </Typography>
-                <FormControlLabel
-                    label="View All"
-                    sx={{ '& .MuiButtonBase-root': { color: 'red' } }}
-                    control={
-                        <Checkbox
-                            color="default"
-                            checked={selectedCalendars.length === Object.keys(calendarsColor).length}
-                            onChange={handleViewAllToggle}
+            {view === 'filter' ? (
+                <>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            position: 'relative',
+                            marginBlock: '20px',
+                            width: '100%'
+                        }}>
+                        <Button
+                            fullWidth
+                            className="buttonClassname"
                             sx={{
-                                '& .MuiSvgIcon-root': {
-                                    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-                                    borderRadius: '8px',
-                                    transition: 'box-shadow 0.3s ease',
-                                    '&:hover': {
-                                        boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
-                                    },
-                                },
+                                width: '230px',
+                                background: '#7D7f85 !important'
                             }}
+                            onClick={handleAddEvent}
+                        >
+                            <Plus style={{ marginRight: '5px', opacity: '.9' }} size={20} />
+                            Add Event
+                        </Button>
+                    </Box>
+                    <Divider sx={{ width: '100%', m: '0 !important' }} />
+                    <div>
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <StaticDatePicker
+                                defaultValue={dayjs()}
+                                sx={customDatePickerStyles}
+                                slots={{
+                                    actionBar: () => null,
+                                }}
+                                onChange={calendarMonthChange}
+                            />
+                        </LocalizationProvider>
+                    </div>
+                    <Divider sx={{ width: '100%', m: '0 !important' }} />
+                    <Box sx={{ padding: '20px 60px', display: 'flex', alignItems: 'flex-start', flexDirection: 'column' }}>
+                        <Typography variant="body2" sx={{ mb: 2, color: 'text.disabled', textTransform: 'uppercase', fontWeight: 'bold', fontSize: '15px' }}>
+                            Filters
+                        </Typography>
+                        <FormControlLabel
+                            label="View All"
+                            sx={{ '& .MuiButtonBase-root': { color: 'red' } }}
+                            control={
+                                <Checkbox
+                                    color="default"
+                                    checked={selectedCalendars.length === Object.keys(calendarsColor).length}
+                                    onChange={handleViewAllToggle}
+                                    sx={{
+                                        '& .MuiSvgIcon-root': {
+                                            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                                            borderRadius: '8px',
+                                            transition: 'box-shadow 0.3s ease',
+                                            '&:hover': {
+                                                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
+                                            },
+                                        },
+                                    }}
+                                />
+                            }
                         />
-                    }
-                />
-                {renderFilters}
-            </Box>
-            <CalendarForm
-                open={caledrawerOpen}
-                onClose={handleDrawerToggle}
-                onSubmit={handleCaleFormSubmit}
-            />
-        </div>
+                        {renderFilters}
+                    </Box>
+                    <CalendarForm
+                        open={caledrawerOpen}
+                        onClose={handleDrawerToggle}
+                        onSubmit={handleCaleFormSubmit}
+                    />
+                </>
+            ) :
+                <TasklistForCal calendarsColor={calendarsColor} />
+            }
+        </div >
     );
 };
 

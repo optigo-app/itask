@@ -3,11 +3,9 @@ import { CommonAPI } from "../InitialApi/CommonApi";
 export const fetchTaskDataApi = async (selectedRow) => {
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
-
-        const id = JSON?.parse(sessionStorage.getItem('taskId'));
-
+        
         const combinedValue = JSON.stringify({
-            taskid: `${selectedRow?.taskid ?? id}`,
+            taskid: `${selectedRow?.taskid ?? ''}`,
         });
 
         const body = {

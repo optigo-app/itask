@@ -58,22 +58,26 @@ const Calendar = () => {
     }, []);
 
     useEffect(() => {
-        if (calendarApi && date) {
-            const validDate = new Date(date);
-            if (!isNaN(validDate.getTime())) {
-                calendarApi.gotoDate(validDate);
-            } else {
-                console.error('Invalid date:', date);
+        setTimeout(() => {
+            if (calendarApi && date) {
+                const validDate = new Date(date);
+                if (!isNaN(validDate.getTime())) {
+                    calendarApi.gotoDate(validDate);
+                } else {
+                    console.error('Invalid date:', date);
+                }
             }
-        }
+        }, 500);
     }, [date, calendarApi]);
 
     const filterEvents = (events, selectedCalendars) => {
+        console.log('events: ', events);
         return events && events?.filter((event) => selectedCalendars?.includes(event?.category));
     };
 
     // filter fun according to events
     const filteredEvents = filterEvents(calEvData, selectedEventfilter);
+    console.log('filteredEvents: ', filteredEvents);
 
     // calendar colors
     const calendarsColor = {
@@ -99,6 +103,7 @@ const Calendar = () => {
             },
         },
         editable: true,
+        droppable: true,
         eventResizableFromStart: true,
         resizable: true,
         dragScroll: true,
@@ -109,6 +114,12 @@ const Calendar = () => {
             const colorClass = calendarsColor[category] || 'info';
             return [`bg-${colorClass}`];
         },
+        // eventContent: function (arg) {
+        //     console.log('arg: ', arg);
+        //     const time = arg?.timeText ? `<div style="font-weight: bold;">${arg?.timeText}</div>` : "";
+        //     const title = `<div>${arg.event.title}</div>`;
+        //     return { html: `${time ? time + "&nbsp;" : ""}${title}` };
+        // },
         eventClick({ event: clickedEvent }) {
             const startDate = clickedEvent?.start;
             const endDate = clickedEvent?.end ?? startDate;
@@ -163,6 +174,36 @@ const Calendar = () => {
             );
             localStorage.setItem('calformData', JSON.stringify(updatedEvents));
         },
+        eventReceive({ event: receivedEvent }) {
+            console.log('receivedEvent: ', receivedEvent);
+            const randomId = Math.random().toString(36).substring(2, 10);
+
+            const newEvent = {
+                id: randomId,
+                title: receivedEvent.title || "Untitled Event",
+                start: receivedEvent.start ? receivedEvent.start.toISOString() : "",
+                end: receivedEvent.end ? receivedEvent.end.toISOString() : receivedEvent.start.toISOString(),
+                location: receivedEvent.extendedProps?.location || "",
+                description: receivedEvent.extendedProps?.description || "",
+                category: receivedEvent.extendedProps?.category || "",
+                guests: receivedEvent.extendedProps?.guests || [],
+                eventUrl: receivedEvent.extendedProps?.eventUrl || "",
+                allDay: receivedEvent.allDay ?? false,
+            };
+            const existingData = JSON.parse(localStorage.getItem('calformData')) || [];
+            const isDuplicate = existingData.some(event =>
+                event.title === newEvent.title && event.start === newEvent.start
+            );
+
+            if (!isDuplicate) {
+                const updatedData = [...existingData, newEvent];
+                localStorage.setItem('calformData', JSON.stringify(updatedData));
+                setCalEvData(updatedData);
+            } else {
+                console.log("Duplicate event detected, not adding.");
+            }
+        },
+
         eventResize({ event: resizedEvent }) {
             const startDate = resizedEvent?.start;
             const endDate = resizedEvent?.end ?? startDate;

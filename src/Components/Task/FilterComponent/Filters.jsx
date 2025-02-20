@@ -70,7 +70,6 @@ const Filters = ({
   }, [handleVisibilityChange, handleVisibilityChange]);
 
   const handleFilterChange = (key, value) => {
-    console.log(key, value);
     setFilters((prev) => ({ ...prev, [key]: value }));
     onFilterChange(key, value);
   };
@@ -192,34 +191,18 @@ const Filters = ({
         }}
       >
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-          {[{
-            label: "Status",
-            key: "status",
-            data: statusData,
-          },
-          {
-            label: "Priority",
-            key: "priority",
-            data: priorityData,
-          },
-          {
-            label: "Department",
-            key: "department",
-            data: taskDepartment,
-          },
-          {
-            label: "Assignee",
-            key: "assignee",
-            data: assigneeData,
-          },
-          {
-            label: "Project",
-            key: "project",
-            data: taskProject,
-          }].map((filter) => (
-            filterVisibility[filter.key] && (
+          {[
+            { label: "Status", key: "status", data: statusData },
+            { label: "Priority", key: "priority", data: priorityData },
+            { label: "Department", key: "department", data: taskDepartment },
+            { label: "Assignee", key: "assignee", data: assigneeData },
+            { label: "Project", key: "project", data: taskProject },
+          ].map((filter) =>
+            filterVisibility[filter.key] ? (
               <Box key={filter.key} className="form-group">
-                <Typography variant="subtitle1" id={filter?.label}>{filter?.label}</Typography>
+                <Typography variant="subtitle1" id={filter?.label}>
+                  {filter?.label}
+                </Typography>
                 <TextField
                   aria-label={`Select ${filter?.label}`}
                   id={filter?.label}
@@ -230,18 +213,21 @@ const Filters = ({
                   ref={filterRefs[filter?.key]}
                   className="textfieldsClass"
                 >
-                  <MenuItem value={`Select ${filter?.label}`}>
+                  <MenuItem value="">
                     <span className="notranslate">Select {filter?.label}</span>
                   </MenuItem>
                   {filter.data?.map((item) => (
-                    <MenuItem key={item?.id} value={item?.labelname}>
-                      {item?.labelname}
+                    <MenuItem
+                      key={item?.id}
+                      value={filter.key === "assignee" ? `${item?.firstname} ${item?.lastname}` : item?.labelname}
+                    >
+                      {filter.key === "assignee" ? `${item?.firstname} ${item?.lastname}` : item?.labelname}
                     </MenuItem>
                   ))}
                 </TextField>
               </Box>
-            )
-          ))}
+            ) : null
+          )}
 
           {/* Due Date Filter */}
           {dueDateVisible && (
@@ -253,49 +239,17 @@ const Filters = ({
                 onChange={(newDate) => handleFilterChange("dueDate", newDate)}
                 className="textfieldsClass"
                 {...customDatePickerProps}
-                sx={{ padding: '0' }}
+                sx={{ padding: "0" }}
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    fullWidth
-                    className="textfieldsClass"
-                    sx={{ padding: '0' }}
-                  />
+                  <TextField {...params} size="small" fullWidth className="textfieldsClass" sx={{ padding: "0" }} />
                 )}
               />
             </Box>
           )}
         </Box>
 
+
         <Box>
-          {/* Search Field */}
-          {/* <TextField
-          placeholder="Search tasks..."
-          value={searchTerm}
-          onChange={(e) => onFilterChange("searchTerm", e.target.value)}
-          size="small"
-          className="textfieldsClass"
-          sx={{
-            minWidth: 250,
-            "@media (max-width: 600px)": { minWidth: "100%" },
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon size={20} color="#7d7f85" opacity={0.5} />
-              </InputAdornment>
-            ),
-          }}
-          aria-label='Search tasks...'
-        /> */}
-
-
-
-          {/* More Filter Menu (3 dots) */}
-          {/* <IconButton onClick={handleMenuOpen}>
-            <MoreVerticalIcon size={24} />
-          </IconButton> */}
           <Button size='medium' className="buttonClassname" variant="contained" onClick={handleMenuOpen} sx={{ marginRight: '10px' }}>Show Filter</Button>
           <Menu
             anchorEl={anchorEl}
@@ -325,27 +279,6 @@ const Filters = ({
           </Button>
         </Box>
       </Box>
-      {/* <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-        <TextField
-          placeholder="Search tasks..."
-          value={searchTerm}
-          onChange={(e) => onFilterChange("searchTerm", e.target.value)}
-          size="small"
-          className="textfieldsClass"
-          sx={{
-            minWidth: 250,
-            "@media (max-width: 600px)": { minWidth: "100%" },
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon size={20} color="#7d7f85" opacity={0.5} />
-              </InputAdornment>
-            ),
-          }}
-          aria-label='Search tasks...'
-        />
-      </Box> */}
     </Box>
   );
 };

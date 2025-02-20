@@ -9,7 +9,7 @@ import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag } from "../../../Recoil/atom";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import KanbanCardSkeleton from "./KanbanSkelton";
-import LoadingBackdrop from "../../../Utils/LoadingBackdrop";
+import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 
 function KanbanView({
   taskdata,
@@ -34,7 +34,6 @@ function KanbanView({
   };
 
   const handleDelete = (task) => {
-    console.log('task: ', task);
     setCnfDialogOpen(true);
     setSelectedTask(task)
   }
@@ -137,7 +136,6 @@ function KanbanView({
 
       const endTasks = Array.from(endColumn.tasks);
       endTasks.splice(destination.index, 0, updatedMovedTask);
-      console.log('endTasks: ', endTasks);
 
       setData((prevData) => ({
         ...prevData,
@@ -158,7 +156,6 @@ function KanbanView({
         };
         let rootSubrootflagval = "root"
         const addTaskApi = await AddTaskDataApi(formValues ?? {}, updatedMovedTask ?? {}, rootSubrootflagval ?? {});
-        console.log('addTaskApi: ', addTaskApi);
       }
     }
   };
@@ -185,7 +182,7 @@ function KanbanView({
     setFormDrawerOpen(true);
     setSelectedTask(null);
   }
-  
+
   const handleEditTask = async (task, additionalInfo) => {
     setRootSubroot(additionalInfo);
     setFormDataValue(task);
@@ -370,12 +367,19 @@ function KanbanView({
                                       <Box
                                         key={subtask.taskid}
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
                                         mt={1}
-                                        onClick={() => handleEditSubtask(subtask, { Task: 'root' })}
+                                        onClick={() => handleEditSubtask(subtask, { Task: "root" })}
+                                        sx={{ gap: 1 }}
                                       >
-                                        <Workflow size={16} color="#6058F7" style={{ marginRight: '8px' }} />
-                                        <Typography variant="body2" color="text.secondary">
+                                        <Box sx={{ flexShrink: 0, width: "16px", height: "16px", display: "flex", alignItems: "center" }}>
+                                          <Workflow size={16} color="#6058F7" />
+                                        </Box>
+                                        <Typography
+                                          variant="body2"
+                                          color="text.secondary"
+                                          sx={{ wordBreak: "break-word", whiteSpace: "normal", flexGrow: 1 }}
+                                        >
                                           {subtask.taskname}
                                         </Typography>
                                       </Box>
@@ -385,8 +389,8 @@ function KanbanView({
                                         variant="text"
                                         sx={{
                                           position: 'absolute',
-                                          top: 0,
-                                          right: 0,
+                                          top: -35,
+                                          right: -15,
                                           fontSize: '12px',
                                           marginTop: '5px',
                                           background: 'transparent !important',

@@ -9,7 +9,6 @@ const utcDate = "2025-01-21T07:26:56.356Z";
 // Convert to IST (Indian Standard Time)
 const istDate = convertToIST(utcDate)
 
-console.log("Converted IST Date:", istDate);
   return (
     <div>DatePickerWithIST</div>
   )

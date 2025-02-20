@@ -1,0 +1,59 @@
+@import '../../theme/variable.scss';
+
+#external-tasks {
+    .bg-primary {
+        border-color: transparent !important;
+        color: $primary-main !important;
+        background-color: $primary-light-bg !important;
+
+        .text-primary p {
+            color: #444050 !important;
+
+        }
+    }
+
+    .bg-success {
+        border-color: transparent !important;
+        color: $success-main !important;
+        background-color: $success-light-bg !important;
+
+        .text-success p {
+            color: #444050 !important;
+        }
+    }
+
+    .bg-error {
+        border-color: transparent !important;
+        color: $error-main !important;
+        background-color: $error-light-bg !important;
+
+        .text-error p {
+            color: #444050 !important;
+        }
+    }
+
+    .bg-warning {
+        border-color: transparent !important;
+        color: $warning-main !important;
+        background-color: $warning-light-bg !important;
+
+        .text-warning p {
+            color: #444050 !important;
+        }
+    }
+
+    .bg-info {
+        border-color: transparent !important;
+        color: $info-main;
+        background-color: $info-light-bg !important;
+
+        .text-info p {
+            color: #444050 !important;
+        }
+    }
+}
+
+.toggleBtnCal{
+    width: 150px;
+    font-size: 14px !important;
+}

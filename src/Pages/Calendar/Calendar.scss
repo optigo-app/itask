@@ -261,7 +261,9 @@
                 }
 
                 &.bg-primary {
-                    .fc-list-event-dot {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
                         border-color: $primary-main !important;
                         background-color: $primary-main !important;
                     }
@@ -272,7 +274,9 @@
                 }
 
                 &.bg-success {
-                    .fc-list-event-dot {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
                         border-color: $success-main !important;
                         background-color: $success-main !important;
                     }
@@ -283,7 +287,9 @@
                 }
 
                 &.bg-error {
-                    .fc-list-event-dot {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
                         border-color: $error-main !important;
                         background-color: $error-main !important;
                     }
@@ -294,7 +300,9 @@
                 }
 
                 &.bg-warning {
-                    .fc-list-event-dot {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
                         border-color: $warning-main !important;
                         background-color: $warning-main !important;
                     }
@@ -305,7 +313,9 @@
                 }
 
                 &.bg-info {
-                    .fc-list-event-dot {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
                         border-color: $info-main !important;
                         background-color: $info-main !important;
                     }

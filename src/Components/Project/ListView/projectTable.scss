@@ -47,6 +47,11 @@
         }
     }
 
+    .prShDesc {
+        font-size: 13px !important;
+        color: $placeholderColor;
+    }
+
     .MuiButton-root {
         font-family: $font-family;
         color: $text2ndColor;

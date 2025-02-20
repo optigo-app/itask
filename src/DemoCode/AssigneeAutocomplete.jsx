@@ -35,7 +35,9 @@ const MultiSelectChipWithLimit = ({
                 multiple
                 fullWidth
                 options={options}
-                getOptionLabel={(option) => option.label}
+                getOptionLabel={(option) => option.firstname + " " + option.lastname}
+                getOptionKey={(option) => option.id}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
                 value={selectedValues}
                 onChange={handleChange}
                 limitTags={limitTags}
@@ -43,7 +45,7 @@ const MultiSelectChipWithLimit = ({
                     value.map((option, index) => (
                         <Chip
                             key={option.id}
-                            label={option.label}
+                            label={option.firstname + " " + option.lastname}
                             {...commonTextFieldProps}
                             {...getTagProps({ index })}
                             sx={{ borderRadius: "8px" }}
@@ -54,13 +56,11 @@ const MultiSelectChipWithLimit = ({
                     <TextField
                         {...params}
                         {...commonTextFieldProps}
-                        placeholder={!selectedValues || selectedValues?.length !== 2 ? placeholder : ''}
+                        placeholder={!selectedValues || selectedValues?.length <= 1 ? placeholder : ''}
                         variant="outlined"
                         fullWidth
                     />
                 )}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                getOptionSelected={(option, value) => option.id === value.id}
             />
         </Box>
     );

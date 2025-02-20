@@ -4,8 +4,9 @@ import { useRecoilState } from "recoil";
 import { calendarSideBarOpen } from "../../../Recoil/atom";
 import CalendarLeftSide from "../CalendarLeftSide";
 import { CircleX } from "lucide-react";
+import TasklistForCal from "../TasklistForCal";
 
-const CalendarDrawer = () => {
+const CalendarDrawer = ({ calendarsColor, showTasklist }) => {
     const [openSideDrawer, setSideDrawer] = useRecoilState(calendarSideBarOpen);
     const drawerRef = useRef(null);
 
@@ -70,7 +71,12 @@ const CalendarDrawer = () => {
                     }}>
                     <CircleX />
                 </IconButton>
-                <CalendarLeftSide />
+
+                {showTasklist ? (
+                    <TasklistForCal calendarsColor={calendarsColor} />
+                ) :
+                    <CalendarLeftSide calendarsColor={calendarsColor} />
+                }
             </Box>
         </Drawer>
     );

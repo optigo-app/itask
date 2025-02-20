@@ -14,7 +14,7 @@ const Card1 = ({ agenda }) => {
                     <TableBody>
                         {agenda?.map((event, idx) => (
                             <TableRow key={idx}>
-                                <TableCell>                   
+                                <TableCell>
                                     {event?.taskTitle}
                                 </TableCell>
 

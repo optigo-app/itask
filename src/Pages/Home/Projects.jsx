@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, Typography, Table, TableBody, TableCell, TableRow, Avatar, AvatarGroup } from '@mui/material';
+import { Card, CardContent, Typography, Table, TableBody, TableCell, TableRow, Avatar, AvatarGroup, Tooltip } from '@mui/material';
 import { getRandomAvatarColor } from '../../Utils/globalfun';
 
 const Card2 = ({ projects }) => {
@@ -48,16 +48,18 @@ const Card2 = ({ projects }) => {
                                             }}
                                         >
                                             {project?.team?.map((teamMember, teamIdx) => (
-                                                <Avatar
-                                                    key={teamIdx}
-                                                    alt={teamMember.name}
-                                                    src={teamMember.avatar}
-                                                    sx={{
-                                                        backgroundColor: background(teamMember),
-                                                    }}
-                                                >
-                                                    {!teamMember.avatar && teamMember.name.charAt(0)}
-                                                </Avatar>
+                                                <Tooltip placement="top" key={teamMember.name} title={teamMember.name} arrow>
+                                                    <Avatar
+                                                        key={teamIdx}
+                                                        alt={teamMember.name}
+                                                        src={teamMember.avatar}
+                                                        sx={{
+                                                            backgroundColor: background(teamMember),
+                                                        }}
+                                                    >
+                                                        {!teamMember.avatar && teamMember.name.charAt(0)}
+                                                    </Avatar>
+                                                </Tooltip>
                                             ))}
                                         </AvatarGroup>
                                     </div>

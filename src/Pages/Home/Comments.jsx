@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, Typography, Avatar, List, ListItem, ListItemAvatar, ListItemText } from '@mui/material';
-import { formatDate, getRandomAvatarColor } from '../../Utils/globalfun';
+import { formatDate2, getRandomAvatarColor } from '../../Utils/globalfun';
 
 const CommentList = ({ comments }) => {
 
@@ -45,7 +45,7 @@ const CommentList = ({ comments }) => {
                                             {comment.author.name}
                                         </Typography>
                                         <Typography component="span" variant="body2" color="textPrimary">
-                                            {comment.createdAt && formatDate(comment.createdAt)}
+                                            {comment.createdAt && formatDate2(comment.createdAt)}
                                         </Typography>
                                     </div>
                                 }

@@ -10,7 +10,7 @@ const PagenotFound = () => {
             <p className="not-found-text">
                 The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
             </p>
-            <Link to="/" className="not-found-link">
+            <Link to="/" className="not-found-link buttonClassname">
                Home
             </Link>
         </div>

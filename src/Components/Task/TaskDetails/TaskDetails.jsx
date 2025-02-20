@@ -9,40 +9,48 @@ import {
 import { CircleX, Expand, Shrink, Download, Send, Edit } from 'lucide-react';
 import './TaskDetails.scss';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { fetchlistApiCall, formData, openFormDrawer, selectedRowData } from '../../../Recoil/atom';
+import { fetchlistApiCall, formData, openFormDrawer, selectedRowData, TaskData } from '../../../Recoil/atom';
 import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
 import AttachmentImg from "../../../Assests/Attachment.jpg"
-import { getRandomAvatarColor, priorityColors, statusColors } from '../../../Utils/globalfun';
+import { findParentTask, formatDate3, getRandomAvatarColor, priorityColors, statusColors } from '../../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
 
 const TaskDetail = ({ open, onClose }) => {
     const theme = useTheme();
+    const [taskArr, setTaskArr] = useRecoilState(TaskData);
     const taskData = useRecoilValue(formData);
+    const setCallTaskApi = useSetRecoilState(fetchlistApiCall);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [count, setCount] = useState(2);
     const [taskDesc, setTaskDesc] = useState('');
     const [taskDescEdit, setTaskDescEdit] = useState(false);
-    console.log('taskDescEdit: ', taskDescEdit);
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [activeTab, setActiveTab] = useState(0);
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
-    const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const placeholderImage = AttachmentImg;
 
     const assignees = [
-        { name: "John Doe", avatar: "https://via.placeholder.com/30" },
-        { name: "Jane Smith", avatar: "https://via.placeholder.com/30" },
+        { name: "Aarav Sharma", avatar: "" },
+        { name: "Ishita Verma", avatar: "" },
+        { name: "Rajesh Iyer", avatar: "" },
+        { name: "Priya Nair", avatar: "" },
+        { name: "Vikram Singh", avatar: "" },
+        { name: "Ananya Reddy", avatar: "" },
+        { name: "Karthik Menon", avatar: "" },
+        { name: "Neha Gupta", avatar: "" },
+        { name: "Suresh Patil", avatar: "" },
+        { name: "Meera Joshi", avatar: "" }
     ];
-
+    
     const colors = [
         '#FF5722', '#4CAF50', '#2196F3', '#FFC107',
         '#E91E63', '#9C27B0', '#3F51B5', '#00BCD4'
@@ -52,15 +60,52 @@ const TaskDetail = ({ open, onClose }) => {
         setCnfDialogOpen(true);
     };
 
+    // const handleConfirmRemoveAll = async () => {
+    //     setCnfDialogOpen(false);
+    //     const parentTask = findParentTask(taskArr, taskData.taskid);
+    //     try {
+    //         const deleteTaskApi = await deleteTaskDataApi(formDataValue);
+    //         if (deleteTaskApi?.rd[0]?.stat == 1) {
+    //             setCallTaskApi(true);
+    //             setSelectedTask(parentTask);
+    //             setFormDrawerOpen(false);
+    //             setFormDataValue(null);
+    //             onClose()
+    //             toast.success("Task deleted successfully!");
+    //         } else {
+    //             console.error("Failed to delete task");
+    //         }
+    //     } catch (error) {
+    //         console.error("Error while deleting task:", error);
+    //     }
+    // };
+
+    // remove Task
+    const removeTaskRecursively = (tasks, taskIdToRemove) => {
+        return tasks
+            .map(task => {
+                if (task.subtasks) {
+                    return {
+                        ...task,
+                        subtasks: removeTaskRecursively(task.subtasks, taskIdToRemove)
+                    };
+                }
+                return task;
+            })
+            .filter(task => task.taskid !== taskIdToRemove);
+    };
+
     const handleConfirmRemoveAll = async () => {
         setCnfDialogOpen(false);
         try {
             const deleteTaskApi = await deleteTaskDataApi(formDataValue);
-            if (deleteTaskApi) {
-                setOpenChildTask(true);
-                setSelectedTask(null);
+            if (deleteTaskApi?.rd[0]?.stat === 1) {
+                const updatedTaskArr = removeTaskRecursively(taskArr, formDataValue.taskid);
+                setTaskArr(updatedTaskArr);
+                setCallTaskApi(true);
                 setFormDrawerOpen(false);
                 setFormDataValue(null);
+                onClose();
                 toast.success("Task deleted successfully!");
             } else {
                 console.error("Failed to delete task");
@@ -81,6 +126,7 @@ const TaskDetail = ({ open, onClose }) => {
     const handleClose = () => {
         onClose();
     }
+
     const toggleFullScreen = () => setIsFullScreen(!isFullScreen);
     const handleTabChange = (event, newValue) => setActiveTab(newValue);
 
@@ -152,30 +198,14 @@ const TaskDetail = ({ open, onClose }) => {
         }
     };
 
-
-    console.log(taskDesc, 'dlkjwsjdlkj')
-
-    const getRandomColor = (name) => {
-        const charSum = name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-        return colors[charSum % colors.length];
+    const background = (assignee) => {
+        const avatarBackgroundColor = assignee?.avatar
+            ? "transparent"
+            : getRandomAvatarColor(assignee?.name);
+        return avatarBackgroundColor;
     };
 
-    // for date format
-    const formatDate = (date) => {
-        if (!date) return '';
-
-        const formattedDate = new Date(date).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true,
-        });
-
-        return formattedDate;
-    };
+  
 
     return (
         <div>
@@ -287,7 +317,7 @@ const TaskDetail = ({ open, onClose }) => {
                                                         alt={assignee.name}
                                                         src={assignee.avatars || undefined}
                                                         sx={{
-                                                            backgroundColor: getRandomColor(assignee.name),
+                                                            background: `${background(assignee)} !important`,
                                                             color: '#fff',
                                                             width: '25px',
                                                             height: '25px',
@@ -391,7 +421,7 @@ const TaskDetail = ({ open, onClose }) => {
                                                             <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: 'flex-end', flexDirection: 'column', alignItems: 'flex-end' }}>
                                                                 {/* Date/Time */}
                                                                 <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px !important' }}>
-                                                                    {formatDate(subtask?.DeadLineDate)}
+                                                                    {formatDate3(subtask?.DeadLineDate)}
                                                                 </Typography>
                                                             </Grid>
                                                         </Grid>
@@ -413,7 +443,7 @@ const TaskDetail = ({ open, onClose }) => {
                                                             <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: 'flex-end', flexDirection: 'column', alignItems: 'flex-end' }}>
                                                                 {/* Date/Time */}
                                                                 <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px !important' }}>
-                                                                    {formatDate(comment?.entrydate)}
+                                                                    {formatDate3(comment?.entrydate)}
                                                                 </Typography>
                                                             </Grid>
                                                         </Grid>

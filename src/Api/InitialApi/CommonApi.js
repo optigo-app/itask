@@ -1,27 +1,29 @@
-
 import axios from "axios";
-const APIURL = (window.location.hostname === 'localhost' || window.location.hostname === 'zen') ? "http://zen/api/report.aspx" : 'https://api.optigoapps.com/ALL/report.aspx';
+
+const isLocal = ["localhost", "zen", "itask.web"].includes(window.location.hostname);
+const APIURL = isLocal
+  ? "http://zen/api/report.aspx"
+  : "https://api.optigoapps.com/ALL/report.aspx";
 
 export const CommonAPI = async (body) => {
-    const init = JSON.parse(sessionStorage.getItem('taskInit'));
-    try {
-        const YearCode = init?.YearCode ?? (window.location.hostname === 'localhost' || window.location.hostname === 'zen') ?
-            'e3t6ZW59fXt7MjB9fXt7b3JhaWwyNX19e3tvcmFpbDI1fX0=' : 'e3tsaXZlLm9wdGlnb2FwcHMuY29tfX17ezIwfX17e3Byb2l0YXNrfX17e3Byb2l0YXNrfX0='
-        const version = init?.version ?? 'v4';
-        const token = init?.token ?? '';
-        const sv = init?.sv ?? (window.location.hostname === 'localhost' || window.location.hostname === 'zen') ? '0' : '1';
+  try {
+    const init = JSON.parse(sessionStorage.getItem("taskInit")) || {};
+    const { YearCode, version = "v4", token = "", sv } = init;
 
-        const header = {
-            Authorization: `Bearer ${token}`,
-            Yearcode: YearCode,
-            Version: version,
-            sv: sv
-        };
-        const response = await axios.post(APIURL, body, { headers: header });
-        return response?.data;
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      Yearcode:
+        YearCode ??
+        (isLocal
+          ? "e3t6ZW59fXt7MjB9fXt7b3JhaWwyNX19e3tvcmFpbDI1fX0="
+          : "e3tsaXZlLm9wdGlnb2FwcHMuY29tfX17ezIwfX17e3Byb2l0YXNrfX17e3Byb2l0YXNrfX0="),
+      Version: version,
+      sv: sv ?? (isLocal ? "0" : "1"),
+    };
 
-    } catch (error) {
-        console.error('error is..', error);
-    }
+    const { data } = await axios.post(APIURL, body, { headers });
+    return data;
+  } catch (error) {
+    console.error("API Error:", error);
+  }
 };
-

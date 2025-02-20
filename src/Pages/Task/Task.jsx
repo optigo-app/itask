@@ -4,7 +4,7 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box } from "@mui/material";
 import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { fetchlistApiCall, flowRemember, masterDataValue, selectedRowData } from "../../Recoil/atom";
+import { fetchlistApiCall, masterDataValue, selectedRowData, taskActionMode, TaskData } from "../../Recoil/atom";
 import { fetchMasterGlFunc, formatDate, formatDate2 } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 
@@ -25,15 +25,12 @@ const Task = () => {
   const [assigneeData, setAssigneeData] = useState();
   const [taskDepartment, setTaskDepartment] = useState();
   const [taskProject, setTaskProject] = useState();
-  const flowRememberdata = useRecoilValue(flowRemember);
-  console.log('flowRememberdata: ', flowRememberdata);
   const [taskCategory, setTaskCategory] = useState();
   const [activeButton, setActiveButton] = useState("table");
   const [filters, setFilters] = useState({});
 
   // Sample data for tasks
-  const [tasks, setTasks] = useState();
-  console.log('tasks: ', tasks);
+  const [tasks, setTasks] = useRecoilState(TaskData);
 
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
@@ -65,7 +62,7 @@ const Task = () => {
       setIsLoading(false);
     }
   };
-  console.log('taskProject: ', taskProject);
+
   // const fetchTaskData = async (selectedRow) => {
   //   setIsLoading(true);
   //   try {
@@ -159,9 +156,9 @@ const Task = () => {
   //   }
   // };
 
-  const fetchTaskData = async (selectedRow) => {
+  const fetchTaskData = async () => {
     debugger
-    if (!tasks) {
+    if (tasks?.length == 0) {
       setIsTaskLoading(true);
     }
     try {
@@ -180,11 +177,12 @@ const Task = () => {
         const department = taskDepartment?.find(item => item?.id == task?.departmentid);
         const category = taskCategory?.find(item => item?.id == task?.workcategoryid);
         const assignee = ['shivam', 'shyam', "ram", "shiv", 'jeet', 'karan', 'kamal'];
+        const estimate = ['20', '30', '40']
 
         const enhancedSubtasks = task?.subtasks?.map((subtask) => ({
           ...enhanceTask(subtask),
-          subtaskflag: 1, // Flag for subtask
-          isUpdated: false, // Track if subtask is updated
+          subtaskflag: 1,
+          isUpdated: false,
         }));
 
         return {
@@ -196,6 +194,7 @@ const Task = () => {
           subtasks: enhancedSubtasks || [],
           assignee: assignee,
           category: category?.labelname,
+          estimate: estimate,
           subtaskflag: 0,
           isUpdated: false,
         };
@@ -399,7 +398,7 @@ const Task = () => {
       sx={{
         boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
         padding: "30px 20px",
-        borderRadius: "5px",
+        borderRadius: "8px",
         overflow: "hidden !important",
       }}
     >
@@ -414,6 +413,7 @@ const Task = () => {
         projectData={taskProject}
         statusData={statusData}
         taskCategory={taskCategory}
+        taskDepartment={taskDepartment}
       />
 
       {/* Divider */}
@@ -451,14 +451,14 @@ const Task = () => {
       <Suspense fallback={<></>}>
         {activeButton === "table" && (
           <TaskTable
-            data={!isTaskLoading ? filteredData : []}
+            data={filteredData ?? null}
             isLoading={isTaskLoading}
             masterData={masterData} />
         )}
 
         {activeButton === "kanban" &&
           <KanbanView
-            taskdata={!isTaskLoading ? filteredData : []}
+            taskdata={filteredData ?? null}
             isLoading={isTaskLoading}
             masterData={masterData}
             statusData={statusData}
