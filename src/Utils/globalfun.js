@@ -1,3 +1,4 @@
+import { AssigneeMaster } from "../Api/MasterApi/AssigneeMaster";
 import { fetchMaster } from "../Api/MasterApi/MasterApi";
 
 // output like 01/01/2023
@@ -17,6 +18,23 @@ export function formatDate2(dateStr) {
     const year = dateObj.getFullYear();
     return `${day} ${month} ${year}`;
 }
+
+// output like January 29, 2024 at 06:30:00 PM
+export const formatDate3 = (date) => {
+    if (!date) return '';
+
+    const formattedDate = new Date(date).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+    });
+
+    return formattedDate;
+};
 
 export const priorityColors = {
     Low: {
@@ -125,7 +143,7 @@ export const statusColors = {
 export const colors = [
     "#FF5722", "#4CAF50", "#2196F3", "#FFC107", "#E91E63", "#9C27B0", "#3F51B5", "#00BCD4",
     "#FF9800", "#9E9E9E", "#795548", "#607D8B", "#8BC34A", "#FFEB3B", "#FF4081", "#673AB7",
-    "#009688", "#F44336", "#3F51B5", "#CDDC39", "#03A9F4", "#9C27B0", "#FF1744", "#00E5FF",
+    "#ff7f50", "#F44336", "#3F51B5", "#CDDC39", "#03A9F4", "#9C27B0", "#FF1744", "#00E5FF",
     "#9E9E9E", "#4CAF50", "#00BCD4", "#8B4513", "#6A5ACD", "#F08080", "#32CD32", "#FF6347"
 ];
 
@@ -136,11 +154,15 @@ export const getRandomAvatarColor = (name) => {
     return colors[charSum % colors.length];
 };
 
-
 // make structure master data function
 export const fetchMasterGlFunc = async () => {
     try {
         const storedMasterData = sessionStorage.getItem('masterData');
+        const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('assigneeMaster'));
+        if (!AssigneeMasterData) {
+            AssigneeMaster()
+        }
+
         let result = JSON.parse(storedMasterData);
 
         if (!result) {
@@ -190,5 +212,166 @@ export const fetchMasterGlFunc = async () => {
         console.error("Error fetching master data:", error);
     }
 };
+
+// task parentid when add suntask and delete
+export const findParentTask = (tasks, selectedTaskId, parentTask = null) => {
+    for (let task of tasks) {
+        if (task.taskid === selectedTaskId) {
+            return parentTask;
+        }
+        if (task.subtasks) {
+            const foundParent = findParentTask(task.subtasks, selectedTaskId, task);
+            if (foundParent !== null) {
+                return foundParent;
+            }
+        }
+    }
+    return null;
+};
+
+//Selectmenu custom styles
+export const commonSelectProps = {
+    select: true,
+    fullWidth: true,
+    size: "small",
+    sx: {
+        minWidth: 180,
+        "& .MuiOutlinedInput-root": {
+            borderRadius: "8px",
+            "& fieldset": {
+                borderRadius: "8px",
+            },
+        },
+    },
+    SelectProps: {
+        MenuProps: {
+            PaperProps: {
+                sx: {
+                    borderRadius: "8px",
+                    "& .MuiMenuItem-root": {
+                        fontFamily: '"Public Sans", sans-serif',
+                        color: "#444050",
+                        margin: "5px 10px",
+                        "&:hover": {
+                            borderRadius: "8px",
+                            backgroundColor: "#7367f0",
+                            color: "#fff",
+                        },
+                        "&.Mui-selected": {
+                            backgroundColor: "#80808033",
+                            borderRadius: "8px",
+                            "&:hover": {
+                                backgroundColor: "#7367f0",
+                                color: "#fff",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+};
+
+// DatePicker custom styles
+export const customDatePickerProps = {
+    slotProps: {
+        popper: {
+            sx: {
+                "& .MuiDateCalendar-root": {
+                    borderRadius: "8px",
+                    fontFamily: '"Public Sans", sans-serif',
+                },
+                "& .MuiButtonBase-root, .MuiPickersCalendarHeader-label, .MuiPickersYear-yearButton": {
+                    color: "#444050",
+                    fontFamily: '"Public Sans", sans-serif',
+                },
+                "& .MuiPickersDay-root, .MuiPickersYear-yearButton": {
+                    "&:hover": {
+                        backgroundColor: "#7367f0",
+                        color: "#fff",
+                    },
+                },
+                "& .MuiPickersDay-root.Mui-selected, .Mui-selected ": {
+                    backgroundColor: "#7367f0",
+                    color: "#fff",
+                },
+                "& .MuiPickersDay-root.Mui-selected, .MuiPickersYear-yearButton:hover": {
+                    backgroundColor: "#7367f0",
+                    color: "#fff",
+                },
+            },
+        },
+    },
+};
+
+// sticky DatePicker custom styles use calendar page
+export const customDatePickerStyles = {
+    '& .MuiPickersLayout-root': {
+        minWidth: '300px',
+        width: '300px',
+        margin: '0 auto',
+    },
+    '& .MuiDatePickerToolbar-root': {
+        padding: '10px !important',
+    },
+    '& .MuiPickersToolbar-content': {
+        '& .MuiTypography-root': {
+            fontSize: '24px'
+        },
+    },
+    '& .MuiDateCalendar-root': {
+        borderRadius: '8px',
+        fontFamily: '"Public Sans", sans-serif',
+        color: '#444050',
+        maxHeight: '300px'
+    },
+    '& .MuiPickersYear-root': {
+        '& .MuiPickersYear-yearButton': {
+            fontFamily: '"Public Sans", sans-serif',
+            color: '#444050',
+            '&:hover': {
+                backgroundColor: '#7367f0',
+                color: '#fff',
+                borderRadius: '50px',
+            },
+        },
+    },
+    '& .css-6mw38q-MuiTypography-root': {
+        display: 'none',
+    },
+    '& .MuiPickersCalendarHeader-label': {
+        fontFamily: '"Public Sans", sans-serif',
+        color: "#444050",
+    },
+    '& .MuiPickersDay-root': {
+        fontFamily: '"Public Sans", sans-serif',
+        color: '#444050',
+        '&:hover': {
+            backgroundColor: '#7367f0',
+            color: '#fff',
+        },
+    },
+    '& .MuiPickersDay-root.Mui-selected': {
+        backgroundColor: '#7367f0 !important',
+        color: '#fff !important',
+    },
+    '& .MuiPickersDay-root.Mui-selected:hover': {
+        backgroundColor: '#7367f0',
+        color: '#fff',
+    },
+    '& .MuiPickersYear-yearButton.Mui-selected': {
+        backgroundColor: '#7367f0 !important',
+        color: '#fff !important',
+    },
+};
+
+// Common TextField style properties
+export const commonTextFieldProps = {
+    fullWidth: true,
+    size: "small",
+    className: "textfieldsClass",
+};
+
+
 
 

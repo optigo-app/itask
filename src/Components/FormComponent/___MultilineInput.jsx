@@ -1,15 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Grid, TextField, IconButton, Box } from "@mui/material";
 import { Minus, Plus } from "lucide-react";
 
-const EstimateInput = ({ onChanges }) => {
+const MultiLineInput = ({ onChanges }) => {
     const [values, setValues] = useState([""]);
-    const maxInputs = 3;
+    const inputRefs = useRef([]);
+    const maxInputs = 50;
 
-    // Function to add a new field
+    // Function to add a new field and focus on it
     const addField = () => {
         if (values.length < maxInputs) {
-            setValues([...values, ""]);
+            setValues((prev) => {
+                const newValues = [...prev, ""];
+                return newValues;
+            });
+
+            setTimeout(() => {
+                const lastIndex = inputRefs.current.length - 1;
+                inputRefs.current[lastIndex]?.focus();
+            }, 100);
         }
     };
 
@@ -17,7 +26,6 @@ const EstimateInput = ({ onChanges }) => {
     const handleChange = (index, value) => {
         const newValues = [...values];
         newValues[index] = value;
-        console.log('newValues: ', newValues);
         setValues(newValues);
         onChanges(newValues);
     };
@@ -39,6 +47,7 @@ const EstimateInput = ({ onChanges }) => {
                             variant="outlined"
                             size="small"
                             value={value}
+                            inputRef={(el) => (inputRefs.current[index] = el)}
                             onChange={(e) => handleChange(index, e.target.value)}
                             className="textfieldsClass"
                         />
@@ -63,4 +72,4 @@ const EstimateInput = ({ onChanges }) => {
     );
 };
 
-export default EstimateInput;
+export default MultiLineInput;

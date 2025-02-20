@@ -1,5 +1,10 @@
 import { atom } from "recoil";
 
+export const TaskData = atom({
+  key: 'TaskData',
+  default: []
+})
+
 export const openFormDrawer = atom({
   key: 'openFormDrawer',
   default: false
@@ -10,19 +15,13 @@ export const formData = atom({
   default: {}
 })
 
-export const flowRemember = atom({
-  key: 'flowRemember',
-  default: []
+export const taskActionMode = atom({
+  key: 'taskActionMode',
+  default: ''
 })
 
 export const masterDataValue = atom({
   key: 'masterDataValue',
-  default: []
-})
-
-
-export const TaskData = atom({
-  key: 'TaskData',
   default: []
 })
 

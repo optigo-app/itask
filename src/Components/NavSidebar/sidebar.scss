@@ -4,6 +4,7 @@
     display: flex;
     box-shadow: 0 .125rem .5rem 0 rgba(47, 43, 61, .12);
     font-family: $font-family;
+    height: 100vh;
 }
 
 .itask_drawerButton {
@@ -18,7 +19,7 @@
 }
 
 .itask_drawerListItem {
-    padding: 5px 0 !important;
+    padding: 6px 0 !important;
     border-radius: 8px !important;
     justify-content: center !important;
 }
@@ -49,11 +50,11 @@
 }
 
 .itask_checkbox {
-    color: $button-Bordercolor;
+    color: $button-Bordercolor !important;
 }
 
 .itask_checkboxChecked {
-    color: $button-Bordercolor;
+    color: $button-Bordercolor !important;
 }
 
 /* Styles for active button */
@@ -62,17 +63,26 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    padding: 0px 6px !important;
 }
 
 .itask_logoWrapper {
     display: flex;
     align-items: center;
-    gap: 10px;
-}
+    cursor: pointer;
 
-.itask_logo {
-    width: 32px;
-    height: 22px;
+    .itask_logo {
+        height: 40px;
+        object-fit: contain;
+        mix-blend-mode: darken;
+    }
+
+    .itask_logoTxt span {
+        font-size: 30px;
+        font-weight: 600;
+        font-family: $font-family !important;
+        color: $titleColor;
+    }
 }
 
 .itask_separator {

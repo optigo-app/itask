@@ -1,14 +1,22 @@
-.notiCo {
-    font-size: 13px !important;
-}
+.notiCardCo {
+    .notiCo {
+        font-size: 13px !important;
+    }
 
-.notiTitleDescriptCo {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: normal;
-    max-width: 300px;
+    .notiTitleDescriptCo {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal;
+        max-width: 300px;
+    }
+
+    .btnReject, .btnAccept{
+        font-size: 12px !important;
+        padding: 2px !important;
+    }
+
 }

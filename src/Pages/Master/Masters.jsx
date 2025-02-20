@@ -16,14 +16,12 @@ import { DataGrid } from '@mui/x-data-grid';
 import { ArchiveRestore, Pencil, SearchIcon, Trash } from 'lucide-react';
 import { addEditDelMaster, fetchMaster } from "../../Api/MasterApi/MasterApi";
 import "./Master.scss";
-import LoadingBackdrop from "../../Utils/LoadingBackdrop";
+import LoadingBackdrop from "../../Utils/Common/LoadingBackdrop";
 
 const CategoryCards = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [formattedData, setFormattedData] = useState([]);
-    console.log('formattedData: ', formattedData);
     const [categoryStates, setCategoryStates] = useState({});
-    console.log('categoryStates: ', categoryStates);
     const [paginationModel, setPaginationModel] = useState({
         page: 0,
         pageSize: 10,

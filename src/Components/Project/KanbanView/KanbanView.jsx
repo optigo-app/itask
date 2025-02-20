@@ -8,7 +8,7 @@ import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDi
 import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag } from "../../../Recoil/atom";
 import { useRecoilState, useSetRecoilState } from "recoil";
-import LoadingBackdrop from "../../../Utils/LoadingBackdrop";
+import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 
 function KanbanView({
   taskdata,
@@ -33,7 +33,6 @@ function KanbanView({
   };
 
   const handleDelete = (task) => {
-    console.log('task: ', task);
     setCnfDialogOpen(true);
     setSelectedTask(task)
   }
@@ -136,7 +135,6 @@ function KanbanView({
 
       const endTasks = Array.from(endColumn.tasks);
       endTasks.splice(destination.index, 0, updatedMovedTask);
-      console.log('endTasks: ', endTasks);
 
       setData((prevData) => ({
         ...prevData,
@@ -157,7 +155,6 @@ function KanbanView({
         };
         let rootSubrootflagval = "root"
         const addTaskApi = await AddTaskDataApi(formValues ?? {}, updatedMovedTask ?? {}, rootSubrootflagval ?? {});
-        console.log('addTaskApi: ', addTaskApi);
       }
     }
   };

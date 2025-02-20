@@ -2,7 +2,8 @@ $button-Bgcolor: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 10
 $button-color: #fff;
 $button-color-hover: #685dd8;
 $button-Bordercolor: #685dd8;
-$button-DangerBgcolor: #e65b65;
+$button-DangerBgcolor: linear-gradient(270deg, rgba(255, 72, 66, 0.8) 0%, #d90429 100%);
+$button-DangerBgcolor-hover: #c20225;
 $button-Dangercolor: #ffffff;
 
 $sidebar-Activebg: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%) !important;
@@ -51,12 +52,42 @@ $divider-color: #e0e0e0;
 .buttonClassname {
     font-family: $font-family !important;
     background: $button-Bgcolor;
-    color: $button-color;
+    color: $button-color !important;
     border-color: $button-Bordercolor;
+    text-transform: capitalize !important;
+    border-radius: 8px !important;
 
     &:hover {
         background-color: $button-color-hover;
         border-color: $button-Bordercolor;
+    }
+}
+
+.secondaryBtnClassname {
+    font-family: $font-family !important;
+    background: #ebebed !important;
+    color: $secondaryColor !important;
+    border-color: #ebebed;
+    text-transform: capitalize !important;
+    border-radius: 8px !important;
+
+    &:hover {
+        background-color: $button-color-hover;
+        border-color: $button-Bordercolor;
+    }
+}
+
+.dangerbtnClassname {
+    font-family: $font-family !important;
+    background: $button-DangerBgcolor !important;
+    color: $button-color !important;
+    border-color: $button-DangerBgcolor-hover;
+    text-transform: capitalize !important;
+    border-radius: 8px !important;
+
+    &:hover {
+        background-color: $button-DangerBgcolor-hover !important;
+        border-color: $button-DangerBgcolor-hover !important;
     }
 }
 
@@ -174,8 +205,8 @@ $divider-color: #e0e0e0;
                 font-size: 15px !important;
 
                 &[aria-selected="true"] {
-                    background: $button-color-hover;
-                    color: $button-color !important;
+                    background: #e6e6e6;
+                    color: #000 !important;
                 }
 
                 &:hover {
@@ -183,6 +214,28 @@ $divider-color: #e0e0e0;
                     color: $button-color !important;
                 }
             }
+        }
+    }
+}
+
+// mui autocomplete
+.toggle-button-group {
+    font-family: $font-family !important;
+
+    .MuiToggleButton-root {
+        font-family: inherit;
+        color: $titleColor;
+        text-transform: capitalize !important;
+        transition: background-color 0.3s ease, color 0.3s ease;
+
+        &.Mui-selected {
+            background-color: $button-Bordercolor;
+            color: #fff;
+        }
+
+        &:hover {
+            background-color: rgba(173, 156, 220, 0.2);
+            color: $titleColor;
         }
     }
 }

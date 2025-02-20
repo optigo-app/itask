@@ -245,7 +245,7 @@ const Home = () => {
               <Card3 urgentTask={urgentTask} />
             </Grid>
 
-            <Grid item>
+            {/* <Grid item>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
                   <Card4_1 comments={newComment} />
@@ -255,7 +255,7 @@ const Home = () => {
                   <Card4_2 teamData={teamDir} />
                 </Grid>
               </Grid>
-            </Grid>
+            </Grid> */}
           </Grid>
         </Grid>
       </Grid>

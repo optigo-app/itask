@@ -15,6 +15,26 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        position: relative;
+
+        .toggle-btn-group {
+            
+            .toggle-btn {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                font-family: $font-family !important;
+                color: $titleColor !important;
+                gap: 6px;
+                padding: 6px 12px;
+                text-transform: capitalize;
+            }
+
+            .toggle-btn.Mui-selected {
+                background-color: #7D7F85 !important;
+                color: #fff !important;
+            }
+        }
     }
 
     .drawer-title {
@@ -70,5 +90,25 @@
         color: $button-Dangercolor !important;
         font-family: $font-family !important;
         border-radius: 8px !important;
+    }
+
+    .bulTaskTableContainer {
+        box-shadow: rgba(0, 0, 0, 0.02) 0px 6px 24px 0px, rgba(0, 0, 0, 0.05) 0px 0px 0px 1px !important;
+        border-radius: 8px;
+
+        .MuiTableCell-root {
+            font-family: $font-family !important;
+            padding: 8px 16px !important;
+        }
+    }
+
+    .milestone-checkbox.Mui-checked {
+        color: $primary-main !important;
+    }
+
+    .milestone-label {
+        font-size: 16px;
+        font-weight: 500;
+        color: $titleColor;
     }
 }

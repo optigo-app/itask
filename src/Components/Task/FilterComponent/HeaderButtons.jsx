@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Button, InputAdornment, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Box, Button, IconButton, InputAdornment, Menu, MenuItem, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 import SidebarDrawer from "../../FormComponent/Sidedrawer";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
@@ -8,9 +8,23 @@ import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRo
 import { toast } from "react-toastify";
 import TableChartIcon from '@mui/icons-material/TableChart';
 import ViewKanbanIcon from '@mui/icons-material/ViewKanban';
-import { Kanban, List, SearchIcon } from "lucide-react";
+import { Kanban, List, MoreVerticalIcon, SearchIcon } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
-const HeaderButtons = ({ searchTerm, activeButton, onFilterChange, onButtonClick, isLoading, masterData, priorityData, projectData, statusData, taskCategory }) => {
+const HeaderButtons = ({
+  searchTerm,
+  activeButton,
+  onFilterChange,
+  onButtonClick,
+  isLoading,
+  masterData,
+  priorityData,
+  projectData,
+  statusData,
+  taskCategory,
+  taskDepartment }) => {
+  const location = useLocation();
+  console.log('location: ', location);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const setFormDataValue = useSetRecoilState(formData);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
@@ -27,17 +41,17 @@ const HeaderButtons = ({ searchTerm, activeButton, onFilterChange, onButtonClick
     setFormDataValue({})
     setRootSubroot({ Task: "AddTask" })
     setOpenChildTask(false);
-    setSelectedTask({})
+    // setSelectedTask({})
 
   };
 
-  const handleFormSubmit = async (formValues, formDataValue) => {
+  const handleFormSubmit = async (formValues, formDataValue, mode) => {
     setOpenChildTask(false);
-    const addTaskApi = await AddTaskDataApi(formValues ?? {}, formDataValue ?? {}, rootSubrootflagval ?? {});
+    const addTaskApi = await AddTaskDataApi(formValues ?? {}, formDataValue ?? {}, rootSubrootflagval ?? {}, mode);
     if (addTaskApi) {
       setFormDrawerOpen(false);
       setOpenChildTask(true);
-      setSelectedTask({})
+      // setSelectedTask({})
       setTimeout(() => {
         if (rootSubrootflagval?.Task === "SubTask") {
           toast.success("Sub Task Added Successfully...")
@@ -50,7 +64,6 @@ const HeaderButtons = ({ searchTerm, activeButton, onFilterChange, onButtonClick
   };
 
   const handleViewChange = (event, newView) => {
-    console.log('newView: ', newView);
     if (newView !== null) {
       setView(newView);
       onButtonClick(newView);
@@ -58,7 +71,6 @@ const HeaderButtons = ({ searchTerm, activeButton, onFilterChange, onButtonClick
   };
 
   const handleFilterChange = (key, value) => {
-    console.log('key: ', key, 'value: ', value);
     setSelectedCategory(value);
     onFilterChange(key, value);
   };
@@ -135,16 +147,43 @@ const HeaderButtons = ({ searchTerm, activeButton, onFilterChange, onButtonClick
         </Box>
       </Box>
       <Box sx={{ display: "flex", gap: 2 }}>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          className="buttonClassname"
-          onClick={handleDrawerToggle}
-        >
-          New
-        </Button>
+        {location.pathname == "/tasks" &&
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            className="buttonClassname"
+            onClick={handleDrawerToggle}
+          >
+            New
+          </Button>
+        }
         <ViewToggleButtons view={view} onViewChange={handleViewChange} />
+        <IconButton
+          id="actions"
+          aria-label="actions"
+          aria-labelledby="actions"
+          // onClick={(e) => handleMenuOpen(e, task, { Task: 'root' })}
+          style={{ color: "#7d7f85" }}
+        >
+          <MoreVerticalIcon />
+        </IconButton>
       </Box>
+
+      {/* <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          className: "MenuBtnPaperClass",
+          style: {
+            maxHeight: 48 * 4.5,
+            width: "20ch",
+          },
+        }}
+      >
+        <MenuItem onClick={() => handleMenuItemClick('Delete', { Task: 'root' })}>Delete</MenuItem>
+        <MenuItem onClick={() => handleMenuItemClick('View', { Task: 'root' })}>View</MenuItem>
+      </Menu> */}
       <SidebarDrawer
         open={formdrawerOpen}
         onClose={handleDrawerToggle}
@@ -155,6 +194,7 @@ const HeaderButtons = ({ searchTerm, activeButton, onFilterChange, onButtonClick
         projectData={projectData}
         statusData={statusData}
         taskCategory={taskCategory}
+        taskDepartment={taskDepartment}
       />
     </Box>
   );

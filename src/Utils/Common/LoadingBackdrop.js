@@ -2,6 +2,7 @@ import React from 'react';
 import { Backdrop, Box, CircularProgress } from '@mui/material';
 
 const LoadingBackdrop = ({ isLoading }) => {
+  const isLoadingBool = Boolean(isLoading);
   return (
     <Backdrop
       sx={{
@@ -13,7 +14,7 @@ const LoadingBackdrop = ({ isLoading }) => {
         alignItems: 'center',
         justifyContent: 'center',
       }}
-      open={isLoading}
+      open={isLoadingBool}
     >
       <Box
         sx={{
