@@ -5,6 +5,8 @@ import {
     useTheme,
     Drawer,
     Button,
+    AvatarGroup,
+    Tooltip,
 } from '@mui/material';
 import { CircleX, Expand, Shrink, Download, Send, Edit } from 'lucide-react';
 import './TaskDetails.scss';
@@ -15,10 +17,14 @@ import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
 import AttachmentImg from "../../../Assests/Attachment.jpg"
-import { findParentTask, formatDate3, getRandomAvatarColor, priorityColors, statusColors } from '../../../Utils/globalfun';
+import { findParentTask, formatDate2, formatDate3, getRandomAvatarColor, priorityColors, statusColors } from '../../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
+import AttachmentGrid from './AttachmentGrid';
+import CommentSection from './TaskComment';
+import { TaskDescription } from './TaskDescription';
+import SubtaskCard from './SubTaskcard';
 
 const TaskDetail = ({ open, onClose }) => {
     const theme = useTheme();
@@ -50,7 +56,7 @@ const TaskDetail = ({ open, onClose }) => {
         { name: "Suresh Patil", avatar: "" },
         { name: "Meera Joshi", avatar: "" }
     ];
-    
+
     const colors = [
         '#FF5722', '#4CAF50', '#2196F3', '#FFC107',
         '#E91E63', '#9C27B0', '#3F51B5', '#00BCD4'
@@ -198,6 +204,10 @@ const TaskDetail = ({ open, onClose }) => {
         }
     };
 
+    const handleDescCancel = () => {
+        setTaskDescEdit(false);
+    }
+
     const background = (assignee) => {
         const avatarBackgroundColor = assignee?.avatar
             ? "transparent"
@@ -205,7 +215,7 @@ const TaskDetail = ({ open, onClose }) => {
         return avatarBackgroundColor;
     };
 
-  
+
 
     return (
         <div>
@@ -250,8 +260,9 @@ const TaskDetail = ({ open, onClose }) => {
                                     Delete
                                 </Button>
                             </Box>
-                            <Grid container rowSpacing={2} className="task-details">
+                            <Grid container className="task-details">
                                 <Grid container spacing={2}>
+                                    {/* Status */}
                                     <Grid item xs={3}>
                                         <Typography className="tasklable">Status</Typography>
                                     </Grid>
@@ -261,18 +272,21 @@ const TaskDetail = ({ open, onClose }) => {
                                                 color: `${statusColors[taskData?.status]?.color} !important`,
                                                 backgroundColor: statusColors[taskData?.status]?.backgroundColor,
                                                 width: 'fit-content',
-                                                padding: '0.2rem 0.8rem',
+                                                padding: '0.3rem 1rem',
                                                 borderRadius: '5px',
                                                 textAlign: 'center',
-                                                fontSize: '13.5px !important',
+                                                fontSize: '14px !important',
                                                 fontWeight: '500',
                                                 display: 'flex',
                                                 justifyContent: 'center',
                                                 alignItems: 'center',
                                             }}
-                                        >{taskData?.status}
+                                        >
+                                            {taskData?.status}
                                         </Typography>
                                     </Grid>
+
+                                    {/* Priority */}
                                     <Grid item xs={3}>
                                         <Typography className="tasklable">Priority</Typography>
                                     </Grid>
@@ -282,207 +296,107 @@ const TaskDetail = ({ open, onClose }) => {
                                                 color: `${priorityColors[taskData?.priority]?.color} !important`,
                                                 backgroundColor: priorityColors[taskData?.priority]?.backgroundColor,
                                                 width: 'fit-content',
-                                                padding: '0.2rem 0.8rem',
+                                                padding: '0.3rem 1rem',
                                                 borderRadius: '5px',
                                                 textAlign: 'center',
-                                                fontSize: '13.5px !important',
+                                                fontSize: '14px !important',
                                                 fontWeight: '500',
                                                 display: 'flex',
                                                 justifyContent: 'center',
                                                 alignItems: 'center',
                                             }}
-                                        >{taskData?.priority}
+                                        >
+                                            {taskData?.priority}
                                         </Typography>
                                     </Grid>
-                                </Grid>
 
-                                <Grid item xs={3}>
-                                    <Typography className="tasklable">Assignees</Typography>
-                                </Grid>
-                                <Grid item xs={9}>
-                                    <Grid container spacing={1}>
-                                        {assignees.map((assignee, index) => (
-                                            <Grid item key={index}>
-                                                <Box
-                                                    sx={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '5px',
-                                                        background: '#4c4c4c0d',
-                                                        padding: '0px 10px 0px 0px',
-                                                        borderRadius: '30px',
-                                                    }}
-                                                >
+                                    {/* Assignees */}
+                                    <Grid item xs={3}>
+                                        <Typography className="tasklable">Assignees</Typography>
+                                    </Grid>
+                                    <Grid item xs={9}>
+                                        <AvatarGroup
+                                            max={10}
+                                            sx={{
+                                                flexDirection: 'row',
+                                                '& .MuiAvatar-root': {
+                                                    width: 30,
+                                                    height: 30,
+                                                    fontSize: '14px',
+                                                    cursor: 'pointer',
+                                                    border: 'none',
+                                                    transition: 'transform 0.3s ease-in-out',
+                                                    '&:hover': {
+                                                        transform: 'translateY(-5px)',
+                                                    },
+                                                },
+                                            }}
+                                        >
+                                            {assignees?.map((teamMember, teamIdx) => (
+                                                <Tooltip key={teamIdx} placement="top" title={teamMember.name} arrow>
                                                     <Avatar
-                                                        alt={assignee.name}
-                                                        src={assignee.avatars || undefined}
+                                                        alt={teamMember.name}
+                                                        src={teamMember.avatar}
                                                         sx={{
-                                                            background: `${background(assignee)} !important`,
-                                                            color: '#fff',
-                                                            width: '25px',
-                                                            height: '25px',
-                                                            fontSize: '13px',
+                                                            backgroundColor: background(teamMember),
                                                         }}
                                                     >
-                                                        {assignee.avatars ? null : assignee.name.charAt(0)}
+                                                        {!teamMember.avatar && teamMember.name.charAt(0)}
                                                     </Avatar>
-                                                    <span>{assignee.name}</span>
-                                                </Box>
-                                            </Grid>
-                                        ))}
+                                                </Tooltip>
+                                            ))}
+                                        </AvatarGroup>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                        <Typography className="tasklable">Due Date</Typography>
+                                    </Grid>
+                                    <Grid item xs={9}>
+                                        <Typography>{formatDate2(taskData?.DeadLineDate)}</Typography>
                                     </Grid>
                                 </Grid>
-                                <Grid item xs={12}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <Typography className='tasklable'>Description</Typography>
-                                        <IconButton
-                                            onClick={handleShowEditDesc}
-                                            color="primary"
-                                        >
-                                            <Edit color='#7367f0' size={20} />
-                                        </IconButton>
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={12} paddingTop='5px !important'>
-                                    <Box sx={{ position: 'relative' }}>
-                                        {!taskDescEdit ? (
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Typography>{typeof taskDesc === 'string' ? taskDesc : taskDesc?.descr}</Typography>
-                                            </Box>
-                                        ) : (
-                                            <>
-                                                <TextareaAutosize
-                                                    value={typeof taskDesc === 'string' ? taskDesc : taskDesc?.descr}
-                                                    rows={8}
-                                                    onChange={handleDescChange}
-                                                    placeholder="Enter description here..."
-                                                    className="textarea"
-                                                />
-                                                <Button
-                                                    className='buttonClassname'
-                                                    onClick={handleUpdateDesc}
-                                                    sx={{
-                                                        position: 'absolute',
-                                                        bottom: '10px',
-                                                        right: '10px',
-                                                    }}
-                                                    color="primary"
-                                                >
-                                                    Update
-                                                </Button>
-                                            </>
-                                        )}
-
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={12} className="attachment-header">
-                                    <Typography className='tasklable'>Attachment ({count})</Typography>
-                                    <IconButton onClick={() => alert('Download Attachment')} sx={{ borderRadius: '8px' }}>
-                                        <Download color='#7367f0' size={20} />
-                                        <span style={{ color: '#7367f0', fontSize: '15px', paddingLeft: '5px' }}>Download All</span>
-                                    </IconButton>
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <Grid container spacing={2}>
-                                        {[...Array(count)]?.map((_, index) => (
-                                            <Grid item xs={6} key={index}>
-                                                <Card className="attachment-card">
-                                                    <CardMedia
-                                                        component="img"
-                                                        className="attachment-image"
-                                                        image={placeholderImage}
-                                                        alt="Attachment"
-                                                    />
-                                                    <CardContent>
-                                                        <Typography variant="body1">Attachment Name</Typography>
-                                                        <Typography variant="body2" color="text.secondary">Details about the attachment</Typography>
-                                                    </CardContent>
-                                                </Card>
-                                            </Grid>
-                                        ))}
-                                    </Grid>
-                                </Grid>
-                                <Grid item xs={12}>
+                                {/* description */}
+                                <TaskDescription
+                                    taskDesc={taskDesc}
+                                    taskDescEdit={taskDescEdit}
+                                    handleShowEditDesc={handleShowEditDesc}
+                                    handleDescChange={handleDescChange}
+                                    handleUpdateDesc={handleUpdateDesc}
+                                    handleDescCancel={handleDescCancel}
+                                />
+                                <Grid item xs={12} className='tabDataMain'>
                                     <Tabs value={activeTab} onChange={handleTabChange} className='muiTaskTabs'>
                                         <Tab label={`Subtasks`} />
+                                        <Tab label="Attachment" />
                                         <Tab label={`Comments (${comments?.length})`} />
-                                        {/* <Tab label="Activities" /> */}
                                     </Tabs>
                                     <Box className="tab-content">
                                         {activeTab === 0 &&
-                                            <>
-                                                {taskData?.subtasks?.map((subtask, index) => (
-                                                    <Card key={index} className="subtask-card">
-                                                        <Grid container spacing={2} padding={2}>
-                                                            <Grid item xs={12} sm={8}>
-                                                                {/* Title and Description */}
-                                                                <Typography variant="h6">{subtask?.taskname}</Typography>
-                                                            </Grid>
-                                                            <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: 'flex-end', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                                                {/* Date/Time */}
-                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px !important' }}>
-                                                                    {formatDate3(subtask?.DeadLineDate)}
-                                                                </Typography>
-                                                            </Grid>
-                                                        </Grid>
-                                                    </Card>
-                                                ))}
-                                            </>
+                                            <SubtaskCard subtasks={taskData?.subtasks} />
                                         }
-                                        {activeTab === 1 && (
-                                            <>
-                                                {/* Mapping through multiple comments */}
-                                                {comments?.map((comment, index) => (
-                                                    <Card key={index} className="comment-card">
-                                                        <Grid container spacing={2} padding={2}>
-                                                            <Grid item xs={12} sm={8}>
-                                                                {/* Title and Description */}
-                                                                <Typography variant="h6">{comment?.comment}</Typography>
-                                                                <Typography variant="body1">{comment?.description}</Typography>
-                                                            </Grid>
-                                                            <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: 'flex-end', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                                                {/* Date/Time */}
-                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px !important' }}>
-                                                                    {formatDate3(comment?.entrydate)}
-                                                                </Typography>
-                                                            </Grid>
-                                                        </Grid>
-                                                    </Card>
-                                                ))}
-
-                                                {/* Add New Comment Section */}
-                                                <Box sx={{ position: 'sticky', bottom: '0', background: '#fff' }}>
-                                                    <TextareaAutosize
-                                                        value={newComment}
-                                                        onChange={handleCommentChange}
-                                                        rows={4}
-                                                        placeholder="Add a comment..."
-                                                        className="textarea"
-                                                        style={{ minWidth: '25px' }}
-
-                                                    />
-                                                    <IconButton
-                                                        onClick={handleSendComment}
-                                                        sx={{
-                                                            position: 'absolute',
-                                                            bottom: '10px',
-                                                            right: '10px',
-                                                        }}
-                                                        color="primary"
-                                                    >
-                                                        <Send color='#7367f0' size={25} />
-                                                    </IconButton>
-                                                </Box>
-                                            </>
+                                        {activeTab === 1 &&
+                                            <Box>
+                                                <IconButton onClick={() => alert('Download Attachment')} sx={{ width: '100%', display: 'flex', justifyContent: 'end', borderRadius: '8px' }}>
+                                                    <Download color='#7367f0' size={20} />
+                                                    <span style={{ color: '#7367f0', fontSize: '15px', paddingLeft: '5px' }}>Download All</span>
+                                                </IconButton>
+                                                <AttachmentGrid count={count} placeholderImage={placeholderImage} />
+                                            </Box>
+                                        }
+                                        {activeTab === 2 && (
+                                            <CommentSection
+                                                comments={comments}
+                                                newComment={newComment}
+                                                onCommentChange={handleCommentChange}
+                                                onSendComment={handleSendComment}
+                                            />
                                         )}
-                                        {/* {activeTab === 2 && <Typography>Activities content...</Typography>} */}
                                     </Box>
                                 </Grid>
                             </Grid>
                         </Box>
                     </div>
-                </Box>
-            </Drawer>
+                </Box >
+            </Drawer >
             <ConfirmationDialog
                 open={cnfDialogOpen}
                 onClose={handleCloseDialog}
@@ -490,7 +404,7 @@ const TaskDetail = ({ open, onClose }) => {
                 title="Confirm"
                 content="Are you sure you want to remove this task?"
             />
-        </div>
+        </div >
     );
 };
 

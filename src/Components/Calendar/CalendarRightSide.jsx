@@ -120,6 +120,9 @@ const Calendar = () => {
         //     const title = `<div>${arg.event.title}</div>`;
         //     return { html: `${time ? time + "&nbsp;" : ""}${title}` };
         // },
+        eventAllow: function (dropInfo, draggedEvent) {
+            return !draggedEvent.extendedProps?.isMeeting;
+        },
         eventClick({ event: clickedEvent }) {
             const startDate = clickedEvent?.start;
             const endDate = clickedEvent?.end ?? startDate;
@@ -154,6 +157,7 @@ const Calendar = () => {
             setCaledrawerOpen(true);
         },
         eventDrop({ event: droppedEvent }) {
+            if (droppedEvent.extendedProps?.isMeeting) return;
             const startDate = droppedEvent?.start;
             const endDate = droppedEvent?.end ?? startDate;
             const updatedEvent = {
@@ -205,6 +209,7 @@ const Calendar = () => {
         },
 
         eventResize({ event: resizedEvent }) {
+            if (resizedEvent.extendedProps?.isMeeting) return;
             const startDate = resizedEvent?.start;
             const endDate = resizedEvent?.end ?? startDate;
             const updatedEvent = {

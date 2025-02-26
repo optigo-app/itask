@@ -27,7 +27,7 @@ import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { formatDate2, getRandomAvatarColor, statusColors } from "../../../Utils/globalfun";
+import { formatDate2, getRandomAvatarColor, priorityColors, statusColors } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "./AssigneeShortcutModal";
 
@@ -63,29 +63,6 @@ const TableView = ({ data, isLoading }) => {
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
     const [cnfDialogOpen, setCnfDialogOpen] = useState(false);
     const [openAssigneeModal, setOpenAssigneeModal] = useState(false);
-
-    const priorityColors = {
-        Low: {
-            color: "#4caf50",
-            backgroundColor: "#e8f5e9",
-        },
-        Medium: {
-            color: "#ff9800",
-            backgroundColor: "#fff3e0",
-        },
-        High: {
-            color: "#f44336",
-            backgroundColor: "#ffebee",
-        },
-        Urgent: {
-            color: "#d32f2f",
-            backgroundColor: "#ffcccb",
-        },
-        Critical: {
-            color: "#ffffff",
-            backgroundColor: "#b71c1c",
-        },
-    };
 
     const background = (assignee) => {
         const avatarBackgroundColor = assignee?.avatar

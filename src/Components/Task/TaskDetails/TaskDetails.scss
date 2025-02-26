@@ -47,7 +47,7 @@
     font-family: $font-family !important;
   }
 
-  .titlebox{
+  .titlebox {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -73,15 +73,15 @@
       color: #7b7b7b !important;
     }
 
-    .assignee-info {
+    .taskDesc {
       display: flex;
+      gap: 10px;
+      margin: 16px 0px 5px 0px;
       align-items: center;
 
-      .avatar {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        margin-right: 10px;
+      .taskDesclable {
+        font-size: 20px;
+        font-weight: bold;
       }
     }
 
@@ -120,6 +120,7 @@
     border: 1px solid #e1e1e1;
     border-radius: 8px;
     box-shadow: none !important;
+    position: relative;
 
     .attachment-image {
       width: 120px;
@@ -145,25 +146,34 @@
     }
   }
 
-  .tab-content {
-    // padding: 10px 0px;
-    max-height: 42vh;
-    overflow: auto;
-
-    .comment-card,
-    .subtask-card {
-      margin: 10px;
-      border-radius: 8px;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  .tabDataMain {
+    margin: 20px 0px 0px 0px;
+    
+    .MuiTabs-flexContainer {
+      border-bottom: 2px solid #e1e1e1;
     }
-
-    .muiTaskTabs .MuiTabs-root {
-      margin-bottom: 10px;
-    }
-
+    
     .tab-content {
-      padding: 10px;
-    }
+      padding-top: 10px;
+      max-height: 42vh;
+      
+      .comment-card,
+      .subtask-card {
+        margin: 10px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: auto;
+      }
 
+      .muiTaskTabs .MuiTabs-root {
+        margin-bottom: 10px;
+        border: 2px solid #e1e1e1;
+      }
+
+      .tab-content {
+        padding: 10px;
+      }
+
+    }
   }
 }

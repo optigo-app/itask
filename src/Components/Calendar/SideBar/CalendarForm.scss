@@ -1,0 +1,65 @@
+.MainDrawer {
+    position: relative;
+
+    .MD_WrpDiv {
+        width: 600px;
+
+        .drawer-containerCal {
+            background-color: #fff;
+            padding: 0px 20px;
+
+            .toggleBtnCal {
+                width: 150px;
+                font-size: 14px !important;
+            }
+
+            .drawer-header {
+                margin-bottom: 15px;
+                margin-top: 5px;
+            }
+        }
+
+        .cal_closeBtn {
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            cursor: pointer;
+        }
+
+        .toggle-group {
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 6px;
+            margin: 20px 60px;
+            display: flex;
+
+            .toggle-button {
+                flex: 1;
+                font-size: 18px;
+                color: #666;
+                border: none;
+                line-height: .8rem;
+                text-transform: none;
+                transition: all 0.2s ease-in-out;
+
+                &.Mui-selected {
+                    background-color: #fff !important;
+                    color: #000 !important;
+                    font-weight: 700;
+                }
+            }
+        }
+
+        .MlTask_CalBox{
+            padding: 20px;
+            .ml_tgBtn{
+                display: flex;
+                justify-content: end;
+                margin-bottom: 20px
+            }
+            .mt_calSaveBtn{
+                margin-top: 20px;
+            }
+        }
+    }
+}
