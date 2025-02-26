@@ -86,7 +86,7 @@ const MultiTaskInput = ({ onSave, multiType }) => {
     }, [tasks])
 
     return (
-        <Box>
+        <Box className="mltMainBox">
             <Stack spacing={2}>
                 {showEdit ? (
                     <>
@@ -155,6 +155,10 @@ const MultiTaskInput = ({ onSave, multiType }) => {
                 ) : (
                     <>
                         {tasks?.length !== 0 && (
+                            <>
+                            <Box className="taskCount">
+                              <Typography variant="body">Count: {tasks?.length}</Typography>
+                            </Box>
                             <TableContainer component={Paper} sx={{ mt: 2 }} className="bulTaskTableContainer">
                                 <Table>
                                     <TableHead>
@@ -219,6 +223,7 @@ const MultiTaskInput = ({ onSave, multiType }) => {
                                     </TableBody>
                                 </Table>
                             </TableContainer>
+                            </>
                         )}
                     </>
                 )}

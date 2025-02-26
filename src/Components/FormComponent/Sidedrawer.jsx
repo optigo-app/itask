@@ -52,7 +52,6 @@ const SidebarDrawer = ({
 }) => {
     const location = useLocation();
     const theme = useTheme();
-    let pathname = location.pathname;
     const [checkedMultiTask, setCheckedMultiTask] = useState(false);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
@@ -78,11 +77,12 @@ const SidebarDrawer = ({
         actual: [""],
         milestoneChecked: false,
     });
-    console.log('formValues: ', formValues);
 
     const handleTaskChange = (event, newTaskType) => {
         if (newTaskType !== null) setTaskType(newTaskType);
+        handleResetState();
     };
+
     const handleTaskSubChange = (event, newTaskType) => {
         if (newTaskType !== null) setTaskSubType(newTaskType);
     };
@@ -227,6 +227,9 @@ const SidebarDrawer = ({
     const handleClear = () => {
         onClose();
         setTaskType("single");
+        handleResetState();
+    }
+    const handleResetState = () => {
         setFormValues({
             taskName: "",
             bulkTask: [],
@@ -258,66 +261,40 @@ const SidebarDrawer = ({
                 className="MainDrawer"
                 sx={{ display: open == true ? 'block' : 'none', zIndex: theme.zIndex.drawer + 2, }}
             >
+                <Box className="tSideBarTgBox">
+                    <ToggleButtonGroup
+                        value={taskType}
+                        exclusive
+                        onChange={handleTaskChange}
+                        aria-label="task type"
+                        size="small"
+                        className="toggle-group"
+                    >
+                        {TASK_OPTIONS?.map(({ id, value, label, icon }) => (
+                            <ToggleButton
+                                key={id}
+                                value={value}
+                                className="toggle-button"
+                                sx={{
+                                    borderRadius: "8px",
+                                }}
+                            >
+                                {icon}
+                                {label}
+                            </ToggleButton>
+                        ))}
+                    </ToggleButtonGroup>
+                </Box>
+                <div style={{
+                    border: "1px dashed #7d7f85",
+                    opacity: 0.3,
+                }}
+                />
                 <Box className="drawer-container">
                     <Box className="drawer-header">
                         <Typography variant="h6" className="drawer-title">
-                            {pathname == '/projects' ? "Add Project" : "Add Task"}
+                            {taskType === 'multi_input' ? "Add Tasks" : "Add Task"}
                         </Typography>
-                        <Stack direction="row" sx={{ pr: 5, alignItems: "center" }}>
-                            <ToggleButtonGroup
-                                value={taskType}
-                                exclusive
-                                onChange={handleTaskChange}
-                                aria-label="task type"
-                                size="small"
-                                className="toggle-btn-group"
-                            >
-                                {TASK_OPTIONS?.map(({ id, value, label, icon }) => (
-                                    <ToggleButton
-                                        key={id}
-                                        value={value}
-                                        className="toggle-btn"
-                                        sx={{
-                                            borderRadius: "8px",
-                                        }}
-                                    >
-                                        {icon}
-                                        {label}
-                                    </ToggleButton>
-                                ))}
-                            </ToggleButtonGroup>
-                        </Stack>
-                    </Box>
-                    <IconButton onClick={handleClear}
-                        sx={{
-                            position: "absolute",
-                            top: "-4px",
-                            right: "0px",
-                        }}
-                    >
-                        <CircleX />
-                    </IconButton>
-                    <div style={{
-                        margin: "20px 0",
-                        border: "1px dashed #7d7f85",
-                        opacity: 0.3,
-                    }}
-                    />
-                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                        <Box>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={formValues?.milestoneChecked}
-                                        onChange={(e) => setFormValues((prev) => ({ ...prev, milestoneChecked: e.target.checked }))}
-                                        color="primary"
-                                        className="textfieldsClass, milestone-checkbox"
-                                    />
-                                }
-                                label="Milestone"
-                                className="milestone-label"
-                            />
-                        </Box>
                         {taskType === 'multi_input' &&
                             <Stack direction="row" sx={{ alignItems: "center" }}>
                                 <ToggleButtonGroup
@@ -347,6 +324,37 @@ const SidebarDrawer = ({
                                 </ToggleButtonGroup>
                             </Stack>
                         }
+                    </Box>
+                    <IconButton onClick={handleClear}
+                        sx={{
+                            position: "absolute",
+                            top: "-4px",
+                            right: "0px",
+                        }}
+                    >
+                        <CircleX />
+                    </IconButton>
+                    {/* <div style={{
+                        margin: "20px 0",
+                        border: "1px dashed #7d7f85",
+                        opacity: 0.3,
+                    }}
+                    /> */}
+                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+                        <Box>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={formValues?.milestoneChecked}
+                                        onChange={(e) => setFormValues((prev) => ({ ...prev, milestoneChecked: e.target.checked }))}
+                                        color="primary"
+                                        className="textfieldsClass, milestone-checkbox"
+                                    />
+                                }
+                                label="Milestone"
+                                className="milestone-label"
+                            />
+                        </Box>
                     </Box>
                     {taskType === 'single' &&
                         <>
@@ -676,9 +684,11 @@ const SidebarDrawer = ({
                         <>
                             <Grid item xs={6}>
                                 <Box className="form-group">
-                                    <Typography className="form-label" variant="subtitle1">
-                                        Task Name
-                                    </Typography>
+                                    {formValues.bulkTask.length === 0 &&
+                                        <Typography className="form-label" variant="subtitle1">
+                                            Task Name
+                                        </Typography>
+                                    }
                                     <MultiTaskInput multiType={tasksubType} onSave={handlebulkTaskSave} />
                                 </Box>
                             </Grid>

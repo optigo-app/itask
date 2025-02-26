@@ -15,6 +15,7 @@ export default function SummaryDashboard() {
         {
             title: "Services Tasks",
             value: 15,
+            newTasks: 3,
             icon: iconMapping["Services Tasks"],
             color: "#3B82F6", // Blue
             bgColor: "#EFF6FF", // Light Blue
@@ -22,6 +23,7 @@ export default function SummaryDashboard() {
         {
             title: "R&D Tasks",
             value: 243,
+            newTasks: 12,
             icon: iconMapping["R&D Tasks"],
             color: "#10B981", // Green
             bgColor: "#ECFDF5", // Light Green
@@ -29,6 +31,7 @@ export default function SummaryDashboard() {
         {
             title: "UpComming Tasks",
             value: 80,
+            newTasks: 5,
             icon: iconMapping["UpComming Tasks"],
             color: "#F97316", // Orange
             bgColor: "#FFF7ED", // Light Orange
@@ -36,6 +39,7 @@ export default function SummaryDashboard() {
         {
             title: "Maintenance Tasks",
             value: 142,
+            newTasks: 8,
             icon: iconMapping["Maintenance Tasks"],
             color: "#14B8A6", // Teal
             bgColor: "#F0FDFA", // Light Teal
@@ -43,6 +47,7 @@ export default function SummaryDashboard() {
         {
             title: "Unassigned Tasks",
             value: 63,
+            newTasks: 7,
             icon: iconMapping["Unassigned Tasks"],
             color: "#EF4444", // Red
             bgColor: "#FEF2F2", // Light Red
@@ -50,6 +55,7 @@ export default function SummaryDashboard() {
         {
             title: "Due Tasks",
             value: 10,
+            newTasks: 2,
             icon: iconMapping["Due"],
             color: "#8B5CF6", // Purple
             bgColor: "#F5F3FF", // Light Purple
@@ -76,6 +82,7 @@ export default function SummaryDashboard() {
                                     transform: "translateY(-5px)",
                                     boxShadow: 3,
                                 },
+                                position: 'relative',
                             }}
                             className='HomePageCom'
                         >
@@ -89,18 +96,30 @@ export default function SummaryDashboard() {
                                             <Typography variant="h4" fontWeight="bold">
                                                 {metric.value}
                                             </Typography>
-                                            <Typography
-                                                variant="caption"
-                                                sx={{
-                                                    backgroundColor: '#7d7f857a',
-                                                    borderRadius: "8px",
-                                                    padding: "1px 5px",
-                                                    marginTop: "-20px",
-                                                    fontWeight: "bold",
-                                                }}
-                                            >
-                                                +5
-                                            </Typography>
+                                            {metric.newTasks > 0 && (
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        top: 8,
+                                                        right: 8,
+                                                        backgroundColor: '#ff7400',
+                                                        color: '#fff !important',
+                                                        width: 22,
+                                                        height: 22,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        borderRadius: '50%',
+                                                        fontSize: '11px',
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                                    }}
+
+
+                                                >
+                                                    +{metric.newTasks}
+                                                </Typography>
+                                            )}
                                         </Box>
                                         <Typography
                                             variant="body2"

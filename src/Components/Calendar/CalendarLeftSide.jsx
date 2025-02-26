@@ -120,28 +120,20 @@ const CalendarLeftSide = ({ calendarsColor }) => {
 
     return (
         <div className="calendarLeftMain">
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    position: 'relative',
-                    marginBlock: '20px',
-                    width: '100%'
-                }}>
+            <Box className="cal_leftSidetgBox">
                 <ToggleButtonGroup
                     value={view}
                     exclusive
                     onChange={handleChange}
                     aria-label="toggle filter or task list"
-                    className='toggle-button-group'
+                    className="toggle-group"
                     size='small'
                     sx={{ borderRadius: '8px' }}
                 >
-                    <ToggleButton value="filter" aria-label="filter" className='toggleBtnCal'>
+                    <ToggleButton value="filter" aria-label="filter" className='toggle-button'>
                         Filter
                     </ToggleButton>
-                    <ToggleButton value="tasklist" aria-label="task list" className='toggleBtnCal'>
+                    <ToggleButton value="tasklist" aria-label="task list" className='toggle-button'>
                         Task List
                     </ToggleButton>
                 </ToggleButtonGroup>
@@ -163,7 +155,7 @@ const CalendarLeftSide = ({ calendarsColor }) => {
                             className="buttonClassname"
                             sx={{
                                 width: '230px',
-                                background: '#7D7f85 !important'
+                                // background: '#7D7f85 !important'
                             }}
                             onClick={handleAddEvent}
                         >
