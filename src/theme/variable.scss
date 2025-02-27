@@ -243,3 +243,12 @@ $divider-color: #e0e0e0;
 .MuiAvatar-root{
     font-family: $font-family!important;
 }
+
+// Global Tooltip Styles
+.custom-tooltip {
+  &.MuiTooltip-tooltip {
+    font-family: $font-family !important;
+    text-transform: capitalize !important;
+  }
+}
+

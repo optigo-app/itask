@@ -14,17 +14,22 @@ import {
     Pagination,
     LinearProgress,
     IconButton,
+    Tooltip,
 } from "@mui/material";
 
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { formatDate2, getStatusColor } from "../../../Utils/globalfun";
-import { Eye } from "lucide-react";
+import { Eye, Lock, LockOpen, Unlock } from "lucide-react";
+import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 
-const TableView = ({ data, isLoading }) => {
+const TableView = ({ data, isLoading, handleLockProject }) => {
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("name");
     const [page, setPage] = useState(1);
+    const [selectedRowData, setSelectedRowData] = useState({});
+    console.log('selectedRowData: ', selectedRowData);
+    const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [columnWidths] = useState({
         'project / module': 350,
@@ -57,6 +62,20 @@ const TableView = ({ data, isLoading }) => {
             color: "#ffffff",
             backgroundColor: "#b71c1c",
         },
+    };
+
+    const handleOpenCnfDialog = (task) => {
+        setSelectedRowData(task);
+        setCnfDialogOpen(true);
+    };
+
+    const handleCloseCnfDialog = () => {
+        setCnfDialogOpen(false);
+    };
+
+    const handleCnfPrlUnl = async () => {
+        setCnfDialogOpen(false);
+        handleLockProject(selectedRowData?.taskid);
     };
 
     const handleRequestSort = (property) => {
@@ -106,7 +125,6 @@ const TableView = ({ data, isLoading }) => {
     );
 
     const handleNavigate = (task) => {
-        console.log('task: ', task);
         let urlData = {
             taskname: task?.taskname,
             module: task.module,
@@ -116,8 +134,31 @@ const TableView = ({ data, isLoading }) => {
         const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
         const formattedTaskName = task?.taskname?.trim().replace(/\s+/g, '-') || '';
         const url = `/tasks/${formattedTaskName}?data=${encodedFormData}`;
-        console.log('url: ', url);
         window.open(url, '_blank');
+    };
+
+    const LockButton = ({ isLocked, onClick }) => {
+        const Icon = isLocked ? Lock : Unlock;
+        const label = isLocked ? 'Lock' : 'Unlock';
+
+        return (
+            <Tooltip placement="right" title={`${label} Project`}>
+                <IconButton
+                    id={`pr${label}`}
+                    aria-label={`pr${label}`}
+                    onClick={onClick}
+                    sx={{
+                        color: isLocked ? '#ffffff' : '#7d7f85',
+                        backgroundColor: isLocked ? '#f44336' : 'transparent',
+                        '&:hover': {
+                            backgroundColor: isLocked ? '#d32f2f' : 'rgba(0, 0, 0, 0.04)',
+                        },
+                    }}
+                >
+                    <Icon size={20} color={isLocked ? "#fff" : "#7d7f85"} />
+                </IconButton>
+            </Tooltip>
+        );
     };
 
     return (
@@ -167,14 +208,32 @@ const TableView = ({ data, isLoading }) => {
                                     <>
                                         {currentData?.map((task, taskIndex) => (
                                             <React.Fragment key={taskIndex}>
-                                                <TableRow>
+                                                <TableRow
+                                                    sx={{
+                                                        backgroundColor: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.04)' : 'inherit',
+                                                        '&:hover': {
+                                                            backgroundColor: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                                                        },
+                                                    }}
+                                                >
                                                     <TableCell>
                                                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                                             <div>
-                                                                <a href="#" onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    handleNavigate(task)
-                                                                }}>
+                                                                <a
+                                                                    href="#"
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        if (!task?.isLocked) {
+                                                                            handleNavigate(task);
+                                                                        }
+                                                                    }}
+                                                                    style={{
+                                                                        pointerEvents: task?.isLocked === 1 ? 'none' : 'auto',
+                                                                        color: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.38)' : '#2900ee',
+                                                                        textDecoration: task?.isLocked === 1 ? 'none' : "underline",
+                                                                        cursor: task?.isLocked === 1 ? 'default' : 'pointer'
+                                                                    }}
+                                                                >
                                                                     {task?.taskname}/{task?.module}
                                                                 </a>
                                                             </div>
@@ -223,14 +282,11 @@ const TableView = ({ data, isLoading }) => {
                                                     </TableCell>
                                                     <TableCell>{task?.remark}</TableCell>
                                                     <TableCell>
-                                                        <IconButton
-                                                            id="prView"
-                                                            aria-label="prView"
-                                                            aria-labelledby="prView"
-                                                            style={{ color: "#7d7f85" }}
-                                                        >
-                                                            <Eye size={20} />
-                                                        </IconButton>
+                                                        <LockButton
+                                                            isLocked={task?.isLocked === 1}
+                                                            onClick={() => handleOpenCnfDialog(task)}
+                                                            id={task?.taskid}
+                                                        />
                                                     </TableCell>
                                                 </TableRow>
                                             </React.Fragment>
@@ -239,7 +295,7 @@ const TableView = ({ data, isLoading }) => {
                                 ) :
                                     <TableRow>
                                         <TableCell colSpan={7} >
-                                            <Typography variant="body2">No tasks found.</Typography>
+                                            <Typography variant="body2">No Project/Module found.</Typography>
                                         </TableCell>
                                     </TableRow>
                                 }
@@ -277,6 +333,15 @@ const TableView = ({ data, isLoading }) => {
                     </TableBody>
                 </Table>
             </TableContainer>
+            <ConfirmationDialog
+                open={cnfDialogOpen}
+                onClose={handleCloseCnfDialog}
+                onConfirm={handleCnfPrlUnl}
+                title="Confirm"
+                cancelLabel="Cancel"
+                confirmLabel={selectedRowData?.isLocked === 1 ? "Unlock" : "Lock"}
+                content={selectedRowData?.isLocked === 1 ? 'Are you sure you want to unlock this project?' : 'Are you sure you want to lock this project?'}
+            />
         </>
     );
 };

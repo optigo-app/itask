@@ -24,7 +24,6 @@ const HeaderButtons = ({
   taskCategory,
   taskDepartment }) => {
   const location = useLocation();
-  console.log('location: ', location);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const setFormDataValue = useSetRecoilState(formData);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
@@ -143,11 +142,11 @@ const HeaderButtons = ({
               ),
             }}
             aria-label='Search tasks...'
-          />
+          />      
         </Box>
       </Box>
       <Box sx={{ display: "flex", gap: 2 }}>
-        {location.pathname == "/tasks" &&
+        {location?.pathname?.includes('/tasks') &&
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -158,7 +157,7 @@ const HeaderButtons = ({
           </Button>
         }
         <ViewToggleButtons view={view} onViewChange={handleViewChange} />
-        <IconButton
+        {/* <IconButton
           id="actions"
           aria-label="actions"
           aria-labelledby="actions"
@@ -166,7 +165,7 @@ const HeaderButtons = ({
           style={{ color: "#7d7f85" }}
         >
           <MoreVerticalIcon />
-        </IconButton>
+        </IconButton> */}
       </Box>
 
       {/* <Menu

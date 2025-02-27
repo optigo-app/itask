@@ -13,8 +13,8 @@ import {
     IconButton,
 } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { fetchlistApiCall, formData, rootSubrootflag, selectedRowData } from "../../../Recoil/atom";
-import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
+import { fetchlistApiCall, formData, rootSubrootflag, selectedRowData } from "../../Recoil/atom";
+import { AddTaskDataApi } from "../../Api/TaskApi/AddTaskApi";
 import { toast } from "react-toastify";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -32,9 +32,7 @@ const modalStyle = {
 
 const AssigneeShortcutModal = ({ open, onClose }) => {
     const rowData = useRecoilValue(selectedRowData);
-    console.log('rowData: ', rowData);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
-    console.log('formDataValue: ', formDataValue);
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag);
     const [assigneeMaster, setAssigneeMaster] = useState([]);
@@ -79,7 +77,6 @@ const AssigneeShortcutModal = ({ open, onClose }) => {
     // Handle form value changes
     const handleChange = (e) => {
         const { name, value } = e.target;
-        console.log('jasakkkkkkkkk', name, value);
         setFormValues((prev) => ({
             ...prev,
             [name]: value,

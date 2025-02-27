@@ -104,7 +104,6 @@ function KanbanView({
   };
 
   const onDragEnd = async (result) => {
-    debugger
     const { destination, source } = result;
     setSourceColumnId(null);
 
@@ -195,7 +194,6 @@ function KanbanView({
     setFormDrawerOpen(true);
     setSelectedTask(null);
   };
-  debugger
   return (
     <>
       {(isLoading || !taskdata) ? (

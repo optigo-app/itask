@@ -176,28 +176,30 @@ const Header = ({ avatarSrc = "" }) => {
             className="headerContainer"
         >
             <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
                     <Typography variant="h6" component="div" className="headerTitle">
                         {title}
                     </Typography>
-                    {location.pathname.includes('/tasks') &&
-                        <div style={{
-                            backgroundColor: "#7d7f8799",
-                            color: '#fff',
-                            width: 'fit-content',
-                            padding: '0.2rem 0.4rem',
-                            borderRadius: '5px',
-                            textAlign: 'center',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            marginTop: '-15px'
-                        }}>
+                    {location.pathname.includes("/tasks") && (
+                        <div
+                            style={{
+                                backgroundColor: "#7d7f8799",
+                                color: "#fff",
+                                width: "fit-content",
+                                padding: "0.2rem 0.4rem",
+                                borderRadius: "5px",
+                                textAlign: "center",
+                                fontSize: "12px",
+                                fontWeight: "500",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                marginTop: "-15px",
+                            }}
+                        >
                             20
                         </div>
-                    }
+                    )}
                 </Box>
                 <Typography
                     variant="subtitle1"
@@ -211,9 +213,9 @@ const Header = ({ avatarSrc = "" }) => {
                 <Box
                     sx={{ marginRight: "10px", cursor: "pointer" }}
                     onClick={handleBellClick}
-                    aria-controls={open ? 'account-menu' : undefined}
+                    aria-controls={open ? "account-menu" : undefined}
                     aria-haspopup="true"
-                    aria-expanded={open ? 'true' : undefined}
+                    aria-expanded={open ? "true" : undefined}
                 >
                     {notifications?.length > 0 ? (
                         <Badge
@@ -230,9 +232,9 @@ const Header = ({ avatarSrc = "" }) => {
                         >
                             <Bell size={24} style={{ color: "#7d7f85" }} />
                         </Badge>
-                    ) :
+                    ) : (
                         <Bell size={24} style={{ color: "#7d7f85" }} />
-                    }
+                    )}
                 </Box>
                 <Avatar
                     alt={userName}
@@ -257,39 +259,64 @@ const Header = ({ avatarSrc = "" }) => {
                 slotProps={{
                     paper: {
                         sx: {
-                            top: "125px !important",
-                            width: '400px !important',
-                            borderRadius: '8px !important',
-                            boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px',
+                            top: "100px !important",
+                            width: "400px !important",
+                            borderRadius: "8px !important",
+                            boxShadow:
+                                "rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px",
                             '& "MuiList-root': {
-                                paddingTop: '0 !important',
-                                paddingBottom: '0 !important',
-                            }
+                                paddingTop: "0 !important",
+                                paddingBottom: "0 !important",
+                            },
                         },
                     },
                 }}
-                aria-hidden={open ? 'false' : 'true'}
+                aria-hidden={open ? "false" : "true"}
             >
-                <Box p={2} display="flex" justifyContent="space-between" sx={{ borderBottom: '1px solid #e0e0e0' }}>
-                    <Typography variant="subtitle1" fontWeight={'bold'}>Notification</Typography>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                        <Chip label="8 New" sx={{ background: "#e9e7fd", color: '#7367f0', fontWeight: 'bold', borderRadius: '8px', height: '25px' }} />
+                <Box
+                    p={2}
+                    display="flex"
+                    justifyContent="space-between"
+                    sx={{ borderBottom: "1px solid #e0e0e0" }}
+                >
+                    <Typography variant="subtitle1" fontWeight={"bold"}>
+                        Notification
+                    </Typography>
+                    <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                        <Chip
+                            label="8 New"
+                            sx={{
+                                background: "#e9e7fd",
+                                color: "#7367f0",
+                                fontWeight: "bold",
+                                borderRadius: "8px",
+                                height: "25px",
+                            }}
+                        />
                         <Tooltip title="Mark all as read" placement="top" arrow>
                             <IconButton>
-                                <MailOpen size={20} style={{ cursor: 'pointer' }} />
+                                <MailOpen size={20} style={{ cursor: "pointer" }} />
                             </IconButton>
                         </Tooltip>
                     </div>
                 </Box>
 
                 {notifications.map((notification) => (
-                    <MenuItem key={notification.id} sx={{ display: "block", margin: '0', padding: '0' }}>
+                    <MenuItem
+                        key={notification.id}
+                        sx={{ display: "block", margin: "0", padding: "0" }}
+                    >
                         <NotificationCard notification={notification} />
                     </MenuItem>
                 ))}
 
                 <Box textAlign="center" p={1.5} onClick={handleViewAllNoti}>
-                    <Button size="small" className="buttonClassname" variant="contained" fullWidth >
+                    <Button
+                        size="small"
+                        className="buttonClassname"
+                        variant="contained"
+                        fullWidth
+                    >
                         View all notifications
                     </Button>
                 </Box>
@@ -304,17 +331,29 @@ const Header = ({ avatarSrc = "" }) => {
                 slotProps={{
                     paper: {
                         sx: {
-                            top: "125px !important",
-                            minWidth: '170px !important',
-                            maxWidth: '250px !important',
-                            borderRadius: '8px !important',
-                            boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px',
+                            top: "100px !important",
+                            minWidth: "170px !important",
+                            maxWidth: "250px !important",
+                            borderRadius: "8px !important",
+                            boxShadow:
+                                "rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px",
+                            '& ".MuiList-root': {
+                                paddingTop: "0 !important",
+                                paddingBottom: "0 !important",
+                            },
                         },
                     },
                 }}
-                aria-hidden={open ? 'false' : 'true'}
+                aria-hidden={open ? "false" : "true"}
             >
-                <Box sx={{ display: 'flex', alignItems: 'center', padding: '16px', borderBottom: '1px solid #e0e0e0' }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "16px",
+                        borderBottom: "1px solid #e0e0e0",
+                    }}
+                >
                     <Avatar
                         alt={userName}
                         src={avatarSrc}
@@ -323,16 +362,16 @@ const Header = ({ avatarSrc = "" }) => {
                             color: "#fff",
                             width: 40,
                             height: 40,
-                            marginRight: '12px'
+                            marginRight: "12px",
                         }}
                     >
                         {!avatarSrc && userName.charAt(0).toUpperCase()}
                     </Avatar>
                     <Box>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                             {userName}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#7d7f85' }}>
+                        <Typography variant="body2" sx={{ color: "#7d7f85" }}>
                             Developer
                         </Typography>
                     </Box>
@@ -342,15 +381,15 @@ const Header = ({ avatarSrc = "" }) => {
                         key={index}
                         onClick={() => handleMenuClick(item.route)}
                         sx={{
-                            margin: '10px 10px !important',
-                            borderRadius: '8px !important',
-                            '&:hover': {
-                                backgroundColor: '#f0f0f0 !important',
-                                borderRadius: '8px !important',
-                            }
+                            margin: "10px 10px !important",
+                            borderRadius: "8px !important",
+                            "&:hover": {
+                                backgroundColor: "#f0f0f0 !important",
+                                borderRadius: "8px !important",
+                            },
                         }}
                     >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
                             {item.icon}
                             <Typography className="pMTypo" variant="body2">
                                 {item.text}
@@ -367,9 +406,9 @@ const Header = ({ avatarSrc = "" }) => {
                         size="small"
                         className="buttonClassname"
                         sx={{
-                            background: '#ff4c51 !important',
-                            borderColor: '#ff4c51 !important',
-                            color: '#fff !important'
+                            background: "#ff4c51 !important",
+                            borderColor: "#ff4c51 !important",
+                            color: "#fff !important",
                         }}
                         onClick={() => handleLogout()}
                         variant="contained"
@@ -380,7 +419,6 @@ const Header = ({ avatarSrc = "" }) => {
                     </Button>
                 </Box>
             </Menu>
-
         </Box>
     );
 };

@@ -10,7 +10,6 @@ const ProfileCard = () => {
     const [profileData, setProfileData] = React.useState({});
 
     const handleEdit = () => {
-        console.log("Edit profile");
     };
 
     const handleDelete = () => {

@@ -16,7 +16,7 @@ import {
     FormControlLabel,
     Checkbox,
 } from "@mui/material";
-import { CircleX, Grid3x3, List, ListTodo, Logs } from "lucide-react";
+import { CircleX, List, ListTodo, Logs } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import "./SidebarDrawer.scss";
 import { useRecoilState, useRecoilValue } from "recoil";
@@ -30,13 +30,13 @@ import { commonSelectProps, commonTextFieldProps, customDatePickerProps } from "
 import MultiTaskInput from "./MultiTaskInput";
 
 const TASK_OPTIONS = [
-    { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
-    { id: 2, value: "multi_input", label: "Bulk", icon: <List size={20} /> },
+    { id: 1, value: "single", label: "Single Task", icon: <ListTodo size={20} /> },
+    { id: 2, value: "multi_input", label: "Multi-input Task", icon: <List size={20} /> },
 ];
 
 const mulTASK_OPTIONS = [
-    { id: 3, value: "multi1", label: "Multi-input Task", icon: <List size={18} /> },
-    { id: 4, value: "multi2", label: "Bulk Task", icon: <Grid3x3 size={18} /> },        
+    { id: 3, value: "multi1", label: "Multi-input Task", icon: <List size={20} /> },
+    { id: 4, value: "multi2", label: "Bulk Task", icon: <Logs size={20} /> },
 ];
 
 const SidebarDrawer = ({
@@ -259,7 +259,7 @@ const SidebarDrawer = ({
                 className="MainDrawer"
                 sx={{ display: open == true ? 'block' : 'none', zIndex: theme.zIndex.drawer + 2, }}
             >
-                {/* <Box className="tSideBarTgBox">
+                <Box className="tSideBarTgBox">
                     <ToggleButtonGroup
                         value={taskType}
                         exclusive
@@ -282,18 +282,18 @@ const SidebarDrawer = ({
                             </ToggleButton>
                         ))}
                     </ToggleButtonGroup>
-                </Box> */}
-                {/* <div style={{
+                </Box>
+                <div style={{
                     border: "1px dashed #7d7f85",
                     opacity: 0.3,
                 }}
-                /> */}
+                />
                 <Box className="drawer-container">
                     <Box className="drawer-header">
                         <Typography variant="h6" className="drawer-title">
                             {taskType === 'multi_input' ? "Add Tasks" : "Add Task"}
                         </Typography>
-                        {/* {taskType === 'multi_input' &&
+                        {taskType === 'multi_input' &&
                             <Stack direction="row" sx={{ alignItems: "center" }}>
                                 <ToggleButtonGroup
                                     value={tasksubType}
@@ -321,43 +321,25 @@ const SidebarDrawer = ({
                                     ))}
                                 </ToggleButtonGroup>
                             </Stack>
-                        } */}
-                        <IconButton onClick={handleClear}>
-                            <CircleX />
-                        </IconButton>
+                        }
                     </Box>
-                    <div style={{
-                        margin: "10px 0",
+                    <IconButton onClick={handleClear}
+                        sx={{
+                            position: "absolute",
+                            top: "-4px",
+                            right: "0px",
+                        }}
+                    >
+                        <CircleX />
+                    </IconButton>
+                    {/* <div style={{
+                        margin: "20px 0",
                         border: "1px dashed #7d7f85",
                         opacity: 0.3,
                     }}
-                    />
-                    <Box className="tSideBarTgBox">
-                        <ToggleButtonGroup
-                            value={taskType}
-                            exclusive
-                            onChange={handleTaskChange}
-                            aria-label="task type"
-                            size="small"
-                            className="toggle-group"
-                        >
-                            {TASK_OPTIONS?.map(({ id, value, label, icon }) => (
-                                <ToggleButton
-                                    key={id}
-                                    value={value}
-                                    className="toggle-button"
-                                    sx={{
-                                        borderRadius: "8px",
-                                    }}
-                                >
-                                    {icon}
-                                    {label}
-                                </ToggleButton>
-                            ))}
-                        </ToggleButtonGroup>
-                    </Box>
+                    /> */}
                     <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box>
                             <FormControlLabel
                                 control={
                                     <Checkbox
@@ -370,35 +352,6 @@ const SidebarDrawer = ({
                                 label="Milestone"
                                 className="milestone-label"
                             />
-                            {taskType === 'multi_input' &&
-                                <Stack direction="row" sx={{ alignItems: "center" }}>
-                                    <ToggleButtonGroup
-                                        value={tasksubType}
-                                        exclusive
-                                        onChange={handleTaskSubChange}
-                                        aria-label="task type"
-                                        size="small"
-                                    >
-                                        {mulTASK_OPTIONS?.map(({ id, value, label, icon }) => (
-                                            <Tooltip
-                                                key={id}
-                                                title={label}
-                                                placement="top"
-                                                arrow
-                                                sx={{
-                                                    borderRadius: "8px",
-                                                    "&.Mui-selected": {
-                                                        backgroundColor: "#685dd8 !important",
-                                                        color: "#fff !important",
-                                                    },
-                                                }}
-                                            >
-                                                <ToggleButton value={value}>{icon}</ToggleButton>
-                                            </Tooltip>
-                                        ))}
-                                    </ToggleButtonGroup>
-                                </Stack>
-                            }
                         </Box>
                     </Box>
                     {taskType === 'single' &&

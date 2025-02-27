@@ -71,13 +71,11 @@ const Calendar = () => {
     }, [date, calendarApi]);
 
     const filterEvents = (events, selectedCalendars) => {
-        console.log('events: ', events);
         return events && events?.filter((event) => selectedCalendars?.includes(event?.category));
     };
 
     // filter fun according to events
     const filteredEvents = filterEvents(calEvData, selectedEventfilter);
-    console.log('filteredEvents: ', filteredEvents);
 
     // calendar colors
     const calendarsColor = {
@@ -93,6 +91,8 @@ const Calendar = () => {
         events: filteredEvents,
         plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
         initialView: 'dayGridMonth',
+        slotMinTime: "09:00:00", // Start from 9 AM
+        slotMaxTime: "24:00:00", // End at 9 PM
         headerToolbar: {
             start: 'sidebarToggle, prev, next, title',
             end: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
@@ -179,7 +179,6 @@ const Calendar = () => {
             localStorage.setItem('calformData', JSON.stringify(updatedEvents));
         },
         eventReceive({ event: receivedEvent }) {
-            console.log('receivedEvent: ', receivedEvent);
             const randomId = Math.random().toString(36).substring(2, 10);
 
             const newEvent = {

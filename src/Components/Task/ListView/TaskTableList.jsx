@@ -19,20 +19,21 @@ import {
     Chip,
     Tooltip,
 } from "@mui/material";
-import { CirclePlus, Eye, GitMerge, Pencil } from "lucide-react";
+import { CirclePlus, Eye, Pencil, Timer } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
-import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
 import TaskDetail from "../TaskDetails/TaskDetails";
-import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { formatDate2, getRandomAvatarColor, priorityColors, statusColors } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import AssigneeShortcutModal from "./AssigneeShortcutModal";
+import AssigneeShortcutModal from "../../ShortcutsComponent/AssigneeShortcutModal";
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import TaskTimeTracking from "../../ShortcutsComponent/TaskTimeTracking";
+import BurningImg from "../../../Assests/fire.png"
 
-const TableView = ({ data, isLoading }) => {
-    console.log('dataislo: ', data, isLoading);
+const TableView = ({ data, handleTaskFavorite, isLoading }) => {
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
@@ -58,17 +59,25 @@ const TableView = ({ data, isLoading }) => {
         due: 150,
         priority: 150,
         estimate: 150,
-        actions: 100,
+        actions: 120,
     });
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
     const [cnfDialogOpen, setCnfDialogOpen] = useState(false);
     const [openAssigneeModal, setOpenAssigneeModal] = useState(false);
+    const [timeTrackMOpen, setTimeTrackMOpen] = useState(false);
+    const [taskTimeRunning, setTaskTimeRunning] = useState({});
+    console.log('taskTimeRunning: ', taskTimeRunning);
 
     const background = (assignee) => {
         const avatarBackgroundColor = assignee?.avatar
             ? "transparent"
             : getRandomAvatarColor(assignee);
         return avatarBackgroundColor;
+    };
+
+    const handleTimeTrackModalOpen = (task) => {
+        setTimeTrackMOpen(true);
+        setSelectedItem(task)
     };
 
     const handleTaskModalClose = () => {
@@ -108,30 +117,6 @@ const TableView = ({ data, isLoading }) => {
         setSelectedTask(subtask);
     };
 
-    // const handleMenuOpen = (event, item) => {
-    //     setAnchorEl(event.currentTarget);
-    //     setSelectedItem(item);
-    // };
-
-    // const handleConfirmRemoveAll = async () => {
-    //     setCnfDialogOpen(false);
-    //     try {
-    //         const deleteTaskApi = await deleteTaskDataApi(formDataValue);
-    //         if (deleteTaskApi) {
-    //             setOpenChildTask(false);
-    //             setSelectedTask(null);
-    //         } else {
-    //             console.error("Failed to delete task");
-    //         }
-    //     } catch (error) {
-    //         console.error("Error while deleting task:", error);
-    //     }
-    // };
-
-    // const handleCloseDialog = () => {
-    //     setCnfDialogOpen(false);
-    // };
-
     const handleEditTask = async (task, additionalInfo) => {
         setRootSubroot(additionalInfo);
         setActionMode("edit");
@@ -144,39 +129,6 @@ const TableView = ({ data, isLoading }) => {
         setRootSubroot(additionalInfo);
         setTaskDetailModalOpen(true);
         setFormDataValue(task);
-    };
-
-    const handleMenuItemClick = async (action, additionalInfo) => {
-        setRootSubroot(additionalInfo);
-        setSelectedAction(action);
-
-        switch (action) {
-            case "Edit":
-                setFormDataValue(selectedItem);
-                setFormDrawerOpen(true);
-                setSelectedTask(null);
-                break;
-
-            case "Delete":
-                setFormDataValue(selectedItem);
-                setCnfDialogOpen(true);
-                break;
-
-            case "View":
-                setTaskDetailModalOpen(true);
-                setFormDataValue(selectedItem);
-                break;
-
-            default:
-                console.warn("Unknown action:", action);
-        }
-
-        handleMenuClose();
-    };
-
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-        setSelectedItem(null);
     };
 
     const toggleSubtasks = (taskIndex) => {
@@ -377,16 +329,42 @@ const TableView = ({ data, isLoading }) => {
                                         </div>
                                     )}
                                 </div>
-                                {subtaskIndex % 2 !== 0 && (
-                                    <div style={{ marginLeft: '28px' }}>
+                                <div style={{ marginLeft: '28px', display: 'flex', alignItems: 'center' }}>
+                                    {subtaskIndex % 2 === 0 && (
                                         <Chip
-                                            label={subtask?.ticket || 'G00131'}
+                                            label={subtask?.ticket || 'A00161'}
                                             variant="outlined"
                                             size="small"
-                                            sx={{ fontSize: '12px', height: '20px', color: '#6D6b77' }}
+                                            sx={{ background: '#d8d8d8', fontSize: '11px', height: '20px', color: '#8863FB', marginRight: '8px' }}
                                         />
-                                    </div>
-                                )}
+                                    )}
+                                    <IconButton
+                                        onClick={() => handleTaskFavorite(subtask)}
+                                        size="small"
+                                        aria-label="add-favorite"
+                                        aria-labelledby="add-favorite"
+                                        sx={{
+                                            padding: '4px',
+                                            boxShadow: subtask?.isFav
+                                                ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
+                                                : '0px 2px 8px rgba(99, 99, 99, 0.2)',
+                                            transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
+                                            background: subtask?.isFav ? '#FFD700' : '#fff',
+                                            '&:hover': {
+                                                boxShadow: subtask?.isFav
+                                                    ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
+                                                    : '0px 4px 12px rgba(99, 99, 99, 0.3)',
+                                                background: subtask?.isFav ? '#FFC107' : '#f5f5f5',
+                                            },
+                                        }}
+                                    >
+                                        {subtask?.isFav ? (
+                                            <StarIcon sx={{ fontSize: '18px', color: '#fff' }} />
+                                        ) : (
+                                            <StarBorderIcon sx={{ fontSize: '18px', color: '#7d7f85' }} />
+                                        )}
+                                    </IconButton>
+                                </div>
                             </div>
                             <IconButton
                                 id="toggle-task"
@@ -472,37 +450,28 @@ const TableView = ({ data, isLoading }) => {
                     </TableCell>
                     <TableCell>{subtask?.summary}</TableCell>
                     <TableCell align="center">
-                        {/* <IconButton
-                            id="actions"
-                            aria-label="actions"
-                            aria-labelledby="actions"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleMenuOpen(e, subtask, { Task: 'root' });
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
                             }}
-                            style={{ color: "#7d7f85" }}
                         >
-                            <MoreVertIcon />
-                        </IconButton> */}
-                        <Box>
-                            <IconButton
-                                id="edit"
-                                aria-label="edit"
-                                aria-labelledby="edit"
-                                style={{ color: "#7d7f85" }}
-                                onClick={() => handleViewTask(subtask, { Task: 'root' })}
-                            >
-                                <Eye size={20} />
-                            </IconButton>
-                            <IconButton
-                                id="edit"
-                                aria-label="edit"
-                                aria-labelledby="edit"
-                                style={{ color: "#7d7f85" }}
-                                onClick={() => handleEditTask(subtask, { Task: 'root' })}
-                            >
-                                <Pencil size={20} />
-                            </IconButton>
+                            {[
+                                { id: 'timeTrack', label: 'Time Track', icon: <Timer size={20} />, onClick: () => handleTimeTrackModalOpen(subtask) },
+                                { id: 'view', label: 'View Task', icon: <Eye size={20} />, onClick: () => handleViewTask(subtask, { Task: 'root' }) },
+                                { id: 'edit', label: 'Edit Task', icon: <Pencil size={20} />, onClick: () => handleEditTask(subtask, { Task: 'root' }) }
+                            ]?.map(({ id, label, icon, onClick }) => (
+                                <IconButton
+                                    key={id}
+                                    id={id}
+                                    aria-label={label}
+                                    sx={{ color: "#7d7f85", transition: 'color 0.3s', '&:hover': { color: "#333" } }}
+                                    onClick={onClick}
+                                >
+                                    {icon}
+                                </IconButton>
+                            ))}
                         </Box>
                     </TableCell>
                 </TableRow>
@@ -553,14 +522,18 @@ const TableView = ({ data, isLoading }) => {
                     </TableHead>
                     <TableBody>
                         {(isLoading == null || isLoading || !data) ? (
-                            <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
+                            <TableRow>
+                                <TableCell colSpan={Object?.keys(columnWidths)?.length}>
+                                    <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
+                                </TableCell>
+                            </TableRow>
                         ) :
                             <>
                                 {data?.length != 0 ? (
                                     <>
                                         {currentData?.map((task, taskIndex) => (
                                             <React.Fragment key={taskIndex}>
-                                                <TableRow>
+                                                <TableRow key={taskIndex} sx={{ bgcolor: taskIndex % 2 === 0 && task?.isburning == 1 && '#6e6e6e21' }}>
                                                     <TableCell
                                                         onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
                                                         onMouseLeave={handleTaskMouseLeave}
@@ -591,23 +564,6 @@ const TableView = ({ data, isLoading }) => {
                                                                                 : task?.taskname}
                                                                         </span>
                                                                     </div>
-                                                                    {/* {task?.subtasks?.length > 0 && (
-                                                                        <>
-                                                                            <IconButton
-                                                                                id="toggle-subtasks"
-                                                                                aria-label="toggle subtasks"
-                                                                                aria-labelledby="toggle-subtasks"
-                                                                                size="small"
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    toggleSubtasks(taskIndex);
-                                                                                }}
-                                                                            >
-                                                                                <GitMerge size={20} color="#7367f0" />
-                                                                            </IconButton>
-                                                                            {task?.subtasks?.length}
-                                                                        </>
-                                                                    )} */}
                                                                     {task?.subtasks?.length > 0 && (
                                                                         <div style={{
                                                                             backgroundColor: "#7d7f8799",
@@ -627,16 +583,47 @@ const TableView = ({ data, isLoading }) => {
                                                                         </div>
                                                                     )}
                                                                 </div>
-                                                                {taskIndex % 2 === 0 && (
-                                                                    <div style={{ marginLeft: '28px' }}>
+
+                                                                <div style={{ marginLeft: '28px', display: 'flex', alignItems: 'center' }}>
+                                                                    {taskIndex % 2 === 0 && task?.isburning == 1 &&
+                                                                        <img src={BurningImg} alt="burningTask"
+                                                                            style={{ width: '20px', height: '20px', borderRadius: '50%', marginRight: '8px' }} />
+                                                                    }
+                                                                    {taskIndex % 2 === 0 && (
                                                                         <Chip
                                                                             label={task?.ticket || 'A00161'}
                                                                             variant="outlined"
                                                                             size="small"
-                                                                            sx={{ background: '#d8d8d8', fontSize: '11px', height: '20px', color: '#8863FB' }}
+                                                                            sx={{ background: '#d8d8d8', fontSize: '11px', height: '20px', color: '#8863FB', marginRight: '8px' }}
                                                                         />
-                                                                    </div>
-                                                                )}
+                                                                    )}
+                                                                    <IconButton
+                                                                        onClick={() => handleTaskFavorite(task)}
+                                                                        size="small"
+                                                                        aria-label="add-favorite"
+                                                                        aria-labelledby="add-favorite"
+                                                                        sx={{
+                                                                            padding: '4px',
+                                                                            boxShadow: task.isFav
+                                                                                ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
+                                                                                : '0px 2px 8px rgba(99, 99, 99, 0.2)',
+                                                                            transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
+                                                                            background: task.isFav ? '#FFD700' : '#fff',
+                                                                            '&:hover': {
+                                                                                boxShadow: task.isFav
+                                                                                    ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
+                                                                                    : '0px 4px 12px rgba(99, 99, 99, 0.3)',
+                                                                                background: task.isFav ? '#FFC107' : '#f5f5f5',
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        {task.isFav ? (
+                                                                            <StarIcon sx={{ fontSize: '18px', color: '#fff' }} />
+                                                                        ) : (
+                                                                            <StarBorderIcon sx={{ fontSize: '18px', color: '#7d7f85' }} />
+                                                                        )}
+                                                                    </IconButton>
+                                                                </div>
                                                             </div>
                                                             <IconButton
                                                                 id="add-task"
@@ -740,35 +727,39 @@ const TableView = ({ data, isLoading }) => {
                                                     </TableCell>
                                                     <TableCell> {StatusCircles({ redCount: task.estimate[0], yellowCount: task.estimate[1], greenCount: task.estimate[2] })}</TableCell>
                                                     <TableCell align="center">
-                                                        {/* <IconButton
-                                                            id="actions"
-                                                            aria-label="actions"
-                                                            aria-labelledby="actions"
-                                                            onClick={(e) => handleMenuOpen(e, task, { Task: 'root' })}
-                                                            style={{ color: "#7d7f85" }}
-                                                        >
-                                                            <MoreVertIcon />
-                                                        </IconButton> */}
-                                                        <Box>
-                                                            <IconButton
-                                                                id="edit"
-                                                                aria-label="edit"
-                                                                aria-labelledby="edit"
-                                                                style={{ color: "#7d7f85" }}
-                                                                onClick={() => handleViewTask(task, { Task: 'root' })}
-                                                            >
-                                                                <Eye size={20} />
-                                                            </IconButton>
-                                                            <IconButton
-                                                                id="edit"
-                                                                aria-label="edit"
-                                                                aria-labelledby="edit"
-                                                                style={{ color: "#7d7f85" }}
-                                                                onClick={() => handleEditTask(task, { Task: 'root' })}
-                                                            >
-                                                                <Pencil size={20} />
-                                                            </IconButton>
+                                                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                            {[
+                                                                {
+                                                                    id: 'timeTrack',
+                                                                    label: taskTimeRunning[task.taskid] ? 'Time Track ON' : 'Time Track OFF',
+                                                                    icon: <Timer size={20} color={taskTimeRunning[task.taskid] ? "#FFD700" : "#6D6B77"} />,
+                                                                    onClick: () => handleTimeTrackModalOpen(task),
+                                                                    isRunning: taskTimeRunning[task.taskid] || false,
+                                                                },
+                                                                { id: 'view', label: 'View Task', icon: <Eye size={20} />, onClick: () => handleViewTask(task, { Task: 'root' }) },
+                                                                { id: 'edit', label: 'Edit Task', icon: <Pencil size={20} />, onClick: () => handleEditTask(task, { Task: 'root' }) }
+                                                            ].map(({ id, label, icon, onClick, isRunning }) => (
+                                                                <Tooltip key={id} title={label} arrow placement="top" classes={{ tooltip: "custom-tooltip" }}>
+                                                                    <IconButton
+                                                                        id={id}
+                                                                        aria-label={label}
+                                                                        sx={{
+                                                                            color: isRunning ? "#FFD700" : "#7d7f85",
+                                                                            transition: 'color 0.3s',
+                                                                            backgroundColor: isRunning ? "#6D6B77" : "transparent",
+                                                                            '&:hover': {
+                                                                                color: isRunning ? "#FFD700" : "#333",
+                                                                                backgroundColor: isRunning ? "#6D6B77" : "transparent",
+                                                                            },
+                                                                        }}
+                                                                        onClick={onClick}
+                                                                    >
+                                                                        {icon}
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            ))}
                                                         </Box>
+
                                                     </TableCell>
                                                 </TableRow>
                                                 {
@@ -826,21 +817,6 @@ const TableView = ({ data, isLoading }) => {
                     </TableBody>
                 </Table>
             </TableContainer >
-            {/* <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                PaperProps={{
-                    className: "MenuBtnPaperClass",
-                    style: {
-                        maxHeight: 48 * 4.5,
-                        width: "20ch",
-                    },
-                }}
-            >
-                <MenuItem onClick={() => handleMenuItemClick('Delete', { Task: 'root' })}>Delete</MenuItem>
-                <MenuItem onClick={() => handleMenuItemClick('View', { Task: 'root' })}>View</MenuItem>
-            </Menu> */}
             < TaskDetail
                 open={taskDetailModalOpen}
                 onClose={handleTaskModalClose}
@@ -851,13 +827,13 @@ const TableView = ({ data, isLoading }) => {
                 onClose={handleCloseAssigneeModal}
             // onSubmit={handleAssigneeShortcutSubmit}
             />
-            {/* <ConfirmationDialog
-                open={cnfDialogOpen}
-                onClose={handleCloseDialog}
-                onConfirm={handleConfirmRemoveAll}
-                title="Confirm"
-                content="Are you sure you want to remove this task?"
-            /> */}
+            <TaskTimeTracking
+                isOpen={timeTrackMOpen}
+                onClose={() => setTimeTrackMOpen(false)}
+                taskData={selectedItem}
+                setTaskRunning={setTaskTimeRunning}
+                taskRunning={taskTimeRunning}
+            />
         </>
     );
 };
