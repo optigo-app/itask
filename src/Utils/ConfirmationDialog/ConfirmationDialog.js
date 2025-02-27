@@ -8,7 +8,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Divider } from '@mui/material';
 
-const ConfirmationDialog = ({ open, onClose, onConfirm, title, content }) => {
+const ConfirmationDialog = ({ open, onClose, confirmLabel, cancelLabel, onConfirm, title, content }) => {
   return (
     <Dialog
       open={open}
@@ -26,11 +26,11 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, title, content }) => {
       <Divider />
       <DialogActions>
         <Button className='for_DialogBtn' onClick={onConfirm} autoFocus fullWidth>
-          Remove
+          {confirmLabel ?? "Remove"}
         </Button>
         <Divider orientation="vertical" flexItem />
         <Button className='for_DialogBtn' onClick={onClose} autoFocus fullWidth>
-          Cancel
+          {cancelLabel ?? "Cancel"}
         </Button>
       </DialogActions>
     </Dialog>

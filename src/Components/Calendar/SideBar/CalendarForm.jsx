@@ -186,7 +186,6 @@ const CalendarForm = ({
     };
 
     const handlebulkTaskSave = (updatedTasks) => {
-        debugger
         setFormValues((prev) => ({
             ...prev,
             bulkTask: updatedTasks,

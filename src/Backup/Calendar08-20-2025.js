@@ -22,7 +22,6 @@ const Calendar = () => {
     const [opencnfDialogOpen, setCnfDialogOpen] = useState(false);
     const [formData, setFormData] = useState();
     const [calEvData, setCalEvData] = useState([]);
-    console.log('calEvData: ', calEvData);
 
     const handleDrawerToggle = () => {
         setCaledrawerOpen(!caledrawerOpen);
@@ -72,13 +71,11 @@ const Calendar = () => {
     }, [date, calendarApi]);
 
     const filterEvents = (events, selectedCalendars) => {
-        console.log('events: ', events);
         return events && events?.filter((event) => selectedCalendars?.includes(event?.category));
     };
 
     // filter fun according to events
     const filteredEvents = filterEvents(calEvData, selectedEventfilter);
-    console.log('filteredEvents: ', filteredEvents);
 
     // calendar colors
     const calendarsColor = {
@@ -154,7 +151,6 @@ const Calendar = () => {
             setCaledrawerOpen(true);
         },
         eventDrop({ event: droppedEvent }) {
-            debugger
             const startDate = droppedEvent?.start;
             const endDate = droppedEvent?.end ?? startDate;
             const updatedEvent = {

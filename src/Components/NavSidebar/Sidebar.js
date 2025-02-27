@@ -6,22 +6,11 @@ import {
     ListItemButton,
     ListItemIcon,
     ListItemText,
-    IconButton,
     Box,
-    Tooltip,
-    FormControlLabel,
     Checkbox,
-    TextField,
-    MenuItem,
     Typography,
 } from "@mui/material";
 import {
-    Home,
-    Task,
-    Work,
-    Mail,
-    MeetingRoom,
-    CalendarToday,
     Menu as MenuIcon,
     ChevronLeft as ChevronLeftIcon,
 } from "@mui/icons-material";
@@ -144,20 +133,21 @@ const Sidebar = () => {
     return (
         <motion.div
             layout
-            initial={{ width: 80 }}
+            initial={{ width: 260 }}
             animate={{ width: drawerWidth }}
             transition={{ type: "spring", stiffness: 200, damping: 25 }}
             className="itask_sidebarDrawer"
         >
             {/* Button to toggle sidebar */}
-            {isMobile &&
+            {isMobile && (
                 <div
                     onClick={toggleDrawer}
-                    className={`itask_drawerButton ${isDrawerOpen ? 'itask_drawerButtonOpen' : ''}`}
+                    className={`itask_drawerButton ${isDrawerOpen ? "itask_drawerButtonOpen" : ""
+                        }`}
                 >
                     {isDrawerOpen ? <ChevronLeftIcon /> : <MenuIcon />}
                 </div>
-            }
+            )}
             {/* Drawer Component */}
             <Drawer
                 variant={isMobile ? "temporary" : "permanent"}
@@ -168,10 +158,10 @@ const Sidebar = () => {
                 sx={{
                     width: drawerWidth,
                     flexShrink: 0,
-                    '& .MuiDrawer-paper': {
+                    "& .MuiDrawer-paper": {
                         width: drawerWidth,
                         boxSizing: "border-box",
-                        boxShadow: '0 .125rem .5rem 0 rgba(47, 43, 61, .12)'
+                        boxShadow: "0 .125rem .5rem 0 rgba(47, 43, 61, .12)",
                     },
                 }}
                 aria-labelledby="sidebar-drawer"

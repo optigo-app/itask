@@ -19,6 +19,7 @@
         "progress_bar": "40%",
         "taskPr": "WIP Locker",
         "taskDpt": "Sales",
+        "isLocked": 0,
         "short_description": "Simplifying the OptigoApps UI/UX for better user experience.",
         "remark": "Initial documentation is started, pending review.",
         "assignee": [
@@ -47,6 +48,7 @@
         "progress_bar": "65%",
         "taskPr": "Security",
         "taskDpt": "IT",
+        "isLocked": 0,
         "short_description": "Enhancing authentication for better security.",
         "remark": "Two-factor authentication is under development.",
         "assignee": [
@@ -75,6 +77,7 @@
         "progress_bar": "80%",
         "taskPr": "UI/UX Revamp",
         "taskDpt": "Design",
+        "isLocked": 1,
         "short_description": "Redesigning the mobile app interface for better usability.",
         "remark": "Final testing phase, minor fixes remaining.",
         "assignee": [
@@ -103,6 +106,7 @@
         "progress_bar": "100%",
         "taskPr": "SEO Enhancement",
         "taskDpt": "Marketing",
+        "isLocked": 1,
         "short_description": "Optimizing the website for better search engine rankings.",
         "remark": "SEO changes successfully implemented.",
         "assignee": [
@@ -131,6 +135,7 @@
         "progress_bar": "50%",
         "taskPr": "CRM Module",
         "taskDpt": "IT",
+        "isLocked": 0,
         "short_description": "Integrating CRM software with the existing system.",
         "remark": "Third-party API integration in progress.",
         "assignee": [

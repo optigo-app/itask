@@ -498,17 +498,17 @@
                 }
 
                 .fc-list-day-cushion {
-                    background: $button-color-hover !important;
+                    background: rgb(232,231,253) !important;
                 }
 
                 .fc-list-event {
                     cursor: pointer;
 
-                    &:hover {
-                        td {
-                            background-color: $button-color-hover !important;
-                        }
-                    }
+                    // &:hover {
+                    //     td {
+                    //         background-color: $button-color-hover !important;
+                    //     }
+                    // }
 
                     td {
                         border-color: $divider-color;

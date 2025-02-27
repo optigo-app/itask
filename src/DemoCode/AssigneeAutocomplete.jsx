@@ -10,7 +10,6 @@ const MultiSelectChipWithLimit = ({
     value
 }) => {
     const [selectedValues, setSelectedValues] = useState(value || []);
-    console.log('selectedValues: ', selectedValues);
 
     const handleChange = (event, newValue) => {
         setSelectedValues(newValue);

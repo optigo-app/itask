@@ -15,7 +15,6 @@ const MultiSelectWithHoverStyle = () => {
 
   const handleChange = (event, newValue) => {
     setSelectedOptions(newValue);
-    console.log('Selected Data:', newValue);
   };
 
   return (

@@ -23,6 +23,7 @@ const Project = () => {
   const [taskProject, setTaskProject] = useState();
   const [taskCategory, setTaskCategory] = useState();
   const [activeButton, setActiveButton] = useState("table");
+  const [project, setProject] = useState(ProjectData);
   const [filters, setFilters] = useState({});
 
   const retrieveAndSetData = (key, setter) => {
@@ -34,7 +35,6 @@ const Project = () => {
 
   // master data fetching and setting
   const fetchMasterData = async () => {
-    debugger
     setIsLoading(true);
     try {
       const masterData = sessionStorage.getItem('masterData');
@@ -78,9 +78,8 @@ const Project = () => {
   };
 
   // filter functions
-  const filteredData = ProjectData?.filter((task) => {
+  const filteredData = project?.filter((task) => {
     const { status, priority, assignee, searchTerm, dueDate, department, project, category } = filters;
-    console.log('filters: ', filters);
 
     const normalizedSearchTerm = searchTerm?.toLowerCase();
 
@@ -147,6 +146,18 @@ const Project = () => {
     }
   }, []);
 
+  const handleLockProject = (id) => {
+    debugger
+    const updatedData = filteredData?.map((task) => {
+      if (task.taskid === id) {
+        return { ...task, isLocked: task.isLocked === 1 ? 0 : 1 };
+      }
+      return task;
+    });
+    console.log('updatedData: ', updatedData);
+    setProject(updatedData);
+  };
+
   return (
     <Box
       sx={{
@@ -206,7 +217,9 @@ const Project = () => {
           <TaskTable
             data={!isTaskLoading ? filteredData : []}
             isLoading={isTaskLoading}
-            masterData={masterData} />
+            masterData={masterData} 
+            handleLockProject={handleLockProject}
+            />
         )}
 
         {activeButton === "kanban" &&

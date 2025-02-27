@@ -157,7 +157,6 @@ const Task = () => {
   // };
 
   const fetchTaskData = async () => {
-    debugger
     if (tasks?.length == 0) {
       setIsTaskLoading(true);
     }
@@ -178,6 +177,7 @@ const Task = () => {
         const category = taskCategory?.find(item => item?.id == task?.workcategoryid);
         const assignee = ['shivam', 'shyam', "ram", "shiv", 'jeet', 'karan', 'kamal'];
         const estimate = ['20', '30', '40']
+        const isburning = 1;
 
         const enhancedSubtasks = task?.subtasks?.map((subtask) => ({
           ...enhanceTask(subtask),
@@ -195,6 +195,7 @@ const Task = () => {
           assignee: assignee,
           category: category?.labelname,
           estimate: estimate,
+          isburning: isburning,
           subtaskflag: 0,
           isUpdated: false,
         };
@@ -301,7 +302,6 @@ const Task = () => {
 
   // task api call
   useEffect(() => {
-    debugger
     setTimeout(() => {
       if (priorityData && statusData && taskProject && taskDepartment) {
         if (callFetchTaskApi) {
@@ -326,7 +326,6 @@ const Task = () => {
   // filter functions
   const filteredData = tasks?.filter((task) => {
     const { status, priority, assignee, searchTerm, dueDate, department, project, category } = filters;
-    console.log('filters: ', filters);
 
     const normalizedSearchTerm = searchTerm?.toLowerCase();
 
@@ -393,6 +392,30 @@ const Task = () => {
     }
   }, []);
 
+  const handleTaskFavorite = (taskToUpdate) => {
+    const updateTasksRecursively = (tasks) => {
+      return tasks?.map((task) => {
+        if (task.taskid === taskToUpdate.taskid) {
+          return {
+            ...task,
+            isFav: !task.isFav,
+          };
+        }
+
+        if (task.subtasks && task.subtasks.length > 0) {
+          return {
+            ...task,
+            subtasks: updateTasksRecursively(task.subtasks),
+          };
+        }
+
+        return task;
+      });
+    };
+
+    setTasks((prevTasks) => updateTasksRecursively(prevTasks));
+  };
+
   return (
     <Box
       sx={{
@@ -453,7 +476,9 @@ const Task = () => {
           <TaskTable
             data={filteredData ?? null}
             isLoading={isTaskLoading}
-            masterData={masterData} />
+            masterData={masterData}
+            handleTaskFavorite={handleTaskFavorite}
+          />
         )}
 
         {activeButton === "kanban" &&
@@ -462,13 +487,16 @@ const Task = () => {
             isLoading={isTaskLoading}
             masterData={masterData}
             statusData={statusData}
+            handleTaskFavorite={handleTaskFavorite}
           />
         }
 
         {activeButton === "card" &&
           <CardView
             isLoading={isTaskLoading}
-            masterData={masterData} />
+            masterData={masterData}
+            handleTaskFavorite={handleTaskFavorite}
+          />
         }
       </Suspense>
     </Box>

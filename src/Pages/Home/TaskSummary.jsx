@@ -1,8 +1,11 @@
-import { Package, List, UserCheck, UserX, CheckCircle, Clock, Settings, Layers } from 'lucide-react';
+import { Package, UserCheck, UserX, Clock, Settings, Layers, Star } from 'lucide-react';
 import { Card, CardContent, Box, Typography } from "@mui/material";
+import { useNavigate } from 'react-router-dom';
 
 export default function SummaryDashboard() {
+    const navigate = useNavigate();
     const iconMapping = {
+        "Favorite Tasks": Star,
         "Services Tasks": Package,
         "R&D Tasks": Layers,
         "UpComming Tasks": UserCheck,
@@ -12,6 +15,14 @@ export default function SummaryDashboard() {
     };
 
     const metrics = [
+        {
+            title: "Favorite Tasks",
+            value: 15,
+            newTasks: 3,
+            icon: iconMapping["Favorite Tasks"],
+            color: "#FFB900", // Warmer yellow
+            bgColor: "#FFF9E6", // Light warm yellow background
+        },
         {
             title: "Services Tasks",
             value: 15,
@@ -51,6 +62,7 @@ export default function SummaryDashboard() {
             icon: iconMapping["Unassigned Tasks"],
             color: "#EF4444", // Red
             bgColor: "#FEF2F2", // Light Red
+            routes: '/tasks/unassigned'
         },
         {
             title: "Due Tasks",
@@ -62,6 +74,12 @@ export default function SummaryDashboard() {
         },
     ];
 
+    const handleNavigate = (route) => {
+        if (route) {
+            navigate(route);
+        }
+    }
+
     return (
         <Box>
             <Box
@@ -71,13 +89,14 @@ export default function SummaryDashboard() {
                     gap: 2,
                 }}
             >
-                {metrics.map((metric, index) => {
-                    const Icon = metric.icon;
+                {metrics?.map((metric, index) => {
+                    const Icon = metric?.icon;
                     return (
                         <Card
                             key={index}
                             sx={{
                                 transition: "all 0.2s",
+                                cursor: "pointer",
                                 "&:hover": {
                                     transform: "translateY(-5px)",
                                     boxShadow: 3,
@@ -85,18 +104,22 @@ export default function SummaryDashboard() {
                                 position: 'relative',
                             }}
                             className='HomePageCom'
+                            onClick={() => handleNavigate(metric?.routes)}
                         >
                             <CardContent sx={{ p: "15px", pb: "15px !important" }}>
-                                <Box sx={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 2 }}>
-                                    <Box sx={{ p: 1.5, borderRadius: 2, backgroundColor: metric.bgColor }}>
-                                        <Icon size={24} style={{ color: metric.color }} />
+                                <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 2 }}>
+                                    <Box sx={{ p: 1.2, borderRadius: 2, backgroundColor: metric.bgColor }}>
+                                        <Icon size={20} style={{ color: metric.color }} />
                                     </Box>
                                     <Box>
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                             <Typography variant="h4" fontWeight="bold">
+                                                {metric?.newTasks}
+                                            </Typography>
+                                            <Typography variant="body2">
                                                 {metric.value}
                                             </Typography>
-                                            {metric.newTasks > 0 && (
+                                            {/* {metric?.newTasks > 0 && (
                                                 <Typography
                                                     variant="caption"
                                                     sx={{
@@ -117,22 +140,23 @@ export default function SummaryDashboard() {
 
 
                                                 >
-                                                    +{metric.newTasks}
+                                                    +{metric?.newTasks}
                                                 </Typography>
-                                            )}
+                                            )} */}
                                         </Box>
-                                        <Typography
-                                            variant="body2"
-                                            sx={{
-                                                textTransform: "Capitalize",
-                                                fontWeight: "medium",
-                                                mt: 0.5,
-                                            }}
-                                        >
-                                            {metric.title}
-                                        </Typography>
                                     </Box>
                                 </Box>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        textAlign: "center",
+                                        textTransform: "Capitalize",
+                                        fontWeight: "medium",
+                                        mt: 0.5,
+                                    }}
+                                >
+                                    {metric?.title}
+                                </Typography>
                             </CardContent>
                         </Card>
                     );

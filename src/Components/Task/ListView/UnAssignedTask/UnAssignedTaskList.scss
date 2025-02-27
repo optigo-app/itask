@@ -1,0 +1,73 @@
+@import '../../../../theme/variable.scss';
+
+.UnAssignedtask-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .task-grid {
+    .task-card {
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      background: #fff;
+
+      .task-header,
+      .task-content {
+        margin: 0;
+        padding: 0;
+      }
+
+      .task-content {
+        .task-desc {
+          margin-top: 5px;
+          color: $secondaryColor !important;
+        }
+      }
+
+      .task-dates {
+        display: flex;
+        justify-content: start;
+        gap: 10px;
+        margin-top: 10px;
+
+        p {
+          display: flex;
+          align-items: center;
+          color: $placeholderColor;
+        }
+      }
+
+      .task-actions {
+        margin-top: 10px;
+        display: flex;
+        justify-content: center;
+
+        button {
+          padding: 5px 10px;
+        }
+      }
+    }
+  }
+
+
+
+  @media (max-width: 900px) {
+    .task-grid {
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .task-grid {
+      flex-direction: column;
+    }
+
+    .task-item {
+      width: 100%;
+    }
+  }
+
+
+}
