@@ -112,10 +112,11 @@ export default function SummaryDashboard() {
                                         <Icon size={20} style={{ color: metric.color }} />
                                     </Box>
                                     <Box>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: .2 }}>
                                             <Typography variant="h4" fontWeight="bold" fontSize='35px !important'>
                                                 {metric?.newTasks}
                                             </Typography>
+                                            <Typography variant="h5">/</Typography>
                                             <Typography variant="body2">
                                                 {metric.value}
                                             </Typography>

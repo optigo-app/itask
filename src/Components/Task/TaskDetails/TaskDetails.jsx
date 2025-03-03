@@ -184,6 +184,23 @@ const TaskDetail = ({ open, onClose }) => {
         }
     };
 
+    const handleEditComment = (comment) => {
+        setNewComment(comment.comment);
+    };
+    
+    const handleRemoveComment = async (commentId) => {
+        try {
+            const deleteCommentResponse = await taskCommentAddApi(taskData, commentId);
+            if (deleteCommentResponse) {
+                setComments((prevComments) => prevComments.filter(comment => comment.id !== commentId));
+            } else {
+                console.error('Failed to remove comment');
+            }
+        } catch (error) {
+            console.error('Error while removing comment:', error);
+        }
+    };
+
     const handleDescChange = (event) => {
         setTaskDesc(event.target.value);
     };
@@ -371,7 +388,9 @@ const TaskDetail = ({ open, onClose }) => {
                                     </Tabs>
                                     <Box className="tab-content">
                                         {activeTab === 0 &&
-                                            <SubtaskCard subtasks={taskData?.subtasks} />
+                                            <Box className="subtask_CardBox">
+                                                <SubtaskCard subtasks={taskData?.subtasks} />
+                                            </Box>
                                         }
                                         {activeTab === 1 &&
                                             <Box>
@@ -388,6 +407,8 @@ const TaskDetail = ({ open, onClose }) => {
                                                 newComment={newComment}
                                                 onCommentChange={handleCommentChange}
                                                 onSendComment={handleSendComment}
+                                                onEditComment={handleEditComment}
+                                                onDeleteComment={handleRemoveComment}
                                             />
                                         )}
                                     </Box>

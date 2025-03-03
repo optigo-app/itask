@@ -78,7 +78,13 @@ const Sidebar = () => {
         <List>
             <ListItem className="itask_drawerHeader">
                 <ListItemButton className="itask_drawerListItem">
-                    <Box className="itask_drawerHeader" sx={{ justifyContent: isDrawerOpen ? "space-between" : "center !important" }}>
+                    <Box className="itask_drawerHeader"
+                        sx={{
+                            justifyContent: isDrawerOpen ? "space-between" : "center !important"
+                        }}
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                    >
                         <div className="itask_logoWrapper"
                             onClick={() => {
                                 navigate("/");
@@ -153,8 +159,8 @@ const Sidebar = () => {
                 variant={isMobile ? "temporary" : "permanent"}
                 open={isMobile ? isDrawerOpen : true}
                 onClose={() => setDrawerOpen(false)}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
+                // onMouseEnter={handleMouseEnter}
+                // onMouseLeave={handleMouseLeave}
                 sx={{
                     width: drawerWidth,
                     flexShrink: 0,

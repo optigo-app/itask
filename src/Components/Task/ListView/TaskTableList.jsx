@@ -241,7 +241,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                     boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
                 }}
                 >
-                    <Typography variant="body2" sx={{ color: '#333 !important' }}>
+                    <Typography variant="body1" sx={{ color: '#333 !important' }}>
                         {task.estimate[0]}
                     </Typography>
                 </Box>
@@ -252,7 +252,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                     boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
                 }}
                 >
-                    <Typography variant="body2" sx={{ color: '#fff !important' }}>
+                    <Typography variant="body1" sx={{ color: '#fff !important' }}>
                         {task.estimate[1]}
                     </Typography>
                 </Box>
@@ -263,7 +263,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                     boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
                 }}
                 >
-                    <Typography variant="body2" sx={{ color: '#fff !important' }}>
+                    <Typography variant="body1" sx={{ color: '#fff !important' }}>
                         {task.estimate[2]}
                     </Typography>
                 </Box>
@@ -485,7 +485,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
     return (
         <>
             {(isLoading == null || isLoading || !data || data?.length === 0) ? (
-                        <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
+                <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
             ) :
                 <TableContainer
                     component={Paper}
@@ -529,7 +529,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                 <>
                                     {currentData?.map((task, taskIndex) => (
                                         <React.Fragment key={taskIndex}>
-                                            <TableRow key={taskIndex} sx={{ bgcolor: taskIndex % 2 === 0 && task?.isburning == 1 && '#6e6e6e21' }}>
+                                            <TableRow key={taskIndex} sx={{ bgcolor: taskIndex % 2 === 0 && task?.isburning == 1 && '#6e6e6e14' }}>
                                                 <TableCell
                                                     onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
                                                     onMouseLeave={handleTaskMouseLeave}
@@ -583,14 +583,14 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                             <div style={{ marginLeft: '28px', display: 'flex', alignItems: 'center' }}>
                                                                 {taskIndex % 2 === 0 && task?.isburning == 1 &&
                                                                     <img src={BurningImg} alt="burningTask"
-                                                                        style={{ width: '20px', height: '20px', borderRadius: '50%', marginRight: '8px' }} />
+                                                                        style={{ width: '15px', height: '15px', borderRadius: '50%', marginRight: '8px' }} />
                                                                 }
                                                                 {taskIndex % 2 === 0 && (
                                                                     <Chip
                                                                         label={task?.ticket || 'A00161'}
                                                                         variant="outlined"
                                                                         size="small"
-                                                                        sx={{ background: '#d8d8d8', fontSize: '11px', height: '20px', color: '#8863FB', marginRight: '8px' }}
+                                                                        sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB', marginRight: '8px' }}
                                                                     />
                                                                 )}
                                                                 <IconButton
@@ -614,9 +614,9 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                                     }}
                                                                 >
                                                                     {task.isFav ? (
-                                                                        <StarIcon sx={{ fontSize: '15px', color: '#fff' }} />
+                                                                        <StarIcon sx={{ fontSize: '12px', color: '#fff' }} />
                                                                     ) : (
-                                                                        <StarBorderIcon sx={{ fontSize: '15px', color: '#7d7f85' }} />
+                                                                        <StarBorderIcon sx={{ fontSize: '12px', color: '#7d7f85' }} />
                                                                     )}
                                                                 </IconButton>
                                                             </div>
@@ -734,7 +734,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                             },
                                                             { id: 'view', label: 'View Task', icon: <Eye size={20} />, onClick: () => handleViewTask(task, { Task: 'root' }) },
                                                             { id: 'edit', label: 'Edit Task', icon: <Pencil size={20} />, onClick: () => handleEditTask(task, { Task: 'root' }) }
-                                                        ].map(({ id, label, icon, onClick, isRunning }) => (
+                                                        ]?.map(({ id, label, icon, onClick, isRunning }) => (
                                                             <Tooltip key={id} title={label} arrow placement="top" classes={{ tooltip: "custom-tooltip" }}>
                                                                 <IconButton
                                                                     id={id}
