@@ -113,7 +113,7 @@ export default function SummaryDashboard() {
                                     </Box>
                                     <Box>
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                            <Typography variant="h4" fontWeight="bold">
+                                            <Typography variant="h4" fontWeight="bold" fontSize='35px !important'>
                                                 {metric?.newTasks}
                                             </Typography>
                                             <Typography variant="body2">

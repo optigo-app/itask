@@ -34,6 +34,7 @@ import TaskTimeTracking from "../../ShortcutsComponent/TaskTimeTracking";
 import BurningImg from "../../../Assests/fire.png"
 
 const TableView = ({ data, handleTaskFavorite, isLoading }) => {
+    console.log('data: ', data);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
@@ -219,7 +220,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
         setOpenAssigneeModal(false);
     }
 
-    const StatusCircles = ({ redCount, yellowCount, greenCount }) => {
+    const StatusCircles = ({ task }) => {
         const circleStyle = {
             minWidth: 30,
             minHeight: 30,
@@ -235,41 +236,40 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
             <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center' }}>
                 <Box sx={{
                     ...circleStyle,
-                    backgroundColor: '#FF4D4F',
+                    backgroundColor: '#D3D3D3',
                     cursor: 'pointer',
                     boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
                 }}
                 >
-                    <Typography variant="body2" sx={{ color: '#fff !important' }}>
-                        {redCount}
+                    <Typography variant="body2" sx={{ color: '#333 !important' }}>
+                        {task.estimate[0]}
                     </Typography>
                 </Box>
                 <Box sx={{
                     ...circleStyle,
-                    backgroundColor: '#6CB4EE',
+                    backgroundColor: '#808080',
                     cursor: 'pointer',
                     boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
                 }}
                 >
                     <Typography variant="body2" sx={{ color: '#fff !important' }}>
-                        {yellowCount}
+                        {task.estimate[1]}
                     </Typography>
                 </Box>
                 <Box sx={{
                     ...circleStyle,
-                    backgroundColor: '#52C41A',
+                    backgroundColor: '#404040',
                     cursor: 'pointer',
                     boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
                 }}
                 >
                     <Typography variant="body2" sx={{ color: '#fff !important' }}>
-                        {greenCount}
+                        {task.estimate[2]}
                     </Typography>
                 </Box>
             </Box>
         );
     };
-
     const renderSubtasks = (subtasks, parentIndex) => {
         return subtasks?.map((subtask, subtaskIndex) => (
             <React.Fragment key={`${parentIndex}-${subtaskIndex}`}>
@@ -484,339 +484,333 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
 
     return (
         <>
-            <TableContainer
-                component={Paper}
-                sx={{
-                    boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
-                    borderRadius: "8px",
+            {(isLoading == null || isLoading || !data || data?.length === 0) ? (
+                        <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
+            ) :
+                <TableContainer
+                    component={Paper}
+                    sx={{
+                        boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
+                        borderRadius: "8px",
 
-                }}
-                className="TaskTVMain"
-            >
-                <Table size="small" aria-label="task details"
+                    }}
+                    className="TaskTVMain"
                 >
-                    <TableHead>
-                        <TableRow>
-                            {Object.keys(columnWidths).map((key) => (
-                                <TableCell key={key}
-                                    sx={{
-                                        width: columnWidths[key],
-                                        maxWidth: columnWidths[key],
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "nowrap",
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                                        <TableSortLabel
-                                            active={orderBy === key}
-                                            direction={order}
-                                            onClick={() => handleRequestSort(key)}
-                                        >
-                                            {key.charAt(0).toUpperCase() + key.slice(1)}
-                                        </TableSortLabel>
-                                    </Box>
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {(isLoading == null || isLoading || !data) ? (
-                            <TableRow>
-                                <TableCell colSpan={Object?.keys(columnWidths)?.length}>
-                                    <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
-                                </TableCell>
-                            </TableRow>
-                        ) :
-                            <>
-                                {data?.length != 0 ? (
-                                    <>
-                                        {currentData?.map((task, taskIndex) => (
-                                            <React.Fragment key={taskIndex}>
-                                                <TableRow key={taskIndex} sx={{ bgcolor: taskIndex % 2 === 0 && task?.isburning == 1 && '#6e6e6e21' }}>
-                                                    <TableCell
-                                                        onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
-                                                        onMouseLeave={handleTaskMouseLeave}
-                                                    >
-                                                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                                            <div>
-                                                                <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
-                                                                    <div style={{ display: "flex", alignItems: "center" }}>
-                                                                        <IconButton
-                                                                            id="toggle-task"
-                                                                            aria-label="toggle-task"
-                                                                            aria-labelledby="toggle-task"
-                                                                            size="small"
-                                                                            onClick={() => toggleSubtasks(taskIndex)}
-                                                                        >
-                                                                            <PlayArrowIcon
-                                                                                style={{
-                                                                                    color: subtaskVisibility[taskIndex] ? "#444050" : "#c7c7c7",
-                                                                                    fontSize: "1.5rem",
-                                                                                    transform: subtaskVisibility[taskIndex] ? "rotate(90deg)" : "rotate(0deg)",
-                                                                                    transition: "transform 0.2s ease-in-out",
-                                                                                }}
-                                                                            />
-                                                                        </IconButton>
-                                                                        <span>
-                                                                            {task?.taskname?.length > 20
-                                                                                ? `${task?.taskname.slice(0, 50)}...`
-                                                                                : task?.taskname}
-                                                                        </span>
-                                                                    </div>
-                                                                    {task?.subtasks?.length > 0 && (
-                                                                        <div style={{
-                                                                            backgroundColor: "#7d7f8799",
-                                                                            color: '#fff',
-                                                                            width: 'fit-content',
-                                                                            padding: '0.1rem 0.4rem',
-                                                                            borderRadius: '5px',
-                                                                            textAlign: 'center',
-                                                                            fontSize: '10px',
-                                                                            fontWeight: '500',
-                                                                            display: 'flex',
-                                                                            justifyContent: 'center',
-                                                                            alignItems: 'center',
-                                                                            marginTop: '-15px'
-                                                                        }}>
-                                                                            {task?.subtasks?.length}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
 
-                                                                <div style={{ marginLeft: '28px', display: 'flex', alignItems: 'center' }}>
-                                                                    {taskIndex % 2 === 0 && task?.isburning == 1 &&
-                                                                        <img src={BurningImg} alt="burningTask"
-                                                                            style={{ width: '20px', height: '20px', borderRadius: '50%', marginRight: '8px' }} />
-                                                                    }
-                                                                    {taskIndex % 2 === 0 && (
-                                                                        <Chip
-                                                                            label={task?.ticket || 'A00161'}
-                                                                            variant="outlined"
-                                                                            size="small"
-                                                                            sx={{ background: '#d8d8d8', fontSize: '11px', height: '20px', color: '#8863FB', marginRight: '8px' }}
-                                                                        />
-                                                                    )}
+                    <Table size="small" aria-label="task details"
+                    >
+                        <TableHead>
+                            <TableRow>
+                                {Object.keys(columnWidths).map((key) => (
+                                    <TableCell key={key}
+                                        sx={{
+                                            width: columnWidths[key],
+                                            maxWidth: columnWidths[key],
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                        }}
+                                    >
+                                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                                            <TableSortLabel
+                                                active={orderBy === key}
+                                                direction={order}
+                                                onClick={() => handleRequestSort(key)}
+                                            >
+                                                {key.charAt(0).toUpperCase() + key.slice(1)}
+                                            </TableSortLabel>
+                                        </Box>
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {data && data?.length !== 0 ? (
+                                <>
+                                    {currentData?.map((task, taskIndex) => (
+                                        <React.Fragment key={taskIndex}>
+                                            <TableRow key={taskIndex} sx={{ bgcolor: taskIndex % 2 === 0 && task?.isburning == 1 && '#6e6e6e21' }}>
+                                                <TableCell
+                                                    onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
+                                                    onMouseLeave={handleTaskMouseLeave}
+                                                >
+                                                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                                        <div>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
+                                                                <div style={{ display: "flex", alignItems: "center" }}>
                                                                     <IconButton
-                                                                        onClick={() => handleTaskFavorite(task)}
+                                                                        id="toggle-task"
+                                                                        aria-label="toggle-task"
+                                                                        aria-labelledby="toggle-task"
                                                                         size="small"
-                                                                        aria-label="add-favorite"
-                                                                        aria-labelledby="add-favorite"
-                                                                        sx={{
-                                                                            padding: '4px',
-                                                                            boxShadow: task.isFav
-                                                                                ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
-                                                                                : '0px 2px 8px rgba(99, 99, 99, 0.2)',
-                                                                            transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
-                                                                            background: task.isFav ? '#FFD700' : '#fff',
-                                                                            '&:hover': {
-                                                                                boxShadow: task.isFav
-                                                                                    ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
-                                                                                    : '0px 4px 12px rgba(99, 99, 99, 0.3)',
-                                                                                background: task.isFav ? '#FFC107' : '#f5f5f5',
-                                                                            },
-                                                                        }}
+                                                                        onClick={() => toggleSubtasks(taskIndex)}
                                                                     >
-                                                                        {task.isFav ? (
-                                                                            <StarIcon sx={{ fontSize: '18px', color: '#fff' }} />
-                                                                        ) : (
-                                                                            <StarBorderIcon sx={{ fontSize: '18px', color: '#7d7f85' }} />
-                                                                        )}
-                                                                    </IconButton>
-                                                                </div>
-                                                            </div>
-                                                            <IconButton
-                                                                id="add-task"
-                                                                aria-label="add-task"
-                                                                aria-labelledby="add-task"
-                                                                size="small"
-                                                                onClick={() => handleAddTask(task, { Task: 'subroot' })}
-                                                                style={{
-                                                                    visibility: hoveredTaskId === task?.taskid && hoveredColumnname == 'TaskName' ? "visible" : "hidden",
-                                                                }}
-                                                            >
-                                                                <CirclePlus size={20} color="#7367f0" />
-                                                            </IconButton>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>{task?.taskPr}</TableCell>
-                                                    <TableCell>
-                                                        <div style={{
-                                                            color: statusColors[task?.status]?.color,
-                                                            backgroundColor: statusColors[task?.status]?.backgroundColor,
-                                                            width: 'fit-content',
-                                                            padding: '0.2rem 0.8rem',
-                                                            borderRadius: '5px',
-                                                            textAlign: 'center',
-                                                            fontSize: '13.5px',
-                                                            fontWeight: '500',
-                                                            display: 'flex',
-                                                            justifyContent: 'center',
-                                                            alignItems: 'center',
-                                                        }}>
-                                                            {task?.status}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell
-                                                        onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
-                                                        onMouseLeave={handleTaskMouseLeave}
-                                                    >
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                            <AvatarGroup max={10}
-                                                                sx={{
-                                                                    flexDirection: 'row !important',
-                                                                    '& .MuiAvatar-root': {
-                                                                        width: 22,
-                                                                        height: 22,
-                                                                        fontSize: '0.8rem',
-                                                                        cursor: 'pointer',
-                                                                        border: 'none',
-                                                                        transition: 'transform 0.3s ease-in-out',
-                                                                        '&:hover': {
-                                                                            transform: 'translateY(-8px)',
-                                                                        }
-                                                                    }
-                                                                }}
-                                                            >
-                                                                {task?.assignee?.map((assignee, teamIdx) => (
-                                                                    <Tooltip placement="top" key={assignee} title={assignee} arrow>
-                                                                        <Avatar
-                                                                            key={teamIdx}
-                                                                            alt={assignee}
-                                                                            src={assignee.avatar}
-                                                                            sx={{
-                                                                                backgroundColor: background(assignee),
+                                                                        <PlayArrowIcon
+                                                                            style={{
+                                                                                color: subtaskVisibility[taskIndex] ? "#444050" : "#c7c7c7",
+                                                                                fontSize: "1.5rem",
+                                                                                transform: subtaskVisibility[taskIndex] ? "rotate(90deg)" : "rotate(0deg)",
+                                                                                transition: "transform 0.2s ease-in-out",
                                                                             }}
-                                                                        >
-                                                                            {!assignee.avatar && assignee.charAt(0)}
-                                                                        </Avatar>
-                                                                    </Tooltip>
-                                                                ))}
-                                                            </AvatarGroup>
-                                                            <IconButton
-                                                                id="add-task"
-                                                                aria-label="add-task"
-                                                                aria-labelledby="add-task"
-                                                                size="small"
-                                                                onClick={() => handleAssigneeShortcut(task, { Task: 'root' })}
-                                                                style={{
-                                                                    visibility: hoveredTaskId === task?.taskid && hoveredColumnname == 'Assignee' ? "visible" : "hidden",
-                                                                }}
-                                                            >
-                                                                <CirclePlus size={20} color="#7367f0" />
-                                                            </IconButton>
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell>{task?.DeadLineDate ? formatDate2(task.DeadLineDate) : 'No deadline set'}</TableCell>
-                                                    <TableCell>
-                                                        <div style={{
-                                                            color: priorityColors[task?.priority]?.color,
-                                                            backgroundColor: priorityColors[task?.priority]?.backgroundColor,
-                                                            width: 'fit-content',
-                                                            padding: '0.2rem 0.8rem',
-                                                            borderRadius: '5px',
-                                                            textAlign: 'center',
-                                                            fontSize: '13.5px',
-                                                            fontWeight: '500',
-                                                            display: 'flex',
-                                                            justifyContent: 'center',
-                                                            alignItems: 'center',
-                                                        }}>
-                                                            {task?.priority}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell> {StatusCircles({ redCount: task.estimate[0], yellowCount: task.estimate[1], greenCount: task.estimate[2] })}</TableCell>
-                                                    <TableCell align="center">
-                                                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                            {[
-                                                                {
-                                                                    id: 'timeTrack',
-                                                                    label: taskTimeRunning[task.taskid] ? 'Time Track ON' : 'Time Track OFF',
-                                                                    icon: <Timer size={20} color={taskTimeRunning[task.taskid] ? "#FFD700" : "#6D6B77"} />,
-                                                                    onClick: () => handleTimeTrackModalOpen(task),
-                                                                    isRunning: taskTimeRunning[task.taskid] || false,
-                                                                },
-                                                                { id: 'view', label: 'View Task', icon: <Eye size={20} />, onClick: () => handleViewTask(task, { Task: 'root' }) },
-                                                                { id: 'edit', label: 'Edit Task', icon: <Pencil size={20} />, onClick: () => handleEditTask(task, { Task: 'root' }) }
-                                                            ].map(({ id, label, icon, onClick, isRunning }) => (
-                                                                <Tooltip key={id} title={label} arrow placement="top" classes={{ tooltip: "custom-tooltip" }}>
-                                                                    <IconButton
-                                                                        id={id}
-                                                                        aria-label={label}
-                                                                        sx={{
-                                                                            color: isRunning ? "#FFD700" : "#7d7f85",
-                                                                            transition: 'color 0.3s',
-                                                                            backgroundColor: isRunning ? "#6D6B77" : "transparent",
-                                                                            '&:hover': {
-                                                                                color: isRunning ? "#FFD700" : "#333",
-                                                                                backgroundColor: isRunning ? "#6D6B77" : "transparent",
-                                                                            },
-                                                                        }}
-                                                                        onClick={onClick}
-                                                                    >
-                                                                        {icon}
+                                                                        />
                                                                     </IconButton>
+                                                                    <span>
+                                                                        {task?.taskname?.length > 20
+                                                                            ? `${task?.taskname.slice(0, 50)}...`
+                                                                            : task?.taskname}
+                                                                    </span>
+                                                                </div>
+                                                                {task?.subtasks?.length > 0 && (
+                                                                    <div style={{
+                                                                        backgroundColor: "#7d7f8799",
+                                                                        color: '#fff',
+                                                                        width: 'fit-content',
+                                                                        padding: '0.1rem 0.4rem',
+                                                                        borderRadius: '5px',
+                                                                        textAlign: 'center',
+                                                                        fontSize: '10px',
+                                                                        fontWeight: '500',
+                                                                        display: 'flex',
+                                                                        justifyContent: 'center',
+                                                                        alignItems: 'center',
+                                                                        marginTop: '-15px'
+                                                                    }}>
+                                                                        {task?.subtasks?.length}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            <div style={{ marginLeft: '28px', display: 'flex', alignItems: 'center' }}>
+                                                                {taskIndex % 2 === 0 && task?.isburning == 1 &&
+                                                                    <img src={BurningImg} alt="burningTask"
+                                                                        style={{ width: '20px', height: '20px', borderRadius: '50%', marginRight: '8px' }} />
+                                                                }
+                                                                {taskIndex % 2 === 0 && (
+                                                                    <Chip
+                                                                        label={task?.ticket || 'A00161'}
+                                                                        variant="outlined"
+                                                                        size="small"
+                                                                        sx={{ background: '#d8d8d8', fontSize: '11px', height: '20px', color: '#8863FB', marginRight: '8px' }}
+                                                                    />
+                                                                )}
+                                                                <IconButton
+                                                                    onClick={() => handleTaskFavorite(task)}
+                                                                    size="small"
+                                                                    aria-label="add-favorite"
+                                                                    aria-labelledby="add-favorite"
+                                                                    sx={{
+                                                                        padding: '4px',
+                                                                        boxShadow: task.isFav
+                                                                            ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
+                                                                            : '0px 2px 8px rgba(99, 99, 99, 0.2)',
+                                                                        transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
+                                                                        background: task.isFav ? '#FFD700' : '#fff',
+                                                                        '&:hover': {
+                                                                            boxShadow: task.isFav
+                                                                                ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
+                                                                                : '0px 4px 12px rgba(99, 99, 99, 0.3)',
+                                                                            background: task.isFav ? '#FFC107' : '#f5f5f5',
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    {task.isFav ? (
+                                                                        <StarIcon sx={{ fontSize: '15px', color: '#fff' }} />
+                                                                    ) : (
+                                                                        <StarBorderIcon sx={{ fontSize: '15px', color: '#7d7f85' }} />
+                                                                    )}
+                                                                </IconButton>
+                                                            </div>
+                                                        </div>
+                                                        <IconButton
+                                                            id="add-task"
+                                                            aria-label="add-task"
+                                                            aria-labelledby="add-task"
+                                                            size="small"
+                                                            onClick={() => handleAddTask(task, { Task: 'subroot' })}
+                                                            style={{
+                                                                visibility: hoveredTaskId === task?.taskid && hoveredColumnname == 'TaskName' ? "visible" : "hidden",
+                                                            }}
+                                                        >
+                                                            <CirclePlus size={20} color="#7367f0" />
+                                                        </IconButton>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>{task?.taskPr}</TableCell>
+                                                <TableCell>
+                                                    <div style={{
+                                                        color: statusColors[task?.status]?.color,
+                                                        backgroundColor: statusColors[task?.status]?.backgroundColor,
+                                                        width: 'fit-content',
+                                                        padding: '0.2rem 0.8rem',
+                                                        borderRadius: '5px',
+                                                        textAlign: 'center',
+                                                        fontSize: '13.5px',
+                                                        fontWeight: '500',
+                                                        display: 'flex',
+                                                        justifyContent: 'center',
+                                                        alignItems: 'center',
+                                                    }}>
+                                                        {task?.status}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell
+                                                    onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
+                                                    onMouseLeave={handleTaskMouseLeave}
+                                                >
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                        <AvatarGroup max={10}
+                                                            sx={{
+                                                                flexDirection: 'row !important',
+                                                                '& .MuiAvatar-root': {
+                                                                    width: 22,
+                                                                    height: 22,
+                                                                    fontSize: '0.8rem',
+                                                                    cursor: 'pointer',
+                                                                    border: 'none',
+                                                                    transition: 'transform 0.3s ease-in-out',
+                                                                    '&:hover': {
+                                                                        transform: 'translateY(-8px)',
+                                                                    }
+                                                                }
+                                                            }}
+                                                        >
+                                                            {task?.assignee?.map((assignee, teamIdx) => (
+                                                                <Tooltip placement="top" key={assignee} title={assignee} arrow>
+                                                                    <Avatar
+                                                                        key={teamIdx}
+                                                                        alt={assignee}
+                                                                        src={assignee.avatar}
+                                                                        sx={{
+                                                                            backgroundColor: background(assignee),
+                                                                        }}
+                                                                    >
+                                                                        {!assignee.avatar && assignee.charAt(0)}
+                                                                    </Avatar>
                                                                 </Tooltip>
                                                             ))}
-                                                        </Box>
+                                                        </AvatarGroup>
+                                                        <IconButton
+                                                            id="add-task"
+                                                            aria-label="add-task"
+                                                            aria-labelledby="add-task"
+                                                            size="small"
+                                                            onClick={() => handleAssigneeShortcut(task, { Task: 'root' })}
+                                                            style={{
+                                                                visibility: hoveredTaskId === task?.taskid && hoveredColumnname == 'Assignee' ? "visible" : "hidden",
+                                                            }}
+                                                        >
+                                                            <CirclePlus size={20} color="#7367f0" />
+                                                        </IconButton>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell>{task?.DeadLineDate ? formatDate2(task.DeadLineDate) : 'No deadline set'}</TableCell>
+                                                <TableCell>
+                                                    <div style={{
+                                                        color: priorityColors[task?.priority]?.color,
+                                                        backgroundColor: priorityColors[task?.priority]?.backgroundColor,
+                                                        width: 'fit-content',
+                                                        padding: '0.2rem 0.8rem',
+                                                        borderRadius: '5px',
+                                                        textAlign: 'center',
+                                                        fontSize: '13.5px',
+                                                        fontWeight: '500',
+                                                        display: 'flex',
+                                                        justifyContent: 'center',
+                                                        alignItems: 'center',
+                                                    }}>
+                                                        {task?.priority}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell> {StatusCircles({ task })}</TableCell>
+                                                <TableCell align="center">
+                                                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                        {[
+                                                            {
+                                                                id: 'timeTrack',
+                                                                label: taskTimeRunning[task.taskid] ? 'Time Track ON' : 'Time Track OFF',
+                                                                icon: <Timer size={20} color={taskTimeRunning[task.taskid] ? "#FFD700" : "#6D6B77"} />,
+                                                                onClick: () => handleTimeTrackModalOpen(task),
+                                                                isRunning: taskTimeRunning[task.taskid] || false,
+                                                            },
+                                                            { id: 'view', label: 'View Task', icon: <Eye size={20} />, onClick: () => handleViewTask(task, { Task: 'root' }) },
+                                                            { id: 'edit', label: 'Edit Task', icon: <Pencil size={20} />, onClick: () => handleEditTask(task, { Task: 'root' }) }
+                                                        ].map(({ id, label, icon, onClick, isRunning }) => (
+                                                            <Tooltip key={id} title={label} arrow placement="top" classes={{ tooltip: "custom-tooltip" }}>
+                                                                <IconButton
+                                                                    id={id}
+                                                                    aria-label={label}
+                                                                    sx={{
+                                                                        color: isRunning ? "#FFD700" : "#7d7f85",
+                                                                        transition: 'color 0.3s',
+                                                                        backgroundColor: isRunning ? "#6D6B77" : "transparent",
+                                                                        '&:hover': {
+                                                                            color: isRunning ? "#FFD700" : "#333",
+                                                                            backgroundColor: isRunning ? "#6D6B77" : "transparent",
+                                                                        },
+                                                                    }}
+                                                                    onClick={onClick}
+                                                                >
+                                                                    {icon}
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        ))}
+                                                    </Box>
 
-                                                    </TableCell>
-                                                </TableRow>
-                                                {
-                                                    subtaskVisibility[taskIndex] &&
-                                                    renderSubtasks(task?.subtasks, `${taskIndex}`)
-                                                }
-                                            </React.Fragment>
-                                        ))}
-                                    </>
-                                ) :
-                                    <TableRow>
-                                        <TableCell colSpan={Object?.keys(columnWidths)?.length} >
-                                            <Typography variant="body2" p={2} textAlign="center">No matched tasks found.</Typography>
-                                        </TableCell>
-                                    </TableRow>
-                                }
-                            </>
-                        }
-                        <TableRow>
+                                                </TableCell>
+                                            </TableRow>
+                                            {
+                                                subtaskVisibility[taskIndex] &&
+                                                renderSubtasks(task?.subtasks, `${taskIndex}`)
+                                            }
+                                        </React.Fragment>
+                                    ))}
+                                </>
+                            ) :
+                                <TableRow>
+                                    <TableCell colSpan={Object?.keys(columnWidths)?.length} >
+                                        <Typography variant="body2" p={2} textAlign="center">No matched tasks found.</Typography>
+                                    </TableCell>
+                                </TableRow>
+                            }
+                            {/* <TableRow>
                             <TableCell colSpan={Object?.keys(columnWidths)?.length}>
                                 <Button variant="text" size="small" onClick={() => handleAddTask()}>
                                     + Add Task
                                 </Button>
                             </TableCell>
-                        </TableRow>
-                        {!isLoading &&
-                            <TableRow>
-                                <TableCell colSpan={Object?.keys(columnWidths)?.length} >
-                                    {currentData?.length !== 0 && (
-                                        <Box className="TablePaginationBox">
-                                            <Typography className="paginationText">
-                                                Showing {(page - 1) * rowsPerPage + 1} to{' '}
-                                                {Math.min(page * rowsPerPage, data?.length)} of {data?.length} entries
-                                            </Typography>
-                                            {totalPages > 0 && (
-                                                <Pagination
-                                                    size="large"
-                                                    count={totalPages}
-                                                    page={page}
-                                                    onChange={handleChangePage}
-                                                    color="primary"
-                                                    variant="outlined"
-                                                    shape="rounded"
-                                                    siblingCount={1}
-                                                    boundaryCount={1}
-                                                    className="pagination"
-                                                />
-                                            )}
-                                        </Box>
-                                    )}
+                        </TableRow> */}
+                            {!isLoading && data?.length !== 0 &&
+                                <TableRow>
+                                    <TableCell colSpan={Object?.keys(columnWidths)?.length} >
+                                        {currentData?.length !== 0 && (
+                                            <Box className="TablePaginationBox">
+                                                <Typography className="paginationText">
+                                                    Showing {(page - 1) * rowsPerPage + 1} to{' '}
+                                                    {Math.min(page * rowsPerPage, data?.length)} of {data?.length} entries
+                                                </Typography>
+                                                {totalPages > 0 && (
+                                                    <Pagination
+                                                        count={totalPages}
+                                                        page={page}
+                                                        onChange={handleChangePage}
+                                                        color="primary"
+                                                        variant="outlined"
+                                                        shape="rounded"
+                                                        siblingCount={1}
+                                                        boundaryCount={1}
+                                                        className="pagination"
+                                                    />
+                                                )}
+                                            </Box>
+                                        )}
 
-                                </TableCell>
-                            </TableRow>
-                        }
-                    </TableBody>
-                </Table>
-            </TableContainer >
+                                    </TableCell>
+                                </TableRow>
+                            }
+                        </TableBody>
+                    </Table>
+                </TableContainer >
+            }
             < TaskDetail
                 open={taskDetailModalOpen}
                 onClose={handleTaskModalClose}

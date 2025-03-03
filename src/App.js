@@ -24,6 +24,9 @@ import Profile from './Pages/ProfilePage/Profile';
 import LoginForm from './Components/Auth/LoginForm';
 import { fetchMasterGlFunc } from './Utils/globalfun';
 import UnassignedTaskList from './Pages/Task/UnAssignedTask/UnassignedTaskList';
+import CommentBox from './DemoCode/TaskGrid';
+import TaskGrid from './DemoCode/TaskGrid';
+import TaskTimeTracker from './DemoCode/TaskTimeTracker';
 
 const Layout = ({ children }) => {
     const isMobile = useMediaQuery('(max-width:768px)');
@@ -33,7 +36,7 @@ const Layout = ({ children }) => {
     return (
         <Box sx={{ display: isMobile ? 'block' : 'flex', overflow: "hidden" }}>
             {!hideLayout && <Sidebar />}
-            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '20px', position: 'relative', width: isMobile ? '90%' : '80%' }}>
+            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px 20px', position: 'relative', width: isMobile ? '90%' : '80%' }}>
                 {!hideLayout && <Header />}
                 <MetaDataSet />
                 {children}
@@ -140,6 +143,12 @@ const App = () => {
                                     <Route path="/masters" element={<ProtectedRoute><Masters /></ProtectedRoute>} />
                                     <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                                     <Route path="*" element={<PagenotFound />} />
+
+
+
+
+                                    {/* test */}
+                                    <Route path="/test" element={<ProtectedRoute><TaskTimeTracker /></ProtectedRoute>} />
                                 </Routes>
                             </Layout>
                         </DemoContainer>

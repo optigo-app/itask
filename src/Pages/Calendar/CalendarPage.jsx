@@ -34,15 +34,15 @@ const Calendar = () => {
       sx={{
         display: "flex",
         width: "100%",
-        height: "100vh",
+        height: "100%",
         position: "relative",
         overflow: "hidden",
         backgroundColor: "#ffffff",
       }}
-    >
+    >                      
       {/* Left Panel (Mobile View) */}
       {isLaptop ? (
-        <CalendarDrawer calendarsColor={calendarsColor}/>
+        <CalendarDrawer calendarsColor={calendarsColor} />
       ) : (
         // Left Panel (Desktop View)
         <Box
@@ -55,7 +55,7 @@ const Calendar = () => {
             position: "relative",
           }}
         >
-            <CalendarLeftSide calendarsColor={calendarsColor} />
+          <CalendarLeftSide calendarsColor={calendarsColor} />
         </Box>
       )}
 
@@ -72,7 +72,7 @@ const Calendar = () => {
         }}
       >
         <CalendarRightSide />
-      
+
       </Box>
     </Box>
   );

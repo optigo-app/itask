@@ -174,22 +174,7 @@ const Filters = ({
   };
 
   return (
-    <Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 2,
-          justifyContent: "space-between",
-          alignItems: "end",
-          marginBottom: 2,
-          padding: "8px",
-          borderRadius: "8px",
-          "@media (max-width: 600px)": {
-            flexDirection: "column",
-          },
-        }}
-      >
+      <Box className="filterMainContainer">
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
           {[
             { label: "Status", key: "status", data: statusData },
@@ -200,7 +185,7 @@ const Filters = ({
           ].map((filter) =>
             filterVisibility[filter.key] ? (
               <Box key={filter.key} className="form-group">
-                <Typography variant="subtitle1" id={filter?.label}>
+                <Typography variant="subtitle1" id={filter?.label} className="filterLabletxt">
                   {filter?.label}
                 </Typography>
                 <TextField
@@ -240,7 +225,8 @@ const Filters = ({
                 className="textfieldsClass"
                 {...customDatePickerProps}
                 sx={{ padding: "0" }}
-                renderInput={(params) => (
+                format="DD/MM/YYYY" 
+                textField={(params) => (
                   <TextField {...params} size="small" fullWidth className="textfieldsClass" sx={{ padding: "0" }} />
                 )}
               />
@@ -279,7 +265,6 @@ const Filters = ({
           </Button>
         </Box>
       </Box>
-    </Box>
   );
 };
 

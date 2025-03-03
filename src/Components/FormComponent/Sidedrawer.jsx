@@ -16,7 +16,7 @@ import {
     FormControlLabel,
     Checkbox,
 } from "@mui/material";
-import { CircleX, Grid3x3, List, ListTodo, Logs } from "lucide-react";
+import { CircleX, Grid2x2, Grid3x3, List, ListTodo, Logs } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import "./SidebarDrawer.scss";
 import { useRecoilState, useRecoilValue } from "recoil";
@@ -31,12 +31,7 @@ import MultiTaskInput from "./MultiTaskInput";
 
 const TASK_OPTIONS = [
     { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
-    { id: 2, value: "multi_input", label: "Bulk", icon: <List size={20} /> },
-];
-
-const mulTASK_OPTIONS = [
-    { id: 3, value: "multi1", label: "Multi-input Task", icon: <List size={18} /> },
-    { id: 4, value: "multi2", label: "Bulk Task", icon: <Grid3x3 size={18} /> },        
+    { id: 2, value: "multi_input", label: "Bulk", icon: <Grid2x2 size={20} /> },
 ];
 
 const SidebarDrawer = ({
@@ -59,7 +54,7 @@ const SidebarDrawer = ({
     const [actualValues, setActualValues] = useState([""]);
     const [assignees, setAssignees] = React.useState([]);
     const [taskType, setTaskType] = useState("single");
-    const [tasksubType, setTaskSubType] = useState("multi1");
+    const [tasksubType, setTaskSubType] = useState("multi2");
     const [formValues, setFormValues] = React.useState({
         taskName: "",
         bulkTask: [],
@@ -259,69 +254,11 @@ const SidebarDrawer = ({
                 className="MainDrawer"
                 sx={{ display: open == true ? 'block' : 'none', zIndex: theme.zIndex.drawer + 2, }}
             >
-                {/* <Box className="tSideBarTgBox">
-                    <ToggleButtonGroup
-                        value={taskType}
-                        exclusive
-                        onChange={handleTaskChange}
-                        aria-label="task type"
-                        size="small"
-                        className="toggle-group"
-                    >
-                        {TASK_OPTIONS?.map(({ id, value, label, icon }) => (
-                            <ToggleButton
-                                key={id}
-                                value={value}
-                                className="toggle-button"
-                                sx={{
-                                    borderRadius: "8px",
-                                }}
-                            >
-                                {icon}
-                                {label}
-                            </ToggleButton>
-                        ))}
-                    </ToggleButtonGroup>
-                </Box> */}
-                {/* <div style={{
-                    border: "1px dashed #7d7f85",
-                    opacity: 0.3,
-                }}
-                /> */}
                 <Box className="drawer-container">
                     <Box className="drawer-header">
                         <Typography variant="h6" className="drawer-title">
                             {taskType === 'multi_input' ? "Add Tasks" : "Add Task"}
                         </Typography>
-                        {/* {taskType === 'multi_input' &&
-                            <Stack direction="row" sx={{ alignItems: "center" }}>
-                                <ToggleButtonGroup
-                                    value={tasksubType}
-                                    exclusive
-                                    onChange={handleTaskSubChange}
-                                    aria-label="task type"
-                                    size="small"
-                                >
-                                    {mulTASK_OPTIONS?.map(({ id, value, label, icon }) => (
-                                        <Tooltip
-                                            key={id}
-                                            title={label}
-                                            placement="top"
-                                            arrow
-                                            sx={{
-                                                borderRadius: "8px",
-                                                "&.Mui-selected": {
-                                                    backgroundColor: "#685dd8 !important",
-                                                    color: "#fff !important",
-                                                },
-                                            }}
-                                        >
-                                            <ToggleButton value={value}>{icon}</ToggleButton>
-                                        </Tooltip>
-                                    ))}
-                                </ToggleButtonGroup>
-                            </Stack>
-                        } */}
                         <IconButton onClick={handleClear}>
                             <CircleX />
                         </IconButton>
@@ -332,30 +269,32 @@ const SidebarDrawer = ({
                         opacity: 0.3,
                     }}
                     />
-                    <Box className="tSideBarTgBox">
-                        <ToggleButtonGroup
-                            value={taskType}
-                            exclusive
-                            onChange={handleTaskChange}
-                            aria-label="task type"
-                            size="small"
-                            className="toggle-group"
-                        >
-                            {TASK_OPTIONS?.map(({ id, value, label, icon }) => (
-                                <ToggleButton
-                                    key={id}
-                                    value={value}
-                                    className="toggle-button"
-                                    sx={{
-                                        borderRadius: "8px",
-                                    }}
-                                >
-                                    {icon}
-                                    {label}
-                                </ToggleButton>
-                            ))}
-                        </ToggleButtonGroup>
-                    </Box>
+                    {rootSubrootflagval?.Task !== "root" &&
+                        <Box className="tSideBarTgBox">
+                            <ToggleButtonGroup
+                                value={taskType}
+                                exclusive
+                                onChange={handleTaskChange}
+                                aria-label="task type"
+                                size="small"
+                                className="toggle-group"
+                            >
+                                {TASK_OPTIONS?.map(({ id, value, label, icon }) => (
+                                    <ToggleButton
+                                        key={id}
+                                        value={value}
+                                        className="toggle-button"
+                                        sx={{
+                                            borderRadius: "8px",
+                                        }}
+                                    >
+                                        {icon}
+                                        {label}
+                                    </ToggleButton>
+                                ))}
+                            </ToggleButtonGroup>
+                        </Box>
+                    }
                     <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <FormControlLabel
@@ -370,35 +309,6 @@ const SidebarDrawer = ({
                                 label="Milestone"
                                 className="milestone-label"
                             />
-                            {taskType === 'multi_input' &&
-                                <Stack direction="row" sx={{ alignItems: "center" }}>
-                                    <ToggleButtonGroup
-                                        value={tasksubType}
-                                        exclusive
-                                        onChange={handleTaskSubChange}
-                                        aria-label="task type"
-                                        size="small"
-                                    >
-                                        {mulTASK_OPTIONS?.map(({ id, value, label, icon }) => (
-                                            <Tooltip
-                                                key={id}
-                                                title={label}
-                                                placement="top"
-                                                arrow
-                                                sx={{
-                                                    borderRadius: "8px",
-                                                    "&.Mui-selected": {
-                                                        backgroundColor: "#685dd8 !important",
-                                                        color: "#fff !important",
-                                                    },
-                                                }}
-                                            >
-                                                <ToggleButton value={value}>{icon}</ToggleButton>
-                                            </Tooltip>
-                                        ))}
-                                    </ToggleButtonGroup>
-                                </Stack>
-                            }
                         </Box>
                     </Box>
                     {taskType === 'single' &&
@@ -578,7 +488,8 @@ const SidebarDrawer = ({
                                                 }))
                                             }
                                             sx={{ minWidth: 320 }}
-                                            renderInput={(params) => (
+                                            format="DD/MM/YYYY"
+                                            textField={(params) => (
                                                 <TextField
                                                     {...params}
                                                     size="small"
@@ -607,7 +518,8 @@ const SidebarDrawer = ({
                                                 }))
                                             }
                                             sx={{ minWidth: 320 }}
-                                            renderInput={(params) => (
+                                            format="DD/MM/YYYY"
+                                            textField={(params) => (
                                                 <TextField
                                                     {...params}
                                                     size="small"
@@ -621,8 +533,7 @@ const SidebarDrawer = ({
                                     </Box>
                                 </Grid>
                             </Grid>
-
-                            <Grid container spacing={2} className="form-row">
+                            <Grid container spacing={1} className="form-row" sx={{ mt: .5 }}>
                                 <Grid item xs={4}>
                                     <Box className="form-group">
                                         <Typography className="form-label" variant="subtitle1">
@@ -648,6 +559,7 @@ const SidebarDrawer = ({
                                     </Box>
                                 </Grid>
                             </Grid>
+
 
                             {/* Comment & Remark */}
                             <Grid item xs={12}>
@@ -688,39 +600,40 @@ const SidebarDrawer = ({
                                                 onChange={handleFileChange}
                                             />
                                         </Button>
-                                        {formValues.attachment && formValues.attachment.length > 0 && (
-                                            <Box
-                                                sx={{
-                                                    marginTop: "8px",
-                                                    padding: "12px",
-                                                    borderRadius: "8px",
-                                                    backgroundColor: "#f5f5f5",
-                                                    maxHeight: "150px",
-                                                    overflowY: "auto"
-                                                }}
-                                            >
-                                                {formValues.attachment.map((file, index) => (
-                                                    <Box
-                                                        key={index}
-                                                        sx={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            marginBottom: "8px",
-                                                            '&:last-child': { marginBottom: 0 }
-                                                        }}
-                                                    >
-                                                        <InsertDriveFile sx={{ marginRight: 1, color: '#7367f0' }} />
-                                                        <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                            {file.name}
-                                                        </Typography>
-                                                        <IconButton size="small" onClick={() => handleRemoveFile(index)}>
-                                                            <Close fontSize="small" />
-                                                        </IconButton>
-                                                    </Box>
-                                                ))}
-                                            </Box>
-                                        )}
                                     </Box>
+                                    {formValues.attachment && formValues.attachment.length > 0 && (
+                                        <Box
+                                            sx={{
+                                                marginTop: "8px",
+                                                padding: "12px",
+                                                borderRadius: "8px",
+                                                backgroundColor: "#f5f5f5",
+                                                maxHeight: "150px",
+                                                overflowY: "auto",
+                                                width: '50%'
+                                            }}
+                                        >
+                                            {formValues.attachment.map((file, index) => (
+                                                <Box
+                                                    key={index}
+                                                    sx={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        marginBottom: "8px",
+                                                        '&:last-child': { marginBottom: 0 }
+                                                    }}
+                                                >
+                                                    <InsertDriveFile sx={{ marginRight: 1, color: '#7367f0' }} />
+                                                    <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {file.name}
+                                                    </Typography>
+                                                    <IconButton size="small" onClick={() => handleRemoveFile(index)}>
+                                                        <Close fontSize="small" />
+                                                    </IconButton>
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                    )}
                                 </Box>
                             </Grid>
                         </>

@@ -109,7 +109,7 @@ const TaskTimeTracking = ({ isOpen, onClose, taskData, taskRunning, setTaskRunni
                     />
                 </Box>
                 <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mb: 2 }}>
-                    <Typography variant="h4" component="div">
+                    <Typography variant="h4" component="div" sx={{fontSize:'30px'}}>
                         {formatTime(taskTimers[taskData?.taskid] || 0)}
                     </Typography>
                 </Box>

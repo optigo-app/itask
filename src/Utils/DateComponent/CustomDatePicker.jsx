@@ -57,7 +57,7 @@ const CustomDatePicker = ({
                 {...customProps}
                 {...styleprops}
                 sx={{ minWidth: 400, ...sx }}
-                renderInput={(params) => (
+                textField={(params) => (
                     <TextField
                         {...params}
                         size="small"
@@ -67,6 +67,7 @@ const CustomDatePicker = ({
                         {...textFieldProps}
                     />
                 )}
+                format="DD/MM/YYYY"
             />
         </Box>
     );

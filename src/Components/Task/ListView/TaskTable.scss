@@ -3,7 +3,7 @@
 .TaskTVMain {
     font-family: $font-family;
     color: $text2ndColor;
-    font-size: 15px !important;
+    font-size: 14px !important;
 
 
     .MuiTableContainer-root {
@@ -14,10 +14,10 @@
     .MuiTableHead-root {
 
         .MuiTableCell-root {
-            padding: 16px 10px;
+            padding: 10px;
             font-weight: bold !important;
             text-transform: uppercase;
-            font-size: 13px !important;
+            font-size: 14px !important;
 
             .MuiButtonBase-root {
                 color: $text2ndColor !important;
@@ -28,8 +28,8 @@
     .MuiTableCell-root {
         font-family: $font-family !important;
         color: $text2ndColor;
-        font-size: 15px !important;
-        padding: 6px 10px;
+        font-size: 14px !important;
+        padding: 2px 6px;
         font-weight: normal !important;
         // text-align: unset !important;
         text-align: start;
@@ -90,7 +90,7 @@
     }
 
     .paginationText {
-        font-size: 15px;
+        font-size: 14px;
         color: #ACAAB1 !important;
     }
 
@@ -104,14 +104,14 @@
             border-radius: 8px;
             border-color: rgba(0, 0, 0, 0);
             background-color: rgba(47, 43, 61, 0.08);
-            min-height: 40px;
+            min-height: 30px;
 
             &:hover {
                 background-color: #e4e2fc;
             }
 
             &.Mui-selected {
-                background-color: $secondaryColor;
+                background: $button-Bgcolor !important;
                 color: #fff !important;
                 border: none;
             }

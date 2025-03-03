@@ -1,15 +1,14 @@
 import React, { useState } from "react";
-import { Box, Button, IconButton, InputAdornment, Menu, MenuItem, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Box, Button, InputAdornment, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 import SidebarDrawer from "../../FormComponent/Sidedrawer";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, selectedCategoryAtom } from "../../../Recoil/atom";
 import { toast } from "react-toastify";
-import TableChartIcon from '@mui/icons-material/TableChart';
-import ViewKanbanIcon from '@mui/icons-material/ViewKanban';
-import { Kanban, List, MoreVerticalIcon, SearchIcon } from "lucide-react";
+import { Kanban, List, SearchIcon } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import './Styles.scss'
 
 const HeaderButtons = ({
   searchTerm,
@@ -94,16 +93,7 @@ const HeaderButtons = ({
   };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "8px",
-        // background: "#f5f5f5",
-        borderRadius: "8px",
-      }}
-    >
+    <Box className="headerButtons">
       <Box sx={{ display: "flex", gap: 2 }}>
         {taskCategory?.map((category) => (
           <Button
@@ -111,14 +101,7 @@ const HeaderButtons = ({
             value={category?.labelname}
             variant="contained"
             onClick={(e) => handleFilterChange("category", e.target.value)}
-            sx={{
-              backgroundColor: "rgba(0, 0, 0, 0.3)",
-              opacity: selectedCategory === category.labelname ? 1 : 0.5,
-              color: "black",
-              fontWeight: "bold",
-              boxShadow: "none",
-              "&:hover": { opacity: selectedCategory === category.labelname ? 1 : 0.7 },
-            }}
+            className={`categoryFilBtn ${selectedCategory === category.labelname ? 'active' : ''}`}
           >
             {category?.labelname}
           </Button>
@@ -142,7 +125,7 @@ const HeaderButtons = ({
               ),
             }}
             aria-label='Search tasks...'
-          />      
+          />
         </Box>
       </Box>
       <Box sx={{ display: "flex", gap: 2 }}>
