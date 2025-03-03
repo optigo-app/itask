@@ -77,11 +77,13 @@ const CustomDateTimePicker = ({
                 name={name}
                 value={value ? dayjs(value) : null}
                 onChange={onChange}
+                ampm={true}
+                format="DD/MM/YYYY hh:mm A"
                 {...customDateTimePickerProps}
                 {...customProps}
                 {...styleprops}
                 sx={{ minWidth: width, ...sx }}
-                renderInput={(params) => (
+                textField={(params) => (
                     <TextField
                         {...params}
                         size="small"
@@ -92,6 +94,7 @@ const CustomDateTimePicker = ({
                     />
                 )}
             />
+
         </Box>
     );
 };

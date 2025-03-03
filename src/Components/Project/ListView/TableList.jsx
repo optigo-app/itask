@@ -163,176 +163,174 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
 
     return (
         <>
-            <TableContainer
-                component={Paper}
-                sx={{
-                    boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
-                    borderRadius: "8px",
+            {(isLoading == null || isLoading || !data || data?.length === 0) ? (
+                        <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
+            ) :
+                <TableContainer
+                    component={Paper}
+                    sx={{
+                        boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
+                        borderRadius: "8px",
 
-                }}
-                className="TaskTVMain"
-            >
-                <Table size="small" aria-label="task details"
+                    }}
+                    className="ProjectTVMain"
                 >
-                    <TableHead>
-                        <TableRow>
-                            {Object.keys(columnWidths).map((key) => (
-                                <TableCell key={key}
-                                    sx={{
-                                        width: columnWidths[key],
-                                        maxWidth: columnWidths[key],
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "nowrap",
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                                        <TableSortLabel
-                                            active={orderBy === key}
-                                            direction={order}
-                                            onClick={() => handleRequestSort(key)}
-                                        >
-                                            {key.charAt(0).toUpperCase() + key.slice(1)}
-                                        </TableSortLabel>
-                                    </Box>
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {(isLoading == null || isLoading || !data) ? (
-                            <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
-                        ) :
-                            <>
-                                {data?.length != 0 ? (
-                                    <>
-                                        {currentData?.map((task, taskIndex) => (
-                                            <React.Fragment key={taskIndex}>
-                                                <TableRow
-                                                    sx={{
-                                                        backgroundColor: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.04)' : 'inherit',
-                                                        '&:hover': {
-                                                            backgroundColor: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-                                                        },
-                                                    }}
-                                                >
-                                                    <TableCell>
-                                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                                            <div>
-                                                                <a
-                                                                    href="#"
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        if (!task?.isLocked) {
-                                                                            handleNavigate(task);
-                                                                        }
-                                                                    }}
-                                                                    style={{
-                                                                        pointerEvents: task?.isLocked === 1 ? 'none' : 'auto',
-                                                                        color: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.38)' : '#2900ee',
-                                                                        textDecoration: task?.isLocked === 1 ? 'none' : "underline",
-                                                                        cursor: task?.isLocked === 1 ? 'default' : 'pointer'
-                                                                    }}
-                                                                >
-                                                                    {task?.taskname}/{task?.module}
-                                                                </a>
-                                                            </div>
-                                                        </div>
-                                                        <span className="prShDesc">{task?.short_description}</span>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Box display="flex" alignItems="center" gap={2} width="100%">
-                                                            <Box width="100%" position="relative">
-                                                                <LinearProgress
-                                                                    variant="determinate"
-                                                                    value={task?.progress}
-                                                                    sx={{
-                                                                        height: 7,
-                                                                        borderRadius: 5,
-                                                                        backgroundColor: "#e0e0e0",
-                                                                        "& .MuiLinearProgress-bar": {
-                                                                            backgroundColor: getStatusColor(task?.progress),
-                                                                        },
-                                                                    }}
-                                                                />
-                                                            </Box>
-                                                            <Typography variant="body2" minWidth={100}>
-                                                                {`${task?.progress}%`}
-                                                            </Typography>
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell>{task?.StartDate ? formatDate2(task.StartDate) : '-'}</TableCell>
-                                                    <TableCell>{task?.DeadLineDate ? formatDate2(task.DeadLineDate) : '-'}</TableCell>
-                                                    <TableCell>
-                                                        <div style={{
-                                                            color: priorityColors[task?.priority]?.color,
-                                                            backgroundColor: priorityColors[task?.priority]?.backgroundColor,
-                                                            width: 'fit-content',
-                                                            padding: '0.2rem 0.8rem',
-                                                            borderRadius: '5px',
-                                                            textAlign: 'center',
-                                                            fontSize: '13.5px',
-                                                            fontWeight: '500',
-                                                            display: 'flex',
-                                                            justifyContent: 'center',
-                                                            alignItems: 'center',
-                                                        }}>
-                                                            {task?.priority}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>{task?.remark}</TableCell>
-                                                    <TableCell>
-                                                        <LockButton
-                                                            isLocked={task?.isLocked === 1}
-                                                            onClick={() => handleOpenCnfDialog(task)}
-                                                            id={task?.taskid}
-                                                        />
-                                                    </TableCell>
-                                                </TableRow>
-                                            </React.Fragment>
-                                        ))}
-                                    </>
-                                ) :
-                                    <TableRow>
-                                        <TableCell colSpan={7} >
-                                            <Typography variant="body2">No Project/Module found.</Typography>
-                                        </TableCell>
-                                    </TableRow>
-                                }
-                            </>
-                        }
 
-                        {!isLoading &&
+                    <Table size="small" aria-label="task details"
+                    >
+                        <TableHead>
                             <TableRow>
-                                <TableCell colSpan={7} >
-                                    {currentData?.length !== 0 && (
-                                        <Box className="TablePaginationBox">
-                                            <Typography className="paginationText">
-                                                Showing {(page - 1) * rowsPerPage + 1} to{' '}
-                                                {Math.min(page * rowsPerPage, data?.length)} of {data?.length} entries
-                                            </Typography>
-                                            {totalPages > 0 && (
-                                                <Pagination
-                                                    size="large"
-                                                    count={totalPages}
-                                                    page={page}
-                                                    onChange={handleChangePage}
-                                                    color="primary"
-                                                    variant="outlined"
-                                                    shape="rounded"
-                                                    siblingCount={1}
-                                                    boundaryCount={1}
-                                                    className="pagination"
-                                                />
-                                            )}
+                                {Object.keys(columnWidths).map((key) => (
+                                    <TableCell key={key}
+                                        sx={{
+                                            width: columnWidths[key],
+                                            maxWidth: columnWidths[key],
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                        }}
+                                    >
+                                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                                            <TableSortLabel
+                                                active={orderBy === key}
+                                                direction={order}
+                                                onClick={() => handleRequestSort(key)}
+                                            >
+                                                {key.charAt(0).toUpperCase() + key.slice(1)}
+                                            </TableSortLabel>
                                         </Box>
-                                    )}
-                                </TableCell>
+                                    </TableCell>
+                                ))}
                             </TableRow>
-                        }
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                        </TableHead>
+                        <TableBody>
+                            {data?.length != 0 ? (
+                                <>
+                                    {currentData?.map((task, taskIndex) => (
+                                        <React.Fragment key={taskIndex}>
+                                            <TableRow
+                                                sx={{
+                                                    backgroundColor: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.04)' : 'inherit',
+                                                    '&:hover': {
+                                                        backgroundColor: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                                                    },
+                                                }}
+                                            >
+                                                <TableCell>
+                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                                        <div>
+                                                            <a
+                                                                href="#"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    if (!task?.isLocked) {
+                                                                        handleNavigate(task);
+                                                                    }
+                                                                }}
+                                                                style={{
+                                                                    pointerEvents: task?.isLocked === 1 ? 'none' : 'auto',
+                                                                    color: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.38)' : '#2900ee',
+                                                                    textDecoration: task?.isLocked === 1 ? 'none' : "underline",
+                                                                    cursor: task?.isLocked === 1 ? 'default' : 'pointer'
+                                                                }}
+                                                            >
+                                                                {task?.taskname}/{task?.module}
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                    <span className="prShDesc">{task?.short_description}</span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Box display="flex" alignItems="center" gap={2} width="100%">
+                                                        <Box width="100%" position="relative">
+                                                            <LinearProgress
+                                                                variant="determinate"
+                                                                value={task?.progress}
+                                                                sx={{
+                                                                    height: 7,
+                                                                    borderRadius: 5,
+                                                                    backgroundColor: "#e0e0e0",
+                                                                    "& .MuiLinearProgress-bar": {
+                                                                        backgroundColor: getStatusColor(task?.progress),
+                                                                    },
+                                                                }}
+                                                            />
+                                                        </Box>
+                                                        <Typography variant="body2" minWidth={100}>
+                                                            {`${task?.progress}%`}
+                                                        </Typography>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell>{task?.StartDate ? formatDate2(task.StartDate) : '-'}</TableCell>
+                                                <TableCell>{task?.DeadLineDate ? formatDate2(task.DeadLineDate) : '-'}</TableCell>
+                                                <TableCell>
+                                                    <div style={{
+                                                        color: priorityColors[task?.priority]?.color,
+                                                        backgroundColor: priorityColors[task?.priority]?.backgroundColor,
+                                                        width: 'fit-content',
+                                                        padding: '0.2rem 0.8rem',
+                                                        borderRadius: '5px',
+                                                        textAlign: 'center',
+                                                        fontSize: '13.5px',
+                                                        fontWeight: '500',
+                                                        display: 'flex',
+                                                        justifyContent: 'center',
+                                                        alignItems: 'center',
+                                                    }}>
+                                                        {task?.priority}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>{task?.remark}</TableCell>
+                                                <TableCell>
+                                                    <LockButton
+                                                        isLocked={task?.isLocked === 1}
+                                                        onClick={() => handleOpenCnfDialog(task)}
+                                                        id={task?.taskid}
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+                                        </React.Fragment>
+                                    ))}
+                                </>
+                            ) :
+                                <TableRow>
+                                    <TableCell colSpan={7} >
+                                        <Typography variant="body2">No Project/Module found.</Typography>
+                                    </TableCell>
+                                </TableRow>
+                            }
+
+                            {!isLoading &&
+                                <TableRow>
+                                    <TableCell colSpan={7} >
+                                        {currentData?.length !== 0 && (
+                                            <Box className="TablePaginationBox">
+                                                <Typography className="paginationText">
+                                                    Showing {(page - 1) * rowsPerPage + 1} to{' '}
+                                                    {Math.min(page * rowsPerPage, data?.length)} of {data?.length} entries
+                                                </Typography>
+                                                {totalPages > 0 && (
+                                                    <Pagination
+                                                        count={totalPages}
+                                                        page={page}
+                                                        onChange={handleChangePage}
+                                                        color="primary"
+                                                        variant="outlined"
+                                                        shape="rounded"
+                                                        siblingCount={1}
+                                                        boundaryCount={1}
+                                                        className="pagination"
+                                                    />
+                                                )}
+                                            </Box>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            }
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            }
             <ConfirmationDialog
                 open={cnfDialogOpen}
                 onClose={handleCloseCnfDialog}

@@ -1,0 +1,272 @@
+@import "../theme/variable.scss";
+
+.timeTrackerDrawerBox {
+    width: 500px !important;
+    padding: 15px;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+
+    // Drawer Header
+    .drawer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .drawer-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .cal_closeBtn {
+            &:hover {
+                background-color: rgba(255, 77, 77, 0.1);
+            }
+        }
+    }
+
+    // Total Time Display
+    .totalTime {
+        font-size: 16px;
+        font-weight: bold;
+        text-align: right;
+        color: #6200ea;
+        margin-bottom: 10px;
+    }
+
+    // Timer & Task Selection
+    .drawer-content {
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        margin-top: 10px;
+        padding: 15px;
+
+        .taskContainer {
+            .taskTimer {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px;
+                border-bottom: 1px solid #e8e8e8;
+
+                .timerDisplay {
+                    font-size: 22px;
+                    font-weight: bold;
+                    color: #222;
+                }
+
+                .button {
+                    border-radius: 50%;
+                    font-size: 14px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: background-color 0.3s ease;
+
+                }
+
+                .pauseIconBtn {
+                    background-color: #e5484d;
+                    color: #fff;
+
+                    &:hover {
+                        background-color: #f81d24;
+                    }
+                }
+
+                .playIconBtn {
+                    background-color: #6200ea;
+                    color: #fff;
+
+                    &:hover {
+                        background-color: #4a148c;
+                    }
+                }
+
+            }
+
+            // Task List Dropdown
+            .taskListBox {
+                padding: 10px 0px;
+
+                .taskListButton {
+                    border: 1px solid #e8e8e8;
+                    width: 100%;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 10px;
+                    font-weight: bold;
+                    border-radius: 8px;
+                    transition: background-color 0.2s ease-in-out;
+
+                    .selectedtypo {
+                        font-size: 14px;
+                        text-align: start;
+                        text-transform: none;
+                    }
+
+                    &:hover {
+                        background-color: #f5f5f5;
+                    }
+                }
+            }
+        }
+    }
+
+    // Task History
+    .taskHistoryMain {
+        margin-top: 20px;
+
+        .drawer-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #444;
+        }
+
+        .taskHisCard {
+            display: flex;
+            box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+            transition: 0.3s;
+            border-radius: 8px;
+
+            &:hover {
+                background-color: #f8f8f8;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+            .taskHistoryCardContent {
+                padding-bottom: 0px;
+                padding: 5px 10px !important;
+                width: 100%;
+
+                .taskHisBox {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: 100%;
+
+                    h6 {
+                        width: 85% !important;
+                    }
+
+                    .iconBtnBox {
+                        width: 15%;
+                    }
+                }
+
+                .taskhisTitle {
+                    font-size: 14px !important;
+                }
+
+                .task_desc {
+                    font-size: 12px !important;
+                    color: $placeholderColor;
+                }
+
+                .playIconBtn {
+                    background-color: #b4b4b4;
+
+                    &:hover {
+                        background-color: #9e9e9e;
+                    }
+                }
+            }
+
+            .taskInfo {
+                font-size: 14px;
+                color: #555;
+            }
+
+            .deleteBtn {
+                color: #ff4d4d;
+
+                &:hover {
+                    background-color: rgba(255, 77, 77, 0.1);
+                }
+            }
+        }
+
+        .noHistoryBox {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+
+            .emptyImg {
+                width: 50px;
+                height: auto;
+                margin-bottom: .2rem;
+            }
+
+            p {
+                &:first-of-type {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #333;
+                    margin-bottom: 0.2rem;
+                }
+
+                &:last-of-type {
+                    font-size: 12px;
+                    color: #666;
+                    max-width: 80%;
+                    line-height: 1.4;
+                }
+            }
+        }
+    }
+}
+
+.taskMenuList {
+    .MuiPaper-root {
+        max-height: 450px;
+        min-width: 430px !important;
+        max-width: 450px !important;
+        border-radius: 8px;
+        padding-bottom: 10px;
+        box-sizing: $paper-shadow-value;
+        overflow-y: auto;
+
+        ul {
+            padding: 0;
+        }
+
+        .taskMenuList,
+        .searchTaskList {
+            margin: 0;
+            padding: 10px 10px;
+            margin: 0px 10px;
+            border-radius: 8px;
+        }
+
+        .searchTaskListBox {
+            width: 420px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background-color: #fff;
+            margin-top: -60px;
+
+            .searchInput input {
+                width: 390px !important;
+            }
+        }
+
+        // Add styles for task items
+        .taskMenuList {
+            font-size: 13px !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 95%;
+            padding-right: 10px;
+        }
+    }
+}

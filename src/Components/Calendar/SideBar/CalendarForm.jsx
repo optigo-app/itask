@@ -16,7 +16,7 @@ import {
     ToggleButton,
     Tooltip,
 } from "@mui/material";
-import { CircleX, List, Logs } from "lucide-react";
+import { CircleX, Component, List, Logs } from "lucide-react";
 import "./CalendarForm.scss";
 import { useRecoilValue } from "recoil";
 import { CalformData } from "../../../Recoil/atom";
@@ -140,7 +140,7 @@ const CalendarForm = ({
             if (formValues?.category !== '' && formValues?.title !== '' && formValues?.start !== null && formValues?.end !== null) {
                 const updatedFormValues = {
                     ...formValues,
-                    isMeeting: true, 
+                    isMeeting: true,
                 }
                 onSubmit(updatedFormValues);
                 handleClear();
@@ -195,320 +195,279 @@ const CalendarForm = ({
     return (
         <Drawer anchor="right" open={open} onClose={handleClear} className="MainDrawer">
             <Box className="MD_WrpDiv">
-                <ToggleButtonGroup
-                    value={view}
-                    exclusive
-                    onChange={handleViewChange}
-                    className="toggle-group"
-                >
-                    <ToggleButton value="meeting" className="toggle-button">
-                        Meeting
-                    </ToggleButton>
-                    <ToggleButton value="task" className="toggle-button">
-                        Task
-                    </ToggleButton>
-                </ToggleButtonGroup>
-                <div
-                    style={{
-                        // marginTop: '5px',
-                        border: "1px dashed #7d7f85",
-                        opacity: 0.3,
-                    }}
-                />
-                <IconButton className="cal_closeBtn" onClick={handleClear}>
-                    <CircleX />
-                </IconButton>
-                {view === "meeting" ? (
-                    <Box className="drawer-containerCal">
-                        {/* Header */}
-                        <Box className="drawer-header">
-                            <Typography variant="h6" className="drawer-title">
-                                {getFormTitle()}
-                            </Typography>
-                        </Box>
+                <Box className="drawer-containerCal">
+                    {/* Header */}
+                    <Box className="drawer-header">
+                        <Typography variant="h6" className="drawer-title">
+                            {getFormTitle()}
+                        </Typography>
+                        <IconButton className="cal_closeBtn" onClick={handleClear}>
+                            <CircleX />
+                        </IconButton>
+                    </Box>
+                    <div
+                        style={{
+                            // marginTop: '5px',
+                            border: "1px dashed #7d7f85",
+                            opacity: 0.3,
+                        }}
+                    />
+                    <Box className="cal_toogleBtn">
+                        <ToggleButtonGroup
+                            value={view}
+                            exclusive
+                            onChange={handleViewChange}
+                            className="toggle-group"
+                        >
+                            <ToggleButton value="meeting" className="toggle-button">
+                                Meeting
+                            </ToggleButton>
+                            <ToggleButton value="task" className="toggle-button">
+                                Task
+                            </ToggleButton>
+                        </ToggleButtonGroup>
+                    </Box>
+                    {view === "meeting" ? (
+                        <Box className="drawer-form">
+                            <Grid container spacing={1} className="form-row">
+                                {/* Task Name and Due Date */}
+                                <Grid item xs={12}>
+                                    <Box className="form-group">
+                                        <Typography
+                                            variant="subtitle1"
+                                            className="form-label"
+                                            htmlFor="title"
+                                        >
+                                            Title
+                                        </Typography>
+                                        <TextField
+                                            name="title"
+                                            placeholder="Enter task name"
+                                            value={formValues.title}
+                                            onChange={handleChange}
+                                            {...commonTextFieldProps}
+                                        />
+                                    </Box>
+                                </Grid>
 
-                        {/* <div
-                    style={{
-                        margin: "20px 0",
-                        border: "1px dashed #7d7f85",
-                        opacity: 0.3,
-                    }}
-                /> */}
-                        <Grid container spacing={1} className="form-row">
-                            {/* Task Name and Due Date */}
-                            <Grid item xs={12}>
+                                {/* guests and Priority */}
+                                <Grid item xs={12}>
+                                    <MultiSelectChipWithLimit
+                                        options={assignees}
+                                        label="Assign To"
+                                        placeholder="Select assignees"
+                                        limitTags={3}
+                                        onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
+                                    />
+                                </Grid>
+
+                                {/* Event category */}
+                                <Grid item xs={12}>
+                                    <Box className="form-group">
+                                        <Typography
+                                            variant="subtitle1"
+                                            className="form-label"
+                                            htmlFor="category"
+                                        >
+                                            Label
+                                        </Typography>
+                                        <TextField
+                                            name="category"
+                                            value={formValues.category}
+                                            onChange={handleChange}
+                                            select
+                                            {...commonTextFieldProps}
+                                            {...commonSelectProps}
+                                            ref={filterRefs.category}
+                                            required
+                                            sx={{
+                                                '& .MuiSelect-select': {
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                },
+                                            }}
+                                        >
+
+                                            {Object.keys(calendarsColor).map((category) => (
+                                                <MenuItem
+                                                    key={category}
+                                                    value={category}
+                                                    sx={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 1,
+                                                    }}
+                                                >
+                                                    <ListItemIcon sx={{ minWidth: '20px !important' }}>
+                                                        <span
+                                                            style={{
+                                                                width: 10,
+                                                                height: 10,
+                                                                borderRadius: '50%',
+                                                                backgroundColor: calendarsColor[category],
+                                                                display: 'inline-block',
+                                                            }}
+                                                        />
+                                                    </ListItemIcon>
+                                                    <Typography variant="body1">{category}</Typography>
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
+                                    </Box>
+                                </Grid>
+
+                                {/* Progress, Start Date, Repeat */}
+                                <Grid item xs={12}>
+                                    <CustomDateTimePicker
+                                        label="Start Date & Time"
+                                        name="startDateTime"
+                                        value={formValues.start}
+                                        width='560px'
+                                        styleprops={commonTextFieldProps}
+                                        onChange={(value) => {
+                                            if (value) {
+                                                const isIst = convertToIST(value);
+                                                setFormValues((prev) => ({
+                                                    ...prev,
+                                                    start: isIst,
+                                                }))
+                                            }
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <CustomDateTimePicker
+                                        label="End Date & Time"
+                                        name="endDateTime"
+                                        value={formValues.end}
+                                        width='560px'
+                                        styleprops={commonTextFieldProps}
+                                        onChange={(value) => {
+                                            if (value) {
+                                                const isIst = convertToIST(value);
+                                                setFormValues((prev) => ({
+                                                    ...prev,
+                                                    end: isIst,
+                                                }))
+                                            }
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+
+                            {/* all day flag for drag and drop */}
+                            <Grid item xs={12} sx={{ marginBlock: 1.5 }}>
                                 <Box className="form-group">
                                     <Typography
                                         variant="subtitle1"
                                         className="form-label"
                                         htmlFor="title"
                                     >
-                                        Title
+                                    </Typography>
+                                    <Stack
+                                        direction="row"
+                                        spacing={1}
+                                        sx={{ alignItems: 'center' }}
+                                    >
+                                        <CustomSwitch checked={formValues.allDay} onChange={(event) => {
+                                            setFormValues((prev) => ({
+                                                ...prev,
+                                                allDay: event.target.checked,
+                                            }))
+                                        }} />
+                                        <Typography>All Day</Typography>
+                                    </Stack>
+                                </Box>
+                            </Grid>
+
+                            {/* Comment & description */}
+                            <Grid item xs={12}>
+                                <Box className="form-group">
+                                    <Typography variant="subtitle1" className="form-label">
+                                        description
                                     </Typography>
                                     <TextField
-                                        name="title"
-                                        placeholder="Enter task name"
-                                        value={formValues.title}
+                                        name="description"
+                                        value={formValues.description}
                                         onChange={handleChange}
+                                        multiline
+                                        rows={2}
+                                        placeholder="Add a description"
                                         {...commonTextFieldProps}
                                     />
                                 </Box>
                             </Grid>
 
-                            {/* guests and Priority */}
-                            <Grid item xs={12}>
-                                <MultiSelectChipWithLimit
-                                    options={assignees}
-                                    label="Assign To"
-                                    placeholder="Select assignees"
-                                    limitTags={3}
-                                    onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
-                                />
+                            {/* Submit Button */}
+                            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                                {CalformDataValue?.id && CalformDataValue?.id != '' &&
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={() => handleRemoveEvent(formValues)}
+                                        disabled={isLoading}
+                                        className="danger-btn"
+                                    >
+                                        Delete
+                                    </Button>
+                                }
+                                <Box>
+                                    <Button
+                                        variant="outlined"
+                                        onClick={handleClear}
+                                        sx={{ marginRight: "10px" }}
+                                        className="secondary-btn"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={handleSubmit}
+                                        disabled={isLoading}
+                                        className="primary-btn"
+                                    >
+                                        {CalformDataValue?.id && CalformDataValue?.id !== ''
+                                            ? (isLoading ? "Updating..." : "Update")
+                                            : (isLoading ? "Adding..." : "Add")
+                                        }
+
+                                    </Button>
+                                </Box>
                             </Grid>
+                        </Box>
+                    ) :
+                        <Box className="MlTask_CalBox">
+                            <MultiTaskInput multiType={tasksubType} onSave={handlebulkTaskSave} />
 
-                            {/* Event category */}
-                            <Grid item xs={12}>
-                                <Box className="form-group">
-                                    <Typography
-                                        variant="subtitle1"
-                                        className="form-label"
-                                        htmlFor="category"
-                                    >
-                                        Label
-                                    </Typography>
-                                    <TextField
-                                        name="category"
-                                        value={formValues.category}
-                                        onChange={handleChange}
-                                        select
-                                        {...commonTextFieldProps}
-                                        {...commonSelectProps}
-                                        ref={filterRefs.category}
-                                        required
-                                        sx={{
-                                            '& .MuiSelect-select': {
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                            },
-                                        }}
-                                    >
-
-                                        {Object.keys(calendarsColor).map((category) => (
-                                            <MenuItem
-                                                key={category}
-                                                value={category}
-                                                sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 1,
-                                                }}
+                            {(view !== 'task' || (formValues?.bulkTask?.length > 0)) && (
+                                <Grid item xs={12} sx={{ textAlign: "right" }} className="mt_calSaveBtn">
+                                    <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
+                                        <Box>
+                                            <Button
+                                                variant="outlined"
+                                                onClick={handleClear}
+                                                sx={{ marginRight: "10px" }}
+                                                className="secondary-btn"
                                             >
-                                                <ListItemIcon sx={{ minWidth: '20px !important' }}>
-                                                    <span
-                                                        style={{
-                                                            width: 10,
-                                                            height: 10,
-                                                            borderRadius: '50%',
-                                                            backgroundColor: calendarsColor[category],
-                                                            display: 'inline-block',
-                                                        }}
-                                                    />
-                                                </ListItemIcon>
-                                                <Typography variant="body1">{category}</Typography>
-                                            </MenuItem>
-                                        ))}
-                                    </TextField>
-                                </Box>
-                            </Grid>
-
-                            {/* Progress, Start Date, Repeat */}
-                            <Grid item xs={12}>
-                                <CustomDateTimePicker
-                                    label="Start Date & Time"
-                                    name="startDateTime"
-                                    value={formValues.start}
-                                    width='560px'
-                                    styleprops={commonTextFieldProps}
-                                    onChange={(value) => {
-                                        if (value) {
-                                            const isIst = convertToIST(value);
-                                            setFormValues((prev) => ({
-                                                ...prev,
-                                                start: isIst,
-                                            }))
-                                        }
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item xs={12}>
-                                <CustomDateTimePicker
-                                    label="End Date & Time"
-                                    name="endDateTime"
-                                    value={formValues.end}
-                                    width='560px'
-                                    styleprops={commonTextFieldProps}
-                                    onChange={(value) => {
-                                        if (value) {
-                                            const isIst = convertToIST(value);
-                                            setFormValues((prev) => ({
-                                                ...prev,
-                                                end: isIst,
-                                            }))
-                                        }
-                                    }}
-                                />
-                            </Grid>
-                        </Grid>
-
-                        {/* all day flag for drag and drop */}
-                        <Grid item xs={12}>
-                            <Box className="form-group">
-                                <Typography
-                                    variant="subtitle1"
-                                    className="form-label"
-                                    htmlFor="title"
-                                >
-                                </Typography>
-                                <Stack
-                                    direction="row"
-                                    spacing={1}
-                                    sx={{ alignItems: 'center' }}
-                                >
-                                    {/* <AntSwitch
-                                checked={formValues.allDay}
-                                inputProps={{ 'aria-label': 'ant design' }}
-                                onChange={(event) => {
-                                    setFormValues((prev) => ({
-                                        ...prev,
-                                        allDay: event.target.checked,
-                                    }))
-                                }}
-                            /> */}
-                                    <CustomSwitch checked={formValues.allDay} onChange={(event) => {
-                                        setFormValues((prev) => ({
-                                            ...prev,
-                                            allDay: event.target.checked,
-                                        }))
-                                    }} />
-                                    <Typography>All Day</Typography>
-                                </Stack>
-                            </Box>
-                        </Grid>
-
-                        {/* Comment & description */}
-                        <Grid item xs={12}>
-                            <Box className="form-group">
-                                <Typography variant="subtitle1" className="form-label">
-                                    description
-                                </Typography>
-                                <TextField
-                                    name="description"
-                                    value={formValues.description}
-                                    onChange={handleChange}
-                                    multiline
-                                    rows={2}
-                                    placeholder="Add a description"
-                                    {...commonTextFieldProps}
-                                />
-                            </Box>
-                        </Grid>
-
-                        {/* Submit Button */}
-                        <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-                            <Box>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={handleSubmit}
-                                    disabled={isLoading}
-                                    className="primary-btn"
-                                >
-                                    {CalformDataValue?.id && CalformDataValue?.id !== ''
-                                        ? (isLoading ? "Updating..." : "Update")
-                                        : (isLoading ? "Adding..." : "Add")
-                                    }
-
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    onClick={handleClear}
-                                    sx={{ marginLeft: "10px" }}
-                                    className="secondary-btn"
-                                >
-                                    Cancel
-                                </Button>
-                            </Box>
-                            {CalformDataValue?.id && CalformDataValue?.id != '' &&
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={() => handleRemoveEvent(formValues)}
-                                    disabled={isLoading}
-                                    className="danger-btn"
-                                >
-                                    Delete
-                                </Button>
-                            }
-                        </Grid>
-                    </Box>
-                ) :
-                    <Box className="MlTask_CalBox">
-                        <Stack className="ml_tgBtn" direction="row" sx={{ alignItems: "center" }}>
-                            <ToggleButtonGroup
-                                value={tasksubType}
-                                exclusive
-                                onChange={handleTaskSubChange}
-                                aria-label="task type"
-                                size="small"
-                            >
-                                {mulTASK_OPTIONS?.map(({ id, value, label, icon }) => (
-                                    <Tooltip
-                                        key={id}
-                                        title={label}
-                                        placement="top"
-                                        arrow
-                                        sx={{
-                                            borderRadius: "8px",
-                                            "&.Mui-selected": {
-                                                backgroundColor: "#685dd8 !important",
-                                                color: "#fff !important",
-                                            },
-                                        }}
-                                    >
-                                        <ToggleButton value={value}>{icon}</ToggleButton>
-                                    </Tooltip>
-                                ))}
-                            </ToggleButtonGroup>
-                        </Stack>
-                        <MultiTaskInput multiType={tasksubType} onSave={handlebulkTaskSave} />
-
-                        {(view !== 'task' || (formValues?.bulkTask?.length > 0)) && (
-                            <Grid item xs={12} sx={{ textAlign: "right" }} className="mt_calSaveBtn">
-                                <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
-                                    <Box>
-                                        <Button
-                                            variant="outlined"
-                                            onClick={handleClear}
-                                            sx={{ marginRight: "10px" }}
-                                            className="secondary-btn"
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={handleSubmit}
-                                            disabled={isLoading}
-                                            className="primary-btn"
-                                        >
-                                            {isLoading ? "Saving..." : "Save Task"}
-                                        </Button>
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={handleSubmit}
+                                                disabled={isLoading}
+                                                className="primary-btn"
+                                            >
+                                                {isLoading ? "Saving..." : "Save Task"}
+                                            </Button>
+                                        </Box>
                                     </Box>
-                                </Box>
-                            </Grid>
-                        )}
-                    </Box>
-                }
+                                </Grid>
+                            )}
+                        </Box>
+                    }
+                </Box>
             </Box>
         </Drawer>
     );

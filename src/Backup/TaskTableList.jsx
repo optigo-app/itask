@@ -55,6 +55,7 @@ const TableView = ({ data, onAddSubtask, isLoading }) => {
         summary: 200,
         actions: 100,
     });
+
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
     const [cnfDialogOpen, setCnfDialogOpen] = useState(false);
 
