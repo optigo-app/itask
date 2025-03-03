@@ -148,15 +148,20 @@
 
   .tabDataMain {
     margin: 20px 0px 0px 0px;
-    
+
     .MuiTabs-flexContainer {
       border-bottom: 2px solid #e1e1e1;
     }
-    
+
     .tab-content {
       padding-top: 10px;
       max-height: 42vh;
-      
+
+      .subtask_CardBox {
+        max-height: 50vh;
+        overflow: auto;
+      }
+
       .comment-card,
       .subtask-card {
         margin: 10px;
