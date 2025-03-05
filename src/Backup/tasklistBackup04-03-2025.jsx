@@ -19,7 +19,7 @@ import {
     Chip,
     Tooltip,
 } from "@mui/material";
-import { CirclePlus, Eye, Minus, Pencil, Plus, Timer } from "lucide-react";
+import { CirclePlus, Eye, Pencil, Timer } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -34,7 +34,7 @@ import TaskTimeTracking from "../../ShortcutsComponent/TaskTimeTracking";
 import BurningImg from "../../../Assests/fire.png"
 
 const TableView = ({ data, handleTaskFavorite, isLoading }) => {
-    console.log('data: ', data, isLoading);
+    console.log('data: ', data);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
@@ -241,42 +241,41 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                     boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
                 }}
                 >
-                    <Typography variant="caption" sx={{ fontSize: '12.8px', color: '#333 !important' }}>
+                    <Typography variant="caption" sx={{ fontSize:'12.8px', color: '#333 !important' }}>
                         {task.estimate[0]}
                     </Typography>
                 </Box>
                 <Box sx={{
                     ...circleStyle,
-                    backgroundColor: '#808080bf',
+                    backgroundColor: '#808080',
                     cursor: 'pointer',
                     boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
                 }}
                 >
-                    <Typography variant="caption" sx={{ fontSize: '12.8px', color: '#fff !important' }}>
+                    <Typography variant="caption" sx={{ fontSize:'12.8px', color: '#fff !important' }}>
                         {task.estimate[1]}
                     </Typography>
                 </Box>
                 <Box sx={{
                     ...circleStyle,
-                    backgroundColor: '#404040b8',
+                    backgroundColor: '#404040',
                     cursor: 'pointer',
                     boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
                 }}
                 >
-                    <Typography variant="caption" sx={{ fontSize: '12.8px', color: '#fff !important' }}>
+                    <Typography variant="caption" sx={{ fontSize:'12.8px', color: '#fff !important' }}>
                         {task.estimate[2]}
                     </Typography>
                 </Box>
             </Box>
         );
     };
-
     const renderSubtasks = (subtasks, parentIndex) => {
         return subtasks?.map((subtask, subtaskIndex) => (
             <React.Fragment key={`${parentIndex}-${subtaskIndex}`}>
                 <TableRow>
 
-                    {/* <TableCell
+                    <TableCell
                         onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid)}
                         onMouseLeave={handleSubtaskMouseLeave}
                     >
@@ -380,162 +379,6 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                 <CirclePlus size={20} color="#7367f0" />
                             </IconButton>
                         </div>
-                    </TableCell> */}
-
-                    <TableCell
-                        onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid)}
-                        onMouseLeave={handleSubtaskMouseLeave}
-                    >
-                        <div style={{ paddingLeft: `${5 * (parentIndex.split('-').length)}px`, display: "flex", justifyContent: "space-between" }}>
-                            <div>
-                                <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
-                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "30px" }}>
-                                        {/* <IconButton
-                                            id="toggle-task"
-                                            aria-label="toggle-task"
-                                            aria-labelledby="toggle-task"
-                                            size="small"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                toggleSubtasks(`${parentIndex}-${subtaskIndex}`);
-                                            }}
-                                        >
-                                            <PlayArrowIcon
-                                                style={{
-                                                    color: subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? "#444050" : "#c7c7c7",
-                                                    fontSize: "1.2rem",
-                                                    transform: subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? "rotate(90deg)" : "rotate(0deg)",
-                                                    transition: "transform 0.2s ease-in-out",
-                                                }}
-                                            />
-                                        </IconButton> */}
-
-                                        <IconButton
-                                            id="toggle-task"
-                                            aria-label="toggle-task"
-                                            aria-labelledby="toggle-task"
-                                            size="small"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                toggleSubtasks(`${parentIndex}-${subtaskIndex}`);
-                                            }}
-                                        sx={{
-                                            borderRadius: "50%",
-                                            boxShadow: subtaskVisibility[`${parentIndex}-${subtaskIndex}`]
-                                                ? "0px 4px 8px rgba(0,0,0,0.3)"
-                                                : "0px 2px 5px rgba(0,0,0,0.2)",
-                                            padding: "3px",
-                                            backgroundColor: subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? "#FFD700" : "transparent",
-                                            transition: "all 0.3s ease-in-out",
-                                            "&:hover": {
-                                                backgroundColor: subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? "#FFC107" : "#f0f0f0",
-                                            },
-                                        }}
-                                        >
-                                            {subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? (
-                                                <Minus
-                                                    size={16}
-                                                    style={{
-                                                        color: "#444050",
-                                                    }}
-                                                />
-                                            ) : (
-                                                <Plus
-                                                    size={16}
-                                                    style={{
-                                                        color: "#c7c7c7",
-                                                    }}
-                                                />
-                                            )}
-                                        </IconButton>
-                                    </div>
-                                    <div>
-                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
-                                            <span style={{ flex: 1 }}>
-                                                {subtask?.taskname?.length > 20 ? `${subtask?.taskname.slice(0, 50)}...` : subtask?.taskname}
-                                            </span>
-                                            {/* {subtask?.subtasks?.length > 0 && (
-                                                <div style={{
-                                                    backgroundColor: "#7d7f8799",
-                                                    color: '#fff',
-                                                    width: 'fit-content',
-                                                    padding: '0.1rem 0.4rem',
-                                                    borderRadius: '5px',
-                                                    textAlign: 'center',
-                                                    fontSize: '10px',
-                                                    fontWeight: '500',
-                                                    display: 'flex',
-                                                    justifyContent: 'center',
-                                                    alignItems: 'center',
-                                                }}>
-                                                    {subtask?.subtasks?.length}
-                                                </div>
-                                            )} */}
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'end' }}>
-                                            {subtaskIndex % 2 === 0 && subtask?.isburning == 1 &&
-                                                <img src={BurningImg} alt="burningTask"
-                                                    style={{ width: '15px', height: '15px', borderRadius: '50%', marginRight: '8px' }} />
-                                            }
-                                            {subtaskIndex % 2 === 0 && (
-                                                <Chip
-                                                    label={subtask?.ticket || 'A00161'}
-                                                    variant="outlined"
-                                                    size="small"
-                                                    sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB', marginRight: '8px' }}
-                                                />
-                                            )}
-                                            <IconButton
-                                                onClick={() => handleTaskFavorite(subtask)}
-                                                size="small"
-                                                aria-label="add-favorite"
-                                                aria-labelledby="add-favorite"
-                                                sx={{
-                                                    padding: '4px',
-                                                    boxShadow: subtask.isFav
-                                                        ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
-                                                        : '0px 2px 8px rgba(99, 99, 99, 0.2)',
-                                                    transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
-                                                    background: subtask.isFav ? '#FFD700' : '#fff',
-                                                    '&:hover': {
-                                                        boxShadow: subtask.isFav
-                                                            ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
-                                                            : '0px 4px 12px rgba(99, 99, 99, 0.3)',
-                                                        background: subtask.isFav ? '#FFC107' : '#f5f5f5',
-                                                    },
-                                                }}
-                                            >
-                                                {subtask.isFav ? (
-                                                    <StarIcon sx={{ fontSize: '12px', color: '#fff' }} />
-                                                ) : (
-                                                    <StarBorderIcon sx={{ fontSize: '12px', color: '#7d7f85' }} />
-                                                )}
-                                            </IconButton>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <IconButton
-                                id="add-task"
-                                aria-label="add-task"
-                                aria-labelledby="add-task"
-                                size="small"
-                                onClick={() => handleAddSubtask(subtask, { Task: 'subroot' })}
-                                style={{
-                                    visibility: hoveredSubtaskId === subtask?.taskid ? "visible" : "hidden",
-                                }}
-                                sx={{
-                                    '&:hover': {
-                                        backgroundColor: 'transparent',
-                                        boxShadow: 'none',
-                                    }
-                                }}
-                            >
-                                <CirclePlus size={20} color="#7367f0" />
-                            </IconButton>
-                        </div>
-
-
                     </TableCell>
 
                     <TableCell>{subtask?.taskPr}</TableCell>
@@ -641,7 +484,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
 
     return (
         <>
-           {(isLoading === null || isLoading || (!data && isLoading !== false)) ? (
+            {(isLoading == null || isLoading || !data || data?.length === 0) ? (
                 <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
             ) :
                 <TableContainer
@@ -691,11 +534,11 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                     onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
                                                     onMouseLeave={handleTaskMouseLeave}
                                                 >
-                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                                    <div style={{ display: "flex", justifyContent: "space-between" }}>
                                                         <div>
                                                             <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
-                                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "30px" }}>
-                                                                    {/* <IconButton
+                                                                <div style={{ display: "flex", alignItems: "center" }}>
+                                                                    <IconButton
                                                                         id="toggle-task"
                                                                         aria-label="toggle-task"
                                                                         aria-labelledby="toggle-task"
@@ -710,107 +553,72 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                                                 transition: "transform 0.2s ease-in-out",
                                                                             }}
                                                                         />
-                                                                    </IconButton> */}
-                                                                    <IconButton
-                                                                        id="toggle-task"
-                                                                        aria-label="toggle-task"
-                                                                        aria-labelledby="toggle-task"
+                                                                    </IconButton>
+                                                                    <span>
+                                                                        {task?.taskname?.length > 20
+                                                                            ? `${task?.taskname.slice(0, 50)}...`
+                                                                            : task?.taskname}
+                                                                    </span>
+                                                                </div>
+                                                                {task?.subtasks?.length > 0 && (
+                                                                    <div style={{
+                                                                        backgroundColor: "#7d7f8799",
+                                                                        color: '#fff',
+                                                                        width: 'fit-content',
+                                                                        padding: '0.1rem 0.4rem',
+                                                                        borderRadius: '5px',
+                                                                        textAlign: 'center',
+                                                                        fontSize: '10px',
+                                                                        fontWeight: '500',
+                                                                        display: 'flex',
+                                                                        justifyContent: 'center',
+                                                                        alignItems: 'center',
+                                                                        marginTop: '-15px'
+                                                                    }}>
+                                                                        {task?.subtasks?.length}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            <div style={{ marginLeft: '28px', display: 'flex', alignItems: 'end' }}>
+                                                                {taskIndex % 2 === 0 && task?.isburning == 1 &&
+                                                                    <img src={BurningImg} alt="burningTask"
+                                                                        style={{ width: '15px', height: '15px', borderRadius: '50%', marginRight: '8px' }} />
+                                                                }
+                                                                {taskIndex % 2 === 0 && (
+                                                                    <Chip
+                                                                        label={task?.ticket || 'A00161'}
+                                                                        variant="outlined"
                                                                         size="small"
-                                                                        onClick={() => toggleSubtasks(taskIndex)}
+                                                                        sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB', marginRight: '8px' }}
+                                                                    />
+                                                                )}
+                                                                <IconButton
+                                                                    onClick={() => handleTaskFavorite(task)}
+                                                                    size="small"
+                                                                    aria-label="add-favorite"
+                                                                    aria-labelledby="add-favorite"
                                                                     sx={{
-                                                                        borderRadius: "50%",
-                                                                        boxShadow: subtaskVisibility[taskIndex]
-                                                                            ? "0px 4px 8px rgba(0,0,0,0.3)"
-                                                                            : "0px 2px 5px rgba(0,0,0,0.2)",
-                                                                        padding: "3px",
-                                                                        backgroundColor: subtaskVisibility[taskIndex] ? "#FFD700" : "transparent",
-                                                                        transition: "all 0.3s ease-in-out",
-                                                                        "&:hover": {
-                                                                            backgroundColor: subtaskVisibility[taskIndex] ? "#FFC107" : "#f0f0f0",
+                                                                        padding: '4px',
+                                                                        boxShadow: task.isFav
+                                                                            ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
+                                                                            : '0px 2px 8px rgba(99, 99, 99, 0.2)',
+                                                                        transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
+                                                                        background: task.isFav ? '#FFD700' : '#fff',
+                                                                        '&:hover': {
+                                                                            boxShadow: task.isFav
+                                                                                ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
+                                                                                : '0px 4px 12px rgba(99, 99, 99, 0.3)',
+                                                                            background: task.isFav ? '#FFC107' : '#f5f5f5',
                                                                         },
                                                                     }}
-                                                                    >
-                                                                        {subtaskVisibility[taskIndex] ? (
-                                                                            <Minus
-                                                                                size={16}
-                                                                                style={{
-                                                                                    color: "#444050",
-                                                                                }}
-                                                                            />
-                                                                        ) : (
-                                                                            <Plus
-                                                                                size={16}
-                                                                                style={{
-                                                                                    color: "#c7c7c7",
-                                                                                }}
-                                                                            />
-                                                                        )}
-                                                                    </IconButton>
-                                                                </div>
-                                                                <div>
-                                                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
-                                                                        <span style={{ flex: 1 }}>
-                                                                            {task?.taskname?.length > 20 ? `${task?.taskname.slice(0, 50)}...` : task?.taskname}
-                                                                        </span>
-                                                                        {/* {task?.subtasks?.length > 0 && (
-                                                                            <div style={{
-                                                                                backgroundColor: "#7d7f8799",
-                                                                                color: '#fff',
-                                                                                width: 'fit-content',
-                                                                                padding: '0.1rem 0.4rem',
-                                                                                borderRadius: '5px',
-                                                                                textAlign: 'center',
-                                                                                fontSize: '10px',
-                                                                                fontWeight: '500',
-                                                                                display: 'flex',
-                                                                                justifyContent: 'center',
-                                                                                alignItems: 'center',
-                                                                            }}>
-                                                                                {task?.subtasks?.length}
-                                                                            </div>
-                                                                        )} */}
-                                                                    </div>
-                                                                    <div style={{ display: 'flex', alignItems: 'end' }}>
-                                                                        {taskIndex % 2 === 0 && task?.isburning == 1 &&
-                                                                            <img src={BurningImg} alt="burningTask"
-                                                                                style={{ width: '15px', height: '15px', borderRadius: '50%', marginRight: '8px' }} />
-                                                                        }
-                                                                        {taskIndex % 2 === 0 && (
-                                                                            <Chip
-                                                                                label={task?.ticket || 'A00161'}
-                                                                                variant="outlined"
-                                                                                size="small"
-                                                                                sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB', marginRight: '8px' }}
-                                                                            />
-                                                                        )}
-                                                                        <IconButton
-                                                                            onClick={() => handleTaskFavorite(task)}
-                                                                            size="small"
-                                                                            aria-label="add-favorite"
-                                                                            aria-labelledby="add-favorite"
-                                                                            sx={{
-                                                                                padding: '4px',
-                                                                                boxShadow: task.isFav
-                                                                                    ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
-                                                                                    : '0px 2px 8px rgba(99, 99, 99, 0.2)',
-                                                                                transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
-                                                                                background: task.isFav ? '#FFD700' : '#fff',
-                                                                                '&:hover': {
-                                                                                    boxShadow: task.isFav
-                                                                                        ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
-                                                                                        : '0px 4px 12px rgba(99, 99, 99, 0.3)',
-                                                                                    background: task.isFav ? '#FFC107' : '#f5f5f5',
-                                                                                },
-                                                                            }}
-                                                                        >
-                                                                            {task.isFav ? (
-                                                                                <StarIcon sx={{ fontSize: '12px', color: '#fff' }} />
-                                                                            ) : (
-                                                                                <StarBorderIcon sx={{ fontSize: '12px', color: '#7d7f85' }} />
-                                                                            )}
-                                                                        </IconButton>
-                                                                    </div>
-                                                                </div>
+                                                                >
+                                                                    {task.isFav ? (
+                                                                        <StarIcon sx={{ fontSize: '12px', color: '#fff' }} />
+                                                                    ) : (
+                                                                        <StarBorderIcon sx={{ fontSize: '12px', color: '#7d7f85' }} />
+                                                                    )}
+                                                                </IconButton>
                                                             </div>
                                                         </div>
                                                         <IconButton
@@ -826,8 +634,6 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                             <CirclePlus size={20} color="#7367f0" />
                                                         </IconButton>
                                                     </div>
-
-
                                                 </TableCell>
                                                 <TableCell>{task?.taskPr}</TableCell>
                                                 <TableCell>
@@ -853,8 +659,8 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                 >
                                                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                         <AvatarGroup max={10}
-                                                            spacing={2}
                                                             sx={{
+                                                                flexDirection: 'row !important',
                                                                 '& .MuiAvatar-root': {
                                                                     width: 22,
                                                                     height: 22,
@@ -863,20 +669,19 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                                     border: 'none',
                                                                     transition: 'transform 0.3s ease-in-out',
                                                                     '&:hover': {
-                                                                        transform: 'scale(1.2)',
-                                                                        zIndex: 10
+                                                                        transform: 'translateY(-8px)',
                                                                     }
                                                                 }
                                                             }}
                                                         >
                                                             {task?.assignee?.map((assignee, teamIdx) => (
-                                                                <Tooltip className="custom-tooltip" placement="top" key={assignee?.id} title={assignee?.name} arrow>
+                                                                <Tooltip placement="top" key={assignee} title={assignee} arrow>
                                                                     <Avatar
                                                                         key={teamIdx}
-                                                                        alt={assignee?.name}
-                                                                        src={assignee.avatar || null}
+                                                                        alt={assignee}
+                                                                        src={assignee.avatar}
                                                                         sx={{
-                                                                            backgroundColor: background(assignee?.name),
+                                                                            backgroundColor: background(assignee),
                                                                         }}
                                                                     >
                                                                         {!assignee.avatar && assignee.charAt(0)}

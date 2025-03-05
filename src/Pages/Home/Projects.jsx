@@ -33,22 +33,28 @@ const Card2 = ({ projects }) => {
                                         justifyContent: 'center',
                                         gap: '0px'
                                     }}>
-                                        <AvatarGroup max={3}
+                                        <AvatarGroup max={5}
                                             sx={{
                                                 '& .MuiAvatar-root': {
-                                                    width: 35,
-                                                    height: 35,
+                                                    width: 30,
+                                                    height: 30,
                                                     cursor: 'pointer',
                                                     border: 'none',
                                                     transition: 'transform 0.3s ease-in-out',
                                                     '&:hover': {
-                                                        transform: 'translateY(-8px)',
+                                                        transform: 'scale(1.2)',
+                                                        zIndex: 10
                                                     }
                                                 }
                                             }}
                                         >
                                             {project?.team?.map((teamMember, teamIdx) => (
-                                                <Tooltip placement="top" key={teamMember.name} title={teamMember.name} arrow>
+                                                <Tooltip
+                                                    placement="top"
+                                                    key={teamMember.name}
+                                                    title={teamMember.name}
+                                                    arrow
+                                                >
                                                     <Avatar
                                                         key={teamIdx}
                                                         alt={teamMember.name}

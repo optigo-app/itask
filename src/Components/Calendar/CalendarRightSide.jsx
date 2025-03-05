@@ -29,24 +29,24 @@ const Calendar = () => {
 
     const handleCaleFormSubmit = async (formValues) => {
         setCalFormData(formValues);
-        const existingData = JSON.parse(localStorage.getItem('calformData')) || [];
-        const existingEventIndex = existingData.findIndex(event => event.id === formValues.id);
+        const existingData = JSON?.parse(localStorage?.getItem('calformData')) || [];
+        const existingEventIndex = existingData?.findIndex(event => event?.id === formValues?.id);
         let updatedData;
         if (existingEventIndex !== -1) {
-            updatedData = existingData.map((event, index) =>
+            updatedData = existingData?.map((event, index) =>
                 index === existingEventIndex ? formValues : event
             );
         } else {
             updatedData = [...existingData, formValues];
         }
-        localStorage.setItem('calformData', JSON.stringify(updatedData));
+        localStorage.setItem('calformData', JSON?.stringify(updatedData));
     };
 
     // for set events
     useEffect(() => {
         const storedData = localStorage.getItem('calformData');
         if (storedData) {
-            setCalEvData(JSON.parse(storedData));
+            setCalEvData(JSON?.parse(storedData));
         }
     }, [calFormData]);
 
@@ -61,7 +61,7 @@ const Calendar = () => {
         setTimeout(() => {
             if (calendarApi && date) {
                 const validDate = new Date(date);
-                if (!isNaN(validDate.getTime())) {
+                if (!isNaN(validDate?.getTime())) {
                     calendarApi.gotoDate(validDate);
                 } else {
                     console.error('Invalid date:', date);
@@ -91,8 +91,8 @@ const Calendar = () => {
         events: filteredEvents,
         plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
         initialView: 'dayGridMonth',
-        slotMinTime: "09:00:00", // Start from 9 AM
-        slotMaxTime: "24:00:00", // End at 9 PM
+        slotMinTime: "07:00:00", // Start from 9 AM
+        slotMaxTime: "22:00:00", // End at 9 PM
         headerToolbar: {
             start: 'sidebarToggle, prev, next, title',
             end: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
@@ -174,7 +174,7 @@ const Calendar = () => {
             };
             // Update the event in local storage
             const updatedEvents = filteredEvents?.map(event =>
-                event.id === updatedEvent.id ? updatedEvent : event
+                event.id === updatedEvent?.id ? updatedEvent : event
             );
             localStorage.setItem('calformData', JSON.stringify(updatedEvents));
         },
@@ -183,24 +183,24 @@ const Calendar = () => {
 
             const newEvent = {
                 id: randomId,
-                title: receivedEvent.title || "Untitled Event",
-                start: receivedEvent.start ? receivedEvent.start.toISOString() : "",
-                end: receivedEvent.end ? receivedEvent.end.toISOString() : receivedEvent.start.toISOString(),
-                location: receivedEvent.extendedProps?.location || "",
-                description: receivedEvent.extendedProps?.description || "",
-                category: receivedEvent.extendedProps?.category || "",
-                guests: receivedEvent.extendedProps?.guests || [],
-                eventUrl: receivedEvent.extendedProps?.eventUrl || "",
-                allDay: receivedEvent.allDay ?? false,
+                title: receivedEvent?.title || "Untitled Event",
+                start: receivedEvent?.start ? receivedEvent?.start.toISOString() : "",
+                end: receivedEvent?.end ? receivedEvent?.end.toISOString() : receivedEvent?.start?.toISOString(),
+                location: receivedEvent?.extendedProps?.location || "",
+                description: receivedEvent?.extendedProps?.description || "",
+                category: receivedEvent?.extendedProps?.category || "",
+                guests: receivedEvent?.extendedProps?.guests || [],
+                eventUrl: receivedEvent?.extendedProps?.eventUrl || "",
+                allDay: receivedEvent?.allDay ?? false,
             };
-            const existingData = JSON.parse(localStorage.getItem('calformData')) || [];
-            const isDuplicate = existingData.some(event =>
+            const existingData = JSON?.parse(localStorage.getItem('calformData')) || [];
+            const isDuplicate = existingData?.some(event =>
                 event.title === newEvent.title && event.start === newEvent.start
             );
 
             if (!isDuplicate) {
                 const updatedData = [...existingData, newEvent];
-                localStorage.setItem('calformData', JSON.stringify(updatedData));
+                localStorage.setItem('calformData', JSON?.stringify(updatedData));
                 setCalEvData(updatedData);
             } else {
                 console.log("Duplicate event detected, not adding.");
@@ -216,12 +216,12 @@ const Calendar = () => {
                 title: resizedEvent.title,
                 start: startDate?.toISOString(),
                 end: endDate?.toISOString(),
-                location: resizedEvent.extendedProps.location,
-                description: resizedEvent.extendedProps.description,
-                category: resizedEvent.extendedProps.category,
-                guests: resizedEvent.extendedProps.guests,
-                eventUrl: resizedEvent.extendedProps.eventUrl,
-                allDay: resizedEvent.allDay,
+                location: resizedEvent?.extendedProps?.location,
+                description: resizedEvent?.extendedProps?.description,
+                category: resizedEvent?.extendedProps?.category,
+                guests: resizedEvent?.extendedProps?.guests,
+                eventUrl: resizedEvent?.extendedProps?.eventUrl,
+                allDay: resizedEvent?.allDay,
             };
             // Update the event in local storage
             const updatedEvents = filteredEvents?.map(event =>
@@ -237,14 +237,16 @@ const Calendar = () => {
         setFormData(formValue)
         setCnfDialogOpen(true);
     };
+
     // cnf remove event
     const handleConfirmRemoveAll = () => {
         const updatedData = filteredEvents?.filter(event => event?.id !== formData?.id);
         setCalFormData(updatedData)
-        localStorage.setItem('calformData', JSON.stringify(updatedData));
+        localStorage.setItem('calformData', JSON?.stringify(updatedData));
         setCnfDialogOpen(false);
         setCaledrawerOpen(false);
     };
+
     // close remove dialog
     const handleCloseDialog = () => {
         setCnfDialogOpen(false);

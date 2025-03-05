@@ -38,7 +38,7 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
         'due date': 100,
         priority: 100,
         summary: 200,
-        actions: 100,
+        // actions: 100,
     });
 
     const priorityColors = {
@@ -163,8 +163,8 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
 
     return (
         <>
-            {(isLoading == null || isLoading || !data || data?.length === 0) ? (
-                        <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
+            {(isLoading === null || isLoading || (!data && isLoading !== false)) ? (
+                <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
             ) :
                 <TableContainer
                     component={Paper}
@@ -209,12 +209,12 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
                                     {currentData?.map((task, taskIndex) => (
                                         <React.Fragment key={taskIndex}>
                                             <TableRow
-                                                sx={{
-                                                    backgroundColor: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.04)' : 'inherit',
-                                                    '&:hover': {
-                                                        backgroundColor: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-                                                    },
-                                                }}
+                                            // sx={{
+                                            //     backgroundColor: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.04)' : 'inherit',
+                                            //     '&:hover': {
+                                            //         backgroundColor: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                                            //     },
+                                            // }}
                                             >
                                                 <TableCell>
                                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -227,12 +227,12 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
                                                                         handleNavigate(task);
                                                                     }
                                                                 }}
-                                                                style={{
-                                                                    pointerEvents: task?.isLocked === 1 ? 'none' : 'auto',
-                                                                    color: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.38)' : '#2900ee',
-                                                                    textDecoration: task?.isLocked === 1 ? 'none' : "underline",
-                                                                    cursor: task?.isLocked === 1 ? 'default' : 'pointer'
-                                                                }}
+                                                            // style={{
+                                                            //     pointerEvents: task?.isLocked === 1 ? 'none' : 'auto',
+                                                            //     color: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.38)' : '#2900ee',
+                                                            //     textDecoration: task?.isLocked === 1 ? 'none' : "underline",
+                                                            //     cursor: task?.isLocked === 1 ? 'default' : 'pointer'
+                                                            // }}
                                                             >
                                                                 {task?.taskname}/{task?.module}
                                                             </a>
@@ -281,13 +281,13 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>{task?.remark}</TableCell>
-                                                <TableCell>
+                                                {/* <TableCell>
                                                     <LockButton
                                                         isLocked={task?.isLocked === 1}
                                                         onClick={() => handleOpenCnfDialog(task)}
                                                         id={task?.taskid}
                                                     />
-                                                </TableCell>
+                                                </TableCell> */}
                                             </TableRow>
                                         </React.Fragment>
                                     ))}

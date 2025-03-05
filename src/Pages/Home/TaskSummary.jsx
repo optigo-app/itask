@@ -112,12 +112,12 @@ export default function SummaryDashboard() {
                                         <Icon size={20} style={{ color: metric.color }} />
                                     </Box>
                                     <Box>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: .2 }}>
-                                            <Typography variant="h4" fontWeight="bold" fontSize='35px !important'>
+                                        <Box className="taskCountBox" sx={{ display: "flex", alignItems: "center", gap: .2 }}>
+                                            <Typography variant="h4" className='typoFirst'>
                                                 {metric?.newTasks}
                                             </Typography>
-                                            <Typography variant="h5">/</Typography>
-                                            <Typography variant="body2">
+                                            <Typography variant="h4">/</Typography>
+                                            <Typography variant="h4" className='typoSecond'>
                                                 {metric.value}
                                             </Typography>
                                             {/* {metric?.newTasks > 0 && (

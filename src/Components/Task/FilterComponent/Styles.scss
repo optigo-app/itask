@@ -1,3 +1,5 @@
+@import "../../../theme/variable.scss";
+
 .headerButtons {
     display: flex;
     justify-content: space-between;
@@ -35,6 +37,7 @@
     flex-wrap: wrap;
     font-size: 14px;
     gap: 2px;
+    font-family: $font-family !important;
     justify-content: space-between;
     align-items: end;
     margin-bottom: 2px;
@@ -43,6 +46,21 @@
     .form-group{
         .filterLabletxt{
             font-size: 14px;
+        }
+    }
+    .clearAllBtn{
+        display: flex;
+        justify-content: start;
+        align-items: end;
+        font-family: $font-family !important;
+        text-transform: capitalize;
+        font-weight: bold;
+        color: $placeholderColor;
+        text-decoration: underline;
+        cursor: pointer;
+        &:hover {
+            background: transparent;
+            text-decoration: underline;
         }
     }
 }

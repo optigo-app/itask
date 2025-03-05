@@ -65,5 +65,11 @@ export const CalEventsFilter = atom({
   default: []
 })
 
+export const timerCompOpen = atom({
+  key: 'timerCompOpen',
+  default: false
+})
+
+
 
 
