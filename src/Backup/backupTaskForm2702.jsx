@@ -308,13 +308,7 @@ const SidebarDrawer = ({
                                             title={label}
                                             placement="top"
                                             arrow
-                                            sx={{
-                                                borderRadius: "8px",
-                                                "&.Mui-selected": {
-                                                    backgroundColor: "#685dd8 !important",
-                                                    color: "#fff !important",
-                                                },
-                                            }}
+                                            classes={{ tooltip: 'custom-tooltip' }}
                                         >
                                             <ToggleButton value={value}>{icon}</ToggleButton>
                                         </Tooltip>

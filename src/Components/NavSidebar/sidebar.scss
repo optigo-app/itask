@@ -70,6 +70,7 @@
     display: flex;
     align-items: center;
     cursor: pointer;
+    line-height: .8;
 
     .itask_logo {
         height: 40px;
@@ -80,9 +81,10 @@
     .itask_logoTxt {
         margin-top: 0px;
         margin-bottom: 0px;
+        line-height: 0 !important;
 
         span {
-            font-size: 30px;
+            font-size: 28px;
             font-weight: 600;
             font-family: $font-family !important;
             color: $titleColor;

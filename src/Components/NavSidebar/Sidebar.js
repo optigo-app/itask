@@ -102,6 +102,7 @@ const Sidebar = () => {
                         <div>
                             {!isMobile && isDrawerOpen && (
                                 <Checkbox
+                                size="small"
                                     id="sidebar-toggle"
                                     aria-label="open sidebar"
                                     aria-labelledby="sidebar-toggle"

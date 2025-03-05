@@ -252,7 +252,13 @@ const MeetingPage = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
                   <AvatarGroup max={8}>
                     {meeting.participants.map((participant) => (
-                      <Tooltip placement="top" key={participant.name} title={participant.name} arrow>
+                      <Tooltip
+                        placement="top"
+                        key={participant.name}
+                        title={participant.name}
+                        arrow
+                        classes={{ tooltip: 'custom-tooltip' }}
+                      >
                         <Avatar
                           alt={participant.name}
                           src={participant.avatar}

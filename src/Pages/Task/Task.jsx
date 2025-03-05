@@ -4,9 +4,13 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box } from "@mui/material";
 import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { fetchlistApiCall, masterDataValue, selectedRowData, taskActionMode, TaskData } from "../../Recoil/atom";
+import { fetchlistApiCall, filterDrawer, filterDrawer1, masterDataValue, selectedRowData, taskActionMode, TaskData } from "../../Recoil/atom";
 import { fetchMasterGlFunc, formatDate, formatDate2 } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
+import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
+import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
+import {motion, AnimatePresence } from "framer-motion";
+import TaskJson from "../../Data/taskData.json"
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
@@ -202,6 +206,8 @@ const Task = () => {
 
       const taskData = await fetchTaskDataApi(selectedRow ?? {},);
       const labeledTasks = mapTaskLabels(taskData);
+      const finalTaskData = [...labeledTasks,  ...TaskJson]
+      console.log('finalTaskData: ', finalTaskData);
 
       const enhanceTask = (task) => {
         const priority = priorityData?.find(item => item?.id == task?.priorityid);
@@ -235,7 +241,7 @@ const Task = () => {
         };
       };
 
-      const enhancedTasks = labeledTasks?.map(task => enhanceTask(task));
+      const enhancedTasks = finalTaskData?.map(task => enhanceTask(task));
 
       setTasks((prevTasks) => {
         const taskMap = new Map();
@@ -357,6 +363,17 @@ const Task = () => {
     }));
   };
 
+  const handleClearFilter = (filterKey) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      [filterKey]: ''
+    }));
+  };
+
+  const handleClearAllFilters = () => {
+    setFilters({});
+  };
+
   // filter functions
   const filteredData = tasks?.filter((task) => {
     const { status, priority, assignee, searchTerm, dueDate, department, project, category } = filters;
@@ -450,6 +467,9 @@ const Task = () => {
     setTasks((prevTasks) => updateTasksRecursively(prevTasks));
   };
 
+
+  const [drawerOpen1, setDrawerOpen1] = useRecoilState(filterDrawer1);
+
   return (
     <Box
       sx={{
@@ -474,17 +494,44 @@ const Task = () => {
       />
 
       {/* Divider */}
-      <div
-        style={{
-          margin: "20px 0",
-          border: "1px dashed #7d7f85",
-          opacity: 0.3,
-        }}
-      />
+      <AnimatePresence>
+        {drawerOpen1 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <div
+              style={{
+                margin: "20px 0",
+                border: "1px dashed #7d7f85",
+                opacity: 0.3,
+              }}
+            />
 
-      {/* Filters */}
-      <Filters {...filters}
+            {/* Filters */}
+            <Filters
+              {...filters}
+              onFilterChange={handleFilterChange}
+              isLoading={isLoading}
+              masterData={masterData}
+              priorityData={priorityData}
+              statusData={statusData}
+              assigneeData={assigneeData}
+              taskDepartment={taskDepartment}
+              taskProject={taskProject}
+              taskCategory={taskCategory}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <FiltersDrawer {...filters}
+        filters={filters}
+        setFilters={setFilters}
         onFilterChange={handleFilterChange}
+        onClearAll={handleClearAllFilters}
         isLoading={isLoading}
         masterData={masterData}
         priorityData={priorityData}
@@ -495,6 +542,7 @@ const Task = () => {
         taskCategory={taskCategory}
       />
 
+
       {/* Divider */}
       <div
         style={{
@@ -502,6 +550,11 @@ const Task = () => {
           border: "1px dashed #7d7f85",
           opacity: 0.3,
         }}
+      />
+      <FilterChips
+        filters={filters}
+        onClearFilter={handleClearFilter}
+        onClearAll={handleClearAllFilters}
       />
 
       {/* View Components */}

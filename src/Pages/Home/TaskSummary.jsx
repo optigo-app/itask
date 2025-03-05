@@ -116,7 +116,7 @@ export default function SummaryDashboard() {
                                             <Typography variant="h4" className='typoFirst'>
                                                 {metric?.newTasks}
                                             </Typography>
-                                            <Typography variant="h4">/</Typography>
+                                            <Typography variant="h4" className='typoSecond'>/</Typography>
                                             <Typography variant="h4" className='typoSecond'>
                                                 {metric.value}
                                             </Typography>

@@ -22,7 +22,7 @@ import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
 import AttachmentGrid from './AttachmentGrid';
-import CommentSection from './TaskComment';
+import CommentSection from './Comment/TaskComment';
 import { TaskDescription } from './TaskDescription';
 import SubtaskCard from './SubTaskcard';
 
@@ -44,22 +44,11 @@ const TaskDetail = ({ open, onClose }) => {
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const placeholderImage = AttachmentImg;
 
-    const assignees = [
-        { name: "Aarav Sharma", avatar: "" },
-        { name: "Ishita Verma", avatar: "" },
-        { name: "Rajesh Iyer", avatar: "" },
-        { name: "Priya Nair", avatar: "" },
-        { name: "Vikram Singh", avatar: "" },
-        { name: "Ananya Reddy", avatar: "" },
-        { name: "Karthik Menon", avatar: "" },
-        { name: "Neha Gupta", avatar: "" },
-        { name: "Suresh Patil", avatar: "" },
-        { name: "Meera Joshi", avatar: "" }
-    ];
-
-    const colors = [
-        '#FF5722', '#4CAF50', '#2196F3', '#FFC107',
-        '#E91E63', '#9C27B0', '#3F51B5', '#00BCD4'
+    // Dummy attachment data
+    const dummyAttachments = [
+        { filename: 'document.pdf', url: 'https://example.com/document.pdf', size: '2.5 MB' },
+        { filename: 'image.jpg', url: 'https://example.com/image.jpg', size: '1.8 MB' },
+        { filename: 'spreadsheet.xlsx', url: 'https://example.com/spreadsheet.xlsx', size: '3.2 MB' },
     ];
 
     const handleRemoveEvent = () => {
@@ -146,7 +135,12 @@ const TaskDetail = ({ open, onClose }) => {
 
                 const taskComment = await taskCommentGetApi(taskData);
                 if (taskComment) {
-                    setComments(taskComment?.rd);
+                    const commentsWithAttachments = taskComment.rd.map(comment => ({
+                        ...comment,
+                        user: { name: 'John Doe', avatar: null },
+                        attachments: dummyAttachments.slice(0, Math.floor(Math.random() * 3))
+                    }));
+                    setComments(commentsWithAttachments);
                 }
             } catch (error) {
                 console.error('Error fetching task description: ', error);
@@ -382,7 +376,13 @@ const TaskDetail = ({ open, onClose }) => {
                                             }}
                                         >
                                             {taskData?.assignee?.map((assignee, teamIdx) => (
-                                                <Tooltip placement="top" key={assignee?.id} title={assignee?.name} arrow>
+                                                <Tooltip
+                                                    placement="top"
+                                                    key={assignee?.id}
+                                                    title={assignee?.name}
+                                                    arrow
+                                                    classes={{ tooltip: 'custom-tooltip' }}
+                                                >
                                                     <Avatar
                                                         key={teamIdx}
                                                         alt={assignee?.name}

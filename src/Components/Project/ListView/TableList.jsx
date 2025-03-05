@@ -142,7 +142,11 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
         const label = isLocked ? 'Lock' : 'Unlock';
 
         return (
-            <Tooltip placement="right" title={`${label} Project`}>
+            <Tooltip
+                placement="right"
+                title={`${label} Project`}
+                classes={{ tooltip: 'custom-tooltip' }}
+            >
                 <IconButton
                     id={`pr${label}`}
                     aria-label={`pr${label}`}

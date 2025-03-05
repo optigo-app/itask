@@ -293,7 +293,12 @@ const Header = ({ avatarSrc = "" }) => {
                                 height: "25px",
                             }}
                         />
-                        <Tooltip title="Mark all as read" placement="top" arrow>
+                        <Tooltip
+                            title="Mark all as read"
+                            placement="top"
+                            arrow
+                            classes={{ tooltip: 'custom-tooltip' }}
+                        >
                             <IconButton>
                                 <MailOpen size={20} style={{ cursor: "pointer" }} />
                             </IconButton>
