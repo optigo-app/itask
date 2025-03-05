@@ -100,17 +100,17 @@ const CalendarLeftSide = ({ calendarsColor }) => {
             start: selectedDate
         };
         setCalFormData(updatedFormValues);
-        const existingData = JSON.parse(localStorage.getItem('calformData')) || [];
-        const existingEventIndex = existingData.findIndex(event => event.id === updatedFormValues.id);
+        const existingData = JSON?.parse(localStorage.getItem('calformData')) || [];
+        const existingEventIndex = existingData?.findIndex(event => event.id === updatedFormValues.id);
         let updatedData;
         if (existingEventIndex !== -1) {
-            updatedData = existingData.map((event, index) =>
+            updatedData = existingData?.map((event, index) =>
                 index === existingEventIndex ? updatedFormValues : event
             );
         } else {
             updatedData = [...existingData, updatedFormValues];
         }
-        localStorage.setItem('calformData', JSON.stringify(updatedData));
+        localStorage.setItem('calformData', JSON?.stringify(updatedData));
     };
 
     const calendarMonthChange = (date) => {
@@ -187,7 +187,7 @@ const CalendarLeftSide = ({ calendarsColor }) => {
                             control={
                                 <Checkbox
                                     color="default"
-                                    checked={selectedCalendars.length === Object.keys(calendarsColor).length}
+                                    checked={selectedCalendars?.length === Object.keys(calendarsColor).length}
                                     onChange={handleViewAllToggle}
                                     sx={{
                                         '& .MuiSvgIcon-root': {

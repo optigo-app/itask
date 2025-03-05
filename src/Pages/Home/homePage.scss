@@ -23,6 +23,18 @@
         color: $titleColor;
     }
 
+    .taskCountBox {
+        .typoFirst {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .typoSecond {
+            font-size: 30px;
+           color: $placeholderColor !important;
+        }
+    }
+
     .MuiTableCell-root {
         border-bottom: 1px solid rgba(224, 224, 224, 0.2);
     }
@@ -34,7 +46,8 @@
         flex-direction: column !important;
         padding: 16px;
     }
-    .HomePageCom{
+
+    .HomePageCom {
         background-color: transparent;
     }
 

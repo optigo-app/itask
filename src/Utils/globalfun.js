@@ -373,15 +373,3 @@ export const commonTextFieldProps = {
 };
 
 
-
-export const DividerComponent = (margin, border, opacity) => {
-    return <div style={{
-            margin: margin ?? "10px 0",
-            border: border ?? "1px dashed #7d7f85",
-            opacity: opacity ?? 0.3,
-        }}
-        />
-}
-
-
-

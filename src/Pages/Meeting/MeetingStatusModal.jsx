@@ -29,7 +29,7 @@ const modalStyle = {
     width: 600,
     bgcolor: "background.paper",
     boxShadow: 24,
-    p: 3,
+    padding: "10px 20px",
     borderRadius: 2,
     outline: 'none'
 };
@@ -92,13 +92,19 @@ const ReadOnlyModal = ({ open, handleClose }) => {
                         sx={{ mt: 2, width: "50%" }}
                         className="textfieldsClass"
                     /> */}
+                    <div style={{
+                        margin: "10px 0",
+                        border: "1px dashed #7d7f85",
+                        opacity: 0.3,
+                    }}
+                    />
                     <ToggleButtonGroup
                         value={filterStatus}
                         exclusive
                         onChange={handleFilterChange}
                         aria-label="filter status"
                         size="small"
-                       className="toggle-button-group"
+                        className="toggle-button-group"
                     >
                         <ToggleButton value="All">All</ToggleButton>
                         <ToggleButton value="Accept">Accept</ToggleButton>

@@ -18,7 +18,7 @@ const Task = () => {
   const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
   const selectedRow = useRecoilValue(selectedRowData);
   const [isLoading, setIsLoading] = useState(false);
-  const [isTaskLoading, setIsTaskLoading] = useState(false);
+  const [isTaskLoading, setIsTaskLoading] = useState(null);
   const [masterData, setMasterData] = useRecoilState(masterDataValue);
   const [priorityData, setPriorityData] = useState();
   const [statusData, setStatusData] = useState();
@@ -156,6 +156,40 @@ const Task = () => {
   //   }
   // };
 
+  const assigneeJosn = [
+    {
+      "id": 1,
+      "name": "Shivam",
+      "avatar": "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/5.png",
+      "designation": "Software Engineer"
+    },
+    {
+      "id": 2,
+      "name": "Shyam",
+      "avatar": "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/6.png",
+      "designation": "Project Manager"
+    },
+    {
+      "id": 3,
+      "name": "Ram",
+      "avatar": "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/7.png",
+      "designation": "UX Designer"
+    },
+    {
+      "id": 4,
+      "name": "Shiv",
+      "avatar": "https://example.com/avatars/shiv.jpg",
+      "designation": "Backend Developer"
+    },
+    {
+      "id": 5,
+      "name": "Jeet",
+      "avatar": "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/3.png",
+      "designation": "Frontend Developer"
+    },
+  ]
+
+
   const fetchTaskData = async () => {
     if (tasks?.length == 0) {
       setIsTaskLoading(true);
@@ -175,7 +209,7 @@ const Task = () => {
         const project = taskProject?.find(item => item?.id == task?.projectid);
         const department = taskDepartment?.find(item => item?.id == task?.departmentid);
         const category = taskCategory?.find(item => item?.id == task?.workcategoryid);
-        const assignee = ['shivam', 'shyam', "ram", "shiv", 'jeet', 'karan', 'kamal'];
+        const assignee = assigneeJosn;
         const estimate = ['20', '30', '40']
         const isburning = 1;
 

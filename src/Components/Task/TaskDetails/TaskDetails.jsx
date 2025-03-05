@@ -187,7 +187,7 @@ const TaskDetail = ({ open, onClose }) => {
     const handleEditComment = (comment) => {
         setNewComment(comment.comment);
     };
-    
+
     const handleRemoveComment = async (commentId) => {
         try {
             const deleteCommentResponse = await taskCommentAddApi(taskData, commentId);
@@ -332,7 +332,7 @@ const TaskDetail = ({ open, onClose }) => {
                                         <Typography className="tasklable">Assignees</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                        <AvatarGroup
+                                        {/* <AvatarGroup
                                             max={10}
                                             sx={{
                                                 flexDirection: 'row',
@@ -359,6 +359,39 @@ const TaskDetail = ({ open, onClose }) => {
                                                         }}
                                                     >
                                                         {!teamMember.avatar && teamMember.name.charAt(0)}
+                                                    </Avatar>
+                                                </Tooltip>
+                                            ))}
+                                        </AvatarGroup> */}
+                                        <AvatarGroup max={10}
+                                            spacing={2}
+                                            sx={{
+                                                flexDirection: 'row',
+                                                '& .MuiAvatar-root': {
+                                                    width: 30,
+                                                    height: 30,
+                                                    fontSize: '0.8rem',
+                                                    cursor: 'pointer',
+                                                    border: 'none',
+                                                    transition: 'transform 0.3s ease-in-out',
+                                                    '&:hover': {
+                                                        transform: 'scale(1.2)',
+                                                        zIndex: 10
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            {taskData?.assignee?.map((assignee, teamIdx) => (
+                                                <Tooltip placement="top" key={assignee?.id} title={assignee?.name} arrow>
+                                                    <Avatar
+                                                        key={teamIdx}
+                                                        alt={assignee?.name}
+                                                        src={assignee.avatar || null}
+                                                        sx={{
+                                                            backgroundColor: background(assignee?.name),
+                                                        }}
+                                                    >
+                                                        {!assignee.avatar && assignee.charAt(0)}
                                                     </Avatar>
                                                 </Tooltip>
                                             ))}

@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Box, TextField, Typography, MenuItem, Menu, Checkbox, ListItemText, Button } from "@mui/material";
+import { Box, TextField, Typography, MenuItem, Menu, Checkbox, ListItemText, Button, IconButton } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { useSetRecoilState } from "recoil";
-import { selectedCategoryAtom } from "../../../Recoil/atom";
+import { selectedCategoryAtom, timerCompOpen } from "../../../Recoil/atom";
+import { TimerIcon } from "lucide-react";
+import { commonSelectProps, customDatePickerProps } from "../../../Utils/globalfun";
+import TaskTimeTrackerComp from "../../ShortcutsComponent/TaskTimeTrackerComp";
 
 const Filters = ({
   searchTerm,
@@ -35,6 +38,7 @@ const Filters = ({
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [dueDateVisible, setDueDateVisible] = useState(true);
+  const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
 
   const openMenu = Boolean(anchorEl);
 
@@ -96,175 +100,188 @@ const Filters = ({
     setSelectedCategory(null)
   };
 
-  const commonSelectProps = {
-    select: true,
-    fullWidth: true,
-    size: "small",
-    sx: {
-      minWidth: 180,
-      "& .MuiOutlinedInput-root": {
-        borderRadius: "8px",
-        "& fieldset": {
-          borderRadius: "8px",
-        },
-      },
-    },
-    SelectProps: {
-      MenuProps: {
-        PaperProps: {
-          sx: {
-            borderRadius: "8px",
-            "& .MuiMenuItem-root": {
-              fontFamily: '"Public Sans", sans-serif',
-              color: "#444050",
-              margin: "5px 10px",
-              "&:hover": {
-                borderRadius: "8px",
-                backgroundColor: "#7367f0",
-                color: "#fff",
-              },
-              "&.Mui-selected": {
-                backgroundColor: "#80808033",
-                borderRadius: "8px",
-                "&:hover": {
-                  backgroundColor: "#7367f0",
-                  color: "#fff",
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  };
+  // const commonSelectProps = {
+  //   select: true,
+  //   fullWidth: true,
+  //   size: "small",
+  //   sx: {
+  //     minWidth: 180,
+  //     "& .MuiOutlinedInput-root": {
+  //       borderRadius: "8px",
+  //       "& fieldset": {
+  //         borderRadius: "8px",
+  //       },
+  //     },
+  //   },
+  //   SelectProps: {
+  //     MenuProps: {
+  //       PaperProps: {
+  //         sx: {
+  //           borderRadius: "8px",
+  //           "& .MuiMenuItem-root": {
+  //             fontFamily: '"Public Sans", sans-serif',
+  //             color: "#444050",
+  //             margin: "5px 10px",
+  //             "&:hover": {
+  //               borderRadius: "8px",
+  //               backgroundColor: "#7367f0",
+  //               color: "#fff",
+  //             },
+  //             "&.Mui-selected": {
+  //               backgroundColor: "#80808033",
+  //               borderRadius: "8px",
+  //               "&:hover": {
+  //                 backgroundColor: "#7367f0",
+  //                 color: "#fff",
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // };
 
-  const customDatePickerProps = {
-    slotProps: {
-      popper: {
-        sx: {
-          '& .MuiDateCalendar-root': {
-            borderRadius: '8px',
-            fontFamily: '"Public Sans", sans-serif',
-          },
-          '& .MuiButtonBase-root, .MuiPickersCalendarHeader-label, .MuiPickersYear-yearButton': {
-            color: '#444050',
-            fontFamily: '"Public Sans", sans-serif',
-          },
-          '& .MuiPickersDay-root, .MuiPickersYear-yearButton': {
-            '&:hover': {
-              backgroundColor: '#7367f0',
-              color: '#fff',
-            },
-          },
-          '& .MuiPickersDay-root.Mui-selected, .Mui-selected ': {
-            backgroundColor: '#7367f0',
-            color: '#fff',
-          },
-          '& .MuiPickersDay-root.Mui-selected, .MuiPickersYear-yearButton:hover': {
-            backgroundColor: '#7367f0',
-            color: '#fff',
-          },
-        },
-      },
-    },
-  };
+  // const customDatePickerProps = {
+  //   slotProps: {
+  //     popper: {
+  //       sx: {
+  //         '& .MuiDateCalendar-root': {
+  //           borderRadius: '8px',
+  //           fontFamily: '"Public Sans", sans-serif',
+  //         },
+  //         '& .MuiButtonBase-root, .MuiPickersCalendarHeader-label, .MuiPickersYear-yearButton': {
+  //           color: '#444050',
+  //           fontFamily: '"Public Sans", sans-serif',
+  //         },
+  //         '& .MuiPickersDay-root, .MuiPickersYear-yearButton': {
+  //           '&:hover': {
+  //             backgroundColor: '#7367f0',
+  //             color: '#fff',
+  //           },
+  //         },
+  //         '& .MuiPickersDay-root.Mui-selected, .Mui-selected ': {
+  //           backgroundColor: '#7367f0',
+  //           color: '#fff',
+  //         },
+  //         '& .MuiPickersDay-root.Mui-selected, .MuiPickersYear-yearButton:hover': {
+  //           backgroundColor: '#7367f0',
+  //           color: '#fff',
+  //         },
+  //       },
+  //     },
+  //   },
+  // };
 
   const handleDueDateVisibilityChange = (event) => {
     setDueDateVisible(event.target.checked);
   };
 
+  const handleTimerCompOpen = () => {
+    setTimerComponentOpen(true);
+  };
+
   return (
-      <Box className="filterMainContainer">
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-          {[
-            { label: "Status", key: "status", data: statusData },
-            { label: "Priority", key: "priority", data: priorityData },
-            { label: "Department", key: "department", data: taskDepartment },
-            { label: "Assignee", key: "assignee", data: assigneeData },
-            { label: "Project", key: "project", data: taskProject },
-          ].map((filter) =>
-            filterVisibility[filter.key] ? (
-              <Box key={filter.key} className="form-group">
-                <Typography variant="subtitle1" id={filter?.label} className="filterLabletxt">
-                  {filter?.label}
-                </Typography>
-                <TextField
-                  aria-label={`Select ${filter?.label}`}
-                  id={filter?.label}
-                  name={filter?.key}
-                  value={filters[filter?.key]}
-                  onChange={(e) => handleFilterChange(filter?.key, e.target.value)}
-                  {...commonSelectProps}
-                  ref={filterRefs[filter?.key]}
-                  className="textfieldsClass"
-                >
-                  <MenuItem value="">
-                    <span className="notranslate">Select {filter?.label}</span>
-                  </MenuItem>
-                  {filter.data?.map((item) => (
-                    <MenuItem
-                      key={item?.id}
-                      value={filter.key === "assignee" ? `${item?.firstname} ${item?.lastname}` : item?.labelname}
-                    >
-                      {filter.key === "assignee" ? `${item?.firstname} ${item?.lastname}` : item?.labelname}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Box>
-            ) : null
-          )}
-
-          {/* Due Date Filter */}
-          {dueDateVisible && (
-            <Box className="form-group">
-              <Typography variant="subtitle1">Due Date</Typography>
-              <DatePicker
-                name="startDateTime"
-                value={filters.dueDate}
-                onChange={(newDate) => handleFilterChange("dueDate", newDate)}
+    <Box className="filterMainContainer">
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+        {[
+          { label: "Status", key: "status", data: statusData },
+          { label: "Priority", key: "priority", data: priorityData },
+          { label: "Department", key: "department", data: taskDepartment },
+          { label: "Assignee", key: "assignee", data: assigneeData },
+          { label: "Project", key: "project", data: taskProject },
+        ].map((filter) =>
+          filterVisibility[filter.key] ? (
+            <Box key={filter.key} className="form-group">
+              <Typography variant="subtitle1" id={filter?.label} className="filterLabletxt">
+                {filter?.label}
+              </Typography>
+              <TextField
+                aria-label={`Select ${filter?.label}`}
+                id={filter?.label}
+                name={filter?.key}
+                value={filters[filter?.key]}
+                onChange={(e) => handleFilterChange(filter?.key, e.target.value)}
+                {...commonSelectProps}
+                ref={filterRefs[filter?.key]}
                 className="textfieldsClass"
-                {...customDatePickerProps}
-                sx={{ padding: "0" }}
-                format="DD/MM/YYYY" 
-                textField={(params) => (
-                  <TextField {...params} size="small" fullWidth className="textfieldsClass" sx={{ padding: "0" }} />
-                )}
-              />
+              >
+                <MenuItem value="">
+                  <span className="notranslate">Select {filter?.label}</span>
+                </MenuItem>
+                {filter.data?.map((item) => (
+                  <MenuItem
+                    key={item?.id}
+                    value={filter.key === "assignee" ? `${item?.firstname} ${item?.lastname}` : item?.labelname}
+                  >
+                    {filter.key === "assignee" ? `${item?.firstname} ${item?.lastname}` : item?.labelname}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Box>
-          )}
-        </Box>
+          ) : null
+        )}
 
-
-        <Box>
-          <Button size='medium' className="buttonClassname" variant="contained" onClick={handleMenuOpen} sx={{ marginRight: '10px' }}>Show Filter</Button>
-          <Menu
-            anchorEl={anchorEl}
-            open={openMenu}
-            onClose={handleMenuClose}
-          >
-            {[
-              { label: "Status", key: "status" },
-              { label: "Priority", key: "priority" },
-              { label: "Department", key: "department" },
-              { label: "Assignee", key: "assignee" },
-              { label: "Project", key: "project" }
-            ].map(({ key, label }) => (
-              <MenuItem key={key} onClick={() => handleVisibilityChange(key)}>
-                <Checkbox checked={filterVisibility[key]} style={{ color: '#7367f0' }} />
-                <ListItemText primary={label} />
-              </MenuItem>
-            ))}
-            {/* Due Date Visibility Toggle */}
-            <MenuItem>
-              <Checkbox checked={dueDateVisible} onChange={handleDueDateVisibilityChange} style={{ color: '#7367f0' }} />
-              <ListItemText primary="Due Date" />
-            </MenuItem>
-          </Menu>
-          <Button size='medium' className="buttonClassname" variant="contained" onClick={handleClearFilter}>
-            All
-          </Button>
-        </Box>
+        {/* Due Date Filter */}
+        {dueDateVisible && (
+          <Box className="form-group">
+            <Typography variant="subtitle1">Due Date</Typography>
+            <DatePicker
+              name="startDateTime"
+              value={filters.dueDate}
+              onChange={(newDate) => handleFilterChange("dueDate", newDate)}
+              className="textfieldsClass"
+              {...customDatePickerProps}
+              sx={{ padding: "0" }}
+              format="DD/MM/YYYY"
+              textField={(params) => (
+                <TextField {...params} size="small" fullWidth className="textfieldsClass" sx={{ padding: "0" }} />
+              )}
+            />
+          </Box>
+        )}
+        <Button size='small' className="clearAllBtn" variant="text" onClick={handleClearFilter}>
+          clear All
+        </Button>
       </Box>
+
+
+      <Box>
+        <Button size='medium' className="buttonClassname" variant="contained" onClick={handleMenuOpen} sx={{ marginRight: '10px' }}>Show Filter</Button>
+        <Menu
+          anchorEl={anchorEl}
+          open={openMenu}
+          onClose={handleMenuClose}
+        >
+          {[
+            { label: "Status", key: "status" },
+            { label: "Priority", key: "priority" },
+            { label: "Department", key: "department" },
+            { label: "Assignee", key: "assignee" },
+            { label: "Project", key: "project" }
+          ].map(({ key, label }) => (
+            <MenuItem key={key} onClick={() => handleVisibilityChange(key)}>
+              <Checkbox checked={filterVisibility[key]} style={{ color: '#7367f0' }} />
+              <ListItemText primary={label} />
+            </MenuItem>
+          ))}
+          {/* Due Date Visibility Toggle */}
+          <MenuItem>
+            <Checkbox checked={dueDateVisible} onChange={handleDueDateVisibilityChange} style={{ color: '#7367f0' }} />
+            <ListItemText primary="Due Date" />
+          </MenuItem>
+        </Menu>
+        <IconButton
+          size='medium'
+          className="buttonClassname"
+          onClick={handleTimerCompOpen}
+          sx={{ ml: 1 }}
+        >
+          <TimerIcon sx={{ color: '#fff' }} />
+        </IconButton>
+        <TaskTimeTrackerComp />
+      </Box>
+    </Box>
   );
 };
 
