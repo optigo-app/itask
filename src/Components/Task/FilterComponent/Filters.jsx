@@ -100,79 +100,6 @@ const Filters = ({
     setSelectedCategory(null)
   };
 
-  // const commonSelectProps = {
-  //   select: true,
-  //   fullWidth: true,
-  //   size: "small",
-  //   sx: {
-  //     minWidth: 180,
-  //     "& .MuiOutlinedInput-root": {
-  //       borderRadius: "8px",
-  //       "& fieldset": {
-  //         borderRadius: "8px",
-  //       },
-  //     },
-  //   },
-  //   SelectProps: {
-  //     MenuProps: {
-  //       PaperProps: {
-  //         sx: {
-  //           borderRadius: "8px",
-  //           "& .MuiMenuItem-root": {
-  //             fontFamily: '"Public Sans", sans-serif',
-  //             color: "#444050",
-  //             margin: "5px 10px",
-  //             "&:hover": {
-  //               borderRadius: "8px",
-  //               backgroundColor: "#7367f0",
-  //               color: "#fff",
-  //             },
-  //             "&.Mui-selected": {
-  //               backgroundColor: "#80808033",
-  //               borderRadius: "8px",
-  //               "&:hover": {
-  //                 backgroundColor: "#7367f0",
-  //                 color: "#fff",
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   },
-  // };
-
-  // const customDatePickerProps = {
-  //   slotProps: {
-  //     popper: {
-  //       sx: {
-  //         '& .MuiDateCalendar-root': {
-  //           borderRadius: '8px',
-  //           fontFamily: '"Public Sans", sans-serif',
-  //         },
-  //         '& .MuiButtonBase-root, .MuiPickersCalendarHeader-label, .MuiPickersYear-yearButton': {
-  //           color: '#444050',
-  //           fontFamily: '"Public Sans", sans-serif',
-  //         },
-  //         '& .MuiPickersDay-root, .MuiPickersYear-yearButton': {
-  //           '&:hover': {
-  //             backgroundColor: '#7367f0',
-  //             color: '#fff',
-  //           },
-  //         },
-  //         '& .MuiPickersDay-root.Mui-selected, .Mui-selected ': {
-  //           backgroundColor: '#7367f0',
-  //           color: '#fff',
-  //         },
-  //         '& .MuiPickersDay-root.Mui-selected, .MuiPickersYear-yearButton:hover': {
-  //           backgroundColor: '#7367f0',
-  //           color: '#fff',
-  //         },
-  //       },
-  //     },
-  //   },
-  // };
-
   const handleDueDateVisibilityChange = (event) => {
     setDueDateVisible(event.target.checked);
   };
@@ -183,7 +110,7 @@ const Filters = ({
 
   return (
     <Box className="filterMainContainer">
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: 'end', gap: 2 }}>
         {[
           { label: "Status", key: "status", data: statusData },
           { label: "Priority", key: "priority", data: priorityData },

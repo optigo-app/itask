@@ -54,6 +54,7 @@ const Card2 = ({ projects }) => {
                                                     key={teamMember.name}
                                                     title={teamMember.name}
                                                     arrow
+                                                    classes={{ tooltip: 'custom-tooltip' }}
                                                 >
                                                     <Avatar
                                                         key={teamIdx}

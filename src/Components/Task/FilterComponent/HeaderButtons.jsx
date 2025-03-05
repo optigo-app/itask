@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Box, Button, InputAdornment, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Box, Button, IconButton, InputAdornment, TextField, ToggleButton, ToggleButtonGroup, Tooltip } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 import SidebarDrawer from "../../FormComponent/Sidedrawer";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, selectedCategoryAtom } from "../../../Recoil/atom";
+import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, selectedCategoryAtom, filterDrawer, filterDrawer1 } from "../../../Recoil/atom";
 import { toast } from "react-toastify";
-import { Kanban, List, SearchIcon } from "lucide-react";
+import { ChevronsDown, FilterIcon, Kanban, List, SearchIcon } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import './Styles.scss'
 
@@ -30,6 +30,8 @@ const HeaderButtons = ({
   const rootSubrootflagval = useRecoilValue(rootSubrootflag)
   const [view, setView] = useState(activeButton ?? 'table');
   const [selectedCategory, setSelectedCategory] = useRecoilState(selectedCategoryAtom);
+  const [filterDrawerOpen, setFilterDrawerOpen] = useRecoilState(filterDrawer);
+  const [filterDrawerOpen1, setFilterDrawerOpen1] = useRecoilState(filterDrawer1);
 
 
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
@@ -73,6 +75,14 @@ const HeaderButtons = ({
     onFilterChange(key, value);
   };
 
+  const handleFilterDrOpen = () => {
+    setFilterDrawerOpen(!filterDrawerOpen);
+  };
+
+  const handleFilterDrOpen1 = () => {
+    setFilterDrawerOpen1(!filterDrawerOpen1);
+  }
+
   const ViewToggleButtons = ({ view, onViewChange }) => {
     return (
       <ToggleButtonGroup
@@ -94,7 +104,7 @@ const HeaderButtons = ({
 
   return (
     <Box className="headerButtons">
-      <Box sx={{ display: "flex", gap: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: 'start', alignItems: 'end', gap: 2 }}>
         {taskCategory?.map((category) => (
           <Button
             key={category?.id}
@@ -127,6 +137,54 @@ const HeaderButtons = ({
             aria-label='Search tasks...'
           />
         </Box>
+        <Tooltip
+          placement="top"
+          title="Filter tasks"
+          arrow
+          classes={{ tooltip: 'custom-tooltip' }}
+        >
+          <IconButton
+            aria-label="Filter tasks"
+            onClick={handleFilterDrOpen}
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: filterDrawerOpen ? '#ffd700' : 'white',
+              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+              '&:hover': {
+                backgroundColor: '#f5f5f5',
+                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
+              }
+            }}
+          >
+            <FilterIcon size={20} />
+          </IconButton>
+        </Tooltip>
+        <Tooltip
+          placement="top"
+          title="Filter tasks"
+          arrow
+          classes={{ tooltip: 'custom-tooltip' }}
+        >
+          <IconButton
+            aria-label="Filter tasks"
+            onClick={handleFilterDrOpen1}
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: filterDrawerOpen ? '#ffd700' : 'white',
+              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+              '&:hover': {
+                backgroundColor: '#f5f5f5',
+                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
+              }
+            }}
+          >
+            <ChevronsDown size={20} />
+          </IconButton>
+        </Tooltip>
       </Box>
       <Box sx={{ display: "flex", gap: 2 }}>
         {location?.pathname?.includes('/tasks') &&

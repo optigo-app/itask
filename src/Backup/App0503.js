@@ -1,32 +1,32 @@
-import React, { useEffect, useState, lazy, Suspense } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { Box, useMediaQuery, CircularProgress } from '@mui/material';
-import { RecoilRoot } from 'recoil';
-import { ToastContainer } from 'react-toastify';
+import { Box, useMediaQuery } from '@mui/material';
+import Sidebar from './Components/NavSidebar/Sidebar';
+import Header from './Components/Header/Header';
+import Home from './Pages/Home/Home';
+import Inbox from './Pages/Inbox/Inbox';
+import Calendar from './Pages/Calendar/CalendarPage';
+import Meeting from './Pages/Meeting/Meeting';
+import Task from './Pages/Task/Task';
+import Project from './Pages/Project/Project';
+import Masters from './Pages/Master/Masters';
+import { taskInit } from './Api/InitialApi/TaskInitApi';
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { taskInit } from './Api/InitialApi/TaskInitApi';
-import { fetchMasterGlFunc } from './Utils/globalfun';
+import { RecoilRoot } from 'recoil';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
-
-// Lazy Loaded Components
-const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
-const Header = lazy(() => import('./Components/Header/Header'));
-const Home = lazy(() => import('./Pages/Home/Home'));
-const Inbox = lazy(() => import('./Pages/Inbox/Inbox'));
-const Calendar = lazy(() => import('./Pages/Calendar/CalendarPage'));
-const Meeting = lazy(() => import('./Pages/Meeting/Meeting'));
-const Task = lazy(() => import('./Pages/Task/Task'));
-const Project = lazy(() => import('./Pages/Project/Project'));
-const Masters = lazy(() => import('./Pages/Master/Masters'));
-const TaskDetails = lazy(() => import('./Components/Task/TaskDetails/TaskDetails'));
-const PagenotFound = lazy(() => import('./Pages/404Page/PagenotFound'));
-const MetaDataSet = lazy(() => import('./Utils/MetaData/MetaDataSet'));
-const Profile = lazy(() => import('./Pages/ProfilePage/Profile'));
-const LoginForm = lazy(() => import('./Components/Auth/LoginForm'));
-const UnassignedTaskList = lazy(() => import('./Pages/Task/UnAssignedTask/UnassignedTaskList'));
-const TaskTimeTracker = lazy(() => import('./DemoCode/TaskTimeTracker'));
+import TaskDetails from './Components/Task/TaskDetails/TaskDetails';
+import PagenotFound from './Pages/404Page/PagenotFound';
+import MetaDataSet from './Utils/MetaData/MetaDataSet';
+import Profile from './Pages/ProfilePage/Profile';
+import LoginForm from './Components/Auth/LoginForm';
+import { fetchMasterGlFunc } from './Utils/globalfun';
+import UnassignedTaskList from './Pages/Task/UnAssignedTask/UnassignedTaskList';
+import CommentBox from './DemoCode/TaskGrid';
+import TaskGrid from './DemoCode/TaskGrid';
+import TaskTimeTracker from './DemoCode/TaskTimeTracker';
 
 const Layout = ({ children }) => {
     const isMobile = useMediaQuery('(max-width:768px)');
@@ -35,10 +35,10 @@ const Layout = ({ children }) => {
 
     return (
         <Box sx={{ display: isMobile ? 'block' : 'flex', overflow: "hidden" }}>
-            {!hideLayout && <Suspense fallback={<LoadingBackdrop />}><Sidebar /></Suspense>}
+            {!hideLayout && <Sidebar />}
             <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px 20px', position: 'relative', width: isMobile ? '90%' : '80%' }}>
-                {!hideLayout && <Suspense fallback={<LoadingBackdrop />}><Header /></Suspense>}
-                <Suspense fallback={<LoadingBackdrop />}><MetaDataSet /></Suspense>
+                {!hideLayout && <Header />}
+                <MetaDataSet />
                 {children}
                 <Box
                     sx={{
@@ -67,7 +67,9 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const App = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem("isLoggedIn") === "true");
+    const [isAuthenticated, setIsAuthenticated] = useState(
+        localStorage.getItem("isLoggedIn") === "true"
+    );
 
     useEffect(() => {
         const checkAndInit = async () => {
@@ -123,10 +125,13 @@ const App = () => {
             <RecoilRoot>
                 <Router>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
+                        <DemoContainer components={['DateTimePicker']} sx={{ paddingTop: '0' }}>
                             <Layout>
                                 <Routes>
-                                    <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginForm />} />
+                                    <Route
+                                        path="/login"
+                                        element={isAuthenticated ? <Navigate to="/" replace /> : <LoginForm />}
+                                    />
                                     <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                                     <Route path="/projects" element={<ProtectedRoute><Project /></ProtectedRoute>} />
                                     <Route path="/tasks/*" element={<ProtectedRoute><Task /></ProtectedRoute>} />
@@ -141,7 +146,7 @@ const App = () => {
                                     <Route path="/test" element={<ProtectedRoute><TaskTimeTracker /></ProtectedRoute>} />
                                 </Routes>
                             </Layout>
-                        </Suspense>
+                        </DemoContainer>
                     </LocalizationProvider>
                 </Router>
             </RecoilRoot>

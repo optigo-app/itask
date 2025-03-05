@@ -275,113 +275,6 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
         return subtasks?.map((subtask, subtaskIndex) => (
             <React.Fragment key={`${parentIndex}-${subtaskIndex}`}>
                 <TableRow>
-
-                    {/* <TableCell
-                        onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid)}
-                        onMouseLeave={handleSubtaskMouseLeave}
-                    >
-                        <div style={{ paddingLeft: `${10 * (parentIndex.split('-').length)}px`, display: "flex", justifyContent: "space-between" }}>
-                            <div>
-                                <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
-                                    <div style={{ display: "flex", alignItems: "center" }}>
-                                        <IconButton
-                                            id="toggle-subtask"
-                                            aria-label="toggle-subtask"
-                                            aria-labelledby="toggle-subtask"
-                                            size="small"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                toggleSubtasks(`${parentIndex}-${subtaskIndex}`);
-                                            }}
-                                        >
-                                            <PlayArrowIcon
-                                                style={{
-                                                    color: subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? "#444050" : "#c7c7c7",
-                                                    fontSize: "1.5rem",
-                                                    transform: subtaskVisibility[`${parentIndex}-${subtaskIndex}`]
-                                                        ? "rotate(90deg)"
-                                                        : "rotate(0deg)",
-                                                    transition: "transform 0.2s ease-in-out, color 0.2s ease-in-out",
-                                                }}
-                                            />
-                                        </IconButton>
-                                        <span>
-                                            {subtask?.taskname?.length > 20
-                                                ? `${subtask?.taskname.slice(0, 50)}...`
-                                                : subtask?.taskname}
-                                        </span>
-                                    </div>
-                                    {subtask?.subtasks?.length > 0 && (
-                                        <div style={{
-                                            backgroundColor: "#7d7f8799",
-                                            color: '#fff',
-                                            width: 'fit-content',
-                                            padding: '0.1rem 0.4rem',
-                                            borderRadius: '5px',
-                                            textAlign: 'center',
-                                            fontSize: '10px',
-                                            fontWeight: '500',
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            marginTop: '-15px'
-                                        }}>
-                                            {subtask?.subtasks?.length}
-                                        </div>
-                                    )}
-                                </div>
-                                <div style={{ marginLeft: '28px', display: 'flex', alignItems: 'center' }}>
-                                    {subtaskIndex % 2 === 0 && (
-                                        <Chip
-                                            label={subtask?.ticket || 'A00161'}
-                                            variant="outlined"
-                                            size="small"
-                                            sx={{ background: '#d8d8d8', fontSize: '11px', height: '20px', color: '#8863FB', marginRight: '8px' }}
-                                        />
-                                    )}
-                                    <IconButton
-                                        onClick={() => handleTaskFavorite(subtask)}
-                                        size="small"
-                                        aria-label="add-favorite"
-                                        aria-labelledby="add-favorite"
-                                        sx={{
-                                            padding: '4px',
-                                            boxShadow: subtask?.isFav
-                                                ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
-                                                : '0px 2px 8px rgba(99, 99, 99, 0.2)',
-                                            transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
-                                            background: subtask?.isFav ? '#FFD700' : '#fff',
-                                            '&:hover': {
-                                                boxShadow: subtask?.isFav
-                                                    ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
-                                                    : '0px 4px 12px rgba(99, 99, 99, 0.3)',
-                                                background: subtask?.isFav ? '#FFC107' : '#f5f5f5',
-                                            },
-                                        }}
-                                    >
-                                        {subtask?.isFav ? (
-                                            <StarIcon sx={{ fontSize: '18px', color: '#fff' }} />
-                                        ) : (
-                                            <StarBorderIcon sx={{ fontSize: '18px', color: '#7d7f85' }} />
-                                        )}
-                                    </IconButton>
-                                </div>
-                            </div>
-                            <IconButton
-                                id="toggle-task"
-                                aria-label="toggle-task"
-                                aria-labelledby="toggle-tasl"
-                                size="small"
-                                onClick={() => handleAddSubtask(subtask, { Task: 'subroot' })}
-                                style={{
-                                    visibility: hoveredSubtaskId === subtask?.taskid ? "visible" : "hidden",
-                                }}
-                            >
-                                <CirclePlus size={20} color="#7367f0" />
-                            </IconButton>
-                        </div>
-                    </TableCell> */}
-
                     <TableCell
                         onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid)}
                         onMouseLeave={handleSubtaskMouseLeave}
@@ -390,7 +283,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                             <div>
                                 <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
                                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "30px" }}>
-                                        {/* <IconButton
+                                        <IconButton
                                             id="toggle-task"
                                             aria-label="toggle-task"
                                             aria-labelledby="toggle-task"
@@ -408,9 +301,9 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                     transition: "transform 0.2s ease-in-out",
                                                 }}
                                             />
-                                        </IconButton> */}
+                                        </IconButton>
 
-                                        <IconButton
+                                        {/* <IconButton
                                             id="toggle-task"
                                             aria-label="toggle-task"
                                             aria-labelledby="toggle-task"
@@ -419,18 +312,18 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                 e.stopPropagation();
                                                 toggleSubtasks(`${parentIndex}-${subtaskIndex}`);
                                             }}
-                                        sx={{
-                                            borderRadius: "50%",
-                                            boxShadow: subtaskVisibility[`${parentIndex}-${subtaskIndex}`]
-                                                ? "0px 4px 8px rgba(0,0,0,0.3)"
-                                                : "0px 2px 5px rgba(0,0,0,0.2)",
-                                            padding: "3px",
-                                            backgroundColor: subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? "#FFD700" : "transparent",
-                                            transition: "all 0.3s ease-in-out",
-                                            "&:hover": {
-                                                backgroundColor: subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? "#FFC107" : "#f0f0f0",
-                                            },
-                                        }}
+                                            sx={{
+                                                borderRadius: "50%",
+                                                boxShadow: subtaskVisibility[`${parentIndex}-${subtaskIndex}`]
+                                                    ? "0px 4px 8px rgba(0,0,0,0.3)"
+                                                    : "0px 2px 5px rgba(0,0,0,0.2)",
+                                                padding: "3px",
+                                                backgroundColor: subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? "#FFD700" : "transparent",
+                                                transition: "all 0.3s ease-in-out",
+                                                "&:hover": {
+                                                    backgroundColor: subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? "#FFC107" : "#f0f0f0",
+                                                },
+                                            }}
                                         >
                                             {subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? (
                                                 <Minus
@@ -447,14 +340,14 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                     }}
                                                 />
                                             )}
-                                        </IconButton>
+                                        </IconButton> */}
                                     </div>
                                     <div>
                                         <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
                                             <span style={{ flex: 1 }}>
                                                 {subtask?.taskname?.length > 20 ? `${subtask?.taskname.slice(0, 50)}...` : subtask?.taskname}
                                             </span>
-                                            {/* {subtask?.subtasks?.length > 0 && (
+                                            {subtask?.subtasks?.length > 0 && (
                                                 <div style={{
                                                     backgroundColor: "#7d7f8799",
                                                     color: '#fff',
@@ -470,7 +363,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                 }}>
                                                     {subtask?.subtasks?.length}
                                                 </div>
-                                            )} */}
+                                            )}
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'end' }}>
                                             {subtaskIndex % 2 === 0 && subtask?.isburning == 1 &&
@@ -550,42 +443,68 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                             fontSize: '13.5px',
                             fontWeight: '500',
                             display: 'flex',
-                            justifyContent: 'center',
+                            justifyContent: 'start',
                             alignItems: 'center',
                         }}>
                             {subtask?.status}
                         </div>
                     </TableCell>
-                    <TableCell>
-                        <AvatarGroup max={10}
-                            sx={{
-                                flexDirection: 'row !important',
-                                '& .MuiAvatar-root': {
-                                    width: 22,
-                                    height: 22,
-                                    fontSize: '0.8rem',
-                                    cursor: 'pointer',
-                                    border: 'none',
-                                    transition: 'transform 0.3s ease-in-out',
-                                    '&:hover': {
-                                        transform: 'translateY(-8px)',
+                    <TableCell
+                        onMouseEnter={() => handleTaskMouseEnter(subtask?.taskid, { Tbcell: 'Assignee' })}
+                        onMouseLeave={handleTaskMouseLeave}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <AvatarGroup max={10}
+                                spacing={2}
+                                sx={{
+                                    '& .MuiAvatar-root': {
+                                        width: 22,
+                                        height: 22,
+                                        fontSize: '0.8rem',
+                                        cursor: 'pointer',
+                                        border: 'none',
+                                        transition: 'transform 0.3s ease-in-out',
+                                        '&:hover': {
+                                            transform: 'scale(1.2)',
+                                            zIndex: 10
+                                        }
                                     }
-                                }
-                            }}
-                        >
-                            {subtask?.assignee?.map((assignee, teamIdx) => (
-                                <Avatar
-                                    key={teamIdx}
-                                    alt={assignee}
-                                    src={assignee.avatar}
-                                    sx={{
-                                        backgroundColor: background(assignee),
-                                    }}
-                                >
-                                    {!assignee.avatar && assignee.charAt(0)}
-                                </Avatar>
-                            ))}
-                        </AvatarGroup>
+                                }}
+                            >
+                                {subtask?.assignee?.map((assignee, teamIdx) => (
+                                    <Tooltip
+                                        placement="top"
+                                        key={assignee?.id}
+                                        title={assignee?.name}
+                                        arrow
+                                        classes={{ tooltip: 'custom-tooltip' }}
+                                    >
+                                        <Avatar
+                                            key={teamIdx}
+                                            alt={assignee?.name}
+                                            src={assignee.avatar || null}
+                                            sx={{
+                                                backgroundColor: background(assignee?.name),
+                                            }}
+                                        >
+                                            {!assignee.avatar && assignee.charAt(0)}
+                                        </Avatar>
+                                    </Tooltip>
+                                ))}
+                            </AvatarGroup>
+                            <IconButton
+                                id="add-task"
+                                aria-label="add-task"
+                                aria-labelledby="add-task"
+                                size="small"
+                                onClick={() => handleAssigneeShortcut(subtask, { Task: 'root' })}
+                                style={{
+                                    visibility: hoveredTaskId === subtask?.taskid && hoveredColumnname == 'Assignee' ? "visible" : "hidden",
+                                }}
+                            >
+                                <CirclePlus size={20} color="#7367f0" />
+                            </IconButton>
+                        </Box>
                     </TableCell>
                     <TableCell>{subtask?.DeadLineDate ? formatDate2(subtask.DeadLineDate) : 'No deadline set'}</TableCell>
                     <TableCell>
@@ -599,7 +518,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                             fontSize: '13.5px',
                             fontWeight: '500',
                             display: 'flex',
-                            justifyContent: 'center',
+                            justifyContent: 'start',
                             alignItems: 'center',
                         }}>
                             {subtask?.priority}
@@ -641,7 +560,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
 
     return (
         <>
-           {(isLoading === null || isLoading || (!data && isLoading !== false)) ? (
+            {(isLoading === null || isLoading || (!data && isLoading !== false)) ? (
                 <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
             ) :
                 <TableContainer
@@ -653,9 +572,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                     }}
                     className="TaskTVMain"
                 >
-
-                    <Table size="small" aria-label="task details"
-                    >
+                    <Table size="small" aria-label="task details">
                         <TableHead>
                             <TableRow>
                                 {Object.keys(columnWidths).map((key) => (
@@ -695,7 +612,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                         <div>
                                                             <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
                                                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "30px" }}>
-                                                                    {/* <IconButton
+                                                                    <IconButton
                                                                         id="toggle-task"
                                                                         aria-label="toggle-task"
                                                                         aria-labelledby="toggle-task"
@@ -710,25 +627,25 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                                                 transition: "transform 0.2s ease-in-out",
                                                                             }}
                                                                         />
-                                                                    </IconButton> */}
-                                                                    <IconButton
+                                                                    </IconButton>
+                                                                    {/* <IconButton
                                                                         id="toggle-task"
                                                                         aria-label="toggle-task"
                                                                         aria-labelledby="toggle-task"
                                                                         size="small"
                                                                         onClick={() => toggleSubtasks(taskIndex)}
-                                                                    sx={{
-                                                                        borderRadius: "50%",
-                                                                        boxShadow: subtaskVisibility[taskIndex]
-                                                                            ? "0px 4px 8px rgba(0,0,0,0.3)"
-                                                                            : "0px 2px 5px rgba(0,0,0,0.2)",
-                                                                        padding: "3px",
-                                                                        backgroundColor: subtaskVisibility[taskIndex] ? "#FFD700" : "transparent",
-                                                                        transition: "all 0.3s ease-in-out",
-                                                                        "&:hover": {
-                                                                            backgroundColor: subtaskVisibility[taskIndex] ? "#FFC107" : "#f0f0f0",
-                                                                        },
-                                                                    }}
+                                                                        sx={{
+                                                                            borderRadius: "50%",
+                                                                            boxShadow: subtaskVisibility[taskIndex]
+                                                                                ? "0px 4px 8px rgba(0,0,0,0.3)"
+                                                                                : "0px 2px 5px rgba(0,0,0,0.2)",
+                                                                            padding: "3px",
+                                                                            backgroundColor: subtaskVisibility[taskIndex] ? "#FFD700" : "transparent",
+                                                                            transition: "all 0.3s ease-in-out",
+                                                                            "&:hover": {
+                                                                                backgroundColor: subtaskVisibility[taskIndex] ? "#FFC107" : "#f0f0f0",
+                                                                            },
+                                                                        }}
                                                                     >
                                                                         {subtaskVisibility[taskIndex] ? (
                                                                             <Minus
@@ -745,14 +662,14 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                                                 }}
                                                                             />
                                                                         )}
-                                                                    </IconButton>
+                                                                    </IconButton> */}
                                                                 </div>
                                                                 <div>
                                                                     <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
                                                                         <span style={{ flex: 1 }}>
                                                                             {task?.taskname?.length > 20 ? `${task?.taskname.slice(0, 50)}...` : task?.taskname}
                                                                         </span>
-                                                                        {/* {task?.subtasks?.length > 0 && (
+                                                                        {task?.subtasks?.length > 0 && (
                                                                             <div style={{
                                                                                 backgroundColor: "#7d7f8799",
                                                                                 color: '#fff',
@@ -768,7 +685,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                                             }}>
                                                                                 {task?.subtasks?.length}
                                                                             </div>
-                                                                        )} */}
+                                                                        )}
                                                                     </div>
                                                                     <div style={{ display: 'flex', alignItems: 'end' }}>
                                                                         {taskIndex % 2 === 0 && task?.isburning == 1 &&
@@ -841,7 +758,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                         fontSize: '13.5px',
                                                         fontWeight: '500',
                                                         display: 'flex',
-                                                        justifyContent: 'center',
+                                                        justifyContent: 'start',
                                                         alignItems: 'center',
                                                     }}>
                                                         {task?.status}
@@ -870,7 +787,13 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                             }}
                                                         >
                                                             {task?.assignee?.map((assignee, teamIdx) => (
-                                                                <Tooltip className="custom-tooltip" placement="top" key={assignee?.id} title={assignee?.name} arrow>
+                                                                <Tooltip
+                                                                    placement="top"
+                                                                    key={assignee?.id}
+                                                                    title={assignee?.name}
+                                                                    arrow
+                                                                    classes={{ tooltip: 'custom-tooltip' }}
+                                                                >
                                                                     <Avatar
                                                                         key={teamIdx}
                                                                         alt={assignee?.name}
@@ -910,7 +833,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                         fontSize: '13.5px',
                                                         fontWeight: '500',
                                                         display: 'flex',
-                                                        justifyContent: 'center',
+                                                        justifyContent: 'start',
                                                         alignItems: 'center',
                                                     }}>
                                                         {task?.priority}
@@ -930,7 +853,13 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                             { id: 'view', label: 'View Task', icon: <Eye size={20} />, onClick: () => handleViewTask(task, { Task: 'root' }) },
                                                             { id: 'edit', label: 'Edit Task', icon: <Pencil size={20} />, onClick: () => handleEditTask(task, { Task: 'root' }) }
                                                         ]?.map(({ id, label, icon, onClick, isRunning }) => (
-                                                            <Tooltip key={id} title={label} arrow placement="top" classes={{ tooltip: "custom-tooltip" }}>
+                                                            <Tooltip
+                                                                key={id}
+                                                                title={label}
+                                                                arrow
+                                                                placement="top"
+                                                                classes={{ tooltip: "custom-tooltip" }}
+                                                            >
                                                                 <IconButton
                                                                     id={id}
                                                                     aria-label={label}

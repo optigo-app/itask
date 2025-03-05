@@ -82,7 +82,7 @@ const UnAssignedTaskList = ({ unassignedTasks, onPickTask }) => {
                   startIcon={<AddCircle />}
                   onClick={() => handlePickTaskClick(task)}
                 >
-                  Pick Task
+                  Assign to Me
                 </Button>
               </CardActions>
             </Card>
@@ -93,6 +93,8 @@ const UnAssignedTaskList = ({ unassignedTasks, onPickTask }) => {
         open={showConfirmDialog}
         onClose={handleCloseDialog}
         onConfirm={confirmPickTask}
+        confirmLabel="Assign to Me"
+        cancelLabel="Cancel"
         title="Confirm"
         content="Are you sure you want to pick this task?"
       />

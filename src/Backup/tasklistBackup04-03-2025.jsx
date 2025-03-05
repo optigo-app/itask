@@ -241,7 +241,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                     boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
                 }}
                 >
-                    <Typography variant="caption" sx={{ fontSize:'12.8px', color: '#333 !important' }}>
+                    <Typography variant="caption" sx={{ fontSize: '12.8px', color: '#333 !important' }}>
                         {task.estimate[0]}
                     </Typography>
                 </Box>
@@ -252,7 +252,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                     boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
                 }}
                 >
-                    <Typography variant="caption" sx={{ fontSize:'12.8px', color: '#fff !important' }}>
+                    <Typography variant="caption" sx={{ fontSize: '12.8px', color: '#fff !important' }}>
                         {task.estimate[1]}
                     </Typography>
                 </Box>
@@ -263,7 +263,7 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                     boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
                 }}
                 >
-                    <Typography variant="caption" sx={{ fontSize:'12.8px', color: '#fff !important' }}>
+                    <Typography variant="caption" sx={{ fontSize: '12.8px', color: '#fff !important' }}>
                         {task.estimate[2]}
                     </Typography>
                 </Box>
@@ -675,7 +675,12 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                             }}
                                                         >
                                                             {task?.assignee?.map((assignee, teamIdx) => (
-                                                                <Tooltip placement="top" key={assignee} title={assignee} arrow>
+                                                                <Tooltip
+                                                                    classes={{ tooltip: 'custom-tooltip' }}
+                                                                    placement="top"
+                                                                    key={assignee}
+                                                                    title={assignee}
+                                                                    arrow>
                                                                     <Avatar
                                                                         key={teamIdx}
                                                                         alt={assignee}
@@ -735,7 +740,11 @@ const TableView = ({ data, handleTaskFavorite, isLoading }) => {
                                                             { id: 'view', label: 'View Task', icon: <Eye size={20} />, onClick: () => handleViewTask(task, { Task: 'root' }) },
                                                             { id: 'edit', label: 'Edit Task', icon: <Pencil size={20} />, onClick: () => handleEditTask(task, { Task: 'root' }) }
                                                         ]?.map(({ id, label, icon, onClick, isRunning }) => (
-                                                            <Tooltip key={id} title={label} arrow placement="top" classes={{ tooltip: "custom-tooltip" }}>
+                                                            <Tooltip
+                                                                key={id}
+                                                                title={label}
+                                                                arrow placement="top"
+                                                                classes={{ tooltip: "custom-tooltip" }}>
                                                                 <IconButton
                                                                     id={id}
                                                                     aria-label={label}
