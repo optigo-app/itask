@@ -9,7 +9,7 @@ import { fetchMasterGlFunc, formatDate, formatDate2 } from "../../Utils/globalfu
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
-import {motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import TaskJson from "../../Data/taskData.json"
 
 
@@ -206,7 +206,8 @@ const Task = () => {
 
       const taskData = await fetchTaskDataApi(selectedRow ?? {},);
       const labeledTasks = mapTaskLabels(taskData);
-      const finalTaskData = [...labeledTasks,  ...TaskJson]
+      // const finalTaskData = [...labeledTasks, ...TaskJson]
+      const finalTaskData = [...labeledTasks]
       console.log('finalTaskData: ', finalTaskData);
 
       const enhanceTask = (task) => {
@@ -218,6 +219,7 @@ const Task = () => {
         const assignee = assigneeJosn;
         const estimate = ['20', '30', '40']
         const isburning = 1;
+        const isFreezed = 0;
 
         const enhancedSubtasks = task?.subtasks?.map((subtask) => ({
           ...enhanceTask(subtask),
@@ -237,6 +239,7 @@ const Task = () => {
           estimate: estimate,
           isburning: isburning,
           subtaskflag: 0,
+          isFreezed: isFreezed,
           isUpdated: false,
         };
       };
@@ -245,23 +248,19 @@ const Task = () => {
 
       setTasks((prevTasks) => {
         const taskMap = new Map();
-
-        // Map the enhanced tasks by their task IDs
         enhancedTasks.forEach((task) => {
           taskMap.set(task.taskid, task);
         });
-
         const mergeTasks = (tasks = []) => {
           return tasks.map((task) => {
             const updatedTask = taskMap.get(task.taskid);
             const existingSubtasks = task.subtasks || [];
             const updatedSubtasks = updatedTask?.subtasks || [];
 
-            // Avoid recursion if there are no subtasks to merge
             if (!Array.isArray(existingSubtasks) || existingSubtasks.length === 0) {
               return {
                 ...task,
-                ...(updatedTask || {}), // Apply updated task data if available
+                ...(updatedTask || {}),
               };
             }
 
@@ -272,13 +271,10 @@ const Task = () => {
             };
           });
         };
-
         const newTasks = mergeTasks(prevTasks);
-        // If the previous state is empty, just use the new tasks directly
         if (!Array.isArray(prevTasks) || prevTasks.length === 0) {
           return [...enhancedTasks];
         }
-
         return newTasks;
       });
 
@@ -467,6 +463,29 @@ const Task = () => {
     setTasks((prevTasks) => updateTasksRecursively(prevTasks));
   };
 
+  const handleFreezeTask = (taskToUpdate) => {
+    const updateTasksRecursively = (tasks) => {
+      return tasks?.map((task) => {
+        if (task.taskid === taskToUpdate.taskid) {
+          return {
+            ...task,
+            isFreezed: !task.isFreezed,
+          };
+        }
+
+        if (task.subtasks && task.subtasks.length > 0) {
+          return {
+            ...task,
+            subtasks: updateTasksRecursively(task.subtasks),
+          };
+        }
+
+        return task;
+      });
+    };
+
+    setTasks((prevTasks) => updateTasksRecursively(prevTasks));
+  }
 
   const [drawerOpen1, setDrawerOpen1] = useRecoilState(filterDrawer1);
 
@@ -494,13 +513,13 @@ const Task = () => {
       />
 
       {/* Divider */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {drawerOpen1 && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
           >
             <div
               style={{
@@ -510,7 +529,7 @@ const Task = () => {
               }}
             />
 
-            {/* Filters */}
+            {/* Filters Component */}
             <Filters
               {...filters}
               onFilterChange={handleFilterChange}
@@ -526,6 +545,7 @@ const Task = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
 
       <FiltersDrawer {...filters}
         filters={filters}
@@ -558,34 +578,50 @@ const Task = () => {
       />
 
       {/* View Components */}
-      <Suspense fallback={<></>}>
-        {activeButton === "table" && (
-          <TaskTable
-            data={filteredData ?? null}
-            isLoading={isTaskLoading}
-            masterData={masterData}
-            handleTaskFavorite={handleTaskFavorite}
-          />
+      <AnimatePresence mode="wait">
+        {activeButton && (
+          <motion.div
+            key={activeButton}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: drawerOpen1 ? 0 : 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+          >
+            <Suspense fallback={<></>}>
+              {activeButton === "table" && (
+                <TaskTable
+                  data={filteredData ?? null}
+                  isLoading={isTaskLoading}
+                  masterData={masterData}
+                  handleTaskFavorite={handleTaskFavorite}
+                  handleFreezeTask={handleFreezeTask}
+                />
+              )}
+
+              {activeButton === "kanban" && (
+                <KanbanView
+                  taskdata={filteredData ?? null}
+                  isLoading={isTaskLoading}
+                  masterData={masterData}
+                  statusData={statusData}
+                  handleTaskFavorite={handleTaskFavorite}
+                  handleFreezeTask={handleFreezeTask}
+                />
+              )}
+
+              {activeButton === "card" && (
+                <CardView
+                  isLoading={isTaskLoading}
+                  masterData={masterData}
+                  handleTaskFavorite={handleTaskFavorite}
+                  handleFreezeTask={handleFreezeTask}
+                />
+              )}
+            </Suspense>
+          </motion.div>
         )}
+      </AnimatePresence>
 
-        {activeButton === "kanban" &&
-          <KanbanView
-            taskdata={filteredData ?? null}
-            isLoading={isTaskLoading}
-            masterData={masterData}
-            statusData={statusData}
-            handleTaskFavorite={handleTaskFavorite}
-          />
-        }
-
-        {activeButton === "card" &&
-          <CardView
-            isLoading={isTaskLoading}
-            masterData={masterData}
-            handleTaskFavorite={handleTaskFavorite}
-          />
-        }
-      </Suspense>
     </Box>
   );
 };

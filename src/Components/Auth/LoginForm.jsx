@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Box, TextField, Button, Typography, Paper, useMediaQuery, InputAdornment, IconButton } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import loginImage from "../../Assests/loginImage.jpg";
+import loginImage from "../../Assests/loginImage.webp";
 import { commonTextFieldProps } from "../../Utils/globalfun";
 import { useNavigate } from "react-router-dom";
 

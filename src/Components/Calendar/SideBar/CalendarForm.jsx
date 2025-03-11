@@ -16,7 +16,7 @@ import {
     ToggleButton,
     Tooltip,
 } from "@mui/material";
-import { CircleX, Component, List, Logs } from "lucide-react";
+import { CircleX, Component, Edit, List, Logs, X } from "lucide-react";
 import "./CalendarForm.scss";
 import { useRecoilValue } from "recoil";
 import { CalformData } from "../../../Recoil/atom";
@@ -28,6 +28,8 @@ import { useLocation } from "react-router-dom";
 import CustomSwitch from "../../../Utils/Common/CustomSwitch";
 import { commonSelectProps, commonTextFieldProps } from "../../../Utils/globalfun";
 import MultiTaskInput from "../../FormComponent/MultiTaskInput";
+import ProjectModuleList from "../../../DemoCode/ProjectModuleList";
+import projectJson from "../../../Data/projects.json"
 
 const mulTASK_OPTIONS = [
     { id: 3, value: "multi1", label: "Multi-input Task", icon: <List size={20} /> },
@@ -47,6 +49,8 @@ const CalendarForm = ({
     const [tasksubType, setTaskSubType] = useState("multi1");
     const CalformDataValue = useRecoilValue(CalformData);
     const [assignees, setAssignees] = React.useState([]);
+    const [isEditing, setIsEditing] = useState(false);
+    const [selectedModule, setSelectedModule] = useState(null);
     const [formValues, setFormValues] = React.useState({
         id: '',
         title: "",
@@ -192,6 +196,19 @@ const CalendarForm = ({
         }));
     }
 
+    const toggleEditing = () => {
+        setIsEditing(!isEditing);
+    };
+
+    const handleModuleClick = (module) => {
+        setSelectedModule(module);
+        setIsEditing(!isEditing);
+    };
+
+    const handleRemoveModule = () => {
+        setSelectedModule(null);
+    }
+
     return (
         <Drawer anchor="right" open={open} onClose={handleClear} className="MainDrawer">
             <Box className="MD_WrpDiv">
@@ -213,6 +230,27 @@ const CalendarForm = ({
                         }}
                     />
                     <Box className="cal_toogleBtn">
+                        <Box>
+                            {/* {view === "meeting" &&
+                                <>
+                                    {selectedModule ? (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <Typography variant="body1" className="project-label">{selectedModule}</Typography>
+                                            <IconButton onClick={handleRemoveModule} className="remove-module-btn">
+                                                <X size={15} />
+                                            </IconButton>
+                                        </Box>
+                                    ) :
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <Typography variant="body2" className="project-label">Select Project</Typography>
+                                            <IconButton onClick={toggleEditing}>
+                                                {isEditing ? <X size={18} /> : <Edit size={18} />}
+                                            </IconButton>
+                                        </Box>
+                                    }
+                                </>
+                            } */}
+                        </Box>
                         <ToggleButtonGroup
                             value={view}
                             exclusive
@@ -227,8 +265,18 @@ const CalendarForm = ({
                             </ToggleButton>
                         </ToggleButtonGroup>
                     </Box>
+                    {view !== "meeting" &&
+                        <Grid item xs={12}>
+                            <ProjectModuleList selectedModule={selectedModule} handleModuleClick={handleModuleClick} />
+                        </Grid>
+                    }
                     {view === "meeting" ? (
                         <Box className="drawer-form">
+                            <Grid item xs={12}>
+                                {isEditing &&
+                                    <ProjectModuleList selectedModule={selectedModule} handleModuleClick={handleModuleClick} />
+                                }
+                            </Grid>
                             <Grid container spacing={1} className="form-row">
                                 {/* Task Name and Due Date */}
                                 <Grid item xs={12}>
@@ -246,6 +294,31 @@ const CalendarForm = ({
                                             value={formValues.title}
                                             onChange={handleChange}
                                             {...commonTextFieldProps}
+                                        />
+                                    </Box>
+                                </Grid>
+
+                                {/* project */}
+                                <Grid item xs={12}>
+                                    <Box className="form-group">
+                                        <Typography
+                                            variant="subtitle1"
+                                            className="form-label"
+                                            htmlFor="category"
+                                        >
+                                            Project/Module
+                                        </Typography>
+                                        <Autocomplete
+                                            options={projectJson}
+                                            getOptionLabel={(option) => `${option?.taskPr}/${option?.module}`}
+                                            {...commonTextFieldProps}
+                                            renderInput={(params) => <TextField {...params} variant="outlined" placeholder="Select Project/Module" />}
+                                            onChange={(event, newValue) => {
+                                                if (newValue) {
+                                                    console.log("Selected project:", newValue);
+                                                    // You can add additional logic here to handle the selected project
+                                                }
+                                            }}
                                         />
                                     </Box>
                                 </Grid>
@@ -322,7 +395,7 @@ const CalendarForm = ({
                                         label="Start Date & Time"
                                         name="startDateTime"
                                         value={formValues.start}
-                                        width='560px'
+                                        width='440px'
                                         styleprops={commonTextFieldProps}
                                         onChange={(value) => {
                                             if (value) {
@@ -340,7 +413,7 @@ const CalendarForm = ({
                                         label="End Date & Time"
                                         name="endDateTime"
                                         value={formValues.end}
-                                        width='560px'
+                                        width='440px'
                                         styleprops={commonTextFieldProps}
                                         onChange={(value) => {
                                             if (value) {
@@ -399,14 +472,14 @@ const CalendarForm = ({
                             </Grid>
 
                             {/* Submit Button */}
-                            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                            <Grid item xs={12} sx={{ display: 'flex', justifyContent: CalformDataValue?.id && CalformDataValue?.id != '' ? 'space-between' : 'flex-end', alignItems: 'center', mt: 2 }}>
                                 {CalformDataValue?.id && CalformDataValue?.id != '' &&
                                     <Button
                                         variant="contained"
                                         color="primary"
                                         onClick={() => handleRemoveEvent(formValues)}
                                         disabled={isLoading}
-                                        className="danger-btn"
+                                        className="dangerbtnClassname"
                                     >
                                         Delete
                                     </Button>
@@ -416,16 +489,15 @@ const CalendarForm = ({
                                         variant="outlined"
                                         onClick={handleClear}
                                         sx={{ marginRight: "10px" }}
-                                        className="secondary-btn"
+                                        className="secondaryBtnClassname"
                                     >
                                         Cancel
                                     </Button>
                                     <Button
                                         variant="contained"
-                                        color="primary"
                                         onClick={handleSubmit}
                                         disabled={isLoading}
-                                        className="primary-btn"
+                                        className="buttonClassname"
                                     >
                                         {CalformDataValue?.id && CalformDataValue?.id !== ''
                                             ? (isLoading ? "Updating..." : "Update")
@@ -448,16 +520,15 @@ const CalendarForm = ({
                                                 variant="outlined"
                                                 onClick={handleClear}
                                                 sx={{ marginRight: "10px" }}
-                                                className="secondary-btn"
+                                                className="secondaryBtnClassname"
                                             >
                                                 Cancel
                                             </Button>
                                             <Button
                                                 variant="contained"
-                                                color="primary"
                                                 onClick={handleSubmit}
                                                 disabled={isLoading}
-                                                className="primary-btn"
+                                                className="buttonClassname"
                                             >
                                                 {isLoading ? "Saving..." : "Save Task"}
                                             </Button>

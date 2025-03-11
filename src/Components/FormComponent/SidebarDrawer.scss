@@ -16,11 +16,11 @@
         position: relative;
         margin-bottom: 20px;
 
-        .taskCount {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: end;
+        .taskCount  {
+            width: 100% !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: end !important;
             margin-left: 5px;
             .taskCountTypo{
                 font-size: 14px;
@@ -38,7 +38,7 @@
                 padding: 5px 10px !important;
                 margin: 0 !important;
                 p{
-                    font-size: 12px;
+                    font-size: 12px !important;
                 }
             }
 

@@ -50,12 +50,12 @@ $divider-color: #e0e0e0;
 
 
 .buttonClassname {
-    font-family: $font-family !important;
+    font-family: $font-family;
     background: $button-Bgcolor;
-    color: $button-color !important;
+    color: $button-color;
     border-color: $button-Bordercolor;
-    text-transform: capitalize !important;
-    border-radius: 8px !important;
+    text-transform: capitalize;
+    border-radius: 8px;
 
     &:hover {
         background-color: $button-color-hover;
@@ -98,10 +98,17 @@ $divider-color: #e0e0e0;
 
 .textfieldsClass {
     font-size: 14px;
+    color: $placeholderColor;
+
+    .MuiTypography-root {
+        font-family: $font-family !important;
+        color: $placeholderColor;
+        font-size: 14px;
+    }
 
     .MuiOutlinedInput-root {
         font-family: $font-family !important;
-        color: $placeholderColor !important;
+        color: $placeholderColor;
         border-radius: 8px !important;
         padding: 0px 5px !important;
         font-size: 14px;
@@ -161,6 +168,7 @@ $divider-color: #e0e0e0;
     // Apply to Chips
     .MuiChip-root {
         font-family: $font-family !important;
+        color: $titleColor;
         cursor: pointer;
 
         &:hover {
