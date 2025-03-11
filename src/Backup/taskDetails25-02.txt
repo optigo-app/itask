@@ -16,7 +16,7 @@ import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
-import AttachmentImg from "../../../Assests/Attachment.jpg"
+import AttachmentImg from "../../../Assests/Attachment.webp"
 import { formatDate3, getRandomAvatarColor, priorityColors, statusColors } from '../../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';

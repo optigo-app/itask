@@ -11,7 +11,7 @@ import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
-import AttachmentImg from "../../../Assests/Attachment.jpg"
+import AttachmentImg from "../../../Assests/Attachment.webp";
 
 const TaskDetail = ({ open, onClose }) => {
     const taskData = useRecoilValue(formData);

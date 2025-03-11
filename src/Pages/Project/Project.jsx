@@ -3,10 +3,13 @@ import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box } from "@mui/material";
 import { useRecoilState } from "recoil";
-import { masterDataValue, } from "../../Recoil/atom";
+import { filterDrawer1, masterDataValue, } from "../../Recoil/atom";
 import { formatDate } from 'date-fns';
 import { fetchMasterGlFunc, formatDate2 } from "../../Utils/globalfun";
 import ProjectData from "../../Data/projects.json"
+import { motion, AnimatePresence } from "framer-motion";
+import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
+import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Project/ListView/TableList"));
@@ -25,6 +28,7 @@ const Project = () => {
   const [activeButton, setActiveButton] = useState("table");
   const [project, setProject] = useState(ProjectData);
   const [filters, setFilters] = useState({});
+  const [drawerOpen1, setDrawerOpen1] = useRecoilState(filterDrawer1);
 
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
@@ -75,6 +79,17 @@ const Project = () => {
       ...prevFilters,
       [key]: value,
     }));
+  };
+
+  const handleClearFilter = (filterKey) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      [filterKey]: ''
+    }));
+  };
+
+  const handleClearAllFilters = () => {
+    setFilters({});
   };
 
   // filter functions
@@ -180,18 +195,44 @@ const Project = () => {
         taskCategory={taskCategory}
       />
 
-      {/* Divider */}
-      <div
-        style={{
-          margin: "20px 0",
-          border: "1px dashed #7d7f85",
-          opacity: 0.3,
-        }}
-      />
+      <AnimatePresence mode="wait">
+        {drawerOpen1 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+          >
+            <div
+              style={{
+                margin: "20px 0",
+                border: "1px dashed #7d7f85",
+                opacity: 0.3,
+              }}
+            />
 
-      {/* Filters */}
-      <Filters {...filters}
+            {/* Filters Component */}
+            <Filters
+              {...filters}
+              onFilterChange={handleFilterChange}
+              isLoading={isLoading}
+              masterData={masterData}
+              priorityData={priorityData}
+              statusData={statusData}
+              assigneeData={assigneeData}
+              taskDepartment={taskDepartment}
+              taskProject={taskProject}
+              taskCategory={taskCategory}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <FiltersDrawer {...filters}
+        filters={filters}
+        setFilters={setFilters}
         onFilterChange={handleFilterChange}
+        onClearAll={handleClearAllFilters}
         isLoading={isLoading}
         masterData={masterData}
         priorityData={priorityData}
@@ -211,26 +252,50 @@ const Project = () => {
         }}
       />
 
-      {/* View Components */}
-      <Suspense fallback={<></>}>
-        {activeButton === "table" && (
-          <TaskTable
-            data={!isTaskLoading ? filteredData : []}
-            isLoading={isTaskLoading}
-            masterData={masterData} 
-            handleLockProject={handleLockProject}
-            />
-        )}
+      <FilterChips
+        filters={filters}
+        onClearFilter={handleClearFilter}
+        onClearAll={handleClearAllFilters}
+      />
 
-        {activeButton === "kanban" &&
-          <KanbanView
-            taskdata={!isTaskLoading ? filteredData : []}
-            isLoading={isTaskLoading}
-            masterData={masterData}
-            statusData={statusData}
-          />
-        }
-      </Suspense>
+      {/* View Components */}
+      <AnimatePresence mode="wait">
+        {activeButton && (
+          <motion.div
+            key={activeButton}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: drawerOpen1 ? 0 : 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+          >
+            <Suspense fallback={<></>}>
+              {activeButton === "table" && (
+                <TaskTable
+                  data={filteredData ?? null}
+                  isLoading={isTaskLoading}
+                  masterData={masterData}
+                />
+              )}
+
+              {activeButton === "kanban" && (
+                <KanbanView
+                  taskdata={filteredData ?? null}
+                  isLoading={isTaskLoading}
+                  masterData={masterData}
+                  statusData={statusData}
+                />
+              )}
+
+              {/* {activeButton === "card" && (
+                <CardView
+                  isLoading={isTaskLoading}
+                  masterData={masterData}
+                />
+              )} */}
+            </Suspense>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Box>
   );
 };

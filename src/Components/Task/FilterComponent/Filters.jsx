@@ -198,15 +198,15 @@ const Filters = ({
             <ListItemText primary="Due Date" />
           </MenuItem>
         </Menu>
-        <IconButton
+        {/* <IconButton
           size='medium'
           className="buttonClassname"
           onClick={handleTimerCompOpen}
           sx={{ ml: 1 }}
         >
           <TimerIcon sx={{ color: '#fff' }} />
-        </IconButton>
-        <TaskTimeTrackerComp />
+        </IconButton> */}
+        {/* <TaskTimeTrackerComp /> */}
       </Box>
     </Box>
   );

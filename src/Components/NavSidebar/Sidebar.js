@@ -16,7 +16,7 @@ import {
 } from "@mui/icons-material";
 
 import { Asterisk, CalendarCheck, Component, FileCheck, House, Inbox, SquareChartGantt } from 'lucide-react';
-import logo from "../../Assests/logo.png"
+import logo from "../../Assests/logo.webp";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
@@ -97,15 +97,14 @@ const Sidebar = () => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ duration: 0.5 }}
                             />
-                            {isDrawerOpen && <ListItemText primary="Itask" className="itask_logoTxt" />}
+                            {isDrawerOpen && <ListItemText primary="iTask" className="itask_logoTxt" />}
                         </div>
                         <div>
                             {!isMobile && isDrawerOpen && (
                                 <Checkbox
-                                size="small"
+                                    size="small"
                                     id="sidebar-toggle"
-                                    aria-label="open sidebar"
-                                    aria-labelledby="sidebar-toggle"
+                                    aria-hidden="true" 
                                     className="itask_checkbox"
                                     checked={isFullSidebar}
                                     onChange={toggleSidebar}

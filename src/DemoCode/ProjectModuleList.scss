@@ -1,0 +1,61 @@
+@import '../theme/variable.scss';
+
+.project-module-box {
+    // width: 350px;
+    max-width: 100%;
+    margin-bottom: 20px;
+
+    .project-label {
+        padding: 0 0 5px 0;
+        font-size: 16px;
+    }
+
+    .module-card {
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid #ddd;
+    }
+
+    .card-header {
+        // background: #f4f4f4;
+        padding: 10px 12px 5px 12px;
+    }
+
+    .card-content {
+        max-height: 180px;
+        overflow-y: auto;
+        padding: 10px;
+        padding-bottom: 10px !important;
+    }
+
+    .module-list {
+        padding: 0;
+        margin: 0;
+
+        .module-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            transition: background 0.3s ease;
+
+            &:hover {
+                background: #e2e6ea;
+            }
+            &.selected {
+                background-color: $primary-main;
+                color: #fff;
+                font-weight: bold;
+            }
+        }
+
+        .no-results {
+            padding: 10px;
+            text-align: center;
+            color: #777;
+            font-style: italic;
+        }
+    }
+}

@@ -9,6 +9,7 @@ import { taskInit } from './Api/InitialApi/TaskInitApi';
 import { fetchMasterGlFunc } from './Utils/globalfun';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
+import ProjectModuleList from './DemoCode/ProjectModuleList';
 
 // Lazy Loaded Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -42,16 +43,18 @@ const Layout = ({ children }) => {
                 {children}
                 <Box
                     sx={{
-                        position: 'absolute',
-                        top: '25px',
-                        right: '-50px',
-                        transform: 'rotate(45deg)',
-                        backgroundColor: '#8B0000',
-                        color: 'white',
-                        padding: '5px 40px',
-                        fontWeight: 'bold',
-                        fontSize: '20px',
-                        zIndex: 1,
+                        position: "fixed",
+                        top: "15px",
+                        right: "30px",
+                        transform: "translateX(50%) rotate(45deg)",
+                        backgroundColor: "#8B0000",
+                        color: "white",
+                        padding: "6px 40px",
+                        fontWeight: "bold",
+                        fontSize: "14px",
+                        zIndex: 10,
+                        whiteSpace: "nowrap",
+                        boxShadow: "2px 2px 10px rgba(0,0,0,0.2)",
                     }}
                 >
                     Prototype
@@ -93,23 +96,23 @@ const App = () => {
     }, []);
 
     const toastStyle = {
-        borderRadius: '8px',
-        backgroundColor: '#fff',
+        borderRadius: "8px",
+        backgroundColor: "#fff",
         fontFamily: '"Public Sans", sans-serif',
-        fontWeight: '500',
-        fontSize: '15px',
-        lineHeight: '19px',
-        color: '#444050',
-        boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px',
-        minWidth: '0px',
-        width: 'fit-content',
-        padding: '0px 6px',
-        border: 'none',
-        borderLeft: '4px solid transparent',
-        backgroundImage: 'linear-gradient(#fff, #fff), linear-gradient(45deg, #6a11cb, #2575fc)',
-        backgroundOrigin: 'border-box',
-        backgroundClip: 'padding-box, border-box'
-    };
+        fontWeight: 500,
+        fontSize: "15px",
+        lineHeight: "19px",
+        color: "#444050",
+        boxShadow: "rgba(100,100,111,0.2) 0px 7px 29px 0px",
+        minWidth: "auto",
+        width: "fit-content",
+        padding: "0px 6px",
+        border: "none",
+        borderLeft: "4px solid transparent",
+        backgroundImage: "linear-gradient(#fff, #fff), linear-gradient(45deg, #6a11cb, #2575fc)",
+        backgroundOrigin: "border-box",
+        backgroundClip: "padding-box, border-box",
+      };
 
     return (
         <>
@@ -138,7 +141,7 @@ const App = () => {
                                     <Route path="/masters" element={<ProtectedRoute><Masters /></ProtectedRoute>} />
                                     <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                                     <Route path="*" element={<PagenotFound />} />
-                                    <Route path="/test" element={<ProtectedRoute><TaskTimeTracker /></ProtectedRoute>} />
+                                    <Route path="/test" element={<ProtectedRoute><ProjectModuleList /></ProtectedRoute>} />
                                 </Routes>
                             </Layout>
                         </Suspense>

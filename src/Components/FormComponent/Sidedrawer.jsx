@@ -16,7 +16,7 @@ import {
     FormControlLabel,
     Checkbox,
 } from "@mui/material";
-import { CircleX, Grid2x2, Grid3x3, List, ListTodo, Logs } from "lucide-react";
+import { CircleX, Grid2x2, Grid3x3, List, ListTodo, Loader, Logs } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import "./SidebarDrawer.scss";
 import { useRecoilState, useRecoilValue } from "recoil";
@@ -92,8 +92,21 @@ const SidebarDrawer = ({
         department: useRef(),
     };
 
+    const getAssigneeData = (() => {
+        const data = sessionStorage?.getItem('taskAssigneeData');
+        if (data) {
+            try {
+                return JSON.parse(data);
+            } catch (error) {
+                console.error('Error parsing taskAssigneeData:', error);
+                return null;
+            }
+        }
+        return null;
+    })();
+
     useEffect(() => {
-        const assigneeData = JSON?.parse(sessionStorage?.getItem('taskAssigneeData'));
+        const assigneeData = getAssigneeData;
         setAssignees(assigneeData);
         if (open && rootSubrootflagval?.Task === "root") {
             setFormValues({
@@ -245,6 +258,8 @@ const SidebarDrawer = ({
     // departmentwise assignee
     const filterAssigneeData = formValues?.department ? assignees.filter((item) => item.departmentId == formValues?.department) : assignees;
 
+    const breadcoms = location?.pathname?.split('/')?.filter((item) => item !== '');
+    console.log('breadcoms: ', breadcoms);
     return (
         <>
             <Drawer
@@ -269,32 +284,35 @@ const SidebarDrawer = ({
                         opacity: 0.3,
                     }}
                     />
-                    {rootSubrootflagval?.Task !== "root" &&
-                        <Box className="tSideBarTgBox">
-                            <ToggleButtonGroup
-                                value={taskType}
-                                exclusive
-                                onChange={handleTaskChange}
-                                aria-label="task type"
-                                size="small"
-                                className="toggle-group"
-                            >
-                                {TASK_OPTIONS?.map(({ id, value, label, icon }) => (
-                                    <ToggleButton
-                                        key={id}
-                                        value={value}
-                                        className="toggle-button"
-                                        sx={{
-                                            borderRadius: "8px",
-                                        }}
-                                    >
-                                        {icon}
-                                        {label}
-                                    </ToggleButton>
-                                ))}
-                            </ToggleButtonGroup>
-                        </Box>
-                    }
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>{breadcoms[1]}</Typography>
+                        {rootSubrootflagval?.Task !== "root" &&
+                            <Box className="tSideBarTgBox">
+                                <ToggleButtonGroup
+                                    value={taskType}
+                                    exclusive
+                                    onChange={handleTaskChange}
+                                    aria-label="task type"
+                                    size="small"
+                                    className="toggle-group"
+                                >
+                                    {TASK_OPTIONS?.map(({ id, value, label, icon }) => (
+                                        <ToggleButton
+                                            key={id}
+                                            value={value}
+                                            className="toggle-button"
+                                            sx={{
+                                                borderRadius: "8px",
+                                            }}
+                                        >
+                                            {icon}
+                                            {label}
+                                        </ToggleButton>
+                                    ))}
+                                </ToggleButtonGroup>
+                            </Box>
+                        }
+                    </Box>
                     <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <FormControlLabel

@@ -3,6 +3,7 @@ import {
     Box, Button, TextareaAutosize, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField, IconButton, Typography
 } from "@mui/material";
 import { Save, X as Close, Pencil, Trash, Plus, ArrowLeft } from "lucide-react";
+import './SidebarDrawer.scss';
 
 const MultiTaskInput = ({ onSave }) => {
     const [tasks, setTasks] = useState([]);
