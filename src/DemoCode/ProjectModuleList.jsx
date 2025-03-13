@@ -1,71 +1,64 @@
-import React, { useState } from "react";
-import { Card, CardHeader, CardContent, TextField, List, ListItem, Typography } from "@mui/material";
-import "./ProjectModuleList.scss"; // SCSS file for styling
-import { commonTextFieldProps } from "../Utils/globalfun";
+import React, { useState, useMemo } from "react";
+import { Autocomplete, TextField } from "@mui/material";
+import { FixedSizeList } from "react-window"; // Virtualization for large lists
 
-const ProjectModuleList = ({ selectedModule, handleModuleClick }) => {
-    // Sample Data - Realistic Project Modules
-    const allModules = [
-        "OptigoApps",
-        "Simplification",
-        "OptigoApp",
-        "Ecom Website",
-        "Hello App",
-        "Admin App",
-        "SalesRep App",
-        "ProTransaction",
-        "ProQC",
-        "ProCasting",
-        "iTask",
-        "Print",
-        "Excel",
-    ];
+const customerList = Array.from({ length: 700 }, (_, index) => ({
+  Master_Name: `Customer ${index + 1}`,
+  CustomerId: 11530 + index,
+  CustomerCode: String(1000 + index),
+  SaleRepId: 11475,
+  SalesRepCode: `SKM${index}`,
+}));
 
-    // State for search input
-    const [searchTerm, setSearchTerm] = useState("");
+const AutoCompleteStyles = { minWidth: "200px" };
 
-    const filteredModules = allModules.filter((module) =>
-        module.toLowerCase().includes(searchTerm.toLowerCase())
+// Custom Listbox for virtualization
+const ListboxComponent = React.forwardRef(function ListboxComponent(props, ref) {
+  const { children, ...other } = props;
+  const itemCount = Array.isArray(children) ? children.length : 0;
+  const itemSize = 36; // Height of each item
+
+  return (
+    <div ref={ref} {...other}>
+      <FixedSizeList height="max-content" width="100%" itemSize={itemSize} itemCount={itemCount} overscanCount={5}>
+        {({ index, style }) => <div style={style}>{children[index]}</div>}
+      </FixedSizeList>
+    </div>
+  );
+});
+
+const CustomerAutocomplete = () => {
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [searchValue, setSearchValue] = useState("");
+
+  // Efficient filtering using useMemo
+  const filteredCustomers = useMemo(() => {
+    if (!searchValue) return customerList;
+    return customerList.filter((customer) =>
+      customer.CustomerCode.toLowerCase().includes(searchValue.toLowerCase())
     );
+  }, [searchValue]);
 
-    return (
-        <div className="project-module-box">
-            <Typography variant="h6" className="project-label">Project Modules</Typography>
-            <Card className="module-card">
-                <CardHeader
-                    className="card-header"
-                    title={
-                        <TextField
-                            variant="outlined"
-                            placeholder="Search..."
-                            size="small"
-                            {...commonTextFieldProps}
-                            fullWidth
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    }
-                />
-                <CardContent className="card-content">
-                    <List className="module-list">
-                        {filteredModules.length > 0 ? (
-                            filteredModules.map((module, index) => (
-                                <ListItem
-                                    key={index}
-                                    className={`module-item ${selectedModule === module ? "selected" : ""}`}
-                                    onClick={() => handleModuleClick(module)}
-                                >
-                                    {module}
-                                </ListItem>
-                            ))
-                        ) : (
-                            <Typography className="no-results">No matching modules found</Typography>
-                        )}
-                    </List>
-                </CardContent>
-            </Card>
-        </div>
-    );
+  return (
+    <Autocomplete
+      size="small"
+      options={filteredCustomers}
+      sx={{ minWidth: "200px" }}
+      getOptionLabel={(option) => option.CustomerCode}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          sx={AutoCompleteStyles}
+          placeholder="Select Customer"
+          variant="outlined"
+          onChange={(e) => setSearchValue(e.target.value)} // Optimize filtering
+        />
+      )}
+      ListboxComponent={ListboxComponent} // Virtualized List
+      onChange={(event, newValue) => setSelectedCustomer(newValue)}
+      isOptionEqualToValue={(option, value) => option.CustomerId === value.CustomerId}
+    />
+  );
 };
 
-export default ProjectModuleList;
+export default CustomerAutocomplete;

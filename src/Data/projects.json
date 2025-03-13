@@ -143,5 +143,34 @@
             { "id": 11, "name": "Neha", "image": "https://example.com/images/neha.jpg" }
         ],
         "category": "System Integration"
+    },
+    {
+        "taskid": 6,
+        "projectid": 106,
+        "module": "Simplifying the OptigoApps UI/UX for better user experience.",
+        "entrydate": "2024-11-15T16:05:11.501",
+        "taskname": "Task management",
+        "StartDate": "2024-10-10T00:00:00",
+        "estimate_hrs": 11,
+        "DeadLineDate": "2024-12-18T00:00:00",
+        "priorityid": 2,
+        "statusid": 5,
+        "workcategoryid": 5,
+        "departmentid": 1,
+        "parentid": null,
+        "priority": "Medium",
+        "status": "In Progress",
+        "progress": 50,
+        "progress_bar": "50%",
+        "taskPr": "CRM Module",
+        "taskDpt": "IT",
+        "isLocked": 0,
+        "short_description": "Integrating CRM software with the existing system.",
+        "remark": "Third-party API integration in progress.",
+        "assignee": [
+            { "id": 10, "name": "Suresh", "image": "https://example.com/images/suresh.jpg" },
+            { "id": 11, "name": "Neha", "image": "https://example.com/images/neha.jpg" }
+        ],
+        "category": "System Integration"
     }
 ]
