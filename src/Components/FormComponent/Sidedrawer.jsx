@@ -55,6 +55,9 @@ const SidebarDrawer = ({
     const [assignees, setAssignees] = React.useState([]);
     const [taskType, setTaskType] = useState("single");
     const [tasksubType, setTaskSubType] = useState("multi2");
+    const searchParams = new URLSearchParams(location.search);
+    const encodedData = searchParams.get("data");
+    const [decodedData, setDecodedData] = useState(null);
     const [formValues, setFormValues] = React.useState({
         taskName: "",
         bulkTask: [],
@@ -258,8 +261,19 @@ const SidebarDrawer = ({
     // departmentwise assignee
     const filterAssigneeData = formValues?.department ? assignees.filter((item) => item.departmentId == formValues?.department) : assignees;
 
-    const breadcoms = location?.pathname?.split('/')?.filter((item) => item !== '');
-    console.log('breadcoms: ', breadcoms);
+    useEffect(() => {
+        if (encodedData) {
+            try {
+                const decodedString = decodeURIComponent(encodedData);
+                const jsonString = atob(decodedString);
+                const parsedData = JSON.parse(jsonString);
+                setDecodedData(parsedData);
+            } catch (error) {
+                console.error("Error decoding data:", error);
+            }
+        }
+    }, [encodedData]);
+
     return (
         <>
             <Drawer
@@ -285,7 +299,7 @@ const SidebarDrawer = ({
                     }}
                     />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                        <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>{breadcoms[1]}</Typography>
+                        <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>{decodedData?.taskname + '/' + decodedData?.module}</Typography>
                         {rootSubrootflagval?.Task !== "root" &&
                             <Box className="tSideBarTgBox">
                                 <ToggleButtonGroup

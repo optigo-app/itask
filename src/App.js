@@ -73,17 +73,24 @@ const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem("isLoggedIn") === "true");
 
     useEffect(() => {
+        let retryCount = 0;
+        const maxRetries = 5;
+    
         const checkAndInit = async () => {
+            if (retryCount >= maxRetries) return console.log("Api call failed after 5 retries");
+    
             const token = sessionStorage.getItem("taskInit");
-            if (!token) {
-                const result = await taskInit();
-                if (result?.Data?.rd) {
-                    fetchMasterGlFunc();
-                } else {
-                    setTimeout(checkAndInit, 1000);
-                }
+            if (token) return;
+    
+            const result = await taskInit();
+            if (result?.Data?.rd) {
+                fetchMasterGlFunc();
+            } else {
+                retryCount++;
+                setTimeout(checkAndInit, 1000);
             }
         };
+    
         checkAndInit();
     }, []);
 

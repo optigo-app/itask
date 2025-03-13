@@ -56,6 +56,7 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [columnWidths] = useState({
         name: 350,
+        ticket: 100,
         project: 150,
         status: 180,
         assignee: 150,
@@ -728,19 +729,28 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                                                                             </div>
                                                                         )}
                                                                     </div>
-                                                                    <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'end', gap: '8px', marginBlock:'2px' }}>
                                                                         {taskIndex % 2 === 0 && task?.isburning == 1 &&
                                                                             <img src={BurningImg} alt="burningTask"
                                                                                 style={{ width: '15px', height: '15px', borderRadius: '50%' }} />
                                                                         }
-                                                                        {taskIndex % 2 === 0 && (
+                                                                        {/* {taskIndex % 2 === 0 && (
                                                                             <Chip
                                                                                 label={task?.ticket || 'A00161'}
-                                                                                variant="outlined"
+                                                                                variant="filled"
                                                                                 size="small"
-                                                                                sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB' }}
+                                                                                sx={{
+                                                                                    backgroundColor: '#d8d8d8',
+                                                                                    color: '#8863FB',
+                                                                                    fontSize: '10px',
+                                                                                    height: '16px',
+                                                                                    '& .MuiChip-label': {
+                                                                                        padding: '0 6px',
+                                                                                    },
+                                                                                }}
                                                                             />
-                                                                        )}
+                                                                        )} */}
+                                                                        {/* 
                                                                         <IconButton
                                                                             onClick={() => handleTaskFavorite(task)}
                                                                             size="small"
@@ -762,17 +772,17 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                                                                             }}
                                                                         >
                                                                             {task.isFav ? (
-                                                                                <StarIcon sx={{ fontSize: '12px', color: '#fff' }} />
+                                                                                <StarIcon sx={{ fontSize: '11px', color: '#fff' }} />
                                                                             ) : (
-                                                                                <StarBorderIcon sx={{ fontSize: '12px', color: '#7d7f85' }} />
+                                                                                <StarBorderIcon sx={{ fontSize: '11px', color: '#7d7f85' }} />
                                                                             )}
-                                                                        </IconButton>
+                                                                        </IconButton> */}
                                                                         {task?.isFreezed == 1 &&
                                                                             <CircleIcon sx={{ color: task?.isFreezed == 1 ? "#d32f2f" : "#1976d2", width: "15px", height: "15px" }} />
                                                                         }
                                                                         <Chip
                                                                             label={'New'}
-                                                                            variant="filled"
+                                                                            variant="rounded"
                                                                             size="small"
                                                                             sx={{
                                                                                 backgroundColor: '#E3F2FD',
@@ -801,8 +811,26 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                                                             <CirclePlus size={20} color="#7367f0" />
                                                         </IconButton>
                                                     </div>
-
-
+                                                </TableCell>
+                                                <TableCell>
+                                                    {/* {taskIndex % 2 === 0 && (
+                                                        <div style={{
+                                                            color: '#808080',
+                                                            backgroundColor: '#7d7f8540',
+                                                            width: 'fit-content',
+                                                            padding: '0.2rem 0.8rem',
+                                                            borderRadius: '5px',
+                                                            textAlign: 'center',
+                                                            fontSize: '13.5px',
+                                                            fontWeight: '500',
+                                                            display: 'flex',
+                                                            justifyContent: 'start',
+                                                            alignItems: 'center',
+                                                        }}>
+                                                            {task?.ticket || 'A00161'}
+                                                        </div>
+                                                    )} */}
+                                                     {task?.ticket || 'A00161'}
                                                 </TableCell>
                                                 <TableCell>{task?.taskPr}</TableCell>
                                                 <TableCell>
@@ -900,6 +928,33 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                                                 <TableCell> {StatusCircles({ task })}</TableCell>
                                                 <TableCell align="center">
                                                     <Box sx={{ display: "flex", alignItems: "center" }}>
+
+                                                        <IconButton
+                                                            onClick={() => handleTaskFavorite(task)}
+                                                            size="small"
+                                                            aria-label="add-favorite"
+                                                            aria-labelledby="add-favorite"
+                                                            sx={{
+                                                                padding: '4px',
+                                                                boxShadow: task.isFav
+                                                                    ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
+                                                                    : '0px 2px 8px rgba(99, 99, 99, 0.2)',
+                                                                transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
+                                                                background: task.isFav ? '#FFD700' : '#fff',
+                                                                '&:hover': {
+                                                                    boxShadow: task.isFav
+                                                                        ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
+                                                                        : '0px 4px 12px rgba(99, 99, 99, 0.3)',
+                                                                    background: task.isFav ? '#FFC107' : '#f5f5f5',
+                                                                },
+                                                            }}
+                                                        >
+                                                            {task.isFav ? (
+                                                                <StarIcon sx={{ fontSize: '15px', color: '#fff' }} />
+                                                            ) : (
+                                                                <StarBorderIcon sx={{ fontSize: '15px', color: '#7d7f85' }} />
+                                                            )}
+                                                        </IconButton>
                                                         {/* Time Track Button */}
                                                         <Tooltip
                                                             title={taskTimeRunning[task.taskid] ? "Time Track ON" : "Time Track OFF"}

@@ -22,7 +22,8 @@ const initialTasks = [
             }
         ],
         "description": "Client requirement discussion",
-        "allDay": "false"
+        "allDay": "false",
+        "estimate": 1.5
     },
     {
         "id": "task002",
@@ -50,7 +51,8 @@ const initialTasks = [
             }
         ],
         "description": "Daily team sync-up",
-        "allDay": "false"
+        "allDay": "false",
+        "estimate": 0.5
     },
     {
         "id": "task003",
@@ -70,8 +72,9 @@ const initialTasks = [
             }
         ],
         "description": "Client requirement discussion",
-        "allDay": "false"
-    },
+        "allDay": "false",
+        "estimate": 2.5
+    }
 ];
 
 const TasklistForCal = ({ calendarsColor }) => {

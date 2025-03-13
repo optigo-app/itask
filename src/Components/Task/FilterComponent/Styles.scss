@@ -17,8 +17,7 @@
         border-radius: 8px;
         padding: 4px 8px;
         display: flex;
-        text-transform: capitalize;
-        justify-content: space-between;
+        text-transform: capitalize !important;
         align-items: center;
         transition: opacity 0.3s ease-in-out;
 

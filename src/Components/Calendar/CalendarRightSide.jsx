@@ -136,6 +136,7 @@ const Calendar = () => {
                 guests: clickedEvent?.extendedProps?.guests,
                 eventUrl: clickedEvent?.extendedProps?.eventUrl,
                 category: clickedEvent?.extendedProps?.category,
+                estimate: clickedEvent?.extendedProps?.estimate || 1,
                 allDay: clickedEvent?.allDay,
             };
             setCalFormData(eventDetails);
@@ -170,6 +171,7 @@ const Calendar = () => {
                 category: droppedEvent.extendedProps.category,
                 guests: droppedEvent.extendedProps.guests,
                 eventUrl: droppedEvent.extendedProps.eventUrl,
+                estimate: droppedEvent.extendedProps.estimate || 1,
                 allDay: droppedEvent.allDay,
             };
             // Update the event in local storage
@@ -180,19 +182,25 @@ const Calendar = () => {
         },
         eventReceive({ event: receivedEvent }) {
             const randomId = Math.random().toString(36).substring(2, 10);
+            const estimate = receivedEvent?.extendedProps?.estimate || 1;
+
+            const startDate = receivedEvent?.start ? new Date(receivedEvent.start) : new Date();
+            const endDate = new Date(startDate.getTime() + estimate * 60 * 60 * 1000);
 
             const newEvent = {
                 id: randomId,
                 title: receivedEvent?.title || "Untitled Event",
-                start: receivedEvent?.start ? receivedEvent?.start.toISOString() : "",
-                end: receivedEvent?.end ? receivedEvent?.end.toISOString() : receivedEvent?.start?.toISOString(),
+                start: startDate.toISOString(),
+                end: endDate.toISOString(),
                 location: receivedEvent?.extendedProps?.location || "",
                 description: receivedEvent?.extendedProps?.description || "",
                 category: receivedEvent?.extendedProps?.category || "",
                 guests: receivedEvent?.extendedProps?.guests || [],
                 eventUrl: receivedEvent?.extendedProps?.eventUrl || "",
+                estimate: estimate,
                 allDay: receivedEvent?.allDay ?? false,
             };
+
             const existingData = JSON?.parse(localStorage.getItem('calformData')) || [];
             const isDuplicate = existingData?.some(event =>
                 event.title === newEvent.title && event.start === newEvent.start
@@ -206,35 +214,48 @@ const Calendar = () => {
                 console.log("Duplicate event detected, not adding.");
             }
         },
-
-        eventResize({ event: resizedEvent }) {
+        eventResize({ event: resizedEvent, revert }) {
             if (resizedEvent.extendedProps?.isMeeting) return;
-            const startDate = resizedEvent?.start;
-            const endDate = resizedEvent?.end ?? startDate;
+
+            const startDate = resizedEvent.start;
+            const endDate = resizedEvent.end ?? startDate;
+            let estimate = resizedEvent.extendedProps?.estimate || 1;
+            const estimatedEndTime = new Date(startDate.getTime() + estimate * 60 * 60 * 1000);
+            console.log('estimatedEndTime: ', estimatedEndTime);
+
+            if (endDate > estimatedEndTime) {
+                console.log("Resizing beyond the estimated time is not allowed.");
+                revert();
+                return;
+            }
+
+            // Update event data
             const updatedEvent = {
                 id: resizedEvent.id,
                 title: resizedEvent.title,
-                start: startDate?.toISOString(),
-                end: endDate?.toISOString(),
-                location: resizedEvent?.extendedProps?.location,
-                description: resizedEvent?.extendedProps?.description,
-                category: resizedEvent?.extendedProps?.category,
-                guests: resizedEvent?.extendedProps?.guests,
-                eventUrl: resizedEvent?.extendedProps?.eventUrl,
-                allDay: resizedEvent?.allDay,
+                start: startDate.toISOString(),
+                end: endDate.toISOString(),
+                estimate,
+                location: resizedEvent.extendedProps?.location,
+                description: resizedEvent.extendedProps?.description,
+                category: resizedEvent.extendedProps?.category,
+                guests: resizedEvent.extendedProps?.guests,
+                eventUrl: resizedEvent.extendedProps?.eventUrl,
+                allDay: resizedEvent.allDay,
             };
+
             // Update the event in local storage
-            const updatedEvents = filteredEvents?.map(event =>
+            const updatedEvents = filteredEvents.map(event =>
                 event.id === updatedEvent.id ? updatedEvent : event
             );
-            localStorage.setItem('calformData', JSON.stringify(updatedEvents));
-        },
-        ref: calendarRef,
+            localStorage.setItem("calformData", JSON.stringify(updatedEvents));
+        }
     };
 
     // remove event
     const handleRemove = (formValue) => {
         setFormData(formValue)
+        
         setCnfDialogOpen(true);
     };
 
