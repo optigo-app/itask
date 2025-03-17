@@ -9,6 +9,8 @@ import {
     Tooltip,
 } from '@mui/material';
 import { CircleX, Expand, Shrink, Download, Send, Edit } from 'lucide-react';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
 import './TaskDetails.scss';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { fetchlistApiCall, formData, openFormDrawer, selectedRowData, TaskData } from '../../../Recoil/atom';
@@ -26,10 +28,12 @@ import CommentSection from './Comment/TaskComment';
 import { TaskDescription } from './TaskDescription';
 import SubtaskCard from './SubTaskcard';
 
-const TaskDetail = ({ open, onClose }) => {
+const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const theme = useTheme();
     const [taskArr, setTaskArr] = useRecoilState(TaskData);
-    const taskData = useRecoilValue(formData);
+    console.log('taskArr: ', taskArr);
+    // const taskData = useRecoilValue(formData);
+    console.log('taskData: ', taskData);
     const setCallTaskApi = useSetRecoilState(fetchlistApiCall);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [count, setCount] = useState(2);
@@ -260,8 +264,39 @@ const TaskDetail = ({ open, onClose }) => {
                         />
                         <Box className="modal-body">
                             <Box className="titlebox">
-                                <Typography variant="h4" className="task-title">{taskData?.taskname}</Typography>
+                                <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <IconButton
+                                        onClick={() => handleTaskFavorite(taskData)}
+                                        size="small"
+                                        aria-label="add-favorite"
+                                        aria-labelledby="add-favorite"
+                                        sx={{
+                                            width: '30px',
+                                            height: '30px',
+                                            padding: '4px',
+                                            boxShadow: taskData?.isFav
+                                                ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
+                                                : '0px 2px 8px rgba(99, 99, 99, 0.2)',
+                                            transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
+                                            background: taskData?.isFav ? '#FFD700' : '#fff',
+                                            '&:hover': {
+                                                boxShadow: taskData?.isFav
+                                                    ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
+                                                    : '0px 4px 12px rgba(99, 99, 99, 0.3)',
+                                                background: taskData?.isFav ? '#FFC107' : '#f5f5f5',
+                                            },
+                                        }}
+                                    >
+                                        {taskData?.isFav ? (
+                                            <StarIcon sx={{ fontSize: '20px', color: '#fff' }} />
+                                        ) : (
+                                            <StarBorderIcon sx={{ fontSize: '20px', color: '#7d7f85' }} />
+                                        )}
+                                    </IconButton>
+                                    <Typography variant="h4" className="task-title">{taskData?.taskname}</Typography>
+                                </Box>
                                 <Button
+                                    size='small'
                                     variant="contained"
                                     onClick={() => handleRemoveEvent()}
                                     sx={{ marginRight: "10px" }}

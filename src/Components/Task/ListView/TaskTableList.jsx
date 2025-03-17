@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./TaskTable.scss";
 import {
     Table,
@@ -72,6 +72,28 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
 
+
+    useEffect(() => {
+        if (!selectedItem || !data) return;
+        const findTaskRecursively = (tasks, taskId) => {
+            for (const task of tasks) {
+                if (task.taskid === taskId) {
+                    return task;
+                }
+                if (task.subtasks && task.subtasks.length > 0) {
+                    const foundInSubtasks = findTaskRecursively(task.subtasks, taskId);
+                    if (foundInSubtasks) return foundInSubtasks;
+                }
+            }
+            return null;
+        };
+        const selectedData = findTaskRecursively(data, selectedItem.taskid);
+        if (selectedData) {
+            console.log('selectedData: ', selectedData);
+            setSelectedItem(selectedData);
+        }
+    }, [data, selectedItem?.taskid]);
+
     // Handle menu open/close
     const handleMenuOpen = (event, task) => {
         setAnchorEl(event.currentTarget);
@@ -141,6 +163,7 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
         setRootSubroot(additionalInfo);
         setTaskDetailModalOpen(true);
         setFormDataValue(task);
+        setSelectedItem(task);
     };
 
     const toggleSubtasks = (taskIndex) => {
@@ -377,19 +400,7 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                                             )}
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
-                                            {subtaskIndex % 2 === 0 && subtask?.isburning == 1 &&
-                                                <img src={BurningImg} alt="burningTask"
-                                                    style={{ width: '15px', height: '15px', borderRadius: '50%' }} />
-                                            }
-                                            {subtaskIndex % 2 === 0 && (
-                                                <Chip
-                                                    label={subtask?.ticket || 'A00161'}
-                                                    variant="outlined"
-                                                    size="small"
-                                                    sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB' }}
-                                                />
-                                            )}
-                                            <IconButton
+                                            {/* <IconButton
                                                 onClick={() => handleTaskFavorite(subtask)}
                                                 size="small"
                                                 aria-label="add-favorite"
@@ -414,7 +425,19 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                                                 ) : (
                                                     <StarBorderIcon sx={{ fontSize: '12px', color: '#7d7f85' }} />
                                                 )}
-                                            </IconButton>
+                                            </IconButton> */}
+                                            {subtaskIndex % 2 === 0 && subtask?.isburning == 1 &&
+                                                <img src={BurningImg} alt="burningTask"
+                                                    style={{ width: '15px', height: '15px', borderRadius: '50%' }} />
+                                            }
+                                            {subtaskIndex % 2 === 0 && (
+                                                <Chip
+                                                    label={subtask?.ticket || 'A00161'}
+                                                    variant="outlined"
+                                                    size="small"
+                                                    sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB' }}
+                                                />
+                                            )}
                                             {subtask?.isFreezed == 1 &&
                                                 <CircleIcon sx={{ color: subtask?.isFreezed == 1 ? "#d32f2f" : "#1976d2", width: "15px", height: "15px" }} />
                                             }
@@ -586,9 +609,26 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                                     </IconButton>
                                 </span>
                             </Tooltip>
-                            <IconButton onClick={(event) => handleMenuOpen(event, subtask)}>
+                            <Tooltip
+                                title="View Sub-Task"
+                                arrow
+                                placement="top"
+                                classes={{ tooltip: "custom-tooltip" }}
+                            >
+                                <span>
+                                    <IconButton
+                                        onClick={() => handleViewTask(subtask, { Task: "root" })}
+                                    >
+                                        <Eye
+                                            size={20}
+                                            color={"#808080"}
+                                        />
+                                    </IconButton>
+                                </span>
+                            </Tooltip>
+                            {/* <IconButton onClick={(event) => handleMenuOpen(event, subtask)}>
                                 <MoreVert />
-                            </IconButton>
+                            </IconButton> */}
                         </Box>
                     </TableCell>
                 </TableRow>
@@ -652,7 +692,7 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                                         <div>
                                                             <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
-                                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "30px" }}>
+                                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                                                                     <IconButton
                                                                         id="toggle-task"
                                                                         aria-label="toggle-task"
@@ -663,12 +703,33 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                                                                         <PlayArrowIcon
                                                                             style={{
                                                                                 color: subtaskVisibility[taskIndex] ? "#444050" : "#c7c7c7",
-                                                                                fontSize: "1.2rem",
+                                                                                fontSize: "1rem",
                                                                                 transform: subtaskVisibility[taskIndex] ? "rotate(90deg)" : "rotate(0deg)",
                                                                                 transition: "transform 0.2s ease-in-out",
                                                                             }}
                                                                         />
                                                                     </IconButton>
+
+                                                                    {/* <IconButton
+                                                                        id="toggle-task"
+                                                                        aria-label="toggle-task"
+                                                                        aria-labelledby="toggle-task"
+                                                                        size="small"
+                                                                        onClick={() => toggleSubtasks(taskIndex)}
+                                                                        style={{
+                                                                            visibility: subtaskVisibility[taskIndex] ? 'visible' : hoveredTaskId === task?.taskid && hoveredColumnname === 'TaskName' ? "visible" : "hidden",
+                                                                        }}
+                                                                    >
+                                                                        <PlayArrowIcon
+                                                                            style={{
+                                                                                color: subtaskVisibility[taskIndex] ? "#444050" : "#c7c7c7",
+                                                                                fontSize: "1rem",
+                                                                                transform: subtaskVisibility[taskIndex] ? "rotate(90deg)" : "rotate(0deg)",
+                                                                                transition: "transform 0.2s ease-in-out",
+                                                                            }}
+                                                                        />
+                                                                    </IconButton> */}
+
                                                                     {/* <IconButton
                                                                         id="toggle-task"
                                                                         aria-label="toggle-task"
@@ -729,19 +790,7 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                                                                         )}
                                                                     </div>
                                                                     <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
-                                                                        {taskIndex % 2 === 0 && task?.isburning == 1 &&
-                                                                            <img src={BurningImg} alt="burningTask"
-                                                                                style={{ width: '15px', height: '15px', borderRadius: '50%' }} />
-                                                                        }
-                                                                        {taskIndex % 2 === 0 && (
-                                                                            <Chip
-                                                                                label={task?.ticket || 'A00161'}
-                                                                                variant="outlined"
-                                                                                size="small"
-                                                                                sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB' }}
-                                                                            />
-                                                                        )}
-                                                                        <IconButton
+                                                                        {/* <IconButton
                                                                             onClick={() => handleTaskFavorite(task)}
                                                                             size="small"
                                                                             aria-label="add-favorite"
@@ -766,7 +815,19 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                                                                             ) : (
                                                                                 <StarBorderIcon sx={{ fontSize: '12px', color: '#7d7f85' }} />
                                                                             )}
-                                                                        </IconButton>
+                                                                        </IconButton> */}
+                                                                        {taskIndex % 2 === 0 && task?.isburning == 1 &&
+                                                                            <img src={BurningImg} alt="burningTask"
+                                                                                style={{ width: '15px', height: '15px', borderRadius: '50%' }} />
+                                                                        }
+                                                                        {taskIndex % 2 === 0 && (
+                                                                            <Chip
+                                                                                label={task?.ticket || 'A00161'}
+                                                                                variant="outlined"
+                                                                                size="small"
+                                                                                sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB' }}
+                                                                            />
+                                                                        )}
                                                                         {task?.isFreezed == 1 &&
                                                                             <CircleIcon sx={{ color: task?.isFreezed == 1 ? "#d32f2f" : "#1976d2", width: "15px", height: "15px" }} />
                                                                         }
@@ -945,9 +1006,26 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                                                                 </IconButton>
                                                             </span>
                                                         </Tooltip>
-                                                        <IconButton onClick={(event) => handleMenuOpen(event, task)}>
+                                                        <Tooltip
+                                                            title="View Task"
+                                                            arrow
+                                                            placement="top"
+                                                            classes={{ tooltip: "custom-tooltip" }}
+                                                        >
+                                                            <span>
+                                                                <IconButton
+                                                                    onClick={() => handleViewTask(task, { Task: "root" })}
+                                                                >
+                                                                    <Eye
+                                                                        size={20}
+                                                                        color={"#808080"}
+                                                                    />
+                                                                </IconButton>
+                                                            </span>
+                                                        </Tooltip>
+                                                        {/* <IconButton onClick={(event) => handleMenuOpen(event, task)}>
                                                             <MoreVert />
-                                                        </IconButton>
+                                                        </IconButton> */}
                                                     </Box>
 
                                                 </TableCell>
@@ -999,7 +1077,7 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                 </TableContainer >
             }
 
-            <Menu
+            {/* <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
@@ -1031,12 +1109,13 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
                     <Eye />
                     View Details
                 </MenuItem>
-            </Menu>
+            </Menu> */}
 
             < TaskDetail
                 open={taskDetailModalOpen}
                 onClose={handleTaskModalClose}
-                TaskData={selectedItem}
+                taskData={selectedItem}
+                handleTaskFavorite={handleTaskFavorite}
             />
             <AssigneeShortcutModal
                 open={openAssigneeModal}

@@ -197,8 +197,8 @@ const HeaderButtons = ({
             </IconButton>
           </Tooltip>
         </Box>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          {location?.pathname?.includes('/tasks') &&
+        {location?.pathname?.includes('/tasks') &&
+          <Box sx={{ display: "flex", gap: 2 }}>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -207,41 +207,29 @@ const HeaderButtons = ({
             >
               New
             </Button>
-          }
-          <IconButton
-            size='medium'
-            className="buttonClassname"
-            onClick={handleTimerCompOpen}
-          >
-            <TimerIcon sx={{ color: '#fff' }} />
-          </IconButton>
-          <ViewToggleButtons view={view} onViewChange={handleViewChange} />
-          {/* <IconButton
-          id="actions"
-          aria-label="actions"
-          aria-labelledby="actions"
-          // onClick={(e) => handleMenuOpen(e, task, { Task: 'root' })}
-          style={{ color: "#7d7f85" }}
-        >
-          <MoreVerticalIcon />
-        </IconButton> */}
-        </Box>
 
-        {/* <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        PaperProps={{
-          className: "MenuBtnPaperClass",
-          style: {
-            maxHeight: 48 * 4.5,
-            width: "20ch",
-          },
-        }}
-      >
-        <MenuItem onClick={() => handleMenuItemClick('Delete', { Task: 'root' })}>Delete</MenuItem>
-        <MenuItem onClick={() => handleMenuItemClick('View', { Task: 'root' })}>View</MenuItem>
-      </Menu> */}
+            <IconButton
+              size='medium'
+              className="buttonClassname"
+              onClick={handleTimerCompOpen}
+            >
+              <TimerIcon sx={{ color: '#fff' }} />
+            </IconButton>
+            <ViewToggleButtons view={view} onViewChange={handleViewChange} />
+          </Box>
+        }
+        {location?.pathname?.includes('/projects') &&
+          <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              className="buttonClassname"
+              onClick={handleDrawerToggle}
+            >
+              New
+            </Button>
+          </Box>
+        }
         <SidebarDrawer
           open={formdrawerOpen}
           onClose={handleDrawerToggle}

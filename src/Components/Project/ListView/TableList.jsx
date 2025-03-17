@@ -19,16 +19,22 @@ import {
 
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { formatDate2, getStatusColor } from "../../../Utils/globalfun";
-import { Eye, Lock, LockOpen, Unlock } from "lucide-react";
+import { formatDate2, getStatusColor, priorityColors } from "../../../Utils/globalfun";
+import { Eye, Lock, LockOpen, Pencil, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
+import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
+import { useSetRecoilState } from "recoil";
 
 const TableView = ({ data, isLoading, handleLockProject }) => {
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("name");
     const [page, setPage] = useState(1);
-    const [selectedRowData, setSelectedRowData] = useState({});
-    console.log('selectedRowData: ', selectedRowData);
+    const [selectedRow, setSelectedRow] = useState({});
+    const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
+    const setActionMode = useSetRecoilState(taskActionMode);
+    const setRootSubroot = useSetRecoilState(rootSubrootflag);
+    const setFormDataValue = useSetRecoilState(formData);
+    const setSelectedTask = useSetRecoilState(selectedRowData);
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [columnWidths] = useState({
@@ -37,35 +43,12 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
         'start date': 100,
         'due date': 100,
         priority: 100,
-        summary: 200,
-        // actions: 100,
+        // summary: 200,
+        actions: 100,
     });
 
-    const priorityColors = {
-        Low: {
-            color: "#4caf50",
-            backgroundColor: "#e8f5e9",
-        },
-        Medium: {
-            color: "#ff9800",
-            backgroundColor: "#fff3e0",
-        },
-        High: {
-            color: "#f44336",
-            backgroundColor: "#ffebee",
-        },
-        Urgent: {
-            color: "#d32f2f",
-            backgroundColor: "#ffcccb",
-        },
-        Critical: {
-            color: "#ffffff",
-            backgroundColor: "#b71c1c",
-        },
-    };
-
     const handleOpenCnfDialog = (task) => {
-        setSelectedRowData(task);
+        setSelectedRow(task);
         setCnfDialogOpen(true);
     };
 
@@ -75,7 +58,16 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
 
     const handleCnfPrlUnl = async () => {
         setCnfDialogOpen(false);
-        handleLockProject(selectedRowData?.taskid);
+        handleLockProject(selectedRow?.taskid);
+    };
+
+    const handleEditProject = async (task, additionalInfo) => {
+        console.log('task: ', task);
+        setRootSubroot(additionalInfo);
+        setActionMode("edit");
+        setFormDataValue(task);
+        setFormDrawerOpen(true);
+        setSelectedTask(task);
     };
 
     const handleRequestSort = (property) => {
@@ -284,14 +276,33 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
                                                         {task?.priority}
                                                     </div>
                                                 </TableCell>
-                                                <TableCell>{task?.remark}</TableCell>
-                                                {/* <TableCell>
-                                                    <LockButton
-                                                        isLocked={task?.isLocked === 1}
-                                                        onClick={() => handleOpenCnfDialog(task)}
-                                                        id={task?.taskid}
-                                                    />
-                                                </TableCell> */}
+                                                {/* <TableCell>{task?.remark}</TableCell> */}
+                                                <TableCell>
+                                                    <Box sx={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                    }}>
+                                                        <LockButton
+                                                            isLocked={task?.isLocked === 1}
+                                                            onClick={() => handleOpenCnfDialog(task)}
+                                                            id={task?.taskid}
+                                                        />
+                                                        <IconButton
+                                                            disabled={task?.isLocked == 1}
+                                                            onClick={() => handleEditProject(task, { Task: "root" })}
+                                                            sx={{
+                                                                '&.Mui-disabled': {
+                                                                    color: 'rgba(0, 0, 0, 0.26)',
+                                                                },
+                                                            }}
+                                                        >
+                                                            <Pencil
+                                                                size={20}
+                                                                color={task?.isLocked == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                                                            />
+                                                        </IconButton>
+                                                    </Box>
+                                                </TableCell>
                                             </TableRow>
                                         </React.Fragment>
                                     ))}

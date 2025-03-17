@@ -283,199 +283,454 @@ const SidebarDrawer = ({
                 className="MainDrawer"
                 sx={{ display: open == true ? 'block' : 'none', zIndex: theme.zIndex.drawer + 2, }}
             >
-                <Box className="drawer-container">
-                    <Box className="drawer-header">
-                        <Typography variant="h6" className="drawer-title">
-                            {taskType === 'multi_input' ? "Add Tasks" : "Add Task"}
-                        </Typography>
-                        <IconButton onClick={handleClear}>
-                            <CircleX />
-                        </IconButton>
-                    </Box>
-                    <div style={{
-                        margin: "10px 0",
-                        border: "1px dashed #7d7f85",
-                        opacity: 0.3,
-                    }}
-                    />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                        <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>{decodedData?.taskname + '/' + decodedData?.module}</Typography>
-                        {rootSubrootflagval?.Task !== "root" &&
-                            <Box className="tSideBarTgBox">
-                                <ToggleButtonGroup
-                                    value={taskType}
-                                    exclusive
-                                    onChange={handleTaskChange}
-                                    aria-label="task type"
-                                    size="small"
-                                    className="toggle-group"
-                                >
-                                    {TASK_OPTIONS?.map(({ id, value, label, icon }) => (
-                                        <ToggleButton
-                                            key={id}
-                                            value={value}
-                                            className="toggle-button"
-                                            sx={{
-                                                borderRadius: "8px",
-                                            }}
-                                        >
-                                            {icon}
-                                            {label}
-                                        </ToggleButton>
-                                    ))}
-                                </ToggleButtonGroup>
-                            </Box>
-                        }
-                    </Box>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={formValues?.milestoneChecked}
-                                        onChange={(e) => setFormValues((prev) => ({ ...prev, milestoneChecked: e.target.checked }))}
-                                        color="primary"
-                                        className="textfieldsClass, milestone-checkbox"
-                                    />
-                                }
-                                label="Milestone"
-                                className="milestone-label"
-                            />
+                {location?.pathname?.includes('/tasks') &&
+                    <Box className="drawer-container">
+                        <Box className="drawer-header">
+                            <Typography variant="h6" className="drawer-title">
+                                {taskType === 'multi_input' ? "Add Tasks" : "Add Task"}
+                            </Typography>
+                            <IconButton onClick={handleClear}>
+                                <CircleX />
+                            </IconButton>
                         </Box>
-                    </Box>
-                    {taskType === 'single' &&
-                        <>
-                            <Grid container spacing={1} className="form-row">
-                                <Grid item xs={6}>
+                        <div style={{
+                            margin: "10px 0",
+                            border: "1px dashed #7d7f85",
+                            opacity: 0.3,
+                        }}
+                        />
+                        <Box sx={{ display: 'flex', justifyContent: decodedData ? 'space-between' : "end", alignItems: 'start' }}>
+                            {decodedData && <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>{decodedData?.taskname + '/' + decodedData?.module}</Typography>}
+                            {rootSubrootflagval?.Task !== "root" &&
+                                <Box className="tSideBarTgBox">
+                                    <ToggleButtonGroup
+                                        value={taskType}
+                                        exclusive
+                                        onChange={handleTaskChange}
+                                        aria-label="task type"
+                                        size="small"
+                                        className="toggle-group"
+                                    >
+                                        {TASK_OPTIONS?.map(({ id, value, label, icon }) => (
+                                            <ToggleButton
+                                                key={id}
+                                                value={value}
+                                                className="toggle-button"
+                                                sx={{
+                                                    borderRadius: "8px",
+                                                }}
+                                            >
+                                                {icon}
+                                                {label}
+                                            </ToggleButton>
+                                        ))}
+                                    </ToggleButtonGroup>
+                                </Box>
+                            }
+                        </Box>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+                            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={formValues?.milestoneChecked}
+                                            onChange={(e) => setFormValues((prev) => ({ ...prev, milestoneChecked: e.target.checked }))}
+                                            color="primary"
+                                            className="textfieldsClass, milestone-checkbox"
+                                        />
+                                    }
+                                    label="Milestone"
+                                    className="milestone-label"
+                                />
+                            </Box>
+                        </Box>
+                        {taskType === 'single' &&
+                            <>
+                                <Grid container spacing={1} className="form-row">
+                                    <Grid item xs={6}>
+                                        <Box className="form-group">
+                                            <Typography
+                                                variant="subtitle1"
+                                                className="form-label"
+                                                htmlFor="taskName"
+                                            >
+                                                Task Name
+                                            </Typography>
+                                            <TextField
+                                                name="taskName"
+                                                placeholder="Enter task name"
+                                                value={formValues.taskName}
+                                                onChange={handleChange}
+                                                {...commonTextFieldProps}
+                                            />
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box className="form-group">
+                                            <Typography className="form-label" variant="subtitle1">
+                                                Category
+                                            </Typography>
+                                            <TextField
+                                                name="category"
+                                                value={formValues.category || ""}
+                                                onChange={handleChange}
+                                                select
+                                                {...commonTextFieldProps}
+                                                {...commonSelectProps}
+                                                ref={filterRefs.category}
+                                            >
+                                                <MenuItem value="">
+                                                    <em>Select Category</em>
+                                                </MenuItem>
+                                                {taskCategory?.map((category) => (
+                                                    <MenuItem name={category?.id} key={category?.id} value={category?.id}>
+                                                        {category.labelname}
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
+                                        </Box>
+                                    </Grid>
+                                    {/* department */}
+                                    <Grid item xs={6}>
+                                        <Box className="form-group">
+                                            <Typography className="form-label" variant="subtitle1">
+                                                Department
+                                            </Typography>
+                                            <TextField
+                                                name="department"
+                                                value={formValues.department || ""}
+                                                onChange={handleChange}
+                                                select
+                                                {...commonTextFieldProps}
+                                                {...commonSelectProps}
+                                                ref={filterRefs.department}
+                                            >
+                                                <MenuItem value="">
+                                                    <em>Select Department</em>
+                                                </MenuItem>
+                                                {taskDepartment?.map((department) => (
+                                                    <MenuItem name={department?.id} key={department?.id} value={department?.id}>
+                                                        {department.labelname}
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
+                                        </Box>
+                                    </Grid>
+                                    {/* Assignee master */}
+                                    <Grid item xs={6}>
+                                        <MultiSelectChipWithLimit
+                                            options={filterAssigneeData}
+                                            label="Assign To"
+                                            placeholder="Select assignees"
+                                            limitTags={2}
+                                            onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box className="form-group">
+                                            <Typography variant="subtitle1" className="form-label" htmlFor="status">
+                                                Status
+                                            </Typography>
+                                            <TextField
+                                                name="status"
+                                                value={formValues?.status || ""}
+                                                onChange={handleChange}
+                                                select
+                                                {...commonTextFieldProps}
+                                                {...commonSelectProps}
+                                                ref={filterRefs?.status}
+                                            >
+                                                <MenuItem value="">
+                                                    <em>Select Status</em>
+                                                </MenuItem>
+                                                {statusData?.map((status) => (
+                                                    <MenuItem name={status?.id} key={status?.id} value={status?.id}>
+                                                        {status?.labelname}
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box className="form-group">
+                                            <Typography variant="subtitle1" className="form-label" htmlFor="priority">
+                                                Priority
+                                            </Typography>
+                                            <TextField
+                                                name="priority"
+                                                value={formValues?.priority || ""}
+                                                onChange={handleChange}
+                                                select
+                                                {...commonTextFieldProps}
+                                                {...commonSelectProps}
+                                                ref={filterRefs?.priority}
+                                            >
+                                                <MenuItem value="">
+                                                    <em>Select Priority</em>
+                                                </MenuItem>
+                                                {priorityData?.map((priority) => (
+                                                    <MenuItem name={priority?.id} key={priority?.id} value={priority?.id}>
+                                                        {priority?.labelname}
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box className="form-group">
+                                            <Typography
+                                                variant="subtitle1"
+                                                className="form-label"
+                                                htmlFor="progress"
+                                            >
+                                                Project
+                                            </Typography>
+                                            <TextField
+                                                name="project"
+                                                value={formValues?.project || ""}
+                                                onChange={handleChange}
+                                                select
+                                                {...commonTextFieldProps}
+                                                {...commonSelectProps}
+                                                ref={filterRefs?.project}
+                                            >
+                                                <MenuItem value="">
+                                                    <em>Select project</em>
+                                                </MenuItem>
+                                                {projectData?.map((project) => (
+                                                    <MenuItem name={project?.id} key={project?.id} value={project?.id}>
+                                                        {project?.labelname}
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box className="form-group">
+                                            <Typography className="form-label" variant="subtitle1">
+                                                Start Date
+                                            </Typography>
+                                            <DatePicker
+                                                name="startDate"
+                                                value={formValues.startDate ? dayjs(formValues.startDate) : null}
+                                                className="textfieldsClass"
+                                                onChange={(value) =>
+                                                    setFormValues((prev) => ({
+                                                        ...prev,
+                                                        startDate: value,
+                                                    }))
+                                                }
+                                                sx={{ minWidth: 320 }}
+                                                format="DD/MM/YYYY"
+                                                textField={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        size="small"
+                                                        fullWidth
+                                                        className="textfieldsClass"
+                                                        sx={{ padding: "0" }}
+                                                    />
+                                                )}
+                                                {...customDatePickerProps}
+                                            />
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box className="form-group">
+                                            <Typography className="form-label" variant="subtitle1">
+                                                Due Date
+                                            </Typography>
+                                            <DatePicker
+                                                name="dueDate"
+                                                value={formValues.dueDate ? dayjs(formValues.dueDate) : null}
+                                                className="textfieldsClass"
+                                                onChange={(value) =>
+                                                    setFormValues((prev) => ({
+                                                        ...prev,
+                                                        dueDate: value,
+                                                    }))
+                                                }
+                                                sx={{ minWidth: 320 }}
+                                                format="DD/MM/YYYY"
+                                                textField={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        size="small"
+                                                        fullWidth
+                                                        className="textfieldsClass"
+                                                        sx={{ padding: "0" }}
+                                                    />
+                                                )}
+                                                {...customDatePickerProps}
+                                            />
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+                                <Grid container spacing={1} className="form-row" sx={{ mt: .5 }}>
+                                    <Grid item xs={4}>
+                                        <Box className="form-group">
+                                            <Typography className="form-label" variant="subtitle1">
+                                                Estimate
+                                            </Typography>
+                                            <EstimateInput onChanges={handleEstimateChange} />
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={4}>
+                                        <Box className="form-group">
+                                            <Typography className="form-label" variant="subtitle1">
+                                                Actual Estimate
+                                            </Typography>
+                                            <EstimateInput onChanges={handleActualChange} />
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={4}>
+                                        <Box className="form-group">
+                                            <Typography className="form-label" variant="subtitle1">
+                                                Final Estimate
+                                            </Typography>
+                                            <EstimateInput onChanges={handleActualChange} />
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+
+
+                                {/* Comment & Remark */}
+                                <Grid item xs={12}>
                                     <Box className="form-group">
-                                        <Typography
-                                            variant="subtitle1"
-                                            className="form-label"
-                                            htmlFor="taskName"
-                                        >
-                                            Task Name
+                                        <Typography variant="subtitle1" className="form-label">
+                                            Remark
                                         </Typography>
                                         <TextField
-                                            name="taskName"
-                                            placeholder="Enter task name"
-                                            value={formValues.taskName}
+                                            name="remark"
+                                            value={formValues.remark}
                                             onChange={handleChange}
+                                            multiline
+                                            rows={2}
+                                            placeholder="Add a remark"
                                             {...commonTextFieldProps}
                                         />
                                     </Box>
                                 </Grid>
-                                <Grid item xs={6}>
+
+                                {/* File Upload */}
+                                <Grid item xs={12}>
                                     <Box className="form-group">
-                                        <Typography className="form-label" variant="subtitle1">
-                                            Category
-                                        </Typography>
-                                        <TextField
-                                            name="category"
-                                            value={formValues.category || ""}
-                                            onChange={handleChange}
-                                            select
-                                            {...commonTextFieldProps}
-                                            {...commonSelectProps}
-                                            ref={filterRefs.category}
+                                        <Typography
+                                            variant="subtitle1"
+                                            className="form-label"
+                                            htmlFor="attachment"
                                         >
-                                            <MenuItem value="">
-                                                <em>Select Category</em>
-                                            </MenuItem>
-                                            {taskCategory?.map((category) => (
-                                                <MenuItem name={category?.id} key={category?.id} value={category?.id}>
-                                                    {category.labelname}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
+                                            Attachment
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                                            <Button variant="outlined" component="label" className="secondary-btn">
+                                                Upload File
+                                                <input
+                                                    type="file"
+                                                    multiple
+                                                    hidden
+                                                    name="attachment"
+                                                    onChange={handleFileChange}
+                                                />
+                                            </Button>
+                                        </Box>
+                                        {formValues.attachment && formValues.attachment.length > 0 && (
+                                            <Box
+                                                sx={{
+                                                    marginTop: "8px",
+                                                    padding: "12px",
+                                                    borderRadius: "8px",
+                                                    backgroundColor: "#f5f5f5",
+                                                    maxHeight: "150px",
+                                                    overflowY: "auto",
+                                                    width: '50%'
+                                                }}
+                                            >
+                                                {formValues.attachment.map((file, index) => (
+                                                    <Box
+                                                        key={index}
+                                                        sx={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            marginBottom: "8px",
+                                                            '&:last-child': { marginBottom: 0 }
+                                                        }}
+                                                    >
+                                                        <InsertDriveFile sx={{ marginRight: 1, color: '#7367f0' }} />
+                                                        <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {file.name}
+                                                        </Typography>
+                                                        <IconButton size="small" onClick={() => handleRemoveFile(index)}>
+                                                            <Close fontSize="small" />
+                                                        </IconButton>
+                                                    </Box>
+                                                ))}
+                                            </Box>
+                                        )}
                                     </Box>
                                 </Grid>
-                                {/* department */}
+                            </>
+                        }
+                        {taskType === 'multi_input' &&
+                            <>
                                 <Grid item xs={6}>
                                     <Box className="form-group">
-                                        <Typography className="form-label" variant="subtitle1">
-                                            Department
-                                        </Typography>
-                                        <TextField
-                                            name="department"
-                                            value={formValues.department || ""}
-                                            onChange={handleChange}
-                                            select
-                                            {...commonTextFieldProps}
-                                            {...commonSelectProps}
-                                            ref={filterRefs.department}
-                                        >
-                                            <MenuItem value="">
-                                                <em>Select Department</em>
-                                            </MenuItem>
-                                            {taskDepartment?.map((department) => (
-                                                <MenuItem name={department?.id} key={department?.id} value={department?.id}>
-                                                    {department.labelname}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
+                                        {formValues.bulkTask.length === 0 &&
+                                            <Typography className="form-label" variant="subtitle1">
+                                                Task Name
+                                            </Typography>
+                                        }
+                                        <MultiTaskInput multiType={tasksubType} onSave={handlebulkTaskSave} />
                                     </Box>
                                 </Grid>
-                                {/* Assignee master */}
-                                <Grid item xs={6}>
-                                    <MultiSelectChipWithLimit
-                                        options={filterAssigneeData}
-                                        label="Assign To"
-                                        placeholder="Select assignees"
-                                        limitTags={2}
-                                        onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
-                                    />
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <Box className="form-group">
-                                        <Typography variant="subtitle1" className="form-label" htmlFor="status">
-                                            Status
-                                        </Typography>
-                                        <TextField
-                                            name="status"
-                                            value={formValues?.status || ""}
-                                            onChange={handleChange}
-                                            select
-                                            {...commonTextFieldProps}
-                                            {...commonSelectProps}
-                                            ref={filterRefs?.status}
+                            </>
+                        }
+                        {(taskType !== 'multi_input' || (taskType === 'multi_input' && formValues.bulkTask.length > 0)) && (
+                            <Grid item xs={12} sx={{ textAlign: "right" }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
+                                    <Box>
+                                        <Button
+                                            variant="outlined"
+                                            onClick={handleClear}
+                                            sx={{ marginRight: "10px" }}
+                                            className="secondaryBtnClassname"
                                         >
-                                            <MenuItem value="">
-                                                <em>Select Status</em>
-                                            </MenuItem>
-                                            {statusData?.map((status) => (
-                                                <MenuItem name={status?.id} key={status?.id} value={status?.id}>
-                                                    {status?.labelname}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <Box className="form-group">
-                                        <Typography variant="subtitle1" className="form-label" htmlFor="priority">
-                                            Priority
-                                        </Typography>
-                                        <TextField
-                                            name="priority"
-                                            value={formValues?.priority || ""}
-                                            onChange={handleChange}
-                                            select
-                                            {...commonTextFieldProps}
-                                            {...commonSelectProps}
-                                            ref={filterRefs?.priority}
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={handleSubmit}
+                                            disabled={isLoading}
+                                            className="primary-btn"
                                         >
-                                            <MenuItem value="">
-                                                <em>Select Priority</em>
-                                            </MenuItem>
-                                            {priorityData?.map((priority) => (
-                                                <MenuItem name={priority?.id} key={priority?.id} value={priority?.id}>
-                                                    {priority?.labelname}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
+                                            {isLoading ? "Saving..." : "Save Task"}
+                                        </Button>
                                     </Box>
-                                </Grid>
-                                <Grid item xs={6}>
+                                </Box>
+                            </Grid>
+                        )}
+                    </Box>
+                }
+                {location?.pathname?.includes('/projects') &&
+                    <Box className="pr_drawer-container">
+                        <Box className="drawer-header">
+                            <Typography variant="h6" className="drawer-title">
+                                Add Projet Module
+                            </Typography>
+                            <IconButton onClick={handleClear}>
+                                <CircleX />
+                            </IconButton>
+                        </Box>
+                        <div style={{
+                            margin: "10px 0",
+                            border: "1px dashed #7d7f85",
+                            opacity: 0.3,
+                        }}
+                        />
+                        <>
+                            <Grid container spacing={1} className="form-row">
+                                <Grid item xs={12}>
                                     <Box className="form-group">
                                         <Typography
                                             variant="subtitle1"
@@ -504,7 +759,100 @@ const SidebarDrawer = ({
                                         </TextField>
                                     </Box>
                                 </Grid>
-                                <Grid item xs={6}>
+                                <Grid item xs={12}>
+                                    <Box className="form-group">
+                                        <Typography
+                                            variant="subtitle1"
+                                            className="form-label"
+                                            htmlFor="taskName"
+                                        >
+                                            Module
+                                        </Typography>
+                                        <TextField
+                                            name="taskName"
+                                            placeholder="Enter task name"
+                                            value={formValues.taskName}
+                                            onChange={handleChange}
+                                            {...commonTextFieldProps}
+                                        />
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Box className="form-group">
+                                        <Typography className="form-label" variant="subtitle1">
+                                            Category
+                                        </Typography>
+                                        <TextField
+                                            name="category"
+                                            value={formValues.category || ""}
+                                            onChange={handleChange}
+                                            select
+                                            {...commonTextFieldProps}
+                                            {...commonSelectProps}
+                                            ref={filterRefs.category}
+                                        >
+                                            <MenuItem value="">
+                                                <em>Select Category</em>
+                                            </MenuItem>
+                                            {taskCategory?.map((category) => (
+                                                <MenuItem name={category?.id} key={category?.id} value={category?.id}>
+                                                    {category.labelname}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Box className="form-group">
+                                        <Typography variant="subtitle1" className="form-label" htmlFor="status">
+                                            Status
+                                        </Typography>
+                                        <TextField
+                                            name="status"
+                                            value={formValues?.status || ""}
+                                            onChange={handleChange}
+                                            select
+                                            {...commonTextFieldProps}
+                                            {...commonSelectProps}
+                                            ref={filterRefs?.status}
+                                        >
+                                            <MenuItem value="">
+                                                <em>Select Status</em>
+                                            </MenuItem>
+                                            {statusData?.map((status) => (
+                                                <MenuItem name={status?.id} key={status?.id} value={status?.id}>
+                                                    {status?.labelname}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Box className="form-group">
+                                        <Typography variant="subtitle1" className="form-label" htmlFor="priority">
+                                            Priority
+                                        </Typography>
+                                        <TextField
+                                            name="priority"
+                                            value={formValues?.priority || ""}
+                                            onChange={handleChange}
+                                            select
+                                            {...commonTextFieldProps}
+                                            {...commonSelectProps}
+                                            ref={filterRefs?.priority}
+                                        >
+                                            <MenuItem value="">
+                                                <em>Select Priority</em>
+                                            </MenuItem>
+                                            {priorityData?.map((priority) => (
+                                                <MenuItem name={priority?.id} key={priority?.id} value={priority?.id}>
+                                                    {priority?.labelname}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={12}>
                                     <Box className="form-group">
                                         <Typography className="form-label" variant="subtitle1">
                                             Start Date
@@ -519,7 +867,7 @@ const SidebarDrawer = ({
                                                     startDate: value,
                                                 }))
                                             }
-                                            sx={{ minWidth: 320 }}
+                                            sx={{ minWidth: 400 }}
                                             format="DD/MM/YYYY"
                                             textField={(params) => (
                                                 <TextField
@@ -534,7 +882,7 @@ const SidebarDrawer = ({
                                         />
                                     </Box>
                                 </Grid>
-                                <Grid item xs={6}>
+                                <Grid item xs={12}>
                                     <Box className="form-group">
                                         <Typography className="form-label" variant="subtitle1">
                                             Due Date
@@ -549,7 +897,7 @@ const SidebarDrawer = ({
                                                     dueDate: value,
                                                 }))
                                             }
-                                            sx={{ minWidth: 320 }}
+                                            sx={{ minWidth: 400 }}
                                             format="DD/MM/YYYY"
                                             textField={(params) => (
                                                 <TextField
@@ -565,39 +913,11 @@ const SidebarDrawer = ({
                                     </Box>
                                 </Grid>
                             </Grid>
-                            <Grid container spacing={1} className="form-row" sx={{ mt: .5 }}>
-                                <Grid item xs={4}>
-                                    <Box className="form-group">
-                                        <Typography className="form-label" variant="subtitle1">
-                                            Estimate
-                                        </Typography>
-                                        <EstimateInput onChanges={handleEstimateChange} />
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={4}>
-                                    <Box className="form-group">
-                                        <Typography className="form-label" variant="subtitle1">
-                                            Actual Estimate
-                                        </Typography>
-                                        <EstimateInput onChanges={handleActualChange} />
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={4}>
-                                    <Box className="form-group">
-                                        <Typography className="form-label" variant="subtitle1">
-                                            Final Estimate
-                                        </Typography>
-                                        <EstimateInput onChanges={handleActualChange} />
-                                    </Box>
-                                </Grid>
-                            </Grid>
-
-
                             {/* Comment & Remark */}
                             <Grid item xs={12}>
                                 <Box className="form-group">
                                     <Typography variant="subtitle1" className="form-label">
-                                        Remark
+                                        Description
                                     </Typography>
                                     <TextField
                                         name="remark"
@@ -668,48 +988,34 @@ const SidebarDrawer = ({
                                     )}
                                 </Box>
                             </Grid>
-                        </>
-                    }
-                    {taskType === 'multi_input' &&
-                        <>
-                            <Grid item xs={6}>
-                                <Box className="form-group">
-                                    {formValues.bulkTask.length === 0 &&
-                                        <Typography className="form-label" variant="subtitle1">
-                                            Task Name
-                                        </Typography>
-                                    }
-                                    <MultiTaskInput multiType={tasksubType} onSave={handlebulkTaskSave} />
+
+                            {/* Action button */}
+                            <Grid item xs={12} sx={{ textAlign: "right" }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
+                                    <Box>
+                                        <Button
+                                            variant="outlined"
+                                            onClick={handleClear}
+                                            sx={{ marginRight: "10px" }}
+                                            className="secondaryBtnClassname"
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={handleSubmit}
+                                            disabled={isLoading}
+                                            className="primary-btn"
+                                        >
+                                            {isLoading ? "Saving..." : "Save"}
+                                        </Button>
+                                    </Box>
                                 </Box>
                             </Grid>
                         </>
-                    }
-                    {(taskType !== 'multi_input' || (taskType === 'multi_input' && formValues.bulkTask.length > 0)) && (
-                        <Grid item xs={12} sx={{ textAlign: "right" }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
-                                <Box>
-                                    <Button
-                                        variant="outlined"
-                                        onClick={handleClear}
-                                        sx={{ marginRight: "10px" }}
-                                        className="secondary-btn"
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={handleSubmit}
-                                        disabled={isLoading}
-                                        className="primary-btn"
-                                    >
-                                        {isLoading ? "Saving..." : "Save Task"}
-                                    </Button>
-                                </Box>
-                            </Box>
-                        </Grid>
-                    )}
-                </Box>
+                    </Box>
+                }
             </Drawer>
         </>
     );

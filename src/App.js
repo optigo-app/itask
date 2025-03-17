@@ -10,6 +10,7 @@ import { fetchMasterGlFunc } from './Utils/globalfun';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
 import ProjectModuleList from './DemoCode/ProjectModuleList';
+import InfoCard from './DemoCode/InfoCard';
 
 // Lazy Loaded Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -148,7 +149,7 @@ const App = () => {
                                     <Route path="/masters" element={<ProtectedRoute><Masters /></ProtectedRoute>} />
                                     <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                                     <Route path="*" element={<PagenotFound />} />
-                                    <Route path="/test" element={<ProtectedRoute><ProjectModuleList /></ProtectedRoute>} />
+                                    <Route path="/test" element={<ProtectedRoute><InfoCard /></ProtectedRoute>} />
                                 </Routes>
                             </Layout>
                         </Suspense>
