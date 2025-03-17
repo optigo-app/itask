@@ -11,6 +11,15 @@
         overflow-x: hidden;
         // position: relative;
     }
+    .pr_drawer-container{
+        width: 400px;
+        padding: 5px 24px 24px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 0px;
+        font-family: $font-family !important;
+        overflow-x: hidden;
+    }
 
     .mltMainBox {
         position: relative;

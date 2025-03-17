@@ -274,6 +274,7 @@ const Project = () => {
                   data={filteredData ?? null}
                   isLoading={isTaskLoading}
                   masterData={masterData}
+                  handleLockProject={handleLockProject}
                 />
               )}
 
@@ -283,6 +284,7 @@ const Project = () => {
                   isLoading={isTaskLoading}
                   masterData={masterData}
                   statusData={statusData}
+                  handleLockProject={handleLockProject}
                 />
               )}
 

@@ -220,6 +220,7 @@ const Task = () => {
         const estimate = ['20', '30', '40']
         const isburning = 1;
         const isFreezed = 0;
+        const isFav = false;
 
         const enhancedSubtasks = task?.subtasks?.map((subtask) => ({
           ...enhanceTask(subtask),
@@ -239,6 +240,7 @@ const Task = () => {
           estimate: estimate,
           isburning: isburning,
           subtaskflag: 0,
+          isFav: isFav,
           isFreezed: isFreezed,
           isUpdated: false,
         };
@@ -445,23 +447,27 @@ const Task = () => {
         if (task.taskid === taskToUpdate.taskid) {
           return {
             ...task,
-            isFav: !task.isFav,
+            isFav: !task.isFav, // Toggle isFav
           };
         }
-
-        if (task.subtasks && task.subtasks.length > 0) {
-          return {
-            ...task,
-            subtasks: updateTasksRecursively(task.subtasks),
-          };
+  
+        if (task.subtasks?.length > 0) {
+          const updatedSubtasks = updateTasksRecursively(task.subtasks);
+          if (updatedSubtasks !== task.subtasks) {
+            return {
+              ...task,
+              subtasks: updatedSubtasks,
+            };
+          }
         }
-
+  
         return task;
       });
     };
-
+  
     setTasks((prevTasks) => updateTasksRecursively(prevTasks));
   };
+  
 
   const handleFreezeTask = (taskToUpdate) => {
     const updateTasksRecursively = (tasks) => {
