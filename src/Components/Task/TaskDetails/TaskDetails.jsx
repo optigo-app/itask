@@ -31,9 +31,7 @@ import SubtaskCard from './SubTaskcard';
 const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const theme = useTheme();
     const [taskArr, setTaskArr] = useRecoilState(TaskData);
-    console.log('taskArr: ', taskArr);
     // const taskData = useRecoilValue(formData);
-    console.log('taskData: ', taskData);
     const setCallTaskApi = useSetRecoilState(fetchlistApiCall);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [count, setCount] = useState(2);

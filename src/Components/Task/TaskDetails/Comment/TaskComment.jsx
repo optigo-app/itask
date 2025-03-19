@@ -4,7 +4,6 @@ import { Eye, Paperclip, Send } from 'lucide-react';
 import CommentCard from './CommentCard';
 
 const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, onDeleteComment, onSendComment }) => {
-    console.log('comments: ', comments);
     const [selectedFile, setSelectedFile] = useState(null);
     const [filePreview, setFilePreview] = useState(null);
 

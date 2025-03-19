@@ -89,7 +89,6 @@ const TableView = ({ data, handleTaskFavorite, handleFreezeTask, isLoading }) =>
         };
         const selectedData = findTaskRecursively(data, selectedItem.taskid);
         if (selectedData) {
-            console.log('selectedData: ', selectedData);
             setSelectedItem(selectedData);
         }
     }, [data, selectedItem?.taskid]);

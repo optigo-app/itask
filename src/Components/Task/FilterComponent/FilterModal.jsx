@@ -20,7 +20,6 @@ const FiltersDrawer = ({
     taskCategory,
     taskDepartment,
 }) => {
-    console.log('filters: ', filters);
     const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
     const [drawerOpen, setDrawerOpen] = useRecoilState(filterDrawer);
 

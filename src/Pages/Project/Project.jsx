@@ -30,6 +30,7 @@ const Project = () => {
   const [filters, setFilters] = useState({});
   const [drawerOpen1, setDrawerOpen1] = useRecoilState(filterDrawer1);
 
+  // Helper function to get data from session storage and set state
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
     if (data) {
@@ -37,25 +38,28 @@ const Project = () => {
     }
   };
 
-  // master data fetching and setting
+  // Master data fetching and real-time updating
   const fetchMasterData = async () => {
     setIsLoading(true);
     try {
-      const masterData = sessionStorage.getItem('masterData');
-      const result = JSON.parse(masterData);
-      if (!result) {
-        fetchMasterGlFunc();
-      } else {
-        setMasterData(result);
+      let storedStructuredData = sessionStorage.getItem('structuredMasterData');
+      let structuredData = storedStructuredData ? JSON.parse(storedStructuredData) : null;
+      if (!structuredData) {
+        await fetchMasterGlFunc();
+        storedStructuredData = sessionStorage.getItem('structuredMasterData');
+        structuredData = storedStructuredData ? JSON.parse(storedStructuredData) : null;
+      }
+      if (structuredData) {
+        setMasterData(structuredData);
         retrieveAndSetData('taskAssigneeData', setAssigneeData);
-        retrieveAndSetData('taskStatusData', setStatusData);
-        retrieveAndSetData('taskPriorityData', setPriorityData);
-        retrieveAndSetData('taskDepartmentData', setTaskDepartment);
-        retrieveAndSetData('taskProjectData', setTaskProject);
-        retrieveAndSetData('taskCategoryData', setTaskCategory);
+        retrieveAndSetData('taskstatusData', setStatusData);
+        retrieveAndSetData('taskpriorityData', setPriorityData);
+        retrieveAndSetData('taskdepartmentData', setTaskDepartment);
+        retrieveAndSetData('taskprojectData', setTaskProject);
+        retrieveAndSetData('taskworkcategoryData', setTaskCategory);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching master data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -169,7 +173,6 @@ const Project = () => {
       }
       return task;
     });
-    console.log('updatedData: ', updatedData);
     setProject(updatedData);
   };
 

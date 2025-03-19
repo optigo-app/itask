@@ -10,9 +10,14 @@ const MultiTaskInput = ({ onSave }) => {
     const [editIndex, setEditIndex] = useState(null);
     const [showEdit, setShowEdit] = useState(true);
     const [text, setText] = useState("");
-    const [newTask, setNewTask] = useState(""); // For single input field
+    const [newTask, setNewTask] = useState("");
     const [newEstimate, setNewEstimate] = useState("");
     const inputRef = useRef(null);
+    const estimateRefs = useRef([]);
+
+    useEffect(() => {
+        estimateRefs.current = estimateRefs.current.slice(0, tasks.length);
+    }, [tasks]);
 
     // Handle bulk text entry
     const handleSaveTextArea = () => {
@@ -47,6 +52,18 @@ const MultiTaskInput = ({ onSave }) => {
         if (e.key === "Enter") {
             e.preventDefault();
             addNewTask();
+        }
+    };
+
+    const handleEstimateKeyPress = (e, index) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const nextIndex = index + 1;
+            if (nextIndex < tasks.length) {
+                estimateRefs.current[nextIndex]?.focus();
+            } else {
+                inputRef.current?.focus();
+            }
         }
     };
 
@@ -115,7 +132,7 @@ const MultiTaskInput = ({ onSave }) => {
                             onChange={(e) => setText(e.target.value)}
                             style={{
                                 padding: "10px",
-                                fontSize: "16px",
+                                fontSize: "14px",
                                 borderRadius: "8px",
                                 border: "1px solid #ccc",
                                 outline: "none",
@@ -146,15 +163,15 @@ const MultiTaskInput = ({ onSave }) => {
                                     <Table className="Mlt-denseTable">
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell sx={{ width: "50%" }}><b>Task Name</b></TableCell>
-                                                <TableCell sx={{ width: "30%" }}><b>Estimate</b></TableCell>
+                                                <TableCell sx={{ width: "60%" }}><b>Task Name</b></TableCell>
+                                                <TableCell sx={{ width: "20%" }}><b>Estimate</b></TableCell>
                                                 <TableCell sx={{ width: "20%", textAlign: "center" }}><b>Actions</b></TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
                                             {tasks.map((task, index) => (
                                                 <TableRow key={index}>
-                                                    <TableCell sx={{ width: "50%" }}>
+                                                    <TableCell sx={{ width: "60%" }}>
                                                         {editIndex === index ? (
                                                             <TextField
                                                                 size="small"
@@ -168,13 +185,15 @@ const MultiTaskInput = ({ onSave }) => {
                                                         )}
                                                     </TableCell>
 
-                                                    <TableCell sx={{ width: "30%" }}>
+                                                    <TableCell sx={{ width: "20%" }}>
                                                         <TextField
                                                             type="number"
                                                             size="small"
                                                             fullWidth
                                                             value={task.estimate}
                                                             onChange={(e) => handleTaskChange(index, "estimate", e.target.value)}
+                                                            onKeyPress={(e) => handleEstimateKeyPress(e, index)}
+                                                            inputRef={el => estimateRefs.current[index] = el}
                                                             className="textfieldsClass"
                                                         />
                                                     </TableCell>

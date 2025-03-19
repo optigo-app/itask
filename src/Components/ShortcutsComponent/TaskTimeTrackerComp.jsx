@@ -26,7 +26,6 @@ import { timerCompOpen } from "../../Recoil/atom";
 
 const TaskTimeTrackerComp = () => {
     const [drawerOpen, setDrawerOpen] = useRecoilState(timerCompOpen);
-    console.log('drawerOpen: ', drawerOpen);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedTask, setSelectedTask] = useState(null);
     const [isRunning, setIsRunning] = useState(false);

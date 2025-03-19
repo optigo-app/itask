@@ -3,8 +3,8 @@ import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box } from "@mui/material";
 import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { fetchlistApiCall, filterDrawer, filterDrawer1, masterDataValue, selectedRowData, taskActionMode, TaskData } from "../../Recoil/atom";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { fetchlistApiCall, filterDrawer, filterDrawer1, masterDataValue, selectedCategoryAtom, selectedRowData, taskActionMode, TaskData } from "../../Recoil/atom";
 import { fetchMasterGlFunc, formatDate, formatDate2 } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
@@ -31,11 +31,13 @@ const Task = () => {
   const [taskProject, setTaskProject] = useState();
   const [taskCategory, setTaskCategory] = useState();
   const [activeButton, setActiveButton] = useState("table");
+  const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [filters, setFilters] = useState({});
 
   // Sample data for tasks
   const [tasks, setTasks] = useRecoilState(TaskData);
 
+  // Helper function to get data from session storage and set state
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
     if (data) {
@@ -43,122 +45,32 @@ const Task = () => {
     }
   };
 
-  // master data fetching and setting
+  // Master data fetching and real-time updating
   const fetchMasterData = async () => {
     setIsLoading(true);
     try {
-      const masterData = sessionStorage.getItem('masterData');
-      const result = JSON.parse(masterData);
-      if (!result) {
-        fetchMasterGlFunc();
-      } else {
-        setMasterData(result);
+      let storedStructuredData = sessionStorage.getItem('structuredMasterData');
+      let structuredData = storedStructuredData ? JSON.parse(storedStructuredData) : null;
+      if (!structuredData) {
+        await fetchMasterGlFunc();
+        storedStructuredData = sessionStorage.getItem('structuredMasterData');
+        structuredData = storedStructuredData ? JSON.parse(storedStructuredData) : null;
+      }
+      if (structuredData) {
+        setMasterData(structuredData);
         retrieveAndSetData('taskAssigneeData', setAssigneeData);
-        retrieveAndSetData('taskStatusData', setStatusData);
-        retrieveAndSetData('taskPriorityData', setPriorityData);
-        retrieveAndSetData('taskDepartmentData', setTaskDepartment);
-        retrieveAndSetData('taskProjectData', setTaskProject);
-        retrieveAndSetData('taskCategoryData', setTaskCategory);
+        retrieveAndSetData('taskstatusData', setStatusData);
+        retrieveAndSetData('taskpriorityData', setPriorityData);
+        retrieveAndSetData('taskdepartmentData', setTaskDepartment);
+        retrieveAndSetData('taskprojectData', setTaskProject);
+        retrieveAndSetData('taskworkcategoryData', setTaskCategory);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching master data:", error);
     } finally {
       setIsLoading(false);
     }
   };
-
-  // const fetchTaskData = async (selectedRow) => {
-  //   setIsLoading(true);
-  //   try {
-  //     if (!priorityData || !statusData || !taskProject || !taskDepartment) {
-  //       console.log("Master data not yet loaded");
-  //       setIsLoading(false);
-  //       return;
-  //     }
-
-  //     const taskData = await fetchTaskDataApi(selectedRow ?? {});
-
-  //     const labeledTasks = mapTaskLabels(taskData);
-  //     const enhancedTasks = labeledTasks?.map(task => {
-  //       // Task
-  //       const priority = priorityData?.find(item => item?.id == task?.priorityid);
-  //       const status = statusData?.find(item => item?.id == task?.statusid);
-  //       const project = taskProject?.find(item => item?.id == task?.projectid);
-  //       const department = taskDepartment?.find(item => item?.id == task?.departmentid);
-
-  //       // Map subtasks if present
-  //       const enhancedSubtasks = task?.subtasks?.map(subtask => {
-  //         const subPriority = priorityData?.find(item => item?.id == subtask?.priorityid);
-  //         const subStatus = statusData?.find(item => item?.id == subtask?.statusid);
-  //         const subProject = taskProject?.find(item => item?.id == subtask?.projectid);
-  //         const subDepartment = taskDepartment?.find(item => item?.id == subtask?.departmentid);
-
-  //         return {
-  //           ...subtask,
-  //           priority: subPriority ? subPriority?.labelname : '',
-  //           status: subStatus ? subStatus?.labelname : '',
-  //           taskPr: subProject ? subProject?.labelname : '',
-  //           taskDpt: subDepartment ? subDepartment?.labelname : '',
-  //           subtaskflag: 1,
-  //         };
-  //       });
-
-  //       return {
-  //         ...task,
-  //         priority: priority ? priority?.labelname : '',
-  //         status: status ? status?.labelname : '',
-  //         taskPr: project ? project?.labelname : '',
-  //         taskDpt: department ? department?.labelname : '',
-  //         subtasks: enhancedSubtasks || [],
-  //         subtaskflag: 0,
-  //       };
-  //     });
-
-  //     setTasks((prevTasks) => {
-  //       if (!Array.isArray(prevTasks)) return [...enhancedTasks];
-
-  //       const updateSubtasks = (subtasks, visited = new Set()) => {
-  //         if (!Array.isArray(subtasks) || subtasks.length === 0) return subtasks;
-
-  //         return subtasks.map((subtask) => {
-  //           if (visited.has(subtask.taskid)) return subtask;
-
-  //           visited.add(subtask.taskid);
-
-  //           const matchingSubtask = enhancedTasks.find(
-  //             (newTask) => newTask?.taskid === subtask?.taskid
-  //           );
-
-  //           if (matchingSubtask) {
-  //             return {
-  //               ...subtask,
-  //               ...matchingSubtask,
-  //               subtasks: updateSubtasks(
-  //                 matchingSubtask.subtasks || subtask.subtasks,
-  //                 visited
-  //               ),
-  //             };
-  //           }
-  //           return {
-  //             ...subtask,
-  //             subtasks: updateSubtasks(subtask.subtasks, visited),
-  //           };
-  //         });
-  //       };
-
-  //       return prevTasks.map((task) => ({
-  //         ...task,
-  //         subtasks: updateSubtasks(task?.subtasks),
-  //       }));
-  //     });
-
-  //     console.log('enhancedTasks: ', enhancedTasks);
-  //   } catch (error) {
-  //     console.error(error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
   const assigneeJosn = [
     {
@@ -195,6 +107,7 @@ const Task = () => {
 
 
   const fetchTaskData = async () => {
+    debugger
     if (tasks?.length == 0) {
       setIsTaskLoading(true);
     }
@@ -208,7 +121,6 @@ const Task = () => {
       const labeledTasks = mapTaskLabels(taskData);
       // const finalTaskData = [...labeledTasks, ...TaskJson]
       const finalTaskData = [...labeledTasks]
-      console.log('finalTaskData: ', finalTaskData);
 
       const enhanceTask = (task) => {
         const priority = priorityData?.find(item => item?.id == task?.priorityid);
@@ -332,7 +244,7 @@ const Task = () => {
 
   // master api call
   useEffect(() => {
-    const init = sessionStorage.getItem('taskInit');
+    const init = sessionStorage?.getItem('taskInit');
     if (init) {
       fetchMasterData();
     }
@@ -340,13 +252,16 @@ const Task = () => {
 
   // task api call
   useEffect(() => {
+    debugger
     setTimeout(() => {
       if (priorityData && statusData && taskProject && taskDepartment) {
         if (callFetchTaskApi) {
           fetchTaskData(selectedRow);
         }
+      } else {
+        fetchMasterData();
       }
-    }, 200);
+    }, 100);
   }, [location?.pathname, priorityData, statusData, taskProject, taskDepartment, callFetchTaskApi]);
 
   // Filter change handler
@@ -366,10 +281,12 @@ const Task = () => {
       ...prevFilters,
       [filterKey]: ''
     }));
+    setSelectedCategory('');
   };
 
   const handleClearAllFilters = () => {
     setFilters({});
+    setSelectedCategory('');
   };
 
   // filter functions
@@ -407,8 +324,8 @@ const Task = () => {
           task?.status?.toLowerCase().includes(normalizedSearchTerm) ||
           task?.priority?.toLowerCase().includes(normalizedSearchTerm) ||
           (Array.isArray(task?.assignee)
-            ? task.assignee.some((a) => a.toLowerCase().includes(normalizedSearchTerm))
-            : task?.assignee?.toLowerCase().includes(normalizedSearchTerm)) ||
+            ? task.assignee.some((a) => a?.name?.toLowerCase()?.includes(normalizedSearchTerm))
+            : task?.assignee?.toLowerCase()?.includes(normalizedSearchTerm)) ||
           task?.description?.toLowerCase().includes(normalizedSearchTerm) ||
           task?.DeadLineDate?.toLowerCase().includes(normalizedSearchTerm) ||
           task?.taskPr?.toLowerCase().includes(normalizedSearchTerm) ||
@@ -450,7 +367,7 @@ const Task = () => {
             isFav: !task.isFav, // Toggle isFav
           };
         }
-  
+
         if (task.subtasks?.length > 0) {
           const updatedSubtasks = updateTasksRecursively(task.subtasks);
           if (updatedSubtasks !== task.subtasks) {
@@ -460,14 +377,14 @@ const Task = () => {
             };
           }
         }
-  
+
         return task;
       });
     };
-  
+
     setTasks((prevTasks) => updateTasksRecursively(prevTasks));
   };
-  
+
 
   const handleFreezeTask = (taskToUpdate) => {
     const updateTasksRecursively = (tasks) => {

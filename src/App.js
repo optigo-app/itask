@@ -74,24 +74,26 @@ const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem("isLoggedIn") === "true");
 
     useEffect(() => {
+        debugger
         let retryCount = 0;
         const maxRetries = 5;
-    
+
         const checkAndInit = async () => {
             if (retryCount >= maxRetries) return console.log("Api call failed after 5 retries");
-    
-            const token = sessionStorage.getItem("taskInit");
-            if (token) return;
-    
-            const result = await taskInit();
-            if (result?.Data?.rd) {
+
+            const token = JSON?.parse(localStorage.getItem("token"));
+            let result;
+            if (!token) {
+                result = await taskInit();
+            }
+            if (result?.Data?.rd || token) {
                 fetchMasterGlFunc();
             } else {
                 retryCount++;
                 setTimeout(checkAndInit, 1000);
             }
         };
-    
+
         checkAndInit();
     }, []);
 
@@ -120,7 +122,7 @@ const App = () => {
         backgroundImage: "linear-gradient(#fff, #fff), linear-gradient(45deg, #6a11cb, #2575fc)",
         backgroundOrigin: "border-box",
         backgroundClip: "padding-box, border-box",
-      };
+    };
 
     return (
         <>
