@@ -21,15 +21,19 @@ export const fetchMaster = async () => {
     }
 };
 
-export const addEditDelMaster = async (mode, masterName, newRow, editMode) => {
+export const addEditDelMaster = async (payload) => {
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
+        let mode = payload?.mode;
+        let masterName = payload?.tabData?.table_name;
+        let editMode = payload?.id;
+
         const combinedValue = JSON.stringify({
             master_table: `${masterName ?? ''}`,
             master_mode: `${mode ?? ''}`,
             master_id: `${editMode ?? ''}`,
-            master_labelvalue: `${newRow?.labelname ?? ''}`,
-            master_displayorder: `${newRow?.masterDisplayOrder ?? ''}`,
+            master_labelvalue: `${payload?.name ?? ''}`,
+            master_displayorder: `${payload?.displayorder ?? ''}`,
         });
 
         const body = {

@@ -328,22 +328,24 @@ const SidebarDrawer = ({
                                 </Box>
                             }
                         </Box>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={formValues?.milestoneChecked}
-                                            onChange={(e) => setFormValues((prev) => ({ ...prev, milestoneChecked: e.target.checked }))}
-                                            color="primary"
-                                            className="textfieldsClass, milestone-checkbox"
-                                        />
-                                    }
-                                    label="Milestone"
-                                    className="milestone-label"
-                                />
+                        {taskType === 'single' &&
+                            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+                                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={formValues?.milestoneChecked}
+                                                onChange={(e) => setFormValues((prev) => ({ ...prev, milestoneChecked: e.target.checked }))}
+                                                color="primary"
+                                                className="textfieldsClass, milestone-checkbox"
+                                            />
+                                        }
+                                        label="Milestone"
+                                        className="milestone-label"
+                                    />
+                                </Box>
                             </Box>
-                        </Box>
+                        }
                         {taskType === 'single' &&
                             <>
                                 <Grid container spacing={1} className="form-row">

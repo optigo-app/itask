@@ -1,173 +1,121 @@
 @import '../../theme/variable.scss';
 
-.customDataGridWrapper {
-    // General Font and Color Styling
-    font-family: $font-family !important;
-    color: $titleColor !important;
-
-    // Master Card Styling
-    .master_card {
-        box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important;
-        border-radius: 8px !important;
-        height: 540px !important;
-        overflow: auto !important;
-    }
-
-    // Titles
-    .masterTitle {
-        font-family: inherit;
-        color: $titleColor !important;
-    }
-
-    // MuiPaper Root Shadow
-    .MuiPaper-root {
-        box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important;
-        --Paper-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important;
-    }
-
-    // DataGrid Container Height
-    .DataGridContainer {
-        height: 370px !important;
-    }
-
-    // DataGrid Styles
-    .MuiDataGrid-root,
-    .MuiDataGrid-footer,
-    .MuiDataGrid-toolbarContainer {
-        font-family: $font-family !important;
-        color: $titleColor !important;
-        box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important;
-    }
-
-    .MuiDataGrid-columnSeparator {
-        display: none !important;
-    }
-
-    .MuiDataGrid-root {
-        border-radius: 8px !important;
-    }
-
-    .MuiDataGrid-columnHeader {
-        font-weight: bold !important;
-        padding: 12px 16px !important;
-    }
-
-    .MuiDataGrid-columnHeaderTitle {
-        font-weight: bold !important;
-    }
-
-    .MuiDataGrid-cell {
-        font-size: 15px !important;
-        // padding: 5px 16px !important;
-
-        &:hover {
-            background-color: #f4f4f4 !important;
-        }
-
-        .MuiTypography-root {
-            font-size: inherit;
-        }
-    }
-
-    .MuiDataGrid-row:hover {
-        background-color: #f4f4f4 !important;
-        cursor: pointer;
-    }
-
-    .MuiDataGrid-cell--textLeft,
-    .MuiDataGrid-editCell,
-    .MuiDataGrid-withBorderColor {
-        // border: none !important;
-        outline: none !important;
-    }
-
-    .MuiDataGrid-editCell {
-        color: $button-Bgcolor !important;
-        font-weight: bold !important;
-        cursor: pointer;
-
-        &:hover {
-            color: $button-color-hover !important;
-        }
-    }
-
-    // Pagination Styles
-    .MuiTablePagination-root {
-        color: inherit;
-
-        .MuiTablePagination-selectLabel,
-        .MuiInputBase-root,
-        .MuiTablePagination-displayedRows {
-            font-family: inherit;
-        }
-    }
-
-    .TablePaginationBox {
-        width: 100%;
+.masterMainDiv {
+    .masterToggleBox {
         display: flex;
-        justify-content: space-between;
+        justify-content: start;
         align-items: center;
-        gap: 16px;
-        padding: 15px 0;
-    }
+        position: relative;
 
-    .paginationText {
-        font-size: 15px;
-        color: #ACAAB1 !important;
-    }
-
-    .pagination {
-        .MuiPaginationItem-root {
-            font-family: $font-family;
-            color: $text2ndColor;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .toggle-group {
+            background-color: #f4f4f5;
             border-radius: 8px;
-            border-color: rgba(0, 0, 0, 0);
-            background-color: rgba(47, 43, 61, 0.08);
-            min-height: 40px;
+            padding: 6px;
+            display: flex;
+            gap: 10px;
+            width: 100%;
 
-            &:hover {
-                background-color: #e4e2fc;
-            }
-
-            &.Mui-selected {
-                background-color: $secondaryColor;
-                color: #fff !important;
+            .toggle-button {
+                flex: 1;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 8px;
+                font-size: 16px;
+                font-family: $font-family !important;
+                color: $placeholderColor;
                 border: none;
+                line-height: 1.4rem;
+                padding: 4px 8px;
+                text-transform: none;
+                transition: all 0.2s ease-in-out;
+                min-width: 0;
+
+                &.Mui-selected {
+                    background-color: #fff !important;
+                    color: $titleColor !important;
+                }
+            }
+        }
+    }
+
+    .masterGridBox {
+        .gridHeaderBox {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .TableContainer {
+            box-shadow: $box-shadow-value !important;
+            border-radius: 8px;
+            font-family: $font-family !important;
+        }
+
+        .Table {
+            font-family: $font-family !important;
+
+            th {
+                text-transform: capitalize;
+                font-family: $font-family !important;
+                color: $placeholderColor;
             }
 
-            &:hover {
-                background-color: $button-color-hover !important;
-                color: $button-color !important;
+            td {
+                font-family: $font-family !important;
+                color: $titleColor;
+                padding: 8px 16px;
+            }
+            .actionCell{
+                text-align: right;
             }
         }
-    }
 
-    // Buttons
-    .primary-btn {
-        background: $button-Bgcolor !important;
-        color: #fff !important;
-        border-radius: 8px !important;
-
-        &:hover {
-            background-color: $button-color-hover;
+        .TablePaginationBox {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: none!important;
+            gap: 16px;
+            padding: 15px 0;
         }
-    }
 
-    // Responsive Styles
-    @media (max-width: 768px) {
-
-        .MuiDataGrid-columnHeader,
-        .MuiDataGrid-cell {
-            padding: 8px 12px !important;
-            font-size: 14px !important;
+        .paginationText {
+            margin-left: 10px;
+            font-size: 15px;
+            color: #ACAAB1 !important;
         }
-    }
 
-    // Remove Column Separator
-    .MuiDataGrid-columnSeparator {
-        display: none !important;
+        .pagination {
+            margin-right: 10px;
+            .MuiPaginationItem-root {
+                // margin-right: 10px;
+                font-family: $font-family;
+                color: $text2ndColor;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 8px;
+                border-color: rgba(0, 0, 0, 0);
+                background-color: rgba(47, 43, 61, 0.08);
+                min-height: 40px;
+
+                &:hover {
+                    background-color: #e4e2fc;
+                }
+
+                &.Mui-selected {
+                    background-color: $secondaryColor;
+                    color: #fff !important;
+                    border: none;
+                }
+
+                &:hover {
+                    background-color: $button-color-hover !important;
+                    color: $button-color !important;
+                }
+            }
+        }
     }
 }

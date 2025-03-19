@@ -29,7 +29,6 @@ const TaskTimeTracking = ({ isOpen, onClose, taskData, taskRunning, setTaskRunni
 
         // const estimateSeconds = taskData.estimate_hrs * 3600;
         const estimateSeconds = .05 * 3600;
-        console.log('estimateSeconds: ', estimateSeconds);
         const remainingSeconds = estimateSeconds - currentSeconds;
         const notifications = [600, 300, 60]; // 10 minutes, 5 minutes, 1 minute in seconds
 

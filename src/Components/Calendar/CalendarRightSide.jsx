@@ -115,7 +115,6 @@ const Calendar = () => {
             return [`bg-${colorClass}`];
         },
         // eventContent: function (arg) {
-        //     console.log('arg: ', arg);
         //     const time = arg?.timeText ? `<div style="font-weight: bold;">${arg?.timeText}</div>` : "";
         //     const title = `<div>${arg.event.title}</div>`;
         //     return { html: `${time ? time + "&nbsp;" : ""}${title}` };
@@ -221,7 +220,6 @@ const Calendar = () => {
             const endDate = resizedEvent.end ?? startDate;
             let estimate = resizedEvent.extendedProps?.estimate || 1;
             const estimatedEndTime = new Date(startDate.getTime() + estimate * 60 * 60 * 1000);
-            console.log('estimatedEndTime: ', estimatedEndTime);
 
             if (endDate > estimatedEndTime) {
                 console.log("Resizing beyond the estimated time is not allowed.");

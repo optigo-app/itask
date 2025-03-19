@@ -20,12 +20,12 @@ import {
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { formatDate2, getStatusColor, priorityColors } from "../../../Utils/globalfun";
-import { Eye, Lock, LockOpen, Pencil, Unlock } from "lucide-react";
+import { Eye, Lock, LockOpen, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
 
-const TableView = ({ data, isLoading, handleLockProject }) => {
+const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => {
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("name");
     const [page, setPage] = useState(1);
@@ -36,6 +36,7 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
     const setFormDataValue = useSetRecoilState(formData);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
+    const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [columnWidths] = useState({
         'project / module': 350,
@@ -56,19 +57,33 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
         setCnfDialogOpen(false);
     };
 
+    const handleCloseCnfDelDialog = () => {
+        setCnfDelDialogOpen(false);
+    };
+
     const handleCnfPrlUnl = async () => {
         setCnfDialogOpen(false);
         handleLockProject(selectedRow?.taskid);
     };
 
+    const handleRemovePr = async () => {
+        setCnfDialogOpen(false);
+        handleDeletePrMo(selectedRow?.taskid);
+    };
+
     const handleEditProject = async (task, additionalInfo) => {
-        console.log('task: ', task);
         setRootSubroot(additionalInfo);
         setActionMode("edit");
         setFormDataValue(task);
         setFormDrawerOpen(true);
         setSelectedTask(task);
     };
+
+    const handleDeleteProject = async (task, additionalInfo) => {
+        setCnfDelDialogOpen(true);
+        setRootSubroot(additionalInfo);
+        setActionMode("delete");
+    }
 
     const handleRequestSort = (property) => {
         const fieldMapping = {
@@ -145,9 +160,9 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
                     onClick={onClick}
                     sx={{
                         color: isLocked ? '#ffffff' : '#7d7f85',
-                        backgroundColor: isLocked ? '#f44336' : 'transparent',
+                        backgroundColor: isLocked ? '#7367f0' : 'transparent',
                         '&:hover': {
-                            backgroundColor: isLocked ? '#d32f2f' : 'rgba(0, 0, 0, 0.04)',
+                            backgroundColor: isLocked ? '#7367f0' : 'rgba(0, 0, 0, 0.04)',
                         },
                     }}
                 >
@@ -301,6 +316,20 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
                                                                 color={task?.isLocked == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
                                                             />
                                                         </IconButton>
+                                                        <IconButton
+                                                            disabled={task?.isLocked == 1}
+                                                            onClick={() => handleDeleteProject(task, { Task: "sub" })}
+                                                            sx={{
+                                                                '&.Mui-disabled': {
+                                                                    color: 'rgba(0, 0, 0, 0.26)',
+                                                                },
+                                                            }}
+                                                        >
+                                                            <Trash
+                                                                size={20}
+                                                                color={task?.isLocked == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                                                            />
+                                                        </IconButton>
                                                     </Box>
                                                 </TableCell>
                                             </TableRow>
@@ -354,6 +383,15 @@ const TableView = ({ data, isLoading, handleLockProject }) => {
                 cancelLabel="Cancel"
                 confirmLabel={selectedRowData?.isLocked === 1 ? "Unlock" : "Lock"}
                 content={selectedRowData?.isLocked === 1 ? 'Are you sure you want to unlock this project?' : 'Are you sure you want to lock this project?'}
+            />
+            <ConfirmationDialog
+                open={cnfDelDialogOpen}
+                onClose={handleCloseCnfDelDialog}
+                onConfirm={handleRemovePr}
+                title="Confirm"
+                cancelLabel="Cancel"
+                confirmLabel="Remove"
+                content='Are you sure you want to Remove this project/module?'
             />
         </>
     );

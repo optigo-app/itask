@@ -18,7 +18,6 @@ const Header = ({ avatarSrc = "" }) => {
     const profileOpen = Boolean(profileAnchorEl);
     const encodedData = searchParams.get("data");
     const [decodedData, setDecodedData] = useState(null);
-    console.log('decodedData: ', decodedData);
 
     useEffect(() => {
         if (encodedData) {

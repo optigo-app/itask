@@ -23,7 +23,7 @@ const HeaderButtons = ({
   statusData,
   taskCategory,
   taskDepartment }) => {
-  const location = useLocation();
+    const location = useLocation();
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const setFormDataValue = useSetRecoilState(formData);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);

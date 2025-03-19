@@ -111,7 +111,6 @@ const MeetingPage = () => {
   }
 
   const background = (team) => {
-    console.log('team: ', team);
     const avatarBackgroundColor = team?.avatar
       ? "transparent"
       : getRandomAvatarColor(team?.name);

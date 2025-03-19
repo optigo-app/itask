@@ -27,7 +27,7 @@ function KanbanView({
   const [cnfDialogOpen, setCnfDialogOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [hoveredTaskId, setHoveredTaskId] = useState(null);
-  const taskStatusData = JSON?.parse(sessionStorage.getItem("taskStatusData")) || [];
+  const taskStatusData = JSON?.parse(sessionStorage.getItem("taskstatusData")) || [];
 
   const handleToggleShowAll = () => {
     setShowAll(prevState => !prevState);
@@ -291,16 +291,16 @@ function KanbanView({
                                     <Box
                                       sx={{
                                         display: "flex",
-                                        alignItems: "flex-start",
+                                        alignItems: "start",
                                         marginBottom: 1
                                       }}
                                     >
-                                      <StickyNote size={18} style={{ marginRight: '8px', marginTop: '2px' }} />
-                                      <Box>
-                                        <Typography variant="subtitle1" sx={{ lineHeight: 1.4, flex: 1 }}>
+                                      <StickyNote size={18} style={{ marginRight: '8px', flexShrink: 0 }} />
+                                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography variant="subtitle1" sx={{ lineHeight: 1.4 }}>
                                           {task.taskname}
                                         </Typography>
-                                        <Typography variant="caption" sx={{ lineHeight: 1.4, flex: 1 }}>
+                                        <Typography variant="caption" sx={{ lineHeight: 1.4 }}>
                                           {formatDate2(task.DeadLineDate)}
                                         </Typography>
                                       </Box>

@@ -1,73 +1,67 @@
-import React, { useEffect, useState } from "react";
-import {
-    Grid,
-    Card,
-    CardContent,
-    Typography,
-    TextField,
-    Button,
-    Backdrop,
-    CircularProgress,
-    Box,
-    InputAdornment,
-    Pagination,
-} from "@mui/material";
-import { DataGrid } from '@mui/x-data-grid';
-import { ArchiveRestore, Pencil, SearchIcon, Trash } from 'lucide-react';
-import { addEditDelMaster, fetchMaster } from "../../Api/MasterApi/MasterApi";
-import "./Master.scss";
-import LoadingBackdrop from "../../Utils/Common/LoadingBackdrop";
+import React, { useEffect, useState } from 'react';
+import { ToggleButton, ToggleButtonGroup, Box, Typography, TextField, Button } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import './Master.scss';
+import { commonTextFieldProps } from '../../Utils/globalfun';
+import Mastergrid from './masterGrid';
+import { addEditDelMaster, fetchMaster } from '../../Api/MasterApi/MasterApi';
+import MasterFormDrawer from './MasterFormDrawer';
+import { fetchIndidualApiMaster } from '../../Api/MasterApi/masterIndividualyApi';
+import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
+import { Add as AddIcon } from "@mui/icons-material";
 
-const CategoryCards = () => {
+const toggleData = [
+    { label: 'Toggle 1', content: 'Content for Toggle 1' },
+    { label: 'Toggle 2', content: 'Content for Toggle 2' },
+    { label: 'Toggle 3', content: 'Content for Toggle 3' },
+];
+
+const tableData = [
+    { id: 1, name: 'Item 1', createdDate: '2024-03-01', updatedDate: '2024-03-10', isdelete: 0 },
+    { id: 2, name: 'Item 2', createdDate: '2024-02-15', updatedDate: '2024-03-08', isdelete: 1 },
+    { id: 3, name: 'Item 3', createdDate: '2024-01-20', updatedDate: '2024-02-25', isdelete: 0 },
+];
+
+const MasterToggle = () => {
     const [isLoading, setIsLoading] = useState(false);
+    const [isIndLoading, setIsIndLoading] = useState(false);
+    const [value, setValue] = useState();
+    const [searchTerm, setSearchTerm] = useState('');
     const [formattedData, setFormattedData] = useState([]);
+    const [tableTabData, setTableTabData] = useState([]);
     const [categoryStates, setCategoryStates] = useState({});
-    const [paginationModel, setPaginationModel] = useState({
-        page: 0,
-        pageSize: 10,
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [formData, setFormData] = useState({
+        name: ''
     });
-
-
-    // State for pagination
+    const [selectedRow, setSelectedRow] = useState(null);
+    const [mode, setMode] = useState('');
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    const handleOpenDrawer = () => {
+        setSelectedRow(null);
+        setFormData({
+            name: ''
+        });
+        setMode('add');
+        setDrawerOpen(true)
+    };
+
+    const handleCloseDrawer = () => {
+        setDrawerOpen(false);
+        setSelectedRow(null);
+        setFormData({
+            name: ''
+        });
+    };
 
     const fetchMasterData = async () => {
         setIsLoading(true);
         try {
             const masterData = await fetchMaster();
-            const result = Object.keys(masterData)
-                .filter((key) => key.startsWith("rd") && key !== "rd")
-                .map((key) => {
-                    const rdIndex = parseInt(key.replace("rd", ""), 10);
-                    const rdItem = masterData.rd.find((item) => item.id === rdIndex);
-                    return {
-                        id: rdItem?.id,
-                        table_name: rdItem?.table_name,
-                        Table_Title: rdItem?.title,
-                        rows: masterData[key].map((item) => ({
-                            ...item,
-                            table_id: rdItem?.id,
-                        })),
-                    };
-                });
-
-            setFormattedData(result);
-
-            // Initialize category states
-            const initialStates = result.reduce((acc, category) => {
-                acc[category.id] = {
-                    newRow: { labelname: "" },
-                    rows: category.rows || [],
-                    page: 1,
-                    rowsPerPage: 10,
-                    editMode: null,
-                    searchValue: "",
-                    table_name: category?.table_name
-                };
-                return acc;
-            }, {});
-            setCategoryStates(initialStates);
+            setTableTabData(masterData?.rd)
+            setValue(masterData?.rd[0]?.title);
         } catch (error) {
             console.error(error);
         } finally {
@@ -75,319 +69,213 @@ const CategoryCards = () => {
         }
     };
 
+    const handleTaskApicall = async () => {
+        setIsIndLoading(true);
+        try {
+            if (tableTabData) {
+                const mode = tableTabData.find(tabItem => tabItem.title === value);
+                setCategoryStates(mode);
+                const modeValue = mode?.mode;
+                if (modeValue) {
+                    const masterIndApi = await fetchIndidualApiMaster({ mode: modeValue });
+                    const finalMasterData = masterIndApi?.rd || [];
+                    const sortedMasterData = finalMasterData.sort((a, b) => a.displayorder - b.displayorder);
+                    const mergedData = sortedMasterData.map(item => ({
+                        ...item,
+                        tabData: tableTabData.find(tabItem => tabItem.id === item.masterid) || null
+                    }));
+                    setFormattedData(mergedData);
+                }
+            }
+        } catch (error) {
+            console.error('Error in handleTaskApicall:', error);
+        } finally {
+            setIsIndLoading(false);
+        }
+    }
+
     useEffect(() => {
         fetchMasterData();
     }, []);
 
-    const handleAddOrSaveRow = async (categoryId, category) => {
-        const categoryState = categoryStates[categoryId];
-        const { newRow, editMode, rows } = categoryState;
-        if (newRow.labelname.trim() === "") return;
+    useEffect(() => {
+        if (tableTabData) {
+            handleTaskApicall()
+        }
+    }, [value])
 
-        let mode;
-        if (editMode !== null) {
-            mode = "edit";
-            const editData = await addEditDelMaster(mode, category.table_name, newRow, editMode);
-            if (editData[0]?.stat !== 0) {
-                const updatedRows = rows.map((row) =>
-                    row.id === editMode ? { ...row, labelname: newRow.labelname } : row
-                );
-                setCategoryStates((prev) => ({
-                    ...prev,
-                    [categoryId]: { ...prev[categoryId], rows: updatedRows, editMode: null },
-                }));
+    const handleChange = (event, newValue) => {
+        if (newValue !== null) {
+            setValue(newValue);
+        }
+    };
+
+    const handleSearch = (event) => {
+        setSearchTerm(event.target.value);
+    };
+
+    const handlePageChange = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleAddOrSaveRow = async (row) => {
+        setIsIndLoading(true);
+        try {
+            const payload = mode == 'edit'
+                ? { ...row, ...formData, mode: 'edit' }
+                : { ...formData, tabData: categoryStates, mode: 'add' };
+
+            const response = await addEditDelMaster(payload);
+            if (response?.success) {
+                handleTaskApicall();
             }
-        } else {
-            mode = "add";
-            const addData = await addEditDelMaster(mode, category.table_name, newRow);
-            if (addData[0]?.stat !== 0) {
-                const newId = rows.length ? Math.max(...rows.map((r) => r.id)) + 1 : 1;
-                const updatedRows = [...rows, { ...newRow, id: newId }];
-                setCategoryStates((prev) => ({
-                    ...prev,
-                    [categoryId]: { ...prev[categoryId], rows: updatedRows },
-                }));
+        } catch (error) {
+            console.error('Error in handleAddOrSaveRow:', error);
+        } finally {
+            setIsIndLoading(false);
+            handleCloseDrawer();
+        }
+    };
+
+    const handleEditRow = (row) => {
+        setDrawerOpen(true);
+        setSelectedRow(row);
+        setMode('edit');
+        setFormData({
+            name: row?.labelname,
+        });
+    };
+
+    const handleDeleteRow = async (row) => {
+        try {
+            const payload = {
+                ...row,
+                ...formData,
+                mode: 'del',
+            };
+            const response = await addEditDelMaster(payload);
+            if (response[0]?.stat == 1) {
+                setFormattedData(formattedData.map(item =>
+                    item.id == row.id ? { ...item, isdelete: 1 } : item
+                ));
             }
-        }
-        setCategoryStates((prev) => ({
-            ...prev,
-            [categoryId]: { ...prev[categoryId], newRow: { labelname: "" } },
-        }));
-    };
-
-    const handleEditRow = (categoryId, rowId) => {
-        const rowToEdit = categoryStates[categoryId].rows.find((row) => row.id === rowId);
-        setCategoryStates((prev) => ({
-            ...prev,
-            [categoryId]: { ...prev[categoryId], newRow: { labelname: rowToEdit.labelname }, editMode: rowId },
-        }));
-    };
-
-    const handleDeleteRow = async (categoryId, rowId) => {
-        let tableName = categoryStates[categoryId]?.table_name
-        const updatedRows = categoryStates[categoryId].rows.map((row) =>
-            row.id === rowId ? { ...row, isdelete: 1 } : row
-        );
-        let mode = 'del';
-        const deleteRow = await addEditDelMaster(mode, tableName, null, rowId);
-        if (deleteRow && deleteRow[0]?.stat !== 0) {
-            setCategoryStates((prev) => ({
-                ...prev,
-                [categoryId]: {
-                    ...prev[categoryId],
-                    rows: updatedRows
-                },
-            }));
+        } catch (error) {
+            console.error('Error in handleDeleteRow:', error);
         }
     };
 
-    const handleRestoreRow = async (categoryId, rowId) => {
-        let tableName = categoryStates[categoryId]?.table_name
-        const updatedRows = categoryStates[categoryId].rows.map((row) =>
-            row.id === rowId ? { ...row, isdelete: 0 } : row
-        );
-        let mode = 'restore';
-        const deleteRow = await addEditDelMaster(mode, tableName, null, rowId);
-        if (deleteRow && deleteRow[0]?.stat !== 0) {
-            setCategoryStates((prev) => ({
-                ...prev,
-                [categoryId]: {
-                    ...prev[categoryId],
-                    rows: updatedRows
-                },
-            }));
+    const handleRestoreRow = async (row) => {
+        try {
+            const payload = {
+                ...row,
+                ...formData,
+                mode: 'restore',
+            };
+            const response = await addEditDelMaster(payload);
+            if (response[0]?.stat == 1) {
+                setFormattedData(formattedData.map(item =>
+                    item.id == row.id ? { ...item, isdelete: 0 } : item
+                ));
+            }
+        } catch (error) {
+            console.error('Error in handleRestoreRow:', error);
         }
     };
 
-    // Handle Search Change
-    const handleSearchChange = (categoryId, value) => {
-        setCategoryStates((prev) => ({
-            ...prev,
-            [categoryId]: {
-                ...prev[categoryId],
-                searchValue: value,
-                page: 1,
-            },
-        }));
-    };
+    const filteredData = formattedData?.filter(item =>
+        item?.labelname?.toLowerCase()?.includes(searchTerm?.toLowerCase())
+    );
 
-    // Handle Pagination
-    const handlePageChange = (categoryId, newPage) => {
-        setCategoryStates((prev) => ({
-            ...prev,
-            [categoryId]: {
-                ...prev[categoryId],
-                page: newPage,
-            },
-        }));
-    };
+    const paginatedData = filteredData?.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
-    const getPaginatedRows = (categoryId) => {
-        const { rows, searchValue, page, rowsPerPage } = categoryStates[categoryId] || {};
-
-        // Filter rows based on search
-        const filteredRows = rows?.filter((row) =>
-            row?.labelname?.toLowerCase().includes(searchValue.toLowerCase())
-        ) || [];
-
-        // Paginate rows
-        const start = (page - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-        return filteredRows.slice(start, end);
-    };
-
-    const columns = (categoryId, category) => [
-        {
-            field: "labelname",
-            headerName: "Name",
-            flex: 1,
-            renderCell: (params) => {
-                const isDeleted = params.row.isdelete === 1;
-                return (
-                    <div
-                        style={{
-                            textDecoration: isDeleted ? 'line-through' : 'none',
-                            color: isDeleted && '#ab003c'
-                        }}
-                    // variant="body1"
-                    >
-                        {params.value}
-                    </div>
-                );
-            },
-        },
-        {
-            field: "actions",
-            headerName: "Actions",
-            sortable: false,
-            renderCell: (params) => (
-                <>
-                    <Pencil
-                        className="iconEdit"
-                        size={18}
-                        style={{ cursor: "pointer", marginRight: 10 }}
-                        onClick={() => handleEditRow(categoryId, params.row.id)}
-                    />
-                    {params.row.isdelete === 0 ? (
-                        <Trash
-                            className="iconDelete"
-                            size={18}
-                            style={{ cursor: "pointer", color: "#ab003c" }}
-                            onClick={() => handleDeleteRow(categoryId, params.row.id)}
-                        />
-                    ) : (
-                        <ArchiveRestore
-                            className="iconRestore"
-                            size={18}
-                            style={{ cursor: "pointer", color: "#ab003c" }}
-                            onClick={() => handleRestoreRow(categoryId, params.row.id)}
-                        />
-                    )}
-                </>
-            ),
-        },
-    ];
-
-    // Custom Footer Component for Pagination
-    const CustomFooter = ({ totalRows, categoryId }) => {
-        const { page, rowsPerPage } = categoryStates[categoryId];
-        const totalPages = Math.ceil(totalRows / rowsPerPage);
-
-        return (
-            <Box className="TablePaginationBox" sx={{ borderTop: '1px solid rgba(224, 224, 224, 1)' }}>
-                <Typography variant="body2" className="paginationText" sx={{ paddingLeft: '10px' }}>
-                    Showing {(page - 1) * rowsPerPage + 1} to{" "}
-                    {Math.min(page * rowsPerPage, totalRows)} of {totalRows} entries
-                </Typography>
-                <Pagination
-                    size="medium"
-                    count={totalPages}
-                    page={page}
-                    onChange={(e, value) => handlePageChange(categoryId, value)}
-                    color="primary"
-                    variant="outlined"
-                    shape="rounded"
-                    siblingCount={1}
-                    boundaryCount={1}
-                    className="pagination"
-                    sx={{
-                        '.MuiPaginationItem-root': {
-                            minHeight: '30px !important'
-                        }
-                    }}
-                />
-            </Box>
-        );
-    };
 
     return (
-        <div className="customDataGridWrapper">
-            {isLoading ? (
+        <>
+            {!isLoading ? (
+                <div className='masterMainDiv'>
+                    <Box
+                        className="masterGridBox"
+                        sx={{
+                            boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
+                            padding: "20px 20px",
+                            borderRadius: "8px",
+                            overflow: "hidden !important",
+                        }}
+                    >
+                        <Box className="masterToggleBox">
+                            <ToggleButtonGroup
+                                value={value}
+                                exclusive
+                                onChange={handleChange}
+                                aria-label="master toggles"
+                                className="toggle-group"
+                            >
+                                {tableTabData?.map((item, index) => (
+                                    <ToggleButton className="toggle-button" key={item?.id} value={item.title}>
+                                        {item?.title}
+                                    </ToggleButton>
+                                ))}
+                            </ToggleButtonGroup>
+                        </Box>
+                        <div style={{
+                            margin: "20px 0",
+                            border: "1px dashed #7d7f85",
+                            opacity: 0.3,
+                        }}
+                        />
+                        <Box className="gridHeaderBox" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="h6" className="gridHeaderText">{value}</Typography>
+                            <Box sx={{ display: 'flex', alignItems:'end', gap: 2 }}>
+                                <TextField
+                                    placeholder="Search..."
+                                    value={searchTerm}
+                                    {...commonTextFieldProps}
+                                    onChange={handleSearch}
+                                    InputProps={{
+                                        endAdornment: <SearchIcon />,
+                                    }}
+                                />
+
+                                <Button
+                                    variant="contained"
+                                    startIcon={<AddIcon />}
+                                    className="buttonClassname"
+                                    onClick={handleOpenDrawer}
+                                >
+                                    New
+                                </Button>
+                            </Box>
+                        </Box>
+                        {isIndLoading ? (
+                            <LoadingBackdrop isLoading={isIndLoading} />
+                        ) :
+                            <Mastergrid
+                                data={paginatedData}
+                                handleEditRow={handleEditRow}
+                                handleDeleteRow={handleDeleteRow}
+                                handleRestoreRow={handleRestoreRow}
+                                paginationCount={Math.ceil(filteredData.length / rowsPerPage)}
+                                totalRows={filteredData.length}
+                                paginationPage={page}
+                                rowsPerPage={rowsPerPage}
+                                onPaginationChange={handlePageChange}
+                            />
+                        }
+                    </Box>
+                    <MasterFormDrawer
+                        open={drawerOpen}
+                        onClose={handleCloseDrawer}
+                        onSubmit={handleAddOrSaveRow}
+                        formData={formData}
+                        selectedRow={selectedRow}
+                        setFormData={setFormData}
+                    />
+                </div>
+            ) :
                 <LoadingBackdrop isLoading={isLoading} />
-            ) : (
-                <Grid container spacing={2}>
-                    {formattedData?.map((category) => (
-                        <Grid item xs={12} sm={6} key={category.id}>
-                            <Card>
-                                <CardContent className="masterCardContent">
-                                    <div className="masterHeader">
-                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                            <Typography className="masterTitle" variant="h6" gutterBottom>
-                                                {category.Table_Title}
-                                            </Typography>
-                                            <TextField
-                                                placeholder="Search..."
-                                                value={categoryStates[category.id]?.searchValue || ""}
-                                                onChange={(e) => handleSearchChange(category.id, e.target.value)}
-                                                size="small"
-                                                className="textfieldsClass"
-                                                sx={{ minWidth: 250 }}
-                                                InputProps={{
-                                                    startAdornment: (
-                                                        <InputAdornment position="start">
-                                                            <SearchIcon size={20} color="#7d7f85" opacity={.5} />
-                                                        </InputAdornment>
-                                                    ),
-                                                }}
-                                            />
-                                            {/* <TextField
-                                                placeholder="Search..."
-                                                size="small"
-                                                sx={{ width: "250px" }}
-                                                className="textfieldsClass"
-                                                value={categoryStates[category.id]?.searchValue || ""}
-                                                onChange={(e) => handleSearchChange(category.id, e.target.value)}
-                                            /> */}
-                                        </div>
-                                        <div
-                                            style={{
-                                                margin: "20px 0",
-                                                border: "1px dashed #7d7f85",
-                                                opacity: 0.3,
-                                            }}
-                                        />
-                                        {/* Input and Add/Save button */}
-                                        <Grid container spacing={1} alignItems="center" style={{ marginBottom: "16px" }}>
-                                            <Grid item xs={8}>
-                                                <TextField
-                                                    fullWidth
-                                                    placeholder="Enter Data..."
-                                                    size="small"
-                                                    variant="outlined"
-                                                    className="textfieldsClass"
-                                                    value={categoryStates[category.id]?.newRow.labelname || ""}
-                                                    onChange={(e) =>
-                                                        setCategoryStates((prev) => ({
-                                                            ...prev,
-                                                            [category.id]: { ...prev[category.id], newRow: { labelname: e.target.value } },
-                                                        }))
-                                                    }
-                                                />
-                                            </Grid>
-                                            <Grid item xs={4}>
-                                                <Button
-                                                    variant="contained"
-                                                    color="primary"
-                                                    className="primary-btn"
-                                                    onClick={() => handleAddOrSaveRow(category.id, category)}
-                                                >
-                                                    {categoryStates[category.id]?.editMode !== null ? "Save" : "Add"}
-                                                </Button>
-                                            </Grid>
-                                        </Grid>
-                                    </div>
-                                    <div className="DataGridContainer" >
-                                        <DataGrid
-                                            rows={getPaginatedRows(category.id)}
-                                            columns={columns(category.id)}
-                                            disableSelectionOnClick
-                                            disableColumnMenu
-                                            paginationMode="server"
-                                            rowCount={categoryStates[category.id]?.rows.length || 0}
-                                            slots={{
-                                                footer: () => (
-                                                    <CustomFooter
-                                                        totalRows={categoryStates[category.id]?.rows.length || 0}
-                                                        categoryId={category.id}
-                                                    />
-                                                ),
-                                            }}
-                                            slotProps={{
-                                                pagination: {
-                                                    pageSize: categoryStates[category.id]?.rowsPerPage,
-                                                    page: categoryStates[category.id]?.page - 1,
-                                                },
-                                            }}
-                                        />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))}
-                </Grid>
-            )}
-        </div>
+            }
+        </>
     );
 };
 
-export default CategoryCards;
+export default MasterToggle;

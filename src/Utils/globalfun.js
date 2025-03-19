@@ -1,5 +1,6 @@
 import { AssigneeMaster } from "../Api/MasterApi/AssigneeMaster";
 import { fetchMaster } from "../Api/MasterApi/MasterApi";
+import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi";
 
 // output like 01/01/2023
 export const formatDate = (dateStr) => {
@@ -156,58 +157,37 @@ export const getRandomAvatarColor = (name) => {
 
 // make structure master data function
 export const fetchMasterGlFunc = async () => {
+    debugger
     try {
-        const storedMasterData = sessionStorage.getItem('masterData');
-        const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('assigneeMaster'));
+        const AssigneeMasterData = JSON.parse(sessionStorage.getItem('assigneeMaster'));
         if (!AssigneeMasterData) {
-            AssigneeMaster()
+            AssigneeMaster();
         }
-
-        let result = JSON.parse(storedMasterData);
-
-        if (!result) {
-            const masterData = await fetchMaster();
-            result = Object.keys(masterData)
-                .filter((key) => key.startsWith("rd") && key !== "rd")
-                .map((key) => {
-                    const rdIndex = parseInt(key.replace("rd", ""), 10);
-                    const rdItem = masterData.rd.find((item) => item.id === rdIndex);
-                    return {
-                        id: rdItem?.id,
-                        table_name: rdItem?.table_name,
-                        Table_Title: rdItem?.title,
-                        rows: masterData[key]
-                            .map((item) => ({
-                                ...item,
-                                table_id: rdItem?.id,
-                            }))
-                            .sort((a, b) => a.displayorder - b.displayorder),
-                    };
-                });
-
-            sessionStorage.setItem('masterData', JSON.stringify(result));
+        let masterData = JSON.parse(sessionStorage.getItem('masterData'));
+        if (!masterData) {
+            masterData = await fetchMaster();
+            sessionStorage.setItem('masterData', JSON.stringify(masterData));
         }
+        if (masterData?.rd && Array.isArray(masterData?.rd)) {
+            const structuredData = [];
+            for (const item of masterData?.rd) {
+                const { id, mode } = item;
+                if (mode) {
+                    const apiResponse = await fetchIndidualApiMaster({ mode });
 
-        const setFilteredData = (id, key) => {
-            const data = result?.find((item) => item.id === id);
-            if (data) {
-                sessionStorage.setItem(
-                    key,
-                    JSON.stringify(
-                        data.rows
-                            .filter((row) => row?.isdelete === 0)
-                            .sort((a, b) => a.displayorder - b.displayorder)
-                    )
-                );
+                    // Filter out items where delete === 1
+                    const filteredData = apiResponse?.rd?.filter(row => row.isdelete != 1) || [];
+                    structuredData.push({
+                        ...item,
+                        rowdata: filteredData || []
+                    });
+                    // Store individual datasets in session storage
+                    sessionStorage.setItem(`${mode}Data`, JSON.stringify(filteredData || []));
+                }
             }
-        };
+            sessionStorage.setItem('structuredMasterData', JSON.stringify(structuredData));
+        }
 
-        setFilteredData(1, 'taskCategoryData');
-        setFilteredData(2, 'taskStatusData');
-        setFilteredData(3, 'taskPriorityData');
-        setFilteredData(4, 'taskDepartmentData');
-        setFilteredData(5, 'taskProjectData');
-        setFilteredData(6, 'workspaceData');
     } catch (error) {
         console.error("Error fetching master data:", error);
     }
