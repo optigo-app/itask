@@ -117,7 +117,7 @@ const Filters = ({
           { label: "Department", key: "department", data: taskDepartment },
           { label: "Assignee", key: "assignee", data: assigneeData },
           { label: "Project", key: "project", data: taskProject },
-        ].map((filter) =>
+        ]?.map((filter) =>
           filterVisibility[filter.key] ? (
             <Box key={filter.key} className="form-group">
               <Typography variant="subtitle1" id={filter?.label} className="filterLabletxt">
@@ -152,7 +152,7 @@ const Filters = ({
         {/* Due Date Filter */}
         {dueDateVisible && (
           <Box className="form-group">
-            <Typography variant="subtitle1">Due Date</Typography>
+            <Typography variant="subtitle1" className="filterLabletxt">Due Date</Typography>
             <DatePicker
               name="startDateTime"
               value={filters.dueDate}

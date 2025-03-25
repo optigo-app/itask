@@ -71,6 +71,13 @@ const MetaDataSet = () => {
       keywords: "task inbox, notifications, task updates, workflow, alerts",
       url: window.location.href,
     },
+    "/reports": {
+      title: "Reports - Stay Updated",
+      description: "Check pending tasks, receive updates, and take action on important assignments.",
+      image: "https://example.com/inbox-image.jpg",
+      keywords: "task inbox, notifications, task updates, workflow, alerts, Reports",
+      url: window.location.href,
+    },
   };
 
   const currentPath = location.pathname;

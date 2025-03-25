@@ -11,6 +11,7 @@ import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { motion, AnimatePresence } from "framer-motion";
 import TaskJson from "../../Data/taskData.json"
+import { AddTaskDataApi } from "../../Api/TaskApi/AddTaskApi";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
@@ -33,11 +34,9 @@ const Task = () => {
   const [activeButton, setActiveButton] = useState("table");
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [filters, setFilters] = useState({});
-
-  // Sample data for tasks
+  const showAdvancedFil= useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
 
-  // Helper function to get data from session storage and set state
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
     if (data) {
@@ -45,7 +44,6 @@ const Task = () => {
     }
   };
 
-  // Master data fetching and real-time updating
   const fetchMasterData = async () => {
     setIsLoading(true);
     try {
@@ -105,9 +103,7 @@ const Task = () => {
     },
   ]
 
-
   const fetchTaskData = async () => {
-    debugger
     if (tasks?.length == 0) {
       setIsTaskLoading(true);
     }
@@ -242,7 +238,6 @@ const Task = () => {
     return taskData;
   }
 
-  // master api call
   useEffect(() => {
     const init = sessionStorage?.getItem('taskInit');
     if (init) {
@@ -410,7 +405,37 @@ const Task = () => {
     setTasks((prevTasks) => updateTasksRecursively(prevTasks));
   }
 
-  const [drawerOpen1, setDrawerOpen1] = useRecoilState(filterDrawer1);
+  const handleStatusChange = (taskId, status) => {
+    const updateTasksRecursively = (tasks) => {
+      return tasks?.map((task) => {
+        if (task.taskid === taskId.taskid) {
+          return {
+            ...task,
+            statusid: status?.id,
+            status: status?.labelname
+          };
+        }
+
+        if (task.subtasks?.length > 0) {
+          const updatedSubtasks = updateTasksRecursively(task.subtasks);
+          if (updatedSubtasks !== task.subtasks) {
+            return {
+              ...task,
+              subtasks: updatedSubtasks,
+            };
+          }
+        }
+
+        return task;
+      });
+    };
+    setTasks((prevTasks) => updateTasksRecursively(prevTasks));
+  }
+
+  const handleAddApicall = async() => {
+    
+    // const addTaskApi = await AddTaskDataApi(formValues ?? {}, updatedRowData, rootSubrootflagval ?? {});
+  }
 
   return (
     <Box
@@ -437,7 +462,7 @@ const Task = () => {
 
       {/* Divider */}
       <AnimatePresence mode="wait">
-        {drawerOpen1 && (
+        {showAdvancedFil && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -470,7 +495,7 @@ const Task = () => {
       </AnimatePresence>
 
 
-      <FiltersDrawer {...filters}
+      {/* <FiltersDrawer {...filters}
         filters={filters}
         setFilters={setFilters}
         onFilterChange={handleFilterChange}
@@ -483,7 +508,7 @@ const Task = () => {
         taskDepartment={taskDepartment}
         taskProject={taskProject}
         taskCategory={taskCategory}
-      />
+      /> */}
 
 
       {/* Divider */}
@@ -506,7 +531,7 @@ const Task = () => {
           <motion.div
             key={activeButton}
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: drawerOpen1 ? 0 : 0 }}
+            animate={{ opacity: 1, y: showAdvancedFil ? 0 : 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
           >
@@ -518,6 +543,7 @@ const Task = () => {
                   masterData={masterData}
                   handleTaskFavorite={handleTaskFavorite}
                   handleFreezeTask={handleFreezeTask}
+                  handleStatusChange={handleStatusChange}
                 />
               )}
 

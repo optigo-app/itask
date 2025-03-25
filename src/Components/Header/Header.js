@@ -69,6 +69,10 @@ const Header = ({ avatarSrc = "" }) => {
             title: "Profile",
             subtitle: "Manage your Profile here",
         },
+        "/reports": {
+            title: "Reports",
+            subtitle: "View All your Reports here",
+        },
     };
 
     const decodedPathname = decodeURIComponent(location?.pathname);

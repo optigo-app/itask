@@ -1,9 +1,9 @@
 import React from "react";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { TextField, Typography, Box } from "@mui/material";
 import dayjs from "dayjs";
 
-const CustomDatePicker = ({
+const CustomTimePicker = ({
     label,
     name,
     value,
@@ -14,33 +14,32 @@ const CustomDatePicker = ({
     sx = {},
     textFieldProps = {},
 }) => {
-    const customDatePickerProps = {
+    const customTimePickerProps = {
         slotProps: {
             popper: {
                 sx: {
-                    '& .MuiDateCalendar-root': {
+                    '& .MuiPickersLayout-root': {
                         borderRadius: '8px',
                         fontFamily: '"Public Sans", sans-serif',
-                    },
-                    '& .MuiButtonBase-root, .MuiPickersCalendarHeader-label, .MuiPickersYear-yearButton': {
-                        color: '#444050',
-                        fontFamily: '"Public Sans", sans-serif',
-                    },
-                    '& .MuiPickersDay-root, .MuiPickersYear-yearButton': {
-                        '&:hover': {
-                            backgroundColor: '#7367f0',
-                            color: '#fff',
+                        '& .Mui-selected': {
+                            backgroundColor: '#7367f0 !important',
+                            color: '#fff !important',
+                            fontFamily: '"Public Sans", sans-serif',
                         },
-                    },
-                    '& .MuiPickersDay-root.Mui-selected, .Mui-selected ': {
-                        backgroundColor: '#7367f0',
-                        color: '#fff',
-                    },
-                    '& .MuiPickersDay-root.Mui-selected, .MuiPickersYear-yearButton:hover': {
-                        backgroundColor: '#7367f0',
-                        color: '#fff',
-                    },
+                        '& .MuiMultiSectionDigitalClockSection-item': {
+                            fontFamily: '"Public Sans", sans-serif',
+                            fontSize: '14px',
+                        },
+                        '& .MuiDialogActions-root': {
+                            '& .MuiButton-root': {
+                                fontFamily: '"Public Sans", sans-serif',
+                                backgroundColor: '#7367f0',
+                                color: '#fff',
+                            }
+                        }
+                    }
                 },
+
             },
         },
     };
@@ -50,11 +49,13 @@ const CustomDatePicker = ({
             <Typography className="form-label" variant="subtitle1">
                 {label}
             </Typography>
-            <DatePicker
+            <TimePicker
                 name={name}
                 value={value ? dayjs(value) : null}
                 onChange={onChange}
-                {...customDatePickerProps}
+                ampm={true}
+                format="hh:mm A"
+                {...customTimePickerProps}
                 {...customProps}
                 {...styleprops}
                 sx={{ minWidth: width, ...sx }}
@@ -62,15 +63,15 @@ const CustomDatePicker = ({
                     <TextField
                         {...params}
                         size="small"
+                        fullWidth
                         className="textfieldsClass"
                         sx={{ padding: "0" }}
                         {...textFieldProps}
                     />
                 )}
-                format="DD/MM/YYYY"
             />
         </Box>
     );
 };
 
-export default CustomDatePicker;
+export default CustomTimePicker;

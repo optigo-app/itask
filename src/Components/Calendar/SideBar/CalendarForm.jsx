@@ -23,13 +23,15 @@ import { CalformData } from "../../../Recoil/atom";
 import { styled, useTheme } from '@mui/material/styles';
 import CustomDateTimePicker from "../../../Utils/DateComponent/CustomDateTimePicker"
 import { convertToIST } from "../../../Utils/Common/convertToIST";
-import MultiSelectChipWithLimit from "../../../DemoCode/AssigneeAutocomplete";
+import MultiSelectChipWithLimit from "../../ShortcutsComponent/AssigneeAutocomplete";
 import { useLocation } from "react-router-dom";
 import CustomSwitch from "../../../Utils/Common/CustomSwitch";
 import { commonSelectProps, commonTextFieldProps } from "../../../Utils/globalfun";
 import MultiTaskInput from "../../FormComponent/MultiTaskInput";
-import ProjectModuleList from "../../../DemoCode/ProjectModuleList";
+import ProjectModuleList from "../ProjectModuleList";
 import projectJson from "../../../Data/projects.json"
+import CustomTimePicker from "../../../Utils/DateComponent/CustomTimePicker";
+import CustomDatePicker from "../../../Utils/DateComponent/CustomDatePicker";
 
 const mulTASK_OPTIONS = [
     { id: 3, value: "multi1", label: "Multi-input Task", icon: <List size={20} /> },
@@ -48,6 +50,7 @@ const CalendarForm = ({
     const [view, setView] = useState("meeting");
     const [tasksubType, setTaskSubType] = useState("multi1");
     const CalformDataValue = useRecoilValue(CalformData);
+    const [category, setCategory] = useState([]);
     const [assignees, setAssignees] = React.useState([]);
     const [isEditing, setIsEditing] = useState(false);
     const [selectedModule, setSelectedModule] = useState(null);
@@ -63,6 +66,7 @@ const CalendarForm = ({
         bulkTask: [],
         allDay: false
     });
+    console.log('formValues: ', formValues);
 
     const filterRefs = {
         category: useRef(),
@@ -86,6 +90,11 @@ const CalendarForm = ({
         }
     }
 
+    useEffect(() => {
+        const cateData = JSON?.parse(sessionStorage.getItem('taskworkcategoryData'));
+        setCategory(cateData);
+    }, [])
+
     // set value when edit
     useEffect(() => {
         const assigneeData = JSON?.parse(sessionStorage?.getItem('taskAssigneeData'));
@@ -95,7 +104,7 @@ const CalendarForm = ({
                 setFormValues({
                     id: CalformDataValue?.id ?? "",
                     title: CalformDataValue?.title ?? "",
-                    category: CalformDataValue?.category ?? "Personal",
+                    category: CalformDataValue?.category ?? "",
                     eventUrl: CalformDataValue?.eventUrl ?? "",
                     start: CalformDataValue?.start ?? null,
                     end: CalformDataValue?.end ?? null,
@@ -122,7 +131,7 @@ const CalendarForm = ({
                 });
             }
         }, 300);
-    }, [open, CalformDataValue]);
+    }, [open, CalformDataValue, formValues]);
 
     // Handle form value changes
     const generateRandomId = () => {
@@ -273,9 +282,9 @@ const CalendarForm = ({
                     {view === "meeting" ? (
                         <Box className="drawer-form">
                             <Grid item xs={12}>
-                                {isEditing &&
+                                {/* {isEditing &&
                                     <ProjectModuleList selectedModule={selectedModule} handleModuleClick={handleModuleClick} />
-                                }
+                                } */}
                             </Grid>
                             <Grid container spacing={1} className="form-row">
                                 {/* Task Name and Due Date */}
@@ -342,7 +351,7 @@ const CalendarForm = ({
                                             className="form-label"
                                             htmlFor="category"
                                         >
-                                            Label
+                                            Category
                                         </Typography>
                                         <TextField
                                             name="category"
@@ -360,29 +369,20 @@ const CalendarForm = ({
                                                 },
                                             }}
                                         >
-
-                                            {Object.keys(calendarsColor).map((category) => (
+                                            <MenuItem value="">
+                                                <span className="notranslate">Select Category</span>
+                                            </MenuItem>
+                                            {category?.map((category) => (
                                                 <MenuItem
-                                                    key={category}
-                                                    value={category}
+                                                    key={category?.id}
+                                                    value={category?.labelname}
                                                     sx={{
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         gap: 1,
                                                     }}
                                                 >
-                                                    <ListItemIcon sx={{ minWidth: '20px !important' }}>
-                                                        <span
-                                                            style={{
-                                                                width: 10,
-                                                                height: 10,
-                                                                borderRadius: '50%',
-                                                                backgroundColor: calendarsColor[category],
-                                                                display: 'inline-block',
-                                                            }}
-                                                        />
-                                                    </ListItemIcon>
-                                                    <Typography variant="body1">{category}</Typography>
+                                                    {category?.labelname}
                                                 </MenuItem>
                                             ))}
                                         </TextField>
@@ -390,12 +390,12 @@ const CalendarForm = ({
                                 </Grid>
 
                                 {/* Progress, Start Date, Repeat */}
-                                <Grid item xs={12}>
-                                    <CustomDateTimePicker
-                                        label="Start Date & Time"
+                                <Grid item xs={6}>
+                                    <CustomDatePicker
+                                        label="Start Date"
                                         name="startDateTime"
                                         value={formValues.start}
-                                        width='440px'
+                                        width='100%'
                                         styleprops={commonTextFieldProps}
                                         onChange={(value) => {
                                             if (value) {
@@ -408,12 +408,48 @@ const CalendarForm = ({
                                         }}
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
-                                    <CustomDateTimePicker
-                                        label="End Date & Time"
+                                <Grid item xs={6}>
+                                    <CustomTimePicker
+                                        label="Start Time"
                                         name="endDateTime"
+                                        width='100%'
+                                        value={formValues.start}
+                                        styleprops={commonTextFieldProps}
+                                        onChange={(value) => {
+                                            if (value) {
+                                                const isIst = convertToIST(value);
+                                                setFormValues((prev) => ({
+                                                    ...prev,
+                                                    end: isIst,
+                                                }))
+                                            }
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <CustomDatePicker
+                                        label="End Date"
+                                        name="endDateTime"
+                                        width='100%'
                                         value={formValues.end}
-                                        width='440px'
+                                        styleprops={commonTextFieldProps}
+                                        onChange={(value) => {
+                                            if (value) {
+                                                const isIst = convertToIST(value);
+                                                setFormValues((prev) => ({
+                                                    ...prev,
+                                                    end: isIst,
+                                                }))
+                                            }
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <CustomTimePicker
+                                        label="End Time"
+                                        name="endDateTime"
+                                        width='100%'
+                                        value={formValues.end}
                                         styleprops={commonTextFieldProps}
                                         onChange={(value) => {
                                             if (value) {

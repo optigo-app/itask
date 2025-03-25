@@ -13,7 +13,7 @@ import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import './TaskDetails.scss';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { fetchlistApiCall, formData, openFormDrawer, selectedRowData, TaskData } from '../../../Recoil/atom';
+import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, TaskData } from '../../../Recoil/atom';
 import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
@@ -29,6 +29,7 @@ import { TaskDescription } from './TaskDescription';
 import SubtaskCard from './SubTaskcard';
 
 const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
+    console.log('taskData: ', taskData);
     const theme = useTheme();
     const [taskArr, setTaskArr] = useRecoilState(TaskData);
     // const taskData = useRecoilValue(formData);
@@ -44,6 +45,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
     const setSelectedTask = useSetRecoilState(selectedRowData);
+    const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const placeholderImage = AttachmentImg;
 
     // Dummy attachment data
@@ -56,26 +58,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const handleRemoveEvent = () => {
         setCnfDialogOpen(true);
     };
-
-    // const handleConfirmRemoveAll = async () => {
-    //     setCnfDialogOpen(false);
-    //     const parentTask = findParentTask(taskArr, taskData.taskid);
-    //     try {
-    //         const deleteTaskApi = await deleteTaskDataApi(formDataValue);
-    //         if (deleteTaskApi?.rd[0]?.stat == 1) {
-    //             setCallTaskApi(true);
-    //             setSelectedTask(parentTask);
-    //             setFormDrawerOpen(false);
-    //             setFormDataValue(null);
-    //             onClose()
-    //             toast.success("Task deleted successfully!");
-    //         } else {
-    //             console.error("Failed to delete task");
-    //         }
-    //     } catch (error) {
-    //         console.error("Error while deleting task:", error);
-    //     }
-    // };
 
     // remove Task
     const removeTaskRecursively = (tasks, taskIdToRemove) => {
@@ -228,6 +210,12 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
         return avatarBackgroundColor;
     };
 
+    const handleAddSubTask = (task, additionalInfo) => {
+        setRootSubroot(additionalInfo);
+        setFormDataValue(task);
+        setFormDrawerOpen(true);
+        setSelectedTask(task);
+    }
 
 
     return (
@@ -239,14 +227,14 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                 className="MainDrawer"
                 sx={{ display: open == true ? 'block' : 'none', zIndex: theme.zIndex.drawer + 2, }}
             >
-                <Box className={`modal-container ${isFullScreen && isFullScreen ? '' : 'full-screen'}`}>
+                <Box className={`modal-container`}>
                     <div className='modal-container2'>
                         <Box className="modal-header">
                             <div className="header-left">
-                                <IconButton onClick={toggleFullScreen}>
+                                {/* <IconButton onClick={toggleFullScreen}>
                                     {isFullScreen && isFullScreen ? <Shrink /> : <Expand />}
                                 </IconButton>
-                                <Divider orientation="vertical" variant="middle" flexItem />
+                                <Divider orientation="vertical" variant="middle" flexItem /> */}
                                 <Typography variant="h6">{taskData?.taskDpt} / {taskData?.taskPr}</Typography>
                             </div>
                             <IconButton onClick={handleClose}>
@@ -255,7 +243,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                         </Box>
                         <div
                             style={{
-                                margin: "0 0 10px 0",
+                                margin: "10px 0",
                                 border: "1px dashed #7d7f85",
                                 opacity: 0.3,
                             }}
@@ -452,10 +440,31 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         <Tab label="Attachment" />
                                         <Tab label={`Comments (${comments?.length})`} />
                                     </Tabs>
-                                    <Box className="tab-content">
+                                    <Box
+                                        className="tab-content"
+                                        sx={{ justifyContent: activeTab === 2 ? 'flex-end' : 'flex-start' }}
+                                    >
                                         {activeTab === 0 &&
                                             <Box className="subtask_CardBox">
-                                                <SubtaskCard subtasks={taskData?.subtasks} />
+                                                <Box className="addNewTaskBtn">
+                                                    <Button
+                                                        variant="contained"
+                                                        size="small"
+                                                        onClick={() => handleAddSubTask(taskData, { Task: 'subroot' })}
+                                                        className="buttonClassname"
+                                                        sx={{ fontSize: '12px', marginTop: '5px' }}
+                                                    >
+                                                        Add task
+                                                    </Button>
+                                                </Box>
+                                                <div
+                                                    style={{
+                                                        margin: "15px 0",
+                                                        border: "1px dashed #7d7f85",
+                                                        opacity: 0.3,
+                                                    }}
+                                                />
+                                                <SubtaskCard subtasks={taskData?.subtasks} onAddDubTask={handleAddSubTask} />
                                             </Box>
                                         }
                                         {activeTab === 1 &&

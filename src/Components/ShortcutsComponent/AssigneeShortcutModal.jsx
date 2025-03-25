@@ -17,6 +17,7 @@ import { fetchlistApiCall, formData, rootSubrootflag, selectedRowData } from "..
 import { AddTaskDataApi } from "../../Api/TaskApi/AddTaskApi";
 import { toast } from "react-toastify";
 import CloseIcon from "@mui/icons-material/Close";
+import { commonSelectProps, commonTextFieldProps } from "../../Utils/globalfun";
 
 const modalStyle = {
     position: "absolute",
@@ -100,55 +101,6 @@ const AssigneeShortcutModal = ({ open, onClose }) => {
                 }
             }, 100);
         }
-    };
-
-    // Common TextField style properties
-    const commonTextFieldProps = {
-        fullWidth: true,
-        size: "small",
-        className: "textfieldsClass",
-    };
-
-    const commonSelectProps = {
-        select: true,
-        fullWidth: true,
-        size: "small",
-        sx: {
-            minWidth: 180,
-            "& .MuiOutlinedInput-root": {
-                borderRadius: "8px",
-                "& fieldset": {
-                    borderRadius: "8px",
-                },
-            },
-        },
-        SelectProps: {
-            MenuProps: {
-                PaperProps: {
-                    sx: {
-                        borderRadius: "8px",
-                        "& .MuiMenuItem-root": {
-                            fontFamily: '"Public Sans", sans-serif',
-                            color: "#444050",
-                            margin: "5px 10px",
-                            "&:hover": {
-                                borderRadius: "8px",
-                                backgroundColor: "#7367f0",
-                                color: "#fff",
-                            },
-                            "&.Mui-selected": {
-                                backgroundColor: "#80808033",
-                                borderRadius: "8px",
-                                "&:hover": {
-                                    backgroundColor: "#7367f0",
-                                    color: "#fff",
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
     };
 
     return (

@@ -58,7 +58,7 @@ const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, 
                         startIcon={<Send size={20} />}
                         className='buttonClassname'
                     >
-                        Send
+                        Add comment
                     </Button>
                 </Box>
             </Box>

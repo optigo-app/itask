@@ -1,31 +1,35 @@
 @import '../../../theme/variable.scss';
 
 .modal-container {
-  &.full-screen {
-    width: 50vw;
-    height: 100vh;
-  }
+  .modal-container2{
+    width: 650px;
+    padding: 5px 24px 24px 24px;
 
-  @media (max-width: 768px) {
-    &.full-screen {
-      width: 75vw;
-      height: 100vh;
-    }
   }
+  // &.full-screen {
+  //   width: 50vw;
+  //   height: 100vh;
+  // }
 
-  @media (max-width: 480px) {
-    &.full-screen {
-      width: 100vw;
-      height: 100vh;
-    }
-  }
+  // @media (max-width: 768px) {
+  //   &.full-screen {
+  //     width: 75vw;
+  //     height: 100vh;
+  //   }
+  // }
+
+  // @media (max-width: 480px) {
+  //   &.full-screen {
+  //     width: 100vw;
+  //     height: 100vh;
+  //   }
+  // }
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
 
   .header-left {
     display: flex;
@@ -41,7 +45,6 @@
 
 .modal-body {
   flex-grow: 1;
-  padding: 0 25px;
 
   span {
     font-family: $font-family !important;
@@ -155,20 +158,24 @@
 
     .tab-content {
       padding-top: 10px;
-      min-height: 42vh;
+      min-height: 46vh;
       height: 98%;
       display: flex;
       flex-direction: column;
-      // justify-content: flex-end;
 
       .subtask_CardBox {
         max-height: 50vh;
         overflow: auto;
+
+        .addNewTaskBtn {
+          display: flex;
+          justify-content: end;
+        }
       }
 
       .comment-card,
       .subtask-card {
-        margin: 10px;
+        margin: 10px 4px;
         border-radius: 8px;
         box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
         overflow: auto;

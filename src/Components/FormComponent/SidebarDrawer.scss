@@ -11,7 +11,8 @@
         overflow-x: hidden;
         // position: relative;
     }
-    .pr_drawer-container{
+
+    .pr_drawer-container {
         width: 400px;
         padding: 5px 24px 24px 24px;
         display: flex;
@@ -25,14 +26,15 @@
         position: relative;
         margin-bottom: 20px;
 
-        .taskCount  {
+        .taskCount {
             width: 100% !important;
             display: flex !important;
             justify-content: space-between !important;
             align-items: end !important;
             margin-left: 5px;
             margin-top: 20px;
-            .taskCountTypo{
+
+            .taskCountTypo {
                 font-size: 14px;
                 font-weight: 500;
                 color: $titleColor;
@@ -47,7 +49,8 @@
             .MuiTableCell-root {
                 padding: 5px 10px !important;
                 margin: 0 !important;
-                p{
+
+                p {
                     font-size: 14px !important;
                 }
             }

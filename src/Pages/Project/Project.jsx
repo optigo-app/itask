@@ -2,8 +2,8 @@ import React, { Suspense, useEffect, useState } from "react";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box } from "@mui/material";
-import { useRecoilState } from "recoil";
-import { filterDrawer1, masterDataValue, } from "../../Recoil/atom";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { filterDrawer, masterDataValue, } from "../../Recoil/atom";
 import { formatDate } from 'date-fns';
 import { fetchMasterGlFunc, formatDate2 } from "../../Utils/globalfun";
 import ProjectData from "../../Data/projects.json"
@@ -28,7 +28,7 @@ const Project = () => {
   const [activeButton, setActiveButton] = useState("table");
   const [project, setProject] = useState(ProjectData);
   const [filters, setFilters] = useState({});
-  const [drawerOpen1, setDrawerOpen1] = useRecoilState(filterDrawer1);
+  const showAdvancedFil = useRecoilValue(filterDrawer);
 
   // Helper function to get data from session storage and set state
   const retrieveAndSetData = (key, setter) => {
@@ -199,7 +199,7 @@ const Project = () => {
       />
 
       <AnimatePresence mode="wait">
-        {drawerOpen1 && (
+        {showAdvancedFil && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -231,7 +231,7 @@ const Project = () => {
         )}
       </AnimatePresence>
 
-      <FiltersDrawer {...filters}
+      {/* <FiltersDrawer {...filters}
         filters={filters}
         setFilters={setFilters}
         onFilterChange={handleFilterChange}
@@ -244,7 +244,7 @@ const Project = () => {
         taskDepartment={taskDepartment}
         taskProject={taskProject}
         taskCategory={taskCategory}
-      />
+      /> */}
 
       {/* Divider */}
       <div
@@ -267,7 +267,7 @@ const Project = () => {
           <motion.div
             key={activeButton}
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: drawerOpen1 ? 0 : 0 }}
+            animate={{ opacity: 1, y: showAdvancedFil ? 0 : 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
           >
