@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Grid, TextField, IconButton, Box } from "@mui/material";
 import { Minus, Plus } from "lucide-react";
 
-const EstimateInput = ({ onChanges }) => {
+const EstimateInput = ({ onChanges, hideBtn }) => {
+    console.log('hideBtn: ', hideBtn);
     const [values, setValues] = useState([""]);
     const maxInputs = 3;
 
@@ -42,20 +43,22 @@ const EstimateInput = ({ onChanges }) => {
                             className="textfieldsClass"
                         />
                     </Grid>
-                    <Grid item xs={2} sx={{ display: "flex", justifyContent: "space-between" }}>
-                        {/* Add Button (Only on last input) */}
-                        {index === values.length - 1 && values.length < maxInputs && (
-                            <IconButton onClick={addField} color="primary">
-                                <Plus color="#444050" />
-                            </IconButton>
-                        )}
-                        {/* Remove Button (Always visible except for the first input) */}
-                        {index !== values.length - 1 && values.length > 1 && (
-                            <IconButton onClick={() => removeField(index)} color="error">
-                                <Minus />
-                            </IconButton>
-                        )}
-                    </Grid>
+                    {hideBtn &&
+                        <Grid item xs={2} sx={{ display: "flex", justifyContent: "space-between" }}>
+                            {/* Add Button (Only on last input) */}
+                            {index === values.length - 1 && values.length < maxInputs && (
+                                <IconButton onClick={addField} color="primary">
+                                    <Plus color="#444050" />
+                                </IconButton>
+                            )}
+                            {/* Remove Button (Always visible except for the first input) */}
+                            {index !== values.length - 1 && values.length > 1 && (
+                                <IconButton onClick={() => removeField(index)} color="error">
+                                    <Minus />
+                                </IconButton>
+                            )}
+                        </Grid>
+                    }
                 </Grid>
             ))}
         </Box>

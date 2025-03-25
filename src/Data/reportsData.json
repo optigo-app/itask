@@ -1,0 +1,65 @@
+{
+    "reportsList": [
+      { "id": "daily_task_progress", "name": "Daily Task Progress Report" },
+      { "id": "team_productivity", "name": "Team Productivity Report" },
+      { "id": "issue_blocker", "name": "Issue & Blocker Report" },
+      { "id": "project_overview", "name": "Project Overview Report" }
+    ],
+    "daily_task_progress": {
+      "columns": [
+        { "key": "sr", "label": "Sr" },
+        { "key": "teamMember", "label": "Team Member Name", "filterable": true },
+        { "key": "taskName", "label": "Task Name", "filterable": true },
+        { "key": "taskStatus", "label": "Task Status", "filterable": true, "type": "select", "options": ["Completed", "In Progress", "Pending"] },
+        { "key": "category", "label": "Category", "filterable": true },
+        { "key": "dueDate", "label": "Due Date", "filterable": true, "type": "date" }
+      ],
+      "rows": [
+        { "sr": 1, "teamMember": "John Doe", "taskName": "UI Design", "taskStatus": "In Progress", "category": "Frontend", "dueDate": "2025-03-30" },
+        { "sr": 2, "teamMember": "Jane Smith", "taskName": "Database Schema", "taskStatus": "Completed", "category": "Backend", "dueDate": "2025-03-28" }
+      ]
+    },
+    "team_productivity": {
+      "columns": [
+        { "key": "sr", "label": "Sr" },
+        { "key": "teamMember", "label": "Team Member Name", "filterable": true },
+        { "key": "tasksCompleted", "label": "Tasks Completed", "filterable": true, "type": "number" },
+        { "key": "hoursWorked", "label": "Hours Worked", "filterable": true, "type": "number" },
+        { "key": "efficiency", "label": "Efficiency (%)", "filterable": true, "type": "number" }
+      ],
+      "rows": [
+        { "sr": 1, "teamMember": "John Doe", "tasksCompleted": 5, "hoursWorked": 40, "efficiency": 85 },
+        { "sr": 2, "teamMember": "Jane Smith", "tasksCompleted": 7, "hoursWorked": 42, "efficiency": 90 },
+        { "sr": 3, "teamMember": "Robert Brown", "tasksCompleted": 4, "hoursWorked": 35, "efficiency": 80 }
+      ]
+    },
+    "issue_blocker": {
+      "columns": [
+        { "key": "sr", "label": "Sr" },
+        { "key": "date", "label": "Date", "filterable": true, "type": "date" },
+        { "key": "teamMember", "label": "Reported By", "filterable": true },
+        { "key": "issue", "label": "Issue", "filterable": true },
+        { "key": "severity", "label": "Severity", "filterable": true, "type": "select", "options": ["Low", "Medium", "High", "Critical"] },
+        { "key": "taskStatus", "label": "Status", "filterable": true, "type": "select", "options": ["Resolved", "Pending", "In Progress"] }
+      ],
+      "rows": [
+        { "sr": 1, "date": "2025-03-20", "teamMember": "John Doe", "issue": "API Delay", "severity": "High", "taskStatus": "Pending" },
+        { "sr": 2, "date": "2025-03-21", "teamMember": "Jane Smith", "issue": "Database Connection Issue", "severity": "Critical", "taskStatus": "In Progress" }
+      ]
+    },
+    "project_overview": {
+      "columns": [
+        { "key": "sr", "label": "Sr" },
+        { "key": "projectName", "label": "Project Name", "filterable": true },
+        { "key": "progress", "label": "Progress (%)", "filterable": true, "type": "number" },
+        { "key": "tasksCompleted", "label": "Tasks Completed", "filterable": true, "type": "number" },
+        { "key": "pendingTasks", "label": "Pending Tasks", "filterable": true, "type": "number" },
+        { "key": "dueDate", "label": "Due Date", "filterable": true, "type": "date" }
+      ],
+      "rows": [
+        { "sr": 1, "projectName": "E-Commerce App", "progress": 75, "tasksCompleted": 150, "pendingTasks": 50, "dueDate": "2025-04-15" },
+        { "sr": 2, "projectName": "CRM System", "progress": 60, "tasksCompleted": 120, "pendingTasks": 80, "dueDate": "2025-05-10" }
+      ]
+    }
+  }
+  

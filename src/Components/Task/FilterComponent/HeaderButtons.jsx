@@ -4,7 +4,7 @@ import { Add as AddIcon } from "@mui/icons-material";
 import SidebarDrawer from "../../FormComponent/Sidedrawer";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, selectedCategoryAtom, filterDrawer, filterDrawer1, timerCompOpen } from "../../../Recoil/atom";
+import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, selectedCategoryAtom, filterDrawer, timerCompOpen } from "../../../Recoil/atom";
 import { toast } from "react-toastify";
 import { ChevronsDown, FilterIcon, Kanban, List, SearchIcon, TimerIcon } from "lucide-react";
 import { useLocation } from "react-router-dom";
@@ -32,7 +32,6 @@ const HeaderButtons = ({
   const [view, setView] = useState(activeButton ?? 'table');
   const [selectedCategory, setSelectedCategory] = useRecoilState(selectedCategoryAtom);
   const [filterDrawerOpen, setFilterDrawerOpen] = useRecoilState(filterDrawer);
-  const [filterDrawerOpen1, setFilterDrawerOpen1] = useRecoilState(filterDrawer1);
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
 
 
@@ -81,12 +80,9 @@ const HeaderButtons = ({
     setFilterDrawerOpen(!filterDrawerOpen);
   };
 
-  const handleFilterDrOpen1 = () => {
-    setFilterDrawerOpen1(!filterDrawerOpen1);
-  }
 
   useEffect(() => {
-    setFilterDrawerOpen1(false);
+    setFilterDrawerOpen(false);
   }, [location])
 
   const handleTimerCompOpen = () => {
@@ -148,30 +144,6 @@ const HeaderButtons = ({
               aria-label='Search tasks...'
             />
           </Box>
-          {/* <Tooltip
-          placement="top"
-          title="Filter tasks"
-          arrow
-          classes={{ tooltip: 'custom-tooltip' }}
-        >
-          <IconButton
-            aria-label="Filter tasks"
-            onClick={handleFilterDrOpen}
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: filterDrawerOpen ? '#ffd700' : 'white',
-              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-              '&:hover': {
-                backgroundColor: '#f5f5f5',
-                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
-              }
-            }}
-          >
-            <FilterIcon size={20} />
-          </IconButton>
-        </Tooltip> */}
           <Tooltip
             placement="top"
             title="Filter tasks"
@@ -180,12 +152,12 @@ const HeaderButtons = ({
           >
             <IconButton
               aria-label="Filter tasks"
-              onClick={handleFilterDrOpen1}
+              onClick={handleFilterDrOpen}
               sx={{
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                backgroundColor: filterDrawerOpen1 ? '#ffd700' : 'white',
+                backgroundColor: filterDrawerOpen ? '#ffd700' : 'white',
                 boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
                 '&:hover': {
                   backgroundColor: '#f5f5f5',

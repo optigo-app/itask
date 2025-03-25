@@ -159,35 +159,31 @@ export const getRandomAvatarColor = (name) => {
 export const fetchMasterGlFunc = async () => {
     debugger
     try {
-        const AssigneeMasterData = JSON.parse(sessionStorage.getItem('assigneeMaster'));
+        const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('assigneeMaster'));
         if (!AssigneeMasterData) {
             AssigneeMaster();
         }
-        let masterData = JSON.parse(sessionStorage.getItem('masterData'));
-        if (!masterData) {
+        let masterData = JSON?.parse(sessionStorage.getItem('structuredMasterData'));
+        if (!masterData || masterData?.length == 0) {
             masterData = await fetchMaster();
-            sessionStorage.setItem('masterData', JSON.stringify(masterData));
+            sessionStorage.setItem('masterData', JSON?.stringify(masterData));
         }
-        if (masterData?.rd && Array.isArray(masterData?.rd)) {
+        if (masterData?.rd && Array?.isArray(masterData?.rd)) {
             const structuredData = [];
             for (const item of masterData?.rd) {
                 const { id, mode } = item;
                 if (mode) {
                     const apiResponse = await fetchIndidualApiMaster({ mode });
-
-                    // Filter out items where delete === 1
-                    const filteredData = apiResponse?.rd?.filter(row => row.isdelete != 1) || [];
+                    const filteredData = apiResponse?.rd?.filter(row => row?.isdelete != 1) || [];
                     structuredData.push({
                         ...item,
                         rowdata: filteredData || []
                     });
-                    // Store individual datasets in session storage
-                    sessionStorage.setItem(`${mode}Data`, JSON.stringify(filteredData || []));
+                    sessionStorage.setItem(`${mode}Data`, JSON?.stringify(filteredData || []));
                 }
             }
-            sessionStorage.setItem('structuredMasterData', JSON.stringify(structuredData));
+            sessionStorage.setItem('structuredMasterData', JSON?.stringify(structuredData));
         }
-
     } catch (error) {
         console.error("Error fetching master data:", error);
     }
@@ -276,6 +272,45 @@ export const customDatePickerProps = {
                     color: "#fff",
                 },
                 "& .MuiPickersDay-root.Mui-selected, .MuiPickersYear-yearButton:hover": {
+                    backgroundColor: "#7367f0",
+                    color: "#fff",
+                },
+            },
+        },
+    },
+};
+
+// TimePicker custom styles
+export const customTimePickerProps = {
+    slotProps: {
+        popper: {
+            sx: {
+                "& .MuiClockPicker-root": {
+                    fontFamily: '"Public Sans", sans-serif',
+                },
+                "& .MuiClockPicker-pin": {
+                    backgroundColor: "#7367f0",
+                },
+                "& .MuiClockPicker-arrowSwitcher-button": {
+                    color: "#444050",
+                    "&:hover": {
+                        backgroundColor: "#e6e6e6",
+                    },
+                },
+                "& .MuiMultiSectionDigitalClock-root": {
+                    backgroundColor: "#f9f9f9",
+                },
+                "& .MuiMultiSectionDigitalClockSection-item": {
+                    width: "30px",
+                    height: "30px",
+                    borderRadius: "50%",
+                    fontSize: "13px",
+                    "&:hover": {
+                        backgroundColor: "#7367f0",
+                        color: "#fff",
+                    },
+                },
+                "& .MuiMultiSectionDigitalClockSection-item.Mui-selected": {
                     backgroundColor: "#7367f0",
                     color: "#fff",
                 },

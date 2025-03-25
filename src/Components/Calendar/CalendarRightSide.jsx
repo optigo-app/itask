@@ -253,7 +253,7 @@ const Calendar = () => {
     // remove event
     const handleRemove = (formValue) => {
         setFormData(formValue)
-        
+
         setCnfDialogOpen(true);
     };
 

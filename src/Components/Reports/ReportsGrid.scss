@@ -1,0 +1,63 @@
+@import "../../theme/variable.scss";
+
+.reports_tableContainer {
+    box-shadow: $box-shadow-value !important;
+    border-radius: 8px !important;
+    font-family: $font-family;
+
+    .reports_table {
+        width: 100%;
+        border-collapse: collapse;
+
+        th,
+        td {
+            font-family: $font-family;
+            font-size: 14px;
+            padding: 10px;
+            text-align: left;
+            color: $text2ndColor;
+        }
+    }
+}
+
+.reports_filterMainBox {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+
+    .reports_filterBox {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 16px;
+
+        .reports_categoryBtn {
+            background-color: rgba(0, 0, 0, 0.3);
+            opacity: 0.5;
+            color: black;
+            font-weight: bold;
+            box-shadow: none;
+            border-radius: 8px;
+            padding: 4px 8px;
+            display: flex;
+            text-transform: capitalize !important;
+            align-items: center;
+            transition: opacity 0.3s ease-in-out;
+    
+            &:hover {
+                opacity: 0.7;
+            }
+    
+            &.active {
+                opacity: 1;
+            }
+        }
+    }
+
+    .filterLabletxt {
+        font-size: 14px;
+        color: $text2ndColor;
+    }
+}

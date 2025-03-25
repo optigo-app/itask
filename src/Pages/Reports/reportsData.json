@@ -1,0 +1,416 @@
+{
+    "Daily Task Progress Report": [
+        {
+            "sr": 1,
+            "teamMember": "John Doe",
+            "taskName": "Design UI",
+            "taskStatus": "In Progress",
+            "category": "Design",
+            "time": "5h vs 6h",
+            "blockers": "None",
+            "dueDate": "2025-03-25"
+        },
+        {
+            "sr": 2,
+            "teamMember": "Jane Smith",
+            "taskName": "Develop API",
+            "taskStatus": "Completed",
+            "category": "Development",
+            "time": "10h vs 8h",
+            "blockers": "API delay",
+            "dueDate": "2025-03-26"
+        },
+        {
+            "sr": 3,
+            "teamMember": "Alice Johnson",
+            "taskName": "Database Schema Design",
+            "taskStatus": "Pending",
+            "category": "Database",
+            "time": "0h vs 4h",
+            "blockers": "Awaiting approval",
+            "dueDate": "2025-03-27"
+        },
+        {
+            "sr": 4,
+            "teamMember": "Bob Martin",
+            "taskName": "Frontend Integration",
+            "taskStatus": "In Progress",
+            "category": "Development",
+            "time": "6h vs 7h",
+            "blockers": "None",
+            "dueDate": "2025-03-28"
+        },
+        {
+            "sr": 5,
+            "teamMember": "Emily Davis",
+            "taskName": "User Testing",
+            "taskStatus": "Completed",
+            "category": "QA",
+            "time": "4h vs 4h",
+            "blockers": "None",
+            "dueDate": "2025-03-29"
+        },
+        {
+            "sr": 6,
+            "teamMember": "Michael Brown",
+            "taskName": "Bug Fixing",
+            "taskStatus": "In Progress",
+            "category": "Development",
+            "time": "3h vs 5h",
+            "blockers": "Need logs",
+            "dueDate": "2025-03-30"
+        },
+        {
+            "sr": 7,
+            "teamMember": "Sophia Wilson",
+            "taskName": "Content Writing",
+            "taskStatus": "Pending",
+            "category": "Marketing",
+            "time": "0h vs 3h",
+            "blockers": "None",
+            "dueDate": "2025-03-31"
+        },
+        {
+            "sr": 8,
+            "teamMember": "David White",
+            "taskName": "Server Deployment",
+            "taskStatus": "Completed",
+            "category": "DevOps",
+            "time": "8h vs 6h",
+            "blockers": "None",
+            "dueDate": "2025-04-01"
+        },
+        {
+            "sr": 9,
+            "teamMember": "Olivia Harris",
+            "taskName": "SEO Optimization",
+            "taskStatus": "In Progress",
+            "category": "Marketing",
+            "time": "2h vs 4h",
+            "blockers": "Technical issues",
+            "dueDate": "2025-04-02"
+        },
+        {
+            "sr": 10,
+            "teamMember": "James Anderson",
+            "taskName": "Security Audit",
+            "taskStatus": "Pending",
+            "category": "Security",
+            "time": "0h vs 5h",
+            "blockers": "Waiting for team",
+            "dueDate": "2025-04-03"
+        },
+        {
+            "sr": 11,
+            "teamMember": "Emma Thompson",
+            "taskName": "Social Media Campaign",
+            "taskStatus": "Completed",
+            "category": "Marketing",
+            "time": "6h vs 6h",
+            "blockers": "None",
+            "dueDate": "2025-04-04"
+        },
+        {
+            "sr": 12,
+            "teamMember": "Liam Scott",
+            "taskName": "Backend Optimization",
+            "taskStatus": "In Progress",
+            "category": "Development",
+            "time": "7h vs 8h",
+            "blockers": "Server issues",
+            "dueDate": "2025-04-05"
+        },
+        {
+            "sr": 13,
+            "teamMember": "Isabella Lewis",
+            "taskName": "Graphics Design",
+            "taskStatus": "Pending",
+            "category": "Design",
+            "time": "0h vs 3h",
+            "blockers": "Client feedback awaited",
+            "dueDate": "2025-04-06"
+        },
+        {
+            "sr": 14,
+            "teamMember": "Ethan Walker",
+            "taskName": "Load Testing",
+            "taskStatus": "Completed",
+            "category": "QA",
+            "time": "5h vs 5h",
+            "blockers": "None",
+            "dueDate": "2025-04-07"
+        },
+        {
+            "sr": 15,
+            "teamMember": "Ava Hall",
+            "taskName": "Data Migration",
+            "taskStatus": "In Progress",
+            "category": "Database",
+            "time": "9h vs 10h",
+            "blockers": "Script issues",
+            "dueDate": "2025-04-08"
+        },
+        {
+            "sr": 16,
+            "teamMember": "Benjamin Young",
+            "taskName": "Client Meeting",
+            "taskStatus": "Completed",
+            "category": "Management",
+            "time": "3h vs 3h",
+            "blockers": "None",
+            "dueDate": "2025-04-09"
+        },
+        {
+            "sr": 17,
+            "teamMember": "Charlotte Allen",
+            "taskName": "Ad Campaign Setup",
+            "taskStatus": "Pending",
+            "category": "Marketing",
+            "time": "0h vs 5h",
+            "blockers": "Budget approval",
+            "dueDate": "2025-04-10"
+        },
+        {
+            "sr": 18,
+            "teamMember": "Daniel King",
+            "taskName": "Product Documentation",
+            "taskStatus": "In Progress",
+            "category": "Documentation",
+            "time": "4h vs 6h",
+            "blockers": "Waiting for details",
+            "dueDate": "2025-04-11"
+        },
+        {
+            "sr": 19,
+            "teamMember": "Mia Wright",
+            "taskName": "Dashboard Redesign",
+            "taskStatus": "Completed",
+            "category": "Design",
+            "time": "8h vs 8h",
+            "blockers": "None",
+            "dueDate": "2025-04-12"
+        },
+        {
+            "sr": 20,
+            "teamMember": "Logan Perez",
+            "taskName": "CRM Integration",
+            "taskStatus": "In Progress",
+            "category": "Development",
+            "time": "6h vs 7h",
+            "blockers": "API issues",
+            "dueDate": "2025-04-13"
+        },
+        {
+            "sr": 21,
+            "teamMember": "Grace Adams",
+            "taskName": "Customer Support Training",
+            "taskStatus": "Pending",
+            "category": "HR",
+            "time": "0h vs 4h",
+            "blockers": "Scheduling conflicts",
+            "dueDate": "2025-04-14"
+        },
+        {
+            "sr": 22,
+            "teamMember": "Elijah Nelson",
+            "taskName": "Code Review",
+            "taskStatus": "Completed",
+            "category": "Development",
+            "time": "5h vs 5h",
+            "blockers": "None",
+            "dueDate": "2025-04-15"
+        }
+    ],
+    "Team Productivity Report": [
+        {
+            "sr": 1,
+            "teamMember": "John Doe",
+            "tasksCompleted": 5,
+            "tasksPending": 2,
+            "avgTimePerTask": "3h"
+        },
+        {
+            "sr": 2,
+            "teamMember": "Jane Smith",
+            "tasksCompleted": 8,
+            "tasksPending": 1,
+            "avgTimePerTask": "2h 30m"
+        },
+        {
+            "sr": 3,
+            "teamMember": "Alice Johnson",
+            "tasksCompleted": 6,
+            "tasksPending": 3,
+            "avgTimePerTask": "2h 45m"
+        },
+        {
+            "sr": 4,
+            "teamMember": "Bob Martin",
+            "tasksCompleted": 4,
+            "tasksPending": 5,
+            "avgTimePerTask": "3h 15m"
+        },
+        {
+            "sr": 5,
+            "teamMember": "Emily Davis",
+            "tasksCompleted": 9,
+            "tasksPending": 0,
+            "avgTimePerTask": "2h"
+        },
+        {
+            "sr": 6,
+            "teamMember": "Michael Brown",
+            "tasksCompleted": 7,
+            "tasksPending": 2,
+            "avgTimePerTask": "2h 50m"
+        },
+        {
+            "sr": 7,
+            "teamMember": "Sophia Wilson",
+            "tasksCompleted": 3,
+            "tasksPending": 4,
+            "avgTimePerTask": "3h 30m"
+        },
+        {
+            "sr": 8,
+            "teamMember": "David White",
+            "tasksCompleted": 10,
+            "tasksPending": 1,
+            "avgTimePerTask": "1h 45m"
+        },
+        {
+            "sr": 9,
+            "teamMember": "Olivia Harris",
+            "tasksCompleted": 6,
+            "tasksPending": 3,
+            "avgTimePerTask": "2h 40m"
+        },
+        {
+            "sr": 10,
+            "teamMember": "James Anderson",
+            "tasksCompleted": 8,
+            "tasksPending": 2,
+            "avgTimePerTask": "2h 20m"
+        },
+        {
+            "sr": 11,
+            "teamMember": "Emma Thompson",
+            "tasksCompleted": 5,
+            "tasksPending": 3,
+            "avgTimePerTask": "3h 10m"
+        },
+        {
+            "sr": 12,
+            "teamMember": "Liam Scott",
+            "tasksCompleted": 9,
+            "tasksPending": 1,
+            "avgTimePerTask": "2h 15m"
+        },
+        {
+            "sr": 13,
+            "teamMember": "Isabella Lewis",
+            "tasksCompleted": 7,
+            "tasksPending": 2,
+            "avgTimePerTask": "2h 55m"
+        },
+        {
+            "sr": 14,
+            "teamMember": "Ethan Walker",
+            "tasksCompleted": 4,
+            "tasksPending": 6,
+            "avgTimePerTask": "3h 45m"
+        },
+        {
+            "sr": 15,
+            "teamMember": "Ava Hall",
+            "tasksCompleted": 11,
+            "tasksPending": 0,
+            "avgTimePerTask": "1h 50m"
+        },
+        {
+            "sr": 16,
+            "teamMember": "Benjamin Young",
+            "tasksCompleted": 6,
+            "tasksPending": 3,
+            "avgTimePerTask": "2h 35m"
+        },
+        {
+            "sr": 17,
+            "teamMember": "Charlotte Allen",
+            "tasksCompleted": 5,
+            "tasksPending": 4,
+            "avgTimePerTask": "3h 5m"
+        },
+        {
+            "sr": 18,
+            "teamMember": "Daniel King",
+            "tasksCompleted": 9,
+            "tasksPending": 1,
+            "avgTimePerTask": "2h 10m"
+        },
+        {
+            "sr": 19,
+            "teamMember": "Mia Wright",
+            "tasksCompleted": 8,
+            "tasksPending": 2,
+            "avgTimePerTask": "2h 25m"
+        },
+        {
+            "sr": 20,
+            "teamMember": "Logan Perez",
+            "tasksCompleted": 7,
+            "tasksPending": 3,
+            "avgTimePerTask": "2h 45m"
+        },
+        {
+            "sr": 21,
+            "teamMember": "Grace Adams",
+            "tasksCompleted": 6,
+            "tasksPending": 4,
+            "avgTimePerTask": "3h"
+        },
+        {
+            "sr": 22,
+            "teamMember": "Elijah Nelson",
+            "tasksCompleted": 10,
+            "tasksPending": 1,
+            "avgTimePerTask": "2h"
+        }
+    ],
+    "Issue & Blocker Report": [
+        {
+            "sr": 1,
+            "date": "2025-03-21",
+            "teamMember": "John Doe",
+            "issue": "API response delay",
+            "severity": "High",
+            "taskStatus": "In Progress"
+        },
+        {
+            "sr": 2,
+            "date": "2025-03-22",
+            "teamMember": "Jane Smith",
+            "issue": "UI not loading",
+            "severity": "Medium",
+            "taskStatus": "Resolved"
+        }
+    ],
+    "Project Overview Report": [
+        {
+            "sr": 1,
+            "projectName": "E-commerce Platform",
+            "progress": "75%",
+            "tasksCompleted": 150,
+            "pendingTasks": 50,
+            "dueDate": "2025-05-15"
+        },
+        {
+            "sr": 2,
+            "projectName": "CRM System",
+            "progress": "60%",
+            "tasksCompleted": 120,
+            "pendingTasks": 80,
+            "dueDate": "2025-06-10"
+        }
+    ]
+}

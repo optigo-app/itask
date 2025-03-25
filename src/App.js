@@ -9,8 +9,11 @@ import { taskInit } from './Api/InitialApi/TaskInitApi';
 import { fetchMasterGlFunc } from './Utils/globalfun';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
-import ProjectModuleList from './DemoCode/ProjectModuleList';
+import ProjectModuleList from './Components/Calendar/ProjectModuleList';
 import InfoCard from './DemoCode/InfoCard';
+import Reports from './Pages/Reports/Reports';
+import TaskReport from './DemoCode/TaskReport';
+import ProjectDashboard from './DemoCode/ProjectDashboard';
 
 // Lazy Loaded Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -74,7 +77,6 @@ const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem("isLoggedIn") === "true");
 
     useEffect(() => {
-        debugger
         let retryCount = 0;
         const maxRetries = 5;
 
@@ -150,8 +152,9 @@ const App = () => {
                                     <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
                                     <Route path="/masters" element={<ProtectedRoute><Masters /></ProtectedRoute>} />
                                     <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                                    <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                                     <Route path="*" element={<PagenotFound />} />
-                                    <Route path="/test" element={<ProtectedRoute><InfoCard /></ProtectedRoute>} />
+                                    <Route path="/test" element={<ProtectedRoute><ProjectDashboard /></ProtectedRoute>} />
                                 </Routes>
                             </Layout>
                         </Suspense>

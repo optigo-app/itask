@@ -9,14 +9,12 @@ import {
     IconButton,
     Grid,
     useTheme,
-    Stack,
     ToggleButtonGroup,
     ToggleButton,
-    Tooltip,
     FormControlLabel,
     Checkbox,
 } from "@mui/material";
-import { CircleX, Grid2x2, Grid3x3, List, ListTodo, Loader, Logs } from "lucide-react";
+import { CircleX, Grid2x2, ListTodo } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import "./SidebarDrawer.scss";
 import { useRecoilState, useRecoilValue } from "recoil";
@@ -25,9 +23,10 @@ import dayjs from 'dayjs';
 import { useLocation } from "react-router-dom";
 import EstimateInput from "../../Utils/Common/EstimateInput";
 import { Close, InsertDriveFile } from "@mui/icons-material";
-import MultiSelectChipWithLimit from "../../DemoCode/AssigneeAutocomplete";
+import MultiSelectChipWithLimit from "../ShortcutsComponent/AssigneeAutocomplete";
 import { commonSelectProps, commonTextFieldProps, customDatePickerProps } from "../../Utils/globalfun";
 import MultiTaskInput from "./MultiTaskInput";
+import FileUploader from "../ShortcutsComponent/FileUploader";
 
 const TASK_OPTIONS = [
     { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -79,10 +78,6 @@ const SidebarDrawer = ({
     const handleTaskChange = (event, newTaskType) => {
         if (newTaskType !== null) setTaskType(newTaskType);
         handleResetState();
-    };
-
-    const handleTaskSubChange = (event, newTaskType) => {
-        if (newTaskType !== null) setTaskSubType(newTaskType);
     };
 
     const filterRefs = {
@@ -160,14 +155,6 @@ const SidebarDrawer = ({
             [name]: value,
         }));
     }
-
-    // multilineTasks
-    const handleMultilineTask = (newValues) => {
-        setFormValues((prev) => ({
-            ...prev,
-            multiTaskName: newValues,
-        }));
-    };
 
     // estimated and actual estimate
     const handleEstimateChange = (newValues) => {
@@ -478,7 +465,7 @@ const SidebarDrawer = ({
                                             </TextField>
                                         </Box>
                                     </Grid>
-                                    <Grid item xs={6}>
+                                    {/* <Grid item xs={6}>
                                         <Box className="form-group">
                                             <Typography
                                                 variant="subtitle1"
@@ -506,7 +493,7 @@ const SidebarDrawer = ({
                                                 ))}
                                             </TextField>
                                         </Box>
-                                    </Grid>
+                                    </Grid> */}
                                     <Grid item xs={6}>
                                         <Box className="form-group">
                                             <Typography className="form-label" variant="subtitle1">
@@ -540,7 +527,7 @@ const SidebarDrawer = ({
                                     <Grid item xs={6}>
                                         <Box className="form-group">
                                             <Typography className="form-label" variant="subtitle1">
-                                                Due Date
+                                                Deadline Date
                                             </Typography>
                                             <DatePicker
                                                 name="dueDate"
@@ -574,7 +561,7 @@ const SidebarDrawer = ({
                                             <Typography className="form-label" variant="subtitle1">
                                                 Estimate
                                             </Typography>
-                                            <EstimateInput onChanges={handleEstimateChange} />
+                                            <EstimateInput onChanges={handleEstimateChange} hideBtn={false} />
                                         </Box>
                                     </Grid>
                                     <Grid item xs={4}>
@@ -582,7 +569,7 @@ const SidebarDrawer = ({
                                             <Typography className="form-label" variant="subtitle1">
                                                 Actual Estimate
                                             </Typography>
-                                            <EstimateInput onChanges={handleActualChange} />
+                                            <EstimateInput onChanges={handleActualChange} hideBtn={false} />
                                         </Box>
                                     </Grid>
                                     <Grid item xs={4}>
@@ -590,7 +577,7 @@ const SidebarDrawer = ({
                                             <Typography className="form-label" variant="subtitle1">
                                                 Final Estimate
                                             </Typography>
-                                            <EstimateInput onChanges={handleActualChange} />
+                                            <EstimateInput onChanges={handleActualChange} hideBtn={false} />
                                         </Box>
                                     </Grid>
                                 </Grid>
@@ -600,15 +587,15 @@ const SidebarDrawer = ({
                                 <Grid item xs={12}>
                                     <Box className="form-group">
                                         <Typography variant="subtitle1" className="form-label">
-                                            Remark
+                                            Description
                                         </Typography>
                                         <TextField
-                                            name="remark"
+                                            name="description"
                                             value={formValues.remark}
                                             onChange={handleChange}
                                             multiline
                                             rows={2}
-                                            placeholder="Add a remark"
+                                            placeholder="Add a description..."
                                             {...commonTextFieldProps}
                                         />
                                     </Box>
@@ -616,60 +603,7 @@ const SidebarDrawer = ({
 
                                 {/* File Upload */}
                                 <Grid item xs={12}>
-                                    <Box className="form-group">
-                                        <Typography
-                                            variant="subtitle1"
-                                            className="form-label"
-                                            htmlFor="attachment"
-                                        >
-                                            Attachment
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                                            <Button variant="outlined" component="label" className="secondary-btn">
-                                                Upload File
-                                                <input
-                                                    type="file"
-                                                    multiple
-                                                    hidden
-                                                    name="attachment"
-                                                    onChange={handleFileChange}
-                                                />
-                                            </Button>
-                                        </Box>
-                                        {formValues.attachment && formValues.attachment.length > 0 && (
-                                            <Box
-                                                sx={{
-                                                    marginTop: "8px",
-                                                    padding: "12px",
-                                                    borderRadius: "8px",
-                                                    backgroundColor: "#f5f5f5",
-                                                    maxHeight: "150px",
-                                                    overflowY: "auto",
-                                                    width: '50%'
-                                                }}
-                                            >
-                                                {formValues.attachment.map((file, index) => (
-                                                    <Box
-                                                        key={index}
-                                                        sx={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            marginBottom: "8px",
-                                                            '&:last-child': { marginBottom: 0 }
-                                                        }}
-                                                    >
-                                                        <InsertDriveFile sx={{ marginRight: 1, color: '#7367f0' }} />
-                                                        <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                            {file.name}
-                                                        </Typography>
-                                                        <IconButton size="small" onClick={() => handleRemoveFile(index)}>
-                                                            <Close fontSize="small" />
-                                                        </IconButton>
-                                                    </Box>
-                                                ))}
-                                            </Box>
-                                        )}
-                                    </Box>
+                                    <FileUploader formValues={formValues} setFormValues={setFormValues} />
                                 </Grid>
                             </>
                         }
@@ -935,7 +869,7 @@ const SidebarDrawer = ({
 
                             {/* File Upload */}
                             <Grid item xs={12}>
-                                <Box className="form-group">
+                                {/* <Box className="form-group">
                                     <Typography
                                         variant="subtitle1"
                                         className="form-label"
@@ -988,7 +922,8 @@ const SidebarDrawer = ({
                                             ))}
                                         </Box>
                                     )}
-                                </Box>
+                                </Box> */}
+                                <FileUploader formValues={formValues} setFormValues={setFormValues} />
                             </Grid>
 
                             {/* Action button */}

@@ -14,10 +14,6 @@ export const filterDrawer = atom({
   key: 'filterDrawer',
   default: false
 })
-export const filterDrawer1 = atom({
-  key: 'filterDrawer1',
-  default: false
-})
 
 export const formData = atom({
   key: 'formData',

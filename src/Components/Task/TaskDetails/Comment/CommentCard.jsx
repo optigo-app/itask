@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Grid, Typography, Box, IconButton, Avatar } from "@mui/material";
+import { Card, Grid, Typography, Box, IconButton, Avatar, Link } from "@mui/material";
 import { Download, MoreVertical } from "lucide-react";
 import DescriptionIcon from "@mui/icons-material/Description";
 import { formatDate3, getRandomAvatarColor } from "../../../../Utils/globalfun";
@@ -57,6 +57,36 @@ const CommentCard = ({ comment }) => {
                     sx={{
                         display: "flex",
                         alignItems: "center",
+                        marginTop: 2,
+                    }}
+                >
+                    <DescriptionIcon sx={{ color: "#007BFF", fontSize: 20, marginRight: 1 }} />
+                    <Link
+                        href={comment.attachments[0].url}
+                        download
+                        underline="always"
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            color: '#007BFF !important',
+                            textDecorationColor: '#007BFF !important',
+                            '&:hover': {
+                                color: '#0056b3',
+                                textDecorationColor: '#0056b3',
+                            }
+                        }}
+                    >
+                        {comment.attachments[0].filename}
+                        <Download size={16} style={{ marginLeft: 4 }} />
+                    </Link>
+                </Box>
+            )}
+
+            {/* {comment.attachments?.length > 0 && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
                         background: "#EEF7FF",
                         borderRadius: "8px",
                         padding: "10px",
@@ -76,7 +106,7 @@ const CommentCard = ({ comment }) => {
                         <Download size={20} />
                     </IconButton>
                 </Box>
-            )}
+            )} */}
         </Card>
     );
 };
