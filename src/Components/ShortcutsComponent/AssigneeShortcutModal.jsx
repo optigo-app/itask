@@ -90,7 +90,7 @@ const AssigneeShortcutModal = ({ open, onClose }) => {
             departmentid: formValues.department ?? ''
         };
 
-        const addTaskApi = await AddTaskDataApi(formValues ?? {}, updatedRowData, rootSubrootflagval ?? {});
+        const addTaskApi = await AddTaskDataApi(updatedRowData, rootSubrootflagval ?? {});
         if (addTaskApi) {
             setOpenChildTask(true);
             setTimeout(() => {

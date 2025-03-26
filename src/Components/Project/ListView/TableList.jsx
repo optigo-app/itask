@@ -24,8 +24,10 @@ import { Eye, Lock, LockOpen, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
+import { useNavigate } from "react-router-dom";
 
 const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => {
+    const navigate = useNavigate();
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("name");
     const [page, setPage] = useState(1);
@@ -52,6 +54,10 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
         setSelectedRow(task);
         setCnfDialogOpen(true);
     };
+
+    const handleViewPrDashboard = () => {
+        navigate('/projects/dashboard');
+    }
 
     const handleCloseCnfDialog = () => {
         setCnfDialogOpen(false);
@@ -303,6 +309,19 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
                                                             id={task?.taskid}
                                                         />
                                                         <IconButton
+                                                            onClick={handleViewPrDashboard}
+                                                            sx={{
+                                                                '&.Mui-disabled': {
+                                                                    color: 'rgba(0, 0, 0, 0.26)',
+                                                                },
+                                                            }}
+                                                        >
+                                                            <Eye
+                                                                size={20}
+                                                                color="#808080"
+                                                            />
+                                                        </IconButton>
+                                                        <IconButton
                                                             disabled={task?.isLocked == 1}
                                                             onClick={() => handleEditProject(task, { Task: "root" })}
                                                             sx={{
@@ -381,8 +400,8 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
                 onConfirm={handleCnfPrlUnl}
                 title="Confirm"
                 cancelLabel="Cancel"
-                confirmLabel={selectedRowData?.isLocked === 1 ? "Unlock" : "Lock"}
-                content={selectedRowData?.isLocked === 1 ? 'Are you sure you want to unlock this project?' : 'Are you sure you want to lock this project?'}
+                confirmLabel={selectedRow?.isLocked == 1 ? "Unlock" : "Lock"}
+                content={selectedRow?.isLocked === 1 ? 'Are you sure you want to unlock this project?' : 'Are you sure you want to lock this project?'}
             />
             <ConfirmationDialog
                 open={cnfDelDialogOpen}

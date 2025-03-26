@@ -22,6 +22,7 @@ export default function SummaryDashboard() {
             icon: iconMapping["Favorite Tasks"],
             color: "#FFB900", // Warmer yellow
             bgColor: "#FFF9E6", // Light warm yellow background
+            borderColor: "#FFD700", // Yellow border
         },
         {
             title: "Services Tasks",
@@ -30,6 +31,7 @@ export default function SummaryDashboard() {
             icon: iconMapping["Services Tasks"],
             color: "#3B82F6", // Blue
             bgColor: "#EFF6FF", // Light Blue
+            borderColor: "#BEE3F8", // Light Blue
         },
         {
             title: "R&D Tasks",
@@ -38,6 +40,7 @@ export default function SummaryDashboard() {
             icon: iconMapping["R&D Tasks"],
             color: "#10B981", // Green
             bgColor: "#ECFDF5", // Light Green
+            borderColor: "#D1FAE5", // Light Green
         },
         {
             title: "UpComming Tasks",
@@ -46,6 +49,7 @@ export default function SummaryDashboard() {
             icon: iconMapping["UpComming Tasks"],
             color: "#F97316", // Orange
             bgColor: "#FFF7ED", // Light Orange
+            borderColor: "#FED7AA", // Light Orange
         },
         {
             title: "Maintenance Tasks",
@@ -54,6 +58,7 @@ export default function SummaryDashboard() {
             icon: iconMapping["Maintenance Tasks"],
             color: "#14B8A6", // Teal
             bgColor: "#F0FDFA", // Light Teal
+            borderColor: "#C6F7E2", // Light Teal
         },
         {
             title: "Unassigned Tasks",
@@ -62,7 +67,8 @@ export default function SummaryDashboard() {
             icon: iconMapping["Unassigned Tasks"],
             color: "#EF4444", // Red
             bgColor: "#FEF2F2", // Light Red
-            routes: '/tasks/unassigned'
+            routes: '/tasks/unassigned',
+            borderColor: "#FECACA", // Light Red
         },
         {
             title: "Due Tasks",
@@ -71,6 +77,7 @@ export default function SummaryDashboard() {
             icon: iconMapping["Due"],
             color: "#8B5CF6", // Purple
             bgColor: "#F5F3FF", // Light Purple
+            borderColor: "#EDE9FE", // Light Purple
         },
     ];
 
@@ -120,30 +127,6 @@ export default function SummaryDashboard() {
                                             <Typography variant="h4" className='typoSecond'>
                                                 {metric.value}
                                             </Typography>
-                                            {/* {metric?.newTasks > 0 && (
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        position: 'absolute',
-                                                        top: 8,
-                                                        right: 8,
-                                                        backgroundColor: '#ff7400',
-                                                        color: '#fff !important',
-                                                        width: 22,
-                                                        height: 22,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        borderRadius: '50%',
-                                                        fontSize: '11px',
-                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                                                    }}
-
-
-                                                >
-                                                    +{metric?.newTasks}
-                                                </Typography>
-                                            )} */}
                                         </Box>
                                     </Box>
                                 </Box>

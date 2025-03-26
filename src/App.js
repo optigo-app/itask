@@ -13,7 +13,9 @@ import ProjectModuleList from './Components/Calendar/ProjectModuleList';
 import InfoCard from './DemoCode/InfoCard';
 import Reports from './Pages/Reports/Reports';
 import TaskReport from './DemoCode/TaskReport';
-import ProjectDashboard from './DemoCode/ProjectDashboard';
+import ProjectDashboard from './Pages/Project/ProjectDashboard';
+import MilestoneTimeline from './Components/Project/Dashboard/MilestoneTimeline';
+import ReferencePr from './Components/Project/Dashboard/ReferencePr';
 
 // Lazy Loaded Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -144,6 +146,7 @@ const App = () => {
                                     <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginForm />} />
                                     <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                                     <Route path="/projects" element={<ProtectedRoute><Project /></ProtectedRoute>} />
+                                    <Route path="/projects/Dashboard" element={<ProtectedRoute><ProjectDashboard /></ProtectedRoute>} />
                                     <Route path="/tasks/*" element={<ProtectedRoute><Task /></ProtectedRoute>} />
                                     <Route path="/tasks/unassigned" element={<ProtectedRoute><UnassignedTaskList /></ProtectedRoute>} />
                                     <Route path="/taskDetails" element={<ProtectedRoute><TaskDetails /></ProtectedRoute>} />
@@ -154,7 +157,8 @@ const App = () => {
                                     <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                                     <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                                     <Route path="*" element={<PagenotFound />} />
-                                    <Route path="/test" element={<ProtectedRoute><ProjectDashboard /></ProtectedRoute>} />
+                                    <Route path="/test" element={<ProtectedRoute><MilestoneTimeline /></ProtectedRoute>} />
+                                    <Route path="/test1" element={<ProtectedRoute><ReferencePr /></ProtectedRoute>} />
                                 </Routes>
                             </Layout>
                         </Suspense>

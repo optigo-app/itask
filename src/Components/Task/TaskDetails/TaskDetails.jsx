@@ -29,7 +29,6 @@ import { TaskDescription } from './TaskDescription';
 import SubtaskCard from './SubTaskcard';
 
 const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
-    console.log('taskData: ', taskData);
     const theme = useTheme();
     const [taskArr, setTaskArr] = useRecoilState(TaskData);
     // const taskData = useRecoilValue(formData);

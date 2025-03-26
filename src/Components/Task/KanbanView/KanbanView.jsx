@@ -132,6 +132,7 @@ function KanbanView({
 
       let statusId = statusData.find(status => status.labelname?.toLowerCase() === endColumn?.title?.toLowerCase())?.id;
       const updatedMovedTask = { ...movedTask, status: endColumn?.title, statusid: statusId };
+      console.log('ddupdatedMovedTask: ', updatedMovedTask);
 
       const endTasks = Array.from(endColumn.tasks);
       endTasks.splice(destination.index, 0, updatedMovedTask);
@@ -147,6 +148,7 @@ function KanbanView({
 
       if (endTasks) {
         let formValues = {
+          ...updatedMovedTask,
           project: updatedMovedTask.projectid,
           taskName: updatedMovedTask.taskname,
           dueDate: updatedMovedTask.DeadLineDate,
@@ -154,7 +156,7 @@ function KanbanView({
           status: updatedMovedTask.statusid,
         };
         let rootSubrootflagval = "root"
-        const addTaskApi = await AddTaskDataApi(formValues ?? {}, updatedMovedTask ?? {}, rootSubrootflagval ?? {});
+        const addTaskApi = await AddTaskDataApi(formValues ?? {}, rootSubrootflagval ?? {});
       }
     }
   };

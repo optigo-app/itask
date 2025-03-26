@@ -1,6 +1,6 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
-export const AddTaskDataApi = async (formValues, formDataValue, rootSubrootflagval, mode) => {
+export const AddTaskDataApi = async (formValues, rootSubrootflagval) => {
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
@@ -8,25 +8,26 @@ export const AddTaskDataApi = async (formValues, formDataValue, rootSubrootflagv
         let parentid;
         if (rootSubrootflagval?.Task == 'subroot') {
             taskid = '0';
-            parentid = formDataValue?.taskid ?? '0';
+            parentid = formValues?.taskid ?? '0';
         } else {
             parentid = '0';
-            taskid = formDataValue?.taskid ?? '0';
+            taskid = formValues?.taskid ?? '0';
         }
 
         const combinedValue = JSON.stringify({
             "taskid": taskid,
-            "projectid": formValues?.project ?? "",
-            "taskname": formValues?.taskName ?? "",
-            "StartDate": formDataValue?.StartDate ?? '',
-            "estimate_hrs": formDataValue?.estimate_hrs ?? "0.0",
-            "DeadLineDate": formValues?.dueDate ?? '',
-            "priorityid": formValues?.priority ?? "0",
-            "statusid": formValues?.status ?? "0",
-            "workcategoryid": formDataValue?.workcategoryid ?? "",
-            "departmentid": formDataValue?.departmentid ?? "",
+            "projectid": formValues?.projectid ?? "",
+            "taskname": formValues?.taskname ?? "",
+            "StartDate": formValues?.StartDate ?? '',
+            "estimate_hrs": formValues?.estimate_hrs ?? "0.0",
+            "DeadLineDate": formValues?.DeadLineDate ?? '',
+            "priorityid": formValues?.priorityid ?? "0",
+            "statusid": formValues?.statusid ?? "0",
+            "workcategoryid": formValues?.workcategoryid ?? "",
+            "departmentid": formValues?.departmentid ?? "",
             "parentid": parentid
         });
+        console.log('combinedValue: ', combinedValue);
 
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"tasksave\",\"appuserid\":\"${init?.userid ?? 'amrut@eg.com'}\"}`,

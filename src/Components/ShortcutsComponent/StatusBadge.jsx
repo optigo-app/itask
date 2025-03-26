@@ -33,7 +33,7 @@ const StatusBadge = ({ task, statusColors, onStatusChange }) => {
                     display: "flex",
                     justifyContent: "start",
                     alignItems: "center",
-                    border: "none",
+                    border: anchorEl ? "1px solid #444050" : "none",
                 }}
             >
                 {task?.status}
@@ -69,7 +69,7 @@ const StatusBadge = ({ task, statusColors, onStatusChange }) => {
                             },
                         }}
                     >
-                       <Typography variant="body2">{status?.labelname}</Typography>
+                        <Typography variant="body2">{status?.labelname}</Typography>
                     </MenuItem>
                 ))}
             </Menu>
