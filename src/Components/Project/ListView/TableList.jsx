@@ -27,6 +27,7 @@ import { useSetRecoilState } from "recoil";
 import { useNavigate } from "react-router-dom";
 
 const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => {
+    console.log('data: ', data);
     const navigate = useNavigate();
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("name");
@@ -251,30 +252,30 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
                                                             //     cursor: task?.isLocked === 1 ? 'default' : 'pointer'
                                                             // }}
                                                             >
-                                                                {task?.taskname}/{task?.module}
+                                                                {task?.taskPr}/{task?.taskname}
                                                             </a>
                                                         </div>
                                                     </div>
-                                                    <span className="prShDesc">{task?.short_description}</span>
+                                                    <span className="prShDesc">{task?.descr}</span>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Box display="flex" alignItems="center" gap={2} width="100%">
                                                         <Box width="100%" position="relative">
                                                             <LinearProgress
                                                                 variant="determinate"
-                                                                value={task?.progress}
+                                                                value={task?.progress_per}
                                                                 sx={{
                                                                     height: 7,
                                                                     borderRadius: 5,
                                                                     backgroundColor: "#e0e0e0",
                                                                     "& .MuiLinearProgress-bar": {
-                                                                        backgroundColor: getStatusColor(task?.progress),
+                                                                        backgroundColor: getStatusColor(task?.progress_per),
                                                                     },
                                                                 }}
                                                             />
                                                         </Box>
                                                         <Typography variant="body2" minWidth={100}>
-                                                            {`${task?.progress}%`}
+                                                            {`${task?.progress_per}%`}
                                                         </Typography>
                                                     </Box>
                                                 </TableCell>
@@ -304,7 +305,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
                                                         alignItems: 'center',
                                                     }}>
                                                         <LockButton
-                                                            isLocked={task?.isLocked === 1}
+                                                            isLocked={task?.isFreez === 1}
                                                             onClick={() => handleOpenCnfDialog(task)}
                                                             id={task?.taskid}
                                                         />
@@ -322,7 +323,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
                                                             />
                                                         </IconButton>
                                                         <IconButton
-                                                            disabled={task?.isLocked == 1}
+                                                            disabled={task?.isFreez == 1}
                                                             onClick={() => handleEditProject(task, { Task: "root" })}
                                                             sx={{
                                                                 '&.Mui-disabled': {
@@ -332,11 +333,11 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
                                                         >
                                                             <Pencil
                                                                 size={20}
-                                                                color={task?.isLocked == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                                                                color={task?.isFreez == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
                                                             />
                                                         </IconButton>
                                                         <IconButton
-                                                            disabled={task?.isLocked == 1}
+                                                            disabled={task?.isFreez == 1}
                                                             onClick={() => handleDeleteProject(task, { Task: "sub" })}
                                                             sx={{
                                                                 '&.Mui-disabled': {
@@ -346,7 +347,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
                                                         >
                                                             <Trash
                                                                 size={20}
-                                                                color={task?.isLocked == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                                                                color={task?.isFreez == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
                                                             />
                                                         </IconButton>
                                                     </Box>

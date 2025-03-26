@@ -181,8 +181,7 @@ const SidebarDrawer = ({
     }
 
     // Handle form submission
-    console.log('formDataValue: ', formDataValue);
-    const handleSubmit = () => {
+    const handleSubmit = (module) => {
         const updatedFormDataValue = {
             ...formDataValue,
             taskname: formValues.taskName ?? formDataValue.taskname,
@@ -199,7 +198,7 @@ const SidebarDrawer = ({
         };
         console.log('updatedFormDataValue: ', updatedFormDataValue);
     
-        onSubmit(updatedFormDataValue, { mode: taskType });
+        onSubmit(updatedFormDataValue, { mode: taskType }, module);
         onClose();
         setTaskType("single");
         setCheckedMultiTask(!checkedMultiTask);
@@ -939,12 +938,12 @@ const SidebarDrawer = ({
                                             sx={{ marginRight: "10px" }}
                                             className="secondaryBtnClassname"
                                         >
-                                            Cancel
+                                            Cancel 
                                         </Button>
                                         <Button
                                             variant="contained"
                                             color="primary"
-                                            onClick={handleSubmit}
+                                            onClick={() => handleSubmit({module:true})}
                                             disabled={isLoading}
                                             className="primary-btn"
                                         >

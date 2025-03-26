@@ -1,6 +1,7 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
-export const AddTaskDataApi = async (formValues, rootSubrootflagval) => {
+export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => {
+    console.log('module: ', module);
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
@@ -11,10 +12,11 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval) => {
             parentid = formValues?.taskid ?? '0';
         } else {
             parentid = '0';
-            taskid = formValues?.taskid ?? '0';
+            taskid = formValues?.taskid ?? '0'; 
         }
 
         const combinedValue = JSON.stringify({
+            "ismodule": module?.module ? '1' : '0',
             "taskid": taskid,
             "projectid": formValues?.projectid ?? "",
             "taskname": formValues?.taskname ?? "",

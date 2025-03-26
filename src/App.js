@@ -1,6 +1,6 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { Box, useMediaQuery, CircularProgress } from '@mui/material';
+import { Box, useMediaQuery } from '@mui/material';
 import { RecoilRoot } from 'recoil';
 import { ToastContainer } from 'react-toastify';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -9,10 +9,7 @@ import { taskInit } from './Api/InitialApi/TaskInitApi';
 import { fetchMasterGlFunc } from './Utils/globalfun';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
-import ProjectModuleList from './Components/Calendar/ProjectModuleList';
-import InfoCard from './DemoCode/InfoCard';
 import Reports from './Pages/Reports/Reports';
-import TaskReport from './DemoCode/TaskReport';
 import ProjectDashboard from './Pages/Project/ProjectDashboard';
 import MilestoneTimeline from './Components/Project/Dashboard/MilestoneTimeline';
 import ReferencePr from './Components/Project/Dashboard/ReferencePr';
@@ -33,7 +30,6 @@ const MetaDataSet = lazy(() => import('./Utils/MetaData/MetaDataSet'));
 const Profile = lazy(() => import('./Pages/ProfilePage/Profile'));
 const LoginForm = lazy(() => import('./Components/Auth/LoginForm'));
 const UnassignedTaskList = lazy(() => import('./Pages/Task/UnAssignedTask/UnassignedTaskList'));
-const TaskTimeTracker = lazy(() => import('./DemoCode/TaskTimeTracker'));
 
 const Layout = ({ children }) => {
     const isMobile = useMediaQuery('(max-width:768px)');
