@@ -6,10 +6,10 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import { filterDrawer, masterDataValue, } from "../../Recoil/atom";
 import { formatDate } from 'date-fns';
 import { fetchMasterGlFunc, formatDate2 } from "../../Utils/globalfun";
-import ProjectData from "../../Data/projects.json"
 import { motion, AnimatePresence } from "framer-motion";
-import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
+import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
+import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Project/ListView/TableList"));
@@ -26,11 +26,10 @@ const Project = () => {
   const [taskProject, setTaskProject] = useState();
   const [taskCategory, setTaskCategory] = useState();
   const [activeButton, setActiveButton] = useState("table");
-  const [project, setProject] = useState(ProjectData);
+  const [project, setProject] = useState();
   const [filters, setFilters] = useState({});
   const showAdvancedFil = useRecoilValue(filterDrawer);
 
-  // Helper function to get data from session storage and set state
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
     if (data) {
@@ -38,7 +37,6 @@ const Project = () => {
     }
   };
 
-  // Master data fetching and real-time updating
   const fetchMasterData = async () => {
     setIsLoading(true);
     try {
@@ -73,7 +71,94 @@ const Project = () => {
     }
   }, []);
 
-  // Filter change handler
+  useEffect(() => {
+    if (!isLoading) {
+      setIsTaskLoading(true);
+      fetchModuleData();
+    }
+  }, [isLoading, priorityData, statusData, taskProject, taskDepartment]);
+
+  const fetchModuleData = async () => {
+    setIsTaskLoading(true);
+    try {
+      if (!priorityData || !statusData || !taskProject || !taskDepartment) {
+        setIsTaskLoading(false);
+        return;
+      }
+
+      const taskData = await fetchModuleDataApi();
+      const labeledTasks = mapTaskLabels(taskData);
+      const finalTaskData = [...labeledTasks]
+
+      const enhanceTask = (task) => {
+        const priority = priorityData?.find(item => item?.id == task?.priorityid);
+        const status = statusData?.find(item => item?.id == task?.statusid);
+        const project = taskProject?.find(item => item?.id == task?.projectid);
+        const department = taskDepartment?.find(item => item?.id == task?.departmentid);
+        const category = taskCategory?.find(item => item?.id == task?.workcategoryid);
+
+        return {
+          ...task,
+          priority: priority ? priority?.labelname : '',
+          status: status ? status?.labelname : '',
+          taskPr: project ? project?.labelname : '',
+          taskDpt: department ? department?.labelname : '',
+          category: category?.labelname,
+        };
+      };
+
+      const enhancedTasks = finalTaskData?.map(task => enhanceTask(task));
+      setProject(enhancedTasks);
+
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsTaskLoading(false);
+    }
+  };
+  function mapTaskLabels(data) {
+    const labels = data?.rd[0];
+    const tasks = data?.rd1;
+    const labelMap = {};
+    Object.keys(labels).forEach((key, index) => {
+      labelMap[index + 1] = key;
+    });
+    function convertTask(task) {
+      let taskObj = {};
+      for (let key in task) {
+        if (task.hasOwnProperty(key)) {
+          const label = labelMap[key];
+          if (label) {
+            taskObj[label] = task[key];
+          }
+        }
+      }
+      if (task.subtasks) {
+        try {
+          const parsedSubtasks = JSON.parse(task.subtasks);
+          taskObj.subtasks = parsedSubtasks.map(subtask => {
+            let subtaskObj = {};
+            for (let key in subtask) {
+              if (subtask.hasOwnProperty(key)) {
+                const label = labelMap[key];
+                if (label) {
+                  subtaskObj[label] = subtask[key];
+                }
+              }
+            }
+            return subtaskObj;
+          });
+        } catch (error) {
+          console.error("Error parsing subtasks:", error);
+        }
+      }
+
+      return taskObj;
+    }
+    let taskData = tasks?.map(task => convertTask(task))
+
+    return taskData;
+  }
   const handleFilterChange = (key, value) => {
     if (key === 'clearFilter' && value == null) {
       setFilters([]);
@@ -96,7 +181,6 @@ const Project = () => {
     setFilters({});
   };
 
-  // filter functions
   const filteredData = project?.filter((task) => {
     const { status, priority, assignee, searchTerm, dueDate, department, project, category } = filters;
 
@@ -165,16 +249,24 @@ const Project = () => {
     }
   }, []);
 
-  const handleLockProject = (id) => {
-    debugger
-    const updatedData = filteredData?.map((task) => {
-      if (task.taskid === id) {
-        return { ...task, isLocked: task.isLocked === 1 ? 0 : 1 };
+  const handleLockProject = async (id) => {
+    const taskToUpdate = filteredData?.find(task => task.taskid === id);
+    if (!taskToUpdate) return;
+    const isFreez = taskToUpdate.isFreez ? 0 : 1;
+    try {
+      const response = await TaskFrezzeApi({ taskid: id, isFreez });
+      if (response?.rd[0]?.stat == 1) {
+        setProject(prevData =>
+          prevData.map(task =>
+            task.taskid === id ? { ...task, isFreez: isFreez } : task
+          )
+        );
       }
-      return task;
-    });
-    setProject(updatedData);
+    } catch (error) {
+      console.error('Error freezing task:', error);
+    }
   };
+
 
   return (
     <Box
