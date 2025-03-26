@@ -247,7 +247,6 @@ const Task = () => {
 
   // task api call
   useEffect(() => {
-    debugger
     setTimeout(() => {
       if (priorityData && statusData && taskProject && taskDepartment) {
         if (callFetchTaskApi) {
@@ -406,35 +405,37 @@ const Task = () => {
   }
 
   const handleStatusChange = (taskId, status) => {
-    const updateTasksRecursively = (tasks) => {
-      return tasks?.map((task) => {
-        if (task.taskid === taskId.taskid) {
-          return {
-            ...task,
-            statusid: status?.id,
-            status: status?.labelname
-          };
-        }
-
-        if (task.subtasks?.length > 0) {
-          const updatedSubtasks = updateTasksRecursively(task.subtasks);
-          if (updatedSubtasks !== task.subtasks) {
+    setTasks((prevTasks) => {
+      const updateTasksRecursively = (tasks) => {
+        return tasks?.map((task) => {
+          if (task.taskid === taskId.taskid) {
+            const updatedTask = {
+              ...task,
+              statusid: status?.id,
+              status: status?.labelname
+            };
+            handleAddApicall(updatedTask);
+            return updatedTask;
+          }
+          if (task.subtasks?.length > 0) {
             return {
               ...task,
-              subtasks: updatedSubtasks,
+              subtasks: updateTasksRecursively(task.subtasks),
             };
           }
-        }
+          return task;
+        });
+      };
+      return updateTasksRecursively(prevTasks);
+    });
+  };
 
-        return task;
-      });
-    };
-    setTasks((prevTasks) => updateTasksRecursively(prevTasks));
-  }
-
-  const handleAddApicall = async() => {
+  const handleAddApicall = async(updatedTasks) => {
+    console.log('ddupdatedTasks: ', updatedTasks);
+    let rootSubrootflagval = { "Task": "root"}
     
-    // const addTaskApi = await AddTaskDataApi(formValues ?? {}, updatedRowData, rootSubrootflagval ?? {});
+    const addTaskApi = await AddTaskDataApi(updatedTasks, rootSubrootflagval ?? {});
+    console.log('ddaddTaskApi: ', addTaskApi);
   }
 
   return (

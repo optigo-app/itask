@@ -52,7 +52,7 @@ $divider-color: #e0e0e0;
 .buttonClassname {
     font-family: $font-family;
     background: $button-Bgcolor;
-    color: $button-color;
+    color: $button-color !important;
     border-color: $button-Bordercolor;
     text-transform: capitalize;
     border-radius: 8px;

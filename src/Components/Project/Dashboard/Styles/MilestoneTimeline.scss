@@ -1,0 +1,57 @@
+@import "../../../../theme/variable.scss";
+
+.milestone-container {
+    padding: 16px;
+    box-shadow: $box-shadow-value;
+    border-radius: 8px;
+
+
+    .milestone-title {
+        text-align: center;
+        margin-bottom: 16px;
+    }
+
+    .milestone-card {
+        padding: 16px;
+        background: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: $box-shadow-value;
+    }
+
+    .milestone-name {
+        font-weight: bold;
+    }
+
+    .milestone-department,
+    .milestone-dates {
+        font-size: 14px;
+        color: #555;
+    }
+
+    .progress-container {
+        margin-top: 8px;
+    }
+
+    .progress-bar {
+        height: 8px;
+        border-radius: 8px;
+        background-color: $divider-color;
+        .MuiLinearProgress-bar {
+            background-color: $primary-main;
+        }
+    }
+
+    .progress-text {
+        font-size: 12px;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .dot-success {
+        background-color: green !important;
+    }
+
+    .dot-primary {
+        background-color: blue !important;
+    }
+}

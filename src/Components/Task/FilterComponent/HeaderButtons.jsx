@@ -46,9 +46,10 @@ const HeaderButtons = ({
 
   };
 
-  const handleFormSubmit = async (formValues, formDataValue, mode) => {
+  console.log('ddrootSubrootflagval: ', rootSubrootflagval);
+  const handleFormSubmit = async (formValues, mode) => {
     setOpenChildTask(false);
-    const addTaskApi = await AddTaskDataApi(formValues ?? {}, formDataValue ?? {}, rootSubrootflagval ?? {}, mode);
+    const addTaskApi = await AddTaskDataApi(formValues, rootSubrootflagval ?? {}, mode);
     if (addTaskApi) {
       setFormDrawerOpen(false);
       setOpenChildTask(true);

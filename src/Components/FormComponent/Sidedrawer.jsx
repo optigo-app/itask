@@ -173,20 +173,6 @@ const SidebarDrawer = ({
         }));
     };
 
-    // Handle file upload
-    const handleFileChange = (e) => {
-        const files = Array.from(e.target.files);
-        setFormValues((prev) => ({ ...prev, attachment: files }));
-    };
-
-    // remove file
-    const handleRemoveFile = (index) => {
-        setFormValues(prev => ({
-            ...prev,
-            attachment: prev.attachment.filter((_, i) => i !== index)
-        }));
-    };
-
     const handlebulkTaskSave = (updatedTasks) => {
         setFormValues((prev) => ({
             ...prev,
@@ -195,11 +181,28 @@ const SidebarDrawer = ({
     }
 
     // Handle form submission
+    console.log('formDataValue: ', formDataValue);
     const handleSubmit = () => {
-        onSubmit(formValues, formDataValue, { mode: taskType });
+        const updatedFormDataValue = {
+            ...formDataValue,
+            taskname: formValues.taskName ?? formDataValue.taskname,
+            statusid: formValues.status ?? formDataValue.statusid,
+            priorityid: formValues.priority?? formDataValue.priorityid,
+            projectid: formValues.project ?? formDataValue.projectid,
+            DeadLineDate: formValues.dueDate ?? formDataValue.DeadLineDate,
+            StartDate: formValues.startDate ?? formDataValue.entrydate,
+            remark: formValues.remark ?? formDataValue.remark,
+            estimate: formValues.estimate ?? formDataValue.estimate,
+            departmentid: formValues.department ?? formDataValue.departmentid,
+            assigneeid: formValues.assignee ?? formDataValue.assigneeid,
+            
+        };
+        console.log('updatedFormDataValue: ', updatedFormDataValue);
+    
+        onSubmit(updatedFormDataValue, { mode: taskType });
         onClose();
         setTaskType("single");
-        setCheckedMultiTask(!checkedMultiTask)
+        setCheckedMultiTask(!checkedMultiTask);
         setFormValues({
             taskName: "",
             bulkTask: [],
