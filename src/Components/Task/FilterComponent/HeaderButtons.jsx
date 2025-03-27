@@ -23,7 +23,7 @@ const HeaderButtons = ({
   statusData,
   taskCategory,
   taskDepartment }) => {
-    const location = useLocation();
+  const location = useLocation();
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const setFormDataValue = useSetRecoilState(formData);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
@@ -33,8 +33,6 @@ const HeaderButtons = ({
   const [selectedCategory, setSelectedCategory] = useRecoilState(selectedCategoryAtom);
   const [filterDrawerOpen, setFilterDrawerOpen] = useRecoilState(filterDrawer);
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
-
-
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
 
   const handleDrawerToggle = () => {
@@ -45,6 +43,7 @@ const HeaderButtons = ({
   };
 
   const handleFormSubmit = async (formValues, mode, module) => {
+    console.log('formValues: ', formValues);
     setOpenChildTask(false);
     const addTaskApi = await AddTaskDataApi(formValues, rootSubrootflagval ?? {}, module);
     if (addTaskApi) {
@@ -55,7 +54,11 @@ const HeaderButtons = ({
         if (rootSubrootflagval?.Task === "SubTask") {
           toast.success("Sub Task Added Successfully...")
         } else {
-          toast.success("Task Updated Successfully...")
+          if (formValues?.taskid) {
+            toast.success("Task Updated Successfully...")
+          } else {
+            toast.success("Task Added Successfully...")
+          }
         }
       }, 100);
 

@@ -34,7 +34,7 @@ const Task = () => {
   const [activeButton, setActiveButton] = useState("table");
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [filters, setFilters] = useState({});
-  const showAdvancedFil= useRecoilValue(filterDrawer);
+  const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
 
   const retrieveAndSetData = (key, setter) => {
@@ -430,10 +430,10 @@ const Task = () => {
     });
   };
 
-  const handleAddApicall = async(updatedTasks) => {
+  const handleAddApicall = async (updatedTasks) => {
     console.log('ddupdatedTasks: ', updatedTasks);
-    let rootSubrootflagval = { "Task": "root"}
-    
+    let rootSubrootflagval = { "Task": "root" }
+
     const addTaskApi = await AddTaskDataApi(updatedTasks, rootSubrootflagval ?? {});
     console.log('ddaddTaskApi: ', addTaskApi);
   }

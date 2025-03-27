@@ -2,14 +2,15 @@ import React, { Suspense, useEffect, useState } from "react";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box } from "@mui/material";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { filterDrawer, masterDataValue, } from "../../Recoil/atom";
-import { formatDate } from 'date-fns';
-import { fetchMasterGlFunc, formatDate2 } from "../../Utils/globalfun";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, } from "../../Recoil/atom";
+import { fetchMasterGlFunc, formatDate } from "../../Utils/globalfun";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
+import { deleteTaskDataApi } from "../../Api/TaskApi/DeleteTaskApi";
+import { toast } from "react-toastify";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Project/ListView/TableList"));
@@ -26,9 +27,11 @@ const Project = () => {
   const [taskProject, setTaskProject] = useState();
   const [taskCategory, setTaskCategory] = useState();
   const [activeButton, setActiveButton] = useState("table");
-  const [project, setProject] = useState();
+  const [project, setProject] = useState([]);
   const [filters, setFilters] = useState({});
   const showAdvancedFil = useRecoilValue(filterDrawer);
+  const refressPrModule = useRecoilValue(fetchlistApiCall);
+  const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
 
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
@@ -73,13 +76,14 @@ const Project = () => {
 
   useEffect(() => {
     if (!isLoading) {
-      setIsTaskLoading(true);
       fetchModuleData();
     }
-  }, [isLoading, priorityData, statusData, taskProject, taskDepartment]);
+  }, [isLoading, refressPrModule, priorityData, statusData, taskProject, taskDepartment]);
 
   const fetchModuleData = async () => {
-    setIsTaskLoading(true);
+    if (project?.length == 0) {
+      setIsTaskLoading(true);
+    }
     try {
       if (!priorityData || !statusData || !taskProject || !taskDepartment) {
         setIsTaskLoading(false);
@@ -120,7 +124,7 @@ const Project = () => {
     const labels = data?.rd[0];
     const tasks = data?.rd1;
     const labelMap = {};
-    Object.keys(labels).forEach((key, index) => {
+    Object?.keys(labels)?.forEach((key, index) => {
       labelMap[index + 1] = key;
     });
     function convertTask(task) {
@@ -135,11 +139,11 @@ const Project = () => {
       }
       if (task.subtasks) {
         try {
-          const parsedSubtasks = JSON.parse(task.subtasks);
-          taskObj.subtasks = parsedSubtasks.map(subtask => {
+          const parsedSubtasks = JSON?.parse(task.subtasks);
+          taskObj.subtasks = parsedSubtasks?.map(subtask => {
             let subtaskObj = {};
             for (let key in subtask) {
-              if (subtask.hasOwnProperty(key)) {
+              if (subtask?.hasOwnProperty(key)) {
                 const label = labelMap[key];
                 if (label) {
                   subtaskObj[label] = subtask[key];
@@ -159,9 +163,18 @@ const Project = () => {
 
     return taskData;
   }
+
   const handleFilterChange = (key, value) => {
     if (key === 'clearFilter' && value == null) {
-      setFilters([]);
+      setFilters({});
+      return;
+    }
+    if (typeof value === "string" && value.startsWith("Select ")) {
+      setFilters((prevFilters) => {
+        const updatedFilters = { ...prevFilters };
+        delete updatedFilters[key];
+        return updatedFilters;
+      });
       return;
     }
     setFilters((prevFilters) => ({
@@ -175,67 +188,61 @@ const Project = () => {
       ...prevFilters,
       [filterKey]: ''
     }));
+    setSelectedCategory('');
   };
 
   const handleClearAllFilters = () => {
     setFilters({});
+    setSelectedCategory('');
   };
 
-  const filteredData = project?.filter((task) => {
-    const { status, priority, assignee, searchTerm, dueDate, department, project, category } = filters;
+  const filteredData = Array.isArray(project) ? project?.filter((task) => {
+    const {
+      status = "",
+      priority = "",
+      assignee = "",
+      searchTerm = "",
+      dueDate = "",
+      department = "",
+      project: projectFilter = "",
+      category = "",
+    } = filters || {};
 
-    const normalizedSearchTerm = searchTerm?.toLowerCase();
-
-    const resetInvalidFilters = () => {
-      Object.keys(filters).forEach((key) => {
-        const value = filters[key];
-        if (value === "Select Department" || value === "Select Status" || value === "Select Priority" || value === "Select Assignee" || value === "Select Project") {
-          filters[key] = "";
-        }
-      });
-    };
-    // Reset filters before applying them
-    resetInvalidFilters();
-
+    const isValidFilter = (value) => value && !["Select Status", "Select Priority", "Select Assignee", "Select Project", "Select Department"].includes(value);
+    const normalizedSearchTerm = searchTerm?.toLowerCase() || "";
     const matchesFilters = (task) => {
+      if (!task) return false;
       const matches =
-        (category ? (task?.category)?.toLocaleLowerCase() === (category)?.toLocaleLowerCase() : true) &&
-        (status ? (task?.status)?.toLocaleLowerCase() === (status)?.toLocaleLowerCase() : true) &&
-        (priority ? (task?.priority)?.toLocaleLowerCase() === (priority)?.toLocaleLowerCase() : true) &&
-        (department ? (task?.taskDpt)?.toLocaleLowerCase() === (department)?.toLocaleLowerCase() : true) &&
-        (project ? (task?.taskPr)?.toLocaleLowerCase() === (project)?.toLocaleLowerCase() : true) &&
-        (dueDate ? formatDate2(task?.DeadLineDate) === formatDate2(dueDate) : true) &&
-        (assignee
-          ? Array.isArray(task?.assignee)
-            ? task.assignee.some((a) => a?.name?.toLocaleLowerCase() === assignee.toLocaleLowerCase())
-            : task?.assignee?.toLocaleLowerCase() === assignee.toLocaleLowerCase()
-          : true) &&
-        (!searchTerm ||
-          task?.taskname?.toLowerCase().includes(normalizedSearchTerm) ||
-          task?.status?.toLowerCase().includes(normalizedSearchTerm) ||
-          task?.priority?.toLowerCase().includes(normalizedSearchTerm) ||
+        (!isValidFilter(category) || (task?.category ?? "")?.toLowerCase() === category?.toLowerCase()) &&
+        (!isValidFilter(status) || (task?.status ?? "")?.toLowerCase() === status?.toLowerCase()) &&
+        (!isValidFilter(priority) || (task?.priority ?? "")?.toLowerCase() === priority?.toLowerCase()) &&
+        (!isValidFilter(department) || (task?.taskDpt ?? "")?.toLowerCase() === department?.toLowerCase()) &&
+        (!isValidFilter(projectFilter) || (task?.taskPr ?? "")?.toLowerCase() === projectFilter?.toLowerCase()) &&
+        (!isValidFilter(dueDate) || formatDate(task?.DeadLineDate) === formatDate(dueDate)) &&
+        (!isValidFilter(assignee) ||
           (Array.isArray(task?.assignee)
-            ? task.assignee.some((a) => a?.name?.toLowerCase()?.includes(normalizedSearchTerm))
-            : task?.assignee?.toLowerCase().includes(normalizedSearchTerm)) ||
-          task?.description?.toLowerCase().includes(normalizedSearchTerm) ||
-          task?.DeadLineDate?.toLowerCase().includes(normalizedSearchTerm) ||
-          task?.taskPr?.toLowerCase().includes(normalizedSearchTerm) ||
-          task?.taskDpt?.toLowerCase().includes(normalizedSearchTerm)) &&
-        (dueDate ? formatDate(task?.DeadLineDate) === formatDate(dueDate) : true);
+            ? task.assignee.some((a) => (a?.name ?? "").toLowerCase() === assignee.toLowerCase())
+            : (task?.assignee ?? "").toLowerCase() === assignee.toLowerCase())) &&
+        (!searchTerm ||
+          (task?.taskname ?? "").toLowerCase().includes(normalizedSearchTerm) ||
+          (task?.status ?? "").toLowerCase().includes(normalizedSearchTerm) ||
+          (task?.priority ?? "").toLowerCase().includes(normalizedSearchTerm) ||
+          (Array.isArray(task?.assignee)
+            ? task.assignee.some((a) => (a?.name ?? "").toLowerCase().includes(normalizedSearchTerm))
+            : (task?.assignee ?? "").toLowerCase().includes(normalizedSearchTerm)) ||
+          (task?.description ?? "").toLowerCase().includes(normalizedSearchTerm) ||
+          (task?.DeadLineDate ? formatDate(task?.DeadLineDate) : "").includes(normalizedSearchTerm) ||
+          (task?.taskPr ?? "").toLowerCase().includes(normalizedSearchTerm) ||
+          (task?.taskDpt ?? "").toLowerCase().includes(normalizedSearchTerm));
 
       if (matches) {
         return true;
       }
-
-      if (task?.subtasks?.length > 0) {
-        return task.subtasks.some(matchesFilters);
-      }
-
-      return false;
+      return Array.isArray(task?.subtasks) ? task.subtasks.some(matchesFilters) : false;
     };
 
     return matchesFilters(task);
-  });
+  }) : [];
 
   const handleTabBtnClick = (button) => {
     setActiveButton(button);
@@ -267,6 +274,19 @@ const Project = () => {
     }
   };
 
+  const handleDeleteModule = async (id) => {
+    const taskToDelete = filteredData?.find(task => task.taskid === id);
+    if (!taskToDelete) return;
+    try {
+      const response = await deleteTaskDataApi({ taskid: id });
+      if (response?.rd[0]?.stat == 1) {
+        setProject(prevData => prevData.filter(task => task.taskid !== id));
+        toast.success('Project Module deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  }
 
   return (
     <Box
@@ -370,6 +390,7 @@ const Project = () => {
                   isLoading={isTaskLoading}
                   masterData={masterData}
                   handleLockProject={handleLockProject}
+                  handleDeleteModule={handleDeleteModule}
                 />
               )}
 
@@ -380,15 +401,9 @@ const Project = () => {
                   masterData={masterData}
                   statusData={statusData}
                   handleLockProject={handleLockProject}
+                  handleDeleteModule={handleDeleteModule}
                 />
               )}
-
-              {/* {activeButton === "card" && (
-                <CardView
-                  isLoading={isTaskLoading}
-                  masterData={masterData}
-                />
-              )} */}
             </Suspense>
           </motion.div>
         )}
