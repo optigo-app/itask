@@ -37,6 +37,7 @@ export const formatDate3 = (date) => {
     return formattedDate;
 };
 
+// priority color
 export const priorityColors = {
     Low: {
         color: "#4caf50",
@@ -138,7 +139,6 @@ export const statusColors = {
         backgroundColor: "#fff3e0", // Light orange background
     },
 };
-
 
 // colors.js (Global colors)
 export const colors = [

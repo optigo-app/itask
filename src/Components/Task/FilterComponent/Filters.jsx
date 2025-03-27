@@ -58,6 +58,7 @@ const Filters = ({
   };
 
   useEffect(() => {
+    debugger
     if (Object.values(filters).every((value) => value === "" || value === null)) {
       Object.keys(filterRefs).forEach((key) => {
         const element = filterRefs[key].current;
@@ -71,7 +72,7 @@ const Filters = ({
         }
       });
     }
-  }, [handleVisibilityChange, handleVisibilityChange]);
+  }, [onFilterChange, handleVisibilityChange, handleVisibilityChange]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -133,7 +134,7 @@ const Filters = ({
                 ref={filterRefs[filter?.key]}
                 className="textfieldsClass"
               >
-                <MenuItem value="">
+                <MenuItem value={`Select ${filter?.label}`}>
                   <span className="notranslate">Select {filter?.label}</span>
                 </MenuItem>
                 {filter.data?.map((item) => (

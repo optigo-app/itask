@@ -38,6 +38,13 @@
 
         a {
             font-size: 15px !important;
+            color: #3724ff;
+            font-family: $font-family;
+            text-decoration: none;
+
+            &:hover {
+                text-decoration: underline;
+            }
         }
 
         .MuiButtonBase-root {
@@ -45,7 +52,13 @@
         }
 
         .prShDesc {
-            font-size: 12px !important;
+            font-size: 11px !important;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #ACAAB1
         }
     }
 

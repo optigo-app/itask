@@ -12,7 +12,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
             parentid = formValues?.taskid ?? '0';
         } else {
             parentid = '0';
-            taskid = formValues?.taskid ?? '0'; 
+            taskid = formValues?.taskid ?? '0';
         }
 
         const combinedValue = JSON.stringify({
@@ -27,7 +27,8 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
             "statusid": formValues?.statusid ?? "0",
             "workcategoryid": formValues?.workcategoryid ?? "",
             "departmentid": formValues?.departmentid ?? "",
-            "parentid": parentid
+            "parentid": parentid,
+            "descr": formValues?.descr ?? "",
         });
         console.log('combinedValue: ', combinedValue);
 

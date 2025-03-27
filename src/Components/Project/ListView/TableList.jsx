@@ -26,7 +26,7 @@ import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionM
 import { useSetRecoilState } from "recoil";
 import { useNavigate } from "react-router-dom";
 
-const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => {
+const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) => {
     console.log('data: ', data);
     const navigate = useNavigate();
     const [order, setOrder] = useState("asc");
@@ -42,13 +42,13 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [columnWidths] = useState({
-        'project / module': 350,
-        progress: 150,
+        'module': 350,
+        // 'project': 200,
+        'progress': 180,
         'start date': 100,
         'due date': 100,
-        priority: 100,
-        // summary: 200,
-        actions: 100,
+        'priority': 100,
+        'actions': 80,
     });
 
     const handleOpenCnfDialog = (task) => {
@@ -74,8 +74,8 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
     };
 
     const handleRemovePr = async () => {
-        setCnfDialogOpen(false);
-        handleDeletePrMo(selectedRow?.taskid);
+        setCnfDelDialogOpen(false);
+        handleDeleteModule(selectedRow?.taskid);
     };
 
     const handleEditProject = async (task, additionalInfo) => {
@@ -90,6 +90,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
         setCnfDelDialogOpen(true);
         setRootSubroot(additionalInfo);
         setActionMode("delete");
+        setSelectedRow(task);
     }
 
     const handleRequestSort = (property) => {
@@ -226,14 +227,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
                                 <>
                                     {currentData?.map((task, taskIndex) => (
                                         <React.Fragment key={taskIndex}>
-                                            <TableRow
-                                            // sx={{
-                                            //     backgroundColor: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.04)' : 'inherit',
-                                            //     '&:hover': {
-                                            //         backgroundColor: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-                                            //     },
-                                            // }}
-                                            >
+                                            <TableRow>
                                                 <TableCell>
                                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                                         <div>
@@ -245,14 +239,8 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
                                                                         handleNavigate(task);
                                                                     }
                                                                 }}
-                                                            // style={{
-                                                            //     pointerEvents: task?.isLocked === 1 ? 'none' : 'auto',
-                                                            //     color: task?.isLocked === 1 ? 'rgba(0, 0, 0, 0.38)' : '#2900ee',
-                                                            //     textDecoration: task?.isLocked === 1 ? 'none' : "underline",
-                                                            //     cursor: task?.isLocked === 1 ? 'default' : 'pointer'
-                                                            // }}
                                                             >
-                                                                {task?.taskPr}/{task?.taskname}
+                                                                <span style={{ fontWeight: 'bold' }}>{task?.taskname}</span>/<span style={{ fontWeight: 'bold', color: '#7d7f85' }}>{task?.taskPr}</span>
                                                             </a>
                                                         </div>
                                                     </div>
@@ -279,8 +267,8 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
                                                         </Typography>
                                                     </Box>
                                                 </TableCell>
-                                                <TableCell>{task?.StartDate ? formatDate2(task.StartDate) : '-'}</TableCell>
-                                                <TableCell>{task?.DeadLineDate ? formatDate2(task.DeadLineDate) : '-'}</TableCell>
+                                                <TableCell>{task?.StartDate ? formatDate2(task?.StartDate) : '-'}</TableCell>
+                                                <TableCell>{task?.DeadLineDate ? formatDate2(task?.DeadLineDate) : '-'}</TableCell>
                                                 <TableCell>
                                                     <div style={{
                                                         color: priorityColors[task?.priority]?.color,
@@ -359,12 +347,12 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeletePrMo }) => 
                             ) :
                                 <TableRow>
                                     <TableCell colSpan={7} >
-                                        <Typography variant="body2">No Project/Module found.</Typography>
+                                        <Typography variant="body2" sx={{ p: 2, textAlign: 'center', color: '#7d7f85 !important' }}>No Project/Module found.</Typography>
                                     </TableCell>
                                 </TableRow>
                             }
 
-                            {!isLoading &&
+                            {!isLoading && data?.length != 0 &&
                                 <TableRow>
                                     <TableCell colSpan={7} >
                                         {currentData?.length !== 0 && (

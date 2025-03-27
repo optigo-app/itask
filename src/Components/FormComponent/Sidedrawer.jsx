@@ -54,7 +54,7 @@ const SidebarDrawer = ({
     const [assignees, setAssignees] = React.useState([]);
     const [taskType, setTaskType] = useState("single");
     const [tasksubType, setTaskSubType] = useState("multi2");
-    const searchParams = new URLSearchParams(location.search);
+    const searchParams = new URLSearchParams(location?.search);
     const encodedData = searchParams.get("data");
     const [decodedData, setDecodedData] = useState(null);
     const [formValues, setFormValues] = React.useState({
@@ -64,7 +64,7 @@ const SidebarDrawer = ({
         dueDate: null,
         assignee: "",
         priority: "",
-        remark: "",
+        description: "",
         attachment: null,
         comment: "",
         progress: "",
@@ -75,6 +75,7 @@ const SidebarDrawer = ({
         milestoneChecked: false,
     });
 
+    console.log('formValues: ', formValues);
     const handleTaskChange = (event, newTaskType) => {
         if (newTaskType !== null) setTaskType(newTaskType);
         handleResetState();
@@ -117,7 +118,7 @@ const SidebarDrawer = ({
                 status: formDataValue?.statusid ?? "",
                 priority: formDataValue?.priorityid ?? "",
                 project: formDataValue?.projectid ?? "",
-                remark: formDataValue?.remark ?? "",
+                description: formDataValue?.descr ?? "",
                 attachment: formDataValue?.attachment ?? null,
                 comment: "",
                 progress: formDataValue?.progress ?? "",
@@ -186,7 +187,7 @@ const SidebarDrawer = ({
             ...formDataValue,
             taskname: formValues.taskName ?? formDataValue.taskname,
             statusid: formValues.status ?? formDataValue.statusid,
-            priorityid: formValues.priority?? formDataValue.priorityid,
+            priorityid: formValues.priority ?? formDataValue.priorityid,
             projectid: formValues.project ?? formDataValue.projectid,
             DeadLineDate: formValues.dueDate ?? formDataValue.DeadLineDate,
             StartDate: formValues.startDate ?? formDataValue.entrydate,
@@ -194,10 +195,9 @@ const SidebarDrawer = ({
             estimate: formValues.estimate ?? formDataValue.estimate,
             departmentid: formValues.department ?? formDataValue.departmentid,
             assigneeid: formValues.assignee ?? formDataValue.assigneeid,
-            
+            descr: formValues.description ?? formDataValue.descr,
+
         };
-        console.log('updatedFormDataValue: ', updatedFormDataValue);
-    
         onSubmit(updatedFormDataValue, { mode: taskType }, module);
         onClose();
         setTaskType("single");
@@ -209,7 +209,7 @@ const SidebarDrawer = ({
             dueDate: null,
             assignee: "",
             priority: "",
-            remark: "",
+            description: "",
             attachment: null,
             comment: "",
             progress: "",
@@ -593,7 +593,7 @@ const SidebarDrawer = ({
                                         </Typography>
                                         <TextField
                                             name="description"
-                                            value={formValues.remark}
+                                            value={formValues.description}
                                             onChange={handleChange}
                                             multiline
                                             rows={2}
@@ -858,12 +858,12 @@ const SidebarDrawer = ({
                                         Description
                                     </Typography>
                                     <TextField
-                                        name="remark"
-                                        value={formValues.remark}
+                                        name="description"
+                                        value={formValues.description}
                                         onChange={handleChange}
                                         multiline
                                         rows={2}
-                                        placeholder="Add a remark"
+                                        placeholder="Add a description"
                                         {...commonTextFieldProps}
                                     />
                                 </Box>
@@ -938,12 +938,12 @@ const SidebarDrawer = ({
                                             sx={{ marginRight: "10px" }}
                                             className="secondaryBtnClassname"
                                         >
-                                            Cancel 
+                                            Cancel
                                         </Button>
                                         <Button
                                             variant="contained"
                                             color="primary"
-                                            onClick={() => handleSubmit({module:true})}
+                                            onClick={() => handleSubmit({ module: true })}
                                             disabled={isLoading}
                                             className="primary-btn"
                                         >
