@@ -24,6 +24,7 @@ const HeaderButtons = ({
   taskCategory,
   taskDepartment }) => {
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const setFormDataValue = useSetRecoilState(formData);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
@@ -34,6 +35,8 @@ const HeaderButtons = ({
   const [filterDrawerOpen, setFilterDrawerOpen] = useRecoilState(filterDrawer);
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
+  const encodedData = searchParams.get("data");
+  console.log('encodedData: ', encodedData);
 
   const handleDrawerToggle = () => {
     setFormDrawerOpen(!formdrawerOpen);
@@ -42,24 +45,31 @@ const HeaderButtons = ({
     setOpenChildTask(false);
   };
 
+  console.log('rootSubrootflagval: ', rootSubrootflagval);
   const handleFormSubmit = async (formValues, mode, module) => {
-    console.log('formValues: ', formValues);
+    let parsedData;
+    console.log('parsedData: ', parsedData);
+    if (encodedData) {
+      const decodedString = decodeURIComponent(encodedData);
+      const jsonString = atob(decodedString);
+      parsedData = JSON.parse(jsonString);
+    }
+    const rootflag = rootSubrootflagval?.Task == 'AddTask' ? { Task: "subroot" } : rootSubrootflagval;
     setOpenChildTask(false);
-    const addTaskApi = await AddTaskDataApi(formValues, rootSubrootflagval ?? {}, module);
+    const addTaskApi = await AddTaskDataApi(formValues, rootflag ?? {}, module);
     if (addTaskApi) {
       setFormDrawerOpen(false);
       setOpenChildTask(true);
-      // setSelectedTask({})
       setTimeout(() => {
+        let message = "Task Added Successfully...";
         if (rootSubrootflagval?.Task === "SubTask") {
-          toast.success("Sub Task Added Successfully...")
-        } else {
-          if (formValues?.taskid) {
-            toast.success("Task Updated Successfully...")
-          } else {
-            toast.success("Task Added Successfully...")
-          }
+          message = "Sub Task Added Successfully...";
+        } else if (rootSubrootflagval?.Task === "AddTask") {
+        } else if (formValues?.taskid) {
+          message = "Task Updated Successfully...";
         }
+
+        toast.success(message);
       }, 100);
 
     }
@@ -172,15 +182,16 @@ const HeaderButtons = ({
         </Box>
         {location?.pathname?.includes('/tasks') &&
           <Box sx={{ display: "flex", gap: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              className="buttonClassname"
-              onClick={handleDrawerToggle}
-            >
-              New
-            </Button>
-
+            {location?.pathname?.includes('/tasks/') &&
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                className="buttonClassname"
+                onClick={handleDrawerToggle}
+              >
+                New
+              </Button>
+            }
             <IconButton
               size='medium'
               className="buttonClassname"

@@ -1,6 +1,6 @@
 import React from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Avatar, Typography } from "@mui/material";
-import "./Styles/TeamMembers.scss";
+import {Avatar, Typography } from "@mui/material";
+import ReusableTable from "./ReusableTable";
 
 const teamMembers = [
     { id: 1, task: "Project Planning", name: "John Doe", designation: "Project Manager", avatar: "https://i.pravatar.cc/150?img=1" },
@@ -12,35 +12,27 @@ const teamMembers = [
 
 const TeamMembers = () => {
     return (
-        <div className="team-container">
-            <TableContainer component={Paper} className="team-table-container">
-                <Table className="teamMember_table">
-                    <TableHead>
-                        <TableRow className="table-header">
-                            <TableCell>ID</TableCell>
-                            <TableCell>Task</TableCell>
-                            <TableCell>Team Member</TableCell>
-                            <TableCell>Designation</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {teamMembers.map((member) => (
-                            <TableRow key={member.id}>
-                                <TableCell>{member.id}</TableCell>
-                                <TableCell className="member-task">{member.task}</TableCell>
-                                <TableCell>
-                                    <div className="team_uploadedBy">
-                                        <Avatar src={member.avatar} alt={member.name} className="team-avatar" />
-                                        <Typography>{member.name}</Typography>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="member-designation">{member.designation}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </div>
+        <ReusableTable
+            className="reusable-table-container"
+            columns={[
+                { id: "id", label: "ID" },
+                { id: "task", label: "Task" },
+                { id: "name", label: "Team Member" },
+                { id: "designation", label: "Designation" }
+            ]}
+            data={teamMembers}
+            renderCell={(columnId, row) => {
+                if (columnId === "name") {
+                    return (
+                        <div className="reusa_uploadedBy">
+                            <Avatar src={row.avatar} alt={row.name} className="reusa_avatar" />
+                            <Typography>{row.name}</Typography>
+                        </div>
+                    );
+                }
+                return row[columnId];
+            }}
+        />
     );
 };
 

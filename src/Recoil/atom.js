@@ -5,6 +5,11 @@ export const TaskData = atom({
   default: []
 })
 
+export const taskLength = atom({
+  key: 'taskLength',
+  default: 0
+})
+
 export const openFormDrawer = atom({
   key: 'openFormDrawer',
   default: false
@@ -74,6 +79,7 @@ export const timerCompOpen = atom({
   key: 'timerCompOpen',
   default: false
 })
+
 
 
 

@@ -1,13 +1,12 @@
-@import "../../../../theme/variable.scss";
+    @import "../../../../theme/variable.scss";
 
-.challenges-container {
-    .challenges-table-container {
+    .reusable-table-container {
         border-radius: 8px;
         overflow: hidden;
         box-shadow: $box-shadow-value !important;
 
 
-        .challenges_table {
+        .reusable_table {
             width: 100%;
             border-collapse: collapse;
             font-family: $font-family !important;
@@ -42,5 +41,17 @@
                 }
             }
         }
+        .reusa_uploadedBy{
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            .reusa_avatar {
+                width: 30px;
+                height: 30px;
+            }
+            .MuiTypography-root{
+                font-size: 14px;
+                color: $text2ndColor;
+            }
+        }
     }
-}

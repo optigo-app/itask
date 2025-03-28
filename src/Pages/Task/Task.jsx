@@ -4,13 +4,12 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box } from "@mui/material";
 import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { fetchlistApiCall, filterDrawer, filterDrawer1, masterDataValue, selectedCategoryAtom, selectedRowData, taskActionMode, TaskData } from "../../Recoil/atom";
+import { fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength } from "../../Recoil/atom";
 import { fetchMasterGlFunc, formatDate, formatDate2 } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { motion, AnimatePresence } from "framer-motion";
-import TaskJson from "../../Data/taskData.json"
 import { AddTaskDataApi } from "../../Api/TaskApi/AddTaskApi";
 
 
@@ -20,8 +19,9 @@ const CardView = React.lazy(() => import("../../Components/Task/CardView/CardVie
 
 const Task = () => {
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
   const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
-  const selectedRow = useRecoilValue(selectedRowData);
+  const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
   const [isLoading, setIsLoading] = useState(false);
   const [isTaskLoading, setIsTaskLoading] = useState(null);
   const [masterData, setMasterData] = useRecoilState(masterDataValue);
@@ -36,6 +36,9 @@ const Task = () => {
   const [filters, setFilters] = useState({});
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
+  console.log('tasks: ', tasks);
+  const setTaskDataLength = useSetRecoilState(taskLength)
+  const encodedData = searchParams.get("data");
 
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
@@ -103,7 +106,8 @@ const Task = () => {
     },
   ]
 
-  const fetchTaskData = async () => {
+  const fetchTaskData = async (parsedData) => {
+    debugger
     if (tasks?.length == 0) {
       setIsTaskLoading(true);
     }
@@ -112,11 +116,20 @@ const Task = () => {
         setIsTaskLoading(false);
         return;
       }
-
-      const taskData = await fetchTaskDataApi(selectedRow ?? {},);
+      let data = selectedRow?.parentid ? selectedRow : parsedData;
+      const taskData = await fetchTaskDataApi(data ?? {});
       const labeledTasks = mapTaskLabels(taskData);
-      // const finalTaskData = [...labeledTasks, ...TaskJson]
-      const finalTaskData = [...labeledTasks]
+      let finalTaskData = [...labeledTasks]
+      debugger
+      setSelectedRow({})
+      if (parsedData?.taskid) {
+        const matchedTask = finalTaskData?.find(task => task.taskid === parsedData.taskid);
+
+        if (matchedTask) {
+          finalTaskData = finalTaskData?.filter(task => task.taskid !== parsedData.taskid)
+            ?.concat((matchedTask.subtasks ?? [])?.map(sub => ({ ...sub })));
+        }
+      }
 
       const enhanceTask = (task) => {
         const priority = priorityData?.find(item => item?.id == task?.priorityid);
@@ -125,10 +138,6 @@ const Task = () => {
         const department = taskDepartment?.find(item => item?.id == task?.departmentid);
         const category = taskCategory?.find(item => item?.id == task?.workcategoryid);
         const assignee = assigneeJosn;
-        const estimate = ['20', '30', '40']
-        const isburning = 1;
-        const isFreezed = 0;
-        const isFav = false;
 
         const enhancedSubtasks = task?.subtasks?.map((subtask) => ({
           ...enhanceTask(subtask),
@@ -145,48 +154,48 @@ const Task = () => {
           subtasks: enhancedSubtasks || [],
           assignee: assignee,
           category: category?.labelname,
-          estimate: estimate,
-          isburning: isburning,
-          subtaskflag: 0,
-          isFav: isFav,
-          isFreezed: isFreezed,
-          isUpdated: false,
         };
       };
 
       const enhancedTasks = finalTaskData?.map(task => enhanceTask(task));
+      setTaskDataLength(enhancedTasks.length);
 
-      setTasks((prevTasks) => {
-        const taskMap = new Map();
-        enhancedTasks.forEach((task) => {
-          taskMap.set(task.taskid, task);
-        });
-        const mergeTasks = (tasks = []) => {
-          return tasks.map((task) => {
-            const updatedTask = taskMap.get(task.taskid);
-            const existingSubtasks = task.subtasks || [];
-            const updatedSubtasks = updatedTask?.subtasks || [];
+      if (data?.taskid === parsedData?.taskid) {
+        setTasks(enhancedTasks);
+      } else {
 
-            if (!Array.isArray(existingSubtasks) || existingSubtasks.length === 0) {
+        setTasks((prevTasks) => {
+          const taskMap = new Map();
+          enhancedTasks.forEach((task) => {
+            taskMap.set(task.taskid, task);
+          });
+          const mergeTasks = (tasks = []) => {
+            return tasks.map((task) => {
+              const updatedTask = taskMap.get(task.taskid);
+              const existingSubtasks = task.subtasks || [];
+              const updatedSubtasks = updatedTask?.subtasks || [];
+
+              if (!Array.isArray(existingSubtasks) || existingSubtasks.length === 0) {
+                return {
+                  ...task,
+                  ...(updatedTask || {}),
+                };
+              }
+
               return {
                 ...task,
                 ...(updatedTask || {}),
+                subtasks: mergeTasks(updatedSubtasks.length > 0 ? updatedSubtasks : existingSubtasks),
               };
-            }
-
-            return {
-              ...task,
-              ...(updatedTask || {}),
-              subtasks: mergeTasks(updatedSubtasks.length > 0 ? updatedSubtasks : existingSubtasks),
-            };
-          });
-        };
-        const newTasks = mergeTasks(prevTasks);
-        if (!Array.isArray(prevTasks) || prevTasks.length === 0) {
-          return [...enhancedTasks];
-        }
-        return newTasks;
-      });
+            });
+          };
+          const newTasks = mergeTasks(prevTasks);
+          if (!Array.isArray(prevTasks) || prevTasks.length === 0) {
+            return [...enhancedTasks];
+          }
+          return newTasks;
+        });
+      }
 
     } catch (error) {
       console.error(error);
@@ -247,10 +256,16 @@ const Task = () => {
 
   // task api call
   useEffect(() => {
+    let parsedData;
+    if (encodedData) {
+      const decodedString = decodeURIComponent(encodedData);
+      const jsonString = atob(decodedString);
+      parsedData = JSON.parse(jsonString);
+    }
     setTimeout(() => {
       if (priorityData && statusData && taskProject && taskDepartment) {
         if (callFetchTaskApi) {
-          fetchTaskData(selectedRow);
+          fetchTaskData(parsedData);
         }
       } else {
         fetchMasterData();
@@ -358,7 +373,7 @@ const Task = () => {
         if (task.taskid === taskToUpdate.taskid) {
           return {
             ...task,
-            isFav: !task.isFav, // Toggle isFav
+            isfavourite: !task.isfavourite, // Toggle isFav
           };
         }
 

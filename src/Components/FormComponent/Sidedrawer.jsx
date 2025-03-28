@@ -104,6 +104,7 @@ const SidebarDrawer = ({
         return null;
     })();
 
+
     useEffect(() => {
         const assigneeData = getAssigneeData;
         setAssignees(assigneeData);
@@ -181,24 +182,34 @@ const SidebarDrawer = ({
         }));
     }
 
+    console.log('rootSubrootflagval: ', rootSubrootflagval);
     // Handle form submission
     const handleSubmit = (module) => {
+        debugger
+        const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const updatedFormDataValue = {
             ...formDataValue,
+            taskid: moduleData?.taskid ?? formDataValue.taskid ?? "",
             taskname: formValues.taskName ?? formDataValue.taskname,
             statusid: formValues.status ?? formDataValue.statusid,
             priorityid: formValues.priority ?? formDataValue.priorityid,
-            projectid: formValues.project ?? formDataValue.projectid,
+            projectid: moduleData?.projectid ?? formValues.project ?? formDataValue.projectid, 
             DeadLineDate: formValues.dueDate ?? formDataValue.DeadLineDate,
+            workcategoryid: formValues.category ?? formDataValue.workcategoryid,
             StartDate: formValues.startDate ?? formDataValue.entrydate,
             remark: formValues.remark ?? formDataValue.remark,
             estimate: formValues.estimate ?? formDataValue.estimate,
             departmentid: formValues.department ?? formDataValue.departmentid,
             assigneeid: formValues.assignee ?? formDataValue.assigneeid,
             descr: formValues.description ?? formDataValue.descr,
-
+            ismilestone: formValues.milestoneChecked ?? formDataValue.milestone,
+            estimate_hrs: estimateValues?.estimate_hrs ?? formDataValue.estimate_hrs,
+            estimate1_hrs: estimateValues?.estimate_hrs ?? formDataValue.estimate1_hrs,
+            estimate2_hrs: estimateValues?.estimate_hrs ?? formDataValue.estimate2_hrs,
         };
+        
         onSubmit(updatedFormDataValue, { mode: taskType }, module);
+        console.log('updatedFormDataValue: ', updatedFormDataValue);
         onClose();
         setTaskType("single");
         setCheckedMultiTask(!checkedMultiTask);
@@ -227,6 +238,7 @@ const SidebarDrawer = ({
         setTaskType("single");
         handleResetState();
     }
+
     const handleResetState = () => {
         setFormValues({
             taskName: "",
@@ -289,7 +301,7 @@ const SidebarDrawer = ({
                         }}
                         />
                         <Box sx={{ display: 'flex', justifyContent: decodedData ? 'space-between' : "end", alignItems: 'start' }}>
-                            {decodedData && <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>{decodedData?.taskname + '/' + decodedData?.module}</Typography>}
+                            {decodedData && <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>{decodedData?.project + '/' + decodedData?.module}</Typography>}
                             {rootSubrootflagval?.Task !== "root" &&
                                 <Box className="tSideBarTgBox">
                                     <ToggleButtonGroup

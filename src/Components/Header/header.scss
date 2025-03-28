@@ -23,6 +23,21 @@
     font-family: $font-family;
 }
 
+.header_task-count {
+    background-color: #7d7f8799;
+    color: #fff;
+    width: fit-content;
+    padding: 0.2rem 0.4rem;
+    border-radius: 50px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -15px;
+  }
+
 .pMTypo{
     font-size: 15px !important;
 }
