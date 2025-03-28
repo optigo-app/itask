@@ -1,6 +1,5 @@
 import React from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography } from "@mui/material";
-import "./Styles/RndTask.scss";
+import ReusableTable from "./ReusableTable";
 
 const rndData = [
     { id: 1, topic: "New Material Research", description: "Exploring eco-friendly materials for production." },
@@ -13,28 +12,15 @@ const rndData = [
 
 const RnDTask = () => {
     return (
-        <div className="rnd-container">
-            <TableContainer component={Paper} className="rnd-table-container">
-                <Table className="rnd_table">
-                    <TableHead>
-                        <TableRow className="table-header">
-                            <TableCell>ID</TableCell>
-                            <TableCell>Research Topic</TableCell>
-                            <TableCell>Description</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {rndData.map((item) => (
-                            <TableRow key={item.id}>
-                                <TableCell>{item.id}</TableCell>
-                                <TableCell className="rnd-topic">{item.topic}</TableCell>
-                                <TableCell className="rnd-description">{item.description}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </div>
+        <ReusableTable
+           className="reusable-table-container"
+            columns={[
+                { id: "id", label: "ID" },
+                { id: "topic", label: "Research Topic" },
+                { id: "description", label: "Description" }
+            ]}
+            data={rndData}
+        />
     );
 };
 

@@ -9,18 +9,8 @@ import MasterFormDrawer from './MasterFormDrawer';
 import { fetchIndidualApiMaster } from '../../Api/MasterApi/masterIndividualyApi';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import { Add as AddIcon } from "@mui/icons-material";
-
-const toggleData = [
-    { label: 'Toggle 1', content: 'Content for Toggle 1' },
-    { label: 'Toggle 2', content: 'Content for Toggle 2' },
-    { label: 'Toggle 3', content: 'Content for Toggle 3' },
-];
-
-const tableData = [
-    { id: 1, name: 'Item 1', createdDate: '2024-03-01', updatedDate: '2024-03-10', isdelete: 0 },
-    { id: 2, name: 'Item 2', createdDate: '2024-02-15', updatedDate: '2024-03-08', isdelete: 1 },
-    { id: 3, name: 'Item 3', createdDate: '2024-01-20', updatedDate: '2024-02-25', isdelete: 0 },
-];
+import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
+import { toast } from 'react-toastify';
 
 const MasterToggle = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -38,6 +28,11 @@ const MasterToggle = () => {
     const [mode, setMode] = useState('');
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
+
+    const handleCloseCnfDialog = () => {
+        setCnfDelDialogOpen(false);
+    };
 
     const handleOpenDrawer = () => {
         setSelectedRow(null);
@@ -61,7 +56,12 @@ const MasterToggle = () => {
         try {
             const masterData = await fetchMaster();
             setTableTabData(masterData?.rd)
-            setValue(masterData?.rd[0]?.title);
+            const storedValue = localStorage?.getItem('masterTab');
+            if (storedValue) {
+                setValue(storedValue);
+            } else {
+                setValue(masterData?.rd[0]?.title);
+            }
         } catch (error) {
             console.error(error);
         } finally {
@@ -70,7 +70,9 @@ const MasterToggle = () => {
     };
 
     const handleTaskApicall = async () => {
-        setIsIndLoading(true);
+        if (formattedData?.length == 0) {
+            setIsIndLoading(true);
+        }
         try {
             if (tableTabData) {
                 const mode = tableTabData.find(tabItem => tabItem.title === value);
@@ -107,6 +109,7 @@ const MasterToggle = () => {
     const handleChange = (event, newValue) => {
         if (newValue !== null) {
             setValue(newValue);
+            localStorage?.setItem('masterTab', newValue);
         }
     };
 
@@ -119,20 +122,20 @@ const MasterToggle = () => {
     };
 
     const handleAddOrSaveRow = async (row) => {
-        setIsIndLoading(true);
+        debugger
         try {
             const payload = mode == 'edit'
                 ? { ...row, ...formData, mode: 'edit' }
                 : { ...formData, tabData: categoryStates, mode: 'add' };
 
             const response = await addEditDelMaster(payload);
-            if (response?.success) {
+            console.log('response: ', response);
+            if (response[0]?.stat == 1) {
                 handleTaskApicall();
             }
         } catch (error) {
             console.error('Error in handleAddOrSaveRow:', error);
         } finally {
-            setIsIndLoading(false);
             handleCloseDrawer();
         }
     };
@@ -182,6 +185,36 @@ const MasterToggle = () => {
         }
     };
 
+    const handleFinalDelete = (row) => {
+        setSelectedRow(row);
+        setCnfDelDialogOpen(true);
+    }
+
+    const handleRemoveMasterData = async () => {
+        try {
+            const payload = {
+                ...selectedRow,
+                ...formData,
+                mode: 'trash',
+            };
+            const response = await addEditDelMaster(payload);
+            setCnfDelDialogOpen(false);
+            if (response[0]?.stat === 1) {
+                setFormattedData(prevData => prevData.filter(item => item.id !== selectedRow.id));
+                toast.success('Data Removed Successfully');
+            } else {
+                toast.error('Failed to remove data');
+            }
+        } catch (error) {
+            console.error('Error in handleRemoveMasterData:', error);
+            toast.error('An error occurred while removing the data');
+        }
+    };
+
+    // const handleSyncMaster = () => {
+    //     const masterApiCall = localStorage?.setItem('masterApiFuncCall', true);
+    // }
+
     const filteredData = formattedData?.filter(item =>
         item?.labelname?.toLowerCase()?.includes(searchTerm?.toLowerCase())
     );
@@ -225,7 +258,7 @@ const MasterToggle = () => {
                         />
                         <Box className="gridHeaderBox" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Typography variant="h6" className="gridHeaderText">{value}</Typography>
-                            <Box sx={{ display: 'flex', alignItems:'end', gap: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'end', gap: 2 }}>
                                 <TextField
                                     placeholder="Search..."
                                     value={searchTerm}
@@ -235,6 +268,14 @@ const MasterToggle = () => {
                                         endAdornment: <SearchIcon />,
                                     }}
                                 />
+
+                                {/* <Button
+                                    variant="contained"
+                                    className="buttonClassname"
+                                    onClick={handleSyncMaster}
+                                >
+                                   Sync
+                                </Button> */}
 
                                 <Button
                                     variant="contained"
@@ -259,11 +300,13 @@ const MasterToggle = () => {
                                 paginationPage={page}
                                 rowsPerPage={rowsPerPage}
                                 onPaginationChange={handlePageChange}
+                                handleFinalDelete={handleFinalDelete}
                             />
                         }
                     </Box>
                     <MasterFormDrawer
                         open={drawerOpen}
+                        activeTab = {value}
                         onClose={handleCloseDrawer}
                         onSubmit={handleAddOrSaveRow}
                         formData={formData}
@@ -274,6 +317,15 @@ const MasterToggle = () => {
             ) :
                 <LoadingBackdrop isLoading={isLoading} />
             }
+            <ConfirmationDialog
+                open={cnfDelDialogOpen}
+                onClose={handleCloseCnfDialog}
+                onConfirm={handleRemoveMasterData}
+                title="Confirm"
+                cancelLabel="Cancel"
+                confirmLabel="Remove"
+                content='Are you sure you want to Remove this Fields'
+            />
         </>
     );
 };

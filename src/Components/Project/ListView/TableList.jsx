@@ -141,14 +141,17 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
 
     const handleNavigate = (task) => {
         let urlData = {
-            taskname: task?.taskname,
-            module: task.module,
+            module: task?.taskname,
+            project: task.taskPr,
             taskid: task?.taskid,
+            projectid: task?.projectid,
         }
 
         const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
-        const formattedTaskName = task?.taskname?.trim().replace(/\s+/g, '-') || '';
-        const url = `/tasks/${formattedTaskName}?data=${encodedFormData}`;
+        console.log('encodedFormData: ', encodedFormData);
+        const formattedPrName = task?.taskPr?.trim()?.replace(/\s+/g, '-') || '';
+        const formattedTaskName = task?.taskname?.trim()?.replace(/\s+/g, '-') || '';
+        const url = `/tasks/${formattedPrName}/${formattedTaskName}?data=${encodedFormData}`;
         window.open(url, '_blank');
     };
 
@@ -158,8 +161,8 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
 
         return (
             <Tooltip
-                placement="right"
-                title={`${label} Project`}
+                placement="top"
+                title={`${label} Module`}
                 classes={{ tooltip: 'custom-tooltip' }}
             >
                 <IconButton
@@ -240,7 +243,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
                                                                     }
                                                                 }}
                                                             >
-                                                                <span style={{ fontWeight: 'bold' }}>{task?.taskname}</span>/<span style={{ fontWeight: 'bold', color: '#7d7f85' }}>{task?.taskPr}</span>
+                                                                <span style={{ fontWeight: 'bold' }}>{task?.taskPr}</span>/<span style={{ fontWeight: 'bold', color: '#7d7f85' }}>{task?.taskname}</span>
                                                             </a>
                                                         </div>
                                                     </div>
@@ -389,8 +392,8 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
                 onConfirm={handleCnfPrlUnl}
                 title="Confirm"
                 cancelLabel="Cancel"
-                confirmLabel={selectedRow?.isLocked == 1 ? "Unlock" : "Lock"}
-                content={selectedRow?.isLocked === 1 ? 'Are you sure you want to unlock this project?' : 'Are you sure you want to lock this project?'}
+                confirmLabel={selectedRow?.isFreez == 1 ? "Unlock" : "Lock"}
+                content={selectedRow?.isFreez == 1 ? 'Are you sure you want to unlock this project?' : 'Are you sure you want to lock this project?'}
             />
             <ConfirmationDialog
                 open={cnfDelDialogOpen}

@@ -5,6 +5,8 @@ import { Bell, MailOpen, User, Settings, LogOut } from "lucide-react";
 import { getRandomAvatarColor } from "../../Utils/globalfun";
 import "./header.scss";
 import NotificationCard from "../Notification/NotificationCard";
+import { taskLength } from "../../Recoil/atom";
+import { useRecoilValue } from "recoil";
 
 const Header = ({ avatarSrc = "" }) => {
     const location = useLocation();
@@ -18,6 +20,8 @@ const Header = ({ avatarSrc = "" }) => {
     const profileOpen = Boolean(profileAnchorEl);
     const encodedData = searchParams.get("data");
     const [decodedData, setDecodedData] = useState(null);
+    const taskDataLength = useRecoilValue(taskLength);
+    console.log('taskDataLength: ', taskDataLength);
 
     useEffect(() => {
         if (encodedData) {
@@ -84,8 +88,8 @@ const Header = ({ avatarSrc = "" }) => {
         return null;
     }
 
-    if (decodedData?.taskname) {
-        dataMap[matchedKey].title = `${decodedData?.taskname}/${decodedData?.module}`;
+    if (decodedData?.module) {
+        dataMap[matchedKey].title = `${decodedData?.project}/${decodedData?.module}`;
     }
 
     const { title, subtitle } = dataMap[matchedKey];
@@ -185,23 +189,8 @@ const Header = ({ avatarSrc = "" }) => {
                         {title}
                     </Typography>
                     {location.pathname.includes("/tasks") && (
-                        <div
-                            style={{
-                                backgroundColor: "#7d7f8799",
-                                color: "#fff",
-                                width: "fit-content",
-                                padding: "0.2rem 0.4rem",
-                                borderRadius: "5px",
-                                textAlign: "center",
-                                fontSize: "12px",
-                                fontWeight: "500",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                marginTop: "-15px",
-                            }}
-                        >
-                            20
+                        <div className="header_task-count">
+                            {taskDataLength}
                         </div>
                     )}
                 </Box>

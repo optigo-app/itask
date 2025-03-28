@@ -37,8 +37,9 @@ import BurningImg from "../../../Assests/fire.webp"
 import CircleIcon from '@mui/icons-material/Circle';
 import { MoreVert } from "@mui/icons-material";
 import StatusBadge from "../../ShortcutsComponent/StatusBadge";
+import StatusCircles from "../../ShortcutsComponent/EstimateComp";
 
-const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeTask, isLoading }) => {
+const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) => {
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
@@ -258,57 +259,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
         setOpenAssigneeModal(false);
     }
 
-    const StatusCircles = ({ task }) => {
-        const circleStyle = {
-            minWidth: 25,
-            minHeight: 25,
-            borderRadius: '50%',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginRight: '1px',
-            marginLeft: '1px',
-        };
-
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center' }}>
-                <Box sx={{
-                    ...circleStyle,
-                    backgroundColor: '#D3D3D3',
-                    cursor: 'pointer',
-                    boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
-                }}
-                >
-                    <Typography variant="caption" sx={{ fontSize: '12.8px', color: '#333 !important' }}>
-                        {task.estimate[0]}
-                    </Typography>
-                </Box>
-                <Box sx={{
-                    ...circleStyle,
-                    backgroundColor: '#808080bf',
-                    cursor: 'pointer',
-                    boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
-                }}
-                >
-                    <Typography variant="caption" sx={{ fontSize: '12.8px', color: '#fff !important' }}>
-                        {task.estimate[1]}
-                    </Typography>
-                </Box>
-                <Box sx={{
-                    ...circleStyle,
-                    backgroundColor: '#404040b8',
-                    cursor: 'pointer',
-                    boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
-                }}
-                >
-                    <Typography variant="caption" sx={{ fontSize: '12.8px', color: '#fff !important' }}>
-                        {task.estimate[2]}
-                    </Typography>
-                </Box>
-            </Box>
-        );
-    };
-
     const renderSubtasks = (subtasks, parentIndex) => {
         return subtasks?.map((subtask, subtaskIndex) => (
             <React.Fragment key={`${parentIndex}-${subtaskIndex}`}>
@@ -346,39 +296,40 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                                             <span style={{ flex: 1 }}>
                                                 {subtask?.taskname?.length > 20 ? `${subtask?.taskname.slice(0, 50)}...` : subtask?.taskname}
                                             </span>
-                                            {subtask?.subtasks?.length > 0 && (
-                                                <div style={{
-                                                    backgroundColor: "#7d7f8799",
-                                                    color: '#fff',
-                                                    width: 'fit-content',
-                                                    padding: '0.1rem 0.4rem',
-                                                    borderRadius: '5px',
-                                                    textAlign: 'center',
-                                                    fontSize: '10px',
-                                                    fontWeight: '500',
-                                                    display: 'flex',
-                                                    justifyContent: 'center',
-                                                    alignItems: 'center',
-                                                }}>
+                                            {/* {subtask?.subtasks?.length > 0 && (
+                                                <div className="task-sub_count">
                                                     {subtask?.subtasks?.length}
                                                 </div>
-                                            )}
+                                            )} */}
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
-                                            {subtaskIndex % 2 === 0 && subtask?.isburning == 1 &&
+                                            {subtask?.isburning == 1 &&
                                                 <img src={BurningImg} alt="burningTask"
                                                     style={{ width: '15px', height: '15px', borderRadius: '50%' }} />
                                             }
-                                            {subtaskIndex % 2 === 0 && (
+                                            {subtask?.ticketno != "" && (
                                                 <Chip
-                                                    label={subtask?.ticket || 'A00161'}
+                                                    label={subtask?.ticketno || ''}
                                                     variant="outlined"
                                                     size="small"
                                                     sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB' }}
                                                 />
                                             )}
-                                            {subtask?.isFreezed == 1 &&
-                                                <CircleIcon sx={{ color: subtask?.isFreezed == 1 ? "#d32f2f" : "#1976d2", width: "15px", height: "15px" }} />
+                                            {subtask?.isnew == 1 &&
+                                                <Chip
+                                                    label={'New'}
+                                                    variant="filled"
+                                                    size="small"
+                                                    sx={{
+                                                        backgroundColor: '#E3F2FD',
+                                                        color: '#2196F3',
+                                                        fontSize: '10px',
+                                                        height: '16px',
+                                                        '& .MuiChip-label': {
+                                                            padding: '0 6px',
+                                                        },
+                                                    }}
+                                                />
                                             }
 
                                         </div>
@@ -407,9 +358,9 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                     </TableCell>
                     <TableCell>{subtask?.taskPr}</TableCell>
                     <TableCell>
-                        <div style={{
-                            color: statusColors[subtask?.status]?.color,
-                            backgroundColor: statusColors[subtask?.status]?.backgroundColor,
+                        {/* <div style={{
+                            color: statusColors[subtask?.status]?.color ?? '#fff',
+                            backgroundColor: statusColors[subtask?.status]?.backgroundColor ?? '#7d7f85a1',
                             width: 'fit-content',
                             padding: '0.2rem 0.8rem',
                             borderRadius: '5px',
@@ -421,7 +372,8 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                             alignItems: 'center',
                         }}>
                             {subtask?.status}
-                        </div>
+                        </div> */}
+                        <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange} />
                     </TableCell>
                     <TableCell
                         onMouseEnter={() => handleTaskMouseEnter(subtask?.taskid, { Tbcell: 'Assignee' })}
@@ -482,8 +434,8 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                     <TableCell>{subtask?.DeadLineDate ? formatDate2(subtask.DeadLineDate) : 'No deadline set'}</TableCell>
                     <TableCell>
                         <div style={{
-                            color: priorityColors[subtask?.priority]?.color,
-                            backgroundColor: priorityColors[subtask?.priority]?.backgroundColor,
+                            color: priorityColors[subtask?.priority]?.color ?? '#fff',
+                            backgroundColor: priorityColors[subtask?.priority]?.backgroundColor ?? '#7d7f85a1',
                             width: 'fit-content',
                             padding: '0.2rem 0.8rem',
                             borderRadius: '5px',
@@ -497,7 +449,9 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                             {subtask?.priority}
                         </div>
                     </TableCell>
-                    <TableCell>{subtask?.summary}</TableCell>
+                    <TableCell>
+                        <StatusCircles task={subtask} />
+                    </TableCell>
                     <TableCell align="center">
                         <Box sx={{ display: "flex", alignItems: "center" }}>
                             {/* <Tooltip
@@ -506,20 +460,20 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                                 placement="top"
                                 classes={{ tooltip: "custom-tooltip" }}
                             > */}
-                                <IconButton
-                                    onClick={() => handleTimeTrackModalOpen(subtask)}
-                                    sx={{
-                                        color: taskTimeRunning[subtask.taskid] ? "#FFD700" : "#7d7f85",
-                                        transition: "color 0.3s",
+                            <IconButton
+                                onClick={() => handleTimeTrackModalOpen(subtask)}
+                                sx={{
+                                    color: taskTimeRunning[subtask.taskid] ? "#FFD700" : "#7d7f85",
+                                    transition: "color 0.3s",
+                                    backgroundColor: taskTimeRunning[subtask.taskid] ? "#6D6B77" : "transparent",
+                                    "&:hover": {
+                                        color: taskTimeRunning[subtask.taskid] ? "#FFD700" : "#333",
                                         backgroundColor: taskTimeRunning[subtask.taskid] ? "#6D6B77" : "transparent",
-                                        "&:hover": {
-                                            color: taskTimeRunning[subtask.taskid] ? "#FFD700" : "#333",
-                                            backgroundColor: taskTimeRunning[subtask.taskid] ? "#6D6B77" : "transparent",
-                                        },
-                                    }}
-                                >
-                                    <Timer size={20} />
-                                </IconButton>
+                                    },
+                                }}
+                            >
+                                <Timer size={20} />
+                            </IconButton>
                             {/* </Tooltip> */}
                             {/* <Tooltip
                                 title="Edit Sub-Task"
@@ -527,22 +481,22 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                                 placement="top"
                                 classes={{ tooltip: "custom-tooltip" }}
                             > */}
-                                <span>
-                                    <IconButton
-                                        disabled={subtask?.isFreezed == 1}
-                                        onClick={() => handleEditTask(subtask, { Task: "root" })}
-                                        sx={{
-                                            '&.Mui-disabled': {
-                                                color: 'rgba(0, 0, 0, 0.26)',
-                                            },
-                                        }}
-                                    >
-                                        <Pencil
-                                            size={20}
-                                            color={subtask?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                                        />
-                                    </IconButton>
-                                </span>
+                            <span>
+                                <IconButton
+                                    disabled={subtask?.isFreezed == 1}
+                                    onClick={() => handleEditTask(subtask, { Task: "root" })}
+                                    sx={{
+                                        '&.Mui-disabled': {
+                                            color: 'rgba(0, 0, 0, 0.26)',
+                                        },
+                                    }}
+                                >
+                                    <Pencil
+                                        size={20}
+                                        color={subtask?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                                    />
+                                </IconButton>
+                            </span>
                             {/* </Tooltip> */}
                             {/* <Tooltip
                                 title="View Sub-Task"
@@ -550,16 +504,16 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                                 placement="top"
                                 classes={{ tooltip: "custom-tooltip" }}
                             > */}
-                                <span>
-                                    <IconButton
-                                        onClick={() => handleViewTask(subtask, { Task: "root" })}
-                                    >
-                                        <Eye
-                                            size={20}
-                                            color={"#808080"}
-                                        />
-                                    </IconButton>
-                                </span>
+                            <span>
+                                <IconButton
+                                    onClick={() => handleViewTask(subtask, { Task: "root" })}
+                                >
+                                    <Eye
+                                        size={20}
+                                        color={"#808080"}
+                                    />
+                                </IconButton>
+                            </span>
                             {/* </Tooltip> */}
                         </Box>
                     </TableCell>
@@ -647,54 +601,41 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                                                                         <span style={{ flex: 1 }}>
                                                                             {task?.taskname?.length > 35 ? `${task?.taskname?.slice(0, 35)}...` : task?.taskname}
                                                                         </span>
-                                                                        {task?.subtasks?.length > 0 && (
-                                                                            <div style={{
-                                                                                backgroundColor: "#7d7f8799",
-                                                                                color: '#fff',
-                                                                                width: 'fit-content',
-                                                                                padding: '0.1rem 0.4rem',
-                                                                                borderRadius: '5px',
-                                                                                textAlign: 'center',
-                                                                                fontSize: '10px',
-                                                                                fontWeight: '500',
-                                                                                display: 'flex',
-                                                                                justifyContent: 'center',
-                                                                                alignItems: 'center',
-                                                                            }}>
+                                                                        {/* {task?.subtasks?.length > 0 && (
+                                                                            <div className="task-sub_count">
                                                                                 {task?.subtasks?.length}
                                                                             </div>
-                                                                        )}
+                                                                        )} */}
                                                                     </div>
                                                                     <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
-                                                                        {taskIndex % 2 === 0 && task?.isburning == 1 &&
+                                                                        {task?.isburning == 1 &&
                                                                             <img src={BurningImg} alt="burningTask"
                                                                                 style={{ width: '15px', height: '15px', borderRadius: '50%' }} />
                                                                         }
-                                                                        {taskIndex % 2 === 0 && (
+                                                                        {task?.ticketno !== "" && (
                                                                             <Chip
-                                                                                label={task?.ticket || 'A00161'}
+                                                                                label={task?.ticketno || ''}
                                                                                 variant="outlined"
                                                                                 size="small"
                                                                                 sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB' }}
                                                                             />
                                                                         )}
-                                                                        {task?.isFreezed == 1 &&
-                                                                            <CircleIcon sx={{ color: task?.isFreezed == 1 ? "#d32f2f" : "#1976d2", width: "15px", height: "15px" }} />
+                                                                        {task?.isnew == 1 &&
+                                                                            <Chip
+                                                                                label={'New'}
+                                                                                variant="filled"
+                                                                                size="small"
+                                                                                sx={{
+                                                                                    backgroundColor: '#E3F2FD',
+                                                                                    color: '#2196F3',
+                                                                                    fontSize: '10px',
+                                                                                    height: '16px',
+                                                                                    '& .MuiChip-label': {
+                                                                                        padding: '0 6px',
+                                                                                    },
+                                                                                }}
+                                                                            />
                                                                         }
-                                                                        <Chip
-                                                                            label={'New'}
-                                                                            variant="filled"
-                                                                            size="small"
-                                                                            sx={{
-                                                                                backgroundColor: '#E3F2FD',
-                                                                                color: '#2196F3',
-                                                                                fontSize: '10px',
-                                                                                height: '16px',
-                                                                                '& .MuiChip-label': {
-                                                                                    padding: '0 6px',
-                                                                                },
-                                                                            }}
-                                                                        />
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -794,8 +735,8 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                                                 <TableCell>{task?.DeadLineDate ? formatDate2(task.DeadLineDate) : 'No deadline set'}</TableCell>
                                                 <TableCell>
                                                     <div style={{
-                                                        color: priorityColors[task?.priority]?.color,
-                                                        backgroundColor: priorityColors[task?.priority]?.backgroundColor,
+                                                        color: priorityColors[task?.priority]?.color ?? '#fff',
+                                                        backgroundColor: priorityColors[task?.priority]?.backgroundColor ?? '#7d7f85a1',
                                                         width: 'fit-content',
                                                         padding: '0.2rem 0.8rem',
                                                         borderRadius: '5px',
@@ -809,7 +750,9 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                                                         {task?.priority}
                                                     </div>
                                                 </TableCell>
-                                                <TableCell> {StatusCircles({ task })}</TableCell>
+                                                <TableCell>
+                                                    <StatusCircles task={task} />
+                                                </TableCell>
                                                 <TableCell align="center">
                                                     <Box sx={{ display: "flex", alignItems: "center" }}>
                                                         {/* Time Track Button */}
@@ -819,20 +762,20 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                                                             placement="top"
                                                             classes={{ tooltip: "custom-tooltip" }}
                                                         > */}
-                                                            <IconButton
-                                                                onClick={() => handleTimeTrackModalOpen(task)}
-                                                                sx={{
-                                                                    color: taskTimeRunning[task.taskid] ? "#FFD700 !important" : "#7d7f85 !important",
-                                                                    transition: "color 0.3s",
+                                                        <IconButton
+                                                            onClick={() => handleTimeTrackModalOpen(task)}
+                                                            sx={{
+                                                                color: taskTimeRunning[task.taskid] ? "#FFD700 !important" : "#7d7f85 !important",
+                                                                transition: "color 0.3s",
+                                                                backgroundColor: taskTimeRunning[task.taskid] ? "#6D6B77" : "transparent",
+                                                                "&:hover": {
+                                                                    color: taskTimeRunning[task.taskid] ? "#FFD700" : "#333",
                                                                     backgroundColor: taskTimeRunning[task.taskid] ? "#6D6B77" : "transparent",
-                                                                    "&:hover": {
-                                                                        color: taskTimeRunning[task.taskid] ? "#FFD700" : "#333",
-                                                                        backgroundColor: taskTimeRunning[task.taskid] ? "#6D6B77" : "transparent",
-                                                                    },
-                                                                }}
-                                                            >
-                                                                <Timer size={20} />
-                                                            </IconButton>
+                                                                },
+                                                            }}
+                                                        >
+                                                            <Timer size={20} />
+                                                        </IconButton>
                                                         {/* </Tooltip> */}
                                                         {/* <Tooltip
                                                             title="Edit Task"
@@ -840,22 +783,22 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                                                             placement="top"
                                                             classes={{ tooltip: "custom-tooltip" }}
                                                         > */}
-                                                            <span>
-                                                                <IconButton
-                                                                    disabled={task?.isFreezed == 1}
-                                                                    onClick={() => handleEditTask(task, { Task: "root" })}
-                                                                    sx={{
-                                                                        '&.Mui-disabled': {
-                                                                            color: 'rgba(0, 0, 0, 0.26)',
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <Pencil
-                                                                        size={20}
-                                                                        color={task?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                                                                    />
-                                                                </IconButton>
-                                                            </span>
+                                                        <span>
+                                                            <IconButton
+                                                                disabled={task?.isFreezed == 1}
+                                                                onClick={() => handleEditTask(task, { Task: "root" })}
+                                                                sx={{
+                                                                    '&.Mui-disabled': {
+                                                                        color: 'rgba(0, 0, 0, 0.26)',
+                                                                    },
+                                                                }}
+                                                            >
+                                                                <Pencil
+                                                                    size={20}
+                                                                    color={task?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                                                                />
+                                                            </IconButton>
+                                                        </span>
                                                         {/* </Tooltip> */}
                                                         {/* <Tooltip
                                                             title="View Task"
@@ -863,16 +806,16 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleFreezeT
                                                             placement="top"
                                                             classes={{ tooltip: "custom-tooltip" }}
                                                         > */}
-                                                            <span>
-                                                                <IconButton
-                                                                    onClick={() => handleViewTask(task, { Task: "root" })}
-                                                                >
-                                                                    <Eye
-                                                                        size={20}
-                                                                        color={"#808080"}
-                                                                    />
-                                                                </IconButton>
-                                                            </span>
+                                                        <span>
+                                                            <IconButton
+                                                                onClick={() => handleViewTask(task, { Task: "root" })}
+                                                            >
+                                                                <Eye
+                                                                    size={20}
+                                                                    color={"#808080"}
+                                                                />
+                                                            </IconButton>
+                                                        </span>
                                                         {/* </Tooltip> */}
                                                     </Box>
 

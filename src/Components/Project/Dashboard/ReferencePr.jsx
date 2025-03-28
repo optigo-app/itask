@@ -7,6 +7,7 @@ import { CloudDownload } from "lucide-react";
 import "./Styles/ReferencePr.scss";
 import placeholderImg from "../../../Assests/Attachment.webp";
 import { formatDate2 } from "../../../Utils/globalfun";
+import ReusableTable from "./ReusableTable";
 
 const referenceData = {
     attachments: [
@@ -42,7 +43,6 @@ const referenceData = {
 const ReferencePr = () => {
     return (
         <div className="ref_MainDiv">
-            {/* Attachments List */}
             <div className="ref_attachments">
                 {referenceData.attachments.map((attachment, index) => (
                     <Card key={index} className="ref_card">
@@ -65,38 +65,34 @@ const ReferencePr = () => {
                 ))}
             </div>
 
-            {/* Task Table */}
-            <TableContainer className="ref_tableContainer" component={Paper}>
-                <Table className="ref_table">
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Task Name</TableCell>
-                            <TableCell>Uploaded By</TableCell>
-                            <TableCell>Upload Date</TableCell>
-                            <TableCell>File</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {referenceData.tasks.map((task, index) => (
-                            <TableRow key={index}>
-                                <TableCell>{task.taskName}</TableCell>
-                                <TableCell>
-                                    <div className="ref_uploadedBy">
-                                        <Avatar className="ref_avatar" src={task.avatar} alt={task.uploadedBy} />
-                                        <Typography>{task.uploadedBy}</Typography>
-                                    </div>
-                                </TableCell>
-                                <TableCell>{formatDate2(task.uploadDate)}</TableCell>
-                                <TableCell>
-                                    <a href={task.fileLink} className="ref_fileLink">
-                                        View File
-                                    </a>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+            <ReusableTable
+              className="reusable-table-container"
+                columns={[
+                    { id: "taskName", label: "Task Name" },
+                    { id: "uploadedBy", label: "Uploaded By" },
+                    { id: "uploadDate", label: "Upload Date" },
+                    { id: "file", label: "File" }
+                ]}
+                data={referenceData.tasks}
+                renderCell={(columnId, row) => {
+                    if (columnId === "uploadedBy") {
+                        return (
+                            <div className="reusa_uploadedBy">
+                                <Avatar className="reusa_avatar" src={row.avatar} alt={row.uploadedBy} />
+                                <Typography>{row.uploadedBy}</Typography>
+                            </div>
+                        );
+                    }
+                    if (columnId === "uploadDate") {
+                        return formatDate2(row.uploadDate);
+                    }
+                    if (columnId === "file") {
+                        return <a href={row.fileLink} className="ref_fileLink">View File</a>;
+                    }
+                    return row[columnId];
+                }}
+            />
+
         </div>
     );
 };

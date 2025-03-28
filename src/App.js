@@ -131,6 +131,7 @@ const App = () => {
                 hideProgressBar={true}
                 position="top-right"
                 closeButton={false}
+                autoClose={1000}
                 style={{ marginBottom: '40px' }}
             />
             <RecoilRoot>

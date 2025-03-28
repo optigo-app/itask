@@ -1,6 +1,6 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Pagination, IconButton } from '@mui/material';
-import { Pencil, Trash, ArchiveRestore } from 'lucide-react';
+import { Pencil, Trash, ArchiveRestore, Trash2 } from 'lucide-react';
 import './Master.scss';
 
 const Mastergrid = ({
@@ -8,6 +8,7 @@ const Mastergrid = ({
     handleEditRow,
     handleDeleteRow,
     handleRestoreRow,
+    handleFinalDelete,
     paginationCount,
     paginationPage,
     onPaginationChange,
@@ -48,7 +49,7 @@ const Mastergrid = ({
                 <Table className='Table'>
                     <TableHead>
                         <TableRow>
-                            <TableCell width={80}>Sr no</TableCell>
+                            <TableCell width={80}>Sr#</TableCell>
                             <TableCell>Name</TableCell>
                             <TableCell className='actionCell'>Actions</TableCell>
                         </TableRow>
@@ -65,14 +66,16 @@ const Mastergrid = ({
                                     {row.labelname}
                                 </TableCell>
                                 <TableCell className='actionCell'>
-                                    <IconButton
-                                        onClick={() => handleEditRow(row)}
-                                        disabled={row.isdelete !== 0}
-                                    >
-                                        <Pencil
-                                            size={18}
-                                        />
-                                    </IconButton>
+                                    {row.isdelete == 0 &&
+                                        <IconButton
+                                            onClick={() => handleEditRow(row)}
+                                            disabled={row.isdelete !== 0}
+                                        >
+                                            <Pencil
+                                                size={18}
+                                            />
+                                        </IconButton>
+                                    }
                                     {row.isdelete === 0 ? (
                                         <IconButton
                                             onClick={() => handleDeleteRow(row)}
@@ -84,14 +87,25 @@ const Mastergrid = ({
                                             />
                                         </IconButton>
                                     ) : (
-                                        <IconButton
-                                            onClick={() => handleRestoreRow(row)}
-                                        >
-                                            <ArchiveRestore
-                                                size={18}
-                                                style={{ color: "#ab003c" }}
-                                            />
-                                        </IconButton>
+                                        <>
+                                            <IconButton
+                                                onClick={() => handleRestoreRow(row)}
+                                            >
+                                                <ArchiveRestore
+                                                    size={18}
+                                                    style={{ color: "#ab003c" }}
+                                                />
+                                            </IconButton>
+                                            <IconButton
+                                                onClick={() => handleFinalDelete(row)}
+                                            >
+                                                <Trash2
+                                                    size={18}
+                                                    style={{ color: "#ab003c" }}
+                                                />
+                                            </IconButton>
+                                        </>
+
                                     )}
                                 </TableCell>
                             </TableRow>

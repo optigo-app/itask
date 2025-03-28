@@ -11,6 +11,20 @@
         border-radius: 8px;
     }
 
+    .task-sub_count {
+        background-color: #7d7f8799;
+        color: #fff;
+        width: fit-content;
+        padding: 0.1rem 0.4rem;
+        border-radius: 50px;
+        text-align: center;
+        font-size: 10px;
+        font-weight: 500;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
     .MuiTableHead-root {
 
         .MuiTableCell-root {

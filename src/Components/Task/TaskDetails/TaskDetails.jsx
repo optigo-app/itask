@@ -234,7 +234,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                     {isFullScreen && isFullScreen ? <Shrink /> : <Expand />}
                                 </IconButton>
                                 <Divider orientation="vertical" variant="middle" flexItem /> */}
-                                <Typography variant="h6">{taskData?.taskDpt} / {taskData?.taskPr}</Typography>
+                                <Typography variant="h6">{taskData?.taskPr} / {taskData?.taskname}</Typography>
                             </div>
                             <IconButton onClick={handleClose}>
                                 <CircleX />
@@ -259,16 +259,16 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                             width: '30px',
                                             height: '30px',
                                             padding: '4px',
-                                            boxShadow: taskData?.isFav
+                                            boxShadow: taskData?.isfavourite
                                                 ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
                                                 : '0px 2px 8px rgba(99, 99, 99, 0.2)',
                                             transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
-                                            background: taskData?.isFav ? '#FFD700' : '#fff',
+                                            background: taskData?.isfavourite ? '#FFD700' : '#fff',
                                             '&:hover': {
-                                                boxShadow: taskData?.isFav
+                                                boxShadow: taskData?.isfavourite
                                                     ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
                                                     : '0px 4px 12px rgba(99, 99, 99, 0.3)',
-                                                background: taskData?.isFav ? '#FFC107' : '#f5f5f5',
+                                                background: taskData?.isfavourite ? '#FFC107' : '#f5f5f5',
                                             },
                                         }}
                                     >
@@ -346,37 +346,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         <Typography className="tasklable">Assignees</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                        {/* <AvatarGroup
-                                            max={10}
-                                            sx={{
-                                                flexDirection: 'row',
-                                                '& .MuiAvatar-root': {
-                                                    width: 30,
-                                                    height: 30,
-                                                    fontSize: '14px',
-                                                    cursor: 'pointer',
-                                                    border: 'none',
-                                                    transition: 'transform 0.3s ease-in-out',
-                                                    '&:hover': {
-                                                        transform: 'translateY(-5px)',
-                                                    },
-                                                },
-                                            }}
-                                        >
-                                            {assignees?.map((teamMember, teamIdx) => (
-                                                <Tooltip key={teamIdx} placement="top" title={teamMember.name} arrow>
-                                                    <Avatar
-                                                        alt={teamMember.name}
-                                                        src={teamMember.avatar}
-                                                        sx={{
-                                                            backgroundColor: background(teamMember),
-                                                        }}
-                                                    >
-                                                        {!teamMember.avatar && teamMember.name.charAt(0)}
-                                                    </Avatar>
-                                                </Tooltip>
-                                            ))}
-                                        </AvatarGroup> */}
                                         <AvatarGroup max={10}
                                             spacing={2}
                                             sx={{
@@ -468,10 +437,14 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         }
                                         {activeTab === 1 &&
                                             <Box>
-                                                <IconButton onClick={() => alert('Download Attachment')} sx={{ width: '100%', display: 'flex', justifyContent: 'end', borderRadius: '8px' }}>
-                                                    <Download color='#7367f0' size={20} />
-                                                    <span style={{ color: '#7367f0', fontSize: '15px', paddingLeft: '5px' }}>Download All</span>
-                                                </IconButton>
+                                                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end', mb:.2 }}>
+                                                    <Button
+                                                        variant="text"
+                                                        onClick={() => alert('Download Attachment')}
+                                                        startIcon={<Download color='#7367f0' size={20} />}>
+                                                        <Typography sx={{textTransform:'capitalize', color:'#7367f0 !important'}}>Download All</Typography>
+                                                    </Button>
+                                                </Box>
                                                 <AttachmentGrid count={count} placeholderImage={placeholderImage} />
                                             </Box>
                                         }
