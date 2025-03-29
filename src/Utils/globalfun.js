@@ -37,6 +37,15 @@ export const formatDate3 = (date) => {
     return formattedDate;
 };
 
+export const ImageUrl = (data) => {
+    const init = JSON.parse(sessionStorage.getItem('taskInit'));
+    if (data && init) {
+        const url = `${init.url_path}/${init.ukey}/${data.empphoto}`;
+        return url;
+    }
+    return null;
+};
+
 // priority color
 export const priorityColors = {
     Low: {
@@ -385,5 +394,7 @@ export const commonTextFieldProps = {
     size: "small",
     className: "textfieldsClass",
 };
+
+
 
 

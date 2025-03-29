@@ -1,61 +1,34 @@
-import React, { useState } from "react";
-import { Grid, TextField, IconButton, Box } from "@mui/material";
-import { Minus, Plus } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Grid, TextField, Box } from "@mui/material";
 
-const EstimateInput = ({ onChanges, hideBtn }) => {
-    console.log('hideBtn: ', hideBtn);
-    const [values, setValues] = useState([""]);
-    const maxInputs = 3;
+const EstimateInput = ({ value, onChange }) => {
+    const [inputValue, setInputValue] = useState(value || "");
 
-    const addField = () => {
-        if (values.length < maxInputs) {
-            setValues([...values, ""]);
-        }
-    };
+    useEffect(() => {
+        setInputValue(value || ""); // Update if external value changes
+    }, [value]);
 
-    const handleChange = (index, value) => {
-        const newValues = [...values];
-        newValues[index] = value;
-        setValues(newValues);
-        onChanges(newValues);
-    };
-
-    const removeField = (index) => {
-        const newValues = values.filter((_, i) => i !== index);
-        setValues(newValues);
-        onChanges(newValues);
+    const handleInputChange = (e) => {
+        const newValue = e.target.value;
+        setInputValue(newValue);
+        onChange(newValue); // Pass updated value to parent
     };
 
     return (
         <Box>
-            {values?.map((value, index) => (
-                <Grid container spacing={1} alignItems="center" key={index} sx={{ mb: 1 }}>
-                    <Grid item xs={10}>
-                        <TextField
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            value={value}
-                            onChange={(e) => handleChange(index, e.target.value)}
-                            className="textfieldsClass"
-                        />
-                    </Grid>
-                    {hideBtn &&
-                        <Grid item xs={2} sx={{ display: "flex", justifyContent: "space-between" }}>
-                            {index === values.length - 1 && values.length < maxInputs && (
-                                <IconButton onClick={addField} color="primary">
-                                    <Plus color="#444050" />
-                                </IconButton>
-                            )}
-                            {index !== values.length - 1 && values.length > 1 && (
-                                <IconButton onClick={() => removeField(index)} color="error">
-                                    <Minus />
-                                </IconButton>
-                            )}
-                        </Grid>
-                    }
+            <Grid container spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                <Grid item xs={12}>
+                    <TextField
+                        fullWidth
+                        variant="outlined"
+                        size="small"
+                        placeholder="Estimate"
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        className="textfieldsClass"
+                    />
                 </Grid>
-            ))}
+            </Grid>
         </Box>
     );
 };

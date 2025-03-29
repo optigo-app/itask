@@ -27,7 +27,7 @@ import { useRecoilState, useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { formatDate2, getRandomAvatarColor, priorityColors, statusColors } from "../../../Utils/globalfun";
+import { formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/AssigneeShortcutModal";
 import StarIcon from '@mui/icons-material/Star';
@@ -67,13 +67,10 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
         actions: 120,
     });
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
-    const [cnfDialogOpen, setCnfDialogOpen] = useState(false);
     const [openAssigneeModal, setOpenAssigneeModal] = useState(false);
     const [timeTrackMOpen, setTimeTrackMOpen] = useState(false);
     const [taskTimeRunning, setTaskTimeRunning] = useState({});
     const [anchorEl, setAnchorEl] = useState(null);
-    const open = Boolean(anchorEl);
-
 
     useEffect(() => {
         if (!selectedItem || !data) return;
@@ -94,14 +91,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
             setSelectedItem(selectedData);
         }
     }, [data, selectedItem?.taskid]);
-
-    // Handle menu open/close
-    const handleMenuOpen = (event, task) => {
-        setAnchorEl(event.currentTarget);
-        setSelectedItem(task);
-    };
-
-    const handleMenuClose = () => setAnchorEl(null);
 
     const background = (assignee) => {
         const avatarBackgroundColor = assignee?.avatar
@@ -701,19 +690,19 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                                                                 <Tooltip
                                                                     placement="top"
                                                                     key={assignee?.id}
-                                                                    title={assignee?.name}
+                                                                    title={assignee?.firstname}
                                                                     arrow
                                                                     classes={{ tooltip: 'custom-tooltip' }}
                                                                 >
                                                                     <Avatar
                                                                         key={teamIdx}
-                                                                        alt={assignee?.name}
-                                                                        src={assignee.avatar || null}
+                                                                        alt={assignee?.firstname}
+                                                                        src={ImageUrl(assignee) || null}
                                                                         sx={{
-                                                                            backgroundColor: background(assignee?.name),
+                                                                            backgroundColor: background(assignee?.firstname),
                                                                         }}
                                                                     >
-                                                                        {!assignee.avatar && assignee.charAt(0)}
+                                                                        {!assignee.avatar && assignee?.firstname?.charAt(0)}
                                                                     </Avatar>
                                                                 </Tooltip>
                                                             ))}
