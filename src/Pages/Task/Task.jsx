@@ -31,6 +31,7 @@ const Task = () => {
   const [taskDepartment, setTaskDepartment] = useState();
   const [taskProject, setTaskProject] = useState();
   const [taskCategory, setTaskCategory] = useState();
+  const [taskAssigneeData, setTaskAssigneeData] = useState();
   const [activeButton, setActiveButton] = useState("table");
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [filters, setFilters] = useState({});
@@ -65,6 +66,7 @@ const Task = () => {
         retrieveAndSetData('taskdepartmentData', setTaskDepartment);
         retrieveAndSetData('taskprojectData', setTaskProject);
         retrieveAndSetData('taskworkcategoryData', setTaskCategory);
+        retrieveAndSetData('taskAssigneeData', setTaskAssigneeData);
       }
     } catch (error) {
       console.error("Error fetching master data:", error);
@@ -72,39 +74,6 @@ const Task = () => {
       setIsLoading(false);
     }
   };
-
-  const assigneeJosn = [
-    {
-      "id": 1,
-      "name": "Shivam",
-      "avatar": "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/5.png",
-      "designation": "Software Engineer"
-    },
-    {
-      "id": 2,
-      "name": "Shyam",
-      "avatar": "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/6.png",
-      "designation": "Project Manager"
-    },
-    {
-      "id": 3,
-      "name": "Ram",
-      "avatar": "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/7.png",
-      "designation": "UX Designer"
-    },
-    {
-      "id": 4,
-      "name": "Shiv",
-      "avatar": "https://example.com/avatars/shiv.jpg",
-      "designation": "Backend Developer"
-    },
-    {
-      "id": 5,
-      "name": "Jeet",
-      "avatar": "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/3.png",
-      "designation": "Frontend Developer"
-    },
-  ]
 
   const fetchTaskData = async (parsedData) => {
     debugger
@@ -137,7 +106,8 @@ const Task = () => {
         const project = taskProject?.find(item => item?.id == task?.projectid);
         const department = taskDepartment?.find(item => item?.id == task?.departmentid);
         const category = taskCategory?.find(item => item?.id == task?.workcategoryid);
-        const assignee = assigneeJosn;
+        const assigneeIdArray = task?.assigneids?.split(',')?.map(id => Number(id));
+        const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
 
         const enhancedSubtasks = task?.subtasks?.map((subtask) => ({
           ...enhanceTask(subtask),
@@ -152,7 +122,7 @@ const Task = () => {
           taskPr: project ? project?.labelname : '',
           taskDpt: department ? department?.labelname : '',
           subtasks: enhancedSubtasks || [],
-          assignee: assignee,
+          assignee: matchedAssignees ?? [],
           category: category?.labelname,
         };
       };
@@ -367,31 +337,29 @@ const Task = () => {
     }
   }, []);
 
-  const handleTaskFavorite = (taskToUpdate) => {
-    const updateTasksRecursively = (tasks) => {
-      return tasks?.map((task) => {
-        if (task.taskid === taskToUpdate.taskid) {
-          return {
-            ...task,
-            isfavourite: !task.isfavourite, // Toggle isFav
-          };
-        }
-
-        if (task.subtasks?.length > 0) {
-          const updatedSubtasks = updateTasksRecursively(task.subtasks);
-          if (updatedSubtasks !== task.subtasks) {
+  const handleTaskFavorite = (taskToUpdates) => {
+    setTasks((prevTasks) => {
+      const updateTasksRecursively = (tasks) => {
+        return tasks?.map((task) => {
+          if (task.taskid === taskToUpdates.taskid) {
+            const updatedTask = {
+              ...task,
+              isfavourite: task.isfavourite ? 0 : 1,
+            };
+            handleAddApicall(updatedTask);
+            return updatedTask;
+          }
+          if (task.subtasks?.length > 0) {
             return {
               ...task,
-              subtasks: updatedSubtasks,
+              subtasks: updateTasksRecursively(task.subtasks),
             };
           }
-        }
-
-        return task;
-      });
-    };
-
-    setTasks((prevTasks) => updateTasksRecursively(prevTasks));
+          return task;
+        });
+      };
+      return updateTasksRecursively(prevTasks);
+    });
   };
 
 
@@ -474,6 +442,7 @@ const Task = () => {
         statusData={statusData}
         taskCategory={taskCategory}
         taskDepartment={taskDepartment}
+        taskAssigneeData={taskAssigneeData}
       />
 
       {/* Divider */}

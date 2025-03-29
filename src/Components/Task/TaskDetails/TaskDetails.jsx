@@ -19,7 +19,7 @@ import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
 import AttachmentImg from "../../../Assests/Attachment.webp";
-import { findParentTask, formatDate2, formatDate3, getRandomAvatarColor, priorityColors, statusColors } from '../../../Utils/globalfun';
+import { findParentTask, formatDate2, formatDate3, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from '../../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
@@ -133,7 +133,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
         if (open) {
             fetchTaskDesc();
         }
-    }, [open, taskData]);
+    }, [open]);
 
     const handleCommentChange = (event) => {
         setNewComment(event.target.value);
@@ -272,7 +272,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                             },
                                         }}
                                     >
-                                        {taskData?.isFav ? (
+                                        {taskData?.isfavourite ? (
                                             <StarIcon sx={{ fontSize: '20px', color: '#fff' }} />
                                         ) : (
                                             <StarBorderIcon sx={{ fontSize: '20px', color: '#7d7f85' }} />
@@ -357,7 +357,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                     cursor: 'pointer',
                                                     border: 'none',
                                                     transition: 'transform 0.3s ease-in-out',
-                                                    '&:hover': {
+                                                    '&:hover': {       
                                                         transform: 'scale(1.2)',
                                                         zIndex: 10
                                                     }
@@ -374,13 +374,13 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                 >
                                                     <Avatar
                                                         key={teamIdx}
-                                                        alt={assignee?.name}
-                                                        src={assignee.avatar || null}
+                                                        alt={assignee?.firstname}
+                                                        src={ImageUrl(assignee) || null}
                                                         sx={{
-                                                            backgroundColor: background(assignee?.name),
+                                                            backgroundColor: background(assignee?.firstname),
                                                         }}
                                                     >
-                                                        {!assignee.avatar && assignee.charAt(0)}
+                                                        {!assignee.avatar && assignee?.firstname?.charAt(0)}
                                                     </Avatar>
                                                 </Tooltip>
                                             ))}
@@ -437,12 +437,12 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         }
                                         {activeTab === 1 &&
                                             <Box>
-                                                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end', mb:.2 }}>
+                                                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end', mb: .2 }}>
                                                     <Button
                                                         variant="text"
                                                         onClick={() => alert('Download Attachment')}
                                                         startIcon={<Download color='#7367f0' size={20} />}>
-                                                        <Typography sx={{textTransform:'capitalize', color:'#7367f0 !important'}}>Download All</Typography>
+                                                        <Typography sx={{ textTransform: 'capitalize', color: '#7367f0 !important' }}>Download All</Typography>
                                                     </Button>
                                                 </Box>
                                                 <AttachmentGrid count={count} placeholderImage={placeholderImage} />

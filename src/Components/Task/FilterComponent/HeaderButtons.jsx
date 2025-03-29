@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, IconButton, InputAdornment, TextField, ToggleButton, ToggleButtonGroup, Tooltip } from "@mui/material";
+import { Box, Button, IconButton, InputAdornment, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 import SidebarDrawer from "../../FormComponent/Sidedrawer";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
@@ -10,6 +10,7 @@ import { ChevronsDown, FilterIcon, Kanban, List, SearchIcon, TimerIcon } from "l
 import { useLocation } from "react-router-dom";
 import './Styles.scss'
 import TaskTimeTrackerComp from "../../ShortcutsComponent/TaskTimeTrackerComp";
+import ScrollableCategoryTabs from "./ScrollableCategoryTabs";
 
 const HeaderButtons = ({
   searchTerm,
@@ -22,7 +23,8 @@ const HeaderButtons = ({
   projectData,
   statusData,
   taskCategory,
-  taskDepartment }) => {
+  taskDepartment,
+  taskAssigneeData }) => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
@@ -122,18 +124,12 @@ const HeaderButtons = ({
   return (
     <>
       <Box className="headerButtons">
-        <Box sx={{ display: "flex", justifyContent: 'start', alignItems: 'end', gap: 2 }}>
-          {taskCategory?.map((category) => (
-            <Button
-              key={category?.id}
-              value={category?.labelname}
-              variant="contained"
-              onClick={(e) => handleFilterChange("category", e.target.value)}
-              className={`categoryFilBtn ${selectedCategory === category.labelname ? 'active' : ''}`}
-            >
-              {category?.labelname}
-            </Button>
-          ))}
+        <Box className="FirstMainBox" sx={{ display: "flex", justifyContent: 'start', alignItems: 'end', gap: 2 }}>
+          <ScrollableCategoryTabs
+            taskCategory={taskCategory}
+            selectedCategory={selectedCategory}
+            handleFilterChange={handleFilterChange}
+          />
           <Box sx={{ display: 'flex', justifyContent: 'end' }}>
             <TextField
               placeholder="Search tasks..."
@@ -180,9 +176,31 @@ const HeaderButtons = ({
             </IconButton>
           </Tooltip>
         </Box>
-        {location?.pathname?.includes('/tasks') &&
-          <Box sx={{ display: "flex", gap: 2 }}>
-            {location?.pathname?.includes('/tasks/') &&
+        <Box className="secondMainBox">
+          {location?.pathname?.includes('/tasks') &&
+            <Box sx={{ display: "flex", gap: 2 }}>
+              {location?.pathname?.includes('/tasks/') &&
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  className="buttonClassname"
+                  onClick={handleDrawerToggle}
+                >
+                  New
+                </Button>
+              }
+              <IconButton
+                size='medium'
+                className="buttonClassname"
+                onClick={handleTimerCompOpen}
+              >
+                <TimerIcon sx={{ color: '#fff' }} />
+              </IconButton>
+              <ViewToggleButtons view={view} onViewChange={handleViewChange} />
+            </Box>
+          }
+          {location?.pathname?.includes('/projects') &&
+            <Box sx={{ display: 'flex', justifyContent: 'end' }}>
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
@@ -191,29 +209,9 @@ const HeaderButtons = ({
               >
                 New
               </Button>
-            }
-            <IconButton
-              size='medium'
-              className="buttonClassname"
-              onClick={handleTimerCompOpen}
-            >
-              <TimerIcon sx={{ color: '#fff' }} />
-            </IconButton>
-            <ViewToggleButtons view={view} onViewChange={handleViewChange} />
-          </Box>
-        }
-        {location?.pathname?.includes('/projects') &&
-          <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              className="buttonClassname"
-              onClick={handleDrawerToggle}
-            >
-              New
-            </Button>
-          </Box>
-        }
+            </Box>
+          }
+        </Box>
         <SidebarDrawer
           open={formdrawerOpen}
           onClose={handleDrawerToggle}
@@ -225,6 +223,7 @@ const HeaderButtons = ({
           statusData={statusData}
           taskCategory={taskCategory}
           taskDepartment={taskDepartment}
+          taskAssigneeData={taskAssigneeData}
         />
       </Box>
       <TaskTimeTrackerComp />

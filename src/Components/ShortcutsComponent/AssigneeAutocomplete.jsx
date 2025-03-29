@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Autocomplete, TextField, Chip, Box, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Autocomplete, TextField, Chip, Box, Typography, Avatar } from "@mui/material";
+import { commonTextFieldProps, getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
 
 const MultiSelectChipWithLimit = ({
     options,
@@ -7,57 +8,113 @@ const MultiSelectChipWithLimit = ({
     placeholder = "Select assignees",
     limitTags = 2,
     onChange,
-    value
+    value = []
 }) => {
-    const [selectedValues, setSelectedValues] = useState(value || []);
+    const [selectedValues, setSelectedValues] = useState(value);
+
+    useEffect(() => {
+        if (Array.isArray(value)) {
+            setSelectedValues(value);
+        }
+    }, []);
 
     const handleChange = (event, newValue) => {
+        console.log('newValue: ', newValue);
         setSelectedValues(newValue);
         if (onChange) {
             onChange(newValue);
         }
     };
 
-    const commonTextFieldProps = {
-        fullWidth: true,
-        size: "small",
-        className: "textfieldsClass",
+    const background = (assignee) => {
+        const avatarBackgroundColor = assignee?.avatar
+            ? "transparent"
+            : getRandomAvatarColor(assignee);
+        return avatarBackgroundColor;
     };
 
     return (
         <Box className="form-group">
-            <Typography
-                variant="subtitle1"
-                className="form-label"
-                htmlFor="assignee">{label}</Typography>
+            <Typography variant="subtitle1" className="form-label">{label}</Typography>
             <Autocomplete
                 multiple
                 fullWidth
                 options={options}
                 getOptionLabel={(option) => option.firstname + " " + option.lastname}
-                getOptionKey={(option) => option.id}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
                 value={selectedValues}
                 onChange={handleChange}
                 limitTags={limitTags}
                 renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                        <Chip
-                            key={option.id}
-                            label={option.firstname + " " + option.lastname}
-                            {...commonTextFieldProps}
-                            {...getTagProps({ index })}
-                            sx={{ borderRadius: "8px" }}
-                        />
-                    ))
+                    value.map((option, index) => {
+                        const imageSrc = ImageUrl(option);
+                        return (
+                            <Chip
+                                key={option.id}
+                                avatar={
+                                    imageSrc ? (
+                                        <Avatar src={imageSrc} alt={option.firstname} />
+                                    ) : (
+                                        <Avatar
+                                            sx={{
+                                                fontSize: "14px",
+                                                textTransform: "capitalize",
+                                                backgroundColor: background(option?.firstname),
+                                            }}
+                                        >
+                                            {option.firstname.charAt(0)}
+                                        </Avatar>
+                                    )
+                                }
+                                label={
+                                    <Box
+                                        sx={{
+                                            maxWidth: "80px",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                        }}
+                                    >
+                                        {option.firstname + " " + option.lastname}
+                                    </Box>
+                                }
+                                {...getTagProps({ index })}
+                                sx={{ borderRadius: "8px", fontSize: "14px", textTransform: "capitalize" }}
+                                {...commonTextFieldProps}
+                            />
+                        );
+                    })
                 }
+                renderOption={(props, option) => {
+                    const imageSrc = ImageUrl(option);
+                    return (
+                        <li {...props} key={option.id}>
+                            <Avatar
+                                src={imageSrc}
+                                alt={option.firstname}
+                                sx={{
+                                    width: 25,
+                                    height: 25,
+                                    marginRight: 1,
+                                    fontSize: "14px",
+                                    textTransform: "capitalize",
+                                    backgroundColor: background(option?.firstname),
+                                }}
+                            >
+                                {!imageSrc && option.firstname.charAt(0)}
+                            </Avatar>
+                            {option.firstname} {option.lastname}
+                        </li>
+                    );
+                }}
                 renderInput={(params) => (
                     <TextField
                         {...params}
                         {...commonTextFieldProps}
-                        placeholder={!selectedValues || selectedValues?.length <= 1 ? placeholder : ''}
+                        placeholder={selectedValues.length === 0 ? placeholder : ''}
                         variant="outlined"
                         fullWidth
+                        size="small"
                     />
                 )}
             />

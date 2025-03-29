@@ -43,14 +43,15 @@ const SidebarDrawer = ({
     taskCategory,
     taskDepartment,
     statusData,
+    taskAssigneeData
 }) => {
+    console.log('taskAssigneeData: ', taskAssigneeData);
     const location = useLocation();
     const theme = useTheme();
     const [checkedMultiTask, setCheckedMultiTask] = useState(false);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
+    console.log('dddf: ', formDataValue);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
-    const [estimateValues, setEstimateValues] = useState([""]);
-    const [actualValues, setActualValues] = useState([""]);
     const [assignees, setAssignees] = React.useState([]);
     const [taskType, setTaskType] = useState("single");
     const [tasksubType, setTaskSubType] = useState("multi2");
@@ -62,20 +63,22 @@ const SidebarDrawer = ({
         bulkTask: [],
         multiTaskName: [""],
         dueDate: null,
+        startDate: null,
         assignee: "",
         priority: "",
         description: "",
         attachment: null,
         comment: "",
         progress: "",
-        startDate: null,
         category: "",
-        estimate: [""],
-        actual: [""],
-        milestoneChecked: false,
+        department: "",
+        workcategoryid: "",
+        milestoneChecked: 0,
+        estimate_hrs: "",
+        estimate1_hrs: "",
+        estimate2_hrs: "",
     });
 
-    console.log('formValues: ', formValues);
     const handleTaskChange = (event, newTaskType) => {
         if (newTaskType !== null) setTaskType(newTaskType);
         handleResetState();
@@ -104,10 +107,13 @@ const SidebarDrawer = ({
         return null;
     })();
 
-
     useEffect(() => {
         const assigneeData = getAssigneeData;
         setAssignees(assigneeData);
+        const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
+        console.log('formDataValue: ', formDataValue);
+        const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
+        console.log('matchedAssignees: ', matchedAssignees);
         if (open && rootSubrootflagval?.Task === "root") {
             setFormValues({
                 taskName: formDataValue?.taskname ?? "",
@@ -115,23 +121,25 @@ const SidebarDrawer = ({
                 bulkTask: formDataValue?.bulk ?? [""],
                 dueDate: formDataValue?.DeadLineDate ?? null,
                 department: formDataValue?.departmentid ?? "",
-                assignee: formDataValue?.assigneeid ?? "",
+                guests: matchedAssignees ?? [],
+                assignee: formDataValue?.assigneids ?? "",
                 status: formDataValue?.statusid ?? "",
                 priority: formDataValue?.priorityid ?? "",
                 project: formDataValue?.projectid ?? "",
                 description: formDataValue?.descr ?? "",
                 attachment: formDataValue?.attachment ?? null,
-                comment: "",
                 progress: formDataValue?.progress ?? "",
                 startDate: formDataValue?.entrydate ?? null,
                 category: formDataValue?.workcategoryid ?? "",
                 estimate: formDataValue?.estimate ?? [""],
                 actual: formDataValue?.actual ?? [""],
-                milestoneChecked: formDataValue?.milestone ?? false,
+                milestoneChecked: formDataValue?.ismilestone ? 1 : 0 ?? 0,
+                estimate_hrs: formDataValue.estimate_hrs ?? 0,
+                estimate1_hrs: formDataValue.estimate1_hrs ?? 0,
+                estimate2_hrs: formDataValue.estimate2_hrs ?? 0,
             });
         }
     }, [open, formDataValue, rootSubrootflagval]);
-
 
     useEffect(() => {
         setTimeout(() => {
@@ -157,23 +165,14 @@ const SidebarDrawer = ({
             [name]: value,
         }));
     }
-
-    // estimated and actual estimate
-    const handleEstimateChange = (newValues) => {
-        setEstimateValues(newValues);
+    // Handle estimate form value changes
+    const handleEstimateChange = (field, newValue) => {
         setFormValues((prev) => ({
             ...prev,
-            estimate: newValues,
+            [field]: newValue.toString(),
         }));
     };
 
-    const handleActualChange = (newValues) => {
-        setActualValues(newValues);
-        setFormValues((prev) => ({
-            ...prev,
-            actual: newValues,
-        }));
-    };
 
     const handlebulkTaskSave = (updatedTasks) => {
         setFormValues((prev) => ({
@@ -181,38 +180,43 @@ const SidebarDrawer = ({
             bulkTask: updatedTasks,
         }));
     }
+    console.log('dddformValues: ', formValues);
 
-    console.log('rootSubrootflagval: ', rootSubrootflagval);
-    // Handle form submission
     const handleSubmit = (module) => {
         debugger
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
+        const idString = formValues?.guests?.map(user => user.id)?.join(",");
         const updatedFormDataValue = {
-            ...formDataValue,
             taskid: moduleData?.taskid ?? formDataValue.taskid ?? "",
             taskname: formValues.taskName ?? formDataValue.taskname,
             statusid: formValues.status ?? formDataValue.statusid,
             priorityid: formValues.priority ?? formDataValue.priorityid,
-            projectid: moduleData?.projectid ?? formValues.project ?? formDataValue.projectid, 
+            projectid: moduleData?.projectid ?? formValues.project ?? formDataValue.projectid,
             DeadLineDate: formValues.dueDate ?? formDataValue.DeadLineDate,
             workcategoryid: formValues.category ?? formDataValue.workcategoryid,
             StartDate: formValues.startDate ?? formDataValue.entrydate,
             remark: formValues.remark ?? formDataValue.remark,
-            estimate: formValues.estimate ?? formDataValue.estimate,
             departmentid: formValues.department ?? formDataValue.departmentid,
-            assigneeid: formValues.assignee ?? formDataValue.assigneeid,
+            assigneids: idString ?? formDataValue.assigneids,
             descr: formValues.description ?? formDataValue.descr,
-            ismilestone: formValues.milestoneChecked ?? formDataValue.milestone,
-            estimate_hrs: estimateValues?.estimate_hrs ?? formDataValue.estimate_hrs,
-            estimate1_hrs: estimateValues?.estimate_hrs ?? formDataValue.estimate1_hrs,
-            estimate2_hrs: estimateValues?.estimate_hrs ?? formDataValue.estimate2_hrs,
+            ismilestone: formValues.milestoneChecked ? 1 : 0 ?? formDataValue.ismilestone,
+            estimate_hrs: formValues?.estimate_hrs ?? formDataValue.estimate_hrs,
+            estimate1_hrs: formValues?.estimate1_hrs ?? formDataValue.estimate1_hrs,
+            estimate2_hrs: formValues?.estimate2_hrs ?? formDataValue.estimate2_hrs,
         };
-        
+
         onSubmit(updatedFormDataValue, { mode: taskType }, module);
-        console.log('updatedFormDataValue: ', updatedFormDataValue);
+        console.log('dddupdatedFormDataValue: ', updatedFormDataValue);
+        handleClear();
+
+    };
+
+    // for close and clear form
+    const handleClear = () => {
         onClose();
+        handleResetState();
         setTaskType("single");
-        setCheckedMultiTask(!checkedMultiTask);
+        setCheckedMultiTask(prev => !prev);
         setFormValues({
             taskName: "",
             bulkTask: [],
@@ -226,18 +230,13 @@ const SidebarDrawer = ({
             progress: "",
             startDate: null,
             category: "",
-            estimate: [""],
-            actual: [""],
+            estimate_hrs: "",
+            estimate1_hrs: "",
+            estimate2_hrs: "",
             milestoneChecked: false,
         });
     };
 
-    // for close and clear form
-    const handleClear = () => {
-        onClose();
-        setTaskType("single");
-        handleResetState();
-    }
 
     const handleResetState = () => {
         setFormValues({
@@ -260,7 +259,7 @@ const SidebarDrawer = ({
     }
 
     // departmentwise assignee
-    const filterAssigneeData = formValues?.department ? assignees.filter((item) => item.departmentId == formValues?.department) : assignees;
+    // const filterAssigneeData = formValues?.department ? assignees.filter((item) => item.departmentId == formValues?.department) : assignees;
 
     useEffect(() => {
         if (encodedData) {
@@ -335,10 +334,15 @@ const SidebarDrawer = ({
                                     <FormControlLabel
                                         control={
                                             <Checkbox
-                                                checked={formValues?.milestoneChecked}
-                                                onChange={(e) => setFormValues((prev) => ({ ...prev, milestoneChecked: e.target.checked }))}
+                                                checked={Boolean(formValues?.milestoneChecked)}
+                                                onChange={(e) =>
+                                                    setFormValues((prev) => ({
+                                                        ...prev,
+                                                        milestoneChecked: e.target.checked ? 1 : 0,
+                                                    }))
+                                                }
                                                 color="primary"
-                                                className="textfieldsClass, milestone-checkbox"
+                                                className="textfieldsClass milestone-checkbox"
                                             />
                                         }
                                         label="Milestone"
@@ -422,7 +426,8 @@ const SidebarDrawer = ({
                                     {/* Assignee master */}
                                     <Grid item xs={6}>
                                         <MultiSelectChipWithLimit
-                                            options={filterAssigneeData}
+                                            value={formValues?.guests}
+                                            options={taskAssigneeData}
                                             label="Assign To"
                                             placeholder="Select assignees"
                                             limitTags={2}
@@ -569,13 +574,16 @@ const SidebarDrawer = ({
                                         </Box>
                                     </Grid>
                                 </Grid>
-                                <Grid container spacing={1} className="form-row" sx={{ mt: .5 }}>
+                                <Grid container spacing={1} className="form-row" sx={{ mt: 0.5 }}>
                                     <Grid item xs={4}>
                                         <Box className="form-group">
                                             <Typography className="form-label" variant="subtitle1">
                                                 Estimate
                                             </Typography>
-                                            <EstimateInput onChanges={handleEstimateChange} hideBtn={false} />
+                                            <EstimateInput
+                                                value={formValues.estimate_hrs}
+                                                onChange={(value) => handleEstimateChange("estimate_hrs", value)}
+                                            />
                                         </Box>
                                     </Grid>
                                     <Grid item xs={4}>
@@ -583,7 +591,10 @@ const SidebarDrawer = ({
                                             <Typography className="form-label" variant="subtitle1">
                                                 Actual Estimate
                                             </Typography>
-                                            <EstimateInput onChanges={handleActualChange} hideBtn={false} />
+                                            <EstimateInput
+                                                value={formValues.estimate1_hrs}
+                                                onChange={(value) => handleEstimateChange("estimate1_hrs", value)}
+                                            />
                                         </Box>
                                     </Grid>
                                     <Grid item xs={4}>
@@ -591,12 +602,13 @@ const SidebarDrawer = ({
                                             <Typography className="form-label" variant="subtitle1">
                                                 Final Estimate
                                             </Typography>
-                                            <EstimateInput onChanges={handleActualChange} hideBtn={false} />
+                                            <EstimateInput
+                                                value={formValues.estimate2_hrs}
+                                                onChange={(value) => handleEstimateChange("estimate2_hrs", value)}
+                                            />
                                         </Box>
                                     </Grid>
                                 </Grid>
-
-
                                 {/* Comment & Remark */}
                                 <Grid item xs={12}>
                                     <Box className="form-group">
