@@ -8,7 +8,6 @@ import TeamMembers from './TeamMembers';
 import Comments from './Commnets';
 
 const DashboardContent = ({ tabData, selectedTab }) => {
-  console.log('selectedTab: ', selectedTab);
   const renderContent = () => {
     switch (selectedTab) {
       case 'Reference':

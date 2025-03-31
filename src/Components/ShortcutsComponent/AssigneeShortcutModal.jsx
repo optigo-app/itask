@@ -18,6 +18,7 @@ import { AddTaskDataApi } from "../../Api/TaskApi/AddTaskApi";
 import { toast } from "react-toastify";
 import CloseIcon from "@mui/icons-material/Close";
 import { commonSelectProps, commonTextFieldProps } from "../../Utils/globalfun";
+import MultiSelectChipWithLimit from "./AssigneeAutocomplete";
 
 const modalStyle = {
     position: "absolute",
@@ -31,51 +32,31 @@ const modalStyle = {
     borderRadius: 2,
 };
 
-const AssigneeShortcutModal = ({ open, onClose }) => {
-    const rowData = useRecoilValue(selectedRowData);
-    const [formDataValue, setFormDataValue] = useRecoilState(formData);
+const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit }) => {
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag);
     const [assigneeMaster, setAssigneeMaster] = useState([]);
     const [taskDepartment, setTaskDepartment] = useState([]);
     const [formValues, setFormValues] = React.useState({});
-
-
-    const filterRefs = {
-        assignee: useRef(),
-        department: useRef(),
-    };
+    console.log('formValues: ', formValues);
 
     useEffect(() => {
-        if (open && rootSubrootflagval?.Task === "root") {
-            setFormValues({
-                taskName: rowData?.taskname ?? "",
-                dueDate: rowData?.DeadLineDate ?? null,
-                department: rowData?.departmentid ?? "",
-                assignee: rowData?.assigneeid ?? "",
-                status: rowData?.statusid ?? "",
-                priority: rowData?.priorityid ?? "",
-                project: rowData?.projectid ?? "",
-                remark: rowData?.remark ?? "",
-                attachment: rowData?.attachment ?? null,
-                comment: "",
-                progress: rowData?.progress ?? "",
-                startDate: rowData?.entrydate ?? null,
-                category: rowData?.workcategoryid ?? "",
-                estimate: rowData?.estimate ?? [""],
-                actual: rowData?.actual ?? [""],
-            });
+        const data = {
+            department: taskData?.departmentid,
+            guests: taskData?.assignee,
         }
-    }, [open, rowData, rootSubrootflagval]);
+        setFormValues(data);
+
+    }, [taskData])
+
 
     useEffect(() => {
-        const assigneeMaster = JSON?.parse(sessionStorage.getItem("assigneeMaster"));
+        const assigneeMaster = JSON?.parse(sessionStorage.getItem("taskAssigneeData"));
         setAssigneeMaster(assigneeMaster);
-        const departmentMaster = JSON?.parse(sessionStorage.getItem("taskDepartmentData"));
+        const departmentMaster = JSON?.parse(sessionStorage.getItem("taskdepartmentData"));
         setTaskDepartment(departmentMaster);
     }, [])
 
-    // Handle form value changes
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormValues((prev) => ({
@@ -85,22 +66,15 @@ const AssigneeShortcutModal = ({ open, onClose }) => {
     }
 
     const handleFormSubmit = async () => {
+        const idString = formValues?.guests?.map(user => user.id)?.join(",");
         const updatedRowData = {
-            ...rowData,
-            departmentid: formValues.department ?? ''
+            ...taskData,
+            departmentid: formValues.department ?? taskData.departmentid,
+            assigneids: idString ?? taskData.assigneids,
+            assignee: formValues?.guests
         };
-
-        const addTaskApi = await AddTaskDataApi(updatedRowData, rootSubrootflagval ?? {});
-        if (addTaskApi) {
-            setOpenChildTask(true);
-            setTimeout(() => {
-                if (rootSubrootflagval?.Task === "SubTask") {
-                    toast.success("Sub Task Added Successfully...")
-                } else {
-                    toast.success("Task Updated Successfully...")
-                }
-            }, 100);
-        }
+        handleAssigneSubmit(updatedRowData);
+        onClose();
     };
 
     return (
@@ -128,7 +102,6 @@ const AssigneeShortcutModal = ({ open, onClose }) => {
                                 select
                                 {...commonTextFieldProps}
                                 {...commonSelectProps}
-                                ref={filterRefs.department}
                             >
                                 <MenuItem value="">
                                     <em>Select Department</em>
@@ -143,27 +116,14 @@ const AssigneeShortcutModal = ({ open, onClose }) => {
                     </Grid>
                     <Grid item xs={12}>
                         <Box className="form-group">
-                            <Typography className="form-label" variant="subtitle1">
-                                Assignee
-                            </Typography>
-                            <TextField
-                                name="assignee"
-                                value={formValues.department || ""}
-                                onChange={handleChange}
-                                select
-                                {...commonTextFieldProps}
-                                {...commonSelectProps}
-                                ref={filterRefs.department}
-                            >
-                                <MenuItem value="">
-                                    <em>Select Department</em>
-                                </MenuItem>
-                                {taskDepartment?.map((department) => (
-                                    <MenuItem name={department?.id} key={department?.id} value={department?.id}>
-                                        {department.labelname}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
+                            <MultiSelectChipWithLimit
+                                value={formValues?.guests}
+                                options={assigneeMaster}
+                                label="Assign To"
+                                placeholder="Select assignees"
+                                limitTags={2}
+                                onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
+                            />
                         </Box>
                     </Grid>
                 </Grid>

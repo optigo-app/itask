@@ -8,18 +8,17 @@ const MultiSelectChipWithLimit = ({
     placeholder = "Select assignees",
     limitTags = 2,
     onChange,
-    value = []
+    value
 }) => {
-    const [selectedValues, setSelectedValues] = useState(value);
+    const [selectedValues, setSelectedValues] = useState([]);
 
     useEffect(() => {
-        if (Array.isArray(value)) {
+        if (value) {
             setSelectedValues(value);
         }
-    }, []);
+    }, [value]);
 
     const handleChange = (event, newValue) => {
-        console.log('newValue: ', newValue);
         setSelectedValues(newValue);
         if (onChange) {
             onChange(newValue);

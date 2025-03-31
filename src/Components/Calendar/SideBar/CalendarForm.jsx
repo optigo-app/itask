@@ -66,7 +66,6 @@ const CalendarForm = ({
         bulkTask: [],
         allDay: false
     });
-    console.log('formValues: ', formValues);
 
     const filterRefs = {
         category: useRef(),

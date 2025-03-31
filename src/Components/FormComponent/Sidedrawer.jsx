@@ -45,12 +45,10 @@ const SidebarDrawer = ({
     statusData,
     taskAssigneeData
 }) => {
-    console.log('taskAssigneeData: ', taskAssigneeData);
     const location = useLocation();
     const theme = useTheme();
     const [checkedMultiTask, setCheckedMultiTask] = useState(false);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
-    console.log('dddf: ', formDataValue);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
     const [assignees, setAssignees] = React.useState([]);
     const [taskType, setTaskType] = useState("single");
@@ -72,6 +70,7 @@ const SidebarDrawer = ({
         progress: "",
         category: "",
         department: "",
+        guests: [],
         workcategoryid: "",
         milestoneChecked: 0,
         estimate_hrs: "",
@@ -111,9 +110,7 @@ const SidebarDrawer = ({
         const assigneeData = getAssigneeData;
         setAssignees(assigneeData);
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
-        console.log('formDataValue: ', formDataValue);
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
-        console.log('matchedAssignees: ', matchedAssignees);
         if (open && rootSubrootflagval?.Task === "root") {
             setFormValues({
                 taskName: formDataValue?.taskname ?? "",
@@ -180,10 +177,8 @@ const SidebarDrawer = ({
             bulkTask: updatedTasks,
         }));
     }
-    console.log('dddformValues: ', formValues);
 
     const handleSubmit = (module) => {
-        debugger
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const idString = formValues?.guests?.map(user => user.id)?.join(",");
         const updatedFormDataValue = {
@@ -206,7 +201,6 @@ const SidebarDrawer = ({
         };
 
         onSubmit(updatedFormDataValue, { mode: taskType }, module);
-        console.log('dddupdatedFormDataValue: ', updatedFormDataValue);
         handleClear();
 
     };
@@ -226,7 +220,7 @@ const SidebarDrawer = ({
             priority: "",
             description: "",
             attachment: null,
-            comment: "",
+            guests: [],
             progress: "",
             startDate: null,
             category: "",
@@ -300,7 +294,11 @@ const SidebarDrawer = ({
                         }}
                         />
                         <Box sx={{ display: 'flex', justifyContent: decodedData ? 'space-between' : "end", alignItems: 'start' }}>
-                            {decodedData && <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>{decodedData?.project + '/' + decodedData?.module}</Typography>}
+                            {decodedData && <Typography variant="caption"
+                                sx={{ color: '#7D7f85 !important' }}
+                            >
+                                {decodedData?.project + '/' + decodedData?.module + (rootSubrootflagval?.Task == "subroot" ? '/' + formDataValue?.taskname : '')}
+                            </Typography>}
                             {rootSubrootflagval?.Task !== "root" &&
                                 <Box className="tSideBarTgBox">
                                     <ToggleButtonGroup

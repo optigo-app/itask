@@ -11,6 +11,7 @@ import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { motion, AnimatePresence } from "framer-motion";
 import { AddTaskDataApi } from "../../Api/TaskApi/AddTaskApi";
+import { toast } from "react-toastify";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
@@ -76,7 +77,7 @@ const Task = () => {
   };
 
   const fetchTaskData = async (parsedData) => {
-    debugger
+    debugger;
     if (tasks?.length == 0) {
       setIsTaskLoading(true);
     }
@@ -89,7 +90,6 @@ const Task = () => {
       const taskData = await fetchTaskDataApi(data ?? {});
       const labeledTasks = mapTaskLabels(taskData);
       let finalTaskData = [...labeledTasks]
-      debugger
       setSelectedRow({})
       if (parsedData?.taskid) {
         const matchedTask = finalTaskData?.find(task => task.taskid === parsedData.taskid);
@@ -413,13 +413,41 @@ const Task = () => {
     });
   };
 
-  const handleAddApicall = async (updatedTasks) => {
-    console.log('ddupdatedTasks: ', updatedTasks);
-    let rootSubrootflagval = { "Task": "root" }
-
-    const addTaskApi = await AddTaskDataApi(updatedTasks, rootSubrootflagval ?? {});
-    console.log('ddaddTaskApi: ', addTaskApi);
+  const handleAssigneeShortcutSubmit = (updatedRowData) => {
+    setTasks((prevTasks) => {
+      const updateTasksRecursively = (tasks) => {
+        return tasks?.map((task) => {
+          if (task.taskid === updatedRowData.taskid) {
+            const updatedTask = {
+              ...task,
+              departmentid: updatedRowData?.departmentid,
+              assigneids: updatedRowData?.assigneids,
+              assignee: updatedRowData?.assignee
+            };
+            handleAddApicall(updatedRowData);
+            return updatedTask;
+          }
+          if (task.subtasks?.length > 0) {
+            return {
+              ...task,
+              subtasks: updateTasksRecursively(task.subtasks),
+            };
+          }
+          return task;
+        });
+      };
+      return updateTasksRecursively(prevTasks);
+    });
   }
+
+  const handleAddApicall = async (updatedTasks) => {
+    let rootSubrootflagval = { "Task": "root" }
+    const addTaskApi = await AddTaskDataApi(updatedTasks, rootSubrootflagval ?? {});
+    if (addTaskApi?.rd[0]?.stat == 1) {
+      toast.success(addTaskApi?.rd[0]?.stat_msg);
+    }
+  }
+
 
   return (
     <Box
@@ -529,6 +557,7 @@ const Task = () => {
                   handleTaskFavorite={handleTaskFavorite}
                   handleFreezeTask={handleFreezeTask}
                   handleStatusChange={handleStatusChange}
+                  handleAssigneeShortcutSubmit={handleAssigneeShortcutSubmit}
                 />
               )}
 

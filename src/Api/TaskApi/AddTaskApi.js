@@ -1,9 +1,6 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => {
-    console.log('sssformValues: ', formValues);
-    debugger;
-    console.log('module: ', module);
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
@@ -18,26 +15,25 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
         }
 
         const combinedValue = JSON.stringify({
-            "ismodule": module?.module ? '1' : '0',
-            "taskid": taskid,
-            "projectid": formValues?.projectid ?? "",
+            "ismodule": module?.module ? 1 : 0,
+            "taskid": taskid ?? 0,
+            "projectid": formValues?.projectid ?? 0,
             "taskname": formValues?.taskname ?? "",
             "StartDate": formValues?.StartDate ?? '',
-            "estimate_hrs": formValues?.estimate_hrs ?? "0.0",
-            "estimate1_hrs": formValues?.estimate1_hrs ?? "0.0",
-            "estimate2_hrs": formValues?.estimate2_hrs ?? "0.0",
+            "estimate_hrs": (formValues?.estimate_hrs != "" ? formValues?.estimate_hrs : 0) ?? 0,
+            "estimate1_hrs": (formValues?.estimate1_hrs != "" ? formValues?.estimate1_hrs : 0) ?? 0,
+            "estimate2_hrs": (formValues?.estimate2_hrs != "" ? formValues?.estimate2_hrs : 0) ?? 0,
             "DeadLineDate": formValues?.DeadLineDate ?? '',
-            "priorityid": formValues?.priorityid ?? "0",
-            "statusid": formValues?.statusid ?? "0",
-            "workcategoryid": formValues?.workcategoryid ?? "",
-            "departmentid": formValues?.departmentid ?? "",
-            "parentid": parentid,
+            "priorityid": formValues?.priorityid ?? 0,
+            "statusid": formValues?.statusid ?? 0,
+            "workcategoryid": formValues?.workcategoryid ?? 0,
+            "departmentid": formValues?.departmentid ?? 0,
+            "parentid": parentid ?? 0,
             "descr": formValues?.descr ?? "",
-            "ismilestone": formValues?.ismilestone ?? "0",
-            "isfavourite": formValues?.isfavourite ?? "0",
+            "ismilestone": formValues?.ismilestone ?? 0,
+            "isfavourite": formValues?.isfavourite ?? 0,
             "assigneids": formValues?.assigneids ?? "",
         });
-        console.log('combinedValue: ', combinedValue);
 
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"tasksave\",\"appuserid\":\"${init?.userid ?? 'amrut@eg.com'}\"}`,

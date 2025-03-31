@@ -122,7 +122,6 @@ const MasterToggle = () => {
     };
 
     const handleAddOrSaveRow = async (row) => {
-        debugger
         try {
             const payload = mode == 'edit'
                 ? { ...row, ...formData, mode: 'edit' }
