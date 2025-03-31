@@ -165,11 +165,12 @@ $divider-color: #e0e0e0;
         }
     }
 
-    .MuiInputAdornment-root{
-        .MuiButtonBase-root{
+    .MuiInputAdornment-root {
+        .MuiButtonBase-root {
             padding: 0px 2px !important;
             margin-right: 0px;
-            .MuiSvgIcon-root{
+
+            .MuiSvgIcon-root {
                 width: 22px;
                 height: 22px;
                 color: $placeholderColor;
@@ -276,7 +277,7 @@ $divider-color: #e0e0e0;
 .custom-tooltip {
     background-color: #000 !important;
     color: #fff !important;
-    font-size: 13px !important;
+    font-size: 12px !important;
     font-family: $font-family !important;
     text-transform: capitalize !important;
     padding: 3px 6px !important;

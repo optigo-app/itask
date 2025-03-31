@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import { CirclePlus, Eye, Pencil, Timer } from "lucide-react";
 import "react-resizable/css/styles.css";
-import {useSetRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
@@ -31,6 +31,7 @@ import TaskTimeTracking from "../../ShortcutsComponent/TaskTimeTracking";
 import BurningImg from "../../../Assests/fire.webp"
 import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 import StatusCircles from "../../ShortcutsComponent/EstimateComp";
+import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 
 const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigneeShortcutSubmit, isLoading }) => {
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
@@ -62,6 +63,7 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
     const [openAssigneeModal, setOpenAssigneeModal] = useState(false);
     const [timeTrackMOpen, setTimeTrackMOpen] = useState(false);
     const [taskTimeRunning, setTaskTimeRunning] = useState({});
+    const [profileOpen, setProfileOpen] = useState(false);
 
     useEffect(() => {
         if (!selectedItem || !data) return;
@@ -150,6 +152,11 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
     const onStatusChange = (task, newStatus) => {
         handleStatusChange(task, newStatus);
     };
+
+    const hanldePAvatarClick = (task) => {
+        setSelectedItem(task);
+        setProfileOpen(true);
+    }
 
     const handleAssigneSubmit = (updatedRowData) => {
         handleAssigneeShortcutSubmit(updatedRowData)
@@ -369,13 +376,13 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                     <Tooltip
                                         placement="top"
                                         key={assignee?.id}
-                                        title={assignee?.firstname}
+                                        title={assignee?.firstname+ " " + assignee?.lastname}
                                         arrow
                                         classes={{ tooltip: 'custom-tooltip' }}
                                     >
                                         <Avatar
                                             key={teamIdx}
-                                            alt={assignee?.firstname}
+                                            alt={assignee?.firstname+ " " + assignee?.lastname}
                                             src={assignee.avatar || null}
                                             sx={{
                                                 backgroundColor: background(assignee?.firstname),
@@ -632,17 +639,18 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                                                 <Tooltip
                                                                     placement="top"
                                                                     key={assignee?.id}
-                                                                    title={assignee?.firstname}
+                                                                    title={assignee?.firstname+ " " + assignee?.lastname}
                                                                     arrow
                                                                     classes={{ tooltip: 'custom-tooltip' }}
                                                                 >
                                                                     <Avatar
                                                                         key={teamIdx}
-                                                                        alt={assignee?.firstname}
+                                                                        alt={assignee?.firstname+ " " + assignee?.lastname}
                                                                         src={ImageUrl(assignee) || null}
                                                                         sx={{
                                                                             backgroundColor: background(assignee?.firstname),
                                                                         }}
+                                                                        onClick={() => hanldePAvatarClick(assignee)}
                                                                     >
                                                                         {!assignee.avatar && assignee?.firstname?.charAt(0)}
                                                                     </Avatar>
@@ -795,6 +803,12 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                 taskData={selectedItem}
                 setTaskRunning={setTaskTimeRunning}
                 taskRunning={taskTimeRunning}
+            />
+            <ProfileCardModal
+                open={profileOpen}
+                onClose={() => setProfileOpen(false)}
+                profileData={selectedItem}
+                background={background}
             />
         </>
     );

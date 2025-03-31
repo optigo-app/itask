@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Modal, Box, Typography, Button, Chip } from "@mui/material";
+import { Modal, Box, Typography, Button, Chip, TextField } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import StopIcon from "@mui/icons-material/Stop";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { toast } from "react-toastify";
+import { commonTextFieldProps } from "../../Utils/globalfun";
 
 const TaskTimeTracking = ({ isOpen, onClose, taskData, taskRunning, setTaskRunning }) => {
     const [taskTimers, setTaskTimers] = useState({});
-  
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedTime, setEditedTime] = useState("");
+
     const intervalsRef = useRef({});
     const notificationsRef = useRef({});
 
@@ -24,11 +27,17 @@ const TaskTimeTracking = ({ isOpen, onClose, taskData, taskRunning, setTaskRunni
         return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
     };
 
-    const checkAndNotify = (taskId, currentSeconds) => {
-        if (!taskData?.estimate_hrs) return;
+    const parseTime = (timeString) => {
+        const parts = timeString.split(":").map(Number);
+        if (parts.length !== 3 || parts.some(isNaN)) return null;
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    };
 
-        // const estimateSeconds = taskData.estimate_hrs * 3600;
-        const estimateSeconds = .05 * 3600;
+    const checkAndNotify = (taskId, currentSeconds) => {
+        if (!taskData?.estimate2_hrs) return;
+
+        // const estimateSeconds = taskData.estimate2_hrs * 3600;   
+        const estimateSeconds = .02 * 3600;
         const remainingSeconds = estimateSeconds - currentSeconds;
         const notifications = [600, 300, 60]; // 10 minutes, 5 minutes, 1 minute in seconds
 
@@ -68,6 +77,31 @@ const TaskTimeTracking = ({ isOpen, onClose, taskData, taskRunning, setTaskRunni
         });
     };
 
+
+    const handleEdit = () => {
+        setIsEditing(true);
+        setEditedTime(formatTime(taskTimers[taskData?.taskid] || 0));
+    };
+
+    const handleInputChange = (event) => {
+        setEditedTime(event.target.value);
+    };
+
+    const handleBlur = () => {
+        const newTimeInSeconds = parseTime(editedTime);
+        if (newTimeInSeconds !== null) {
+            setTaskTimers((prevTimers) => ({ ...prevTimers, [taskData?.taskid]: newTimeInSeconds }));
+        }
+        setIsEditing(false);
+    };
+
+    const handleKeyPress = (event) => {
+        if (event.key === "Enter") {
+            handleBlur();
+        }
+    };
+
+
     return (
         <Modal open={isOpen} onClose={onClose}>
             <Box
@@ -82,7 +116,7 @@ const TaskTimeTracking = ({ isOpen, onClose, taskData, taskRunning, setTaskRunni
                     borderRadius: 2,
                 }}
             >
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Typography variant="h6" component="h2">
                         {taskData?.taskname}
                     </Typography>
@@ -107,10 +141,33 @@ const TaskTimeTracking = ({ isOpen, onClose, taskData, taskRunning, setTaskRunni
                         }}
                     />
                 </Box>
+                <div style={{
+                    margin: "15px 0",
+                    border: "1px dashed #7d7f85",
+                    opacity: 0.3,
+                }}
+                />
                 <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mb: 2 }}>
-                    <Typography variant="h4" component="div" sx={{fontSize:'30px'}}>
-                        {formatTime(taskTimers[taskData?.taskid] || 0)}
-                    </Typography>
+                    {isEditing ? (
+                        <TextField
+                            value={editedTime}
+                            onChange={handleInputChange}
+                            onBlur={handleBlur}
+                            onKeyPress={handleKeyPress}
+                            variant="outlined"
+                            size="small"
+                            autoFocus
+                            {...commonTextFieldProps}
+                            sx={{ width: "155px" }}
+                            InputProps={{
+                                style: { fontSize: "30px", textAlign: "center" },
+                            }}
+                        />
+                    ) : (
+                        <Typography variant="h4" component="div" sx={{ fontSize: '30px' }} onClick={handleEdit}>
+                            {formatTime(taskTimers[taskData?.taskid] || 0)}
+                        </Typography>
+                    )}
                 </Box>
                 <Box sx={{ display: "flex", justifyContent: "center" }}>
                     <Button

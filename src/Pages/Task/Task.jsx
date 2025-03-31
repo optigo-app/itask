@@ -21,7 +21,7 @@ const CardView = React.lazy(() => import("../../Components/Task/CardView/CardVie
 const Task = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
+  const [callFetchTaskApi, setCallFetchTaskApi] = useRecoilState(fetchlistApiCall);
   const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
   const [isLoading, setIsLoading] = useState(false);
   const [isTaskLoading, setIsTaskLoading] = useState(null);
@@ -38,7 +38,6 @@ const Task = () => {
   const [filters, setFilters] = useState({});
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
-  console.log('tasks: ', tasks);
   const setTaskDataLength = useSetRecoilState(taskLength)
   const encodedData = searchParams.get("data");
 
@@ -222,15 +221,22 @@ const Task = () => {
     if (init) {
       fetchMasterData();
     }
+    setCallFetchTaskApi(true);
   }, []);
 
   // task api call
   useEffect(() => {
-    let parsedData;
+    debugger
+    let parsedData = null;
     if (encodedData) {
-      const decodedString = decodeURIComponent(encodedData);
-      const jsonString = atob(decodedString);
-      parsedData = JSON.parse(jsonString);
+      try {
+        const decodedString = decodeURIComponent(encodedData);
+        const jsonString = atob(decodedString);
+        parsedData = JSON.parse(jsonString);
+      } catch (error) {
+        console.error("Error decoding or parsing encodedData:", error);
+        parsedData = null;
+      }
     }
     setTimeout(() => {
       if (priorityData && statusData && taskProject && taskDepartment) {
@@ -271,6 +277,7 @@ const Task = () => {
   // filter functions
   const filteredData = tasks?.filter((task) => {
     const { status, priority, assignee, searchTerm, dueDate, department, project, category } = filters;
+    console.log('assignee: ', assignee);
 
     const normalizedSearchTerm = searchTerm?.toLowerCase();
 
@@ -287,24 +294,25 @@ const Task = () => {
 
     const matchesFilters = (task) => {
       const matches =
-        (category ? (task?.category)?.toLocaleLowerCase() === (category)?.toLocaleLowerCase() : true) &&
-        (status ? (task?.status)?.toLocaleLowerCase() === (status)?.toLocaleLowerCase() : true) &&
-        (priority ? (task?.priority)?.toLocaleLowerCase() === (priority)?.toLocaleLowerCase() : true) &&
-        (department ? (task?.taskDpt)?.toLocaleLowerCase() === (department)?.toLocaleLowerCase() : true) &&
-        (project ? (task?.taskPr)?.toLocaleLowerCase() === (project)?.toLocaleLowerCase() : true) &&
+        (category ? (task?.category)?.toLowerCase() === category.toLowerCase() : true) &&
+        (status ? (task?.status)?.toLowerCase() === status.toLowerCase() : true) &&
+        (priority ? (task?.priority)?.toLowerCase() === priority.toLowerCase() : true) &&
+        (department ? (task?.taskDpt)?.toLowerCase() === department.toLowerCase() : true) &&
+        (project ? (task?.taskPr)?.toLowerCase() === project.toLowerCase() : true) &&
         (dueDate ? formatDate2(task?.DeadLineDate) === formatDate2(dueDate) : true) &&
-        (assignee
-          ? Array.isArray(task?.assignee)
-            ? task.assignee.some((a) => a.toLocaleLowerCase() === assignee.toLocaleLowerCase())
-            : task?.assignee?.toLocaleLowerCase() === assignee.toLocaleLowerCase()
+        (assignee ?
+          task.assignee?.some((a) => {
+            const fullName = `${a?.firstname} ${a?.lastname}`.toLowerCase();
+            return fullName.includes(assignee.toLowerCase());
+          })
           : true) &&
         (!searchTerm ||
           task?.taskname?.toLowerCase().includes(normalizedSearchTerm) ||
           task?.status?.toLowerCase().includes(normalizedSearchTerm) ||
           task?.priority?.toLowerCase().includes(normalizedSearchTerm) ||
           (Array.isArray(task?.assignee)
-            ? task.assignee.some((a) => a?.name?.toLowerCase()?.includes(normalizedSearchTerm))
-            : task?.assignee?.toLowerCase()?.includes(normalizedSearchTerm)) ||
+            ? task.assignee.some((a) => `${a?.firstname} ${a?.lastname}`.toLowerCase().includes(normalizedSearchTerm))
+            : task?.assignee?.toLowerCase().includes(normalizedSearchTerm)) ||
           task?.description?.toLowerCase().includes(normalizedSearchTerm) ||
           task?.DeadLineDate?.toLowerCase().includes(normalizedSearchTerm) ||
           task?.taskPr?.toLowerCase().includes(normalizedSearchTerm) ||
@@ -453,7 +461,7 @@ const Task = () => {
     <Box
       sx={{
         boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
-        padding: "30px 20px",
+        padding: "20px",
         borderRadius: "8px",
         overflow: "hidden !important",
       }}
