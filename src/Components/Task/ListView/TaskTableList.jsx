@@ -10,7 +10,6 @@ import {
     Paper,
     IconButton,
     TableSortLabel,
-    Button,
     Box,
     Typography,
     Pagination,
@@ -18,38 +17,31 @@ import {
     Avatar,
     Chip,
     Tooltip,
-    MenuItem,
-    Menu,
 } from "@mui/material";
-import { CirclePlus, Eye, Minus, Pencil, Plus, Timer } from "lucide-react";
+import { CirclePlus, Eye, Pencil, Timer } from "lucide-react";
 import "react-resizable/css/styles.css";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import {useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/AssigneeShortcutModal";
-import StarIcon from '@mui/icons-material/Star';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
 import TaskTimeTracking from "../../ShortcutsComponent/TaskTimeTracking";
 import BurningImg from "../../../Assests/fire.webp"
-import CircleIcon from '@mui/icons-material/Circle';
-import { MoreVert } from "@mui/icons-material";
 import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 import StatusCircles from "../../ShortcutsComponent/EstimateComp";
 
-const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) => {
+const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigneeShortcutSubmit, isLoading }) => {
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
-    const [formDataValue, setFormDataValue] = useRecoilState(formData);
+    const setFormDataValue = useSetRecoilState(formData);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const [hoveredTaskId, setHoveredTaskId] = useState(null);
     const [hoveredColumnname, setHoveredColumnName] = useState('');
     const [hoveredSubtaskId, setHoveredSubtaskId] = useState(null);
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const setSelectedTask = useSetRecoilState(selectedRowData);
-    const [selectedAction, setSelectedAction] = useState("");
     const [selectedItem, setSelectedItem] = useState(null);
     const [subtaskVisibility, setSubtaskVisibility] = useState({});
     const [order, setOrder] = useState("asc");
@@ -70,7 +62,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
     const [openAssigneeModal, setOpenAssigneeModal] = useState(false);
     const [timeTrackMOpen, setTimeTrackMOpen] = useState(false);
     const [taskTimeRunning, setTaskTimeRunning] = useState({});
-    const [anchorEl, setAnchorEl] = useState(null);
 
     useEffect(() => {
         if (!selectedItem || !data) return;
@@ -160,6 +151,10 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
         handleStatusChange(task, newStatus);
     };
 
+    const handleAssigneSubmit = (updatedRowData) => {
+        handleAssigneeShortcutSubmit(updatedRowData)
+    }
+
     const toggleSubtasks = (taskIndex) => {
         setSubtaskVisibility((prev) => {
             const isCurrentlyVisible = prev[taskIndex];
@@ -228,7 +223,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
         sortedData = sortData(data, getComparator(order, orderBy));
     }
 
-    // for data logic or data manipulation
     // Calculate total pages
     const totalPages = Math?.ceil(data && data?.length / rowsPerPage);
 
@@ -239,13 +233,14 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
     );
 
     const handleAssigneeShortcut = (task, additionalInfo) => {
+        setSelectedItem(task);
         setRootSubroot(additionalInfo);
         setOpenAssigneeModal(true);
-        setSelectedTask(task);
     }
 
     const handleCloseAssigneeModal = () => {
         setOpenAssigneeModal(false);
+        setSelectedItem(null);
     }
 
     const renderSubtasks = (subtasks, parentIndex) => {
@@ -285,11 +280,11 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                                             <span style={{ flex: 1 }}>
                                                 {subtask?.taskname?.length > 20 ? `${subtask?.taskname.slice(0, 50)}...` : subtask?.taskname}
                                             </span>
-                                            {/* {subtask?.subtasks?.length > 0 && (
+                                            {subtask?.subtasks?.length > 0 && (
                                                 <div className="task-sub_count">
                                                     {subtask?.subtasks?.length}
                                                 </div>
-                                            )} */}
+                                            )}
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
                                             {subtask?.isburning == 1 &&
@@ -347,21 +342,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                     </TableCell>
                     <TableCell>{subtask?.taskPr}</TableCell>
                     <TableCell>
-                        {/* <div style={{
-                            color: statusColors[subtask?.status]?.color ?? '#fff',
-                            backgroundColor: statusColors[subtask?.status]?.backgroundColor ?? '#7d7f85a1',
-                            width: 'fit-content',
-                            padding: '0.2rem 0.8rem',
-                            borderRadius: '5px',
-                            textAlign: 'center',
-                            fontSize: '13.5px',
-                            fontWeight: '500',
-                            display: 'flex',
-                            justifyContent: 'start',
-                            alignItems: 'center',
-                        }}>
-                            {subtask?.status}
-                        </div> */}
                         <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange} />
                     </TableCell>
                     <TableCell
@@ -389,19 +369,19 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                                     <Tooltip
                                         placement="top"
                                         key={assignee?.id}
-                                        title={assignee?.name}
+                                        title={assignee?.firstname}
                                         arrow
                                         classes={{ tooltip: 'custom-tooltip' }}
                                     >
                                         <Avatar
                                             key={teamIdx}
-                                            alt={assignee?.name}
+                                            alt={assignee?.firstname}
                                             src={assignee.avatar || null}
                                             sx={{
-                                                backgroundColor: background(assignee?.name),
+                                                backgroundColor: background(assignee?.firstname),
                                             }}
                                         >
-                                            {!assignee.avatar && assignee.charAt(0)}
+                                            {!assignee.avatar && assignee?.firstname?.charAt(0)}
                                         </Avatar>
                                     </Tooltip>
                                 ))}
@@ -423,8 +403,8 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                     <TableCell>{subtask?.DeadLineDate ? formatDate2(subtask.DeadLineDate) : 'No deadline set'}</TableCell>
                     <TableCell>
                         <div style={{
-                            color: priorityColors[subtask?.priority]?.color ?? '#fff',
-                            backgroundColor: priorityColors[subtask?.priority]?.backgroundColor ?? '#7d7f85a1',
+                            color: (subtask?.priority && priorityColors[subtask?.priority]?.color) ?? '#fff',
+                            backgroundColor: (subtask?.priority && priorityColors[subtask?.priority]?.backgroundColor) ?? '#7d7f85a1',
                             width: 'fit-content',
                             padding: '0.2rem 0.8rem',
                             borderRadius: '5px',
@@ -435,7 +415,7 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                             justifyContent: 'start',
                             alignItems: 'center',
                         }}>
-                            {subtask?.priority}
+                            {subtask?.priority ?? '-'}
                         </div>
                     </TableCell>
                     <TableCell>
@@ -443,12 +423,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                     </TableCell>
                     <TableCell align="center">
                         <Box sx={{ display: "flex", alignItems: "center" }}>
-                            {/* <Tooltip
-                                title={taskTimeRunning[subtask.taskid] ? "Time Track ON" : "Time Track OFF"}
-                                arrow
-                                placement="top"
-                                classes={{ tooltip: "custom-tooltip" }}
-                            > */}
                             <IconButton
                                 onClick={() => handleTimeTrackModalOpen(subtask)}
                                 sx={{
@@ -463,13 +437,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                             >
                                 <Timer size={20} />
                             </IconButton>
-                            {/* </Tooltip> */}
-                            {/* <Tooltip
-                                title="Edit Sub-Task"
-                                arrow
-                                placement="top"
-                                classes={{ tooltip: "custom-tooltip" }}
-                            > */}
                             <span>
                                 <IconButton
                                     disabled={subtask?.isFreezed == 1}
@@ -486,13 +453,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                                     />
                                 </IconButton>
                             </span>
-                            {/* </Tooltip> */}
-                            {/* <Tooltip
-                                title="View Sub-Task"
-                                arrow
-                                placement="top"
-                                classes={{ tooltip: "custom-tooltip" }}
-                            > */}
                             <span>
                                 <IconButton
                                     onClick={() => handleViewTask(subtask, { Task: "root" })}
@@ -503,7 +463,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                                     />
                                 </IconButton>
                             </span>
-                            {/* </Tooltip> */}
                         </Box>
                     </TableCell>
                 </TableRow>
@@ -590,11 +549,11 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                                                                         <span style={{ flex: 1 }}>
                                                                             {task?.taskname?.length > 35 ? `${task?.taskname?.slice(0, 35)}...` : task?.taskname}
                                                                         </span>
-                                                                        {/* {task?.subtasks?.length > 0 && (
+                                                                        {task?.subtasks?.length > 0 && (
                                                                             <div className="task-sub_count">
                                                                                 {task?.subtasks?.length}
                                                                             </div>
-                                                                        )} */}
+                                                                        )}
                                                                     </div>
                                                                     <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
                                                                         {task?.isburning == 1 &&
@@ -642,26 +601,9 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                                                             <CirclePlus size={20} color="#7367f0" />
                                                         </IconButton>
                                                     </div>
-
-
                                                 </TableCell>
                                                 <TableCell>{task?.taskPr}</TableCell>
                                                 <TableCell>
-                                                    {/* <div style={{
-                                                        color: statusColors[task?.status]?.color,
-                                                        backgroundColor: statusColors[task?.status]?.backgroundColor,
-                                                        width: 'fit-content',
-                                                        padding: '0.2rem 0.8rem',
-                                                        borderRadius: '5px',
-                                                        textAlign: 'center',
-                                                        fontSize: '13.5px',
-                                                        fontWeight: '500',
-                                                        display: 'flex',
-                                                        justifyContent: 'start',
-                                                        alignItems: 'center',
-                                                    }}>
-                                                        {task?.status}
-                                                    </div> */}
                                                     <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange} />
                                                 </TableCell>
                                                 <TableCell
@@ -724,8 +666,8 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                                                 <TableCell>{task?.DeadLineDate ? formatDate2(task.DeadLineDate) : 'No deadline set'}</TableCell>
                                                 <TableCell>
                                                     <div style={{
-                                                        color: priorityColors[task?.priority]?.color ?? '#fff',
-                                                        backgroundColor: priorityColors[task?.priority]?.backgroundColor ?? '#7d7f85a1',
+                                                        color: (task?.priority && priorityColors[task?.priority]?.color) ?? '#fff',
+                                                        backgroundColor: (task?.priority && priorityColors[task?.priority]?.backgroundColor) ?? '#7d7f85a1',
                                                         width: 'fit-content',
                                                         padding: '0.2rem 0.8rem',
                                                         borderRadius: '5px',
@@ -744,13 +686,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                                                 </TableCell>
                                                 <TableCell align="center">
                                                     <Box sx={{ display: "flex", alignItems: "center" }}>
-                                                        {/* Time Track Button */}
-                                                        {/* <Tooltip
-                                                            title={taskTimeRunning[task.taskid] ? "Time Track ON" : "Time Track OFF"}
-                                                            arrow
-                                                            placement="top"
-                                                            classes={{ tooltip: "custom-tooltip" }}
-                                                        > */}
                                                         <IconButton
                                                             onClick={() => handleTimeTrackModalOpen(task)}
                                                             sx={{
@@ -765,13 +700,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                                                         >
                                                             <Timer size={20} />
                                                         </IconButton>
-                                                        {/* </Tooltip> */}
-                                                        {/* <Tooltip
-                                                            title="Edit Task"
-                                                            arrow
-                                                            placement="top"
-                                                            classes={{ tooltip: "custom-tooltip" }}
-                                                        > */}
                                                         <span>
                                                             <IconButton
                                                                 disabled={task?.isFreezed == 1}
@@ -788,13 +716,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                                                                 />
                                                             </IconButton>
                                                         </span>
-                                                        {/* </Tooltip> */}
-                                                        {/* <Tooltip
-                                                            title="View Task"
-                                                            arrow
-                                                            placement="top"
-                                                            classes={{ tooltip: "custom-tooltip" }}
-                                                        > */}
                                                         <span>
                                                             <IconButton
                                                                 onClick={() => handleViewTask(task, { Task: "root" })}
@@ -805,7 +726,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                                                                 />
                                                             </IconButton>
                                                         </span>
-                                                        {/* </Tooltip> */}
                                                     </Box>
 
                                                 </TableCell>
@@ -864,9 +784,10 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, isLoading }) 
                 handleTaskFavorite={handleTaskFavorite}
             />
             <AssigneeShortcutModal
+                taskData={selectedItem}
                 open={openAssigneeModal}
                 onClose={handleCloseAssigneeModal}
-            // onSubmit={handleAssigneeShortcutSubmit}
+                handleAssigneSubmit={handleAssigneSubmit}
             />
             <TaskTimeTracking
                 isOpen={timeTrackMOpen}

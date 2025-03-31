@@ -58,7 +58,6 @@ const Filters = ({
   };
 
   useEffect(() => {
-    debugger
     if (Object.values(filters).every((value) => value === "" || value === null)) {
       Object.keys(filterRefs).forEach((key) => {
         const element = filterRefs[key].current;

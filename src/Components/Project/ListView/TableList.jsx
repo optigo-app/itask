@@ -27,7 +27,6 @@ import { useSetRecoilState } from "recoil";
 import { useNavigate } from "react-router-dom";
 
 const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) => {
-    console.log('data: ', data);
     const navigate = useNavigate();
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("name");

@@ -4,8 +4,6 @@ import { TextField, MenuItem, Box } from "@mui/material";
 import { commonSelectProps, commonTextFieldProps } from "../../Utils/globalfun";
 
 const Filters = ({ filterShow, setFilterShow, filters, handleFilterChange, filterColumns }) => {
-    console.log('filterShow: ', filterShow);
-    console.log('filterColumns: ', filterColumns);
   return (
     <Box className="filters-container" sx={{display:'flex', gap:'10px', marginBlock:2}}>
       {filterShow && filterColumns?.map((col) => (

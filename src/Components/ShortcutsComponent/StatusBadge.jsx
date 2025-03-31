@@ -22,8 +22,8 @@ const StatusBadge = ({ task, statusColors, onStatusChange }) => {
             <Button
                 onClick={handleClick}
                 style={{
-                    color: statusColors[task?.status]?.color ?? "#fff",
-                    backgroundColor: statusColors[task?.status]?.backgroundColor ?? "#7d7f85a1",
+                    color: (statusColors[task?.status]?.color) ?? "#fff",
+                    backgroundColor: (statusColors[task?.status]?.backgroundColor) ?? "#7d7f85a1",
                     width: "fit-content",
                     padding: "0.2rem 0.8rem",
                     borderRadius: "5px",
@@ -36,7 +36,7 @@ const StatusBadge = ({ task, statusColors, onStatusChange }) => {
                     border: anchorEl ? "1px solid #444050" : "none",
                 }}
             >
-                {task?.status}
+                {task?.status != "" ? task?.status : '-'}
             </Button>
             <Menu
                 anchorEl={anchorEl}

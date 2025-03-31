@@ -38,7 +38,6 @@ const HeaderButtons = ({
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
   const encodedData = searchParams.get("data");
-  console.log('encodedData: ', encodedData);
 
   const handleDrawerToggle = () => {
     setFormDrawerOpen(!formdrawerOpen);
@@ -47,10 +46,8 @@ const HeaderButtons = ({
     setOpenChildTask(false);
   };
 
-  console.log('rootSubrootflagval: ', rootSubrootflagval);
   const handleFormSubmit = async (formValues, mode, module) => {
     let parsedData;
-    console.log('parsedData: ', parsedData);
     if (encodedData) {
       const decodedString = decodeURIComponent(encodedData);
       const jsonString = atob(decodedString);
