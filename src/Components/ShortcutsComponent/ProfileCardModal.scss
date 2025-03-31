@@ -1,0 +1,62 @@
+@import "../../theme/variable.scss";
+
+.profile-container {
+    text-align: center;
+    margin-top: 50px;
+}
+
+.profile-card-modal {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    outline: none;
+}
+
+.profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 400px;
+    width: 100%;
+    border-radius: 20px;
+    padding: 20px;
+    border: none;
+    box-shadow: $box-shadow-value;
+    background: white;
+    text-align: center;
+
+    .image {
+        position: relative;
+        height: 180px;
+        width: 180px;
+        border-radius: 1px solid #707070;
+        padding: 5px;
+        border-radius: 50%;
+        background-color: $primary-main;
+
+        .profile-pic {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    .data {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 15px;
+
+        .name {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .role {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+    }
+
+}

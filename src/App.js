@@ -13,6 +13,7 @@ import Reports from './Pages/Reports/Reports';
 import ProjectDashboard from './Pages/Project/ProjectDashboard';
 import MilestoneTimeline from './Components/Project/Dashboard/MilestoneTimeline';
 import ReferencePr from './Components/Project/Dashboard/ReferencePr';
+import EditableTimer from './Backup/EditableTimer';
 
 // Lazy Loaded Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -129,10 +130,9 @@ const App = () => {
             <ToastContainer
                 toastStyle={toastStyle}
                 hideProgressBar={true}
-                position="top-right"
+                position="bottom-right"
                 closeButton={false}
-                autoClose={1000}
-                style={{ marginBottom: '40px' }}
+                autoClose={2000}
             />
             <RecoilRoot>
                 <Router>
@@ -155,7 +155,7 @@ const App = () => {
                                     <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                                     <Route path="*" element={<PagenotFound />} />
                                     <Route path="/test" element={<ProtectedRoute><MilestoneTimeline /></ProtectedRoute>} />
-                                    <Route path="/test1" element={<ProtectedRoute><ReferencePr /></ProtectedRoute>} />
+                                    <Route path="/test1" element={<ProtectedRoute><EditableTimer  /></ProtectedRoute>} />
                                 </Routes>
                             </Layout>
                         </Suspense>

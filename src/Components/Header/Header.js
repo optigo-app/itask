@@ -188,7 +188,7 @@ const Header = ({ avatarSrc = "" }) => {
                     <Typography variant="h6" component="div" className="headerTitle">
                         {title}
                     </Typography>
-                    {location.pathname.includes("/tasks") && (
+                    {location.pathname.includes("/tasks/") && (
                         <div className="header_task-count">
                             {taskDataLength}
                         </div>

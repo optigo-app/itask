@@ -21,12 +21,13 @@ import taskJson from "../../Data/taskData.json";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import timerImg from "../../Assests/no-timesheet.svg"
-import { useRecoilState } from "recoil";
-import { timerCompOpen } from "../../Recoil/atom";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { TaskData, timerCompOpen } from "../../Recoil/atom";
 
 const TaskTimeTrackerComp = () => {
     const [drawerOpen, setDrawerOpen] = useRecoilState(timerCompOpen);
     const [anchorEl, setAnchorEl] = useState(null);
+    const task = useRecoilValue(TaskData)
     const [selectedTask, setSelectedTask] = useState(null);
     const [isRunning, setIsRunning] = useState(false);
     const [timer, setTimer] = useState(0);
@@ -46,18 +47,18 @@ const TaskTimeTrackerComp = () => {
 
     // Flatten task structure & remove `subtasks` key
     const flattenTasks = (tasks, level = 0) => {
-        return tasks.reduce((flatList, task) => {
+        return tasks?.reduce((flatList, task) => {
             const { subtasks, ...taskWithoutSubtasks } = task;
-            flatList.push({ ...taskWithoutSubtasks, level });
+            flatList?.push({ ...taskWithoutSubtasks, level });
 
             if (subtasks?.length > 0) {
-                flatList = flatList.concat(flattenTasks(subtasks, level + 1));
+                flatList = flatList?.concat(flattenTasks(subtasks, level + 1));
             }
             return flatList;
         }, []);
     };
 
-    const flatTasks = flattenTasks(taskJson);
+    const flatTasks = flattenTasks(task);
 
     // Toggle Drawer
     const toggleDrawer = useCallback((open) => () => {
@@ -152,12 +153,6 @@ const TaskTimeTrackerComp = () => {
                             <CircleX />
                         </IconButton>
                     </Box>
-                    {/* <div style={{
-                        margin: "10px 0",
-                        border: "1px dashed #7d7f85",
-                        opacity: 0.3,
-                    }}
-                    /> */}
                     <Box sx={{ width: '100%', margin: "10px 0" }}>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <Box sx={{ width: '100%', mr: 1 }}>
@@ -175,11 +170,6 @@ const TaskTimeTrackerComp = () => {
                                     }}
                                 />
                             </Box>
-                            {/* <Box sx={{ minWidth: 35 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    {`${percentage}%`}
-                                </Typography>
-                            </Box> */}
                         </Box>
                     </Box>
 

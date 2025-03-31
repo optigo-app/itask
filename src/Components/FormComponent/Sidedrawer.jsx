@@ -170,7 +170,6 @@ const SidebarDrawer = ({
         }));
     };
 
-
     const handlebulkTaskSave = (updatedTasks) => {
         setFormValues((prev) => ({
             ...prev,
@@ -230,7 +229,6 @@ const SidebarDrawer = ({
             milestoneChecked: false,
         });
     };
-
 
     const handleResetState = () => {
         setFormValues({

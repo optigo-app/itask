@@ -88,7 +88,12 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
                         <CloseIcon />
                     </IconButton>
                 </Grid>
-
+                <div style={{
+                            margin: "10px 0",
+                            border: "1px dashed #7d7f85",
+                            opacity: 0.3,
+                        }}
+                        />
                 <Grid container spacing={2} className="form-row">
                     <Grid item xs={12}>
                         <Box className="form-group">
@@ -128,8 +133,8 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
                     </Grid>
                 </Grid>
 
-                <Box sx={{ mt: 2 }}>
-                    <Button className="buttonClassname" variant="contained" fullWidth onClick={handleFormSubmit}>
+                <Box sx={{textAlign:'end', mt: 2 }}>
+                    <Button className="buttonClassname" variant="contained" onClick={handleFormSubmit}>
                         Submit
                     </Button>
                 </Box>
