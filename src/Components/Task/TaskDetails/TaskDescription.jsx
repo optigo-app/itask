@@ -2,8 +2,9 @@ import React from 'react';
 import { Grid, Typography, Box, IconButton, TextareaAutosize, Button } from '@mui/material';
 import './TaskDetails.scss';
 import { SquarePen } from 'lucide-react';
+import { convertWordsToSpecialChars } from '../../../Utils/globalfun';
 
-const TaskDescription = ({ taskDesc, taskDescEdit, handleShowEditDesc, handleDescChange,handleDescCancel, handleUpdateDesc }) => {
+const TaskDescription = ({ taskDesc, taskDescEdit, handleShowEditDesc, handleDescChange, handleDescCancel, handleUpdateDesc }) => {
     return (
         <>
             <Grid item xs={12}>
@@ -18,7 +19,7 @@ const TaskDescription = ({ taskDesc, taskDescEdit, handleShowEditDesc, handleDes
                 <Box sx={{ position: 'relative' }}>
                     {!taskDescEdit ? (
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography>{typeof taskDesc === 'string' ? taskDesc : taskDesc?.descr}</Typography>
+                            <Typography>{typeof taskDesc === 'string' ? convertWordsToSpecialChars(taskDesc) : convertWordsToSpecialChars(taskDesc?.descr)}</Typography>
                         </Box>
                     ) : (
                         <Box sx={{
@@ -29,7 +30,7 @@ const TaskDescription = ({ taskDesc, taskDescEdit, handleShowEditDesc, handleDes
                             padding: '12px'
                         }}>
                             <TextareaAutosize
-                                value={typeof taskDesc === 'string' ? taskDesc : taskDesc?.descr}
+                                value={typeof taskDesc === 'string' ? convertWordsToSpecialChars(taskDesc) : convertWordsToSpecialChars(taskDesc?.descr)}
                                 rows={8}
                                 onChange={handleDescChange}
                                 placeholder="Enter description here..."
@@ -40,7 +41,7 @@ const TaskDescription = ({ taskDesc, taskDescEdit, handleShowEditDesc, handleDes
                                     border: '1px solid #ccc',
                                 }}
                             />
-                            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end', gap:'10px', mt:1 }}>
+                            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end', gap: '10px', mt: 1 }}>
                                 <Button
                                     className='secondaryBtnClassname'
                                     onClick={handleDescCancel}

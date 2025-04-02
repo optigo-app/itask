@@ -24,7 +24,7 @@ import { useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
+import { convertSpecialCharsToWords, convertWordsToSpecialChars, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/AssigneeShortcutModal";
 import TaskTimeTracking from "../../ShortcutsComponent/TaskTimeTracking";
@@ -48,7 +48,7 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("name");
     const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(12);
     const [columnWidths] = useState({
         name: 350,
         project: 150,
@@ -258,7 +258,7 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                         onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid)}
                         onMouseLeave={handleSubtaskMouseLeave}
                     >
-                        <div style={{ paddingLeft: `${5 * (parentIndex.split('-').length)}px`, display: "flex", justifyContent: "space-between" }}>
+                        <div style={{ paddingLeft: `${8 * (parentIndex.split('-').length)}px`, display: "flex", justifyContent: "space-between" }}>
                             <div>
                                 <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
                                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "30px" }}>
@@ -285,7 +285,7 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                     <div>
                                         <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
                                             <span style={{ flex: 1 }}>
-                                                {subtask?.taskname?.length > 20 ? `${subtask?.taskname.slice(0, 50)}...` : subtask?.taskname}
+                                                {subtask?.taskname?.length > 20 ? `${subtask?.taskname.slice(0, 50)}...` : convertWordsToSpecialChars(subtask?.taskname)}
                                             </span>
                                             {subtask?.subtasks?.length > 0 && (
                                                 <div className="task-sub_count">
@@ -376,13 +376,13 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                     <Tooltip
                                         placement="top"
                                         key={assignee?.id}
-                                        title={assignee?.firstname+ " " + assignee?.lastname}
+                                        title={assignee?.firstname + " " + assignee?.lastname}
                                         arrow
                                         classes={{ tooltip: 'custom-tooltip' }}
                                     >
                                         <Avatar
                                             key={teamIdx}
-                                            alt={assignee?.firstname+ " " + assignee?.lastname}
+                                            alt={assignee?.firstname + " " + assignee?.lastname}
                                             src={assignee.avatar || null}
                                             sx={{
                                                 backgroundColor: background(assignee?.firstname),
@@ -554,7 +554,7 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                                                 <div>
                                                                     <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
                                                                         <span style={{ flex: 1 }}>
-                                                                            {task?.taskname?.length > 35 ? `${task?.taskname?.slice(0, 35)}...` : task?.taskname}
+                                                                            {task?.taskname?.length > 35 ? `${task?.taskname?.slice(0, 35)}...` : convertWordsToSpecialChars(task?.taskname)}
                                                                         </span>
                                                                         {task?.subtasks?.length > 0 && (
                                                                             <div className="task-sub_count">
@@ -639,13 +639,13 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                                                 <Tooltip
                                                                     placement="top"
                                                                     key={assignee?.id}
-                                                                    title={assignee?.firstname+ " " + assignee?.lastname}
+                                                                    title={assignee?.firstname + " " + assignee?.lastname}
                                                                     arrow
                                                                     classes={{ tooltip: 'custom-tooltip' }}
                                                                 >
                                                                     <Avatar
                                                                         key={teamIdx}
-                                                                        alt={assignee?.firstname+ " " + assignee?.lastname}
+                                                                        alt={assignee?.firstname + " " + assignee?.lastname}
                                                                         src={ImageUrl(assignee) || null}
                                                                         sx={{
                                                                             backgroundColor: background(assignee?.firstname),

@@ -1,18 +1,16 @@
-import { convertSpecialCharsToWords } from "../../Utils/globalfun";
 import { CommonAPI } from "../InitialApi/CommonApi";
 
-export const taskDescAddApi = async (selectedRow, taskDesc) => {
+export const fetchMettingListApi = async (selectedRow) => {
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
-
+        
         const combinedValue = JSON.stringify({
-            taskid: `${selectedRow?.taskid ?? '0'}`,
-            descr: `${convertSpecialCharsToWords(taskDesc) ?? ''}`,
+            taskid: `${selectedRow?.taskid ?? ''}`,
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"task_descr_save\",\"appuserid\":\"${init?.userid ?? 'amrut@eg.com'}\"}`,
-            "f": "Task Management (task_descr_save)",
+            "con": `{\"id\":\"\",\"mode\":\"meetinglist\",\"appuserid\":\"${init?.userid ?? 'amrut@eg.com'}\"}`,
+            "f": "Task Management (tasklist)",
             "p": combinedValue,
         };
         const response = await CommonAPI(body);

@@ -19,7 +19,7 @@ import {
 
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { formatDate2, getStatusColor, priorityColors } from "../../../Utils/globalfun";
+import { convertWordsToSpecialChars, formatDate2, getStatusColor, priorityColors } from "../../../Utils/globalfun";
 import { Eye, Lock, LockOpen, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -242,7 +242,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
                                                                     }
                                                                 }}
                                                             >
-                                                                <span style={{ fontWeight: 'bold' }}>{task?.taskPr}</span>/<span style={{ fontWeight: 'bold', color: '#7d7f85' }}>{task?.taskname}</span>
+                                                                <span style={{ fontWeight: 'bold' }}>{task?.taskPr}</span>/<span style={{ fontWeight: 'bold', color: '#7d7f85' }}>{convertWordsToSpecialChars(task?.taskname)}</span>
                                                             </a>
                                                         </div>
                                                     </div>

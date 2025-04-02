@@ -14,6 +14,9 @@ import ProjectDashboard from './Pages/Project/ProjectDashboard';
 import MilestoneTimeline from './Components/Project/Dashboard/MilestoneTimeline';
 import ReferencePr from './Components/Project/Dashboard/ReferencePr';
 import EditableTimer from './Backup/EditableTimer';
+import TreeDataGrid from './Backup/TreeDataGrid';
+import NotificationComponent from './Backup/NotificationComponent';
+import PinnableTable from './Backup/TreeDataGrid';
 
 // Lazy Loaded Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -47,10 +50,10 @@ const Layout = ({ children }) => {
                 <Box
                     sx={{
                         position: "fixed",
-                        top: "15px",
-                        right: "30px",
+                        top: "30px",
+                        right: "40px",
                         transform: "translateX(50%) rotate(45deg)",
-                        backgroundColor: "#8B0000",
+                        background: "linear-gradient(to right, #ff7e5f, #feb47b)",
                         color: "white",
                         padding: "6px 40px",
                         fontWeight: "bold",
@@ -60,7 +63,7 @@ const Layout = ({ children }) => {
                         boxShadow: "2px 2px 10px rgba(0,0,0,0.2)",
                     }}
                 >
-                    Prototype
+                    In Development
                 </Box>
             </Box>
         </Box>
@@ -155,7 +158,7 @@ const App = () => {
                                     <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                                     <Route path="*" element={<PagenotFound />} />
                                     <Route path="/test" element={<ProtectedRoute><MilestoneTimeline /></ProtectedRoute>} />
-                                    <Route path="/test1" element={<ProtectedRoute><EditableTimer  /></ProtectedRoute>} />
+                                    <Route path="/test1" element={<ProtectedRoute><PinnableTable  /></ProtectedRoute>} />
                                 </Routes>
                             </Layout>
                         </Suspense>

@@ -2,7 +2,7 @@
     position: relative;
 
     .MD_WrpDiv {
-        width: 480px;
+        width: 420px;
 
         .drawer-containerCal {
             background-color: #fff;
@@ -52,27 +52,28 @@
                     }
                 }
             }
+
             .remove-module-btn {
                 background-color: #fdeeef;
                 border-radius: 50%;
                 padding: 2px;
                 transition: all 0.3s ease;
-            
+
                 &:hover {
                     background-color: #c97780;
                     color: white;
                 }
-            
+
                 svg {
                     color: #721c24;
                     transition: color 0.3s ease;
                 }
-            
+
                 &:hover svg {
                     color: white;
                 }
             }
-            
+
         }
 
         .MlTask_CalBox {

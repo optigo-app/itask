@@ -1,21 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Modal,
     Box,
     Typography,
     Button,
-    Select,
     MenuItem,
-    FormControl,
-    InputLabel,
     TextField,
     Grid,
     IconButton,
 } from "@mui/material";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { fetchlistApiCall, formData, rootSubrootflag, selectedRowData } from "../../Recoil/atom";
-import { AddTaskDataApi } from "../../Api/TaskApi/AddTaskApi";
-import { toast } from "react-toastify";
 import CloseIcon from "@mui/icons-material/Close";
 import { commonSelectProps, commonTextFieldProps } from "../../Utils/globalfun";
 import MultiSelectChipWithLimit from "./AssigneeAutocomplete";
@@ -25,7 +18,7 @@ const modalStyle = {
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
-    width: 400,
+    width: 460,
     bgcolor: "background.paper",
     boxShadow: 24,
     p: 3,
@@ -33,12 +26,9 @@ const modalStyle = {
 };
 
 const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit }) => {
-    const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
-    const rootSubrootflagval = useRecoilValue(rootSubrootflag);
     const [assigneeMaster, setAssigneeMaster] = useState([]);
     const [taskDepartment, setTaskDepartment] = useState([]);
     const [formValues, setFormValues] = React.useState({});
-    console.log('formValues: ', formValues);
 
     useEffect(() => {
         const data = {
@@ -89,11 +79,11 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
                     </IconButton>
                 </Grid>
                 <div style={{
-                            margin: "10px 0",
-                            border: "1px dashed #7d7f85",
-                            opacity: 0.3,
-                        }}
-                        />
+                    margin: "10px 0",
+                    border: "1px dashed #7d7f85",
+                    opacity: 0.3,
+                }}
+                />
                 <Grid container spacing={2} className="form-row">
                     <Grid item xs={12}>
                         <Box className="form-group">
@@ -133,7 +123,7 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
                     </Grid>
                 </Grid>
 
-                <Box sx={{textAlign:'end', mt: 2 }}>
+                <Box sx={{ textAlign: 'end', mt: 2 }}>
                     <Button className="buttonClassname" variant="contained" onClick={handleFormSubmit}>
                         Submit
                     </Button>

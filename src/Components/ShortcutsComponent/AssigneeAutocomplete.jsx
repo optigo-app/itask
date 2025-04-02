@@ -77,7 +77,7 @@ const MultiSelectChipWithLimit = ({
                                         {option.firstname + " " + option.lastname}
                                     </Box>
                                 }
-                                {...getTagProps({ index })}
+                                // {...getTagProps({ index })}
                                 sx={{ borderRadius: "8px", fontSize: "14px", textTransform: "capitalize" }}
                                 {...commonTextFieldProps}
                             />
