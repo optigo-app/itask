@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Menu, MenuItem, Button, Typography } from "@mui/material";
+import { Button } from "@mui/material";
+import CustomMenu from "./CustomMenuFun";
 
 const StatusBadge = ({ task, statusColors, onStatusChange }) => {
     const [anchorEl, setAnchorEl] = useState(null);
@@ -13,7 +14,7 @@ const StatusBadge = ({ task, statusColors, onStatusChange }) => {
         setAnchorEl(null);
         if (status) {
             console.log("Selected Status:", status);
-            onStatusChange(task, status);
+            onStatusChange(task, status);   
         }
     };
 
@@ -22,8 +23,8 @@ const StatusBadge = ({ task, statusColors, onStatusChange }) => {
             <Button
                 onClick={handleClick}
                 style={{
-                    color: (statusColors[task?.status]?.color) ?? "#7d7f85",
-                    backgroundColor: (statusColors[task?.status]?.backgroundColor) ?? "#7d7f8559",
+                    color: (statusColors[(task?.status)?.toLowerCase()]?.color) ?? "#7d7f85",
+                    backgroundColor: (statusColors[(task?.status)?.toLowerCase()]?.backgroundColor) ?? "#7d7f8559",
                     width: "fit-content",
                     padding: "0.2rem 0.8rem",
                     borderRadius: "5px",
@@ -38,41 +39,11 @@ const StatusBadge = ({ task, statusColors, onStatusChange }) => {
             >
                 {task?.status != "" ? task?.status : '-'}
             </Button>
-            <Menu
+            <CustomMenu
                 anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={() => handleClose(null)}
-                slotProps={{
-                    paper: {
-                        sx: {
-                            borderRadius: "8px !important",
-                            boxShadow:
-                                "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;",
-                            '& ".MuiList-root': {
-                                paddingTop: "0 !important",
-                                paddingBottom: "0 !important",
-                            },
-                        },
-                    },
-                }}
-            >
-                {statusMaster?.map((status) => (
-                    <MenuItem
-                        key={status?.id}
-                        onClick={() => handleClose(status)}
-                        sx={{
-                            margin: "5px 10px !important",
-                            borderRadius: "8px !important",
-                            "&:hover": {
-                                backgroundColor: "#f0f0f0 !important",
-                                borderRadius: "8px !important",
-                            },
-                        }}
-                    >
-                        <Typography variant="body2">{status?.labelname}</Typography>
-                    </MenuItem>
-                ))}
-            </Menu>
+                handleClose={handleClose}
+                statusMaster={statusMaster}
+            />
         </>
     );
 };

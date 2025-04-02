@@ -56,7 +56,8 @@ const HeaderButtons = ({
     const rootflag = rootSubrootflagval?.Task == 'AddTask' ? { Task: "subroot" } : rootSubrootflagval;
     setOpenChildTask(false);
     const addTaskApi = await AddTaskDataApi(formValues, rootflag ?? {}, module);
-    if (addTaskApi) {
+    console.log('addTaskApi: ', addTaskApi);
+    if (addTaskApi?.rd[0]?.stat == 1) {
       setFormDrawerOpen(false);
       setOpenChildTask(true);
       setTimeout(() => {
@@ -71,6 +72,8 @@ const HeaderButtons = ({
         toast.success(message);
       }, 100);
 
+    } else {
+      toast.error("Something went wrong...");
     }
   };
 

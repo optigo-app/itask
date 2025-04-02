@@ -87,63 +87,63 @@ export const getStatusColor = (value) => {
 
 // Task Status color
 export const statusColors = {
-    "Pending": {
+    "pending": {
         color: "#ff9800", // Orange text color
         backgroundColor: "#fff3e0", // Light orange background
     },
-    "Just Started": {
+    "just started": {
         color: "#4caf50", // Green text color
         backgroundColor: "#e8f5e9", // Light green background
     },
-    "Running": {
+    "running": {
         color: "#2196f3", // Blue text color
         backgroundColor: "#e3f2fd", // Light blue background
     },
-    "On Hold": {
+    "on hold": {
         color: "#ff5722", // Red-orange text color
         backgroundColor: "#ffccbc", // Light red-orange background
     },
-    "On Hold With Challenge": {
+    "on hold with challenge": {
         color: "#f44336", // Red text color
         backgroundColor: "#ffebee", // Light red background
     },
-    "Challenge Running": {
+    "challenge running": {
         color: "#d32f2f", // Dark red text color
         backgroundColor: "#ffcccb", // Light dark red background
     },
-    "Doc Started": {
+    "doc started": {
         color: "#8e24aa", // Purple text color
         backgroundColor: "#f3e5f5", // Light purple background
     },
-    "Doc Completed": {
+    "doc completed": {
         color: "#9c27b0", // Purple text color
         backgroundColor: "#fce4ec", // Light purple background
     },
-    "Code Started": {
+    "code started": {
         color: "#3f51b5", // Indigo text color
         backgroundColor: "#e8eaf6", // Light indigo background
     },
-    "Code Completed": {
+    "code completed": {
         color: "#3949ab", // Dark indigo text color
         backgroundColor: "#c5cae9", // Light dark indigo background
     },
-    "Test Started": {
+    "test started": {
         color: "#f44336", // Red text color
         backgroundColor: "#ffebee", // Light red background
     },
-    "Test Completed": {
+    "test completed": {
         color: "#8bc34a", // Light green text color
         backgroundColor: "#c8e6c9", // Light green background
     },
-    "Completed": {
+    "completed": {
         color: "#4caf50", // Green text color
         backgroundColor: "#e8f5e9", // Light green background
     },
-    "Delivered": {
+    "delivered": {
         color: "#3f51b5", // Indigo text color
         backgroundColor: "#e8eaf6", // Light indigo background
     },
-    "In Testing": {
+    "in testing": {
         color: "#ff9800", // Orange text color
         backgroundColor: "#fff3e0", // Light orange background
     },
@@ -212,6 +212,51 @@ export const findParentTask = (tasks, selectedTaskId, parentTask = null) => {
     }
     return null;
 };
+
+// map key value in api
+export function mapTaskLabels(data) {
+    const labels = data?.rd[0];
+    const tasks = data?.rd1;
+    const labelMap = {};
+    Object?.keys(labels)?.forEach((key, index) => {
+      labelMap[index + 1] = key;
+    });
+    function convertTask(task) {
+      let taskObj = {};
+      for (let key in task) {
+        if (task.hasOwnProperty(key)) {
+          const label = labelMap[key];
+          if (label) {
+            taskObj[label] = task[key];
+          }
+        }
+      }
+      if (task.subtasks) {
+        try {
+          const parsedSubtasks = JSON?.parse(task.subtasks);
+          taskObj.subtasks = parsedSubtasks?.map(subtask => {
+            let subtaskObj = {};
+            for (let key in subtask) {
+              if (subtask?.hasOwnProperty(key)) {
+                const label = labelMap[key];
+                if (label) {
+                  subtaskObj[label] = subtask[key];
+                }
+              }
+            }
+            return subtaskObj;
+          });
+        } catch (error) {
+          console.error("Error parsing subtasks:", error);
+        }
+      }
+
+      return taskObj;
+    }
+    let taskData = tasks?.map(task => convertTask(task))
+
+    return taskData;
+  }
 
 //Selectmenu custom styles
 export const commonSelectProps = {
@@ -346,7 +391,6 @@ export const customDatePickerStyles = {
         borderRadius: '8px',
         fontFamily: '"Public Sans", sans-serif',
         color: '#444050',
-        maxHeight: '300px'
     },
     '& .MuiPickersYear-root': {
         '& .MuiPickersYear-yearButton': {
@@ -396,5 +440,35 @@ export const commonTextFieldProps = {
 };
 
 
+// Optimized conversion functions
+const charMap = {
+    "&": "and",
+    "<": "less_than",
+    ">": "greater_than",
+    "%": "percent",
+    "$": "dollar",
+    "#": "hash",
+    "@": "at",
+    "?": "question",
+    "=": "equals",
+    "+": "plus",
+    "-": "minus",
+    "*": "asterisk",
+    "^": "caret",
+    "~": "tilde",
+};
 
+// Reverse the mapping for words to special characters
+const wordMap = Object.fromEntries(
+    Object.entries(charMap).map(([key, value]) => [value, key])
+);
 
+// Function to convert special characters to words (for API)
+export function convertSpecialCharsToWords(str) {
+    return str?.replace(/[&<>"'%$#!?=+\-*/\\^~]/g, (match) => charMap[match] || match);
+}
+
+// Function to convert words back to special characters (for UI)
+export function convertWordsToSpecialChars(str) {
+    return str?.replace(/\b(and|less_than|greater_than|percent|dollar|hash|at|question|equals|plus|minus|asterisk|caret|tilde)\b/g, (match) => wordMap[match] || match);
+}

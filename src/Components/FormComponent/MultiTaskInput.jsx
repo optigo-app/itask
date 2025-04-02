@@ -12,6 +12,7 @@ const MultiTaskInput = ({ onSave }) => {
     const [text, setText] = useState("");
     const [newTask, setNewTask] = useState("");
     const [newEstimate, setNewEstimate] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
     const inputRef = useRef(null);
     const estimateRefs = useRef([]);
 
@@ -22,8 +23,13 @@ const MultiTaskInput = ({ onSave }) => {
     // Handle bulk text entry
     const handleSaveTextArea = () => {
         if (text.trim() === "") return;
-
-        const newTasks = text.split("\n").filter(line => line.trim() !== "").map(line => ({
+        const lines = text.split("\n").map(line => line.trim()).filter(line => line !== "");
+        if (lines.some(line => !isValidInput(line))) {
+            setErrorMessage("Tasks cannot contain ',' or '#'.");
+            return;
+        }
+        setErrorMessage("");
+        const newTasks = lines.map(line => ({
             taskName: line,
             estimate: "",
         }));
@@ -37,6 +43,11 @@ const MultiTaskInput = ({ onSave }) => {
     // Add new task from input field
     const addNewTask = () => {
         if (newTask.trim() === "") return;
+        if (!isValidInput(newTask)) {
+            setErrorMessage("Task name cannot contain ',' or '#'.");
+            return;
+        }
+        setErrorMessage("");
 
         const newTasks = [...tasks, { taskName: newTask, estimate: newEstimate }];
         setTasks(newTasks);
@@ -51,6 +62,11 @@ const MultiTaskInput = ({ onSave }) => {
     const handleKeyPress = (e) => {
         if (e.key === "Enter") {
             e.preventDefault();
+            if (!isValidInput(newTask)) {
+                setErrorMessage("Task name cannot contain ',' or '#'.");
+                return;
+            }
+            setErrorMessage("");
             addNewTask();
         }
     };
@@ -69,10 +85,25 @@ const MultiTaskInput = ({ onSave }) => {
 
     // Task edit functions
     const handleEdit = (index) => setEditIndex(index);
-    const handleCancelEdit = () => setEditIndex(null);
-    const handleSaveEdit = () => setEditIndex(null);
+    const handleCancelEdit = () => {
+        setEditIndex(null);
+        setErrorMessage("");
+    };
+    const handleSaveEdit = () => {
+        setEditIndex(null)
+        setErrorMessage("");
+    };
+
+    const isValidInput = (value) => {
+        return !/[,#]/.test(value); // Disallow "," and "#"
+    };
 
     const handleTaskChange = (index, key, value) => {
+        if (!isValidInput(value)) {
+            setErrorMessage("Task name cannot contain ',' or '#'.");
+            return;
+        }
+        setErrorMessage("");
         const updatedTasks = [...tasks];
         updatedTasks[index][key] = value;
         setTasks(updatedTasks);
@@ -126,8 +157,8 @@ const MultiTaskInput = ({ onSave }) => {
                 {showEdit ? (
                     <>
                         <TextareaAutosize
-                            minRows={4}
-                            placeholder="Enter tasks (each line = new task)..."
+                            minRows={5}
+                            placeholder="Enter tasks (each line = new task, ',' and '#' not allowed)..."
                             value={text}
                             onChange={(e) => setText(e.target.value)}
                             style={{
@@ -141,6 +172,14 @@ const MultiTaskInput = ({ onSave }) => {
                             }}
                             className="textareaCustCss"
                         />
+                        {errorMessage && (
+                            <Typography variant="body2" sx={{
+                                color: '#d32f2f !important',
+                                marginTop: '4px !important',
+                            }}>
+                                {errorMessage}
+                            </Typography>
+                        )}
                         <Box sx={{ display: "flex", justifyContent: "end" }}>
                             <Button className="buttonClassname" onClick={handleSaveTextArea}>
                                 Add Tasks
@@ -170,56 +209,58 @@ const MultiTaskInput = ({ onSave }) => {
                                         </TableHead>
                                         <TableBody>
                                             {tasks.map((task, index) => (
-                                                <TableRow key={index}>
-                                                    <TableCell sx={{ width: "60%" }}>
-                                                        {editIndex === index ? (
+                                                <>
+                                                    <TableRow key={index}>
+                                                        <TableCell sx={{ width: "60%" }}>
+                                                            {editIndex === index ? (
+                                                                <TextField
+                                                                    size="small"
+                                                                    fullWidth
+                                                                    value={task.taskName}
+                                                                    onChange={(e) => handleTaskChange(index, "taskName", e.target.value)}
+                                                                    className="textfieldsClass"
+                                                                />
+                                                            ) : (
+                                                                <Typography>{task.taskName}</Typography>
+                                                            )}
+                                                        </TableCell>
+
+                                                        <TableCell sx={{ width: "20%" }}>
                                                             <TextField
+                                                                type="number"
                                                                 size="small"
                                                                 fullWidth
-                                                                value={task.taskName}
-                                                                onChange={(e) => handleTaskChange(index, "taskName", e.target.value)}
+                                                                value={task.estimate}
+                                                                onChange={(e) => handleTaskChange(index, "estimate", e.target.value)}
+                                                                onKeyPress={(e) => handleEstimateKeyPress(e, index)}
+                                                                inputRef={el => estimateRefs.current[index] = el}
                                                                 className="textfieldsClass"
                                                             />
-                                                        ) : (
-                                                            <Typography>{task.taskName}</Typography>
-                                                        )}
-                                                    </TableCell>
+                                                        </TableCell>
 
-                                                    <TableCell sx={{ width: "20%" }}>
-                                                        <TextField
-                                                            type="number"
-                                                            size="small"
-                                                            fullWidth
-                                                            value={task.estimate}
-                                                            onChange={(e) => handleTaskChange(index, "estimate", e.target.value)}
-                                                            onKeyPress={(e) => handleEstimateKeyPress(e, index)}
-                                                            inputRef={el => estimateRefs.current[index] = el}
-                                                            className="textfieldsClass"
-                                                        />
-                                                    </TableCell>
-
-                                                    <TableCell sx={{ width: "20%", textAlign: "center" }}>
-                                                        {editIndex === index ? (
-                                                            <>
-                                                                <IconButton onClick={handleSaveEdit} color="success">
-                                                                    <Save size={18} />
-                                                                </IconButton>
-                                                                <IconButton onClick={handleCancelEdit} color="error">
-                                                                    <Close size={18} />
-                                                                </IconButton>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <IconButton onClick={() => handleEdit(index)}>
-                                                                    <Pencil size={18} />
-                                                                </IconButton>
-                                                                <IconButton onClick={() => handleDelete(index)} color="error">
-                                                                    <Trash size={18} />
-                                                                </IconButton>
-                                                            </>
-                                                        )}
-                                                    </TableCell>
-                                                </TableRow>
+                                                        <TableCell sx={{ width: "20%", textAlign: "center" }}>
+                                                            {editIndex === index ? (
+                                                                <>
+                                                                    <IconButton onClick={handleSaveEdit} color="success">
+                                                                        <Save size={18} />
+                                                                    </IconButton>
+                                                                    <IconButton onClick={handleCancelEdit} color="error">
+                                                                        <Close size={18} />
+                                                                    </IconButton>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <IconButton onClick={() => handleEdit(index)}>
+                                                                        <Pencil size={18} />
+                                                                    </IconButton>
+                                                                    <IconButton onClick={() => handleDelete(index)} color="error">
+                                                                        <Trash size={18} />
+                                                                    </IconButton>
+                                                                </>
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                </>
                                             ))}
 
                                             {/* Add New Task Row */}
@@ -271,6 +312,7 @@ const MultiTaskInput = ({ onSave }) => {
                                             </TableRow>
                                         </TableBody>
                                     </Table>
+                                    {errorMessage && <Typography sx={{ m: 1, fontSize: '12px', color: '#d32f2f !important' }}>{errorMessage}</Typography>}
                                 </TableContainer>
                             </>
                         )}

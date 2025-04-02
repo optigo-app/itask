@@ -38,6 +38,7 @@ const Task = () => {
   const [filters, setFilters] = useState({});
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
+  console.log('tasks: ', tasks);
   const setTaskDataLength = useSetRecoilState(taskLength)
   const encodedData = searchParams.get("data");
 
@@ -76,7 +77,6 @@ const Task = () => {
   };
 
   const fetchTaskData = async (parsedData) => {
-    debugger;
     if (tasks?.length == 0) {
       setIsTaskLoading(true);
     }
@@ -226,7 +226,6 @@ const Task = () => {
 
   // task api call
   useEffect(() => {
-    debugger
     let parsedData = null;
     if (encodedData) {
       try {

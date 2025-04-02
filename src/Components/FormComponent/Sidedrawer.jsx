@@ -20,11 +20,11 @@ import "./SidebarDrawer.scss";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { formData, rootSubrootflag } from "../../Recoil/atom";
 import dayjs from 'dayjs';
+import utc from "dayjs/plugin/utc";
 import { useLocation } from "react-router-dom";
 import EstimateInput from "../../Utils/Common/EstimateInput";
-import { Close, InsertDriveFile } from "@mui/icons-material";
 import MultiSelectChipWithLimit from "../ShortcutsComponent/AssigneeAutocomplete";
-import { commonSelectProps, commonTextFieldProps, customDatePickerProps } from "../../Utils/globalfun";
+import { commonSelectProps, commonTextFieldProps, convertWordsToSpecialChars, customDatePickerProps } from "../../Utils/globalfun";
 import MultiTaskInput from "./MultiTaskInput";
 import FileUploader from "../ShortcutsComponent/FileUploader";
 
@@ -47,10 +47,10 @@ const SidebarDrawer = ({
 }) => {
     const location = useLocation();
     const theme = useTheme();
+    dayjs.extend(utc);
     const [checkedMultiTask, setCheckedMultiTask] = useState(false);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
-    const rootSubrootflagval = useRecoilValue(rootSubrootflag)
-    const [assignees, setAssignees] = React.useState([]);
+    const [rootSubrootflagval, setRootSubrootFlagVal] = useRecoilState(rootSubrootflag)
     const [taskType, setTaskType] = useState("single");
     const [tasksubType, setTaskSubType] = useState("multi2");
     const searchParams = new URLSearchParams(location?.search);
@@ -77,7 +77,6 @@ const SidebarDrawer = ({
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
-
     const handleTaskChange = (event, newTaskType) => {
         if (newTaskType !== null) setTaskType(newTaskType);
         handleResetState();
@@ -93,29 +92,14 @@ const SidebarDrawer = ({
         department: useRef(),
     };
 
-    const getAssigneeData = (() => {
-        const data = sessionStorage?.getItem('taskAssigneeData');
-        if (data) {
-            try {
-                return JSON.parse(data);
-            } catch (error) {
-                console.error('Error parsing taskAssigneeData:', error);
-                return null;
-            }
-        }
-        return null;
-    })();
-
     useEffect(() => {
-        const assigneeData = getAssigneeData;
-        setAssignees(assigneeData);
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
         if (open && rootSubrootflagval?.Task === "root") {
             setFormValues({
                 taskName: formDataValue?.taskname ?? "",
                 multiTaskName: formDataValue?.actual ?? [""],
-                bulkTask: formDataValue?.bulk ?? [""],
+                bulkTask: formDataValue?.bulk ?? [],
                 dueDate: formDataValue?.DeadLineDate ?? null,
                 department: formDataValue?.departmentid ?? "",
                 guests: matchedAssignees ?? [],
@@ -126,7 +110,7 @@ const SidebarDrawer = ({
                 description: formDataValue?.descr ?? "",
                 attachment: formDataValue?.attachment ?? null,
                 progress: formDataValue?.progress ?? "",
-                startDate: formDataValue?.entrydate ?? null,
+                startDate: formDataValue?.StartDate ?? null,
                 category: formDataValue?.workcategoryid ?? "",
                 estimate: formDataValue?.estimate ?? [""],
                 actual: formDataValue?.actual ?? [""],
@@ -178,11 +162,13 @@ const SidebarDrawer = ({
     }
 
     const handleSubmit = (module) => {
+        debugger
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const idString = formValues?.guests?.map(user => user.id)?.join(",");
         const updatedFormDataValue = {
             taskid: moduleData?.taskid ?? formDataValue.taskid ?? "",
             taskname: formValues.taskName ?? formDataValue.taskname,
+            bulkTask: formValues?.bulkTask?? formDataValue?.bulkTask,
             statusid: formValues.status ?? formDataValue.statusid,
             priorityid: formValues.priority ?? formDataValue.priorityid,
             projectid: moduleData?.projectid ?? formValues.project ?? formDataValue.projectid,
@@ -198,10 +184,8 @@ const SidebarDrawer = ({
             estimate1_hrs: formValues?.estimate1_hrs ?? formDataValue.estimate1_hrs,
             estimate2_hrs: formValues?.estimate2_hrs ?? formDataValue.estimate2_hrs,
         };
-
         onSubmit(updatedFormDataValue, { mode: taskType }, module);
         handleClear();
-
     };
 
     // for close and clear form
@@ -480,35 +464,6 @@ const SidebarDrawer = ({
                                             </TextField>
                                         </Box>
                                     </Grid>
-                                    {/* <Grid item xs={6}>
-                                        <Box className="form-group">
-                                            <Typography
-                                                variant="subtitle1"
-                                                className="form-label"
-                                                htmlFor="progress"
-                                            >
-                                                Project
-                                            </Typography>
-                                            <TextField
-                                                name="project"
-                                                value={formValues?.project || ""}
-                                                onChange={handleChange}
-                                                select
-                                                {...commonTextFieldProps}
-                                                {...commonSelectProps}
-                                                ref={filterRefs?.project}
-                                            >
-                                                <MenuItem value="">
-                                                    <em>Select project</em>
-                                                </MenuItem>
-                                                {projectData?.map((project) => (
-                                                    <MenuItem name={project?.id} key={project?.id} value={project?.id}>
-                                                        {project?.labelname}
-                                                    </MenuItem>
-                                                ))}
-                                            </TextField>
-                                        </Box>
-                                    </Grid> */}
                                     <Grid item xs={6}>
                                         <Box className="form-group">
                                             <Typography className="form-label" variant="subtitle1">
@@ -516,12 +471,12 @@ const SidebarDrawer = ({
                                             </Typography>
                                             <DatePicker
                                                 name="startDate"
-                                                value={formValues.startDate ? dayjs(formValues.startDate) : null}
+                                                value={formValues.startDate ? dayjs.utc(formValues.startDate).local() : null}
                                                 className="textfieldsClass"
                                                 onChange={(value) =>
                                                     setFormValues((prev) => ({
                                                         ...prev,
-                                                        startDate: value,
+                                                        startDate: value ? dayjs.utc(value).startOf("day").toISOString() : null,
                                                     }))
                                                 }
                                                 sx={{ minWidth: 320 }}
@@ -546,12 +501,12 @@ const SidebarDrawer = ({
                                             </Typography>
                                             <DatePicker
                                                 name="dueDate"
-                                                value={formValues.dueDate ? dayjs(formValues.dueDate) : null}
+                                                value={formValues.dueDate ? dayjs.utc(formValues.dueDate).local() : null}
                                                 className="textfieldsClass"
                                                 onChange={(value) =>
                                                     setFormValues((prev) => ({
                                                         ...prev,
-                                                        dueDate: value,
+                                                        dueDate: value ? dayjs.utc(value).startOf("day").toISOString() : null,
                                                     }))
                                                 }
                                                 sx={{ minWidth: 320 }}
@@ -613,7 +568,7 @@ const SidebarDrawer = ({
                                         </Typography>
                                         <TextField
                                             name="description"
-                                            value={formValues.description}
+                                            value={convertWordsToSpecialChars(formValues.description)}
                                             onChange={handleChange}
                                             multiline
                                             rows={2}
@@ -817,12 +772,12 @@ const SidebarDrawer = ({
                                         </Typography>
                                         <DatePicker
                                             name="startDate"
-                                            value={formValues.startDate ? dayjs(formValues.startDate) : null}
+                                            value={formValues.startDate ? dayjs.utc(formValues.startDate).local() : null}
                                             className="textfieldsClass"
                                             onChange={(value) =>
                                                 setFormValues((prev) => ({
                                                     ...prev,
-                                                    startDate: value,
+                                                    startDate: value ? dayjs.utc(value).startOf("day").toISOString() : null,
                                                 }))
                                             }
                                             sx={{ minWidth: 400 }}
@@ -847,12 +802,12 @@ const SidebarDrawer = ({
                                         </Typography>
                                         <DatePicker
                                             name="dueDate"
-                                            value={formValues.dueDate ? dayjs(formValues.dueDate) : null}
+                                            value={formValues.dueDate ? dayjs.utc(formValues.dueDate).local() : null}
                                             className="textfieldsClass"
                                             onChange={(value) =>
                                                 setFormValues((prev) => ({
                                                     ...prev,
-                                                    dueDate: value,
+                                                    dueDate: value ? dayjs.utc(value).startOf("day").toISOString() : null,
                                                 }))
                                             }
                                             sx={{ minWidth: 400 }}
@@ -879,7 +834,7 @@ const SidebarDrawer = ({
                                     </Typography>
                                     <TextField
                                         name="description"
-                                        value={formValues.description}
+                                        value={convertWordsToSpecialChars(formValues.description)}
                                         onChange={handleChange}
                                         multiline
                                         rows={2}
@@ -891,60 +846,6 @@ const SidebarDrawer = ({
 
                             {/* File Upload */}
                             <Grid item xs={12}>
-                                {/* <Box className="form-group">
-                                    <Typography
-                                        variant="subtitle1"
-                                        className="form-label"
-                                        htmlFor="attachment"
-                                    >
-                                        Attachment
-                                    </Typography>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                                        <Button variant="outlined" component="label" className="secondary-btn">
-                                            Upload File
-                                            <input
-                                                type="file"
-                                                multiple
-                                                hidden
-                                                name="attachment"
-                                                onChange={handleFileChange}
-                                            />
-                                        </Button>
-                                    </Box>
-                                    {formValues.attachment && formValues.attachment.length > 0 && (
-                                        <Box
-                                            sx={{
-                                                marginTop: "8px",
-                                                padding: "12px",
-                                                borderRadius: "8px",
-                                                backgroundColor: "#f5f5f5",
-                                                maxHeight: "150px",
-                                                overflowY: "auto",
-                                                width: '50%'
-                                            }}
-                                        >
-                                            {formValues.attachment.map((file, index) => (
-                                                <Box
-                                                    key={index}
-                                                    sx={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        marginBottom: "8px",
-                                                        '&:last-child': { marginBottom: 0 }
-                                                    }}
-                                                >
-                                                    <InsertDriveFile sx={{ marginRight: 1, color: '#7367f0' }} />
-                                                    <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                        {file.name}
-                                                    </Typography>
-                                                    <IconButton size="small" onClick={() => handleRemoveFile(index)}>
-                                                        <Close fontSize="small" />
-                                                    </IconButton>
-                                                </Box>
-                                            ))}
-                                        </Box>
-                                    )}
-                                </Box> */}
                                 <FileUploader formValues={formValues} setFormValues={setFormValues} />
                             </Grid>
 
