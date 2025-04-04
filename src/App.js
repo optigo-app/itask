@@ -17,6 +17,7 @@ import EditableTimer from './Backup/EditableTimer';
 import TreeDataGrid from './Backup/TreeDataGrid';
 import NotificationComponent from './Backup/NotificationComponent';
 import PinnableTable from './Backup/TreeDataGrid';
+import TableGrid from './Backup/TableGrid';
 
 // Lazy Loaded Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -78,6 +79,23 @@ const ProtectedRoute = ({ children }) => {
 const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem("isLoggedIn") === "true");
 
+
+    const getQueryParams = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+      
+        return {
+          yc: urlParams.get("yc"),
+          uid: urlParams.get("uid"),
+          sv: urlParams.get("sv"),
+          ifid: urlParams.get("ifid"),
+          pid: urlParams.get("pid"),
+        };
+      };
+      
+      // Example usage
+      const queryParams = getQueryParams();
+      console.log("Query Parameters:", queryParams);
+      
     useEffect(() => {
         let retryCount = 0;
         const maxRetries = 5;
@@ -158,7 +176,7 @@ const App = () => {
                                     <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                                     <Route path="*" element={<PagenotFound />} />
                                     <Route path="/test" element={<ProtectedRoute><MilestoneTimeline /></ProtectedRoute>} />
-                                    <Route path="/test1" element={<ProtectedRoute><PinnableTable  /></ProtectedRoute>} />
+                                    <Route path="/test1" element={<ProtectedRoute><TableGrid  /></ProtectedRoute>} />
                                 </Routes>
                             </Layout>
                         </Suspense>

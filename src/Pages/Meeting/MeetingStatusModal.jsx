@@ -27,6 +27,9 @@ const modalStyle = {
     left: "50%",
     transform: "translate(-50%, -50%)",
     width: 600,
+    maxHeight: "65vh",
+    height: "63vh",
+    overflowY: "auto",
     bgcolor: "background.paper",
     boxShadow: 24,
     padding: "10px 20px",
@@ -112,76 +115,78 @@ const ReadOnlyModal = ({ open, handleClose }) => {
                         <ToggleButton value="Pending">Pending</ToggleButton>
                     </ToggleButtonGroup>
                 </Box>
-                <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 'rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;', borderRadius: '8px' }}>
-                    <Table stickyHeader>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>
-                                    <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Name</Typography>
-                                </TableCell>
-                                <TableCell>
-                                    <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Status</Typography>
-                                </TableCell>
-                                <TableCell>
-                                    <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Remark</Typography>
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {filteredRows.slice((page - 1) * rowsPerPage, page * rowsPerPage).map((row) => (
-                                <TableRow key={row.id}>
-                                    <TableCell sx={{ minWidth: '150px' }}>
-                                        <Typography sx={{ fontSize: "14px" }}>{row.name}</Typography>
+                <Box sx={{display:'flex', flexDirection:'column', justifyContent:'space-between'}}>
+                    <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 'rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;', borderRadius: '8px' }}>
+                        <Table stickyHeader>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>
+                                        <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Name</Typography>
                                     </TableCell>
                                     <TableCell>
-                                        <Chip
-                                            label={row.status}
-                                            sx={{
-                                                bgcolor: statusColors[row.status]?.background,
-                                                color: statusColors[row.status]?.color,
-                                                fontWeight: "bold",
-                                                fontFamily: '"Public Sans", sans-serif',
-                                                borderRadius: "4px",
-                                                padding: "4px 8px",
-                                                fontSize: "14px"
-                                            }}
-                                        />
+                                        <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Status</Typography>
                                     </TableCell>
                                     <TableCell>
-                                        <Typography sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: "14px" }}>
-                                            {row.remark || "—"}
-                                        </Typography>
+                                        <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Remark</Typography>
                                     </TableCell>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px" }}>
-                    <Typography variant="body2">
-                        Showing {(page - 1) * rowsPerPage + 1} to {Math.min(page * rowsPerPage, filteredRows.length)} of {filteredRows.length} entries
-                    </Typography>
-                    <Pagination
-                        size="small"
-                        count={totalPages}
-                        page={page}
-                        onChange={handlePageChange}
-                        color="primary"
-                        variant="outlined"
-                        shape="rounded"
-                        sx={{
-                            ".MuiPaginationItem-root": {
-                                minHeight: "30px !important",
-                                fontFamily: '"Public Sans", sans-serif',
-                                color: "#444050",
-                                "&.Mui-selected": {
-                                    backgroundColor: "#7D7f85",
-                                    color: "#fff",
-                                    borderColor: "#7D7f85"
-                                }
-                            },
-                        }}
-                    />
+                            </TableHead>
+                            <TableBody>
+                                {filteredRows.slice((page - 1) * rowsPerPage, page * rowsPerPage).map((row) => (
+                                    <TableRow key={row.id}>
+                                        <TableCell sx={{ minWidth: '150px' }}>
+                                            <Typography sx={{ fontSize: "14px" }}>{row.name}</Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={row.status}
+                                                sx={{
+                                                    bgcolor: statusColors[row.status]?.background,
+                                                    color: statusColors[row.status]?.color,
+                                                    fontWeight: "bold",
+                                                    fontFamily: '"Public Sans", sans-serif',
+                                                    borderRadius: "4px",
+                                                    padding: "4px 8px",
+                                                    fontSize: "14px"
+                                                }}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: "14px" }}>
+                                                {row.remark || "—"}
+                                            </Typography>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px" }}>
+                        <Typography variant="body2">
+                            Showing {(page - 1) * rowsPerPage + 1} to {Math.min(page * rowsPerPage, filteredRows.length)} of {filteredRows.length} entries
+                        </Typography>
+                        <Pagination
+                            size="small"
+                            count={totalPages}
+                            page={page}
+                            onChange={handlePageChange}
+                            color="primary"
+                            variant="outlined"
+                            shape="rounded"
+                            sx={{
+                                ".MuiPaginationItem-root": {
+                                    minHeight: "30px !important",
+                                    fontFamily: '"Public Sans", sans-serif',
+                                    color: "#444050",
+                                    "&.Mui-selected": {
+                                        backgroundColor: "#7D7f85",
+                                        color: "#fff",
+                                        borderColor: "#7D7f85"
+                                    }
+                                },
+                            }}
+                        />
+                    </Box>
                 </Box>
             </Box>
         </Modal>

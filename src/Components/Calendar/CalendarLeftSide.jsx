@@ -10,9 +10,10 @@ import { calendarM, CalEventsFilter, CalformData } from '../../Recoil/atom';
 import CalendarForm from './SideBar/CalendarForm';
 import { customDatePickerStyles } from '../../Utils/globalfun';
 import TasklistForCal from './TasklistForCal';
+import { AddMeetingApi } from '../../Api/MeetingApi/AddMeetingApi';
 
-const CalendarLeftSide = ({ calendarsColor }) => {
-    const [selectedCalendars, setSelectedCalendars] = useState(['Personal', 'Business', 'Family', 'Holiday', 'ETC']);
+const CalendarLeftSide = ({ calendarsColor, isLoding, handleCaleFormSubmit  }) => {
+    const [selectedCalendars, setSelectedCalendars] = useState([]);
     const setSelectedCaleFilters = useSetRecoilState(CalEventsFilter);
     const setSelectedMon = useSetRecoilState(calendarM);
     const setCalFormData = useSetRecoilState(CalformData)
@@ -27,8 +28,9 @@ const CalendarLeftSide = ({ calendarsColor }) => {
     }
 
     useEffect(() => {
-        setSelectedCaleFilters(selectedCalendars)
-    }, []);
+        setSelectedCalendars(Object.keys(calendarsColor));
+        setSelectedCaleFilters(Object.keys(calendarsColor));
+    }, [calendarsColor, setSelectedCaleFilters]);
 
     const handleCalendarChange = (calendar) => {
         setSelectedCalendars((prev) =>
@@ -45,10 +47,10 @@ const CalendarLeftSide = ({ calendarsColor }) => {
     const handleViewAllToggle = () => {
         if (selectedCalendars.length === Object.keys(calendarsColor).length) {
             setSelectedCalendars([]);
-            setSelectedCaleFilters([])
+            setSelectedCaleFilters([]);
         } else {
             setSelectedCalendars(Object.keys(calendarsColor));
-            setSelectedCaleFilters(Object.keys(calendarsColor))
+            setSelectedCaleFilters(Object.keys(calendarsColor));
         }
     };
 
@@ -58,7 +60,7 @@ const CalendarLeftSide = ({ calendarsColor }) => {
                 <FormControlLabel
                     key={key}
                     label={key}
-                    sx={{ '& .MuiFormControlLabel-label': { color: 'text.secondary', fontSize: '15px' } }}
+                    sx={{ '& .MuiFormControlLabel-label': { textTransform: 'capitalize', color: '#7D7f85', fontSize: '15px' } }}
                     control={
                         <Checkbox
                             color={value}
@@ -92,25 +94,6 @@ const CalendarLeftSide = ({ calendarsColor }) => {
 
     const handleDrawerToggle = () => {
         setCaledrawerOpen(!caledrawerOpen);
-    };
-
-    const handleCaleFormSubmit = async (formValues) => {
-        const updatedFormValues = {
-            ...formValues,
-            start: selectedDate
-        };
-        setCalFormData(updatedFormValues);
-        const existingData = JSON?.parse(localStorage.getItem('calformData')) || [];
-        const existingEventIndex = existingData?.findIndex(event => event.id === updatedFormValues.id);
-        let updatedData;
-        if (existingEventIndex !== -1) {
-            updatedData = existingData?.map((event, index) =>
-                index === existingEventIndex ? updatedFormValues : event
-            );
-        } else {
-            updatedData = [...existingData, updatedFormValues];
-        }
-        localStorage.setItem('calformData', JSON?.stringify(updatedData));
     };
 
     const calendarMonthChange = (date) => {

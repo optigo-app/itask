@@ -23,11 +23,18 @@ const RejectReasonModal = ({
             <DialogTitle sx={{ fontWeight: "bold" }}>
                 {title}
             </DialogTitle>
+
             <Box sx={{ position: 'absolute', top: '0', right: '0' }}>
                 <IconButton onClick={onClose}>
                     <CloseIcon />
                 </IconButton>
             </Box>
+            <div style={{
+                margin: "0",
+                border: "1px dashed #7d7f85",
+                opacity: 0.3,
+            }}
+            />
             <DialogContent>
                 <Box sx={{ mt: 1 }}>
                     <TextareaAutosize
@@ -44,6 +51,7 @@ const RejectReasonModal = ({
                             outline: "none",
                             resize: "vertical",
                         }}
+                        className="textareaCustCss"
                     />
                 </Box>
             </DialogContent>

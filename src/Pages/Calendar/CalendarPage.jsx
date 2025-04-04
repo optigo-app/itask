@@ -1,31 +1,85 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Typography, useMediaQuery } from "@mui/material";
 import "./Calendar.scss";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import CalendarLeftSide from "../../Components/Calendar/CalendarLeftSide";
 import CalendarRightSide from "../../Components/Calendar/CalendarRightSide";
 import CalendarDrawer from "../../Components/Calendar/SideBar/CalendarDrawer";
-import { calendarM } from "../../Recoil/atom";
-import { useSetRecoilState } from "recoil";
+import { calendarData, calendarM, CalformData } from "../../Recoil/atom";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import TasklistForCal from "../../Components/Calendar/TasklistForCal";
+import { fetchMettingListApi } from "../../Api/MeetingApi/MeetingListApi";
+import { AddMeetingApi } from "../../Api/MeetingApi/AddMeetingApi";
 
 const Calendar = () => {
   const isLaptop = useMediaQuery("(max-width:1420px)");
   const isLaptop1 = useMediaQuery("(max-width:1600px) and (min-width:1421px)");
   const setSelectedMon = useSetRecoilState(calendarM);
+  const [calendarsColor, setCalendarsColor] = useState({});
+  const setCalEvData = useSetRecoilState(calendarData);
+  const setCalFormData = useSetRecoilState(CalformData);
+  const [isLoding, setIsLoding] = useState(false);
 
   useEffect(() => {
     setSelectedMon(new Date());
   }, []);
 
+  useEffect(() => {
+    const taskCategories = JSON?.parse(sessionStorage.getItem("taskworkcategoryData")) || [];
+    const colorClasses = ["error", "primary", "warning", "success", "info", "secondary", "support", "dark", "light", "muted"];
+    const dynamicCalendarsColor = taskCategories.reduce((acc, category, index) => {
+      const categoryName = category.labelname;
+      acc[categoryName] = colorClasses[index % colorClasses.length]; 
+      return acc;
+    }, {});
 
-  const calendarsColor = {
-    Personal: 'error',
-    Business: 'primary',
-    Family: 'warning',
-    Holiday: 'success',
-    ETC: 'info',
-  };
+    setCalendarsColor(dynamicCalendarsColor);
+    setSelectedMon(new Date());
+  }, []);
+
+
+  const handleMeetingList = async () => {
+    setIsLoding(true);
+    try {
+        const meetingApiRes = await fetchMettingListApi();
+        const data = meetingApiRes?.rd || [];
+        const taskAssigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
+        const taskCategory = JSON.parse(sessionStorage.getItem("taskworkcategoryData") || "[]");
+
+
+        const enhancedMeetings = data.map((meeting) => ({
+            ...meeting,
+            guests: taskAssigneeData.filter((user) => meeting?.assigneids?.split(",").map(Number).includes(user.id)) || [],
+            prModule: [],
+            category: taskCategory?.find(item => item?.id == meeting?.workcategoryid)?.labelname || '',
+            prModule: {
+                projectid: meeting?.projectid,
+                taskid: meeting?.taskid,
+            }
+        }));
+
+        setCalEvData(enhancedMeetings);
+    } catch (error) {
+        console.error("Error fetching meeting list:", error);
+    } finally {
+        setIsLoding(false);
+    }
+};
+
+
+useEffect(() => {
+    handleMeetingList();
+}, [])
+
+const handleCaleFormSubmit = async (formValues) => {
+    debugger
+    setCalFormData(formValues);
+    const apiRes = await AddMeetingApi(formValues);
+    console.log('apiRes: ', apiRes);
+    if (apiRes?.rd[0]?.stat == 1) {
+        handleMeetingList()
+    }
+};
 
 
   return (
@@ -42,7 +96,7 @@ const Calendar = () => {
     >                      
       {/* Left Panel (Mobile View) */}
       {isLaptop ? (
-        <CalendarDrawer calendarsColor={calendarsColor} />
+        <CalendarDrawer calendarsColor={calendarsColor} handleCaleFormSubmit={handleCaleFormSubmit} isLoding={isLoding}/>
       ) : (
         // Left Panel (Desktop View)
         <Box
@@ -55,7 +109,7 @@ const Calendar = () => {
             position: "relative",
           }}
         >
-          <CalendarLeftSide calendarsColor={calendarsColor} />
+          <CalendarLeftSide calendarsColor={calendarsColor} handleCaleFormSubmit={handleCaleFormSubmit} isLoding={isLoding}/>
         </Box>
       )}
 
@@ -71,7 +125,7 @@ const Calendar = () => {
           zIndex: 0,
         }}
       >
-        <CalendarRightSide />
+        <CalendarRightSide calendarsColor={calendarsColor} handleCaleFormSubmit={handleCaleFormSubmit} isLoding={isLoding}/>
 
       </Box>
     </Box>

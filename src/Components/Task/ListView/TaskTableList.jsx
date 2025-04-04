@@ -38,16 +38,17 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
     const setActionMode = useSetRecoilState(taskActionMode);
     const setFormDataValue = useSetRecoilState(formData);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
+    const [expandedTasks, setExpandedTasks] = useState({});
     const [hoveredTaskId, setHoveredTaskId] = useState(null);
     const [hoveredColumnname, setHoveredColumnName] = useState('');
     const [hoveredSubtaskId, setHoveredSubtaskId] = useState(null);
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const [selectedItem, setSelectedItem] = useState(null);
-    const [subtaskVisibility, setSubtaskVisibility] = useState({});
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("name");
     const [page, setPage] = useState(1);
+    console.log('page: ', page);
     const [rowsPerPage, setRowsPerPage] = useState(12);
     const [columnWidths] = useState({
         name: 350,
@@ -162,37 +163,58 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
         handleAssigneeShortcutSubmit(updatedRowData)
     }
 
-    const toggleSubtasks = (taskIndex) => {
-        setSubtaskVisibility((prev) => {
-            const isCurrentlyVisible = prev[taskIndex];
-            const newState = { ...prev, [taskIndex]: !isCurrentlyVisible };
+    // const toggleSubtasks = (taskIndex) => {
+    //     setSubtaskVisibility((prev) => {
+    //         const isCurrentlyVisible = prev[taskIndex];
+    //         const newState = { ...prev, [taskIndex]: !isCurrentlyVisible };
+
+    //         setOpenChildTask(false);
+
+    //         if (!isCurrentlyVisible) {
+    //             const task = findTask(data, taskIndex);
+    //             setTimeout(() => {
+    //                 setOpenChildTask(true);
+    //                 setSelectedTask(task);
+    //             }, 0);
+    //         }
+
+    //         return newState;
+    //     });
+    // };
+
+    // const findTask = (tasks, taskIndex) => {
+    //     const indexes = String(taskIndex).split("-").map(Number);
+    //     let currentTasks = tasks;
+    //     let currentTask = null;
+
+    //     indexes.forEach((index) => {
+    //         currentTask = currentTasks[index];
+    //         currentTasks = currentTask?.subtasks || [];
+    //     });
+
+    //     return currentTask;
+    // };
+
+    const toggleSubtasks = (taskId, task) => {
+        setExpandedTasks((prev) => {
+            const isCurrentlyExpanded = prev[taskId];
+            const newState = { ...prev, [taskId]: !isCurrentlyExpanded };
 
             setOpenChildTask(false);
 
-            if (!isCurrentlyVisible) {
-                const task = findTask(data, taskIndex);
+            if (!isCurrentlyExpanded) {
                 setTimeout(() => {
                     setOpenChildTask(true);
                     setSelectedTask(task);
                 }, 0);
+            } else {
+                setSelectedTask(null);
             }
 
             return newState;
         });
     };
 
-    const findTask = (tasks, taskIndex) => {
-        const indexes = String(taskIndex).split("-").map(Number);
-        let currentTasks = tasks;
-        let currentTask = null;
-
-        indexes.forEach((index) => {
-            currentTask = currentTasks[index];
-            currentTasks = currentTask?.subtasks || [];
-        });
-
-        return currentTask;
-    };
 
     const handleRequestSort = (property) => {
         const fieldMapping = {
@@ -250,15 +272,19 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
         setSelectedItem(null);
     }
 
-    const renderSubtasks = (subtasks, parentIndex) => {
-        return subtasks?.map((subtask, subtaskIndex) => (
-            <React.Fragment key={`${parentIndex}-${subtaskIndex}`}>
+    const renderSubtasks = (subtasks, parentTaskId, depth = 0) => {
+        return subtasks?.map((subtask) => (
+            <React.Fragment key={subtask.taskid}>
                 <TableRow>
                     <TableCell
                         onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid)}
                         onMouseLeave={handleSubtaskMouseLeave}
                     >
-                        <div style={{ paddingLeft: `${8 * (parentIndex.split('-').length)}px`, display: "flex", justifyContent: "space-between" }}>
+                        <div style={{
+                            paddingLeft: `${8 * (depth + 1)}px`,
+                            display: "flex",
+                            justifyContent: "space-between"
+                        }}>
                             <div>
                                 <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
                                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "30px" }}>
@@ -267,16 +293,13 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                             aria-label="toggle-task"
                                             aria-labelledby="toggle-task"
                                             size="small"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                toggleSubtasks(`${parentIndex}-${subtaskIndex}`);
-                                            }}
+                                            onClick={() => toggleSubtasks(subtask.taskid, subtask)}
                                         >
                                             <PlayArrowIcon
                                                 style={{
-                                                    color: subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? "#444050" : "#c7c7c7",
+                                                    color: expandedTasks[subtask.taskid] ? "#444050" : "#c7c7c7",
                                                     fontSize: "1.2rem",
-                                                    transform: subtaskVisibility[`${parentIndex}-${subtaskIndex}`] ? "rotate(90deg)" : "rotate(0deg)",
+                                                    transform: expandedTasks[subtask.taskid] ? "rotate(90deg)" : "rotate(0deg)",
                                                     transition: "transform 0.2s ease-in-out",
                                                 }}
                                             />
@@ -473,9 +496,7 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                         </Box>
                     </TableCell>
                 </TableRow>
-                {subtaskVisibility[`${parentIndex}-${subtaskIndex}`] &&
-                    subtask?.subtasks?.length > 0 &&
-                    renderSubtasks(subtask?.subtasks, `${parentIndex}-${subtaskIndex}`)}
+                {expandedTasks[subtask.taskid] && renderSubtasks(subtask.subtasks, subtask.taskid, depth + 1)}
             </React.Fragment>
         ));
     };
@@ -539,13 +560,13 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                                                         aria-label="toggle-task"
                                                                         aria-labelledby="toggle-task"
                                                                         size="small"
-                                                                        onClick={() => toggleSubtasks(taskIndex)}
+                                                                        onClick={() => toggleSubtasks(task.taskid, task)}
                                                                     >
                                                                         <PlayArrowIcon
                                                                             style={{
-                                                                                color: subtaskVisibility[taskIndex] ? "#444050" : "#c7c7c7",
+                                                                                color: expandedTasks[task.taskid] ? "#444050" : "#c7c7c7",
                                                                                 fontSize: "1rem",
-                                                                                transform: subtaskVisibility[taskIndex] ? "rotate(90deg)" : "rotate(0deg)",
+                                                                                transform: expandedTasks[task.taskid] ? "rotate(90deg)" : "rotate(0deg)",
                                                                                 transition: "transform 0.2s ease-in-out",
                                                                             }}
                                                                         />
@@ -738,10 +759,7 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
 
                                                 </TableCell>
                                             </TableRow>
-                                            {
-                                                subtaskVisibility[taskIndex] &&
-                                                renderSubtasks(task?.subtasks, `${taskIndex}`)
-                                            }
+                                            {expandedTasks[task.taskid] && task?.subtasks?.length > 0 && renderSubtasks(task.subtasks, task.taskid)}
                                         </React.Fragment>
                                     ))}
                                 </>
