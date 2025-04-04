@@ -6,7 +6,7 @@ export const AddMeetingApi = async (formValues) => {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
         const combinedValue = JSON.stringify({
-            "meetingid": formValues?.meetingid ?? 0,
+            "meetingid": formValues?.id ?? 0,
             "taskid": formValues?.prModule?.taskid ?? 0,
             "projectid": formValues?.prModule?.projectid ?? 0,
             "meetingtitle": convertSpecialCharsToWords(formValues?.title) ?? "",

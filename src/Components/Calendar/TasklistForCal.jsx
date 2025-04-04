@@ -5,9 +5,9 @@ import './TasklistForCal.scss'
 
 const initialTasks = [
     {
-        "id": "task001",
+        "taskId": "1",
         "title": "Meeting with Client",
-        "category": "Personal",
+        "category": "RND",
         "eventUrl": "https://meeting.com/client",
         "start": "2025-02-05T10:00:00.000Z",
         "end": "2025-02-05T11:30:00.000Z",
@@ -26,9 +26,9 @@ const initialTasks = [
         "estimate": 1.5
     },
     {
-        "id": "task002",
+        "taskId": "2",
         "title": "Team Standup",
-        "category": "Business",
+        "category": "favourite task",
         "eventUrl": "",
         "start": "2025-02-06T09:00:00.000Z",
         "end": "2025-02-06T09:30:00.000Z",
@@ -55,9 +55,9 @@ const initialTasks = [
         "estimate": 0.5
     },
     {
-        "id": "task003",
+        "taskId": "3",
         "title": "Meeting with Client",
-        "category": "Personal",
+        "category": "creative",
         "eventUrl": "https://meeting.com/client",
         "start": "2025-02-05T10:00:00.000Z",
         "end": "2025-02-05T11:30:00.000Z",
@@ -82,13 +82,15 @@ const TasklistForCal = ({ calendarsColor }) => {
 
     // Initialize draggable tasks
     useEffect(() => {
+        debugger
         const container = document.getElementById("external-tasks");
         if (container) {
             new Draggable(container, {
                 itemSelector: ".draggable-task",
                 eventData: (eventEl) => {
                     const taskId = eventEl.getAttribute("data-id");
-                    const task = tasks.find(t => t.id === taskId);
+                    console.log('taskId: ', taskId);
+                    const task = tasks.find(t => t.taskId === taskId);
                     return task ? { ...task } : {};
                 }
             });
@@ -100,7 +102,9 @@ const TasklistForCal = ({ calendarsColor }) => {
             <Typography variant="h6" sx={{ m: '0px 10px 10px 10px' }}>Tasks List</Typography>
             <Box id="external-tasks" sx={{ padding: 1.25 }}>
                 {tasks.map((task) => {
+                    console.log('tasks: ', tasks);
                     const colorClass = calendarsColor[task.category] || "default";
+                    console.log('calendarsColor: ', calendarsColor);
 
                     return (
                         <Card

@@ -22,6 +22,7 @@ const Task = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const [callFetchTaskApi, setCallFetchTaskApi] = useRecoilState(fetchlistApiCall);
+  console.log('ddddcallFetchTaskApi: ', callFetchTaskApi);
   const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
   const [isLoading, setIsLoading] = useState(false);
   const [isTaskLoading, setIsTaskLoading] = useState(null);
@@ -75,8 +76,10 @@ const Task = () => {
       setIsLoading(false);
     }
   };
+  console.log('ddddselectedRow: ', selectedRow);
 
   const fetchTaskData = async (parsedData) => {
+    debugger
     if (tasks?.length == 0) {
       setIsTaskLoading(true);
     }
@@ -226,6 +229,7 @@ const Task = () => {
 
   // task api call
   useEffect(() => {
+    debugger
     let parsedData = null;
     if (encodedData) {
       try {

@@ -200,6 +200,7 @@
                 .fc-event-main,
                 .fc-event-title {
                     font-size: 13px;
+                    font-weight: 600 !important;
                 }
 
                 &:not(.fc-list-event) {
@@ -256,6 +257,39 @@
                         .fc-event-title,
                         .fc-event-time {
                             color: $info-main !important;
+                        }
+                    }
+
+                    &.bg-secondary {
+                        background-color: $new-main !important;
+                        color: $new-light !important;
+                        border-color: transparent !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $new-light !important;
+                        }
+                    }
+
+                    &.bg-support {
+                        background-color: $support-bg !important;
+                        color: $support-main !important;
+                        border-color: transparent !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $support-main !important;
+                        }
+                    }
+
+                    &.bg-dark {
+                        background-color: $dark-bg !important;
+                        color: $dark-main !important;
+                        border-color: transparent !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $dark-main !important;
                         }
                     }
                 }
@@ -322,6 +356,32 @@
 
                     &:hover td {
                         background-color: rgba($info-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-support {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $support-main !important;
+                        background-color: $support-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($support-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-dark {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $dark-main !important;
+                        background-color: $dark-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($dark-light, 0.1) !important;
                     }
                 }
 
@@ -397,7 +457,7 @@
 
             // ** All Views Event
             .fc-daygrid-day-number {
-                margin-bottom: 1.5rem;
+                margin-bottom: .5rem;
                 padding: 0 1.5rem;
             }
 
@@ -498,7 +558,7 @@
                 }
 
                 .fc-list-day-cushion {
-                    background: rgb(232,231,253) !important;
+                    background: rgb(232, 231, 253) !important;
                 }
 
                 .fc-list-event {

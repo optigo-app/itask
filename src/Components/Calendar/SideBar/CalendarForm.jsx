@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { CircleX, List, Logs, X } from "lucide-react";
 import "./CalendarForm.scss";
-import { useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import { CalformData } from "../../../Recoil/atom";
 import { useTheme } from '@mui/material/styles';
 import { convertToIST } from "../../../Utils/Common/convertToIST";
@@ -23,6 +23,8 @@ import { commonTextFieldProps, mapTaskLabels } from "../../../Utils/globalfun";
 import CustomTimePicker from "../../../Utils/DateComponent/CustomTimePicker";
 import CustomDatePicker from "../../../Utils/DateComponent/CustomDatePicker";
 import { fetchModuleDataApi } from "../../../Api/TaskApi/ModuleDataApi";
+import CustomDateTimePicker from "../../../Utils/DateComponent/CustomDateTimePicker";
+import dayjs from "dayjs";
 
 const CalendarForm = ({
     open,
@@ -33,15 +35,15 @@ const CalendarForm = ({
 }) => {
     const location = useLocation();
     const [view, setView] = useState("meeting");
-    const CalformDataValue = useRecoilValue(CalformData);
-    const [category, setCategory] = useState([]);
+    const [CalformDataValue, setCalFormDataValue] = useRecoilState(CalformData);
+    const isDelete = Boolean(CalformDataValue?.id || CalformDataValue?.taskid);
     const [prModuleMaster, setPrModuleMaster] = useState([]);
-    const [assignees, setAssignees] = React.useState([]);
+    const [assignees, setAssignees] = useState([]);
     const [formValues, setFormValues] = React.useState({
         id: '',
         title: "",
         category: "",
-        prModule: "",
+        prModule: null,
         start: null,
         end: null,
         guests: [],
@@ -76,30 +78,30 @@ const CalendarForm = ({
         };
         const enhancedTasks = labeledTasks?.map(task => enhanceTask(task));
         setPrModuleMaster(enhancedTasks);
+        return enhancedTasks;
     }
 
 
     useEffect(() => {
-        const cateData = JSON?.parse(sessionStorage.getItem('taskworkcategoryData'));
-        setCategory(cateData);
         handleProjectModuleData();
+        const taskAssigneeData = JSON?.parse(sessionStorage?.getItem('taskAssigneeData'));
+        setAssignees(taskAssigneeData);
     }, [])
 
     useEffect(() => {
-        const assigneeData = JSON?.parse(sessionStorage?.getItem('taskAssigneeData'));
-        setAssignees(assigneeData);
         setTimeout(() => {
             if (CalformDataValue) {
+                console.log('CalformDataValue: ', CalformDataValue);
                 setFormValues({
-                    id: CalformDataValue?.id ?? "",
-                    title: CalformDataValue?.title ?? "",
+                    id: (CalformDataValue?.id || CalformDataValue?.meetingid) ?? "",
+                    title: (CalformDataValue?.title || CalformDataValue?.meetingtitle) ?? "",
                     category: CalformDataValue?.category ?? "",
-                    prModule: CalformDataValue?.eventUrl ?? "",
-                    start: CalformDataValue?.start ?? null,
-                    end: CalformDataValue?.end ?? null,
+                    prModule: (CalformDataValue?.prModule || CalformDataValue?.prModule) ?? null,
+                    start: (CalformDataValue?.start || CalformDataValue?.StartDate) ?? null,
+                    end: (CalformDataValue?.end || CalformDataValue?.EndDate) ?? null,
                     guests: CalformDataValue?.guests ?? [],
-                    description: CalformDataValue?.description ?? "",
-                    allDay: CalformDataValue?.allDay ?? false
+                    description: (CalformDataValue?.description || CalformDataValue?.Desc) ?? "",
+                    allDay: (CalformDataValue?.allDay || CalformDataValue?.isAllDay) ?? 0
                 });
             }
         }, 300);
@@ -121,15 +123,11 @@ const CalendarForm = ({
         }, 300);
     }, [open, CalformDataValue, formValues]);
 
-    const generateRandomId = () => {
-        return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
-    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormValues((prev) => ({
             ...prev,
-            id: prev.id || generateRandomId(),
             [name]: value,
         }));
     };
@@ -143,6 +141,7 @@ const CalendarForm = ({
     };
 
     const handleSubmit = () => {
+        debugger
         if (view === "meeting") {
             if (formValues) {
                 const idString = formValues?.guests?.map(user => user.id)?.join(",");
@@ -164,16 +163,19 @@ const CalendarForm = ({
 
     const handleClear = () => {
         setFormValues({
+            id: '',
             title: "",
             category: "",
-            eventUrl: "",
+            prModule: null,
             start: null,
             end: null,
             guests: [],
             description: "",
+            bulkTask: [],
             allDay: false
         });
         onClose();
+        setCalFormDataValue(null);
     }
 
     const handleRemoveEvent = () => {
@@ -247,6 +249,7 @@ const CalendarForm = ({
                                         Project/Module
                                     </Typography>
                                     <Autocomplete
+                                        value={formValues?.prModule ?? null}
                                         options={prModuleMaster}
                                         getOptionLabel={(option) => `${option?.taskPr}/${option?.taskname}`}
                                         {...commonTextFieldProps}
@@ -259,6 +262,7 @@ const CalendarForm = ({
                             {/* guests and Priority */}
                             <Grid item xs={12}>
                                 <MultiSelectChipWithLimit
+                                    value={formValues?.guests}
                                     options={assignees}
                                     label="Assign To"
                                     placeholder="Select assignees"
@@ -268,80 +272,44 @@ const CalendarForm = ({
                             </Grid>
 
                             {/* Progress, Start Date, Repeat */}
-                            <Grid item xs={6}>
-                                <CustomDatePicker
-                                    label="Start Date"
+                            <Grid item xs={12}>
+                                <CustomDateTimePicker
+                                    label="Start Date & Time"
                                     name="startDateTime"
                                     value={formValues.start}
-                                    width='100%'
+                                    width='380px'
                                     styleprops={commonTextFieldProps}
                                     onChange={(value) => {
                                         if (value) {
-                                            const isIst = convertToIST(value);
+                                            const formattedDate = dayjs(value).utc().format("YYYY-MM-DDTHH:mm:ss.000[Z]");
                                             setFormValues((prev) => ({
                                                 ...prev,
-                                                start: isIst,
+                                                start: formattedDate,
                                             }))
                                         }
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={6}>
-                                <CustomTimePicker
-                                    label="Start Time"
+                            <Grid item xs={12}>
+                                <CustomDateTimePicker
+                                    label="End Date & Time"
                                     name="endDateTime"
-                                    width='100%'
-                                    value={formValues.start}
-                                    styleprops={commonTextFieldProps}
-                                    onChange={(value) => {
-                                        if (value) {
-                                            const isIst = convertToIST(value);
-                                            setFormValues((prev) => ({
-                                                ...prev,
-                                                end: isIst,
-                                            }))
-                                        }
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <CustomDatePicker
-                                    label="End Date"
-                                    name="endDateTime"
-                                    width='100%'
                                     value={formValues.end}
+                                    width='380px'
                                     styleprops={commonTextFieldProps}
                                     onChange={(value) => {
                                         if (value) {
-                                            const isIst = convertToIST(value);
+                                            const formattedDate = dayjs(value).utc().format("YYYY-MM-DDTHH:mm:ss.000[Z]");
                                             setFormValues((prev) => ({
                                                 ...prev,
-                                                end: isIst,
+                                                end: formattedDate,
                                             }))
                                         }
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={6}>
-                                <CustomTimePicker
-                                    label="End Time"
-                                    name="endDateTime"
-                                    width='100%'
-                                    value={formValues.end}
-                                    styleprops={commonTextFieldProps}
-                                    onChange={(value) => {
-                                        if (value) {
-                                            const isIst = convertToIST(value);
-                                            setFormValues((prev) => ({
-                                                ...prev,
-                                                end: isIst,
-                                            }))
-                                        }
-                                    }}
-                                />
-                            </Grid>
-                        </Grid>
 
+                        </Grid>
                         {/* all day flag for drag and drop */}
                         <Grid item xs={12} sx={{ marginBlock: 1.5 }}>
                             <Box className="form-group">
@@ -356,12 +324,15 @@ const CalendarForm = ({
                                     spacing={1}
                                     sx={{ alignItems: 'center' }}
                                 >
-                                    <CustomSwitch checked={formValues.allDay} onChange={(event) => {
-                                        setFormValues((prev) => ({
-                                            ...prev,
-                                            allDay: event.target.checked,
-                                        }))
-                                    }} />
+                                    <CustomSwitch
+                                        checked={formValues.allDay === 1}
+                                        onChange={(event) => {
+                                            setFormValues((prev) => ({
+                                                ...prev,
+                                                allDay: event.target.checked ? 1 : 0,
+                                            }));
+                                        }}
+                                    />
                                     <Typography>All Day</Typography>
                                 </Stack>
                             </Box>
@@ -386,8 +357,8 @@ const CalendarForm = ({
                         </Grid>
 
                         {/* Submit Button */}
-                        <Grid item xs={12} sx={{ display: 'flex', justifyContent: CalformDataValue?.id && CalformDataValue?.id != '' ? 'space-between' : 'flex-end', alignItems: 'center', mt: 2 }}>
-                            {CalformDataValue?.id && CalformDataValue?.id != '' &&
+                        <Grid item xs={12} sx={{ display: 'flex', justifyContent: isDelete ? 'space-between' : 'flex-end', alignItems: 'center', mt: 2 }}>
+                            {isDelete &&
                                 <Button
                                     variant="contained"
                                     color="primary"
@@ -413,7 +384,7 @@ const CalendarForm = ({
                                     disabled={isLoading}
                                     className="buttonClassname"
                                 >
-                                    {CalformDataValue?.id && CalformDataValue?.id !== ''
+                                    {isDelete
                                         ? (isLoading ? "Updating..." : "Update")
                                         : (isLoading ? "Adding..." : "Add")
                                     }

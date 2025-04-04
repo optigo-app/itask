@@ -47,7 +47,7 @@ export const calendarSideBarOpen = atom({
 
 export const fetchlistApiCall = atom({
   key: 'fetchlistApiCall',
-  default: true
+  default: null
 })
 
 export const selectedRowData = atom({
@@ -57,6 +57,11 @@ export const selectedRowData = atom({
 
 export const selectedCategoryAtom = atom({
   key: 'selectedCategoryAtom',
+  default: []
+})
+
+export const calendarData = atom({
+  key: 'calendarData',
   default: []
 })
 

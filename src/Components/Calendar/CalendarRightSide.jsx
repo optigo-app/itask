@@ -6,51 +6,27 @@ import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { calendarM, calendarSideBarOpen, CalEventsFilter, CalformData } from '../../Recoil/atom';
+import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData } from '../../Recoil/atom';
 import CalendarForm from './SideBar/CalendarForm';
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
 
-const Calendar = () => {
+const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit }) => {
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
     const calendarRef = useRef();
     const [calendarApi, setCalendarApi] = useState(null);
     const date = useRecoilValue(calendarM);
     const setCalFormData = useSetRecoilState(CalformData);
-    const calFormData = useRecoilValue(CalformData);
     const selectedEventfilter = useRecoilValue(CalEventsFilter)
     const [caledrawerOpen, setCaledrawerOpen] = useState(false);
     const [opencnfDialogOpen, setCnfDialogOpen] = useState(false);
     const [formData, setFormData] = useState();
-    const [calEvData, setCalEvData] = useState([]);
+    const [calEvData, setCalEvData] = useRecoilState(calendarData);
+    console.log('calEvData: ', calEvData);
 
     const handleDrawerToggle = () => {
         setCaledrawerOpen(!caledrawerOpen);
     };
 
-    const handleCaleFormSubmit = async (formValues) => {
-        setCalFormData(formValues);
-        const existingData = JSON?.parse(localStorage?.getItem('calformData')) || [];
-        const existingEventIndex = existingData?.findIndex(event => event?.id === formValues?.id);
-        let updatedData;
-        if (existingEventIndex !== -1) {
-            updatedData = existingData?.map((event, index) =>
-                index === existingEventIndex ? formValues : event
-            );
-        } else {
-            updatedData = [...existingData, formValues];
-        }
-        localStorage.setItem('calformData', JSON?.stringify(updatedData));
-    };
-
-    // for set events
-    useEffect(() => {
-        const storedData = localStorage.getItem('calformData');
-        if (storedData) {
-            setCalEvData(JSON?.parse(storedData));
-        }
-    }, [calFormData]);
-
-    // for get events Data
     useEffect(() => {
         if (calendarRef?.current) {
             setCalendarApi(calendarRef?.current?.getApi());
@@ -70,29 +46,46 @@ const Calendar = () => {
         }, 500);
     }, [date, calendarApi]);
 
-    const filterEvents = (events, selectedCalendars) => {
-        return events && events?.filter((event) => selectedCalendars?.includes(event?.category));
-    };
+    // const filterEvents = (events, selectedCalendars) => {
+    //     return events && events?.filter((event) => selectedCalendars?.includes(event?.category));
+    // };
 
-    // filter fun according to events
-    const filteredEvents = filterEvents(calEvData, selectedEventfilter);
+    // const filteredEvents = filterEvents(calEvData, selectedEventfilter);
+    const filteredEvents = calEvData
+    console.log('filteredEvents: ', filteredEvents);
 
-    // calendar colors
-    const calendarsColor = {
-        Personal: 'error',
-        Business: 'primary',
-        Family: 'warning',
-        Holiday: 'success',
-        ETC: 'info',
-    };
 
-    // calendar options
     const calendarOptions = {
-        events: filteredEvents,
+        events: filteredEvents.map(event => {
+            console.log('event: ', event);
+            return {
+                id: event.meetingid.toString(),
+                title: event.meetingtitle || 'Untitled Event',
+                start: event.StartDate,
+                end: event.EndDate,
+                allDay: event.isAllDay ? 1 : 0,
+                description: event.Desc,
+                category: event?.category,
+                extendedProps: {
+                    guests: event?.guests,
+                    estimate: 1,
+                    prModule: {
+                        taskid: event?.taskid,
+                        projectid: event?.projectid,
+                        taskname: event?.taskname,
+                        projectname: event?.ProjectName,
+                        taskPr: event?.ProjectName
+                    },
+                    taskid: event?.taskid,
+                    projectid: event?.projectid,
+                },
+            };
+        }),
         plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
         initialView: 'dayGridMonth',
-        slotMinTime: "07:00:00", // Start from 9 AM
-        slotMaxTime: "22:00:00", // End at 9 PM
+        slotMinTime: "07:00:00",  // Start from 7 AM
+        slotMaxTime: "22:00:00",
+        slotDuration: "00:30:00",
         headerToolbar: {
             start: 'sidebarToggle, prev, next, title',
             end: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
@@ -111,14 +104,10 @@ const Calendar = () => {
         navLinks: true,
         eventClassNames({ event }) {
             const category = event.extendedProps.category || 'ETC';
-            const colorClass = calendarsColor[category] || 'info';
+            console.log('category: ', category);
+            const colorClass = calendarsColor[category] || 'primary';
             return [`bg-${colorClass}`];
         },
-        // eventContent: function (arg) {
-        //     const time = arg?.timeText ? `<div style="font-weight: bold;">${arg?.timeText}</div>` : "";
-        //     const title = `<div>${arg.event.title}</div>`;
-        //     return { html: `${time ? time + "&nbsp;" : ""}${title}` };
-        // },
         eventAllow: function (dropInfo, draggedEvent) {
             return !draggedEvent.extendedProps?.isMeeting;
         },
@@ -130,13 +119,14 @@ const Calendar = () => {
                 title: clickedEvent?.title,
                 start: startDate?.toISOString(),
                 end: endDate?.toISOString(),
-                location: clickedEvent?.extendedProps?.location,
+                taskid: clickedEvent?.extendedProps?.taskid,
+                projectid: clickedEvent?.extendedProps?.projectid,
                 description: clickedEvent?.extendedProps?.description,
+                prModule: clickedEvent?.extendedProps?.prModule,
                 guests: clickedEvent?.extendedProps?.guests,
-                eventUrl: clickedEvent?.extendedProps?.eventUrl,
                 category: clickedEvent?.extendedProps?.category,
                 estimate: clickedEvent?.extendedProps?.estimate || 1,
-                allDay: clickedEvent?.allDay,
+                allDay: clickedEvent?.allDay ? 1 : 0,
             };
             setCalFormData(eventDetails);
             setCaledrawerOpen(true);
@@ -157,6 +147,7 @@ const Calendar = () => {
             setCaledrawerOpen(true);
         },
         eventDrop({ event: droppedEvent }) {
+            console.log('droppedEvent: ', droppedEvent);
             if (droppedEvent.extendedProps?.isMeeting) return;
             const startDate = droppedEvent?.start;
             const endDate = droppedEvent?.end ?? startDate;
@@ -165,99 +156,115 @@ const Calendar = () => {
                 title: droppedEvent.title,
                 start: startDate?.toISOString(),
                 end: endDate?.toISOString(),
-                location: droppedEvent.extendedProps.location,
+                taskid: droppedEvent.extendedProps?.taskid,
+                projectid: droppedEvent.extendedProps?.projectid,
+                prModule: droppedEvent.extendedProps?.prModule,
+                guests: droppedEvent.extendedProps?.guests,
+                assigneids: droppedEvent.extendedProps?.guests?.map(user => user.id)?.join(","),
                 description: droppedEvent.extendedProps.description,
                 category: droppedEvent.extendedProps.category,
                 guests: droppedEvent.extendedProps.guests,
-                eventUrl: droppedEvent.extendedProps.eventUrl,
                 estimate: droppedEvent.extendedProps.estimate || 1,
-                allDay: droppedEvent.allDay,
+                allDay: droppedEvent.allDay ? 1 : 0,
             };
-            // Update the event in local storage
-            const updatedEvents = filteredEvents?.map(event =>
-                event.id === updatedEvent?.id ? updatedEvent : event
-            );
-            localStorage.setItem('calformData', JSON.stringify(updatedEvents));
+
+            const data = calEvData?.map(event => {
+                if (event?.meetingid == updatedEvent?.id) {
+                    return {
+                        ...event,
+                        StartDate: updatedEvent?.start,
+                        EndDate: updatedEvent?.end,
+                    };
+                } else {
+                    return event;
+                }
+            });
+            setCalEvData(data);
+            setCalFormData(updatedEvent);
+            handleCaleFormSubmit(updatedEvent);
         },
         eventReceive({ event: receivedEvent }) {
-            const randomId = Math.random().toString(36).substring(2, 10);
+            console.log('receivedEvent: ', receivedEvent);
             const estimate = receivedEvent?.extendedProps?.estimate || 1;
 
             const startDate = receivedEvent?.start ? new Date(receivedEvent.start) : new Date();
             const endDate = new Date(startDate.getTime() + estimate * 60 * 60 * 1000);
 
             const newEvent = {
-                id: randomId,
+                id: receivedEvent?.id,
                 title: receivedEvent?.title || "Untitled Event",
                 start: startDate.toISOString(),
                 end: endDate.toISOString(),
-                location: receivedEvent?.extendedProps?.location || "",
+                taskid: receivedEvent?.extendedProps?.taskid || 0,
+                projectid: receivedEvent?.extendedProps?.projectid || 0,
+                prModule: receivedEvent?.extendedProps?.prModule || {},
+                guests: receivedEvent?.extendedProps?.guests || [],
+                assigneids: receivedEvent?.extendedProps?.guests?.map(user => user.id)?.join(","),
                 description: receivedEvent?.extendedProps?.description || "",
                 category: receivedEvent?.extendedProps?.category || "",
                 guests: receivedEvent?.extendedProps?.guests || [],
-                eventUrl: receivedEvent?.extendedProps?.eventUrl || "",
                 estimate: estimate,
-                allDay: receivedEvent?.allDay ?? false,
+                allDay: receivedEvent?.allDay ? 1 : 0,
             };
 
-            const existingData = JSON?.parse(localStorage.getItem('calformData')) || [];
-            const isDuplicate = existingData?.some(event =>
-                event.title === newEvent.title && event.start === newEvent.start
-            );
-
-            if (!isDuplicate) {
-                const updatedData = [...existingData, newEvent];
-                localStorage.setItem('calformData', JSON?.stringify(updatedData));
-                setCalEvData(updatedData);
-            } else {
-                console.log("Duplicate event detected, not adding.");
-            }
+            const data = calEvData?.map(event => {
+                if (event?.meetingid == newEvent?.id) {
+                    return {
+                        ...event,
+                        StartDate: newEvent?.start,
+                        EndDate: newEvent?.end,
+                    };
+                }
+                else {
+                    return event;
+                }
+            });
+            setCalEvData(data);
+            setCalFormData(newEvent);
+            handleCaleFormSubmit(newEvent);
         },
-        eventResize({ event: resizedEvent, revert }) {
+        eventResize({ event: resizedEvent }) {
             if (resizedEvent.extendedProps?.isMeeting) return;
-
-            const startDate = resizedEvent.start;
-            const endDate = resizedEvent.end ?? startDate;
-            let estimate = resizedEvent.extendedProps?.estimate || 1;
-            const estimatedEndTime = new Date(startDate.getTime() + estimate * 60 * 60 * 1000);
-
-            if (endDate > estimatedEndTime) {
-                console.log("Resizing beyond the estimated time is not allowed.");
-                revert();
-                return;
-            }
-
-            // Update event data
             const updatedEvent = {
                 id: resizedEvent.id,
                 title: resizedEvent.title,
-                start: startDate.toISOString(),
-                end: endDate.toISOString(),
-                estimate,
-                location: resizedEvent.extendedProps?.location,
+                start: resizedEvent.start?.toISOString(),
+                end: resizedEvent.end?.toISOString(),
+                taskid: resizedEvent.extendedProps?.taskid,
+                projectid: resizedEvent.extendedProps?.projectid,
+                prModule: resizedEvent.extendedProps?.prModule,
+                guests: resizedEvent.extendedProps?.guests,
+                assigneids: resizedEvent.extendedProps?.guests?.map(user => user.id)?.join(","),
                 description: resizedEvent.extendedProps?.description,
                 category: resizedEvent.extendedProps?.category,
                 guests: resizedEvent.extendedProps?.guests,
-                eventUrl: resizedEvent.extendedProps?.eventUrl,
-                allDay: resizedEvent.allDay,
+                estimate: resizedEvent.extendedProps?.estimate || 1,
+                allDay: resizedEvent.allDay ? 1 : 0,
             };
-
-            // Update the event in local storage
-            const updatedEvents = filteredEvents.map(event =>
-                event.id === updatedEvent.id ? updatedEvent : event
-            );
-            localStorage.setItem("calformData", JSON.stringify(updatedEvents));
+            const data = calEvData?.map(event => {
+                if (event?.meetingid == updatedEvent?.id) {
+                    return {
+                        ...event,
+                        StartDate: updatedEvent?.start,
+                        EndDate: updatedEvent?.end,
+                    };
+                } else {
+                    return event;
+                }
+            });
+            setCalEvData(data);
+            setCalFormData(updatedEvent);
+            handleCaleFormSubmit(updatedEvent);
         }
     };
 
-    // remove event
+
     const handleRemove = (formValue) => {
         setFormData(formValue)
 
         setCnfDialogOpen(true);
     };
 
-    // cnf remove event
     const handleConfirmRemoveAll = () => {
         const updatedData = filteredEvents?.filter(event => event?.id !== formData?.id);
         setCalFormData(updatedData)
@@ -266,7 +273,6 @@ const Calendar = () => {
         setCaledrawerOpen(false);
     };
 
-    // close remove dialog
     const handleCloseDialog = () => {
         setCnfDialogOpen(false);
     };

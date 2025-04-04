@@ -21,7 +21,6 @@ $transition-duration: 200ms;
 // Primary Colors
 $primary-main: #7367f0;
 $primary-light: rgba(115, 103, 240, 0.16);
-;
 $primary-light-bg: rgba($primary-main, 0.16);
 
 // Success Colors
@@ -44,18 +43,32 @@ $info-main: #00CFE8;
 $info-light: #b3e5fc;
 $info-light-bg: rgba($info-main, 0.16);
 
+$new-main: #a6a2d18a;
+$new-light: #33299f;
+$new-light-bg: rgba($new-main, 0.16);
+
+
+$support-bg: #e3e3e3;
+$support-main: $titleColor;
+$support-light: #e3e3e3;
+
+$dark-bg: #6788f394;
+$dark-main: #fff;
+$dark-light: #fff;
+
+
 // Divider Color
 $divider-color: #e0e0e0;
 
 
 
 .buttonClassname {
-    font-family: $font-family;
-    background: $button-Bgcolor;
+    font-family: $font-family !important;
+    background: $button-Bgcolor !important;
     color: $button-color !important;
-    border-color: $button-Bordercolor;
-    text-transform: capitalize;
-    border-radius: 8px;
+    border-color: $button-Bordercolor !important;
+    text-transform: capitalize !important;
+    border-radius: 8px !important;
 
     &:hover {
         background-color: $button-color-hover;
