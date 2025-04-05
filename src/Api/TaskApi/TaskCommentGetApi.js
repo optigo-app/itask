@@ -1,6 +1,7 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const taskCommentGetApi = async (selectedRow) => {
+    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
@@ -9,7 +10,7 @@ export const taskCommentGetApi = async (selectedRow) => {
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"task_getcomment\",\"appuserid\":\"${init?.userid ?? 'amrut@eg.com'}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"task_getcomment\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (task_getcomment)",
             "p": combinedValue,
         };

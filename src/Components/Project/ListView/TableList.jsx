@@ -246,7 +246,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
                                                             </a>
                                                         </div>
                                                     </div>
-                                                    <span className="prShDesc">{task?.descr}</span>
+                                                    <span className="prShDesc">{convertWordsToSpecialChars(task?.descr)}</span>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Box display="flex" alignItems="center" gap={2} width="100%">
@@ -299,7 +299,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
                                                             onClick={() => handleOpenCnfDialog(task)}
                                                             id={task?.taskid}
                                                         />
-                                                        <IconButton
+                                                        {/* <IconButton
                                                             onClick={handleViewPrDashboard}
                                                             sx={{
                                                                 '&.Mui-disabled': {
@@ -311,7 +311,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
                                                                 size={20}
                                                                 color="#808080"
                                                             />
-                                                        </IconButton>
+                                                        </IconButton> */}
                                                         <IconButton
                                                             disabled={task?.isFreez == 1}
                                                             onClick={() => handleEditProject(task, { Task: "root" })}

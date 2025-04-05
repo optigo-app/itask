@@ -10,7 +10,7 @@ import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformD
 import CalendarForm from './SideBar/CalendarForm';
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
 
-const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit }) => {
+const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemoveAMeeting }) => {
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
     const calendarRef = useRef();
     const [calendarApi, setCalendarApi] = useState(null);
@@ -46,12 +46,12 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit }) => {
         }, 500);
     }, [date, calendarApi]);
 
-    // const filterEvents = (events, selectedCalendars) => {
-    //     return events && events?.filter((event) => selectedCalendars?.includes(event?.category));
-    // };
+    const filterEvents = (events, selectedCalendars) => {
+        return events && events?.filter((event) => selectedCalendars?.includes(event?.category));
+    };
 
-    // const filteredEvents = filterEvents(calEvData, selectedEventfilter);
-    const filteredEvents = calEvData
+    const filteredEvents = filterEvents(calEvData, selectedEventfilter);
+    // const filteredEvents = calEvData
     console.log('filteredEvents: ', filteredEvents);
 
 
@@ -60,12 +60,12 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit }) => {
             console.log('event: ', event);
             return {
                 id: event.meetingid.toString(),
-                title: event.meetingtitle || 'Untitled Event',
+                title: event.meetingtitle || '',
                 start: event.StartDate,
                 end: event.EndDate,
                 allDay: event.isAllDay ? 1 : 0,
                 description: event.Desc,
-                category: event?.category,
+                category: event?.category || 'primary',
                 extendedProps: {
                     guests: event?.guests,
                     estimate: 1,
@@ -147,6 +147,7 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit }) => {
             setCaledrawerOpen(true);
         },
         eventDrop({ event: droppedEvent }) {
+            debugger
             console.log('droppedEvent: ', droppedEvent);
             if (droppedEvent.extendedProps?.isMeeting) return;
             const startDate = droppedEvent?.start;
@@ -184,15 +185,14 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit }) => {
             handleCaleFormSubmit(updatedEvent);
         },
         eventReceive({ event: receivedEvent }) {
-            console.log('receivedEvent: ', receivedEvent);
+            if (receivedEvent?.title == "") return;
             const estimate = receivedEvent?.extendedProps?.estimate || 1;
-
             const startDate = receivedEvent?.start ? new Date(receivedEvent.start) : new Date();
             const endDate = new Date(startDate.getTime() + estimate * 60 * 60 * 1000);
 
             const newEvent = {
                 id: receivedEvent?.id,
-                title: receivedEvent?.title || "Untitled Event",
+                title: receivedEvent?.title || "",
                 start: startDate.toISOString(),
                 end: endDate.toISOString(),
                 taskid: receivedEvent?.extendedProps?.taskid || 0,
@@ -202,7 +202,6 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit }) => {
                 assigneids: receivedEvent?.extendedProps?.guests?.map(user => user.id)?.join(","),
                 description: receivedEvent?.extendedProps?.description || "",
                 category: receivedEvent?.extendedProps?.category || "",
-                guests: receivedEvent?.extendedProps?.guests || [],
                 estimate: estimate,
                 allDay: receivedEvent?.allDay ? 1 : 0,
             };
@@ -261,14 +260,13 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit }) => {
 
     const handleRemove = (formValue) => {
         setFormData(formValue)
-
         setCnfDialogOpen(true);
     };
 
     const handleConfirmRemoveAll = () => {
         const updatedData = filteredEvents?.filter(event => event?.id !== formData?.id);
-        setCalFormData(updatedData)
-        localStorage.setItem('calformData', JSON?.stringify(updatedData));
+        setCalEvData(updatedData);
+        handleRemoveAMeeting(formData);
         setCnfDialogOpen(false);
         setCaledrawerOpen(false);
     };

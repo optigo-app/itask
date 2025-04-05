@@ -1,6 +1,7 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const deleteMeetingApi = async (selectedRow) => {
+    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     console.log('selectedRow: ', selectedRow);
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
@@ -10,7 +11,7 @@ export const deleteMeetingApi = async (selectedRow) => {
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"taskmeetingdel\",\"appuserid\":\"${init?.userid ?? 'amrut@eg.com'}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"taskmeetingdel\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (task_trash)",
             "p": combinedValue,
         };

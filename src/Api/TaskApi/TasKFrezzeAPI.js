@@ -1,6 +1,7 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const TaskFrezzeApi = async (formValues) => {
+    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
         const combinedValue = JSON.stringify({
@@ -9,7 +10,7 @@ export const TaskFrezzeApi = async (formValues) => {
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"task_freez\",\"appuserid\":\"${init?.userid ?? 'amrut@eg.com'}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"task_freez\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };
