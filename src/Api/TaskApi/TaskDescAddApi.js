@@ -2,6 +2,7 @@ import { convertSpecialCharsToWords } from "../../Utils/globalfun";
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const taskDescAddApi = async (selectedRow, taskDesc) => {
+    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
@@ -11,7 +12,7 @@ export const taskDescAddApi = async (selectedRow, taskDesc) => {
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"task_descr_save\",\"appuserid\":\"${init?.userid ?? 'amrut@eg.com'}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"task_descr_save\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (task_descr_save)",
             "p": combinedValue,
         };

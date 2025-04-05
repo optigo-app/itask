@@ -2,7 +2,7 @@ import { convertSpecialCharsToWords } from "../../Utils/globalfun";
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => {
-    console.log('rootSubrootflagval: ', rootSubrootflagval);
+   const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
@@ -52,7 +52,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
         console.log('combinedValue: ', combinedValue);
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"tasksave\",\"appuserid\":\"${init?.userid ?? 'amrut@eg.com'}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"tasksave\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };

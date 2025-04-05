@@ -406,7 +406,7 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                         <Avatar
                                             key={teamIdx}
                                             alt={assignee?.firstname + " " + assignee?.lastname}
-                                            src={assignee.avatar || null}
+                                            src={ImageUrl(assignee) || null}
                                             sx={{
                                                 backgroundColor: background(assignee?.firstname),
                                             }}

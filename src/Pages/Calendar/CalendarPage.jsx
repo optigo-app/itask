@@ -10,8 +10,11 @@ import { useRecoilState, useSetRecoilState } from "recoil";
 import TasklistForCal from "../../Components/Calendar/TasklistForCal";
 import { fetchMettingListApi } from "../../Api/MeetingApi/MeetingListApi";
 import { AddMeetingApi } from "../../Api/MeetingApi/AddMeetingApi";
+import { deleteMeetingApi } from "../../Api/MeetingApi/DeleteMeetingApi";
+import TaskAPiCallWithFormat from "../../Utils/TaskList/TaskAPiCallWithFormat";
 
 const Calendar = () => {
+  const {fetchTaskData} = TaskAPiCallWithFormat();
   const isLaptop = useMediaQuery("(max-width:1420px)");
   const isLaptop1 = useMediaQuery("(max-width:1600px) and (min-width:1421px)");
   const setSelectedMon = useSetRecoilState(calendarM);
@@ -29,7 +32,7 @@ const Calendar = () => {
     const colorClasses = ["error", "primary", "warning", "success", "info", "secondary", "support", "dark", "light", "muted"];
     const dynamicCalendarsColor = taskCategories.reduce((acc, category, index) => {
       const categoryName = category.labelname;
-      acc[categoryName] = colorClasses[index % colorClasses.length]; 
+      acc[categoryName] = colorClasses[index % colorClasses.length];
       return acc;
     }, {});
 
@@ -41,45 +44,59 @@ const Calendar = () => {
   const handleMeetingList = async () => {
     setIsLoding(true);
     try {
-        const meetingApiRes = await fetchMettingListApi();
-        const data = meetingApiRes?.rd || [];
+      const meetingApiRes = await fetchMettingListApi();
+      const data = meetingApiRes && meetingApiRes?.rd || [];
+      if (data) {
         const taskAssigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
         const taskCategory = JSON.parse(sessionStorage.getItem("taskworkcategoryData") || "[]");
-
-
         const enhancedMeetings = data.map((meeting) => ({
-            ...meeting,
-            guests: taskAssigneeData.filter((user) => meeting?.assigneids?.split(",").map(Number).includes(user.id)) || [],
-            prModule: [],
-            category: taskCategory?.find(item => item?.id == meeting?.workcategoryid)?.labelname || '',
-            prModule: {
-                projectid: meeting?.projectid,
-                taskid: meeting?.taskid,
-            }
+          ...meeting,
+          guests: taskAssigneeData.filter((user) => meeting?.assigneids?.split(",").map(Number).includes(user.id)) || [],
+          prModule: [],
+          category: taskCategory?.find(item => item?.id == meeting?.workcategoryid)?.labelname || '',
+          prModule: {
+            projectid: meeting?.projectid,
+            taskid: meeting?.taskid,
+          }
         }));
-
         setCalEvData(enhancedMeetings);
+      } else {
+        setCalEvData([]);
+      }
     } catch (error) {
-        console.error("Error fetching meeting list:", error);
+      console.error("Error fetching meeting list:", error);
     } finally {
-        setIsLoding(false);
+      setIsLoding(false);
     }
-};
+  };
 
 
-useEffect(() => {
+  useEffect(() => {
     handleMeetingList();
-}, [])
+  }, [])
 
-const handleCaleFormSubmit = async (formValues) => {
+  const handleCaleFormSubmit = async (formValues) => {
     debugger
     setCalFormData(formValues);
     const apiRes = await AddMeetingApi(formValues);
     console.log('apiRes: ', apiRes);
-    if (apiRes?.rd[0]?.stat == 1) {
-        handleMeetingList()
+    if (apiRes && apiRes?.rd[0]?.stat == 1) {
+      handleMeetingList()
     }
-};
+  };
+
+  const handleRemoveAMeeting = async (formData) => {
+    const apiRes = await deleteMeetingApi(formData);
+    if (apiRes && apiRes?.rd[0]?.stat == 1) {
+      handleMeetingList()
+    }
+  };
+
+
+  useEffect(() => {
+    fetchTaskData();
+  },[])
+
 
 
   return (
@@ -93,10 +110,10 @@ const handleCaleFormSubmit = async (formValues) => {
         overflow: "hidden",
         backgroundColor: "#ffffff",
       }}
-    >                      
+    >
       {/* Left Panel (Mobile View) */}
       {isLaptop ? (
-        <CalendarDrawer calendarsColor={calendarsColor} handleCaleFormSubmit={handleCaleFormSubmit} isLoding={isLoding}/>
+        <CalendarDrawer calendarsColor={calendarsColor} handleCaleFormSubmit={handleCaleFormSubmit} handleRemoveAMeeting={handleRemoveAMeeting} isLoding={isLoding} />
       ) : (
         // Left Panel (Desktop View)
         <Box
@@ -109,7 +126,7 @@ const handleCaleFormSubmit = async (formValues) => {
             position: "relative",
           }}
         >
-          <CalendarLeftSide calendarsColor={calendarsColor} handleCaleFormSubmit={handleCaleFormSubmit} isLoding={isLoding}/>
+          <CalendarLeftSide calendarsColor={calendarsColor} handleCaleFormSubmit={handleCaleFormSubmit} handleRemoveAMeeting={handleRemoveAMeeting} isLoding={isLoding} />
         </Box>
       )}
 
@@ -125,7 +142,7 @@ const handleCaleFormSubmit = async (formValues) => {
           zIndex: 0,
         }}
       >
-        <CalendarRightSide calendarsColor={calendarsColor} handleCaleFormSubmit={handleCaleFormSubmit} isLoding={isLoding}/>
+        <CalendarRightSide calendarsColor={calendarsColor} handleCaleFormSubmit={handleCaleFormSubmit} handleRemoveAMeeting={handleRemoveAMeeting} isLoding={isLoding} />
 
       </Box>
     </Box>

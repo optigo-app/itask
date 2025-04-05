@@ -77,6 +77,7 @@ const SidebarDrawer = ({
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
+    console.log('dddformValues: ', formValues);
     const handleTaskChange = (event, newTaskType) => {
         if (newTaskType !== null) setTaskType(newTaskType);
         handleResetState();
@@ -146,6 +147,21 @@ const SidebarDrawer = ({
             [name]: value,
         }));
     }
+    const handleDateChange = (date, key) => {
+        debugger
+        if (date) {
+          const istDate = date.tz('Asia/Kolkata');
+      
+          setFormValues((prev) => ({
+            ...prev,
+            [key]: istDate.format('YYYY-MM-DDTHH:mm:ss.SSS'),
+          }));
+      
+          console.log(`Selected ${key} in IST:`, istDate.format('YYYY-MM-DDTHH:mm:ss.SSS'));
+        }
+      };
+      
+
     // Handle estimate form value changes
     const handleEstimateChange = (field, newValue) => {
         setFormValues((prev) => ({
@@ -168,7 +184,7 @@ const SidebarDrawer = ({
         const updatedFormDataValue = {
             taskid: moduleData?.taskid ?? formDataValue.taskid ?? "",
             taskname: formValues.taskName ?? formDataValue.taskname,
-            bulkTask: formValues?.bulkTask?? formDataValue?.bulkTask,
+            bulkTask: formValues?.bulkTask ?? formDataValue?.bulkTask,
             statusid: formValues.status ?? formDataValue.statusid,
             priorityid: formValues.priority ?? formDataValue.priorityid,
             projectid: moduleData?.projectid ?? formValues.project ?? formDataValue.projectid,
@@ -235,7 +251,7 @@ const SidebarDrawer = ({
     }
 
     // departmentwise assignee
-    // const filterAssigneeData = formValues?.department ? assignees.filter((item) => item.departmentId == formValues?.department) : assignees;
+    // const filterAssigneeData = formValues?.department ? taskAssigneeData?.filter((item) => item.departmentId == formValues?.department) : taskAssigneeData;
 
     useEffect(() => {
         if (encodedData) {
@@ -471,15 +487,10 @@ const SidebarDrawer = ({
                                             </Typography>
                                             <DatePicker
                                                 name="startDate"
-                                                value={formValues.startDate ? dayjs.utc(formValues.startDate).local() : null}
+                                                value={formValues.startDate ? dayjs(formValues.startDate).tz("Asia/Kolkata", true).local() : null}
                                                 className="textfieldsClass"
-                                                onChange={(value) =>
-                                                    setFormValues((prev) => ({
-                                                        ...prev,
-                                                        startDate: value ? dayjs.utc(value).startOf("day").toISOString() : null,
-                                                    }))
-                                                }
-                                                sx={{ minWidth: 320 }}
+                                                onChange={(date) => handleDateChange(date, 'startDate')}
+                                                sx={{ minWidth: 345 }}
                                                 format="DD/MM/YYYY"
                                                 textField={(params) => (
                                                     <TextField
@@ -501,15 +512,10 @@ const SidebarDrawer = ({
                                             </Typography>
                                             <DatePicker
                                                 name="dueDate"
-                                                value={formValues.dueDate ? dayjs.utc(formValues.dueDate).local() : null}
+                                                value={formValues.dueDate ? dayjs(formValues.dueDate).tz("Asia/Kolkata", true).local() : null}
                                                 className="textfieldsClass"
-                                                onChange={(value) =>
-                                                    setFormValues((prev) => ({
-                                                        ...prev,
-                                                        dueDate: value ? dayjs.utc(value).startOf("day").toISOString() : null,
-                                                    }))
-                                                }
-                                                sx={{ minWidth: 320 }}
+                                                onChange={(date) => handleDateChange(date, 'dueDate')}
+                                                sx={{ minWidth: 345 }}
                                                 format="DD/MM/YYYY"
                                                 textField={(params) => (
                                                     <TextField
@@ -772,14 +778,9 @@ const SidebarDrawer = ({
                                         </Typography>
                                         <DatePicker
                                             name="startDate"
-                                            value={formValues.startDate ? dayjs.utc(formValues.startDate).local() : null}
+                                            value={formValues.startDate ? dayjs(formValues.startDate).tz("Asia/Kolkata", true).local() : null}
                                             className="textfieldsClass"
-                                            onChange={(value) =>
-                                                setFormValues((prev) => ({
-                                                    ...prev,
-                                                    startDate: value ? dayjs.utc(value).startOf("day").toISOString() : null,
-                                                }))
-                                            }
+                                            onChange={(date) => handleDateChange(date, 'startDate')}
                                             sx={{ minWidth: 400 }}
                                             format="DD/MM/YYYY"
                                             textField={(params) => (
@@ -802,14 +803,9 @@ const SidebarDrawer = ({
                                         </Typography>
                                         <DatePicker
                                             name="dueDate"
-                                            value={formValues.dueDate ? dayjs.utc(formValues.dueDate).local() : null}
+                                            value={formValues.dueDate ? dayjs(formValues.dueDate).tz("Asia/Kolkata", true).local() : null}
                                             className="textfieldsClass"
-                                            onChange={(value) =>
-                                                setFormValues((prev) => ({
-                                                    ...prev,
-                                                    dueDate: value ? dayjs.utc(value).startOf("day").toISOString() : null,
-                                                }))
-                                            }
+                                            onChange={(date) => handleDateChange(date, 'dueDate')}
                                             sx={{ minWidth: 400 }}
                                             format="DD/MM/YYYY"
                                             textField={(params) => (

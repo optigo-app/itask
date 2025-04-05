@@ -19,7 +19,6 @@ import NotificationComponent from './Backup/NotificationComponent';
 import PinnableTable from './Backup/TreeDataGrid';
 import TableGrid from './Backup/TableGrid';
 import DatePickerWithIST from './Backup/DatePickerWithIST';
-import SomethingWentWrong from './Components/Auth/SomethingWentWrong';
 
 // Lazy Loaded Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -76,7 +75,7 @@ const Layout = ({ children }) => {
 const ProtectedRoute = ({ children }) => {
     const authData = JSON.parse(localStorage.getItem("AuthqueryParams"));
     const isLoggedIn = authData?.yc !== '' && authData?.yc !== null && authData?.yc !== undefined;
-    return isLoggedIn ? children : <Navigate to="/error_401" replace />;
+    return isLoggedIn ? children : <Navigate to="/login" replace />;
 };
 
 const App = () => {
@@ -178,34 +177,26 @@ const App = () => {
                 <Router>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
-                            <Routes>
-                                <Route path="/error_401" element={isAuthenticated ? <Navigate to="/" replace /> : <SomethingWentWrong />} />
-
-                                <Route
-                                    path="*"
-                                    element={
-                                        <Layout>
-                                            <Routes>
-                                                <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                                                <Route path="/projects" element={<ProtectedRoute><Project /></ProtectedRoute>} />
-                                                <Route path="/projects/Dashboard" element={<ProtectedRoute><ProjectDashboard /></ProtectedRoute>} />
-                                                <Route path="/tasks/*" element={<ProtectedRoute><Task /></ProtectedRoute>} />
-                                                <Route path="/tasks/unassigned" element={<ProtectedRoute><UnassignedTaskList /></ProtectedRoute>} />
-                                                <Route path="/taskDetails" element={<ProtectedRoute><TaskDetails /></ProtectedRoute>} />
-                                                <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-                                                <Route path="/meetings" element={<ProtectedRoute><Meeting /></ProtectedRoute>} />
-                                                <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
-                                                <Route path="/masters" element={<ProtectedRoute><Masters /></ProtectedRoute>} />
-                                                <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                                                <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-                                                <Route path="/test" element={<ProtectedRoute><MilestoneTimeline /></ProtectedRoute>} />
-                                                <Route path="/test1" element={<ProtectedRoute><DatePickerWithIST /></ProtectedRoute>} />
-                                                <Route path="*" element={<PagenotFound />} />
-                                            </Routes>
-                                        </Layout>
-                                    }
-                                />
-                            </Routes>
+                            <Layout>
+                                <Routes>
+                                    <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginForm />} />
+                                    <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                                    <Route path="/projects" element={<ProtectedRoute><Project /></ProtectedRoute>} />
+                                    <Route path="/projects/Dashboard" element={<ProtectedRoute><ProjectDashboard /></ProtectedRoute>} />
+                                    <Route path="/tasks/*" element={<ProtectedRoute><Task /></ProtectedRoute>} />
+                                    <Route path="/tasks/unassigned" element={<ProtectedRoute><UnassignedTaskList /></ProtectedRoute>} />
+                                    <Route path="/taskDetails" element={<ProtectedRoute><TaskDetails /></ProtectedRoute>} />
+                                    <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+                                    <Route path="/meetings" element={<ProtectedRoute><Meeting /></ProtectedRoute>} />
+                                    <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
+                                    <Route path="/masters" element={<ProtectedRoute><Masters /></ProtectedRoute>} />
+                                    <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                                    <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+                                    <Route path="/test" element={<ProtectedRoute><MilestoneTimeline /></ProtectedRoute>} />
+                                    <Route path="/test1" element={<ProtectedRoute><DatePickerWithIST /></ProtectedRoute>} />
+                                    <Route path="*" element={<PagenotFound />} />
+                                </Routes>
+                            </Layout>
                         </Suspense>
                     </LocalizationProvider>
                 </Router>

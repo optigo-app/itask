@@ -2,6 +2,7 @@ import { convertSpecialCharsToWords } from "../../Utils/globalfun";
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const AddMeetingApi = async (formValues) => {
+    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
@@ -21,7 +22,7 @@ export const AddMeetingApi = async (formValues) => {
         console.log('combinedValue: ', combinedValue);
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"taskmeetingsave\",\"appuserid\":\"${init?.userid ?? 'amrut@eg.com'}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"taskmeetingsave\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };

@@ -2,115 +2,96 @@ import React, { useState, useEffect } from "react";
 import { Box, Card, CardContent, Typography } from "@mui/material";
 import { Draggable } from "@fullcalendar/interaction";
 import './TasklistForCal.scss'
-
-const initialTasks = [
-    {
-        "taskId": "1",
-        "title": "Meeting with Client",
-        "category": "RND",
-        "eventUrl": "https://meeting.com/client",
-        "start": "2025-02-05T10:00:00.000Z",
-        "end": "2025-02-05T11:30:00.000Z",
-        "guests": [
-            {
-                "id": 101,
-                "userid": "john.doe@example.com",
-                "customercode": "JD123",
-                "firstname": "John",
-                "lastname": "Doe",
-                "designation": "Manager"
-            }
-        ],
-        "description": "Client requirement discussion",
-        "allDay": "false",
-        "estimate": 1.5
-    },
-    {
-        "taskId": "2",
-        "title": "Team Standup",
-        "category": "favourite task",
-        "eventUrl": "",
-        "start": "2025-02-06T09:00:00.000Z",
-        "end": "2025-02-06T09:30:00.000Z",
-        "guests": [
-            {
-                "id": 102,
-                "userid": "alice@example.com",
-                "customercode": "ALICE001",
-                "firstname": "Alice",
-                "lastname": "Smith",
-                "designation": "Team Lead"
-            },
-            {
-                "id": 103,
-                "userid": "bob@example.com",
-                "customercode": "BOB002",
-                "firstname": "Bob",
-                "lastname": "Williams",
-                "designation": "Developer"
-            }
-        ],
-        "description": "Daily team sync-up",
-        "allDay": "false",
-        "estimate": 0.5
-    },
-    {
-        "taskId": "3",
-        "title": "Meeting with Client",
-        "category": "creative",
-        "eventUrl": "https://meeting.com/client",
-        "start": "2025-02-05T10:00:00.000Z",
-        "end": "2025-02-05T11:30:00.000Z",
-        "guests": [
-            {
-                "id": 101,
-                "userid": "john.doe@example.com",
-                "customercode": "JD123",
-                "firstname": "John",
-                "lastname": "Doe",
-                "designation": "Manager"
-            }
-        ],
-        "description": "Client requirement discussion",
-        "allDay": "false",
-        "estimate": 2.5
-    }
-];
+import { TaskData } from "../../Recoil/atom"
+import { useRecoilValue } from "recoil";
 
 const TasklistForCal = ({ calendarsColor }) => {
-    const [tasks, setTasks] = useState(initialTasks);
+    const task = useRecoilValue(TaskData);
+    const [calTasksList, setCalTasksList] = useState([]);
+    console.log('taskIdcalTasksList: ', calTasksList);
+
+    const flattenTasks = (tasks, level = 0) => {
+        const today = new Date();
+        return tasks?.reduce((flatList, task) => {
+            const { subtasks, ...taskWithoutSubtasks } = task;
+
+            const taskDateObj = new Date(task.StartDate);
+            const taskDateLocalStr = taskDateObj.toLocaleDateString('en-CA');
+
+            if (taskDateLocalStr === today.toLocaleDateString('en-CA')) {
+                flatList.push({ ...taskWithoutSubtasks, level });
+            }
+
+            if (subtasks?.length > 0) {
+                flatList = flatList.concat(flattenTasks(subtasks, level + 1));
+            }
+
+            return flatList;
+        }, []);
+    };
+
+
+    useEffect(() => {
+        setCalTasksList(flattenTasks(task));
+    }, [task]);
 
     // Initialize draggable tasks
+    debugger
     useEffect(() => {
-        debugger
         const container = document.getElementById("external-tasks");
         if (container) {
             new Draggable(container, {
                 itemSelector: ".draggable-task",
                 eventData: (eventEl) => {
-                    const taskId = eventEl.getAttribute("data-id");
-                    console.log('taskId: ', taskId);
-                    const task = tasks.find(t => t.taskId === taskId);
-                    return task ? { ...task } : {};
+                    const dragtaskTaskId = eventEl.getAttribute("data-id");
+                    console.log('dragtasktaskId: ', dragtaskTaskId);
+                    const dragtask = calTasksList.find(t => t.taskid == dragtaskTaskId);
+                    console.log('dragtask: ', dragtask);
+                    
+                    if (dragtask) {
+                        const start = dragtask?.StartDate;
+                        const end = dragtask?.DeadLineDate;
+                        return {
+                            title: dragtask?.taskname ?? "",
+                            start,
+                            end,
+                            taskid: dragtask?.taskid,
+                            projectid: dragtask?.projectid ?? 0,
+                            allDay: dragtask?.allDay ?? 0,
+                            category: dragtask?.category ?? "",
+                            description: dragtask?.descr ?? "",
+                            guests: dragtask?.assignee ?? [],
+                            estimate: dragtask?.estimate_hrs ?? "",
+                            prModule: {
+                                taskid: dragtask?.taskid ?? 0,
+                                projectid: dragtask?.projectid ?? 0,
+                                taskname: dragtask?.taskname ?? "",
+                                projectname: dragtask?.taskPr ?? "",
+                                taskPr: dragtask?.taskPr ?? ""
+                            }
+                        };
+                    }
+                    return {};
                 }
             });
         }
-    }, [tasks]);
+    }, [calTasksList]);
+
 
     return (
         <>
-            <Typography variant="h6" sx={{ m: '0px 10px 10px 10px' }}>Tasks List</Typography>
-            <Box id="external-tasks" sx={{ padding: 1.25 }}>
-                {tasks.map((task) => {
-                    console.log('tasks: ', tasks);
+            <Typography variant="h6" sx={{ m: '0px 10px 10px 10px' }}>Today Tasks</Typography>
+            <Box id="external-tasks" sx={{ padding: 1.25, height: '100%', overflow: 'auto' }}>
+                {calTasksList.map((task) => {
+                    console.log('tasks: ', calTasksList);
                     const colorClass = calendarsColor[task.category] || "default";
                     console.log('calendarsColor: ', calendarsColor);
 
                     return (
                         <Card
-                            key={task.id}
+                            key={task.taskid}
                             className={`draggable-task bg-${colorClass} text-white`}
-                            data-id={task.id}
+                            data-id={task.taskid}
                             sx={{
                                 cursor: "grab",
                                 mb: 1.25,
@@ -119,7 +100,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                             }}
                         >
                             <CardContent className={`bg-${colorClass} text-${colorClass}`} sx={{ p: '10px !important', m: 0 }}>
-                                <Typography variant="body1">{task.title}</Typography>
+                                <Typography variant="body1">{task.taskname}</Typography>
                             </CardContent>
                         </Card>
                     );

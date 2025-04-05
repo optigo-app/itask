@@ -97,14 +97,14 @@ const Sidebar = () => {
     ];
 
     const reportSubItems = [
-        { label: 'Admin Report', path: '/reports/admin' },
-        { label: 'Team Lead Report', path: '/reports/team-lead' },
-        { label: 'Employee Report', path: '/reports/employee' },
-        { label: 'Overall Project Status', path: '/reports/overall-project-status' },
-        { label: 'Team Productivity', path: '/reports/team-productivity' },
-        { label: 'Task Time Utilization', path: '/reports/task-time-utilization' },
-        { label: 'Issue & Blocker', path: '/reports/issue-blocker' },
-        { label: 'Project Status Summary', path: '/reports/project-status-summary' },
+        // { label: 'Admin Report', path: '/reports/admin' },
+        // { label: 'Team Lead Report', path: '/reports/team-lead' },
+        // { label: 'Employee Report', path: '/reports/employee' },
+        // { label: 'Overall Project Status', path: '/reports/overall-project-status' },
+        // { label: 'Team Productivity', path: '/reports/team-productivity' },
+        // { label: 'Task Time Utilization', path: '/reports/task-time-utilization' },
+        // { label: 'Issue & Blocker', path: '/reports/issue-blocker' },
+        // { label: 'Project Status Summary', path: '/reports/project-status-summary' },
     ];
 
     return (
