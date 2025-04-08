@@ -13,9 +13,9 @@ import {
 import AvatarGroup from "@mui/material/AvatarGroup";
 import dayjs from "dayjs";
 import { Plus, SearchIcon } from "lucide-react";
-import { getRandomAvatarColor } from "../../Utils/globalfun";
-import CalendarForm from "../../Components/Calendar/SideBar/CalendarForm";
-import { CalformData } from "../../Recoil/atom";
+import { getRandomAvatarColor } from "../Utils/globalfun";
+import CalendarForm from "../Components/Calendar/SideBar/CalendarForm";
+import { CalformData } from "../Recoil/atom";
 import { useSetRecoilState } from "recoil";
 
 // Sample Meeting Data

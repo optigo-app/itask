@@ -63,7 +63,7 @@ const FileUploader = ({ formValues, setFormValues }) => {
                 <Box>
                     <Button
                         variant="outlined"
-                        className="secondary-btn"
+                        className="uploadBtnClassname"
                         onClick={(event) => setAnchorEl(event.currentTarget)}
                     >
                         Upload File

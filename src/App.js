@@ -88,7 +88,7 @@ const App = () => {
 
         const queryParams = {
             yc: urlParams.get("yc"),
-            uid: urlParams.get("uid"),
+            uid: decodeBase64(urlParams.get("uid")),
             sv: urlParams.get("sv"),
             ifid: urlParams.get("ifid"),
             pid: urlParams.get("pid"),
@@ -103,9 +103,19 @@ const App = () => {
         return queryParams;
     };
 
+    const decodeBase64 = (str) => {
+        if (!str) return null;
+        try {
+            return atob(str);
+        } catch (e) {
+            console.error("Error decoding base64:", e);
+            return null;
+        }
+    };
+
     useEffect(() => {
         const params = getQueryParams();
-        const authData = params?.yc || JSON.parse(localStorage.getItem("AuthqueryParams"))?.yc;
+        const authData = params?.yc || JSON?.parse(localStorage.getItem("AuthqueryParams"))?.yc;
         const isLoggedIn = authData !== '' && authData !== null && authData !== undefined;
         setIsAuthenticated(isLoggedIn);
         setIsReady(true);
@@ -164,7 +174,6 @@ const App = () => {
     if (!isReady) {
         return <LoadingBackdrop />;
     }
-
     return (
         <>
             <ToastContainer
@@ -199,7 +208,7 @@ const App = () => {
                                                 <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                                                 <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                                                 <Route path="/test" element={<ProtectedRoute><MilestoneTimeline /></ProtectedRoute>} />
-                                                <Route path="/test1" element={<ProtectedRoute><DatePickerWithIST /></ProtectedRoute>} />
+                                                {/* <Route path="/test1" element={<ProtectedRoute><MeetingTable /></ProtectedRoute>} /> */}
                                                 <Route path="*" element={<PagenotFound />} />
                                             </Routes>
                                         </Layout>

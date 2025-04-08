@@ -11,6 +11,18 @@ const milestones = [
     { name: "Testing & QA", startDate: "2024-07-01", endDate: "2024-08-15", progress: 10, department: "QA Team" },
 ];
 
+const getProgressColor = (progress) => {
+    if (progress === 100) {
+        return "success";
+    } else if (progress >= 60) {
+        return "primary"; 
+    } else if (progress >= 30) {
+        return "warning";
+    } else {
+        return "error"; 
+    }
+};
+
 const MilestoneTimeline = () => {
     return (
         <Box className="milestone-container">
@@ -18,7 +30,7 @@ const MilestoneTimeline = () => {
                 {milestones.map((milestone, index) => (
                     <TimelineItem key={index}>
                         <TimelineSeparator>
-                            <TimelineDot className={milestone.progress === 100 ? "dot-success" : "dot-primary"} />
+                            <TimelineDot className={`dot-${getProgressColor(milestone.progress)}`} />
                             {index !== milestones.length - 1 && <TimelineConnector />}
                         </TimelineSeparator>
                         <TimelineContent>
@@ -29,8 +41,12 @@ const MilestoneTimeline = () => {
                                     Start: {formatDate2(milestone.startDate)} | End: {formatDate2(milestone.endDate)}
                                 </Typography>
                                 <Box className="progress-container">
-                                    <LinearProgress variant="determinate" value={milestone.progress} className="progress-bar" />
-                                    <Typography variant="caption" className="progress-text">{milestone.progress}% Completed</Typography>
+                                    <LinearProgress
+                                        variant="determinate"
+                                        value={milestone.progress}
+                                        className={`progress-bar ${getProgressColor(milestone.progress)}`}
+                                    />
+                                    <Typography variant="caption" className={`progress-text text-${getProgressColor(milestone.progress)}`}>{milestone.progress}% Completed</Typography>
                                 </Box>
                             </Card>
                         </TimelineContent>
