@@ -7,7 +7,7 @@ const ProjectDashboard = () => {
     const tabData = [
         { label: 'Reference', content: 'ReferencePr' },
         { label: 'Milestone', content: 'MilestoneTimeline' },
-        { label: 'SOP Correction', content: 'SopCorrection' },
+        // { label: 'SOP Correction', content: 'SopCorrection' },
         { label: 'Team Member', content: 'TeamMember' },
         { label: 'Comments', content: 'Comments' },
         { label: 'Challenges', content: 'Challenges' },

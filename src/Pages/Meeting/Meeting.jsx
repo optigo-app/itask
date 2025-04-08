@@ -10,24 +10,41 @@ import {
   InputAdornment,
   Avatar,
   Tooltip,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import AvatarGroup from "@mui/material/AvatarGroup";
 import dayjs from "dayjs";
-import { Calendar, Plus, SearchIcon } from "lucide-react";
+import { Calendar, IdCard, Kanban, List, Plus, SearchIcon } from "lucide-react";
 import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
 import CalendarForm from "../../Components/Calendar/SideBar/CalendarForm";
 import { CalformData } from "../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
 import StatusModal from "./MeetingStatusModal";
-import { fetchMettingListApi } from "../../Api/MeetingApi/MeetingListApi";
+import { fetchMettingFullDetailsListApi, fetchMettingListApi, fetchMettingListByLoginApi } from "../../Api/MeetingApi/MeetingListApi";
 import { AddMeetingApi } from "../../Api/MeetingApi/AddMeetingApi";
 import LoadingBackdrop from "../../Utils/Common/LoadingBackdrop";
 import RejectReasonModal from "../../Utils/Common/RejectReasonModal";
 import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { deleteMeetingApi } from "../../Api/MeetingApi/DeleteMeetingApi";
+import { MeetingApprovalAPI } from "../../Api/MeetingApi/MeetingApprovalApi";
+import { fetchMettingDetailApi } from "../../Api/MeetingApi/FetchMeetingStatus.js";
+import { toast } from "react-toastify";
+import MeetingTable from "../../Components/Meeting/MeetingGrid.jsx";
+import MeetingCard from "../../Components/Meeting/MeetingCard.jsx";
+import MeetingHeader from "../../Components/Meeting/MeetingHeader.jsx";
+
+const tabData = [
+  { label: 'Upcoming', content: 'UpcomingMeetings' },
+  { label: 'Overdue', content: 'OverdueMeetings' },
+  { label: 'Completed', content: 'CompletedMeetings' },
+];
+
 
 const MeetingPage = () => {
+  const [viewType, setViewType] = useState('list');
   const [meetings, setMeetings] = useState([]);
+  console.log('meetings: ', meetings);
   const [isLoding, setIsLoding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [caledrawerOpen, setCaledrawerOpen] = useState(false);
@@ -37,9 +54,33 @@ const MeetingPage = () => {
   const [openStatusModal, setOpenStatusModal] = useState(false);
   const [openRejectModal, setOpenRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [selectedTab, setSelectedTab] = useState(tabData[0]?.label || '');
 
-  const handleReject = () => {
+  const handleOpenStatusModal = (meeting) => {
+    setOpenStatusModal(true);
+    setFormData(meeting);
+  };
+
+
+  const handleTabChange = (event, newValue) => {
+    if (newValue !== null) {
+      setSelectedTab(newValue);
+    }
+  };
+
+  const handleReject = (meeting) => {
     setOpenRejectModal(true);
+    setFormData(meeting);
+  };
+
+  const handleAcceptMeeting = async (meeting) => {
+    const formValues = {
+      id: meeting?.meetingid,
+      isAccept: 1,
+      comment: "Approved",
+    };
+    setFormData(formValues)
+    handleMeetingStatusSave(formValues);
   };
 
   const handleCloseRejectModal = () => {
@@ -49,6 +90,12 @@ const MeetingPage = () => {
 
   const handleConfirmReject = () => {
     console.log("Rejected", "Reason:", rejectReason);
+    const formValues = {
+      id: formData?.meetingid,
+      isAccept: 2,
+      comment: rejectReason,
+    };
+    handleMeetingStatusSave(formValues);
     handleCloseRejectModal();
   };
 
@@ -56,20 +103,45 @@ const MeetingPage = () => {
     setIsLoding(true);
     try {
       const meetingApiRes = await fetchMettingListApi();
+      const meetingFullDt = await fetchMettingFullDetailsListApi();
+
+      let meetingDtRes;
+      if (meetingFullDt?.rd1[0]?.stat == 1) {
+        meetingDtRes = meetingFullDt?.rd;
+      } else {
+        toast.error(meetingFullDt?.rd1[0]?.stat_msg);
+      }
+
       const data = meetingApiRes?.rd || [];
       const taskAssigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
+      const loginUserData = JSON.parse(localStorage.getItem("UserProfileData") || "{}");
 
-      const enhancedMeetings = data.map((meeting) => ({
-        ...meeting,
-        guests: taskAssigneeData.filter((user) => meeting?.assigneids?.split(",").map(Number).includes(user.id)) || [],
-        prModule: {
-          projectid: meeting?.projectid,
-          taskid: meeting?.taskid,
-          projectname: meeting?.ProjectName,
-          taskname: meeting?.taskname,
-          taskPr: meeting?.ProjectName,
-        }
-      }));
+      const enhancedMeetings = data.map((meeting) => {
+        const meetingDt = meetingDtRes?.find((m) => m?.meetingid == meeting?.meetingid) || {};
+        const assigneeIds = meeting?.assigneids?.split(",")?.map(Number) || [];
+
+        const isUserAssigned = assigneeIds.includes(loginUserData?.id);
+        const isMeetingDtEmpty = Object.keys(meetingDt).length === 0;
+        const isAcceptStatusValid = isMeetingDtEmpty || meetingDt?.isAccept === 0;
+
+        const isAction = isUserAssigned && isAcceptStatusValid;
+
+        return {
+          ...meeting,
+          isAction,
+          guests: taskAssigneeData?.filter((user) =>
+            assigneeIds.includes(user.id)
+          ) || [],
+          prModule: {
+            projectid: meeting?.projectid,
+            taskid: meeting?.taskid,
+            projectname: meeting?.ProjectName,
+            taskname: meeting?.taskname,
+            taskPr: meeting?.ProjectName,
+          },
+          meetingDt
+        };
+      });
 
       setMeetings(enhancedMeetings);
     } catch (error) {
@@ -79,11 +151,62 @@ const MeetingPage = () => {
     }
   };
 
+  const handleMeetingbyLogin = async () => {
+    setIsLoding(true);
+    try {
+      const meetingApiRes = await fetchMettingListByLoginApi();
+      const meetingFullDt = await fetchMettingFullDetailsListApi();
+
+      let meetingDtRes;
+      if (meetingFullDt?.rd1[0]?.stat == 1) {
+        meetingDtRes = meetingFullDt?.rd;
+      } else {
+        toast.error(meetingFullDt?.rd1[0]?.stat_msg);
+      }
+
+      const data = meetingApiRes?.rd || [];
+      const taskAssigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
+      const loginUserData = JSON.parse(localStorage.getItem("UserProfileData") || "{}");
+
+      const enhancedMeetings = data.map((meeting) => {
+        const meetingDt = meetingDtRes?.find((m) => m?.meetingid == meeting?.meetingid) || {};
+        const assigneeIds = meeting?.assigneids?.split(",")?.map(Number) || [];
+
+        const isUserAssigned = assigneeIds.includes(loginUserData?.id);
+        const isMeetingDtEmpty = Object.keys(meetingDt).length === 0;
+        const isAcceptStatusValid = isMeetingDtEmpty || meetingDt?.isAccept === 0;
+
+        const isAction = isUserAssigned && isAcceptStatusValid;
+
+        return {
+          ...meeting,
+          isAction,
+          guests: taskAssigneeData?.filter((user) =>
+            assigneeIds.includes(user.id)
+          ) || [],
+          prModule: {
+            projectid: meeting?.projectid,
+            taskid: meeting?.taskid,
+            projectname: meeting?.ProjectName,
+            taskname: meeting?.taskname,
+            taskPr: meeting?.ProjectName,
+          },
+          meetingDt
+        };
+      });
+
+      setMeetings(enhancedMeetings);
+    } catch (error) {
+      console.error("Error fetching meeting list:", error);
+    } finally {
+      setIsLoding(false);
+    }
+  };
 
   useEffect(() => {
+    // handleMeetingbyLogin();
     handleMeetingList();
   }, [])
-
 
   // Filter and Sort Meetings
   const filteredMeetings = meetings
@@ -102,8 +225,24 @@ const MeetingPage = () => {
     const apiRes = await AddMeetingApi(formValues);
     if (apiRes?.rd[0]?.stat == 1) {
       handleMeetingList()
+    } else {
+      toast.error(apiRes?.rd[0]?.stat_msg)
     }
   };
+
+  const handleMeetingStatusSave = async (formValues) => {
+    const apiRes = await MeetingApprovalAPI(formValues);
+    if (apiRes?.rd[0]?.stat == 1) {
+      handleMeetingList()
+    }
+  }
+
+  const handleFetchMeetingDetails = async () => {
+    const apiRes = await fetchMettingDetailApi(formData);
+    if (apiRes?.rd1[0]?.stat == 1) {
+      return apiRes?.rd;
+    }
+  }
 
   const handleRemove = (formValue) => {
     setCnfDialogOpen(true);
@@ -127,13 +266,15 @@ const MeetingPage = () => {
   }
 
   const background = (team) => {
-    const avatarBackgroundColor = team?.avatar
+    console.log('team: ', team);
+    const avatarBackgroundColor = team?.empphoto
       ? "transparent"
-      : getRandomAvatarColor(team?.name);
+      : getRandomAvatarColor(team?.firstname);
     return avatarBackgroundColor;
   }
 
-  const StatusCircles = ({ redCount, yellowCount, greenCount }) => {
+  const StatusCircles = ({ meeting, redCount, yellowCount, greenCount }) => {
+    console.log('meeting: ', meeting);
     const circleStyle = {
       minWidth: 30,
       minHeight: 30,
@@ -146,40 +287,40 @@ const MeetingPage = () => {
     };
 
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center' }}>
         <Box sx={{
           ...circleStyle,
-          backgroundColor: '#FF4D4F',
+          backgroundColor: '#FFE0E0',
           cursor: 'pointer',
           boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
         }}
-          onClick={() => setOpenStatusModal(true)}
+          onClick={() => handleOpenStatusModal(meeting)}
         >
-          <Typography variant="body2" sx={{ color: '#fff !important' }}>
+          <Typography variant="body2" sx={{ color: '#FF4D4F !important' }}>
             {redCount}
           </Typography>
         </Box>
         <Box sx={{
           ...circleStyle,
-          backgroundColor: '#FAAD14',
+          backgroundColor: '#FFF7E6',
           cursor: 'pointer',
           boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
         }}
-          onClick={() => setOpenStatusModal(true)}
+          onClick={() => handleOpenStatusModal(meeting)}
         >
-          <Typography variant="body2" sx={{ color: '#fff !important' }}>
+          <Typography variant="body2" sx={{ color: '#FAAD14 !important' }}>
             {yellowCount}
           </Typography>
         </Box>
         <Box sx={{
           ...circleStyle,
-          backgroundColor: '#52C41A',
+          backgroundColor: '#F6FFED',
           cursor: 'pointer',
           boxShadow: 'rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;'
         }}
-          onClick={() => setOpenStatusModal(true)}
+          onClick={() => handleOpenStatusModal(meeting)}
         >
-          <Typography variant="body2" sx={{ color: '#fff !important' }}>
+          <Typography variant="body2" sx={{ color: '#52C41A !important' }}>
             {greenCount}
           </Typography>
         </Box>
@@ -187,182 +328,61 @@ const MeetingPage = () => {
     );
   };
 
+  const handleViewChange = (event, newView) => {
+    if (newView !== null) {
+      setViewType(newView);
+    }
+  }
+
   return (
-    <Box sx={{ padding: "16px" }}>
-      {/* Search and Add Meeting Section */}
-      {!isLoding && filteredMeetings.length > 0 && (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "24px",
-            flexWrap: "wrap",
-            gap: "16px",
-          }}
-        >
-          <TextField
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            size="small"
-            className="textfieldsClass"
-            sx={{
-              minWidth: 250,
-              "@media (max-width: 600px)": { minWidth: "100%" },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon size={20} color="#7d7f85" opacity={0.5} />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Button variant="contained" className="buttonClassname" onClick={handleAddMeetings}>
-            <Plus style={{ marginRight: '5px', opacity: '.9' }} size={20} />
-            Add Meeting</Button>
-        </Box>
-      )}
+    <Box
+      sx={{
+        boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
+        padding: "20px",
+        borderRadius: "8px",
+        overflow: "hidden !important",
+      }}>
+      <MeetingHeader
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        handleMeetingList={handleMeetingList}
+        handleAddMeetings={handleAddMeetings}
+        viewType={viewType}
+        handleViewChange={handleViewChange}
+        tabData={tabData ?? []}
+        selectedTab={selectedTab}
+        handleTabChange={handleTabChange}
+      />
 
       {!isLoding ? (
         <>
           {filteredMeetings.length > 0 ? (
-            <Grid container spacing={2}>
-              {filteredMeetings?.map((meeting) => (
-                <Grid item xs={12} sm={6} md={4} key={meeting?.meetingid}>
-                  <Card
-                    sx={{
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                      backgroundColor: "#fff",
-                      minHeight: '190px',
-                    }}
-                  >
-                    <CardContent sx={{ paddingBottom: '16px !important' }}>
-                      <Box
-                        onClick={() => {
-                          handleDrawerToggle();
-                          setCalFormData(meeting);
-                        }}
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          cursor: "pointer"
-                        }}>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            fontWeight: "bold",
-                            marginBottom: "8px",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            maxWidth: "65%",
-                            color: '#6D6B77 !important'
-                          }}
-                        >
-                          {meeting.meetingtitle}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#6D6B77 !important' }}>
-                          {dayjs(meeting.StartDate)?.format("DD MMM YYYY, hh:mm A")}
-                        </Typography>
-                      </Box>
-                      <div
-                        style={{
-                          margin: "10px 0",
-                          border: "1px dashed #7d7f85",
-                          opacity: 0.3,
-                        }}
+            <>
+              {viewType === 'card' ? (
+                <Grid container spacing={2}>
+                  {filteredMeetings?.map((meeting) => (
+                    <Grid item xs={12} sm={6} md={4} key={meeting?.meetingid}>
+                      <MeetingCard
+                        meeting={meeting}
+                        handleDrawerToggle={handleDrawerToggle}
+                        setCalFormData={setCalFormData}
+                        StatusCircles={StatusCircles}
+                        ImageUrl={ImageUrl}
+                        background={background}
+                        handleAcceptMeeting={handleAcceptMeeting}
+                        handleReject={handleReject}
                       />
-
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="body2">
-                          {meeting.ProjectName && meeting.taskname && (
-                            <>
-                              {/* <span className="label" style={{ color: '#7d7f85' }}>Project/Module : </span> */}
-                              <span
-                                className="value"
-                                style={{ color: '#6D6B77', fontWeight: 'bold' }}
-                              >
-                                {meeting.ProjectName}/{meeting.taskname}
-                              </span>
-                            </>
-                          )}
-                        </Typography>
-                        {StatusCircles({ redCount: 5, yellowCount: 10, greenCount: 50 })}
-                      </Box>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: '#6D6B77 !important', textTransform: 'capitalize', marginBottom: "8px", mt: 0.5 }}
-                      >
-                        {meeting.Desc || "\u00A0"}
-                      </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-                        <AvatarGroup max={8}
-                          sx={{
-                            '& .MuiAvatar-root': {
-                              width: 30,
-                              height: 30,
-                              fontSize: '0.8rem',
-                              cursor: 'pointer',
-                              border: 'none',
-                              transition: 'transform 0.3s ease-in-out',
-                              '&:hover': {
-                                transform: 'scale(1.2)',
-                                zIndex: 10
-                              }
-                            }
-                          }}
-                        >
-                          {meeting?.guests?.map((participant) => (
-                            <Tooltip
-                              key={participant?.id}
-                              placement="top"
-                              title={participant.firstname + " " + participant.lastname}
-                              arrow
-                              classes={{ tooltip: 'custom-tooltip' }}
-                            >
-                              <Avatar
-                                key={participant?.id}
-                                alt={participant.firstname + " " + participant.lastname}
-                                src={ImageUrl(participant)}
-                                sx={{
-                                  background: background(participant),
-                                }}
-                              />
-                            </Tooltip>
-                          ))}
-                        </AvatarGroup>
-
-                        <Box sx={{ display: "flex", gap: 2 }}>
-                          {/* Accept Button */}
-                          <Button
-                            variant="contained"
-                            href={meeting.link}
-                            target="_blank"
-                            className="buttonClassname"
-                          >
-                            Accept
-                          </Button>
-
-                          {/* Reject Button */}
-                          <Button
-                            variant="contained"
-                            onClick={handleReject}
-                            className="secondaryBtnClassname"
-                          >
-                            Reject
-                          </Button>
-                        </Box>
-
-                      </Box>
-                    </CardContent>
-                  </Card>
+                    </Grid>
+                  ))}
                 </Grid>
-              ))}
-            </Grid>
+              ) :
+                <MeetingTable
+                  meeting={meetings}
+                  StatusCircles={StatusCircles}
+                  background={background}
+                  handleOpenStatusModal={handleOpenStatusModal} />
+              }
+            </>
           ) :
             <Box
               sx={{
@@ -395,8 +415,7 @@ const MeetingPage = () => {
       ) :
         <LoadingBackdrop isLoading={isLoding ? 'true' : 'false'} />
       }
-
-      <StatusModal open={openStatusModal} handleClose={() => setOpenStatusModal(false)} />
+      <StatusModal open={openStatusModal} handleFetchMeetingDetails={handleFetchMeetingDetails} handleClose={() => setOpenStatusModal(false)} />
       <CalendarForm
         open={caledrawerOpen}
         onClose={handleDrawerToggle}

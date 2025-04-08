@@ -41,8 +41,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [columnWidths] = useState({
-        'module': 350,
-        // 'project': 200,
+        'Project/module': 350,
         'progress': 180,
         'start date': 100,
         'due date': 100,
@@ -299,7 +298,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
                                                             onClick={() => handleOpenCnfDialog(task)}
                                                             id={task?.taskid}
                                                         />
-                                                        {/* <IconButton
+                                                        <IconButton
                                                             onClick={handleViewPrDashboard}
                                                             sx={{
                                                                 '&.Mui-disabled': {
@@ -311,7 +310,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
                                                                 size={20}
                                                                 color="#808080"
                                                             />
-                                                        </IconButton> */}
+                                                        </IconButton>
                                                         <IconButton
                                                             disabled={task?.isFreez == 1}
                                                             onClick={() => handleEditProject(task, { Task: "root" })}

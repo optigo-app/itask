@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Grid } from '@mui/material'
 import Card1 from './Agenda'
 import Card2 from './Projects'
@@ -7,8 +7,12 @@ import Card4_1 from './Comments'
 import Card4_2 from './Teams'
 import './homePage.scss'
 import SummaryDashnoard from './TaskSummary'
+import { fetchMettingListByLoginApi } from '../../Api/MeetingApi/MeetingListApi'
 
 const Home = () => {
+  const [isLoding, setIsLoding] = React.useState(false);
+  const [meetings, setMeetings] = React.useState([]);
+  console.log('meetings: ', meetings);
   const Project = [
     {
       "projectId": "p1",
@@ -138,65 +142,6 @@ const Home = () => {
     }
   ]
 
-
-  const newComment = [
-    {
-      commentId: "c1",
-      taskId: "t1",
-      commentText: "This task is very urgent and must be prioritized.",
-      author: {
-        userId: "u1",
-        name: "John Doe",
-        image: "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/10.png"
-      },
-      createdAt: "2024-12-05T14:30:00Z"
-    },
-    {
-      commentId: "c2",
-      taskId: "t2",
-      commentText: "We should focus on this task after the current sprint.",
-      author: {
-        userId: "u2",
-        name: "Jane Smith",
-        image: ""
-      },
-      createdAt: "2024-12-04T10:15:00Z"
-    },
-    {
-      commentId: "c3",
-      taskId: "t1",
-      commentText: "Please ensure all dependencies are resolved before proceeding.",
-      author: {
-        userId: "u3",
-        name: "Michael Lee",
-        image: "https://demos.pixinvent.com/vuexy-html-admin-template/assets/img/avatars/5.png"
-      },
-      createdAt: "2024-12-03T16:45:00Z"
-    }
-  ];
-
-
-  const teamDir = [
-    {
-      userId: "u1",
-      name: "John Doe",
-      role: "Frontend Developer",
-      photo: "https://via.placeholder.com/150"
-    },
-    {
-      userId: "u2",
-      name: "Jane Smith",
-      role: "Backend Developer",
-      photo: ""
-    },
-    {
-      userId: "u3",
-      name: "Michael Lee",
-      role: "Project Manager",
-      photo: "https://via.placeholder.com/150"
-    }
-  ]
-
   const agenda = [
     {
       "agendaId": "a1",
@@ -220,6 +165,43 @@ const Home = () => {
       "project": "Project Gamma"
     }
   ]
+
+  const handleMeetingbyLogin = async () => {
+    setIsLoding(true);
+    try {
+      const meetingApiRes = await fetchMettingListByLoginApi();
+      const data = meetingApiRes?.rd || [];
+      const taskAssigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
+
+      const sortedData = [...data]?.sort((a, b) => new Date(b.entrydate) - new Date(a.entrydate));
+      const topFiveMeetings = sortedData.slice(0, 5);
+
+      const enhancedMeetings = topFiveMeetings?.map((meeting) => ({
+        ...meeting,
+        guests: taskAssigneeData.filter((user) =>
+          meeting?.assigneids?.split(",").map(Number).includes(user.id)
+        ) || [],
+        prModule: {
+          projectid: meeting?.projectid,
+          taskid: meeting?.taskid,
+          projectname: meeting?.ProjectName,
+          taskname: meeting?.taskname,
+          taskPr: meeting?.ProjectName,
+        }
+      }));
+
+      setMeetings(enhancedMeetings);
+    } catch (error) {
+      console.error("Error fetching meeting list:", error);
+    } finally {
+      setIsLoding(false);
+    }
+  };
+
+
+  useEffect(() => {
+    handleMeetingbyLogin();
+  }, [])
 
   return (
     <>

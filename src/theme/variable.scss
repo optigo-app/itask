@@ -104,6 +104,18 @@ $divider-color: #e0e0e0;
     }
 }
 
+.uploadBtnClassname {
+    border-color: $button-Bordercolor !important;
+    color: $button-Bordercolor !important;
+    font-family: $font-family !important;
+    border-radius: 8px !important;
+
+    &:hover {
+        border-color: $button-Bordercolor;
+        color: $button-Bordercolor !important;
+    }
+}
+
 .MuiTypography-root {
     font-family: $font-family !important;
     color: $titleColor;

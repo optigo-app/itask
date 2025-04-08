@@ -36,6 +36,48 @@ export const formatDate3 = (date) => {
 
     return formattedDate;
 };
+// "1 day left" or "1 day 2 hr",
+export function getTimeLeft(dateString) {
+    const now = new Date();
+    const future = new Date(dateString);
+    const diffMs = future - now;
+
+    if (diffMs <= 0) return "Overdue";
+
+    const seconds = Math.floor(diffMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+    const months = Math.floor(days / 30); // approx
+    const years = Math.floor(days / 365); // approx
+
+    if (years > 0) return `${years} year${years > 1 ? "s" : ""}`;
+    if (months > 0) return `${months} month${months > 1 ? "s" : ""}`;
+    if (weeks > 0) return `${weeks} week${weeks > 1 ? "s" : ""}`;
+    if (days > 0) return `${days} day${days > 1 ? "s" : ""}`;
+    if (hours > 0 || minutes > 0) {
+        const hr = hours % 24;
+        const min = minutes % 60;
+        return `${hr > 0 ? hr + " hr " : ""}${min > 0 ? min + " min" : ""}`.trim();
+    }
+
+    return "Less than a minute";
+}
+
+export function toISTDateTime(isoDate) {
+    const istDate = new Date(isoDate).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+    });
+    return istDate;
+}
+
 
 export const ImageUrl = (data) => {
     const init = JSON.parse(sessionStorage.getItem('taskInit'));
@@ -167,9 +209,15 @@ export const getRandomAvatarColor = (name) => {
 // make structure master data function
 export const fetchMasterGlFunc = async () => {
     try {
-        const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('assigneeMaster'));
+        const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
+        const AuthUrlData = JSON?.parse(localStorage.getItem('AuthqueryParams'));
         if (!AssigneeMasterData) {
-            AssigneeMaster();
+            const assigneeRes = await AssigneeMaster();
+            const UserProfileData = assigneeRes?.rd?.find(item => item?.userid == AuthUrlData?.uid);
+            localStorage.setItem('UserProfileData', JSON?.stringify(UserProfileData));
+        } else {
+            const UserProfileData = AssigneeMasterData?.find(item => item?.userid == AuthUrlData?.uid);
+            localStorage.setItem('UserProfileData', JSON?.stringify(UserProfileData));
         }
         let masterData = JSON?.parse(sessionStorage.getItem('structuredMasterData'));
         if (!masterData || masterData?.length == 0) {
@@ -219,44 +267,44 @@ export function mapTaskLabels(data) {
     const tasks = data?.rd1;
     const labelMap = {};
     Object?.keys(labels)?.forEach((key, index) => {
-      labelMap[index + 1] = key;
+        labelMap[index + 1] = key;
     });
     function convertTask(task) {
-      let taskObj = {};
-      for (let key in task) {
-        if (task.hasOwnProperty(key)) {
-          const label = labelMap[key];
-          if (label) {
-            taskObj[label] = task[key];
-          }
-        }
-      }
-      if (task.subtasks) {
-        try {
-          const parsedSubtasks = JSON?.parse(task.subtasks);
-          taskObj.subtasks = parsedSubtasks?.map(subtask => {
-            let subtaskObj = {};
-            for (let key in subtask) {
-              if (subtask?.hasOwnProperty(key)) {
+        let taskObj = {};
+        for (let key in task) {
+            if (task.hasOwnProperty(key)) {
                 const label = labelMap[key];
                 if (label) {
-                  subtaskObj[label] = subtask[key];
+                    taskObj[label] = task[key];
                 }
-              }
             }
-            return subtaskObj;
-          });
-        } catch (error) {
-          console.error("Error parsing subtasks:", error);
         }
-      }
+        if (task.subtasks) {
+            try {
+                const parsedSubtasks = JSON?.parse(task.subtasks);
+                taskObj.subtasks = parsedSubtasks?.map(subtask => {
+                    let subtaskObj = {};
+                    for (let key in subtask) {
+                        if (subtask?.hasOwnProperty(key)) {
+                            const label = labelMap[key];
+                            if (label) {
+                                subtaskObj[label] = subtask[key];
+                            }
+                        }
+                    }
+                    return subtaskObj;
+                });
+            } catch (error) {
+                console.error("Error parsing subtasks:", error);
+            }
+        }
 
-      return taskObj;
+        return taskObj;
     }
     let taskData = tasks?.map(task => convertTask(task))
 
     return taskData;
-  }
+}
 
 //Selectmenu custom styles
 export const commonSelectProps = {

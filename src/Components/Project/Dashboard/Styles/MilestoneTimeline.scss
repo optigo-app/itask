@@ -1,10 +1,17 @@
 @import "../../../../theme/variable.scss";
 
+// Define a map for status colors
+$status-colors: (
+  success: $success-main,
+  primary: $primary-main,
+  warning: $warning-main,
+  error: $error-main
+);
+
 .milestone-container {
     padding: 16px;
     box-shadow: $box-shadow-value;
     border-radius: 8px;
-
 
     .milestone-title {
         text-align: center;
@@ -32,26 +39,46 @@
         margin-top: 8px;
     }
 
+    // Reusable progress-bar styling
     .progress-bar {
         height: 8px;
         border-radius: 8px;
         background-color: $divider-color;
-        .MuiLinearProgress-bar {
+
+        &.success .MuiLinearProgress-bar {
+            background-color: $success-main;
+        }
+
+        &.primary .MuiLinearProgress-bar {
             background-color: $primary-main;
+        }
+
+        &.warning .MuiLinearProgress-bar {
+            background-color: $warning-main;
+        }
+
+        &.error .MuiLinearProgress-bar {
+            background-color: $error-main;
         }
     }
 
     .progress-text {
-        font-size: 12px;
+        font-size: 14px;
         margin-top: 4px;
         display: block;
+        font-weight: bold;
     }
 
-    .dot-success {
-        background-color: green !important;
-    }
+    // Text color based on status
+    .text-success { color: $success-main !important; }
+    .text-primary { color: $primary-main !important; }
+    .text-warning { color: $warning-main !important; }
+    .text-error { color: $error-main !important; }
 
-    .dot-primary {
-        background-color: blue !important;
+    // Reusable dot styling using map for status
+    @each $status, $color in $status-colors {
+        .dot-#{$status} {
+            background-color: $color !important;
+        }
     }
 }

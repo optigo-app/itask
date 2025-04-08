@@ -25,6 +25,7 @@ import CustomDatePicker from "../../../Utils/DateComponent/CustomDatePicker";
 import { fetchModuleDataApi } from "../../../Api/TaskApi/ModuleDataApi";
 import CustomDateTimePicker from "../../../Utils/DateComponent/CustomDateTimePicker";
 import dayjs from "dayjs";
+import FileUploader from "../../ShortcutsComponent/FileUploader";
 
 const CalendarForm = ({
     open,
@@ -354,6 +355,10 @@ const CalendarForm = ({
                                     {...commonTextFieldProps}
                                 />
                             </Box>
+                        </Grid>
+
+                        <Grid item xs={12}>
+                            <FileUploader formValues={formValues} setFormValues={setFormValues} />
                         </Grid>
 
                         {/* Submit Button */}
