@@ -20,7 +20,6 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import LoadingBackdrop from "../../Utils/Common/LoadingBackdrop";
-import { Circle, Dot } from "lucide-react";
 import CircleIcon from '@mui/icons-material/Circle';
 
 const modalStyle = {

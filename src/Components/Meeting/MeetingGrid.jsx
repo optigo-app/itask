@@ -11,16 +11,19 @@ import {
     AvatarGroup,
     Tooltip,
     Avatar,
-    Typography,
     Box,
+    Button,
 } from "@mui/material";
 import "./Styles/MeetingGrid.scss";
-import { getRandomAvatarColor, getTimeLeft, ImageUrl, toISTDateTime } from "../../Utils/globalfun";
-import { Eye } from "lucide-react";
+import { getTimeLeft, ImageUrl, toISTDateTime } from "../../Utils/globalfun";
+import { CircleCheck, Eye } from "lucide-react";
+import CircleIcon from '@mui/icons-material/Circle';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 
-const MeetingTable = ({ meeting, StatusCircles, background }) => {
-    console.log('meeting: ', meeting);
+
+
+const MeetingTable = ({ meeting, StatusCircles, handleAcceptMeeting, handleReject, handleAttendMeeting, background }) => {
 
     const handleFormatDate = (startDate) => {
         const date = toISTDateTime(startDate);
@@ -89,10 +92,50 @@ const MeetingTable = ({ meeting, StatusCircles, background }) => {
                                 </AvatarGroup>
                             </TableCell>
                             <TableCell>
-                                {StatusCircles({ meeting, redCount: 5, yellowCount: 10, greenCount: 50 })}
+                                {StatusCircles({ row, redCount: 5, yellowCount: 10, greenCount: 50 })}
                             </TableCell>
                             <TableCell align="center">
-                                <Box sx={{ display: "flex", alignItems: "center" }}>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                    {row?.isAction && (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <Button className="btnAccept buttonClassname"
+                                                variant="contained" size="small" color="primary" onClick={handleAcceptMeeting}>
+                                                Accept
+                                            </Button>
+                                            <Button className="btnReject dangerbtnClassname"
+                                                variant="contained" size="small" color="error" onClick={handleReject}>
+                                                Reject
+                                            </Button>
+                                        </Box>
+                                    )}
+                                    {row?.isAttendBtn != 0 &&
+                                        <Tooltip
+                                            placement="top"
+                                            title={row?.isAttendBtn == 2 ? "Attended" : "Mark as Attended"}
+                                            arrow
+                                            classes={{ tooltip: 'custom-tooltip' }}>
+                                            <IconButton
+                                                onClick={() => handleAttendMeeting(row)}
+                                                size="small"
+                                                aria-label="meeting-attend"
+                                                aria-labelledby="meeting-attend"
+                                                sx={{
+                                                    color: row?.isAttendBtn == 2 ? '#ffffff' : '#7d7f85',
+                                                    backgroundColor: row?.isAttendBtn == 2 ? '#7367f0' : 'transparent',
+                                                    '&:hover': {
+                                                        backgroundColor: row?.isAttendBtn == 2 ? '#7367f0' : 'rgba(0, 0, 0, 0.04)',
+                                                    },
+                                                }}
+                                            >
+                                                <CircleCheck
+                                                    sx={{
+                                                        fontSize: '20px',
+                                                        color: row?.isAttendBtn === 2 ? "#fff" : "#7d7f85"
+                                                    }}
+                                                />
+                                            </IconButton>
+                                        </Tooltip>
+                                    }
                                     <IconButton >
                                         <Eye
                                             size={20}

@@ -1,5 +1,5 @@
 import React from "react";
-import {Avatar, Typography } from "@mui/material";
+import { Avatar, Typography } from "@mui/material";
 import ReusableTable from "./ReusableTable";
 
 const teamMembers = [
@@ -16,7 +16,7 @@ const TeamMembers = () => {
             className="reusable-table-container"
             columns={[
                 { id: "id", label: "ID" },
-                { id: "task", label: "Task" },
+                { id: "task", label: "Task Module" },
                 { id: "name", label: "Team Member" },
                 { id: "designation", label: "Designation" }
             ]}
