@@ -1,8 +1,9 @@
 import React from 'react'
 import { Card, CardContent, Table, TableBody, TableCell, TableRow, Typography } from '@mui/material'
-import { formatDate } from '../../Utils/globalfun'
+import { formatDate, formatDate2, formatDate3 } from '../../Utils/globalfun'
 
-const Card1 = ({ agenda }) => {
+const Agenda = ({ agenda }) => {
+    console.log('agenda: ', agenda);
     return (
         <Card className='HomePageCom'>
             <CardContent sx={{ padding: '0', paddingBottom: '0 !important' }}>
@@ -15,11 +16,11 @@ const Card1 = ({ agenda }) => {
                         {agenda?.map((event, idx) => (
                             <TableRow key={idx}>
                                 <TableCell>
-                                    {event?.taskTitle}
+                                    {event?.meetingtitle}
                                 </TableCell>
 
                                 <TableCell >
-                                    {event?.time && formatDate(event?.time)}
+                                    {event?.StartDate && formatDate3(event?.StartDate)}
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -30,4 +31,4 @@ const Card1 = ({ agenda }) => {
     )
 }
 
-export default Card1
+export default Agenda

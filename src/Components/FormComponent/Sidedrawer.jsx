@@ -27,6 +27,7 @@ import MultiSelectChipWithLimit from "../ShortcutsComponent/AssigneeAutocomplete
 import { commonSelectProps, commonTextFieldProps, convertWordsToSpecialChars, customDatePickerProps } from "../../Utils/globalfun";
 import MultiTaskInput from "./MultiTaskInput";
 import FileUploader from "../ShortcutsComponent/FileUploader";
+import timezone from 'dayjs/plugin/timezone';
 
 const TASK_OPTIONS = [
     { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -48,6 +49,7 @@ const SidebarDrawer = ({
     const location = useLocation();
     const theme = useTheme();
     dayjs.extend(utc);
+    dayjs.extend(timezone);
     const [checkedMultiTask, setCheckedMultiTask] = useState(false);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
     const [rootSubrootflagval, setRootSubrootFlagVal] = useRecoilState(rootSubrootflag)

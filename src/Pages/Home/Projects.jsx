@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, Typography, Table, TableBody, TableCell, TableRow, Avatar, AvatarGroup, Tooltip } from '@mui/material';
 import { getRandomAvatarColor } from '../../Utils/globalfun';
 
-const Card2 = ({ projects }) => {
+const Projects = ({ projects }) => {
 
     const background = (teamName) => {
         const avatarBackgroundColor = projects?.avatar
@@ -80,4 +80,4 @@ const Card2 = ({ projects }) => {
     );
 };
 
-export default Card2;
+export default Projects;

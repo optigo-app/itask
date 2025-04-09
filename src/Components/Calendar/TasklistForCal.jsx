@@ -4,32 +4,12 @@ import { Draggable } from "@fullcalendar/interaction";
 import './TasklistForCal.scss'
 import { TaskData } from "../../Recoil/atom"
 import { useRecoilValue } from "recoil";
+import { flattenTasks } from "../../Utils/globalfun";
 
 const TasklistForCal = ({ calendarsColor }) => {
     const task = useRecoilValue(TaskData);
     const [calTasksList, setCalTasksList] = useState([]);
     console.log('taskIdcalTasksList: ', calTasksList);
-
-    const flattenTasks = (tasks, level = 0) => {
-        const today = new Date();
-        return tasks?.reduce((flatList, task) => {
-            const { subtasks, ...taskWithoutSubtasks } = task;
-
-            const taskDateObj = new Date(task.StartDate);
-            const taskDateLocalStr = taskDateObj.toLocaleDateString('en-CA');
-
-            if (taskDateLocalStr === today.toLocaleDateString('en-CA')) {
-                flatList.push({ ...taskWithoutSubtasks, level });
-            }
-
-            if (subtasks?.length > 0) {
-                flatList = flatList.concat(flattenTasks(subtasks, level + 1));
-            }
-
-            return flatList;
-        }, []);
-    };
-
 
     useEffect(() => {
         setCalTasksList(flattenTasks(task));

@@ -140,7 +140,6 @@ const Header = ({ avatarSrc = "" }) => {
 
     const menuItems = [
         { text: 'My Profile', icon: <User size={20} style={{ color: "#7d7f85" }} />, route: '/account-profile' },
-        { text: 'Settings', icon: <Settings size={20} style={{ color: "#7d7f85" }} />, route: '/account-settings' }
     ];
 
     const handleMenuClick = (route) => {
@@ -253,7 +252,7 @@ const Header = ({ avatarSrc = "" }) => {
                 slotProps={{
                     paper: {
                         sx: {
-                            top: "100px !important",
+                            top: "75px !important",
                             width: "400px !important",
                             borderRadius: "8px !important",
                             boxShadow:
@@ -330,7 +329,7 @@ const Header = ({ avatarSrc = "" }) => {
                 slotProps={{
                     paper: {
                         sx: {
-                            top: "100px !important",
+                            top: "75px !important",
                             minWidth: "170px !important",
                             maxWidth: "250px !important",
                             borderRadius: "8px !important",
@@ -378,7 +377,6 @@ const Header = ({ avatarSrc = "" }) => {
                 {menuItems.map((item, index) => (
                     <MenuItem
                         key={index}
-                        onClick={() => handleMenuClick(item.route)}
                         sx={{
                             margin: "10px 10px !important",
                             borderRadius: "8px !important",

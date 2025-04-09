@@ -1,18 +1,26 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Grid } from '@mui/material'
-import Card1 from './Agenda'
-import Card2 from './Projects'
-import Card3 from './UrgentTasks'
+import Agenda from './Agenda'
+import Projects from './Projects'
+import UrgentTask from './UrgentTasks'
 import Card4_1 from './Comments'
 import Card4_2 from './Teams'
 import './homePage.scss'
 import SummaryDashnoard from './TaskSummary'
 import { fetchMettingListByLoginApi } from '../../Api/MeetingApi/MeetingListApi'
+import TaskAPiCallWithFormat from '../../Utils/TaskList/TaskAPiCallWithFormat'
+import { TaskData } from '../../Recoil/atom'
+import { useRecoilValue } from 'recoil'
+import { flattenTasks } from '../../Utils/globalfun'
 
 const Home = () => {
+  const { fetchTaskData } = TaskAPiCallWithFormat();
+  const task = useRecoilValue(TaskData);
+  console.log('task: ', task);
   const [isLoding, setIsLoding] = React.useState(false);
   const [meetings, setMeetings] = React.useState([]);
-  console.log('meetings: ', meetings);
+  const [prTasksList, setPrTasksList] = useState([]);
+  console.log('prTasksList: ', prTasksList);
   const Project = [
     {
       "projectId": "p1",
@@ -172,23 +180,27 @@ const Home = () => {
       const meetingApiRes = await fetchMettingListByLoginApi();
       const data = meetingApiRes?.rd || [];
       const taskAssigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
+      const topFiveMeetings = data?.slice(0, 5);
+      const currentTime = new Date();
+      const enhancedMeetings = topFiveMeetings?.map((meeting) => {
+        const meetingTime = new Date(meeting.StartDate);
+        const isOverdue = meetingTime < currentTime;
 
-      const sortedData = [...data]?.sort((a, b) => new Date(b.entrydate) - new Date(a.entrydate));
-      const topFiveMeetings = sortedData.slice(0, 5);
-
-      const enhancedMeetings = topFiveMeetings?.map((meeting) => ({
-        ...meeting,
-        guests: taskAssigneeData.filter((user) =>
-          meeting?.assigneids?.split(",").map(Number).includes(user.id)
-        ) || [],
-        prModule: {
-          projectid: meeting?.projectid,
-          taskid: meeting?.taskid,
-          projectname: meeting?.ProjectName,
-          taskname: meeting?.taskname,
-          taskPr: meeting?.ProjectName,
-        }
-      }));
+        return {
+          ...meeting,
+          guests: taskAssigneeData.filter((user) =>
+            meeting?.assigneids?.split(",").map(Number).includes(user.id)
+          ) || [],
+          prModule: {
+            projectid: meeting?.projectid,
+            taskid: meeting?.taskid,
+            projectname: meeting?.ProjectName,
+            taskname: meeting?.taskname,
+            taskPr: meeting?.ProjectName,
+          },
+          isOverdue: isOverdue
+        };
+      });
 
       setMeetings(enhancedMeetings);
     } catch (error) {
@@ -198,10 +210,26 @@ const Home = () => {
     }
   };
 
+  const handleProjectFun = () => {
+
+  }
 
   useEffect(() => {
     handleMeetingbyLogin();
+    fetchTaskData();
   }, [])
+
+  useEffect(() => {
+    setPrTasksList(flattenTasks(task));
+  }, [task]);
+
+  let profileData = JSON?.parse(localStorage.getItem("UserProfileData") || "[]");
+
+  let prFilterData = prTasksList?.filter((task) => {
+    return typeof task?.priority === 'string' && task.priority.toLowerCase().trim() === "high" && task?.assignee?.some((assignee) => assignee.id == profileData?.id);
+  });
+  console.log('prTasksList: ', prTasksList);
+  console.log('prFilterData: ', prFilterData);
 
   return (
     <>
@@ -209,22 +237,22 @@ const Home = () => {
         <Grid item xs={12}>
           <SummaryDashnoard />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={5}>
           <Grid container direction="column" spacing={2}>
             <Grid item>
-              <Card1 agenda={agenda} />
+              <Agenda agenda={meetings} />
             </Grid>
 
             <Grid item>
-              <Card2 projects={Project} />
+              <Projects projects={Project} />
             </Grid>
           </Grid>
         </Grid>
 
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12} md={7}>
           <Grid container direction="column" spacing={2}>
             <Grid item>
-              <Card3 urgentTask={urgentTask} />
+              <UrgentTask urgentTask={prFilterData} />
             </Grid>
 
             {/* <Grid item>

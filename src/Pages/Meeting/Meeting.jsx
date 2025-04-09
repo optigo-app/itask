@@ -245,16 +245,17 @@ const MeetingPage = () => {
         case 'Upcoming':
           return matchesSearch && meetingDate > currentDate;
         case 'Overdue':
-          return matchesSearch && meetingDate < currentDate && meeting.isAttendBtn == 1;
+          return matchesSearch && meetingDate < currentDate ;
         case 'Completed':
           return matchesSearch && meetingDate < currentDate && meeting.isAttendBtn == 2;
         case 'History':
-          return matchesSearch && meetingDate < currentDate && meeting.isAttendBtn === 2;
+          return matchesSearch && meetingDate < currentDate && meeting.isAttendBtn === 0;
         default:
           return matchesSearch;
       }
     })
     ?.sort((a, b) => new Date(a.time) - new Date(b.time));
+  console.log('filteredMeetings: ', filteredMeetings);
 
   const handleDrawerToggle = () => {
     setCaledrawerOpen(!caledrawerOpen);
@@ -419,7 +420,7 @@ const MeetingPage = () => {
                 </Grid>
               ) :
                 <MeetingTable
-                  meeting={meetings}
+                  meeting={filteredMeetings}
                   StatusCircles={StatusCircles}
                   background={background}
                   handleOpenStatusModal={handleOpenStatusModal}
