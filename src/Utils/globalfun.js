@@ -306,6 +306,21 @@ export function mapTaskLabels(data) {
     return taskData;
 }
 
+export const flattenTasks = (tasks, level = 0) => {
+    return tasks?.reduce((flatList, task) => {
+        const { subtasks, ...taskWithoutSubtasks } = task;
+
+        flatList.push({ ...taskWithoutSubtasks, level });
+
+        if (subtasks?.length > 0) {
+            flatList = flatList.concat(flattenTasks(subtasks, level + 1));
+        }
+
+        return flatList;
+    }, []);
+};
+
+
 //Selectmenu custom styles
 export const commonSelectProps = {
     select: true,

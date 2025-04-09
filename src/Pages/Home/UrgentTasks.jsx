@@ -2,7 +2,7 @@ import React from 'react'
 import { Card, CardContent, Typography, Table, TableBody, TableCell, TableRow } from '@mui/material'
 import { priorityColors } from '../../Utils/globalfun'
 
-const Card3 = ({ urgentTask }) => {
+const UrgentTask = ({ urgentTask }) => {
  
 
     return (
@@ -16,7 +16,7 @@ const Card3 = ({ urgentTask }) => {
                     <TableBody>
                         {urgentTask?.map((task) => (
                             <TableRow key={task.taskId}>
-                                <TableCell>{task.taskName}</TableCell>
+                                <TableCell>{task.taskname}</TableCell>
                                 <TableCell>
                                     <div style={{
                                         color: priorityColors[task?.priority]?.color,
@@ -43,4 +43,4 @@ const Card3 = ({ urgentTask }) => {
     )
 }
 
-export default Card3
+export default UrgentTask

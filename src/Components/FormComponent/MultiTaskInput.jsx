@@ -210,7 +210,7 @@ const MultiTaskInput = ({ onSave }) => {
                                         <TableBody>
                                             {tasks.map((task, index) => (
                                                 <>
-                                                    <TableRow key={index}>
+                                                    <TableRow key={task?.taskid}>
                                                         <TableCell sx={{ width: "60%" }}>
                                                             {editIndex === index ? (
                                                                 <TextField
