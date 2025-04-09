@@ -10,15 +10,6 @@ import { fetchMasterGlFunc } from './Utils/globalfun';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
 import Reports from './Pages/Reports/Reports';
-import ProjectDashboard from './Pages/Project/ProjectDashboard';
-import MilestoneTimeline from './Components/Project/Dashboard/MilestoneTimeline';
-import ReferencePr from './Components/Project/Dashboard/ReferencePr';
-import EditableTimer from './Backup/EditableTimer';
-import TreeDataGrid from './Backup/TreeDataGrid';
-import NotificationComponent from './Backup/NotificationComponent';
-import PinnableTable from './Backup/TreeDataGrid';
-import TableGrid from './Backup/TableGrid';
-import DatePickerWithIST from './Backup/DatePickerWithIST';
 import SomethingWentWrong from './Components/Auth/SomethingWentWrong';
 
 // Lazy Loaded Components
@@ -35,8 +26,8 @@ const TaskDetails = lazy(() => import('./Components/Task/TaskDetails/TaskDetails
 const PagenotFound = lazy(() => import('./Pages/404Page/PagenotFound'));
 const MetaDataSet = lazy(() => import('./Utils/MetaData/MetaDataSet'));
 const Profile = lazy(() => import('./Pages/ProfilePage/Profile'));
-const LoginForm = lazy(() => import('./Components/Auth/LoginForm'));
 const UnassignedTaskList = lazy(() => import('./Pages/Task/UnAssignedTask/UnassignedTaskList'));
+const ProjectDashboard = lazy(() => import('./Pages/Project/ProjectDashboard'));
 
 const Layout = ({ children }) => {
     const isMobile = useMediaQuery('(max-width:768px)');
@@ -189,7 +180,6 @@ const App = () => {
                         <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
                             <Routes>
                                 <Route path="/error_401" element={isAuthenticated ? <Navigate to="/" replace /> : <SomethingWentWrong />} />
-
                                 <Route
                                     path="*"
                                     element={
@@ -207,8 +197,6 @@ const App = () => {
                                                 <Route path="/masters" element={<ProtectedRoute><Masters /></ProtectedRoute>} />
                                                 <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                                                 <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-                                                <Route path="/test" element={<ProtectedRoute><MilestoneTimeline /></ProtectedRoute>} />
-                                                {/* <Route path="/test1" element={<ProtectedRoute><MeetingTable /></ProtectedRoute>} /> */}
                                                 <Route path="*" element={<PagenotFound />} />
                                             </Routes>
                                         </Layout>

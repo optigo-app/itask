@@ -38,6 +38,7 @@ const tabData = [
   { label: 'Upcoming', content: 'UpcomingMeetings' },
   { label: 'Overdue', content: 'OverdueMeetings' },
   { label: 'Completed', content: 'CompletedMeetings' },
+  { label: 'History', content: 'MeetingsHistory' },
 ];
 
 
@@ -83,6 +84,17 @@ const MeetingPage = () => {
     handleMeetingStatusSave(formValues);
   };
 
+  const handleAttendMeeting = async (meeting) => {
+    console.log('meeting: ', meeting);
+    const updatedMeetings = meetings?.map(m =>
+      m.meetingid === meeting.meetingid
+        ? { ...m, isAttendBtn: 2 }
+        : m
+    );
+
+    setMeetings(updatedMeetings);
+  };
+
   const handleCloseRejectModal = () => {
     setOpenRejectModal(false);
     setRejectReason("");
@@ -121,14 +133,18 @@ const MeetingPage = () => {
         const assigneeIds = meeting?.assigneids?.split(",")?.map(Number) || [];
 
         const isUserAssigned = assigneeIds.includes(loginUserData?.id);
+        console.log('isUserAssigned: ', isUserAssigned);
         const isMeetingDtEmpty = Object.keys(meetingDt).length === 0;
         const isAcceptStatusValid = isMeetingDtEmpty || meetingDt?.isAccept === 0;
 
         const isAction = isUserAssigned && isAcceptStatusValid;
 
+        const isAttendBtn = isUserAssigned && meeting?.meetingDt?.isAccept != 0 ? 1 : 0;
+
         return {
           ...meeting,
           isAction,
+          isAttendBtn,
           guests: taskAssigneeData?.filter((user) =>
             assigneeIds.includes(user.id)
           ) || [],
@@ -210,9 +226,34 @@ const MeetingPage = () => {
 
   // Filter and Sort Meetings
   const filteredMeetings = meetings
-    ?.filter((meeting) =>
-      meeting?.meetingtitle?.toLowerCase()?.includes(searchTerm.toLowerCase())
-    )
+    ?.filter((meeting) => {
+      const searchFields = [
+        meeting.meetingtitle,
+        meeting.ProjectName,
+        meeting.taskname,
+        meeting.meetingdesc,
+        ...meeting.guests.map(guest => `${guest.firstname} ${guest.lastname}`)
+      ];
+      const matchesSearch = searchFields.some(field =>
+        field?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      const currentDate = new Date();
+      const meetingDate = new Date(meeting.StartDate);
+
+      switch (selectedTab) {
+        case 'Upcoming':
+          return matchesSearch && meetingDate > currentDate;
+        case 'Overdue':
+          return matchesSearch && meetingDate < currentDate && meeting.isAttendBtn == 1;
+        case 'Completed':
+          return matchesSearch && meetingDate < currentDate && meeting.isAttendBtn == 2;
+        case 'History':
+          return matchesSearch && meetingDate < currentDate && meeting.isAttendBtn === 2;
+        default:
+          return matchesSearch;
+      }
+    })
     ?.sort((a, b) => new Date(a.time) - new Date(b.time));
 
   const handleDrawerToggle = () => {
@@ -371,6 +412,7 @@ const MeetingPage = () => {
                         background={background}
                         handleAcceptMeeting={handleAcceptMeeting}
                         handleReject={handleReject}
+                        handleAttendMeeting={handleAttendMeeting}
                       />
                     </Grid>
                   ))}
@@ -380,7 +422,11 @@ const MeetingPage = () => {
                   meeting={meetings}
                   StatusCircles={StatusCircles}
                   background={background}
-                  handleOpenStatusModal={handleOpenStatusModal} />
+                  handleOpenStatusModal={handleOpenStatusModal}
+                  handleAcceptMeeting={handleAcceptMeeting}
+                  handleReject={handleReject}
+                  handleAttendMeeting={handleAttendMeeting}
+                />
               }
             </>
           ) :

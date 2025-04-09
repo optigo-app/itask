@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { Box, Card, CardContent, Typography, IconButton, Avatar, AvatarGroup, Button } from "@mui/material";
+import { Box, Card, CardContent, Typography, IconButton, Avatar, AvatarGroup, Button, Tooltip } from "@mui/material";
 import { Circle, CircleCheck, CircleDotDashed, CirclePlus, CircleX, Plus, StickyNote, Target, Volleyball, Workflow } from "lucide-react";
-import { formatDate, formatDate2, getRandomAvatarColor, priorityColors } from "../../../Utils/globalfun";
+import { formatDate, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors } from "../../../Utils/globalfun";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi"
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
@@ -18,6 +18,7 @@ function KanbanView({
   statusData }) {
 
   const [data, setData] = useState();
+  console.log('data: ', data);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
@@ -319,22 +320,31 @@ function KanbanView({
                                             border: 'none',
                                             transition: 'transform 0.3s ease-in-out',
                                             '&:hover': {
-                                              transform: 'translateY(-8px)',
+                                              transform: 'scale(1.2)',
+                                              zIndex: 10
                                             }
                                           }
                                         }}
                                       >
-                                        {task.assignee?.map((assignee, teamIdx) => (
-                                          <Avatar
-                                            key={teamIdx}
-                                            alt={assignee}
-                                            src={assignee.avatar}
-                                            sx={{
-                                              backgroundColor: background(assignee),
-                                            }}
+                                        {task?.assignee?.map((assignee, teamIdx) => (
+                                          <Tooltip
+                                            placement="top"
+                                            key={assignee?.id}
+                                            title={assignee?.firstname + " " + assignee?.lastname}
+                                            arrow
+                                            classes={{ tooltip: 'custom-tooltip' }}
                                           >
-                                            {!assignee.avatar && assignee.charAt(0)}
-                                          </Avatar>
+                                            <Avatar
+                                              key={teamIdx}
+                                              alt={assignee?.firstname + " " + assignee?.lastname}
+                                              src={ImageUrl(assignee) || null}
+                                              sx={{
+                                                backgroundColor: background(assignee?.firstname),
+                                              }}
+                                            >
+                                              {!assignee.avatar && assignee?.firstname?.charAt(0)}
+                                            </Avatar>
+                                          </Tooltip>
                                         ))}
                                       </AvatarGroup>
                                     </Box>

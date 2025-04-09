@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength } from "../../Recoil/atom";
@@ -91,6 +91,7 @@ const Task = () => {
       let data = selectedRow?.parentid ? selectedRow : parsedData;
       const taskData = await fetchTaskDataApi(data ?? {});
       const labeledTasks = mapTaskLabels(taskData);
+      console.log('labeledTasks: ', labeledTasks);
       let finalTaskData = [...labeledTasks]
       setSelectedRow({})
       if (parsedData?.taskid) {
@@ -573,14 +574,15 @@ const Task = () => {
               )}
 
               {activeButton === "kanban" && (
-                <KanbanView
-                  taskdata={filteredData ?? null}
-                  isLoading={isTaskLoading}
-                  masterData={masterData}
-                  statusData={statusData}
-                  handleTaskFavorite={handleTaskFavorite}
-                  handleFreezeTask={handleFreezeTask}
-                />
+                // <KanbanView
+                //   taskdata={filteredData ?? null}
+                //   isLoading={isTaskLoading}
+                //   masterData={masterData}
+                //   statusData={statusData}
+                //   handleTaskFavorite={handleTaskFavorite}
+                //   handleFreezeTask={handleFreezeTask}
+                // />
+                <Typography>Comming soon...</Typography>
               )}
 
               {activeButton === "card" && (
