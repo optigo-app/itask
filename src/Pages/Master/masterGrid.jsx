@@ -1,5 +1,5 @@
-import React from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Pagination, IconButton } from '@mui/material';
+import React, { useMemo, useState } from 'react';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Pagination, IconButton, TableSortLabel } from '@mui/material';
 import { Pencil, Trash, ArchiveRestore, Trash2 } from 'lucide-react';
 import './Master.scss';
 
@@ -15,7 +15,7 @@ const Mastergrid = ({
     rowsPerPage,
     totalRows
 }) => {
-
+    const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
     // Custom Footer Component for Pagination
     const CustomFooter = ({ totalRows, paginationCount, paginationPage, onPaginationChange }) => {
         const startEntry = (paginationPage - 1) * rowsPerPage + 1;
@@ -43,6 +43,43 @@ const Mastergrid = ({
         );
     };
 
+    const handleSort = (key) => {
+        setSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc"
+        }));
+    };
+
+    const sortedMaster = useMemo(() => {
+        const sorted = [...data];
+        const { key, direction } = sortConfig;
+        if (!key) return sorted;
+
+        sorted.sort((a, b) => {
+            const getValue = (item) => {
+                if (key === "labelname") return item?.labelname;
+                return (item[key] || "").toString().toLowerCase();
+            };
+
+            const aVal = getValue(a);
+            const bVal = getValue(b);
+            return direction === "asc" ? aVal > bVal ? 1 : -1 : aVal < bVal ? 1 : -1;
+        });
+
+        return sorted;
+    }, [data, sortConfig]);
+
+    const renderSortCell = (label, key) => (
+        <TableSortLabel
+            active={sortConfig.key === key}
+            direction={sortConfig.direction}
+            onClick={() => handleSort(key)}
+        >
+            {label}
+        </TableSortLabel>
+    );
+
+
     return (
         <Box>
             <TableContainer className='TableContainer' component={Paper} sx={{ marginTop: 2 }}>
@@ -50,12 +87,12 @@ const Mastergrid = ({
                     <TableHead>
                         <TableRow>
                             <TableCell width={80}>Sr#</TableCell>
-                            <TableCell>Name</TableCell>
+                            <TableCell>{renderSortCell("Name", "labelname")}</TableCell>
                             <TableCell className='actionCell'>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {data?.map((row, index) => (
+                        {sortedMaster?.map((row, index) => (
                             <TableRow key={row.id}>
                                 <TableCell>{index + 1}</TableCell>
                                 <TableCell style={{

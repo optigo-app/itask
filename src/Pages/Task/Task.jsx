@@ -281,6 +281,7 @@ const Task = () => {
   // filter functions
   const filteredData = tasks?.filter((task) => {
     const { status, priority, assignee, searchTerm, dueDate, department, project, category } = filters;
+    console.log('filters: ', filters);
     console.log('assignee: ', assignee);
 
     const normalizedSearchTerm = searchTerm?.toLowerCase();
@@ -298,29 +299,29 @@ const Task = () => {
 
     const matchesFilters = (task) => {
       const matches =
-        (category ? (task?.category)?.toLowerCase() === category.toLowerCase() : true) &&
-        (status ? (task?.status)?.toLowerCase() === status.toLowerCase() : true) &&
-        (priority ? (task?.priority)?.toLowerCase() === priority.toLowerCase() : true) &&
-        (department ? (task?.taskDpt)?.toLowerCase() === department.toLowerCase() : true) &&
-        (project ? (task?.taskPr)?.toLowerCase() === project.toLowerCase() : true) &&
+        (category ? (task?.category)?.toLowerCase() === category?.toLowerCase() : true) &&
+        (status ? (task?.status)?.toLowerCase() === status?.toLowerCase() : true) &&
+        (priority ? (task?.priority)?.toLowerCase() === priority?.toLowerCase() : true) &&
+        (department ? (task?.taskDpt)?.toLowerCase() === department?.toLowerCase() : true) &&
+        (project ? (task?.taskPr)?.toLowerCase() === project?.toLowerCase() : true) &&
         (dueDate ? formatDate2(task?.DeadLineDate) === formatDate2(dueDate) : true) &&
         (assignee ?
-          task.assignee?.some((a) => {
-            const fullName = `${a?.firstname} ${a?.lastname}`.toLowerCase();
-            return fullName.includes(assignee.toLowerCase());
+          task?.assignee?.some((a) => {
+            const fullName = `${a?.firstname} ${a?.lastname}`?.toLowerCase();
+            return fullName?.includes(assignee?.toLowerCase());
           })
           : true) &&
         (!searchTerm ||
-          task?.taskname?.toLowerCase().includes(normalizedSearchTerm) ||
-          task?.status?.toLowerCase().includes(normalizedSearchTerm) ||
-          task?.priority?.toLowerCase().includes(normalizedSearchTerm) ||
+          task?.taskname?.toLowerCase()?.includes(normalizedSearchTerm) ||
+          task?.status?.toLowerCase()?.includes(normalizedSearchTerm) ||
+          task?.priority?.toLowerCase()?.includes(normalizedSearchTerm) ||
           (Array.isArray(task?.assignee)
-            ? task.assignee.some((a) => `${a?.firstname} ${a?.lastname}`.toLowerCase().includes(normalizedSearchTerm))
-            : task?.assignee?.toLowerCase().includes(normalizedSearchTerm)) ||
-          task?.description?.toLowerCase().includes(normalizedSearchTerm) ||
-          task?.DeadLineDate?.toLowerCase().includes(normalizedSearchTerm) ||
-          task?.taskPr?.toLowerCase().includes(normalizedSearchTerm) ||
-          task?.taskDpt?.toLowerCase().includes(normalizedSearchTerm)) &&
+            ? task?.assignee?.some((a) => `${a?.firstname} ${a?.lastname}`?.toLowerCase()?.includes(normalizedSearchTerm))
+            : task?.assignee?.toLowerCase()?.includes(normalizedSearchTerm)) ||
+          task?.description?.toLowerCase()?.includes(normalizedSearchTerm) ||
+          task?.DeadLineDate?.toLowerCase()?.includes(normalizedSearchTerm) ||
+          task?.taskPr?.toLowerCase()?.includes(normalizedSearchTerm) ||
+          task?.taskDpt?.toLowerCase()?.includes(normalizedSearchTerm)) &&
         (dueDate ? formatDate(task?.DeadLineDate) === formatDate(dueDate) : true);
 
       if (matches) {
@@ -328,7 +329,7 @@ const Task = () => {
       }
 
       if (task?.subtasks?.length > 0) {
-        return task.subtasks.some(matchesFilters);
+        return task?.subtasks?.some(matchesFilters);
       }
 
       return false;
@@ -353,10 +354,10 @@ const Task = () => {
     setTasks((prevTasks) => {
       const updateTasksRecursively = (tasks) => {
         return tasks?.map((task) => {
-          if (task.taskid === taskToUpdates.taskid) {
+          if (task?.taskid === taskToUpdates?.taskid) {
             const updatedTask = {
               ...task,
-              isfavourite: task.isfavourite ? 0 : 1,
+              isfavourite: task?.isfavourite ? 0 : 1,
             };
             handleAddApicall(updatedTask);
             return updatedTask;

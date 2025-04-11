@@ -12,15 +12,15 @@ import TaskAPiCallWithFormat from '../../Utils/TaskList/TaskAPiCallWithFormat'
 import { TaskData } from '../../Recoil/atom'
 import { useRecoilValue } from 'recoil'
 import { flattenTasks } from '../../Utils/globalfun'
+import { useNavigate } from 'react-router-dom'
 
 const Home = () => {
+  const [isLoding, setIsLoding] = useState(false);
+  const navigate = useNavigate();
   const { fetchTaskData } = TaskAPiCallWithFormat();
   const task = useRecoilValue(TaskData);
-  console.log('task: ', task);
-  const [isLoding, setIsLoding] = React.useState(false);
-  const [meetings, setMeetings] = React.useState([]);
-  const [prTasksList, setPrTasksList] = useState([]);
-  console.log('prTasksList: ', prTasksList);
+  const [meetings, setMeetings] = React.useState(null);
+  const [prTasksList, setPrTasksList] = useState(null);
   const Project = [
     {
       "projectId": "p1",
@@ -111,70 +111,8 @@ const Home = () => {
     }
   ]
 
-  const urgentTask = [
-    {
-      "taskId": "t1",
-      "taskName": "Urgent Task for Project Alpha",
-      "description": "This task needs to be completed as soon as possible.",
-      "priority": "High",
-      "dueDate": "2024-12-10",
-      "assignedTo": "t1",
-      "status": "Pending"
-    },
-    {
-      "taskId": "t2",
-      "taskName": "Fix Critical Bug in Project Beta",
-      "description": "There is a critical bug in Project Beta that needs immediate attention.",
-      "priority": "High",
-      "dueDate": "2024-12-15",
-      "assignedTo": "t2",
-      "status": "In Progress"
-    },
-    {
-      "taskId": "t3",
-      "taskName": "Prepare Report for Project Gamma",
-      "description": "The final report for Project Gamma needs to be prepared by the end of this week.",
-      "priority": "Medium",
-      "dueDate": "2024-12-12",
-      "assignedTo": "t3",
-      "status": "Pending"
-    },
-    {
-      "taskId": "t4",
-      "taskName": "Review Code for Project Delta",
-      "description": "Code review for Project Delta is due and must be completed by the team.",
-      "priority": "Medium",
-      "dueDate": "2024-12-08",
-      "assignedTo": "t1",
-      "status": "Completed"
-    }
-  ]
-
-  const agenda = [
-    {
-      "agendaId": "a1",
-      "taskTitle": "Complete Project Alpha Report",
-      "description": "Finish compiling the final report for Project Alpha before the deadline.",
-      "time": "2024-12-08T14:00:00Z",
-      "project": "Project Alpha"
-    },
-    {
-      "agendaId": "a2",
-      "taskTitle": "Design User Interface for Project Beta",
-      "description": "Create the initial mockups and user interface designs for Project Beta.",
-      "time": "2024-12-09T10:00:00Z",
-      "project": "Project Beta"
-    },
-    {
-      "agendaId": "a3",
-      "taskTitle": "Review Project Gamma Progress",
-      "description": "Assess the current progress and provide feedback on Project Gamma.",
-      "time": "2024-12-10T15:30:00Z",
-      "project": "Project Gamma"
-    }
-  ]
-
   const handleMeetingbyLogin = async () => {
+    debugger
     setIsLoding(true);
     try {
       const meetingApiRes = await fetchMettingListByLoginApi();
@@ -210,13 +148,21 @@ const Home = () => {
     }
   };
 
-  const handleProjectFun = () => {
-
-  }
+  const fetchTaskAPiData = async () => {
+    setIsLoding(true);
+    try {
+      await fetchTaskData();
+    } catch (error) {
+      console.error("Error fetching task data:", error);
+    } finally {
+      setIsLoding(false);
+    }
+  };
 
   useEffect(() => {
+    setIsLoding(true);
     handleMeetingbyLogin();
-    fetchTaskData();
+    fetchTaskAPiData();
   }, [])
 
   useEffect(() => {
@@ -240,11 +186,11 @@ const Home = () => {
         <Grid item xs={12} md={5}>
           <Grid container direction="column" spacing={2}>
             <Grid item>
-              <Agenda agenda={meetings} />
+              <Agenda agenda={meetings} navigate={navigate} isLoding={isLoding}/>
             </Grid>
 
             <Grid item>
-              <Projects projects={Project} />
+              <Projects projects={Project} navigate={navigate} isLoding={isLoding}/>
             </Grid>
           </Grid>
         </Grid>
@@ -252,7 +198,7 @@ const Home = () => {
         <Grid item xs={12} md={7}>
           <Grid container direction="column" spacing={2}>
             <Grid item>
-              <UrgentTask urgentTask={prFilterData} />
+              <UrgentTask urgentTask={prFilterData} navigate={navigate} isLoding={isLoding}/>
             </Grid>
 
             {/* <Grid item>

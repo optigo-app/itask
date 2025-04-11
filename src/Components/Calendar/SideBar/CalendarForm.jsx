@@ -267,7 +267,7 @@ const CalendarForm = ({
                                     options={assignees}
                                     label="Assign To"
                                     placeholder="Select assignees"
-                                    limitTags={3}
+                                    limitTags={2}
                                     onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
                                 />
                             </Grid>
@@ -278,7 +278,7 @@ const CalendarForm = ({
                                     label="Start Date & Time"
                                     name="startDateTime"
                                     value={formValues.start}
-                                    width='380px'
+                                    width='410px'
                                     styleprops={commonTextFieldProps}
                                     onChange={(value) => {
                                         if (value) {
@@ -296,7 +296,7 @@ const CalendarForm = ({
                                     label="End Date & Time"
                                     name="endDateTime"
                                     value={formValues.end}
-                                    width='380px'
+                                    width='410px'
                                     styleprops={commonTextFieldProps}
                                     onChange={(value) => {
                                         if (value) {

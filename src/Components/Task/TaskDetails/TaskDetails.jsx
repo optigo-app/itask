@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Modal, Box, IconButton, Typography, Divider, Grid, Card, CardContent, CardMedia, Tabs, Tab, TextareaAutosize,
+    Box, IconButton, Typography, Grid, Tabs, Tab,
     Avatar,
     useTheme,
     Drawer,
@@ -8,18 +8,18 @@ import {
     AvatarGroup,
     Tooltip,
 } from '@mui/material';
-import { CircleX, Expand, Shrink, Download, Send, Edit } from 'lucide-react';
+import { CircleX, Download } from 'lucide-react';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import './TaskDetails.scss';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, TaskData } from '../../../Recoil/atom';
 import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
 import AttachmentImg from "../../../Assests/Attachment.webp";
-import { findParentTask, formatDate2, formatDate3, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from '../../../Utils/globalfun';
+import { formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from '../../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
@@ -140,24 +140,28 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     };
 
     const handleSendComment = async () => {
-        if (newComment.trim()) {
-            const newCommentData = {
-                title: `Comment ${comments.length + 1}`,
-                description: newComment,
-                timestamp: Date.now(),
-            };
+        debugger
+        if (!newComment.trim()) return;
 
-            try {
-                const addCommentResponse = await taskCommentAddApi(taskData, newCommentData);
-                if (addCommentResponse) {
-                    setComments((prevComments) => [...prevComments, newCommentData]);
-                    setNewComment('');
-                } else {
-                    console.error('Failed to add comment');
-                }
-            } catch (error) {
-                console.error('Error while sending comment:', error);
+        try {
+            await taskCommentAddApi(taskData, newComment);
+
+            setNewComment('');
+
+            const taskComment = await taskCommentGetApi(taskData);
+
+            if (taskComment) {
+                const cleanedComments = taskComment.rd.map(comment => ({
+                    ...comment,
+                    id: comment?.id,
+                    user: comment?.user,
+                    attachments: comment?.attachments || []
+                }));
+
+                setComments(cleanedComments);
             }
+        } catch (error) {
+            console.error('Error adding comment:', error);
         }
     };
 
@@ -205,7 +209,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const background = (assignee) => {
         const avatarBackgroundColor = assignee?.avatar
             ? "transparent"
-            : getRandomAvatarColor(assignee?.name);
+            : getRandomAvatarColor(assignee?.firstname);
         return avatarBackgroundColor;
     };
 
@@ -215,6 +219,31 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
         setFormDrawerOpen(true);
         setSelectedTask(task);
     }
+
+    const TagLabel = ({ value, colorMap }) => {
+        const colors = colorMap?.[value] || {};
+
+        return (
+            <Typography
+                sx={{
+                    color: `${colors.color || "#7d7f85"} !important`,
+                    backgroundColor: colors.backgroundColor || "#fff",
+                    width: 'fit-content',
+                    padding: '0.3rem 1rem',
+                    borderRadius: '5px',
+                    textAlign: 'center',
+                    fontSize: '14px !important',
+                    fontWeight: '500',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
+                {value}
+            </Typography>
+        );
+    };
+
 
 
     return (
@@ -298,23 +327,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         <Typography className="tasklable">Status</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                        <Typography
-                                            sx={{
-                                                color: `${statusColors[taskData?.status]?.color} !important`,
-                                                backgroundColor: statusColors[taskData?.status]?.backgroundColor,
-                                                width: 'fit-content',
-                                                padding: '0.3rem 1rem',
-                                                borderRadius: '5px',
-                                                textAlign: 'center',
-                                                fontSize: '14px !important',
-                                                fontWeight: '500',
-                                                display: 'flex',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                            }}
-                                        >
-                                            {taskData?.status}
-                                        </Typography>
+                                        <TagLabel value={taskData?.status} colorMap={statusColors} />
                                     </Grid>
 
                                     {/* Priority */}
@@ -322,23 +335,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         <Typography className="tasklable">Priority</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                        <Typography
-                                            sx={{
-                                                color: `${priorityColors[taskData?.priority]?.color} !important`,
-                                                backgroundColor: priorityColors[taskData?.priority]?.backgroundColor,
-                                                width: 'fit-content',
-                                                padding: '0.3rem 1rem',
-                                                borderRadius: '5px',
-                                                textAlign: 'center',
-                                                fontSize: '14px !important',
-                                                fontWeight: '500',
-                                                display: 'flex',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                            }}
-                                        >
-                                            {taskData?.priority}
-                                        </Typography>
+                                        <TagLabel value={taskData?.priority} colorMap={priorityColors} />
                                     </Grid>
 
                                     {/* Assignees */}
@@ -357,7 +354,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                     cursor: 'pointer',
                                                     border: 'none',
                                                     transition: 'transform 0.3s ease-in-out',
-                                                    '&:hover': {       
+                                                    '&:hover': {
                                                         transform: 'scale(1.2)',
                                                         zIndex: 10
                                                     }
@@ -368,16 +365,16 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                 <Tooltip
                                                     placement="top"
                                                     key={assignee?.id}
-                                                    title={assignee?.name}
+                                                    title={assignee?.firstname + " " + assignee?.lastname}
                                                     arrow
                                                     classes={{ tooltip: 'custom-tooltip' }}
                                                 >
                                                     <Avatar
                                                         key={teamIdx}
-                                                        alt={assignee?.firstname}
+                                                        alt={assignee?.firstname + " " + assignee?.lastname}
                                                         src={ImageUrl(assignee) || null}
                                                         sx={{
-                                                            backgroundColor: background(assignee?.firstname),
+                                                            backgroundColor: background(assignee),
                                                         }}
                                                     >
                                                         {!assignee.avatar && assignee?.firstname?.charAt(0)}

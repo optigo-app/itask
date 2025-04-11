@@ -28,6 +28,7 @@ import { commonSelectProps, commonTextFieldProps, convertWordsToSpecialChars, cu
 import MultiTaskInput from "./MultiTaskInput";
 import FileUploader from "../ShortcutsComponent/FileUploader";
 import timezone from 'dayjs/plugin/timezone';
+import CustomAutocomplete from "../ShortcutsComponent/CustomAutocomplete";
 
 const TASK_OPTIONS = [
     { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -53,6 +54,7 @@ const SidebarDrawer = ({
     const [checkedMultiTask, setCheckedMultiTask] = useState(false);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
     const [rootSubrootflagval, setRootSubrootFlagVal] = useRecoilState(rootSubrootflag)
+    console.log('rootSubrootflagval: ', rootSubrootflagval);
     const [taskType, setTaskType] = useState("single");
     const [tasksubType, setTaskSubType] = useState("multi2");
     const searchParams = new URLSearchParams(location?.search);
@@ -65,6 +67,7 @@ const SidebarDrawer = ({
         dueDate: null,
         startDate: null,
         assignee: "",
+        status: "",
         priority: "",
         description: "",
         attachment: null,
@@ -96,6 +99,7 @@ const SidebarDrawer = ({
     };
 
     useEffect(() => {
+        debugger
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
         if (open && rootSubrootflagval?.Task === "root") {
@@ -104,7 +108,7 @@ const SidebarDrawer = ({
                 multiTaskName: formDataValue?.actual ?? [""],
                 bulkTask: formDataValue?.bulk ?? [],
                 dueDate: formDataValue?.DeadLineDate ?? null,
-                department: formDataValue?.departmentid ?? "",
+                department: formDataValue?.departmentid != 0 ? formDataValue?.departmentid : "",
                 guests: matchedAssignees ?? [],
                 assignee: formDataValue?.assigneids ?? "",
                 status: formDataValue?.statusid ?? "",
@@ -134,12 +138,14 @@ const SidebarDrawer = ({
                         const span = element.querySelector(".notranslate");
                         if (span && !formValues[key]) {
                             span.textContent = `Select ${key.charAt(0).toUpperCase() + key.slice(1)}`;
+                            span.style.color = "#9e9e9e8f";
                         }
                     }
                 });
             }
         }, 300);
     }, [open, checkedMultiTask, formValues, rootSubrootflagval]);
+
 
     // Handle form value changes
     const handleChange = (e) => {
@@ -152,17 +158,17 @@ const SidebarDrawer = ({
     const handleDateChange = (date, key) => {
         debugger
         if (date) {
-          const istDate = date.tz('Asia/Kolkata');
-      
-          setFormValues((prev) => ({
-            ...prev,
-            [key]: istDate.format('YYYY-MM-DDTHH:mm:ss.SSS'),
-          }));
-      
-          console.log(`Selected ${key} in IST:`, istDate.format('YYYY-MM-DDTHH:mm:ss.SSS'));
+            const istDate = date.tz('Asia/Kolkata');
+
+            setFormValues((prev) => ({
+                ...prev,
+                [key]: istDate.format('YYYY-MM-DDTHH:mm:ss.SSS'),
+            }));
+
+            console.log(`Selected ${key} in IST:`, istDate.format('YYYY-MM-DDTHH:mm:ss.SSS'));
         }
-      };
-      
+    };
+
 
     // Handle estimate form value changes
     const handleEstimateChange = (field, newValue) => {
@@ -281,7 +287,7 @@ const SidebarDrawer = ({
                     <Box className="drawer-container">
                         <Box className="drawer-header">
                             <Typography variant="h6" className="drawer-title">
-                                {taskType === 'multi_input' ? "Add Tasks" : "Add Task"}
+                                {taskType === 'multi_input' ? "Add Tasks" : rootSubrootflagval?.Task == "AddTask" ? "Add Task" : rootSubrootflagval?.Task == "subroot" ? "Add task" : "Edit Task"}
                             </Typography>
                             <IconButton onClick={handleClear}>
                                 <CircleX />
@@ -371,55 +377,27 @@ const SidebarDrawer = ({
                                         </Box>
                                     </Grid>
                                     <Grid item xs={6}>
-                                        <Box className="form-group">
-                                            <Typography className="form-label" variant="subtitle1">
-                                                Category
-                                            </Typography>
-                                            <TextField
-                                                name="category"
-                                                value={formValues.category || ""}
-                                                onChange={handleChange}
-                                                select
-                                                {...commonTextFieldProps}
-                                                {...commonSelectProps}
-                                                ref={filterRefs.category}
-                                            >
-                                                <MenuItem value="">
-                                                    <em>Select Category</em>
-                                                </MenuItem>
-                                                {taskCategory?.map((category) => (
-                                                    <MenuItem name={category?.id} key={category?.id} value={category?.id}>
-                                                        {category.labelname}
-                                                    </MenuItem>
-                                                ))}
-                                            </TextField>
-                                        </Box>
+                                        <CustomAutocomplete
+                                            label="Category"
+                                            name="category"
+                                            value={formValues.category}
+                                            onChange={handleChange}
+                                            options={taskCategory}
+                                            placeholder="Select Category"
+                                            refProp={filterRefs.category}
+                                        />
                                     </Grid>
                                     {/* department */}
                                     <Grid item xs={6}>
-                                        <Box className="form-group">
-                                            <Typography className="form-label" variant="subtitle1">
-                                                Department
-                                            </Typography>
-                                            <TextField
-                                                name="department"
-                                                value={formValues.department || ""}
-                                                onChange={handleChange}
-                                                select
-                                                {...commonTextFieldProps}
-                                                {...commonSelectProps}
-                                                ref={filterRefs.department}
-                                            >
-                                                <MenuItem value="">
-                                                    <em>Select Department</em>
-                                                </MenuItem>
-                                                {taskDepartment?.map((department) => (
-                                                    <MenuItem name={department?.id} key={department?.id} value={department?.id}>
-                                                        {department.labelname}
-                                                    </MenuItem>
-                                                ))}
-                                            </TextField>
-                                        </Box>
+                                        <CustomAutocomplete
+                                            label="Department"
+                                            name="department"
+                                            value={formValues.department}
+                                            onChange={handleChange}
+                                            options={taskDepartment}
+                                            placeholder="Select Department"
+                                            refProp={filterRefs.department}
+                                        />
                                     </Grid>
                                     {/* Assignee master */}
                                     <Grid item xs={6}>
@@ -433,54 +411,26 @@ const SidebarDrawer = ({
                                         />
                                     </Grid>
                                     <Grid item xs={6}>
-                                        <Box className="form-group">
-                                            <Typography variant="subtitle1" className="form-label" htmlFor="status">
-                                                Status
-                                            </Typography>
-                                            <TextField
-                                                name="status"
-                                                value={formValues?.status || ""}
-                                                onChange={handleChange}
-                                                select
-                                                {...commonTextFieldProps}
-                                                {...commonSelectProps}
-                                                ref={filterRefs?.status}
-                                            >
-                                                <MenuItem value="">
-                                                    <em>Select Status</em>
-                                                </MenuItem>
-                                                {statusData?.map((status) => (
-                                                    <MenuItem name={status?.id} key={status?.id} value={status?.id}>
-                                                        {status?.labelname}
-                                                    </MenuItem>
-                                                ))}
-                                            </TextField>
-                                        </Box>
+                                        <CustomAutocomplete
+                                            label="Status"
+                                            name="status"
+                                            value={formValues.status}
+                                            onChange={handleChange}
+                                            options={statusData}
+                                            placeholder="Select Status"
+                                            refProp={filterRefs.status}
+                                        />
                                     </Grid>
                                     <Grid item xs={6}>
-                                        <Box className="form-group">
-                                            <Typography variant="subtitle1" className="form-label" htmlFor="priority">
-                                                Priority
-                                            </Typography>
-                                            <TextField
-                                                name="priority"
-                                                value={formValues?.priority || ""}
-                                                onChange={handleChange}
-                                                select
-                                                {...commonTextFieldProps}
-                                                {...commonSelectProps}
-                                                ref={filterRefs?.priority}
-                                            >
-                                                <MenuItem value="">
-                                                    <em>Select Priority</em>
-                                                </MenuItem>
-                                                {priorityData?.map((priority) => (
-                                                    <MenuItem name={priority?.id} key={priority?.id} value={priority?.id}>
-                                                        {priority?.labelname}
-                                                    </MenuItem>
-                                                ))}
-                                            </TextField>
-                                        </Box>
+                                        <CustomAutocomplete
+                                            label="Priority"
+                                            name="priority"
+                                            value={formValues.priority}
+                                            onChange={handleChange}
+                                            options={priorityData}
+                                            placeholder="Select Priority"
+                                            refProp={filterRefs.priority}
+                                        />
                                     </Grid>
                                     <Grid item xs={6}>
                                         <Box className="form-group">
@@ -492,7 +442,7 @@ const SidebarDrawer = ({
                                                 value={formValues.startDate ? dayjs(formValues.startDate).tz("Asia/Kolkata", true).local() : null}
                                                 className="textfieldsClass"
                                                 onChange={(date) => handleDateChange(date, 'startDate')}
-                                                sx={{ minWidth: 345 }}
+                                                sx={{ minWidth: 325 }}
                                                 format="DD/MM/YYYY"
                                                 textField={(params) => (
                                                     <TextField
@@ -517,7 +467,7 @@ const SidebarDrawer = ({
                                                 value={formValues.dueDate ? dayjs(formValues.dueDate).tz("Asia/Kolkata", true).local() : null}
                                                 className="textfieldsClass"
                                                 onChange={(date) => handleDateChange(date, 'dueDate')}
-                                                sx={{ minWidth: 345 }}
+                                                sx={{ minWidth: 325 }}
                                                 format="DD/MM/YYYY"
                                                 textField={(params) => (
                                                     <TextField
@@ -637,7 +587,7 @@ const SidebarDrawer = ({
                     <Box className="pr_drawer-container">
                         <Box className="drawer-header">
                             <Typography variant="h6" className="drawer-title">
-                                Add Projet Module
+                                {rootSubrootflagval?.Task == "AddTask" ? "Add Project Module" : "Edit Project Module"}
                             </Typography>
                             <IconButton onClick={handleClear}>
                                 <CircleX />
@@ -652,33 +602,15 @@ const SidebarDrawer = ({
                         <>
                             <Grid container spacing={1} className="form-row">
                                 <Grid item xs={12}>
-                                    <Box className="form-group">
-                                        <Typography
-                                            variant="subtitle1"
-                                            className="form-label"
-                                            htmlFor="progress"
-                                        >
-                                            Project
-                                        </Typography>
-                                        <TextField
-                                            name="project"
-                                            value={formValues?.project || ""}
-                                            onChange={handleChange}
-                                            select
-                                            {...commonTextFieldProps}
-                                            {...commonSelectProps}
-                                            ref={filterRefs?.project}
-                                        >
-                                            <MenuItem value="">
-                                                <em>Select project</em>
-                                            </MenuItem>
-                                            {projectData?.map((project) => (
-                                                <MenuItem name={project?.id} key={project?.id} value={project?.id}>
-                                                    {project?.labelname}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
-                                    </Box>
+                                    <CustomAutocomplete
+                                        label="Project"
+                                        name="project"
+                                        value={formValues.project}
+                                        onChange={handleChange}
+                                        options={projectData}
+                                        placeholder="Select Project"
+                                        refProp={filterRefs.project}
+                                    />
                                 </Grid>
                                 <Grid item xs={12}>
                                     <Box className="form-group">
@@ -699,79 +631,37 @@ const SidebarDrawer = ({
                                     </Box>
                                 </Grid>
                                 <Grid item xs={12}>
-                                    <Box className="form-group">
-                                        <Typography className="form-label" variant="subtitle1">
-                                            Category
-                                        </Typography>
-                                        <TextField
-                                            name="category"
-                                            value={formValues.category || ""}
-                                            onChange={handleChange}
-                                            select
-                                            {...commonTextFieldProps}
-                                            {...commonSelectProps}
-                                            ref={filterRefs.category}
-                                        >
-                                            <MenuItem value="">
-                                                <em>Select Category</em>
-                                            </MenuItem>
-                                            {taskCategory?.map((category) => (
-                                                <MenuItem name={category?.id} key={category?.id} value={category?.id}>
-                                                    {category.labelname}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
-                                    </Box>
+                                    <CustomAutocomplete
+                                        label="Category"
+                                        name="category"
+                                        value={formValues.category}
+                                        onChange={handleChange}
+                                        options={taskCategory}
+                                        placeholder="Select Category"
+                                        refProp={filterRefs.category}
+                                    />
                                 </Grid>
                                 <Grid item xs={12}>
-                                    <Box className="form-group">
-                                        <Typography variant="subtitle1" className="form-label" htmlFor="status">
-                                            Status
-                                        </Typography>
-                                        <TextField
-                                            name="status"
-                                            value={formValues?.status || ""}
-                                            onChange={handleChange}
-                                            select
-                                            {...commonTextFieldProps}
-                                            {...commonSelectProps}
-                                            ref={filterRefs?.status}
-                                        >
-                                            <MenuItem value="">
-                                                <em>Select Status</em>
-                                            </MenuItem>
-                                            {statusData?.map((status) => (
-                                                <MenuItem name={status?.id} key={status?.id} value={status?.id}>
-                                                    {status?.labelname}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
-                                    </Box>
+                                    <CustomAutocomplete
+                                        label="Status"
+                                        name="status"
+                                        value={formValues.status}
+                                        onChange={handleChange}
+                                        options={statusData}
+                                        placeholder="Select Status"
+                                        refProp={filterRefs.status}
+                                    />
                                 </Grid>
                                 <Grid item xs={12}>
-                                    <Box className="form-group">
-                                        <Typography variant="subtitle1" className="form-label" htmlFor="priority">
-                                            Priority
-                                        </Typography>
-                                        <TextField
-                                            name="priority"
-                                            value={formValues?.priority || ""}
-                                            onChange={handleChange}
-                                            select
-                                            {...commonTextFieldProps}
-                                            {...commonSelectProps}
-                                            ref={filterRefs?.priority}
-                                        >
-                                            <MenuItem value="">
-                                                <em>Select Priority</em>
-                                            </MenuItem>
-                                            {priorityData?.map((priority) => (
-                                                <MenuItem name={priority?.id} key={priority?.id} value={priority?.id}>
-                                                    {priority?.labelname}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
-                                    </Box>
+                                    <CustomAutocomplete
+                                        label="Priority"
+                                        name="priority"
+                                        value={formValues.priority}
+                                        onChange={handleChange}
+                                        options={priorityData}
+                                        placeholder="Select Priority"
+                                        refProp={filterRefs.priority}
+                                    />
                                 </Grid>
                                 <Grid item xs={12}>
                                     <Box className="form-group">
