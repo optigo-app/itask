@@ -17,8 +17,6 @@ const CommentCard = ({ comment }) => {
             <Grid container spacing={2} alignItems="start">
                 {/* User Profile & Name */}
                 <Grid item>
-
-                    {/* <Avatar src={comment?.userImage} alt={comment?.user?.name} /> */}
                     <Avatar
                         alt={comment?.user?.name}
                         src={comment?.user?.avatar || null}

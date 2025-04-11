@@ -3,11 +3,9 @@ import { CommonAPI } from "../InitialApi/CommonApi";
 export const taskCommentAddApi = async (selectedRow, newCommentData) => {
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
-        const init = JSON.parse(sessionStorage.getItem('taskInit'));
-
         const combinedValue = JSON.stringify({
             taskid: `${selectedRow?.taskid ?? '0'}`,
-            comment: `${newCommentData?.description ?? ''}`,
+            comment: `${newCommentData ?? ''}`,
         });
 
         const body = {

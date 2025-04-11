@@ -112,6 +112,7 @@ const MeetingPage = () => {
   };
 
   const handleMeetingList = async () => {
+    debugger
     setIsLoding(true);
     try {
       const meetingApiRes = await fetchMettingListApi();
@@ -128,11 +129,11 @@ const MeetingPage = () => {
       const taskAssigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
       const loginUserData = JSON.parse(localStorage.getItem("UserProfileData") || "{}");
 
-      const enhancedMeetings = data.map((meeting) => {
+      const enhancedMeetings = data?.map((meeting) => {
         const meetingDt = meetingDtRes?.find((m) => m?.meetingid == meeting?.meetingid) || {};
         const assigneeIds = meeting?.assigneids?.split(",")?.map(Number) || [];
 
-        const isUserAssigned = assigneeIds.includes(loginUserData?.id);
+        const isUserAssigned = assigneeIds?.includes(loginUserData?.id);
         console.log('isUserAssigned: ', isUserAssigned);
         const isMeetingDtEmpty = Object.keys(meetingDt).length === 0;
         const isAcceptStatusValid = isMeetingDtEmpty || meetingDt?.isAccept === 0;
@@ -245,7 +246,7 @@ const MeetingPage = () => {
         case 'Upcoming':
           return matchesSearch && meetingDate > currentDate;
         case 'Overdue':
-          return matchesSearch && meetingDate < currentDate ;
+          return matchesSearch && meetingDate < currentDate;
         case 'Completed':
           return matchesSearch && meetingDate < currentDate && meeting.isAttendBtn == 2;
         case 'History':
@@ -406,6 +407,7 @@ const MeetingPage = () => {
                     <Grid item xs={12} sm={6} md={4} key={meeting?.meetingid}>
                       <MeetingCard
                         meeting={meeting}
+                        selectedTab={selectedTab}
                         handleDrawerToggle={handleDrawerToggle}
                         setCalFormData={setCalFormData}
                         StatusCircles={StatusCircles}
@@ -421,6 +423,9 @@ const MeetingPage = () => {
               ) :
                 <MeetingTable
                   meeting={filteredMeetings}
+                  selectedTab={selectedTab}
+                  handleDrawerToggle={handleDrawerToggle}
+                  setCalFormData={setCalFormData}
                   StatusCircles={StatusCircles}
                   background={background}
                   handleOpenStatusModal={handleOpenStatusModal}

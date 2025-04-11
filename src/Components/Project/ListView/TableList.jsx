@@ -19,7 +19,7 @@ import {
 
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { convertWordsToSpecialChars, formatDate2, getStatusColor, priorityColors } from "../../../Utils/globalfun";
+import { cleanDate, convertWordsToSpecialChars, formatDate2, getStatusColor, priorityColors } from "../../../Utils/globalfun";
 import { Eye, Lock, LockOpen, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -27,6 +27,7 @@ import { useSetRecoilState } from "recoil";
 import { useNavigate } from "react-router-dom";
 
 const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) => {
+    console.log('dddprDdata: ', data);
     const navigate = useNavigate();
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("name");
@@ -44,7 +45,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
         'Project/module': 350,
         'progress': 180,
         'start date': 100,
-        'due date': 100,
+        'deadline': 100,
         'priority': 100,
         'actions': 80,
     });
@@ -91,6 +92,10 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
         setSelectedRow(task);
     }
 
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
     const handleRequestSort = (property) => {
         const fieldMapping = {
             name: 'taskname',
@@ -102,15 +107,41 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
         setOrderBy(mappedProperty);
     };
 
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
-    };
-
     const descendingComparator = (a, b, orderBy) => {
-        if (b[orderBy] < a[orderBy]) return -1;
-        if (b[orderBy] > a[orderBy]) return 1;
+        console.log('orderBy: ', orderBy);
+        const fieldMapping = {
+            deadline: 'DeadLineDate',
+            due: 'DeadLineDate',
+            "Project/module": 'taskname',
+            "start date": 'StartDate',
+        };
+
+        const mappedField = fieldMapping[orderBy] || orderBy;
+        console.log('mappedField: ', mappedField);
+        let aValue = a[mappedField];
+        let bValue = b[mappedField];
+
+        // Convert to Date if it's a deadline
+        if (mappedField === 'DeadLineDate') {
+            aValue = aValue ? new Date(aValue) : new Date('2100-01-01');
+            bValue = bValue ? new Date(bValue) : new Date('2100-01-01');
+        } else if (mappedField === 'start date') {
+            aValue = aValue ? new Date(aValue) : new Date('2100-01-01');
+            bValue = bValue ? new Date(bValue) : new Date('2100-01-01');
+        } else if (mappedField === 'progress_per') {
+            aValue = parseFloat(aValue);
+            bValue = parseFloat(bValue);
+        } else if (mappedField === 'Project/module') {
+            aValue = aValue?.toLowerCase();
+            bValue = bValue?.toLowerCase();
+        }
+
+
+        if (bValue < aValue) return -1;
+        if (bValue > aValue) return 1;
         return 0;
     };
+
 
     const getComparator = (order, orderBy) => {
         return order === "desc"
@@ -146,7 +177,6 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
         }
 
         const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
-        console.log('encodedFormData: ', encodedFormData);
         const formattedPrName = task?.taskPr?.trim()?.replace(/\s+/g, '-') || '';
         const formattedTaskName = task?.taskname?.trim()?.replace(/\s+/g, '-') || '';
         const url = `/tasks/${formattedPrName}/${formattedTaskName}?data=${encodedFormData}`;
@@ -212,9 +242,14 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
                                     >
                                         <Box sx={{ display: "flex", alignItems: "center" }}>
                                             <TableSortLabel
-                                                active={orderBy === key}
+                                                active={key !== "actions" && orderBy === key}
                                                 direction={order}
-                                                onClick={() => handleRequestSort(key)}
+                                                onClick={() => {
+                                                    if (key !== "actions") {
+                                                        handleRequestSort(key);
+                                                    }
+                                                }}
+                                                hideSortIcon={key === "actions"}
                                             >
                                                 {key.charAt(0).toUpperCase() + key.slice(1)}
                                             </TableSortLabel>
@@ -268,8 +303,16 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
                                                         </Typography>
                                                     </Box>
                                                 </TableCell>
-                                                <TableCell>{task?.StartDate ? formatDate2(task?.StartDate) : '-'}</TableCell>
-                                                <TableCell>{task?.DeadLineDate ? formatDate2(task?.DeadLineDate) : '-'}</TableCell>
+                                                <TableCell>
+                                                    {task?.StartDate && cleanDate(task?.StartDate)
+                                                        ? formatDate2(cleanDate(task?.StartDate))
+                                                        : '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {task?.DeadLineDate && cleanDate(task?.DeadLineDate)
+                                                        ? formatDate2(cleanDate(task?.DeadLineDate))
+                                                        : '-'}
+                                                </TableCell>
                                                 <TableCell>
                                                     <div style={{
                                                         color: priorityColors[task?.priority]?.color,

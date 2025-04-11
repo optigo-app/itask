@@ -1,6 +1,7 @@
 import React from 'react';
-import { Card, Grid, Typography, Box, Button } from '@mui/material';
+import { Card, Grid, Typography, Box, Button, IconButton } from '@mui/material';
 import { formatDate2, formatDate3, getStatusColor, priorityColors } from '../../../Utils/globalfun';
+import AddIcon from '@mui/icons-material/Add';
 
 const SubtaskCard = ({ subtasks, onAddDubTask }) => {
     return (
@@ -28,15 +29,13 @@ const SubtaskCard = ({ subtasks, onAddDubTask }) => {
                             <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px !important' }}>
                                 <strong>Due Date:</strong> {formatDate2(subtask?.DeadLineDate)}
                             </Typography>
-                            <Button
-                                variant="contained"
+                            <IconButton
                                 size="small"
                                 onClick={() => onAddDubTask(subtask, { Task: 'subroot' })}
-                                className="buttonClassname"
-                                sx={{fontSize: '12px', marginTop: '5px'}}
+                                sx={{borderRadius:'50% !important', mt: '5px', backgroundColor: '#7367f0', color: '#fff', '&:hover': { backgroundColor: '#7367f0' } }}
                             >
-                                Add Sub-task
-                            </Button>
+                                <AddIcon fontSize="small" />
+                            </IconButton>
                         </Grid>
                     </Grid>
                 </Card>

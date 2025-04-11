@@ -3,7 +3,7 @@ import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, } from "../../Recoil/atom";
+import { fetchlistApiCall, filterDrawer, masterDataValue, projectData, selectedCategoryAtom, } from "../../Recoil/atom";
 import { fetchMasterGlFunc, formatDate } from "../../Utils/globalfun";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
@@ -27,7 +27,7 @@ const Project = () => {
   const [taskProject, setTaskProject] = useState();
   const [taskCategory, setTaskCategory] = useState();
   const [activeButton, setActiveButton] = useState("table");
-  const [project, setProject] = useState([]);
+  const [project, setProject] = useRecoilState(projectData);
   const [filters, setFilters] = useState({});
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const refressPrModule = useRecoilValue(fetchlistApiCall);

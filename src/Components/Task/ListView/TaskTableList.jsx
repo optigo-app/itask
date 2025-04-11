@@ -24,7 +24,7 @@ import { useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { convertWordsToSpecialChars, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
+import { cleanDate, convertWordsToSpecialChars, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/AssigneeShortcutModal";
 import TaskTimeTracking from "../../ShortcutsComponent/TaskTimeTracking";
@@ -48,7 +48,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("name");
     const [page, setPage] = useState(1);
-    console.log('page: ', page);
     const [rowsPerPage, setRowsPerPage] = useState(12);
     const [columnWidths] = useState({
         name: 350,
@@ -122,15 +121,25 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
     };
 
     const handleAddTask = (task, additionalInfo) => {
+        let data = {
+            taskid: task?.taskid,
+            taskPr: task?.taskPr,
+            projectid: task?.projectid,
+        }
         setRootSubroot(additionalInfo);
-        setFormDataValue(task);
+        setFormDataValue(data);
         setFormDrawerOpen(true);
         setSelectedTask(task);
     };
 
     const handleAddSubtask = (subtask, additionalInfo) => {
+        let data = {
+            taskid: subtask?.taskid,
+            taskPr: subtask?.taskPr,
+            projectid: subtask?.projectid,
+        }
         setRootSubroot(additionalInfo);
-        setFormDataValue(subtask);
+        setFormDataValue(data);
         setFormDrawerOpen(true);
         setSelectedTask(subtask);
     };
@@ -163,38 +172,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
         handleAssigneeShortcutSubmit(updatedRowData)
     }
 
-    // const toggleSubtasks = (taskIndex) => {
-    //     setSubtaskVisibility((prev) => {
-    //         const isCurrentlyVisible = prev[taskIndex];
-    //         const newState = { ...prev, [taskIndex]: !isCurrentlyVisible };
-
-    //         setOpenChildTask(false);
-
-    //         if (!isCurrentlyVisible) {
-    //             const task = findTask(data, taskIndex);
-    //             setTimeout(() => {
-    //                 setOpenChildTask(true);
-    //                 setSelectedTask(task);
-    //             }, 0);
-    //         }
-
-    //         return newState;
-    //     });
-    // };
-
-    // const findTask = (tasks, taskIndex) => {
-    //     const indexes = String(taskIndex).split("-").map(Number);
-    //     let currentTasks = tasks;
-    //     let currentTask = null;
-
-    //     indexes.forEach((index) => {
-    //         currentTask = currentTasks[index];
-    //         currentTasks = currentTask?.subtasks || [];
-    //     });
-
-    //     return currentTask;
-    // };
-
     const toggleSubtasks = (taskId, task) => {
         setExpandedTasks((prev) => {
             const isCurrentlyExpanded = prev[taskId];
@@ -215,6 +192,9 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
         });
     };
 
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
 
     const handleRequestSort = (property) => {
         const fieldMapping = {
@@ -227,15 +207,28 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
         setOrderBy(mappedProperty);
     };
 
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
-    };
-
     const descendingComparator = (a, b, orderBy) => {
-        if (b[orderBy] < a[orderBy]) return -1;
-        if (b[orderBy] > a[orderBy]) return 1;
+        const fieldMapping = {
+            deadline: 'DeadLineDate',
+            due: 'DeadLineDate',
+            name: 'Project/module',
+        };
+
+        const mappedField = fieldMapping[orderBy] || orderBy;
+        let aValue = a[mappedField];
+        let bValue = b[mappedField];
+
+        // Convert to Date if it's a deadline
+        if (mappedField === 'DeadLineDate') {
+            aValue = aValue ? new Date(aValue) : new Date('2100-01-01');
+            bValue = bValue ? new Date(bValue) : new Date('2100-01-01');
+        }
+
+        if (bValue < aValue) return -1;
+        if (bValue > aValue) return 1;
         return 0;
     };
+
 
     const getComparator = (order, orderBy) => {
         return order === "desc"
@@ -272,10 +265,239 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
         setSelectedItem(null);
     }
 
+    const renderAssigneeAvatars = (assignees, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <AvatarGroup
+                max={10}
+                spacing={2}
+                sx={{
+                    '& .MuiAvatar-root': {
+                        width: 22,
+                        height: 22,
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        border: 'none',
+                        transition: 'transform 0.3s ease-in-out',
+                        '&:hover': {
+                            transform: 'scale(1.2)',
+                            zIndex: 10,
+                        },
+                    },
+                }}
+            >
+                {assignees?.map((assignee, teamIdx) => (
+                    <Tooltip
+                        placement="top"
+                        key={assignee?.id}
+                        title={`${assignee?.firstname} ${assignee?.lastname}`}
+                        arrow
+                        classes={{ tooltip: 'custom-tooltip' }}
+                    >
+                        <Avatar
+                            key={teamIdx}
+                            alt={`${assignee?.firstname} ${assignee?.lastname}`}
+                            src={ImageUrl(assignee) || null}
+                            sx={{
+                                backgroundColor: background(assignee?.firstname),
+                            }}
+                            onClick={() => hanldePAvatarClick(assignees)}
+                        >
+                            {!assignee.avatar && assignee?.firstname?.charAt(0)}
+                        </Avatar>
+                    </Tooltip>
+                ))}
+            </AvatarGroup>
+
+            <IconButton
+                id="add-task"
+                aria-label="add-task"
+                aria-labelledby="add-task"
+                size="small"
+                onClick={() => handleAssigneeShortcut(task, { Task: 'root' })}
+                style={{
+                    visibility: hoveredTaskId === task?.taskid && hoveredColumnname === 'Assignee' ? 'visible' : 'hidden',
+                }}
+            >
+                <CirclePlus size={20} color="#7367f0" />
+            </IconButton>
+        </Box>
+    );
+
+    const renderTaskActions = (
+        task,
+        taskTimeRunning,
+        handleTimeTrackModalOpen,
+        handleEditTask,
+        handleViewTask
+    ) => (
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+            <IconButton
+                onClick={() => handleTimeTrackModalOpen(task)}
+                sx={{
+                    color: taskTimeRunning[task.taskid] ? "#FFD700 !important" : "#7d7f85 !important",
+                    transition: "color 0.3s",
+                    backgroundColor: taskTimeRunning[task.taskid] ? "#6D6B77" : "transparent",
+                    "&:hover": {
+                        color: taskTimeRunning[task.taskid] ? "#FFD700" : "#333",
+                        backgroundColor: taskTimeRunning[task.taskid] ? "#6D6B77" : "transparent",
+                    },
+                }}
+            >
+                <Timer size={20} />
+            </IconButton>
+
+            <IconButton
+                disabled={task?.isFreezed == 1}
+                onClick={() => handleEditTask(task, { Task: "root" })}
+                sx={{
+                    '&.Mui-disabled': {
+                        color: 'rgba(0, 0, 0, 0.26)',
+                    },
+                }}
+            >
+                <Pencil
+                    size={20}
+                    color={task?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                />
+            </IconButton>
+
+            <IconButton
+                onClick={() => handleViewTask(task, { Task: "root" })}
+            >
+                <Eye
+                    size={20}
+                    color="#808080"
+                />
+            </IconButton>
+        </Box>
+    );
+
+    const renderPriorityLabel = (priority, priorityColors) => {
+        const color = priority && priorityColors[priority]?.color || '#fff';
+        const backgroundColor = priority && priorityColors[priority]?.backgroundColor || '#7d7f85a1';
+
+        return (
+            <div style={{
+                color,
+                backgroundColor,
+                width: 'fit-content',
+                padding: '0.2rem 0.8rem',
+                borderRadius: '5px',
+                textAlign: 'center',
+                fontSize: '13.5px',
+                fontWeight: '500',
+                display: 'flex',
+                justifyContent: 'start',
+                alignItems: 'center',
+            }}>
+                {priority ?? '-'}
+            </div>
+        );
+    };
+
+    const renderTaskNameSection = (
+        task,
+        expandedTasks,
+        toggleSubtasks,
+        convertWordsToSpecialChars,
+        handleAddTask,
+        hoveredTaskId,
+        hoveredColumnname,
+        BurningImg
+    ) => {
+        return (
+            <>
+                <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <IconButton
+                                id="toggle-task"
+                                aria-label="toggle-task"
+                                aria-labelledby="toggle-task"
+                                size="small"
+                                onClick={() => toggleSubtasks(task.taskid, task)}
+                            >
+                                <PlayArrowIcon
+                                    style={{
+                                        color: expandedTasks[task.taskid] ? "#444050" : "#c7c7c7",
+                                        fontSize: "1rem",
+                                        transform: expandedTasks[task.taskid] ? "rotate(90deg)" : "rotate(0deg)",
+                                        transition: "transform 0.2s ease-in-out",
+                                    }}
+                                />
+                            </IconButton>
+                        </div>
+                        <div>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
+                                <span style={{ flex: 1 }}>
+                                    {task?.taskname?.length > 35
+                                        ? `${task?.taskname?.slice(0, 35)}...`
+                                        : convertWordsToSpecialChars(task?.taskname)}
+                                </span>
+                                {task?.subtasks?.length > 0 && (
+                                    <div className="task-sub_count">
+                                        {task?.subtasks?.length}
+                                    </div>
+                                )}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
+                                {task?.isburning === 1 && (
+                                    <img
+                                        src={BurningImg}
+                                        alt="burningTask"
+                                        style={{ width: '15px', height: '15px', borderRadius: '50%' }}
+                                    />
+                                )}
+                                {task?.ticketno !== "" && (
+                                    <Chip
+                                        label={task?.ticketno || ''}
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB' }}
+                                    />
+                                )}
+                                {task?.isnew === 1 && (
+                                    <Chip
+                                        label={'New'}
+                                        variant="filled"
+                                        size="small"
+                                        sx={{
+                                            backgroundColor: '#E3F2FD',
+                                            color: '#2196F3',
+                                            fontSize: '10px',
+                                            height: '16px',
+                                            '& .MuiChip-label': {
+                                                padding: '0 6px',
+                                            },
+                                        }}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <IconButton
+                    id="add-task"
+                    aria-label="add-task"
+                    aria-labelledby="add-task"
+                    size="small"
+                    onClick={() => handleAddTask(task, { Task: 'subroot' })}
+                    style={{
+                        visibility: hoveredTaskId === task?.taskid && hoveredColumnname === 'TaskName' ? "visible" : "hidden",
+                    }}
+                >
+                    <CirclePlus size={20} color="#7367f0" />
+                </IconButton>
+            </>
+        );
+    };
+
     const renderSubtasks = (subtasks, parentTaskId, depth = 0) => {
         return subtasks?.map((subtask) => (
             <React.Fragment key={subtask.taskid}>
-                <TableRow>
+                <TableRow sx={{
+                    backgroundColor: hoveredSubtaskId === subtask?.taskid ? '#f5f5f5' : 'inherit',
+                }}>
                     <TableCell
                         onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid)}
                         onMouseLeave={handleSubtaskMouseLeave}
@@ -285,89 +507,17 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                             display: "flex",
                             justifyContent: "space-between"
                         }}>
-                            <div>
-                                <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
-                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "30px" }}>
-                                        <IconButton
-                                            id="toggle-task"
-                                            aria-label="toggle-task"
-                                            aria-labelledby="toggle-task"
-                                            size="small"
-                                            onClick={() => toggleSubtasks(subtask.taskid, subtask)}
-                                        >
-                                            <PlayArrowIcon
-                                                style={{
-                                                    color: expandedTasks[subtask.taskid] ? "#444050" : "#c7c7c7",
-                                                    fontSize: "1.2rem",
-                                                    transform: expandedTasks[subtask.taskid] ? "rotate(90deg)" : "rotate(0deg)",
-                                                    transition: "transform 0.2s ease-in-out",
-                                                }}
-                                            />
-                                        </IconButton>
-                                    </div>
-                                    <div>
-                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
-                                            <span style={{ flex: 1 }}>
-                                                {subtask?.taskname?.length > 20 ? `${subtask?.taskname.slice(0, 50)}...` : convertWordsToSpecialChars(subtask?.taskname)}
-                                            </span>
-                                            {subtask?.subtasks?.length > 0 && (
-                                                <div className="task-sub_count">
-                                                    {subtask?.subtasks?.length}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
-                                            {subtask?.isburning == 1 &&
-                                                <img src={BurningImg} alt="burningTask"
-                                                    style={{ width: '15px', height: '15px', borderRadius: '50%' }} />
-                                            }
-                                            {subtask?.ticketno != "" && (
-                                                <Chip
-                                                    label={subtask?.ticketno || ''}
-                                                    variant="outlined"
-                                                    size="small"
-                                                    sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB' }}
-                                                />
-                                            )}
-                                            {subtask?.isnew == 1 &&
-                                                <Chip
-                                                    label={'New'}
-                                                    variant="filled"
-                                                    size="small"
-                                                    sx={{
-                                                        backgroundColor: '#E3F2FD',
-                                                        color: '#2196F3',
-                                                        fontSize: '10px',
-                                                        height: '16px',
-                                                        '& .MuiChip-label': {
-                                                            padding: '0 6px',
-                                                        },
-                                                    }}
-                                                />
-                                            }
+                            {renderTaskNameSection(
+                                subtask,
+                                expandedTasks,
+                                toggleSubtasks,
+                                convertWordsToSpecialChars,
+                                handleAddTask,
+                                hoveredTaskId,
+                                hoveredColumnname,
+                                BurningImg
+                            )}
 
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <IconButton
-                                id="add-task"
-                                aria-label="add-task"
-                                aria-labelledby="add-task"
-                                size="small"
-                                onClick={() => handleAddSubtask(subtask, { Task: 'subroot' })}
-                                style={{
-                                    visibility: hoveredSubtaskId === subtask?.taskid ? "visible" : "hidden",
-                                }}
-                                sx={{
-                                    '&:hover': {
-                                        backgroundColor: 'transparent',
-                                        boxShadow: 'none',
-                                    }
-                                }}
-                            >
-                                <CirclePlus size={20} color="#7367f0" />
-                            </IconButton>
                         </div>
                     </TableCell>
                     <TableCell>{subtask?.taskPr}</TableCell>
@@ -377,123 +527,19 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                     <TableCell
                         onMouseEnter={() => handleTaskMouseEnter(subtask?.taskid, { Tbcell: 'Assignee' })}
                         onMouseLeave={handleTaskMouseLeave}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <AvatarGroup max={10}
-                                spacing={2}
-                                sx={{
-                                    '& .MuiAvatar-root': {
-                                        width: 22,
-                                        height: 22,
-                                        fontSize: '0.8rem',
-                                        cursor: 'pointer',
-                                        border: 'none',
-                                        transition: 'transform 0.3s ease-in-out',
-                                        '&:hover': {
-                                            transform: 'scale(1.2)',
-                                            zIndex: 10
-                                        }
-                                    }
-                                }}
-                            >
-                                {subtask?.assignee?.map((assignee, teamIdx) => (
-                                    <Tooltip
-                                        placement="top"
-                                        key={assignee?.id}
-                                        title={assignee?.firstname + " " + assignee?.lastname}
-                                        arrow
-                                        classes={{ tooltip: 'custom-tooltip' }}
-                                    >
-                                        <Avatar
-                                            key={teamIdx}
-                                            alt={assignee?.firstname + " " + assignee?.lastname}
-                                            src={ImageUrl(assignee) || null}
-                                            sx={{
-                                                backgroundColor: background(assignee?.firstname),
-                                            }}
-                                        >
-                                            {!assignee.avatar && assignee?.firstname?.charAt(0)}
-                                        </Avatar>
-                                    </Tooltip>
-                                ))}
-                            </AvatarGroup>
-                            <IconButton
-                                id="add-task"
-                                aria-label="add-task"
-                                aria-labelledby="add-task"
-                                size="small"
-                                onClick={() => handleAssigneeShortcut(subtask, { Task: 'root' })}
-                                style={{
-                                    visibility: hoveredTaskId === subtask?.taskid && hoveredColumnname == 'Assignee' ? "visible" : "hidden",
-                                }}
-                            >
-                                <CirclePlus size={20} color="#7367f0" />
-                            </IconButton>
-                        </Box>
+                        {renderAssigneeAvatars(subtask?.assignee, subtask, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
                     </TableCell>
-                    <TableCell>{subtask?.DeadLineDate ? formatDate2(subtask.DeadLineDate) : 'No deadline set'}</TableCell>
                     <TableCell>
-                        <div style={{
-                            color: (subtask?.priority && priorityColors[subtask?.priority]?.color) ?? '#fff',
-                            backgroundColor: (subtask?.priority && priorityColors[subtask?.priority]?.backgroundColor) ?? '#7d7f85a1',
-                            width: 'fit-content',
-                            padding: '0.2rem 0.8rem',
-                            borderRadius: '5px',
-                            textAlign: 'center',
-                            fontSize: '13.5px',
-                            fontWeight: '500',
-                            display: 'flex',
-                            justifyContent: 'start',
-                            alignItems: 'center',
-                        }}>
-                            {subtask?.priority ?? '-'}
-                        </div>
+                        {cleanDate(subtask?.DeadLineDate) ? formatDate2(subtask.DeadLineDate) : '-'}
+                    </TableCell>
+                    <TableCell>
+                        {renderPriorityLabel(subtask?.priority, priorityColors)}
                     </TableCell>
                     <TableCell>
                         <StatusCircles task={subtask} />
                     </TableCell>
                     <TableCell align="center">
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                            <IconButton
-                                onClick={() => handleTimeTrackModalOpen(subtask)}
-                                sx={{
-                                    color: taskTimeRunning[subtask.taskid] ? "#FFD700" : "#7d7f85",
-                                    transition: "color 0.3s",
-                                    backgroundColor: taskTimeRunning[subtask.taskid] ? "#6D6B77" : "transparent",
-                                    "&:hover": {
-                                        color: taskTimeRunning[subtask.taskid] ? "#FFD700" : "#333",
-                                        backgroundColor: taskTimeRunning[subtask.taskid] ? "#6D6B77" : "transparent",
-                                    },
-                                }}
-                            >
-                                <Timer size={20} />
-                            </IconButton>
-                            <span>
-                                <IconButton
-                                    disabled={subtask?.isFreezed == 1}
-                                    onClick={() => handleEditTask(subtask, { Task: "root" })}
-                                    sx={{
-                                        '&.Mui-disabled': {
-                                            color: 'rgba(0, 0, 0, 0.26)',
-                                        },
-                                    }}
-                                >
-                                    <Pencil
-                                        size={20}
-                                        color={subtask?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                                    />
-                                </IconButton>
-                            </span>
-                            <span>
-                                <IconButton
-                                    onClick={() => handleViewTask(subtask, { Task: "root" })}
-                                >
-                                    <Eye
-                                        size={20}
-                                        color={"#808080"}
-                                    />
-                                </IconButton>
-                            </span>
-                        </Box>
+                        {renderTaskActions(subtask, taskTimeRunning, handleTimeTrackModalOpen, handleEditTask, handleViewTask)}
                     </TableCell>
                 </TableRow>
                 {expandedTasks[subtask.taskid] && renderSubtasks(subtask.subtasks, subtask.taskid, depth + 1)}
@@ -530,9 +576,14 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                     >
                                         <Box sx={{ display: "flex", alignItems: "center" }}>
                                             <TableSortLabel
-                                                active={orderBy === key}
+                                                active={key !== "estimate" && key !== "actions" && orderBy === key}
                                                 direction={order}
-                                                onClick={() => handleRequestSort(key)}
+                                                onClick={() => {
+                                                    if (key !== "estimate" && key !== "actions") {
+                                                        handleRequestSort(key);
+                                                    }
+                                                }}
+                                                hideSortIcon={key === "estimate" || key === "actions"}
                                             >
                                                 {key.charAt(0).toUpperCase() + key.slice(1)}
                                             </TableSortLabel>
@@ -552,82 +603,16 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                                     onMouseLeave={handleTaskMouseLeave}
                                                 >
                                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                                        <div>
-                                                            <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
-                                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                                                    <IconButton
-                                                                        id="toggle-task"
-                                                                        aria-label="toggle-task"
-                                                                        aria-labelledby="toggle-task"
-                                                                        size="small"
-                                                                        onClick={() => toggleSubtasks(task.taskid, task)}
-                                                                    >
-                                                                        <PlayArrowIcon
-                                                                            style={{
-                                                                                color: expandedTasks[task.taskid] ? "#444050" : "#c7c7c7",
-                                                                                fontSize: "1rem",
-                                                                                transform: expandedTasks[task.taskid] ? "rotate(90deg)" : "rotate(0deg)",
-                                                                                transition: "transform 0.2s ease-in-out",
-                                                                            }}
-                                                                        />
-                                                                    </IconButton>
-                                                                </div>
-                                                                <div>
-                                                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
-                                                                        <span style={{ flex: 1 }}>
-                                                                            {task?.taskname?.length > 35 ? `${task?.taskname?.slice(0, 35)}...` : convertWordsToSpecialChars(task?.taskname)}
-                                                                        </span>
-                                                                        {task?.subtasks?.length > 0 && (
-                                                                            <div className="task-sub_count">
-                                                                                {task?.subtasks?.length}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                    <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
-                                                                        {task?.isburning == 1 &&
-                                                                            <img src={BurningImg} alt="burningTask"
-                                                                                style={{ width: '15px', height: '15px', borderRadius: '50%' }} />
-                                                                        }
-                                                                        {task?.ticketno !== "" && (
-                                                                            <Chip
-                                                                                label={task?.ticketno || ''}
-                                                                                variant="outlined"
-                                                                                size="small"
-                                                                                sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB' }}
-                                                                            />
-                                                                        )}
-                                                                        {task?.isnew == 1 &&
-                                                                            <Chip
-                                                                                label={'New'}
-                                                                                variant="filled"
-                                                                                size="small"
-                                                                                sx={{
-                                                                                    backgroundColor: '#E3F2FD',
-                                                                                    color: '#2196F3',
-                                                                                    fontSize: '10px',
-                                                                                    height: '16px',
-                                                                                    '& .MuiChip-label': {
-                                                                                        padding: '0 6px',
-                                                                                    },
-                                                                                }}
-                                                                            />
-                                                                        }
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <IconButton
-                                                            id="add-task"
-                                                            aria-label="add-task"
-                                                            aria-labelledby="add-task"
-                                                            size="small"
-                                                            onClick={() => handleAddTask(task, { Task: 'subroot' })}
-                                                            style={{
-                                                                visibility: hoveredTaskId === task?.taskid && hoveredColumnname == 'TaskName' ? "visible" : "hidden",
-                                                            }}
-                                                        >
-                                                            <CirclePlus size={20} color="#7367f0" />
-                                                        </IconButton>
+                                                        {renderTaskNameSection(
+                                                            task,
+                                                            expandedTasks,
+                                                            toggleSubtasks,
+                                                            convertWordsToSpecialChars,
+                                                            handleAddTask,
+                                                            hoveredTaskId,
+                                                            hoveredColumnname,
+                                                            BurningImg
+                                                        )}
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>{task?.taskPr}</TableCell>
@@ -636,127 +621,20 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                                 </TableCell>
                                                 <TableCell
                                                     onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
-                                                    onMouseLeave={handleTaskMouseLeave}
-                                                >
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                        <AvatarGroup max={10}
-                                                            spacing={2}
-                                                            sx={{
-                                                                '& .MuiAvatar-root': {
-                                                                    width: 22,
-                                                                    height: 22,
-                                                                    fontSize: '0.8rem',
-                                                                    cursor: 'pointer',
-                                                                    border: 'none',
-                                                                    transition: 'transform 0.3s ease-in-out',
-                                                                    '&:hover': {
-                                                                        transform: 'scale(1.2)',
-                                                                        zIndex: 10
-                                                                    }
-                                                                }
-                                                            }}
-                                                        >
-                                                            {task?.assignee?.map((assignee, teamIdx) => (
-                                                                <Tooltip
-                                                                    placement="top"
-                                                                    key={assignee?.id}
-                                                                    title={assignee?.firstname + " " + assignee?.lastname}
-                                                                    arrow
-                                                                    classes={{ tooltip: 'custom-tooltip' }}
-                                                                >
-                                                                    <Avatar
-                                                                        key={teamIdx}
-                                                                        alt={assignee?.firstname + " " + assignee?.lastname}
-                                                                        src={ImageUrl(assignee) || null}
-                                                                        sx={{
-                                                                            backgroundColor: background(assignee?.firstname),
-                                                                        }}
-                                                                        onClick={() => hanldePAvatarClick(assignee)}
-                                                                    >
-                                                                        {!assignee.avatar && assignee?.firstname?.charAt(0)}
-                                                                    </Avatar>
-                                                                </Tooltip>
-                                                            ))}
-                                                        </AvatarGroup>
-                                                        <IconButton
-                                                            id="add-task"
-                                                            aria-label="add-task"
-                                                            aria-labelledby="add-task"
-                                                            size="small"
-                                                            onClick={() => handleAssigneeShortcut(task, { Task: 'root' })}
-                                                            style={{
-                                                                visibility: hoveredTaskId === task?.taskid && hoveredColumnname == 'Assignee' ? "visible" : "hidden",
-                                                            }}
-                                                        >
-                                                            <CirclePlus size={20} color="#7367f0" />
-                                                        </IconButton>
-                                                    </Box>
+                                                    onMouseLeave={handleTaskMouseLeave}>
+                                                    {renderAssigneeAvatars(task?.assignee, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
                                                 </TableCell>
-                                                <TableCell>{task?.DeadLineDate ? formatDate2(task.DeadLineDate) : 'No deadline set'}</TableCell>
                                                 <TableCell>
-                                                    <div style={{
-                                                        color: (task?.priority && priorityColors[task?.priority]?.color) ?? '#fff',
-                                                        backgroundColor: (task?.priority && priorityColors[task?.priority]?.backgroundColor) ?? '#7d7f85a1',
-                                                        width: 'fit-content',
-                                                        padding: '0.2rem 0.8rem',
-                                                        borderRadius: '5px',
-                                                        textAlign: 'center',
-                                                        fontSize: '13.5px',
-                                                        fontWeight: '500',
-                                                        display: 'flex',
-                                                        justifyContent: 'start',
-                                                        alignItems: 'center',
-                                                    }}>
-                                                        {task?.priority}
-                                                    </div>
+                                                    {cleanDate(task?.DeadLineDate) ? formatDate2(task.DeadLineDate) : '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {renderPriorityLabel(task?.priority, priorityColors)}
                                                 </TableCell>
                                                 <TableCell>
                                                     <StatusCircles task={task} />
                                                 </TableCell>
                                                 <TableCell align="center">
-                                                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                                                        <IconButton
-                                                            onClick={() => handleTimeTrackModalOpen(task)}
-                                                            sx={{
-                                                                color: taskTimeRunning[task.taskid] ? "#FFD700 !important" : "#7d7f85 !important",
-                                                                transition: "color 0.3s",
-                                                                backgroundColor: taskTimeRunning[task.taskid] ? "#6D6B77" : "transparent",
-                                                                "&:hover": {
-                                                                    color: taskTimeRunning[task.taskid] ? "#FFD700" : "#333",
-                                                                    backgroundColor: taskTimeRunning[task.taskid] ? "#6D6B77" : "transparent",
-                                                                },
-                                                            }}
-                                                        >
-                                                            <Timer size={20} />
-                                                        </IconButton>
-                                                        <span>
-                                                            <IconButton
-                                                                disabled={task?.isFreezed == 1}
-                                                                onClick={() => handleEditTask(task, { Task: "root" })}
-                                                                sx={{
-                                                                    '&.Mui-disabled': {
-                                                                        color: 'rgba(0, 0, 0, 0.26)',
-                                                                    },
-                                                                }}
-                                                            >
-                                                                <Pencil
-                                                                    size={20}
-                                                                    color={task?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                                                                />
-                                                            </IconButton>
-                                                        </span>
-                                                        <span>
-                                                            <IconButton
-                                                                onClick={() => handleViewTask(task, { Task: "root" })}
-                                                            >
-                                                                <Eye
-                                                                    size={20}
-                                                                    color={"#808080"}
-                                                                />
-                                                            </IconButton>
-                                                        </span>
-                                                    </Box>
-
+                                                    {renderTaskActions(task, taskTimeRunning, handleTimeTrackModalOpen, handleEditTask, handleViewTask)}
                                                 </TableCell>
                                             </TableRow>
                                             {expandedTasks[task.taskid] && task?.subtasks?.length > 0 && renderSubtasks(task.subtasks, task.taskid)}

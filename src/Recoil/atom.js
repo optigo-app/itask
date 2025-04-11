@@ -5,6 +5,11 @@ export const TaskData = atom({
   default: []
 })
 
+export const projectData = atom({
+  key: 'projectData',
+  default: []
+})
+
 export const taskLength = atom({
   key: 'taskLength',
   default: 0

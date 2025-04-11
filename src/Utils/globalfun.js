@@ -77,7 +77,15 @@ export function toISTDateTime(isoDate) {
     });
     return istDate;
 }
+// output like 01 Jan 1990 return ""
+export function cleanDate(dateStr) {
+    const defaultDates = [
+        "1900-01-01T00:00:00",
+        "1900-01-01T00:00:00.000Z"
+    ];
 
+    return defaultDates.includes(dateStr) ? "" : dateStr;
+}
 
 export const ImageUrl = (data) => {
     const init = JSON.parse(sessionStorage.getItem('taskInit'));
@@ -230,7 +238,8 @@ export const fetchMasterGlFunc = async () => {
                 const { id, mode } = item;
                 if (mode) {
                     const apiResponse = await fetchIndidualApiMaster({ mode });
-                    const filteredData = apiResponse?.rd?.filter(row => row?.isdelete != 1) || [];
+                    let filteredData = apiResponse?.rd?.filter(row => row?.isdelete != 1) || [];
+                    filteredData.sort((a, b) => a?.labelname.localeCompare(b?.labelname));
                     structuredData.push({
                         ...item,
                         rowdata: filteredData || []
@@ -505,20 +514,8 @@ export const commonTextFieldProps = {
 
 // Optimized conversion functions
 const charMap = {
-    "&": "and",
-    "<": "less_than",
-    ">": "greater_than",
+    "&": "ane",
     "%": "percent",
-    "$": "dollar",
-    "#": "hash",
-    "@": "at",
-    "?": "question",
-    "=": "equals",
-    "+": "plus",
-    "-": "minus",
-    "*": "asterisk",
-    "^": "caret",
-    "~": "tilde",
 };
 
 // Reverse the mapping for words to special characters
@@ -533,5 +530,5 @@ export function convertSpecialCharsToWords(str) {
 
 // Function to convert words back to special characters (for UI)
 export function convertWordsToSpecialChars(str) {
-    return str?.replace(/\b(and|less_than|greater_than|percent|dollar|hash|at|question|equals|plus|minus|asterisk|caret|tilde)\b/g, (match) => wordMap[match] || match);
+    return str?.replace(/\b(ane)\b/g, (match) => wordMap[match] || match);
 }

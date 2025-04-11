@@ -44,6 +44,11 @@ const MultiSelectChipWithLimit = ({
                 value={selectedValues}
                 onChange={handleChange}
                 limitTags={limitTags}
+                sx={{
+                    "& .MuiOutlinedInput-root.Mui-focused": {
+                        paddingTop: selectedValues.length > 2 ? '5px !important' : '0px',
+                    },
+                }}
                 renderTags={(value, getTagProps) =>
                     value.map((option, index) => {
                         const imageSrc = ImageUrl(option);
