@@ -19,8 +19,7 @@ import "./Styles/MeetingGrid.scss";
 import { getTimeLeft, ImageUrl, toISTDateTime } from "../../Utils/globalfun";
 import { CircleCheck, Eye, Pencil } from "lucide-react";
 
-const MeetingTable = ({ meeting, selectedTab, StatusCircles, handleAcceptMeeting, handleReject, handleAttendMeeting, handleDrawerToggle, setCalFormData, background }) => {
-    console.log('selectedTab: ', selectedTab);
+const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusCircles, handleAcceptMeeting, handleReject, handleAttendMeeting, handleDrawerToggle, setCalFormData, setFormData, background }) => {
     const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
     const handleFormatDate = (startDate) => {
         const date = toISTDateTime(startDate);
@@ -119,18 +118,18 @@ const MeetingTable = ({ meeting, selectedTab, StatusCircles, handleAcceptMeeting
                             <TableCell>{handleFormatDate(row.StartDate)}</TableCell>
                             <TableCell>{renderAssigneeAvatars(row.guests)}</TableCell>
                             <TableCell>
-                                {StatusCircles({ row, redCount: 5, yellowCount: 10, greenCount: 50 })}
+                                {StatusCircles(row, { redCount: 5, yellowCount: 10, greenCount: 50 })}
                             </TableCell>
                             <TableCell align="center">
                                 <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
                                     {row?.isAction && (
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                             <Button className="btnAccept buttonClassname"
-                                                variant="contained" size="small" color="primary" onClick={handleAcceptMeeting}>
+                                                variant="contained" size="small" color="primary" onClick={() => handleAcceptMeeting(row)}>
                                                 Accept
                                             </Button>
                                             <Button className="btnReject dangerbtnClassname"
-                                                variant="contained" size="small" color="error" onClick={handleReject}>
+                                                variant="contained" size="small" color="error" onClick={() => handleReject(row)}>
                                                 Reject
                                             </Button>
                                         </Box>
@@ -138,7 +137,7 @@ const MeetingTable = ({ meeting, selectedTab, StatusCircles, handleAcceptMeeting
                                     {row?.isAttendBtn != 0 &&
                                         <Tooltip
                                             placement="top"
-                                            title={row?.isAttendBtn == 2 ? "Attended" : "Mark as Attended"}
+                                            title={row?.ismeeting_attnd == 1 ? "Attended" : "Mark as Attended"}
                                             arrow
                                             classes={{ tooltip: 'custom-tooltip' }}>
                                             <IconButton
@@ -147,23 +146,23 @@ const MeetingTable = ({ meeting, selectedTab, StatusCircles, handleAcceptMeeting
                                                 aria-label="meeting-attend"
                                                 aria-labelledby="meeting-attend"
                                                 sx={{
-                                                    color: row?.isAttendBtn == 2 ? '#ffffff' : '#7d7f85',
-                                                    backgroundColor: row?.isAttendBtn == 2 ? '#7367f0' : 'transparent',
+                                                    color: row?.ismeeting_attnd == 1 ? '#ffffff' : '#7d7f85',
+                                                    backgroundColor: row?.ismeeting_attnd == 1 ? '#7367f0' : 'transparent',
                                                     '&:hover': {
-                                                        backgroundColor: row?.isAttendBtn == 2 ? '#7367f0' : 'rgba(0, 0, 0, 0.04)',
+                                                        backgroundColor: row?.ismeeting_attnd == 1 ? '#7367f0' : 'rgba(0, 0, 0, 0.04)',
                                                     },
                                                 }}
                                             >
                                                 <CircleCheck
                                                     sx={{
                                                         fontSize: '20px',
-                                                        color: row?.isAttendBtn === 2 ? "#fff" : "#7d7f85"
+                                                        color: row?.ismeeting_attnd === 1 ? "#fff" : "#7d7f85"
                                                     }}
                                                 />
                                             </IconButton>
                                         </Tooltip>
                                     }
-                                    {selectedTab == "Upcoming" && 
+                                    {selectedTab == "Upcoming" &&
                                         <IconButton
                                             onClick={() => {
                                                 handleDrawerToggle();
@@ -182,7 +181,11 @@ const MeetingTable = ({ meeting, selectedTab, StatusCircles, handleAcceptMeeting
                                         </IconButton>
                                     }
 
-                                    <IconButton >
+                                    <IconButton
+                                        onClick={() => {
+                                            setMeetingDetailModalOpen(true)
+                                            setFormData(row);
+                                        }}>
                                         <Eye
                                             size={20}
                                             color={"#808080"}

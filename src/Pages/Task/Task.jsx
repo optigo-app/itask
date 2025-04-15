@@ -20,9 +20,12 @@ const CardView = React.lazy(() => import("../../Components/Task/CardView/CardVie
 
 const Task = () => {
   const location = useLocation();
+  const [order, setOrder] = useState("asc");
+  const [orderBy, setOrderBy] = useState("name");
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(12);
   const searchParams = new URLSearchParams(location.search);
   const [callFetchTaskApi, setCallFetchTaskApi] = useRecoilState(fetchlistApiCall);
-  console.log('ddddcallFetchTaskApi: ', callFetchTaskApi);
   const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
   const [isLoading, setIsLoading] = useState(false);
   const [isTaskLoading, setIsTaskLoading] = useState(null);
@@ -39,7 +42,6 @@ const Task = () => {
   const [filters, setFilters] = useState({});
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
-  console.log('tasks: ', tasks);
   const setTaskDataLength = useSetRecoilState(taskLength)
   const encodedData = searchParams.get("data");
 
@@ -76,10 +78,8 @@ const Task = () => {
       setIsLoading(false);
     }
   };
-  console.log('ddddselectedRow: ', selectedRow);
 
   const fetchTaskData = async (parsedData) => {
-    debugger
     if (tasks?.length == 0) {
       setIsTaskLoading(true);
     }
@@ -91,7 +91,6 @@ const Task = () => {
       let data = selectedRow?.parentid ? selectedRow : parsedData;
       const taskData = await fetchTaskDataApi(data ?? {});
       const labeledTasks = mapTaskLabels(taskData);
-      console.log('labeledTasks: ', labeledTasks);
       let finalTaskData = [...labeledTasks]
       setSelectedRow({})
       if (parsedData?.taskid) {
@@ -230,7 +229,6 @@ const Task = () => {
 
   // task api call
   useEffect(() => {
-    debugger
     let parsedData = null;
     if (encodedData) {
       try {
@@ -263,6 +261,7 @@ const Task = () => {
       ...prevFilters,
       [key]: value,
     }));
+    setPage(1);
   };
 
   const handleClearFilter = (filterKey) => {
@@ -278,25 +277,72 @@ const Task = () => {
     setSelectedCategory('');
   };
 
+  // sorting
+  const handleRequestSort = (property) => {
+    const fieldMapping = {
+      name: 'taskname',
+      due: 'DeadLineDate',
+    };
+    const mappedProperty = fieldMapping[property] || property;
+    const isAscending = orderBy === mappedProperty && order === "asc";
+    setOrder(isAscending ? "desc" : "asc");
+    setOrderBy(mappedProperty);
+  };
+
+  const descendingComparator = (a, b, orderBy) => {
+    const fieldMapping = {
+      deadline: 'DeadLineDate',
+      due: 'DeadLineDate',
+      name: 'Project/module',
+    };
+
+    const mappedField = fieldMapping[orderBy] || orderBy;
+    let aValue = a[mappedField];
+    let bValue = b[mappedField];
+
+    // Convert to Date if it's a deadline
+    if (mappedField === 'DeadLineDate') {
+      aValue = aValue ? new Date(aValue) : new Date('2100-01-01');
+      bValue = bValue ? new Date(bValue) : new Date('2100-01-01');
+    }
+
+    if (bValue < aValue) return -1;
+    if (bValue > aValue) return 1;
+    return 0;
+  };
+
+  const getComparator = (order, orderBy) => {
+    return order === "desc"
+      ? (a, b) => descendingComparator(a, b, orderBy)
+      : (a, b) => -descendingComparator(a, b, orderBy);
+  };
+
+  const sortData = (array, comparator) => {
+    return [...array]?.sort(comparator);
+  };
+
+  let sortedData;
+  if (tasks) {
+    sortedData = sortData(tasks, getComparator(order, orderBy));
+  }
+
   // filter functions
-  const filteredData = tasks?.filter((task) => {
+  useEffect(() => {
+    const cleanedFilters = { ...filters };
+    Object.keys(cleanedFilters).forEach((key) => {
+      if (
+        ["Select Department", "Select Status", "Select Priority", "Select Assignee", "Select Project"].includes(cleanedFilters[key])
+      ) {
+        cleanedFilters[key] = "";
+      }
+    });
+    setFilters(cleanedFilters);
+  }, [filters]);
+
+  const filteredData = sortedData?.filter((task) => {
     const { status, priority, assignee, searchTerm, dueDate, department, project, category } = filters;
-    console.log('filters: ', filters);
-    console.log('assignee: ', assignee);
 
     const normalizedSearchTerm = searchTerm?.toLowerCase();
-
-    const resetInvalidFilters = () => {
-      Object.keys(filters).forEach((key) => {
-        const value = filters[key];
-        if (value === "Select Department" || value === "Select Status" || value === "Select Priority" || value === "Select Assignee" || value === "Select Project") {
-          filters[key] = "";
-        }
-      });
-    };
-    // Reset filters before applying them
-    resetInvalidFilters();
-
     const matchesFilters = (task) => {
       const matches =
         (category ? (task?.category)?.toLowerCase() === category?.toLowerCase() : true) &&
@@ -461,6 +507,18 @@ const Task = () => {
     }
   }
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const totalPages = Math?.ceil(filteredData && filteredData?.length / rowsPerPage);
+
+  // Get data for the current page
+  const currentData = filteredData?.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  ) || [];
+
 
   return (
     <Box
@@ -565,12 +623,20 @@ const Task = () => {
               {activeButton === "table" && (
                 <TaskTable
                   data={filteredData ?? null}
+                  currentData={currentData}
+                  page={page}
+                  order={order}
+                  orderBy={orderBy}
+                  rowsPerPage={rowsPerPage}
+                  totalPages={totalPages}
                   isLoading={isTaskLoading}
                   masterData={masterData}
                   handleTaskFavorite={handleTaskFavorite}
                   handleFreezeTask={handleFreezeTask}
                   handleStatusChange={handleStatusChange}
                   handleAssigneeShortcutSubmit={handleAssigneeShortcutSubmit}
+                  handleRequestSort={handleRequestSort}
+                  handleChangePage={handleChangePage}
                 />
               )}
 

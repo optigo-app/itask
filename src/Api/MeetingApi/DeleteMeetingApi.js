@@ -2,7 +2,6 @@ import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const deleteMeetingApi = async (selectedRow) => {
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
-    console.log('selectedRow: ', selectedRow);
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 

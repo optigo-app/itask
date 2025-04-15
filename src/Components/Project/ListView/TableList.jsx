@@ -26,12 +26,11 @@ import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionM
 import { useSetRecoilState } from "recoil";
 import { useNavigate } from "react-router-dom";
 
-const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) => {
-    console.log('dddprDdata: ', data);
+const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, totalPages, handleChangePage, handleRequestSort, isLoading, handleLockProject, handleDeleteModule }) => {
     const navigate = useNavigate();
-    const [order, setOrder] = useState("asc");
-    const [orderBy, setOrderBy] = useState("name");
-    const [page, setPage] = useState(1);
+    // const [order, setOrder] = useState("asc");
+    // const [orderBy, setOrderBy] = useState("name");
+    // const [page, setPage] = useState(1);
     const [selectedRow, setSelectedRow] = useState({});
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
@@ -40,7 +39,7 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    // const [rowsPerPage, setRowsPerPage] = useState(10);
     const [columnWidths] = useState({
         'Project/module': 350,
         'progress': 180,
@@ -92,81 +91,79 @@ const TableView = ({ data, isLoading, handleLockProject, handleDeleteModule }) =
         setSelectedRow(task);
     }
 
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
-    };
+    // const handleChangePage = (event, newPage) => {
+    //     setPage(newPage);
+    // };
 
-    const handleRequestSort = (property) => {
-        const fieldMapping = {
-            name: 'taskname',
-            due: 'DeadLineDate',
-        };
-        const mappedProperty = fieldMapping[property] || property;
-        const isAscending = orderBy === mappedProperty && order === "asc";
-        setOrder(isAscending ? "desc" : "asc");
-        setOrderBy(mappedProperty);
-    };
+    // const handleRequestSort = (property) => {
+    //     const fieldMapping = {
+    //         name: 'taskname',
+    //         due: 'DeadLineDate',
+    //     };
+    //     const mappedProperty = fieldMapping[property] || property;
+    //     const isAscending = orderBy === mappedProperty && order === "asc";
+    //     setOrder(isAscending ? "desc" : "asc");
+    //     setOrderBy(mappedProperty);
+    // };
 
-    const descendingComparator = (a, b, orderBy) => {
-        console.log('orderBy: ', orderBy);
-        const fieldMapping = {
-            deadline: 'DeadLineDate',
-            due: 'DeadLineDate',
-            "Project/module": 'taskname',
-            "start date": 'StartDate',
-        };
+    // const descendingComparator = (a, b, orderBy) => {
+    //     const fieldMapping = {
+    //         deadline: 'DeadLineDate',
+    //         due: 'DeadLineDate',
+    //         "Project/module": 'taskname',
+    //         "start date": 'StartDate',
+    //     };
 
-        const mappedField = fieldMapping[orderBy] || orderBy;
-        console.log('mappedField: ', mappedField);
-        let aValue = a[mappedField];
-        let bValue = b[mappedField];
+    //     const mappedField = fieldMapping[orderBy] || orderBy;
+    //     let aValue = a[mappedField];
+    //     let bValue = b[mappedField];
 
-        // Convert to Date if it's a deadline
-        if (mappedField === 'DeadLineDate') {
-            aValue = aValue ? new Date(aValue) : new Date('2100-01-01');
-            bValue = bValue ? new Date(bValue) : new Date('2100-01-01');
-        } else if (mappedField === 'start date') {
-            aValue = aValue ? new Date(aValue) : new Date('2100-01-01');
-            bValue = bValue ? new Date(bValue) : new Date('2100-01-01');
-        } else if (mappedField === 'progress_per') {
-            aValue = parseFloat(aValue);
-            bValue = parseFloat(bValue);
-        } else if (mappedField === 'Project/module') {
-            aValue = aValue?.toLowerCase();
-            bValue = bValue?.toLowerCase();
-        }
+    //     // Convert to Date if it's a deadline
+    //     if (mappedField === 'DeadLineDate') {
+    //         aValue = aValue ? new Date(aValue) : new Date('2100-01-01');
+    //         bValue = bValue ? new Date(bValue) : new Date('2100-01-01');
+    //     } else if (mappedField === 'start date') {
+    //         aValue = aValue ? new Date(aValue) : new Date('2100-01-01');
+    //         bValue = bValue ? new Date(bValue) : new Date('2100-01-01');
+    //     } else if (mappedField === 'progress_per') {
+    //         aValue = parseFloat(aValue);
+    //         bValue = parseFloat(bValue);
+    //     } else if (mappedField === 'Project/module') {
+    //         aValue = aValue?.toLowerCase();
+    //         bValue = bValue?.toLowerCase();
+    //     }
 
 
-        if (bValue < aValue) return -1;
-        if (bValue > aValue) return 1;
-        return 0;
-    };
+    //     if (bValue < aValue) return -1;
+    //     if (bValue > aValue) return 1;
+    //     return 0;
+    // };
 
 
-    const getComparator = (order, orderBy) => {
-        return order === "desc"
-            ? (a, b) => descendingComparator(a, b, orderBy)
-            : (a, b) => -descendingComparator(a, b, orderBy);
-    };
+    // const getComparator = (order, orderBy) => {
+    //     return order === "desc"
+    //         ? (a, b) => descendingComparator(a, b, orderBy)
+    //         : (a, b) => -descendingComparator(a, b, orderBy);
+    // };
 
-    const sortData = (array, comparator) => {
-        return [...array]?.sort(comparator);
-    };
+    // const sortData = (array, comparator) => {
+    //     return [...array]?.sort(comparator);
+    // };
 
-    let sortedData;
-    if (data) {
-        sortedData = sortData(data, getComparator(order, orderBy));
-    }
+    // let sortedData;
+    // if (data) {
+    //     sortedData = sortData(data, getComparator(order, orderBy));
+    // }
 
-    // for data logic or data manipulation
-    // Calculate total pages
-    const totalPages = Math?.ceil(data && data?.length / rowsPerPage);
+    // // for data logic or data manipulation
+    // // Calculate total pages
+    // const totalPages = Math?.ceil(data && data?.length / rowsPerPage);
 
-    // Get data for the current page
-    const currentData = sortedData?.slice(
-        (page - 1) * rowsPerPage,
-        page * rowsPerPage
-    );
+    // // Get data for the current page
+    // const currentData = sortedData?.slice(
+    //     (page - 1) * rowsPerPage,
+    //     page * rowsPerPage
+    // );
 
     const handleNavigate = (task) => {
         let urlData = {

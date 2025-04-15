@@ -5,8 +5,8 @@ export const TaskData = atom({
   default: []
 })
 
-export const projectData = atom({
-  key: 'projectData',
+export const projectDatasRState = atom({
+  key: 'projectDatasRState',
   default: []
 })
 

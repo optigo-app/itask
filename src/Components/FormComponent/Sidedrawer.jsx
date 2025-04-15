@@ -1,10 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
     Drawer,
     Box,
     TextField,
     Button,
-    MenuItem,
     Typography,
     IconButton,
     Grid,
@@ -13,18 +12,20 @@ import {
     ToggleButton,
     FormControlLabel,
     Checkbox,
+    Autocomplete,
+    Avatar,
 } from "@mui/material";
 import { CircleX, Grid2x2, ListTodo } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import "./SidebarDrawer.scss";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { formData, rootSubrootflag } from "../../Recoil/atom";
+import { formData, projectDatasRState, rootSubrootflag, TaskData } from "../../Recoil/atom";
 import dayjs from 'dayjs';
 import utc from "dayjs/plugin/utc";
 import { useLocation } from "react-router-dom";
 import EstimateInput from "../../Utils/Common/EstimateInput";
 import MultiSelectChipWithLimit from "../ShortcutsComponent/AssigneeAutocomplete";
-import { commonSelectProps, commonTextFieldProps, convertWordsToSpecialChars, customDatePickerProps } from "../../Utils/globalfun";
+import { commonTextFieldProps, convertWordsToSpecialChars, customDatePickerProps, flattenTasks, ImageUrl } from "../../Utils/globalfun";
 import MultiTaskInput from "./MultiTaskInput";
 import FileUploader from "../ShortcutsComponent/FileUploader";
 import timezone from 'dayjs/plugin/timezone';
@@ -51,15 +52,18 @@ const SidebarDrawer = ({
     const theme = useTheme();
     dayjs.extend(utc);
     dayjs.extend(timezone);
+    const projectModuleData = useRecoilValue(projectDatasRState);
+    const taskDataValue = useRecoilValue(TaskData);
     const [checkedMultiTask, setCheckedMultiTask] = useState(false);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
     const [rootSubrootflagval, setRootSubrootFlagVal] = useRecoilState(rootSubrootflag)
-    console.log('rootSubrootflagval: ', rootSubrootflagval);
     const [taskType, setTaskType] = useState("single");
     const [tasksubType, setTaskSubType] = useState("multi2");
     const searchParams = new URLSearchParams(location?.search);
     const encodedData = searchParams.get("data");
     const [decodedData, setDecodedData] = useState(null);
+    const [isDuplicateTask, setIsDuplicateTask] = useState(false);
+    const [isTaskNameEmpty, setIsTaskNameEmpty] = useState(false);
     const [formValues, setFormValues] = React.useState({
         taskName: "",
         bulkTask: [],
@@ -76,13 +80,13 @@ const SidebarDrawer = ({
         category: "",
         department: "",
         guests: [],
+        projectLead: [],
         workcategoryid: "",
         milestoneChecked: 0,
         estimate_hrs: "",
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
-    console.log('dddformValues: ', formValues);
     const handleTaskChange = (event, newTaskType) => {
         if (newTaskType !== null) setTaskType(newTaskType);
         handleResetState();
@@ -96,10 +100,10 @@ const SidebarDrawer = ({
         status: useRef(),
         category: useRef(),
         department: useRef(),
+        assignee: useRef(),
     };
 
     useEffect(() => {
-        debugger
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
         if (open && rootSubrootflagval?.Task === "root") {
@@ -110,6 +114,7 @@ const SidebarDrawer = ({
                 dueDate: formDataValue?.DeadLineDate ?? null,
                 department: formDataValue?.departmentid != 0 ? formDataValue?.departmentid : "",
                 guests: matchedAssignees ?? [],
+                projectLead: formDataValue?.projectLead ?? "",
                 assignee: formDataValue?.assigneids ?? "",
                 status: formDataValue?.statusid ?? "",
                 priority: formDataValue?.priorityid ?? "",
@@ -146,6 +151,123 @@ const SidebarDrawer = ({
         }, 300);
     }, [open, checkedMultiTask, formValues, rootSubrootflagval]);
 
+    let data = flattenTasks(taskDataValue)
+    console.log('data: ', data, rootSubrootflagval?.Task);
+    console.log('dataformValues: ', formValues);
+
+
+    const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);
+
+    const projectId = useMemo(() => {
+        if (rootSubrootflagval?.Task === "AddTask") {
+            return formValues?.project || decodedData?.projectid || formDataValue?.projectid;
+        } else {
+            return formValues?.project || formDataValue?.projectid;
+        }
+    }, [formValues?.project, decodedData?.projectid, formDataValue?.projectid, rootSubrootflagval?.Task]);
+
+    const flattenedTasks = useMemo(() => {
+        if (location?.pathname?.includes("/projects")) {
+            return projectModuleData ? flattenTasks(taskDataValue) : [];
+        }
+        return flattenTasks(taskDataValue);
+    }, [location?.pathname, projectModuleData, taskDataValue]);
+
+    useEffect(() => {
+        if (!rootSubrootflagval?.Task) return;
+
+        const isRoot = rootSubrootflagval?.Task === "root";
+        const isAddOrSub = rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "subroot";
+
+        if (projectId) {
+            setIsTaskNameEmpty(taskName === "");
+        }
+
+        if (!projectId || !taskName) {
+            setIsDuplicateTask(false);
+            return;
+        }
+
+        if (isAddOrSub) {
+            const match = flattenedTasks.find(
+                task =>
+                    task?.projectid === projectId &&
+                    task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
+            );
+            setIsDuplicateTask(!!match);
+        } else if (isRoot) {
+            if (formDataValue?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()) {
+                setIsDuplicateTask(false);
+            } else {
+                const match = data.find(
+                    task =>
+                        task?.projectid === projectId &&
+                        task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
+                );
+                setIsDuplicateTask(!!match);
+            }
+        } else {
+            setIsDuplicateTask(false);
+            setIsTaskNameEmpty(false);
+        }
+    }, [
+        open,
+        taskName,
+        projectId,
+        flattenedTasks,
+        data,
+        rootSubrootflagval?.Task,
+        formDataValue?.taskname
+    ]);
+
+
+    // useEffect(() => {
+    //     debugger
+    //     if (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "subroot") {
+    //         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
+    //         let arrData = location?.pathname?.includes("/projects") ? projectModuleData ? flattenTasks(taskDataValue) : [] : flattenTasks(taskDataValue);
+    //         const taskName = formValues?.taskName?.trim() || "";
+    //         const projectId = formValues?.project || moduleData?.projectid || formDataValue?.projectid;
+    //         if (projectId) {
+    //             setIsTaskNameEmpty(taskName === "");
+    //         }
+    //         if (projectId && taskName && Array.isArray(arrData)) {
+    //             const match = arrData.find(
+    //                 task =>
+    //                     task?.projectid === projectId &&
+    //                     task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
+    //             );
+    //             setIsDuplicateTask(!!match);
+    //         } else {
+    //             setIsDuplicateTask(false);
+    //         }
+    //     } else if (rootSubrootflagval?.Task === "root") {
+    //         const taskName = formValues?.taskName?.trim() || "";
+    //         const projectId = formValues?.project || formDataValue?.projectid;
+    //         if (projectId) {
+    //             setIsTaskNameEmpty(taskName === "");
+    //         }
+    //         if (projectId && taskName && Array.isArray(data)) {
+    //             if (formDataValue?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()) {
+    //                 setIsDuplicateTask(false);
+    //             } else {
+    //                 const match = data.find(
+    //                     task =>
+    //                         task?.projectid === projectId &&
+    //                         task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
+    //                 );
+    //                 setIsDuplicateTask(!!match);
+    //             }
+    //         } else {
+    //             setIsDuplicateTask(false);
+    //         }
+    //     } else {
+    //         setIsDuplicateTask(false);
+    //         setIsTaskNameEmpty(false);
+    //     }
+    // }, [open, formValues, formValues.project, formValues.taskName, projectModuleData, taskDataValue, location?.pathname]);
+
+
 
     // Handle form value changes
     const handleChange = (e) => {
@@ -155,8 +277,8 @@ const SidebarDrawer = ({
             [name]: value,
         }));
     }
+
     const handleDateChange = (date, key) => {
-        debugger
         if (date) {
             const istDate = date.tz('Asia/Kolkata');
 
@@ -186,7 +308,6 @@ const SidebarDrawer = ({
     }
 
     const handleSubmit = (module) => {
-        debugger
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const idString = formValues?.guests?.map(user => user.id)?.join(",");
         const updatedFormDataValue = {
@@ -196,6 +317,7 @@ const SidebarDrawer = ({
             statusid: formValues.status ?? formDataValue.statusid,
             priorityid: formValues.priority ?? formDataValue.priorityid,
             projectid: moduleData?.projectid ?? formValues.project ?? formDataValue.projectid,
+            projectLead: formValues?.projectLead ?? formDataValue?.projectLead,
             DeadLineDate: formValues.dueDate ?? formDataValue.DeadLineDate,
             workcategoryid: formValues.category ?? formDataValue.workcategoryid,
             StartDate: formValues.startDate ?? formDataValue.entrydate,
@@ -274,6 +396,70 @@ const SidebarDrawer = ({
         }
     }, [encodedData]);
 
+    const AssigneeAutocomplete = ({
+        label,
+        name,
+        value,
+        onChange,
+        options,
+        placeholder,
+        inputRef,
+    }) => {
+        return (
+            <Box className="form-group">
+                <Typography
+                    variant="subtitle1"
+                    className="form-label"
+                    htmlFor="taskName"
+                >
+                    Project Lead
+                </Typography>
+                <Autocomplete
+                    options={options}
+                    getOptionLabel={(option) =>
+                        option?.firstname && option?.lastname
+                            ? `${option.firstname} ${option.lastname} (${option.designation})`
+                            : ''
+                    }
+                    value={value}
+                    onChange={(event, newValue) => {
+                        onChange({
+                            target: {
+                                name,
+                                value: newValue,
+                            },
+                        });
+                    }}
+                    isOptionEqualToValue={(option, value) =>
+                        option?.userid === value?.userid
+                    }
+                    renderOption={(props, option) => (
+                        <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Avatar
+                                src={ImageUrl(option) || ''}
+                                alt={option.firstname}
+                                sx={{ width: 30, height: 30 }}
+                            >
+                                {(!option.empphoto && option.firstname) ? option.firstname[0] : ''}
+                            </Avatar>
+                            <Box>
+                                {option.firstname} {option.lastname}
+                            </Box>
+                        </Box>
+                    )}
+                    {...commonTextFieldProps}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            placeholder={placeholder}
+                            inputRef={inputRef}
+                        />
+                    )}
+                />
+            </Box>
+        );
+    };
+
     return (
         <>
             <Drawer
@@ -287,7 +473,7 @@ const SidebarDrawer = ({
                     <Box className="drawer-container">
                         <Box className="drawer-header">
                             <Typography variant="h6" className="drawer-title">
-                                {taskType === 'multi_input' ? "Add Tasks" : rootSubrootflagval?.Task == "AddTask" ? "Add Task" : rootSubrootflagval?.Task == "subroot" ? "Add task" : "Edit Task"}
+                                {taskType === 'multi_input' ? "Add Tasks" : rootSubrootflagval?.Task == "AddTask" ? "Add Task" : rootSubrootflagval?.Task == "subroot" ? "Add Sub-Task" : "Edit Task"}
                             </Typography>
                             <IconButton onClick={handleClear}>
                                 <CircleX />
@@ -373,6 +559,14 @@ const SidebarDrawer = ({
                                                 value={formValues.taskName}
                                                 onChange={handleChange}
                                                 {...commonTextFieldProps}
+                                                error={isTaskNameEmpty || isDuplicateTask}
+                                                helperText={
+                                                    isTaskNameEmpty
+                                                        ? "Task name is required."
+                                                        : isDuplicateTask
+                                                            ? "This Task name already exists for the selected project."
+                                                            : ""
+                                                }
                                             />
                                         </Box>
                                     </Grid>
@@ -572,7 +766,12 @@ const SidebarDrawer = ({
                                             variant="contained"
                                             color="primary"
                                             onClick={handleSubmit}
-                                            disabled={isLoading}
+                                            disabled={
+                                                formValues.bulkTask.length > 0
+                                                    ? false
+                                                    : isLoading || isTaskNameEmpty || isDuplicateTask
+                                            }
+
                                             className="primary-btn"
                                         >
                                             {isLoading ? "Saving..." : "Save Task"}
@@ -627,6 +826,14 @@ const SidebarDrawer = ({
                                             value={formValues.taskName}
                                             onChange={handleChange}
                                             {...commonTextFieldProps}
+                                            error={isTaskNameEmpty || isDuplicateTask}
+                                            helperText={
+                                                isTaskNameEmpty
+                                                    ? "Module name is required."
+                                                    : isDuplicateTask
+                                                        ? "This module name already exists for the selected project."
+                                                        : ""
+                                            }
                                         />
                                     </Box>
                                 </Grid>
@@ -639,6 +846,17 @@ const SidebarDrawer = ({
                                         options={taskCategory}
                                         placeholder="Select Category"
                                         refProp={filterRefs.category}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <AssigneeAutocomplete
+                                        label="project lead"
+                                        name="projectLead"
+                                        value={formValues.assignee}
+                                        onChange={handleChange}
+                                        options={taskAssigneeData}
+                                        placeholder="Select Assignee"
+                                        inputRef={filterRefs.assignee}
                                     />
                                 </Grid>
                                 <Grid item xs={12}>
@@ -752,8 +970,8 @@ const SidebarDrawer = ({
                                         <Button
                                             variant="contained"
                                             color="primary"
+                                            disabled={isLoading || isTaskNameEmpty || isDuplicateTask}
                                             onClick={() => handleSubmit({ module: true })}
-                                            disabled={isLoading}
                                             className="primary-btn"
                                         >
                                             {isLoading ? "Saving..." : "Save"}

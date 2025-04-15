@@ -79,7 +79,7 @@ const MeetingCard = ({
               </span>
             )}
           </Typography>
-          {StatusCircles({ meeting, redCount: 5, yellowCount: 10, greenCount: 50 })}
+          {StatusCircles(meeting, {redCount: 5, yellowCount: 10, greenCount: 50})}
         </Box>
 
         <Typography

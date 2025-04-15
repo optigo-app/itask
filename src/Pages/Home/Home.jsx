@@ -112,7 +112,6 @@ const Home = () => {
   ]
 
   const handleMeetingbyLogin = async () => {
-    debugger
     setIsLoding(true);
     try {
       const meetingApiRes = await fetchMettingListByLoginApi();
@@ -174,8 +173,6 @@ const Home = () => {
   let prFilterData = prTasksList?.filter((task) => {
     return typeof task?.priority === 'string' && task.priority.toLowerCase().trim() === "high" && task?.assignee?.some((assignee) => assignee.id == profileData?.id);
   });
-  console.log('prTasksList: ', prTasksList);
-  console.log('prFilterData: ', prFilterData);
 
   return (
     <>

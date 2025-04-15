@@ -1,21 +1,11 @@
 import React, { useEffect, useState } from "react";
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Button,
   Grid,
-  TextField,
-  InputAdornment,
-  Avatar,
-  Tooltip,
-  ToggleButtonGroup,
-  ToggleButton,
 } from "@mui/material";
-import AvatarGroup from "@mui/material/AvatarGroup";
-import dayjs from "dayjs";
-import { Calendar, IdCard, Kanban, List, Plus, SearchIcon } from "lucide-react";
+import { Calendar, Plus } from "lucide-react";
 import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
 import CalendarForm from "../../Components/Calendar/SideBar/CalendarForm";
 import { CalformData } from "../../Recoil/atom";
@@ -33,6 +23,8 @@ import { toast } from "react-toastify";
 import MeetingTable from "../../Components/Meeting/MeetingGrid.jsx";
 import MeetingCard from "../../Components/Meeting/MeetingCard.jsx";
 import MeetingHeader from "../../Components/Meeting/MeetingHeader.jsx";
+import { MeetingAttendAPI } from "../../Api/MeetingApi/MeetingAttendApi.js";
+import MeetingDetail from "../../Components/Meeting/MeetingDetails.jsx";
 
 const tabData = [
   { label: 'Upcoming', content: 'UpcomingMeetings' },
@@ -45,7 +37,6 @@ const tabData = [
 const MeetingPage = () => {
   const [viewType, setViewType] = useState('list');
   const [meetings, setMeetings] = useState([]);
-  console.log('meetings: ', meetings);
   const [isLoding, setIsLoding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [caledrawerOpen, setCaledrawerOpen] = useState(false);
@@ -56,11 +47,17 @@ const MeetingPage = () => {
   const [openRejectModal, setOpenRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [selectedTab, setSelectedTab] = useState(tabData[0]?.label || '');
+  const [meetingDetailModalOpen, setMeetingDetailModalOpen] = useState(false);
 
   const handleOpenStatusModal = (meeting) => {
     setOpenStatusModal(true);
     setFormData(meeting);
   };
+
+
+  const handleTaskModalClose = () => {
+    setMeetingDetailModalOpen(false);
+};
 
 
   const handleTabChange = (event, newValue) => {
@@ -85,15 +82,31 @@ const MeetingPage = () => {
   };
 
   const handleAttendMeeting = async (meeting) => {
-    console.log('meeting: ', meeting);
-    const updatedMeetings = meetings?.map(m =>
-      m.meetingid === meeting.meetingid
-        ? { ...m, isAttendBtn: 2 }
-        : m
-    );
+    try {
+      const updatedMeetings = meetings?.map((m) =>
+        m.meetingid === meeting.meetingid
+          ? { ...m, ismeeting_attnd: 1 }
+          : m
+      );
+      const formValues = {
+        id: meeting?.meetingid,
+        ismeeting_attnd: 1,
+      };
+      const apiRes = await MeetingAttendAPI(formValues);
+      console.log('apiRes: ', apiRes);
 
-    setMeetings(updatedMeetings);
+      if (apiRes?.rd?.[0]?.stat == 1) {
+        setMeetings(updatedMeetings);
+        toast.success("Meeting attendance marked successfully.");
+      } else {
+        toast.error("Something went wrong while updating meeting attendance.");
+      }
+    } catch (error) {
+      console.error("handleAttendMeeting error:", error);
+      toast.error("Failed to update meeting attendance.");
+    }
   };
+
 
   const handleCloseRejectModal = () => {
     setOpenRejectModal(false);
@@ -101,7 +114,6 @@ const MeetingPage = () => {
   };
 
   const handleConfirmReject = () => {
-    console.log("Rejected", "Reason:", rejectReason);
     const formValues = {
       id: formData?.meetingid,
       isAccept: 2,
@@ -112,7 +124,6 @@ const MeetingPage = () => {
   };
 
   const handleMeetingList = async () => {
-    debugger
     setIsLoding(true);
     try {
       const meetingApiRes = await fetchMettingListApi();
@@ -126,29 +137,40 @@ const MeetingPage = () => {
       }
 
       const data = meetingApiRes?.rd || [];
-      const taskAssigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
-      const loginUserData = JSON.parse(localStorage.getItem("UserProfileData") || "{}");
+      const taskAssigneeData = JSON?.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
+      const loginUserData = JSON?.parse(localStorage.getItem("UserProfileData") || "{}");
+      const categoryData = JSON?.parse(sessionStorage?.getItem("taskworkcategoryData"));
+
+      const today = new Date();
+      const currentDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
       const enhancedMeetings = data?.map((meeting) => {
         const meetingDt = meetingDtRes?.find((m) => m?.meetingid == meeting?.meetingid) || {};
         const assigneeIds = meeting?.assigneids?.split(",")?.map(Number) || [];
+        const category = categoryData?.find(item => item?.id == meeting?.workcategoryid);
 
         const isUserAssigned = assigneeIds?.includes(loginUserData?.id);
-        console.log('isUserAssigned: ', isUserAssigned);
         const isMeetingDtEmpty = Object.keys(meetingDt).length === 0;
         const isAcceptStatusValid = isMeetingDtEmpty || meetingDt?.isAccept === 0;
+        const isAttendStatusValid = isMeetingDtEmpty || meetingDt?.ismeeting_attnd === 0;
 
         const isAction = isUserAssigned && isAcceptStatusValid;
 
-        const isAttendBtn = isUserAssigned && meeting?.meetingDt?.isAccept != 0 ? 1 : 0;
+        const meetingDate = new Date(new Date(meeting.StartDate).getFullYear(), new Date(meeting.StartDate).getMonth(), new Date(meeting.StartDate).getDate());
+        const isUpcoming = meetingDate >= currentDateOnly;
+
+        const isAttendBtn = meetingDt?.isAccept == 1 && !isAction && isUserAssigned && isAttendStatusValid && meetingDt?.isAccept != 0 && isUpcoming ? 1 : 0;
+        const ismeeting_attnd = meetingDt?.ismeeting_attnd == 1 ? 1 : 0;
 
         return {
           ...meeting,
           isAction,
           isAttendBtn,
+          ismeeting_attnd,
           guests: taskAssigneeData?.filter((user) =>
             assigneeIds.includes(user.id)
           ) || [],
+          category,
           prModule: {
             projectid: meeting?.projectid,
             taskid: meeting?.taskid,
@@ -239,31 +261,31 @@ const MeetingPage = () => {
         field?.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
-      const currentDate = new Date();
-      const meetingDate = new Date(meeting.StartDate);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const meetingDate = new Date(new Date(meeting.StartDate).getFullYear(), new Date(meeting.StartDate).getMonth(), new Date(meeting.StartDate).getDate());
 
       switch (selectedTab) {
         case 'Upcoming':
-          return matchesSearch && meetingDate > currentDate;
+          return matchesSearch && meetingDate >= today;
         case 'Overdue':
-          return matchesSearch && meetingDate < currentDate;
+          return matchesSearch && meetingDate < today;
         case 'Completed':
-          return matchesSearch && meetingDate < currentDate && meeting.isAttendBtn == 2;
+          return matchesSearch && meetingDate < today && meeting.isAttendBtn == 2;
         case 'History':
-          return matchesSearch && meetingDate < currentDate && meeting.isAttendBtn === 0;
+          return matchesSearch && meetingDate < today && meeting.isAttendBtn === 0;
         default:
           return matchesSearch;
       }
     })
     ?.sort((a, b) => new Date(a.time) - new Date(b.time));
-  console.log('filteredMeetings: ', filteredMeetings);
+
 
   const handleDrawerToggle = () => {
     setCaledrawerOpen(!caledrawerOpen);
   };
 
   const handleCaleFormSubmit = async (formValues) => {
-    debugger
     setCalFormData(formValues);
     const apiRes = await AddMeetingApi(formValues);
     if (apiRes?.rd[0]?.stat == 1) {
@@ -309,15 +331,14 @@ const MeetingPage = () => {
   }
 
   const background = (team) => {
-    console.log('team: ', team);
     const avatarBackgroundColor = team?.empphoto
       ? "transparent"
       : getRandomAvatarColor(team?.firstname);
     return avatarBackgroundColor;
   }
 
-  const StatusCircles = ({ meeting, redCount, yellowCount, greenCount }) => {
-    console.log('meeting: ', meeting);
+  const StatusCircles = (meeting, { redCount, yellowCount, greenCount }) => {
+    console.log('ddddmeeting: ', meeting);
     const circleStyle = {
       minWidth: 30,
       minHeight: 30,
@@ -410,6 +431,7 @@ const MeetingPage = () => {
                         selectedTab={selectedTab}
                         handleDrawerToggle={handleDrawerToggle}
                         setCalFormData={setCalFormData}
+                        setMeetingDetailModalOpen={setMeetingDetailModalOpen}
                         StatusCircles={StatusCircles}
                         ImageUrl={ImageUrl}
                         background={background}
@@ -426,6 +448,8 @@ const MeetingPage = () => {
                   selectedTab={selectedTab}
                   handleDrawerToggle={handleDrawerToggle}
                   setCalFormData={setCalFormData}
+                  setFormData={setFormData}
+                  setMeetingDetailModalOpen={setMeetingDetailModalOpen}
                   StatusCircles={StatusCircles}
                   background={background}
                   handleOpenStatusModal={handleOpenStatusModal}
@@ -487,6 +511,11 @@ const MeetingPage = () => {
         onConfirm={handleConfirmRemoveAMeeting}
         title="Confirm"
         content="Are you sure you want to remove this meeting?"
+      />
+      < MeetingDetail
+        open={meetingDetailModalOpen}
+        onClose={handleTaskModalClose}
+        taskData={formData}
       />
     </Box>
   );

@@ -37,33 +37,69 @@ export const formatDate3 = (date) => {
     return formattedDate;
 };
 // "1 day left" or "1 day 2 hr",
+// export function getTimeLeft(dateString) {
+//     const now = new Date();
+//     const future = new Date(dateString);
+//     const diffMs = future - now;
+
+//     if (diffMs <= 0) return "Overdue";
+
+//     const seconds = Math.floor(diffMs / 1000);
+//     const minutes = Math.floor(seconds / 60);
+//     const hours = Math.floor(minutes / 60);
+//     const days = Math.floor(hours / 24);
+//     const weeks = Math.floor(days / 7);
+//     const months = Math.floor(days / 30); // approx
+//     const years = Math.floor(days / 365); // approx
+
+//     if (years > 0) return `${years} year${years > 1 ? "s" : ""}`;
+//     if (months > 0) return `${months} month${months > 1 ? "s" : ""}`;
+//     if (weeks > 0) return `${weeks} week${weeks > 1 ? "s" : ""}`;
+//     if (days > 0) return `${days} day${days > 1 ? "s" : ""}`;
+//     if (hours > 0 || minutes > 0) {
+//         const hr = hours % 24;
+//         const min = minutes % 60;
+//         return `${hr > 0 ? hr + " hr " : ""}${min > 0 ? min + " min" : ""}`.trim();
+//     }
+
+//     return "Less than a minute";
+// }
+
 export function getTimeLeft(dateString) {
     const now = new Date();
-    const future = new Date(dateString);
-    const diffMs = future - now;
-
-    if (diffMs <= 0) return "Overdue";
-
-    const seconds = Math.floor(diffMs / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    const weeks = Math.floor(days / 7);
-    const months = Math.floor(days / 30); // approx
-    const years = Math.floor(days / 365); // approx
-
-    if (years > 0) return `${years} year${years > 1 ? "s" : ""}`;
-    if (months > 0) return `${months} month${months > 1 ? "s" : ""}`;
-    if (weeks > 0) return `${weeks} week${weeks > 1 ? "s" : ""}`;
-    if (days > 0) return `${days} day${days > 1 ? "s" : ""}`;
-    if (hours > 0 || minutes > 0) {
-        const hr = hours % 24;
-        const min = minutes % 60;
-        return `${hr > 0 ? hr + " hr " : ""}${min > 0 ? min + " min" : ""}`.trim();
-    }
-
-    return "Less than a minute";
-}
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+    const futureDate = new Date(dateString);
+    const target = new Date(futureDate.getFullYear(), futureDate.getMonth(), futureDate.getDate());
+  
+    const diffMs = target - today;
+  
+    const formatDateTime = (date) =>
+      date.toLocaleString("en-US", {
+        day: "numeric",
+        month: "short",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+  
+    if (diffMs < 0) return "Overdue";
+    if (diffMs === 0) return formatDateTime(futureDate);
+  
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const weeks = Math.floor(diffDays / 7);
+    const months = Math.floor(diffDays / 30);
+    const years = Math.floor(diffDays / 365);
+  
+    if (years > 0) return `in ${years} year${years > 1 ? "s" : ""}`;
+    if (months > 0) return `in ${months} month${months > 1 ? "s" : ""}`;
+    if (weeks > 0) return `in ${weeks} week${weeks > 1 ? "s" : ""}`;
+    if (diffDays > 0) return `in ${diffDays} day${diffDays > 1 ? "s" : ""}`;
+  
+    return "Soon";
+  }
+  
+  
 
 export function toISTDateTime(isoDate) {
     const istDate = new Date(isoDate).toLocaleString("en-IN", {

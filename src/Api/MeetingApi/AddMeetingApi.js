@@ -18,9 +18,6 @@ export const AddMeetingApi = async (formValues) => {
             "descr": convertSpecialCharsToWords(formValues?.description) ?? "",
         });
 
-
-        console.log('combinedValue: ', combinedValue);
-
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"taskmeetingsave\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (tasklist)",

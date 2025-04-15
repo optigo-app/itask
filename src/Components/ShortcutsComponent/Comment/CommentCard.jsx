@@ -2,7 +2,7 @@ import React from "react";
 import { Card, Grid, Typography, Box, IconButton, Avatar, Link } from "@mui/material";
 import { Download, MoreVertical } from "lucide-react";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { formatDate3, getRandomAvatarColor } from "../../../../Utils/globalfun";
+import { formatDate3, getRandomAvatarColor } from "../../../Utils/globalfun";
 import './style.scss';
 
 const CommentCard = ({ comment }) => {

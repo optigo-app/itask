@@ -33,7 +33,7 @@ import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 import StatusCircles from "../../ShortcutsComponent/EstimateComp";
 import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 
-const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigneeShortcutSubmit, isLoading }) => {
+const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, totalPages, handleChangePage, handleRequestSort, handleTaskFavorite, handleStatusChange, handleAssigneeShortcutSubmit, isLoading }) => {
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const setFormDataValue = useSetRecoilState(formData);
@@ -45,10 +45,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const [selectedItem, setSelectedItem] = useState(null);
-    const [order, setOrder] = useState("asc");
-    const [orderBy, setOrderBy] = useState("name");
-    const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(12);
     const [columnWidths] = useState({
         name: 350,
         project: 150,
@@ -125,6 +121,7 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
             taskid: task?.taskid,
             taskPr: task?.taskPr,
             projectid: task?.projectid,
+            taskname: task?.taskname,
         }
         setRootSubroot(additionalInfo);
         setFormDataValue(data);
@@ -137,6 +134,7 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
             taskid: subtask?.taskid,
             taskPr: subtask?.taskPr,
             projectid: subtask?.projectid,
+            taskname: subtask?.taskname,
         }
         setRootSubroot(additionalInfo);
         setFormDataValue(data);
@@ -191,68 +189,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
             return newState;
         });
     };
-
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
-    };
-
-    const handleRequestSort = (property) => {
-        const fieldMapping = {
-            name: 'taskname',
-            due: 'DeadLineDate',
-        };
-        const mappedProperty = fieldMapping[property] || property;
-        const isAscending = orderBy === mappedProperty && order === "asc";
-        setOrder(isAscending ? "desc" : "asc");
-        setOrderBy(mappedProperty);
-    };
-
-    const descendingComparator = (a, b, orderBy) => {
-        const fieldMapping = {
-            deadline: 'DeadLineDate',
-            due: 'DeadLineDate',
-            name: 'Project/module',
-        };
-
-        const mappedField = fieldMapping[orderBy] || orderBy;
-        let aValue = a[mappedField];
-        let bValue = b[mappedField];
-
-        // Convert to Date if it's a deadline
-        if (mappedField === 'DeadLineDate') {
-            aValue = aValue ? new Date(aValue) : new Date('2100-01-01');
-            bValue = bValue ? new Date(bValue) : new Date('2100-01-01');
-        }
-
-        if (bValue < aValue) return -1;
-        if (bValue > aValue) return 1;
-        return 0;
-    };
-
-
-    const getComparator = (order, orderBy) => {
-        return order === "desc"
-            ? (a, b) => descendingComparator(a, b, orderBy)
-            : (a, b) => -descendingComparator(a, b, orderBy);
-    };
-
-    const sortData = (array, comparator) => {
-        return [...array]?.sort(comparator);
-    };
-
-    let sortedData;
-    if (data) {
-        sortedData = sortData(data, getComparator(order, orderBy));
-    }
-
-    // Calculate total pages
-    const totalPages = Math?.ceil(data && data?.length / rowsPerPage);
-
-    // Get data for the current page
-    const currentData = sortedData?.slice(
-        (page - 1) * rowsPerPage,
-        page * rowsPerPage
-    );
 
     const handleAssigneeShortcut = (task, additionalInfo) => {
         setSelectedItem(task);
@@ -400,9 +336,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
         expandedTasks,
         toggleSubtasks,
         convertWordsToSpecialChars,
-        handleAddTask,
-        hoveredTaskId,
-        hoveredColumnname,
         BurningImg
     ) => {
         return (
@@ -476,18 +409,6 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                         </div>
                     </div>
                 </div>
-                <IconButton
-                    id="add-task"
-                    aria-label="add-task"
-                    aria-labelledby="add-task"
-                    size="small"
-                    onClick={() => handleAddTask(task, { Task: 'subroot' })}
-                    style={{
-                        visibility: hoveredTaskId === task?.taskid && hoveredColumnname === 'TaskName' ? "visible" : "hidden",
-                    }}
-                >
-                    <CirclePlus size={20} color="#7367f0" />
-                </IconButton>
             </>
         );
     };
@@ -517,7 +438,24 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                 hoveredColumnname,
                                 BurningImg
                             )}
-
+                            <IconButton
+                                id="add-task"
+                                aria-label="add-task"
+                                aria-labelledby="add-task"
+                                size="small"
+                                onClick={() => handleAddSubtask(subtask, { Task: 'subroot' })}
+                                style={{
+                                    visibility: hoveredSubtaskId === subtask?.taskid ? "visible" : "hidden",
+                                }}
+                                sx={{
+                                    '&:hover': {
+                                        backgroundColor: 'transparent',
+                                        boxShadow: 'none',
+                                    }
+                                }}
+                            >
+                                <CirclePlus size={20} color="#7367f0" />
+                            </IconButton>
                         </div>
                     </TableCell>
                     <TableCell>{subtask?.taskPr}</TableCell>
@@ -613,6 +551,18 @@ const TableView = ({ data, handleTaskFavorite, handleStatusChange, handleAssigne
                                                             hoveredColumnname,
                                                             BurningImg
                                                         )}
+                                                        <IconButton
+                                                            id="add-task"
+                                                            aria-label="add-task"
+                                                            aria-labelledby="add-task"
+                                                            size="small"
+                                                            onClick={() => handleAddTask(task, { Task: 'subroot' })}
+                                                            style={{
+                                                                visibility: hoveredTaskId === task?.taskid && hoveredColumnname == 'TaskName' ? "visible" : "hidden",
+                                                            }}
+                                                        >
+                                                            <CirclePlus size={20} color="#7367f0" />
+                                                        </IconButton>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>{task?.taskPr}</TableCell>

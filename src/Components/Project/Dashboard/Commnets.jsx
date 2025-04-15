@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Box, IconButton, Button, TextareaAutosize } from "@mui/material";
 import { Paperclip, Eye, Send } from "lucide-react";
-import CommentCard from "../../Task/TaskDetails/Comment/CommentCard";
+import CommentCard from "../../ShortcutsComponent/Comment/CommentCard";
 import "./Styles/Comments.scss";
 import commentsData from "../../../Data/commentsData";
 

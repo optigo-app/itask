@@ -1,0 +1,196 @@
+@import '../../../theme/variable.scss';
+
+.modal-container {
+  .modal-container2 {
+    width: 660px;
+    padding: 5px 24px 24px 24px;
+
+  }
+
+  // &.full-screen {
+  //   width: 50vw;
+  //   height: 100vh;
+  // }
+
+  // @media (max-width: 768px) {
+  //   &.full-screen {
+  //     width: 75vw;
+  //     height: 100vh;
+  //   }
+  // }
+
+  // @media (max-width: 480px) {
+  //   &.full-screen {
+  //     width: 100vw;
+  //     height: 100vh;
+  //   }
+  // }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+.divider {
+  margin: 20px 0;
+  border: 1px dashed #ccc;
+}
+
+.modal-body {
+  flex-grow: 1;
+
+  span {
+    font-family: $font-family !important;
+  }
+
+  .titlebox {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 2px;
+    background-color: #e0e0e0;
+    border-radius: 20px;
+    font-size: 12px;
+  }
+
+
+  .task-details {
+    .MuiTypography-root {
+      font-size: 15px;
+    }
+
+    .tasklable {
+      color: #7b7b7b !important;
+    }
+
+    .taskDesc {
+      display: flex;
+      gap: 10px;
+      margin: 16px 0px 5px 0px;
+      align-items: center;
+
+      .taskDesclable {
+        font-size: 20px;
+        font-weight: bold;
+      }
+    }
+
+    .tag {
+      display: inline-block;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 8px;
+    }
+
+    .textarea {
+      width: -webkit-fill-available;
+      min-height: 70px;
+      border: 1px solid #e1e1e1;
+      border-radius: 8px;
+      padding: 10px;
+      resize: none;
+      color: $titleColor !important;
+      font-family: $font-family !important;
+      font-size: 15px;
+
+      &:focus {
+        outline-color: $primary-main;
+      }
+    }
+  }
+
+  .attachment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .attachment-card {
+    display: flex;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    box-shadow: none !important;
+    position: relative;
+
+    .attachment-image {
+      width: 120px;
+      border-radius: 8px 0 0 8px;
+    }
+  }
+
+  .muiTaskTabs {
+    .MuiButtonBase-root {
+      font-family: $font-family !important;
+      color: $titleColor !important;
+      font-size: 15px !important;
+      text-transform: capitalize !important;
+    }
+
+    .Mui-selected {
+      color: $button-color-hover;
+      font-weight: bold !important;
+    }
+
+    .MuiTabs-indicator {
+      background-color: $button-color-hover;
+    }
+  }
+
+  .tabDataMain {
+    margin: 20px 0px 0px 0px;
+
+    .MuiTabs-flexContainer {
+      border-bottom: 2px solid #e1e1e1;
+    }
+
+    .tab-content {
+      padding-top: 10px;
+      min-height: 46vh;
+      height: 98%;
+      display: flex;
+      flex-direction: column;
+
+      .subtask_CardBox {
+        max-height: 50vh;
+        overflow: auto;
+
+        .addNewTaskBtn {
+          display: flex;
+          justify-content: end;
+        }
+      }
+
+      .comment-card,
+      .subtask-card {
+        margin: 10px 4px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: auto;
+      }
+
+      .muiTaskTabs .MuiTabs-root {
+        margin-bottom: 10px;
+        border: 2px solid #e1e1e1;
+      }
+
+      .tab-content {
+        padding: 10px;
+      }
+
+    }
+  }
+}

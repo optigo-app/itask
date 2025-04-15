@@ -128,7 +128,6 @@ const MasterToggle = () => {
                 : { ...formData, tabData: categoryStates, mode: 'add' };
 
             const response = await addEditDelMaster(payload);
-            console.log('response: ', response);
             if (response[0]?.stat == 1) {
                 handleTaskApicall();
             }
