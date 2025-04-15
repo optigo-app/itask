@@ -12,9 +12,10 @@ import { fetchMettingListApi } from "../../Api/MeetingApi/MeetingListApi";
 import { AddMeetingApi } from "../../Api/MeetingApi/AddMeetingApi";
 import { deleteMeetingApi } from "../../Api/MeetingApi/DeleteMeetingApi";
 import TaskAPiCallWithFormat from "../../Utils/TaskList/TaskAPiCallWithFormat";
+import { toast } from "react-toastify";
 
 const Calendar = () => {
-  const {fetchTaskData} = TaskAPiCallWithFormat();
+  const { fetchTaskData } = TaskAPiCallWithFormat();
   const isLaptop = useMediaQuery("(max-width:1420px)");
   const isLaptop1 = useMediaQuery("(max-width:1600px) and (min-width:1421px)");
   const setSelectedMon = useSetRecoilState(calendarM);
@@ -76,12 +77,15 @@ const Calendar = () => {
   }, [])
 
   const handleCaleFormSubmit = async (formValues) => {
-    debugger
     setCalFormData(formValues);
     const apiRes = await AddMeetingApi(formValues);
-    console.log('apiRes: ', apiRes);
     if (apiRes && apiRes?.rd[0]?.stat == 1) {
       handleMeetingList()
+      if (formValues?.id) {
+        toast.success("Meeting updated successfully");
+      } else {
+        toast.success("Meeting added successfully");
+      }
     }
   };
 
@@ -95,7 +99,7 @@ const Calendar = () => {
 
   useEffect(() => {
     fetchTaskData();
-  },[])
+  }, [])
 
 
 

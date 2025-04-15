@@ -11,24 +11,24 @@ import {
 import { CircleX, Download } from 'lucide-react';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
-import './TaskDetails.scss';
+import './Styles/MeetingDetail.scss';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, TaskData } from '../../../Recoil/atom';
-import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
-import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
-import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
-import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
-import AttachmentImg from "../../../Assests/Attachment.webp";
-import { formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from '../../../Utils/globalfun';
-import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
+import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, TaskData } from '../../Recoil/atom';
+import { taskDescGetApi } from '../../Api/TaskApi/TaskDescGetApi';
+import { taskCommentGetApi } from '../../Api/TaskApi/TaskCommentGetApi';
+import { taskCommentAddApi } from '../../Api/TaskApi/TaskCommentAddApi';
+import { taskDescAddApi } from '../../Api/TaskApi/TaskDescAddApi';
+import AttachmentImg from "../../Assests/Attachment.webp";
+import { formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from '../../Utils/globalfun';
+import { deleteTaskDataApi } from '../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
-import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
-import CommentSection from '../../ShortcutsComponent/Comment/TaskComment';
-import SubtaskCard from './SubTaskcard';
-import AttachmentGrid from '../../ShortcutsComponent/AttachmentGrid';
-import { TaskDescription } from '../../ShortcutsComponent/TaskDescription';
+import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
+import CommentSection from '../ShortcutsComponent/Comment/TaskComment';
+import AttachmentGrid from '../ShortcutsComponent/AttachmentGrid';
+import { TaskDescription } from '../ShortcutsComponent/TaskDescription';
 
-const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
+const MeetingDetail = ({ open, onClose, taskData }) => {
+    console.log('taskData: ', taskData);
     const theme = useTheme();
     const [taskArr, setTaskArr] = useRecoilState(TaskData);
     // const taskData = useRecoilValue(formData);
@@ -212,14 +212,20 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
         return avatarBackgroundColor;
     };
 
-    const handleAddSubTask = (task, additionalInfo) => {
-        setRootSubroot(additionalInfo);
-        setFormDataValue(task);
-        setFormDrawerOpen(true);
-        setSelectedTask(task);
-    }
+    const colorPalette = {
+        "challanges": { color: "#fff", backgroundColor: "#F5222D" },
+        "Change request": { color: "#fff", backgroundColor: "#1677FF" },
+        "creative": { color: "#000", backgroundColor: "#FAAD14" },
+        "New Request": { color: "#fff", backgroundColor: "#52C41A" },
+        "Professional Services": { color: "#fff", backgroundColor: "#13C2C2" },
+        "RND": { color: "#fff", backgroundColor: "#722ED1" },
+        "Tech Support": { color: "#fff", backgroundColor: "#EB2F96" },
+        "Training": { color: "#fff", backgroundColor: "#000000" },
+        "unassigned": { color: "#000", backgroundColor: "#f5f5f5" },
+      };
 
     const TagLabel = ({ value, colorMap }) => {
+        console.log('colorMap: ', colorMap);
         const colors = colorMap?.[value] || {};
 
         return (
@@ -258,11 +264,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                     <div className='modal-container2'>
                         <Box className="modal-header">
                             <div className="header-left">
-                                {/* <IconButton onClick={toggleFullScreen}>
-                                    {isFullScreen && isFullScreen ? <Shrink /> : <Expand />}
-                                </IconButton>
-                                <Divider orientation="vertical" variant="middle" flexItem /> */}
-                                <Typography variant="h6">{taskData?.taskPr} / {taskData?.taskname}</Typography>
+                                <Typography variant="h6">Meeting Details</Typography>
                             </div>
                             <IconButton onClick={handleClose}>
                                 <CircleX />
@@ -278,63 +280,33 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                         <Box className="modal-body">
                             <Box className="titlebox">
                                 <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <IconButton
-                                        onClick={() => handleTaskFavorite(taskData)}
-                                        size="small"
-                                        aria-label="add-favorite"
-                                        aria-labelledby="add-favorite"
-                                        sx={{
-                                            width: '30px',
-                                            height: '30px',
-                                            padding: '4px',
-                                            boxShadow: taskData?.isfavourite
-                                                ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
-                                                : '0px 2px 8px rgba(99, 99, 99, 0.2)',
-                                            transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
-                                            background: taskData?.isfavourite ? '#FFD700' : '#fff',
-                                            '&:hover': {
-                                                boxShadow: taskData?.isfavourite
-                                                    ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
-                                                    : '0px 4px 12px rgba(99, 99, 99, 0.3)',
-                                                background: taskData?.isfavourite ? '#FFC107' : '#f5f5f5',
-                                            },
-                                        }}
-                                    >
-                                        {taskData?.isfavourite ? (
-                                            <StarIcon sx={{ fontSize: '20px', color: '#fff' }} />
-                                        ) : (
-                                            <StarBorderIcon sx={{ fontSize: '20px', color: '#7d7f85' }} />
-                                        )}
-                                    </IconButton>
-                                    <Typography variant="h4" className="task-title">{taskData?.taskname}</Typography>
+                                    <Typography variant="h5" className="task-title">{taskData?.meetingtitle}</Typography>
                                 </Box>
                                 <Button
                                     size='small'
                                     variant="contained"
-                                    onClick={() => handleRemoveEvent()}
                                     sx={{ marginRight: "10px" }}
-                                    className="danger-btn"
-                                // disabled={isLoading}
+                                    className="dangerbtnClassname"
                                 >
-                                    Delete
+                                    End Meeting
                                 </Button>
                             </Box>
                             <Grid container className="task-details">
                                 <Grid container spacing={2}>
                                     {/* Status */}
                                     <Grid item xs={3}>
-                                        <Typography className="tasklable">Status</Typography>
+                                        <Typography className="tasklable">ProjectName/Module</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                        <TagLabel value={taskData?.status} colorMap={statusColors} />
+                                       <Typography className="taskvalue">{taskData?.ProjectName + " / " + taskData?.taskname}</Typography>
                                     </Grid>
 
                                     {/* Priority */}
                                     <Grid item xs={3}>
-                                        <Typography className="tasklable">Priority</Typography>
+                                        <Typography className="tasklable">Category</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                        <TagLabel value={taskData?.priority} colorMap={priorityColors} />
+                                        <TagLabel value={taskData?.category?.labelname} colorMap={colorPalette} />
                                     </Grid>
 
                                     {/* Assignees */}
@@ -360,7 +332,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                 }
                                             }}
                                         >
-                                            {taskData?.assignee?.map((assignee, teamIdx) => (
+                                            {taskData?.guests?.map((assignee, teamIdx) => (
                                                 <Tooltip
                                                     placement="top"
                                                     key={assignee?.id}
@@ -382,12 +354,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                             ))}
                                         </AvatarGroup>
                                     </Grid>
-                                    <Grid item xs={3}>
-                                        <Typography className="tasklable">Due Date</Typography>
-                                    </Grid>
-                                    <Grid item xs={9}>
-                                        <Typography>{formatDate2(taskData?.DeadLineDate)}</Typography>
-                                    </Grid>
                                 </Grid>
                                 {/* description */}
                                 <TaskDescription
@@ -400,38 +366,14 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                 />
                                 <Grid item xs={12} className='tabDataMain'>
                                     <Tabs value={activeTab} onChange={handleTabChange} className='muiTaskTabs'>
-                                        <Tab label={`Subtasks`} />
                                         <Tab label="Attachment" />
                                         <Tab label={`Comments (${comments?.length})`} />
                                     </Tabs>
                                     <Box
                                         className="tab-content"
-                                        sx={{ justifyContent: activeTab === 2 ? 'flex-end' : 'flex-start' }}
+                                        sx={{ justifyContent: activeTab === 1 ? 'flex-end' : 'flex-start' }}
                                     >
                                         {activeTab === 0 &&
-                                            <Box className="subtask_CardBox">
-                                                <Box className="addNewTaskBtn">
-                                                    <Button
-                                                        variant="contained"
-                                                        size="small"
-                                                        onClick={() => handleAddSubTask(taskData, { Task: 'subroot' })}
-                                                        className="buttonClassname"
-                                                        sx={{ fontSize: '12px', marginTop: '5px' }}
-                                                    >
-                                                        Add task
-                                                    </Button>
-                                                </Box>
-                                                <div
-                                                    style={{
-                                                        margin: "15px 0",
-                                                        border: "1px dashed #7d7f85",
-                                                        opacity: 0.3,
-                                                    }}
-                                                />
-                                                <SubtaskCard subtasks={taskData?.subtasks} onAddDubTask={handleAddSubTask} />
-                                            </Box>
-                                        }
-                                        {activeTab === 1 &&
                                             <Box>
                                                 <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end', mb: .2 }}>
                                                     <Button
@@ -444,7 +386,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                 <AttachmentGrid count={count} placeholderImage={placeholderImage} />
                                             </Box>
                                         }
-                                        {activeTab === 2 && (
+                                        {activeTab === 1 && (
                                             <CommentSection
                                                 comments={comments}
                                                 newComment={newComment}
@@ -472,4 +414,4 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     );
 };
 
-export default TaskDetail;
+export default MeetingDetail;

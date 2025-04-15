@@ -53,7 +53,6 @@ const CalendarForm = ({
         allDay: false
     });
 
-    console.log('formValues: ', formValues);
     const filterRefs = {
         category: useRef(),
         guests: useRef(),
@@ -92,7 +91,6 @@ const CalendarForm = ({
     useEffect(() => {
         setTimeout(() => {
             if (CalformDataValue) {
-                console.log('CalformDataValue: ', CalformDataValue);
                 setFormValues({
                     id: (CalformDataValue?.id || CalformDataValue?.meetingid) ?? "",
                     title: (CalformDataValue?.title || CalformDataValue?.meetingtitle) ?? "",
@@ -134,7 +132,6 @@ const CalendarForm = ({
     };
 
     const handleProjectModuleChange = (_, newValue) => {
-        console.log('newValue: ', newValue);
         setFormValues(prev => ({
             ...prev,
             prModule: newValue ?? ""
@@ -142,7 +139,6 @@ const CalendarForm = ({
     };
 
     const handleSubmit = () => {
-        debugger
         if (view === "meeting") {
             if (formValues) {
                 const idString = formValues?.guests?.map(user => user.id)?.join(",");
@@ -250,13 +246,17 @@ const CalendarForm = ({
                                         Project/Module
                                     </Typography>
                                     <Autocomplete
+                                        key={formValues?.prModule?.taskid ?? 'autocomplete'}
                                         value={formValues?.prModule ?? null}
                                         options={prModuleMaster}
                                         getOptionLabel={(option) => `${option?.taskPr}/${option?.taskname}`}
                                         {...commonTextFieldProps}
                                         onChange={handleProjectModuleChange}
-                                        renderInput={(params) => <TextField {...params} variant="outlined" placeholder="Select Project/Module" />}
+                                        renderInput={(params) => (
+                                            <TextField {...params} variant="outlined" placeholder="Select Project/Module" />
+                                        )}
                                     />
+
                                 </Box>
                             </Grid>
 

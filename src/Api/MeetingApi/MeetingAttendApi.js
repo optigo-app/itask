@@ -1,17 +1,15 @@
-import { convertSpecialCharsToWords } from "../../Utils/globalfun";
 import { CommonAPI } from "../InitialApi/CommonApi";
 
-export const MeetingApprovalAPI = async (formValues) => {
+export const MeetingAttendAPI = async (updatedMeetings) => {
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
         const combinedValue = JSON.stringify({
-            "meetingid": formValues?.id ?? 0,
-            "isAccept": formValues?.isAccept ?? 0,       // isAccept 1 for accept and isAccept 2 for reject
-            "comment": convertSpecialCharsToWords(formValues?.comment) ?? "",
+            "meetingid": updatedMeetings?.id ?? 0,
+            "ismeeting_attnd": updatedMeetings?.ismeeting_attnd ?? 0,       // ismeeting_attnd 1 for Attend and ismeeting_attnd 0 for pending
         });
-
+        
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"meeting_approvalsave\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"task_meeting_attnd\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };

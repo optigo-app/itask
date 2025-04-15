@@ -46,6 +46,7 @@ const statusColors = {
 
 const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
     const [rows, setRows] = useState([]);
+    console.log('rows: ', rows);
     const [page, setPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [filterStatus, setFilterStatus] = useState("All");
@@ -133,6 +134,7 @@ const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
                         <ToggleButton value="Accept">Accept</ToggleButton>
                         <ToggleButton value="Reject">Reject</ToggleButton>
                         <ToggleButton value="Pending">Pending</ToggleButton>
+                        <ToggleButton value="Pending">Attend</ToggleButton>
                     </ToggleButtonGroup>
                 </Box>
                 {!isLoading ? (
@@ -183,7 +185,7 @@ const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
                                                         </Typography>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Tooltip title={attended ? "Attended" : "Mark as Attended"}>
+                                                        <Tooltip title={row?.ismeeting_attnd === 1 ? "Attended" : "Mark as Attended"}>
                                                             <IconButton
                                                                 onClick={handleToggle}
                                                                 size="small"
@@ -193,20 +195,21 @@ const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
                                                                     width: '30px',
                                                                     height: '30px',
                                                                     padding: '4px',
-                                                                    boxShadow: attended
+                                                                    boxShadow: row?.ismeeting_attnd === 1
                                                                         ? '0px 0px 8px rgba(0, 200, 83, 0.6)'
                                                                         : '0px 2px 8px rgba(99, 99, 99, 0.2)',
                                                                     transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
-                                                                    background: attended ? '#4CAF50' : '#fff',
+                                                                    background: row?.ismeeting_attnd === 1 ? '#4CAF50' : '#fff',
                                                                     '&:hover': {
-                                                                        boxShadow: attended
+                                                                        boxShadow: row?.ismeeting_attnd === 1
                                                                             ? '0px 0px 12px rgba(0, 200, 83, 0.9)'
                                                                             : '0px 4px 12px rgba(99, 99, 99, 0.3)',
-                                                                        background: attended ? '#43A047' : '#f5f5f5',
+                                                                        background: row?.ismeeting_attnd === 1 ? '#43A047' : '#f5f5f5',
                                                                     },
                                                                 }}
+                                                                disabled={row?.ismeeting_attnd === 1}
                                                             >
-                                                                {attended ? (
+                                                                {row?.ismeeting_attnd === 1 ? (
                                                                     <CircleIcon sx={{ fontSize: '20px', color: '#2E7D32' }} />
                                                                 ) : (
                                                                     <CircleIcon sx={{ fontSize: '20px', color: '#9e9e9e' }} />

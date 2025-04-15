@@ -2,7 +2,7 @@ import { convertSpecialCharsToWords } from "../../Utils/globalfun";
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => {
-   const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
+    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
@@ -19,11 +19,10 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
         let combinedValue;
         if (formValues?.bulkTask?.length > 0) {
             const formattedString = formValues?.bulkTask?.map(task => `${task.taskName}#${task.estimate}`).join(", ");
-            console.log(formattedString);
             combinedValue = JSON.stringify({
                 "ismodule": 2,
                 "projectid": formValues?.projectid ?? 0,
-                "taskname": formattedString ?? "",
+                "taskname": convertSpecialCharsToWords(formattedString) ?? "",
                 "parentid": formValues?.taskid ?? 0,
             });
         } else {
@@ -48,8 +47,6 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "assigneids": formValues?.assigneids ?? "",
             });
         }
-
-        console.log('combinedValue: ', combinedValue);
 
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"tasksave\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,

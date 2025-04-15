@@ -21,7 +21,6 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
     const [opencnfDialogOpen, setCnfDialogOpen] = useState(false);
     const [formData, setFormData] = useState();
     const [calEvData, setCalEvData] = useRecoilState(calendarData);
-    console.log('calEvData: ', calEvData);
 
     const handleDrawerToggle = () => {
         setCaledrawerOpen(!caledrawerOpen);
@@ -52,12 +51,10 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
 
     const filteredEvents = filterEvents(calEvData, selectedEventfilter);
     // const filteredEvents = calEvData
-    console.log('filteredEvents: ', filteredEvents);
 
 
     const calendarOptions = {
         events: filteredEvents.map(event => {
-            console.log('event: ', event);
             return {
                 id: event.meetingid.toString(),
                 title: event.meetingtitle || '',
@@ -82,7 +79,7 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
             };
         }),
         plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
-        initialView: 'dayGridMonth',
+        initialView: 'timeGridWeek',
         slotMinTime: "07:00:00",  // Start from 7 AM
         slotMaxTime: "22:00:00",
         slotDuration: "00:30:00",
@@ -104,7 +101,6 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
         navLinks: true,
         eventClassNames({ event }) {
             const category = event.extendedProps.category || 'ETC';
-            console.log('category: ', category);
             const colorClass = calendarsColor[category] || 'primary';
             return [`bg-${colorClass}`];
         },
@@ -147,8 +143,6 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
             setCaledrawerOpen(true);
         },
         eventDrop({ event: droppedEvent }) {
-            debugger
-            console.log('droppedEvent: ', droppedEvent);
             if (droppedEvent.extendedProps?.isMeeting) return;
             const startDate = droppedEvent?.start;
             const endDate = droppedEvent?.end ?? startDate;

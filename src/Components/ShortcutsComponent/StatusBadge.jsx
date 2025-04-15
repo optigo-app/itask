@@ -13,7 +13,6 @@ const StatusBadge = ({ task, statusColors, onStatusChange }) => {
     const handleClose = (status) => {
         setAnchorEl(null);
         if (status) {
-            console.log("Selected Status:", status);
             onStatusChange(task, status);   
         }
     };

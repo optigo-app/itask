@@ -9,14 +9,12 @@ import { flattenTasks } from "../../Utils/globalfun";
 const TasklistForCal = ({ calendarsColor }) => {
     const task = useRecoilValue(TaskData);
     const [calTasksList, setCalTasksList] = useState([]);
-    console.log('taskIdcalTasksList: ', calTasksList);
 
     useEffect(() => {
         setCalTasksList(flattenTasks(task));
     }, [task]);
 
     // Initialize draggable tasks
-    debugger
     useEffect(() => {
         const container = document.getElementById("external-tasks");
         if (container) {
@@ -24,9 +22,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                 itemSelector: ".draggable-task",
                 eventData: (eventEl) => {
                     const dragtaskTaskId = eventEl.getAttribute("data-id");
-                    console.log('dragtasktaskId: ', dragtaskTaskId);
                     const dragtask = calTasksList.find(t => t.taskid == dragtaskTaskId);
-                    console.log('dragtask: ', dragtask);
                     
                     if (dragtask) {
                         const start = dragtask?.StartDate;
@@ -63,9 +59,7 @@ const TasklistForCal = ({ calendarsColor }) => {
             <Typography variant="h6" sx={{ m: '0px 10px 10px 10px' }}>Today Tasks</Typography>
             <Box id="external-tasks" sx={{ padding: 1.25, height: '100%', overflow: 'auto' }}>
                 {calTasksList.map((task) => {
-                    console.log('tasks: ', calTasksList);
                     const colorClass = calendarsColor[task.category] || "default";
-                    console.log('calendarsColor: ', calendarsColor);
 
                     return (
                         <Card

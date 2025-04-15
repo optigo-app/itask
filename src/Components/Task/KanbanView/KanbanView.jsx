@@ -18,7 +18,6 @@ function KanbanView({
   statusData }) {
 
   const [data, setData] = useState();
-  console.log('data: ', data);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
@@ -133,7 +132,6 @@ function KanbanView({
 
       let statusId = statusData.find(status => status.labelname?.toLowerCase() === endColumn?.title?.toLowerCase())?.id;
       const updatedMovedTask = { ...movedTask, status: endColumn?.title, statusid: statusId };
-      console.log('ddupdatedMovedTask: ', updatedMovedTask);
 
       const endTasks = Array.from(endColumn.tasks);
       endTasks.splice(destination.index, 0, updatedMovedTask);

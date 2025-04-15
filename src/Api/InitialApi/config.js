@@ -10,7 +10,6 @@ export const APIURL = "https://livenx.optigoapps.com/api/report";
 export const getHeaders = (init = {}) => {
   const {version = "v4", token = ""} = init;
   const AuthData = JSON.parse(localStorage.getItem("AuthqueryParams"));
-  console.log('AuthData: ', AuthData);
 
   return {
     Authorization: `Bearer ${token}`,

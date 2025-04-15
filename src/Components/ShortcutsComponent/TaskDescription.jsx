@@ -1,8 +1,7 @@
 import React from 'react';
 import { Grid, Typography, Box, IconButton, TextareaAutosize, Button } from '@mui/material';
-import './TaskDetails.scss';
 import { SquarePen } from 'lucide-react';
-import { convertWordsToSpecialChars } from '../../../Utils/globalfun';
+import { convertWordsToSpecialChars } from '../../Utils/globalfun';
 
 const TaskDescription = ({ taskDesc, taskDescEdit, handleShowEditDesc, handleDescChange, handleDescCancel, handleUpdateDesc }) => {
     return (
