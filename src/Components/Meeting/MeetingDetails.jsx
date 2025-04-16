@@ -28,7 +28,6 @@ import AttachmentGrid from '../ShortcutsComponent/AttachmentGrid';
 import { TaskDescription } from '../ShortcutsComponent/TaskDescription';
 
 const MeetingDetail = ({ open, onClose, taskData }) => {
-    console.log('taskData: ', taskData);
     const theme = useTheme();
     const [taskArr, setTaskArr] = useRecoilState(TaskData);
     // const taskData = useRecoilValue(formData);
@@ -225,7 +224,6 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
       };
 
     const TagLabel = ({ value, colorMap }) => {
-        console.log('colorMap: ', colorMap);
         const colors = colorMap?.[value] || {};
 
         return (

@@ -4,7 +4,7 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, Typography } from "@mui/material";
 import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength } from "../../Recoil/atom";
+import { Advfilters, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength } from "../../Recoil/atom";
 import { fetchMasterGlFunc, formatDate, formatDate2 } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
@@ -39,7 +39,7 @@ const Task = () => {
   const [taskAssigneeData, setTaskAssigneeData] = useState();
   const [activeButton, setActiveButton] = useState("table");
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useRecoilState(Advfilters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
   const setTaskDataLength = useSetRecoilState(taskLength)
@@ -270,6 +270,7 @@ const Task = () => {
       [filterKey]: ''
     }));
     setSelectedCategory('');
+
   };
 
   const handleClearAllFilters = () => {
@@ -326,23 +327,22 @@ const Task = () => {
     sortedData = sortData(tasks, getComparator(order, orderBy));
   }
 
-  // filter functions
-  useEffect(() => {
-    const cleanedFilters = { ...filters };
-    Object.keys(cleanedFilters).forEach((key) => {
-      if (
-        ["Select Department", "Select Status", "Select Priority", "Select Assignee", "Select Project"].includes(cleanedFilters[key])
-      ) {
-        cleanedFilters[key] = "";
-      }
-    });
-    setFilters(cleanedFilters);
-  }, [filters]);
-
   const filteredData = sortedData?.filter((task) => {
     const { status, priority, assignee, searchTerm, dueDate, department, project, category } = filters;
 
     const normalizedSearchTerm = searchTerm?.toLowerCase();
+
+    const resetInvalidFilters = () => {
+      Object.keys(filters).forEach((key) => {
+        const value = filters[key];
+        if (value === "Select Department" || value === "Select Status" || value === "Select Priority" || value === "Select Assignee" || value === "Select Project") {
+          filters[key] = "";
+        }
+      });
+    };
+    // Reset filters before applying them
+    resetInvalidFilters();
+
     const matchesFilters = (task) => {
       const matches =
         (category ? (task?.category)?.toLowerCase() === category?.toLowerCase() : true) &&
@@ -510,6 +510,17 @@ const Task = () => {
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
+
+  useEffect(() => {
+    if (filteredData) {
+      const maxPage = Math.ceil(filteredData.length / rowsPerPage);
+      if (page > maxPage && maxPage > 0) {
+        setPage(maxPage);
+      }
+    }
+    setTaskDataLength(filteredData?.length);
+  }, [filteredData, page, rowsPerPage]);
+
 
   const totalPages = Math?.ceil(filteredData && filteredData?.length / rowsPerPage);
 

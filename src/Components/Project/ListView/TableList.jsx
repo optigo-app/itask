@@ -283,6 +283,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                     <Box display="flex" alignItems="center" gap={2} width="100%">
                                                         <Box width="100%" position="relative">
                                                             <LinearProgress
+                                                                aria-label="Task progress status"
                                                                 variant="determinate"
                                                                 value={task?.progress_per}
                                                                 sx={{
@@ -339,6 +340,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                             id={task?.taskid}
                                                         />
                                                         <IconButton
+                                                            aria-label="View Module button"
                                                             onClick={handleViewPrDashboard}
                                                             sx={{
                                                                 '&.Mui-disabled': {
@@ -352,6 +354,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                             />
                                                         </IconButton>
                                                         <IconButton
+                                                            aria-label="Edit-Task button"
                                                             disabled={task?.isFreez == 1}
                                                             onClick={() => handleEditProject(task, { Task: "root" })}
                                                             sx={{
@@ -366,6 +369,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                             />
                                                         </IconButton>
                                                         <IconButton
+                                                            aria-label="Delete Task button"
                                                             disabled={task?.isFreez == 1}
                                                             onClick={() => handleDeleteProject(task, { Task: "sub" })}
                                                             sx={{

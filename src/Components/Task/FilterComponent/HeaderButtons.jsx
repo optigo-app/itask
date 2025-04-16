@@ -192,6 +192,7 @@ const HeaderButtons = ({
                 size='medium'
                 className="buttonClassname"
                 onClick={handleTimerCompOpen}
+                aria-label="Time Track Task button"
               >
                 <TimerIcon sx={{ color: '#fff' }} />
               </IconButton>

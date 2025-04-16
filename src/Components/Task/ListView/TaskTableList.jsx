@@ -268,6 +268,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
     ) => (
         <Box sx={{ display: "flex", alignItems: "center" }}>
             <IconButton
+                aria-label="Time Track Task button"
                 onClick={() => handleTimeTrackModalOpen(task)}
                 sx={{
                     color: taskTimeRunning[task.taskid] ? "#FFD700 !important" : "#7d7f85 !important",
@@ -290,6 +291,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                         color: 'rgba(0, 0, 0, 0.26)',
                     },
                 }}
+                aria-label="Edit-Task button"
             >
                 <Pencil
                     size={20}
@@ -298,6 +300,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
             </IconButton>
 
             <IconButton
+                aria-label="view Task button"
                 onClick={() => handleViewTask(task, { Task: "root" })}
             >
                 <Eye
@@ -631,7 +634,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 </TableContainer >
             }
 
-            < TaskDetail
+            <TaskDetail
                 open={taskDetailModalOpen}
                 onClose={handleTaskModalClose}
                 taskData={selectedItem}

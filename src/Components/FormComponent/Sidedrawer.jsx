@@ -152,8 +152,6 @@ const SidebarDrawer = ({
     }, [open, checkedMultiTask, formValues, rootSubrootflagval]);
 
     let data = flattenTasks(taskDataValue)
-    console.log('data: ', data, rootSubrootflagval?.Task);
-    console.log('dataformValues: ', formValues);
 
 
     const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);

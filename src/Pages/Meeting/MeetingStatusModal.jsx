@@ -46,7 +46,6 @@ const statusColors = {
 
 const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
     const [rows, setRows] = useState([]);
-    console.log('rows: ', rows);
     const [page, setPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [filterStatus, setFilterStatus] = useState("All");
@@ -101,7 +100,11 @@ const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
         setPage(1);
     };
 
-    const filteredRows = filterStatus === "All" ? rows : rows?.filter(row => row?.status === filterStatus) ?? [];
+    const filteredRows = filterStatus === "All"
+        ? rows
+        : filterStatus === "Attend"
+            ? rows?.filter(row => row?.ismeeting_attnd == 1)
+            : rows?.filter(row => row?.status === filterStatus) ?? [];
     const totalPages = Math?.ceil(filteredRows?.length / rowsPerPage) ?? 0;
 
     return (
@@ -134,7 +137,7 @@ const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
                         <ToggleButton value="Accept">Accept</ToggleButton>
                         <ToggleButton value="Reject">Reject</ToggleButton>
                         <ToggleButton value="Pending">Pending</ToggleButton>
-                        <ToggleButton value="Pending">Attend</ToggleButton>
+                        <ToggleButton value="Attend">Attend</ToggleButton>
                     </ToggleButtonGroup>
                 </Box>
                 {!isLoading ? (
@@ -155,7 +158,7 @@ const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
                                                     <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Remark</Typography>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Action</Typography>
+                                                    <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Attend</Typography>
                                                 </TableCell>
                                             </TableRow>
                                         </TableHead>

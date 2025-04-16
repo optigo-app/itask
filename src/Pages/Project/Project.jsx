@@ -230,7 +230,6 @@ const Project = () => {
 
   // sorting
   const handleRequestSort = (property) => {
-    console.log("property: ", property);
     const fieldMapping = {
       name: "taskname",
       due: "DeadLineDate",
@@ -429,15 +428,22 @@ const Project = () => {
     setPage(newPage);
   };
 
+  useEffect(() => {
+    if (filteredData) {
+      const maxPage = Math.ceil(filteredData.length / rowsPerPage);
+      if (page > maxPage && maxPage > 0) {
+        setPage(maxPage);
+      }
+    }
+  }, [filteredData, page, rowsPerPage]);
+
   const totalPages = Math?.ceil(
     filteredData && filteredData?.length / rowsPerPage
   );
 
   // Get data for the current page
-  const currentData = filteredData?.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  ) || [];
+  const currentData =
+    filteredData?.slice((page - 1) * rowsPerPage, page * rowsPerPage) || [];
 
   return (
     <Box
