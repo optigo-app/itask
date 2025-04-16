@@ -15,6 +15,20 @@ export const taskLength = atom({
   default: 0
 })
 
+export const Advfilters = atom({
+  key: 'Advfilters',
+  default: {
+    category: '',
+    searchTerm: '',
+    status: '',
+    priority: '',
+    department: '',
+    assignee: '',
+    project: '',
+    dueDate: null,
+  }
+})
+
 export const openFormDrawer = atom({
   key: 'openFormDrawer',
   default: false
@@ -89,6 +103,7 @@ export const timerCompOpen = atom({
   key: 'timerCompOpen',
   default: false
 })
+
 
 
 

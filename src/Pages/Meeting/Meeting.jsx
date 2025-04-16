@@ -93,7 +93,6 @@ const MeetingPage = () => {
         ismeeting_attnd: 1,
       };
       const apiRes = await MeetingAttendAPI(formValues);
-      console.log('apiRes: ', apiRes);
 
       if (apiRes?.rd?.[0]?.stat == 1) {
         setMeetings(updatedMeetings);
@@ -338,7 +337,6 @@ const MeetingPage = () => {
   }
 
   const StatusCircles = (meeting, { redCount, yellowCount, greenCount }) => {
-    console.log('ddddmeeting: ', meeting);
     const circleStyle = {
       minWidth: 30,
       minHeight: 30,

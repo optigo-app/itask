@@ -164,6 +164,7 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                                     }
                                     {selectedTab == "Upcoming" &&
                                         <IconButton
+                                            aria-label="edit-meeting"
                                             onClick={() => {
                                                 handleDrawerToggle();
                                                 setCalFormData(row);
@@ -182,6 +183,7 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                                     }
 
                                     <IconButton
+                                        aria-label="view-meeting"
                                         onClick={() => {
                                             setMeetingDetailModalOpen(true)
                                             setFormData(row);

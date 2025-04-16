@@ -1,31 +1,21 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Box, TextField, Typography, MenuItem, Menu, Checkbox, ListItemText, Button, IconButton } from "@mui/material";
+import { Box, TextField, Typography, MenuItem, Menu, Checkbox, ListItemText, Button } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { useSetRecoilState } from "recoil";
-import { selectedCategoryAtom, timerCompOpen } from "../../../Recoil/atom";
-import { TimerIcon } from "lucide-react";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { Advfilters, selectedCategoryAtom, timerCompOpen } from "../../../Recoil/atom";
 import { commonSelectProps, customDatePickerProps } from "../../../Utils/globalfun";
-import TaskTimeTrackerComp from "../../ShortcutsComponent/TaskTimeTrackerComp";
 
 const Filters = ({
-  searchTerm,
   onFilterChange,
   priorityData,
   assigneeData,
   statusData,
   taskProject,
-  taskCategory,
   taskDepartment,
 }) => {
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom)
-  const [filters, setFilters] = React.useState({
-    priority: "",
-    status: "",
-    assignee: "",
-    department: "",
-    project: "",
-    dueDate: null,
-  });
+  const [filters, setFilters] = useRecoilState(Advfilters);
+  console.log('filters: ', filters);
 
   const [filterVisibility, setFilterVisibility] = useState({
     status: true,
@@ -33,7 +23,7 @@ const Filters = ({
     department: true,
     assignee: true,
     project: true,
-    dueDate: true, // Added visibility for Due Date
+    dueDate: true,
   });
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -71,7 +61,7 @@ const Filters = ({
         }
       });
     }
-  }, [onFilterChange, handleVisibilityChange, handleVisibilityChange]);
+  }, [filters, onFilterChange, handleVisibilityChange, handleVisibilityChange]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));

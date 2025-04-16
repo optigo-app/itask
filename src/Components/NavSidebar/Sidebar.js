@@ -164,6 +164,7 @@ const Sidebar = () => {
                                         <Checkbox
                                             size="small"
                                             className="itask_checkbox"
+                                            aria-label="Toggle full sidebar view"
                                             checked={isFullSidebar}
                                             onChange={toggleSidebar}
                                             icon={<RadioButtonUncheckedIcon />}

@@ -7,7 +7,7 @@ export const MeetingAttendAPI = async (updatedMeetings) => {
             "meetingid": updatedMeetings?.id ?? 0,
             "ismeeting_attnd": updatedMeetings?.ismeeting_attnd ?? 0,       // ismeeting_attnd 1 for Attend and ismeeting_attnd 0 for pending
         });
-        
+
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"task_meeting_attnd\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (tasklist)",
