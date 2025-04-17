@@ -21,7 +21,7 @@ const CardView = React.lazy(() => import("../../Components/Task/CardView/CardVie
 const Task = () => {
   const location = useLocation();
   const [order, setOrder] = useState("asc");
-  const [orderBy, setOrderBy] = useState("name");
+  const [orderBy, setOrderBy] = useState("taskname");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(12);
   const searchParams = new URLSearchParams(location.search);
@@ -278,54 +278,41 @@ const Task = () => {
     setSelectedCategory('');
   };
 
+  function descendingComparator(a, b, orderBy) {
+    console.log('orderBy: ', orderBy);
+    const valA = a[orderBy];
+    const valB = b[orderBy];
+  
+    if (typeof valA === "string" && typeof valB === "string") {
+      return valB.trim().localeCompare(valA.trim()); // descending
+    }
+  
+    if (valB < valA) return -1;
+    if (valB > valA) return 1;
+    return 0;
+  }
+  
+  
+  
+  function getComparator(order, orderBy) {
+    return order === "asc"
+      ? (a, b) => -descendingComparator(a, b, orderBy)
+      : (a, b) => descendingComparator(a, b, orderBy);
+  }
+  
   // sorting
   const handleRequestSort = (property) => {
-    const fieldMapping = {
-      name: 'taskname',
-      due: 'DeadLineDate',
-    };
-    const mappedProperty = fieldMapping[property] || property;
-    const isAscending = orderBy === mappedProperty && order === "asc";
-    setOrder(isAscending ? "desc" : "asc");
-    setOrderBy(mappedProperty);
+    console.log('property: ', property);
+    const isAsc = orderBy === property && order === "asc";
+    console.log('orderBy: ', orderBy);
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
   };
 
-  const descendingComparator = (a, b, orderBy) => {
-    const fieldMapping = {
-      deadline: 'DeadLineDate',
-      due: 'DeadLineDate',
-      name: 'Project/module',
-    };
 
-    const mappedField = fieldMapping[orderBy] || orderBy;
-    let aValue = a[mappedField];
-    let bValue = b[mappedField];
 
-    // Convert to Date if it's a deadline
-    if (mappedField === 'DeadLineDate') {
-      aValue = aValue ? new Date(aValue) : new Date('2100-01-01');
-      bValue = bValue ? new Date(bValue) : new Date('2100-01-01');
-    }
-
-    if (bValue < aValue) return -1;
-    if (bValue > aValue) return 1;
-    return 0;
-  };
-
-  const getComparator = (order, orderBy) => {
-    return order === "desc"
-      ? (a, b) => descendingComparator(a, b, orderBy)
-      : (a, b) => -descendingComparator(a, b, orderBy);
-  };
-
-  const sortData = (array, comparator) => {
-    return [...array]?.sort(comparator);
-  };
-
-  let sortedData;
-  if (tasks) {
-    sortedData = sortData(tasks, getComparator(order, orderBy));
-  }
+  const sortedData = [...(tasks || [])]?.sort(getComparator(order, orderBy));
+  console.log('sortedRows: ', sortedData);
 
   const filteredData = sortedData?.filter((task) => {
     const { status, priority, assignee, searchTerm, dueDate, department, project, category } = filters;

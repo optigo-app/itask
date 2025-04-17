@@ -25,7 +25,7 @@ import utc from "dayjs/plugin/utc";
 import { useLocation } from "react-router-dom";
 import EstimateInput from "../../Utils/Common/EstimateInput";
 import MultiSelectChipWithLimit from "../ShortcutsComponent/AssigneeAutocomplete";
-import { commonTextFieldProps, convertWordsToSpecialChars, customDatePickerProps, flattenTasks, ImageUrl } from "../../Utils/globalfun";
+import { cleanDate, commonTextFieldProps, convertWordsToSpecialChars, customDatePickerProps, flattenTasks, ImageUrl } from "../../Utils/globalfun";
 import MultiTaskInput from "./MultiTaskInput";
 import FileUploader from "../ShortcutsComponent/FileUploader";
 import timezone from 'dayjs/plugin/timezone';
@@ -103,6 +103,7 @@ const SidebarDrawer = ({
         assignee: useRef(),
     };
 
+    console.log('formDataValue: ', formDataValue);
     useEffect(() => {
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
@@ -111,7 +112,7 @@ const SidebarDrawer = ({
                 taskName: formDataValue?.taskname ?? "",
                 multiTaskName: formDataValue?.actual ?? [""],
                 bulkTask: formDataValue?.bulk ?? [],
-                dueDate: formDataValue?.DeadLineDate ?? null,
+                dueDate: cleanDate(formDataValue?.DeadLineDate) ?? null,
                 department: formDataValue?.departmentid != 0 ? formDataValue?.departmentid : "",
                 guests: matchedAssignees ?? [],
                 projectLead: formDataValue?.projectLead ?? "",
@@ -122,7 +123,7 @@ const SidebarDrawer = ({
                 description: formDataValue?.descr ?? "",
                 attachment: formDataValue?.attachment ?? null,
                 progress: formDataValue?.progress ?? "",
-                startDate: formDataValue?.StartDate ?? null,
+                startDate: cleanDate(formDataValue?.StartDate) ?? null,
                 category: formDataValue?.workcategoryid ?? "",
                 estimate: formDataValue?.estimate ?? [""],
                 actual: formDataValue?.actual ?? [""],

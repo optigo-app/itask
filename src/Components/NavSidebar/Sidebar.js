@@ -30,6 +30,8 @@ import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import './sidebar.scss';
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useSetRecoilState } from "recoil";
+import { Advfilters } from "../../Recoil/atom";
 
 const Sidebar = () => {
     const theme = useTheme();
@@ -42,6 +44,7 @@ const Sidebar = () => {
     const [openReports, setOpenReports] = useState(false); // Submenu state
     const drawerWidth = isFullSidebar || isDrawerOpen ? 260 : 80;
     const [reportsAnchorEl, setReportsAnchorEl] = React.useState(null);
+    const setFilters = useSetRecoilState(Advfilters);
 
 
     const toggleDrawer = () => setDrawerOpen(!isDrawerOpen);
@@ -61,6 +64,7 @@ const Sidebar = () => {
     };
 
     const handleItemClick = (pathname, routes) => {
+        setFilters({})
         setActiveItem(routes);
         navigate(pathname);
         if (isMobile) {

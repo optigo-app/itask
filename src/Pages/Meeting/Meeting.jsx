@@ -57,7 +57,7 @@ const MeetingPage = () => {
 
   const handleTaskModalClose = () => {
     setMeetingDetailModalOpen(false);
-};
+  };
 
 
   const handleTabChange = (event, newValue) => {
@@ -85,7 +85,7 @@ const MeetingPage = () => {
     try {
       const updatedMeetings = meetings?.map((m) =>
         m.meetingid === meeting.meetingid
-          ? { ...m, ismeeting_attnd: 1 }
+          ? { ...m, ismeeting_attnd: 1, isAttendBtn: 0 }
           : m
       );
       const formValues = {
@@ -123,7 +123,9 @@ const MeetingPage = () => {
   };
 
   const handleMeetingList = async () => {
-    setIsLoding(true);
+    if (meetings?.length == 0) {
+      setIsLoding(true);
+    }
     try {
       const meetingApiRes = await fetchMettingListApi();
       const meetingFullDt = await fetchMettingFullDetailsListApi();
@@ -153,11 +155,9 @@ const MeetingPage = () => {
         const isAcceptStatusValid = isMeetingDtEmpty || meetingDt?.isAccept === 0;
         const isAttendStatusValid = isMeetingDtEmpty || meetingDt?.ismeeting_attnd === 0;
 
-        const isAction = isUserAssigned && isAcceptStatusValid;
-
         const meetingDate = new Date(new Date(meeting.StartDate).getFullYear(), new Date(meeting.StartDate).getMonth(), new Date(meeting.StartDate).getDate());
         const isUpcoming = meetingDate >= currentDateOnly;
-
+        const isAction = isUserAssigned && isAcceptStatusValid && isUpcoming;
         const isAttendBtn = meetingDt?.isAccept == 1 && !isAction && isUserAssigned && isAttendStatusValid && meetingDt?.isAccept != 0 && isUpcoming ? 1 : 0;
         const ismeeting_attnd = meetingDt?.ismeeting_attnd == 1 ? 1 : 0;
 

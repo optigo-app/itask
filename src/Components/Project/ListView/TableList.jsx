@@ -28,9 +28,6 @@ import { useNavigate } from "react-router-dom";
 
 const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, totalPages, handleChangePage, handleRequestSort, isLoading, handleLockProject, handleDeleteModule }) => {
     const navigate = useNavigate();
-    // const [order, setOrder] = useState("asc");
-    // const [orderBy, setOrderBy] = useState("name");
-    // const [page, setPage] = useState(1);
     const [selectedRow, setSelectedRow] = useState({});
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
@@ -39,15 +36,15 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
-    // const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [columnWidths] = useState({
-        'Project/module': 350,
-        'progress': 180,
-        'start date': 100,
-        'deadline': 100,
-        'priority': 100,
-        'actions': 80,
-    });
+    const columns = [
+        { id: "taskname", label: "Project/Module", width: 350 },
+        { id: "progress", label: "Progress", width: 180 },
+        { id: "StartDate", label: "Start Date", width: 100 },
+        { id: "DeadLineDate", label: "Deadline", width: 100 },
+        { id: "priority", label: "Priority", width: 100 },
+        { id: "actions", label: "Actions", width: 80 },
+    ];
+
 
     const handleOpenCnfDialog = (task) => {
         setSelectedRow(task);
@@ -227,11 +224,12 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                     >
                         <TableHead>
                             <TableRow>
-                                {Object.keys(columnWidths).map((key) => (
-                                    <TableCell key={key}
+                                {columns.map((column) => (
+                                    <TableCell
+                                        key={column.id}
                                         sx={{
-                                            width: columnWidths[key],
-                                            maxWidth: columnWidths[key],
+                                            width: column.width,
+                                            maxWidth: column.width,
                                             overflow: "hidden",
                                             textOverflow: "ellipsis",
                                             whiteSpace: "nowrap",
@@ -239,22 +237,25 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                     >
                                         <Box sx={{ display: "flex", alignItems: "center" }}>
                                             <TableSortLabel
-                                                active={key !== "actions" && orderBy === key}
+                                                active={
+                                                    column.id !== "actions" && orderBy === column.id
+                                                }
                                                 direction={order}
                                                 onClick={() => {
-                                                    if (key !== "actions") {
-                                                        handleRequestSort(key);
+                                                    if (column.id !== "actions") {
+                                                        handleRequestSort(column.id);
                                                     }
                                                 }}
-                                                hideSortIcon={key === "actions"}
+                                                hideSortIcon={column.id === "actions"}
                                             >
-                                                {key.charAt(0).toUpperCase() + key.slice(1)}
+                                                {column.label}
                                             </TableSortLabel>
                                         </Box>
                                     </TableCell>
                                 ))}
                             </TableRow>
                         </TableHead>
+
                         <TableBody>
                             {data?.length != 0 ? (
                                 <>

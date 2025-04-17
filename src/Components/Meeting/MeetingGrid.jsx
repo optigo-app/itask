@@ -135,32 +135,36 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                                         </Box>
                                     )}
                                     {row?.isAttendBtn != 0 &&
-                                        <Tooltip
-                                            placement="top"
-                                            title={row?.ismeeting_attnd == 1 ? "Attended" : "Mark as Attended"}
-                                            arrow
-                                            classes={{ tooltip: 'custom-tooltip' }}>
-                                            <IconButton
-                                                onClick={() => handleAttendMeeting(row)}
-                                                size="small"
-                                                aria-label="meeting-attend"
-                                                aria-labelledby="meeting-attend"
-                                                sx={{
-                                                    color: row?.ismeeting_attnd == 1 ? '#ffffff' : '#7d7f85',
-                                                    backgroundColor: row?.ismeeting_attnd == 1 ? '#7367f0' : 'transparent',
-                                                    '&:hover': {
-                                                        backgroundColor: row?.ismeeting_attnd == 1 ? '#7367f0' : 'rgba(0, 0, 0, 0.04)',
-                                                    },
-                                                }}
-                                            >
-                                                <CircleCheck
-                                                    sx={{
-                                                        fontSize: '20px',
-                                                        color: row?.ismeeting_attnd === 1 ? "#fff" : "#7d7f85"
-                                                    }}
-                                                />
-                                            </IconButton>
-                                        </Tooltip>
+                                        <Button className="buttonClassname"
+                                            variant="contained" size="small" color="primary" onClick={() => handleAttendMeeting(row)}>
+                                            Attend
+                                        </Button>
+                                        // <Tooltip
+                                        //     placement="top"
+                                        //     title={row?.ismeeting_attnd == 1 ? "Attended" : "Mark as Attended"}
+                                        //     arrow
+                                        //     classes={{ tooltip: 'custom-tooltip' }}>
+                                        //     <IconButton
+                                        //         onClick={() => handleAttendMeeting(row)}
+                                        //         size="small"
+                                        //         aria-label="meeting-attend"
+                                        //         aria-labelledby="meeting-attend"
+                                        //         sx={{
+                                        //             color: row?.ismeeting_attnd == 1 ? '#ffffff' : '#7d7f85',
+                                        //             backgroundColor: row?.ismeeting_attnd == 1 ? '#7367f0' : 'transparent',
+                                        //             '&:hover': {
+                                        //                 backgroundColor: row?.ismeeting_attnd == 1 ? '#7367f0' : 'rgba(0, 0, 0, 0.04)',
+                                        //             },
+                                        //         }}
+                                        //     >
+                                        //         <CircleCheck
+                                        //             sx={{
+                                        //                 fontSize: '20px',
+                                        //                 color: row?.ismeeting_attnd === 1 ? "#fff" : "#7d7f85"
+                                        //             }}
+                                        //         />
+                                        //     </IconButton>
+                                        // </Tooltip>
                                     }
                                     {selectedTab == "Upcoming" &&
                                         <IconButton
