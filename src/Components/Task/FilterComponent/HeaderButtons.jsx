@@ -4,7 +4,7 @@ import { Add as AddIcon } from "@mui/icons-material";
 import SidebarDrawer from "../../FormComponent/Sidedrawer";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, selectedCategoryAtom, filterDrawer, timerCompOpen } from "../../../Recoil/atom";
+import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, selectedCategoryAtom, filterDrawer, timerCompOpen, Advfilters } from "../../../Recoil/atom";
 import { toast } from "react-toastify";
 import { ChevronsDown, FilterIcon, Kanban, List, SearchIcon, TimerIcon } from "lucide-react";
 import { useLocation } from "react-router-dom";
@@ -25,7 +25,9 @@ const HeaderButtons = ({
   taskCategory,
   taskDepartment,
   taskAssigneeData }) => {
-  const location = useLocation();
+    console.log('searchTerm: ', searchTerm);
+    const location = useLocation();
+    const [filters, setFilters] = useRecoilState(Advfilters);
   const searchParams = new URLSearchParams(location.search);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const setFormDataValue = useSetRecoilState(formData);
@@ -126,13 +128,13 @@ const HeaderButtons = ({
         <Box className="FirstMainBox" sx={{ display: "flex", justifyContent: 'start', alignItems: 'end', gap: 2 }}>
           <ScrollableCategoryTabs
             taskCategory={taskCategory}
-            selectedCategory={selectedCategory}
+            selectedCategory={filters?.category}
             handleFilterChange={handleFilterChange}
           />
           <Box sx={{ display: 'flex', justifyContent: 'end' }}>
             <TextField
               placeholder="Search tasks..."
-              value={searchTerm}
+              value={filters?.searchTerm}
               onChange={(e) => onFilterChange("searchTerm", e.target.value)}
               size="small"
               className="textfieldsClass"

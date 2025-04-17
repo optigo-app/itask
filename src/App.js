@@ -11,6 +11,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
 import Reports from './Pages/Reports/Reports';
 import SomethingWentWrong from './Components/Auth/SomethingWentWrong';
+import { jwtDecode } from "jwt-decode";
+import Cookies from 'js-cookie';
+import MuiSortableTable from './Backup/MuiSortableTable';
 
 // Lazy Loaded Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -75,23 +78,23 @@ const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     const getQueryParams = () => {
-        const urlParams = new URLSearchParams(window.location.search);
-
-        const queryParams = {
-            yc: urlParams.get("yc"),
-            uid: decodeBase64(urlParams.get("uid")),
-            sv: urlParams.get("sv"),
-            ifid: urlParams.get("ifid"),
-            pid: urlParams.get("pid"),
-        };
-
-        const hasAnyParams = Object.values(queryParams).some((value) => value !== null);
-
-        if (hasAnyParams) {
-            localStorage.setItem("AuthqueryParams", JSON.stringify(queryParams));
+        const token = Cookies.get('skey');
+        if (!token) {
+            return <Navigate to="/error_401" replace />;
         }
 
-        return queryParams;
+        // Decode without verifying signature
+        const decoded = jwtDecode(token);
+        const decodedPayload = {
+            ...decoded,
+            uid: decodeBase64(decoded.uid),
+        };
+
+        if (decodedPayload) {
+            localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
+        }
+
+        return decodedPayload;
     };
 
     const decodeBase64 = (str) => {
@@ -197,6 +200,7 @@ const App = () => {
                                                 <Route path="/masters" element={<ProtectedRoute><Masters /></ProtectedRoute>} />
                                                 <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                                                 <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+                                                <Route path="/test" element={<MuiSortableTable />} />
                                                 <Route path="*" element={<PagenotFound />} />
                                             </Routes>
                                         </Layout>

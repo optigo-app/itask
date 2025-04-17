@@ -4,6 +4,7 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
+  Advfilters,
   fetchlistApiCall,
   filterDrawer,
   masterDataValue,
@@ -27,7 +28,7 @@ const KanbanView = React.lazy(() =>
 
 const Project = () => {
   const [order, setOrder] = useState("asc");
-  const [orderBy, setOrderBy] = useState("name");
+  const [orderBy, setOrderBy] = useState("taskname");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(12);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,10 +42,10 @@ const Project = () => {
   const [taskCategory, setTaskCategory] = useState();
   const [activeButton, setActiveButton] = useState("table");
   const [project, setProject] = useRecoilState(projectDatasRState);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useRecoilState(Advfilters);
+  console.log('filters: ', filters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const refressPrModule = useRecoilValue(fetchlistApiCall);
-  const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
 
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
@@ -220,72 +221,52 @@ const Project = () => {
       ...prevFilters,
       [filterKey]: "",
     }));
-    setSelectedCategory("");
   };
 
   const handleClearAllFilters = () => {
-    setFilters({});
-    setSelectedCategory("");
+    setFilters({
+      category: '',
+      searchTerm: '',
+      status: '',
+      priority: '',
+      department: '',
+      assignee: '',
+      project: '',
+      dueDate: null,
+    });
   };
+
+  function descendingComparator(a, b, orderBy) {
+    console.log('orderBy: ', orderBy);
+    const valA = a[orderBy];
+    const valB = b[orderBy];
+
+    if (typeof valA === "string" && typeof valB === "string") {
+      return valB.trim().localeCompare(valA.trim()); // descending
+    }
+
+    if (valB < valA) return -1;
+    if (valB > valA) return 1;
+    return 0;
+  }
+
+  function getComparator(order, orderBy) {
+    return order === "asc"
+      ? (a, b) => -descendingComparator(a, b, orderBy)
+      : (a, b) => descendingComparator(a, b, orderBy);
+  }
 
   // sorting
   const handleRequestSort = (property) => {
-    const fieldMapping = {
-      name: "taskname",
-      due: "DeadLineDate",
-    };
-    const mappedProperty = fieldMapping[property] || property;
-    const isAscending = orderBy === mappedProperty && order === "asc";
-    setOrder(isAscending ? "desc" : "asc");
-    setOrderBy(mappedProperty);
+    console.log('property: ', property);
+    const isAsc = orderBy === property && order === "asc";
+    console.log('orderBy: ', orderBy);
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
   };
 
-  const descendingComparator = (a, b, orderBy) => {
-    const fieldMapping = {
-      deadline: "DeadLineDate",
-      due: "DeadLineDate",
-      "Project/module": "taskname",
-      "start date": "StartDate",
-    };
 
-    const mappedField = fieldMapping[orderBy] || orderBy;
-    let aValue = a[mappedField];
-    let bValue = b[mappedField];
-
-    // Convert to Date if it's a deadline
-    if (mappedField === "DeadLineDate") {
-      aValue = aValue ? new Date(aValue) : new Date("2100-01-01");
-      bValue = bValue ? new Date(bValue) : new Date("2100-01-01");
-    } else if (mappedField === "start date") {
-      aValue = aValue ? new Date(aValue) : new Date("2100-01-01");
-      bValue = bValue ? new Date(bValue) : new Date("2100-01-01");
-    } else if (mappedField === "progress_per") {
-      aValue = parseFloat(aValue);
-      bValue = parseFloat(bValue);
-    } else if (mappedField === "Project/module") {
-      aValue = aValue?.toLowerCase();
-      bValue = bValue?.toLowerCase();
-    }
-
-    if (bValue < aValue) return -1;
-    if (bValue > aValue) return 1;
-    return 0;
-  };
-
-  const getComparator = (order, orderBy) => {
-    return order === "desc"
-      ? (a, b) => descendingComparator(a, b, orderBy)
-      : (a, b) => -descendingComparator(a, b, orderBy);
-  };
-
-  const sortData = (array, comparator) => {
-    return [...array]?.sort(comparator);
-  };
-
-  let sortedData;
-  if (project) {
-    sortedData = sortData(project, getComparator(order, orderBy));
-  }
+  const sortedData = [...(project || [])]?.sort(getComparator(order, orderBy));
 
   const filteredData = Array.isArray(sortedData)
     ? sortedData?.filter((task) => {

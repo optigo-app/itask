@@ -45,16 +45,17 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const [selectedItem, setSelectedItem] = useState(null);
-    const [columnWidths] = useState({
-        name: 350,
-        project: 150,
-        status: 180,
-        assignee: 150,
-        deadline: 150,
-        priority: 150,
-        estimate: 150,
-        actions: 120,
-    });
+    const columns = [
+        { id: "taskname", label: "Task Name", width: 350 },
+        { id: "project", label: "Project", width: 150 },
+        { id: "status", label: "Status", width: 180 },
+        { id: "assignee", label: "Assignee", width: 150 },
+        { id: "DeadLineDate", label: "Deadline", width: 150 },
+        { id: "priority", label: "Priority", width: 150 },
+        { id: "estimate", label: "Estimate", width: 150 },
+        { id: "actions", label: "Actions", width: 120 },
+    ];
+
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
     const [openAssigneeModal, setOpenAssigneeModal] = useState(false);
     const [timeTrackMOpen, setTimeTrackMOpen] = useState(false);
@@ -505,11 +506,12 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                     <Table size="small" aria-label="task details">
                         <TableHead>
                             <TableRow>
-                                {Object.keys(columnWidths).map((key) => (
-                                    <TableCell key={key}
+                                {columns?.map((column) => (
+                                    <TableCell
+                                        key={column.id}
                                         sx={{
-                                            width: columnWidths[key],
-                                            maxWidth: columnWidths[key],
+                                            width: column.width,
+                                            maxWidth: column.width,
                                             overflow: "hidden",
                                             textOverflow: "ellipsis",
                                             whiteSpace: "nowrap",
@@ -517,22 +519,28 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                     >
                                         <Box sx={{ display: "flex", alignItems: "center" }}>
                                             <TableSortLabel
-                                                active={key !== "estimate" && key !== "actions" && orderBy === key}
+                                                active={
+                                                    column.id !== "estimate" &&
+                                                    column.id !== "actions" &&
+                                                    column.id !== "assignee" &&
+                                                    orderBy === column.id
+                                                }
                                                 direction={order}
                                                 onClick={() => {
-                                                    if (key !== "estimate" && key !== "actions") {
-                                                        handleRequestSort(key);
+                                                    if (column.id !== "estimate" && column.id !== "actions") {
+                                                        handleRequestSort(column.id);
                                                     }
                                                 }}
-                                                hideSortIcon={key === "estimate" || key === "actions"}
+                                                hideSortIcon={column.id === "estimate" || column.id === "actions" || column.id === "assignee"}
                                             >
-                                                {key.charAt(0).toUpperCase() + key.slice(1)}
+                                                {column.label}
                                             </TableSortLabel>
                                         </Box>
                                     </TableCell>
                                 ))}
                             </TableRow>
                         </TableHead>
+
                         <TableBody>
                             {data && data?.length !== 0 ? (
                                 <>
@@ -596,14 +604,14 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                 </>
                             ) :
                                 <TableRow>
-                                    <TableCell colSpan={Object?.keys(columnWidths)?.length} >
+                                    <TableCell colSpan={Object?.keys(columns)?.length} >
                                         <Typography variant="body2" p={2} textAlign="center">No matched tasks found.</Typography>
                                     </TableCell>
                                 </TableRow>
                             }
                             {!isLoading && data?.length !== 0 &&
                                 <TableRow>
-                                    <TableCell colSpan={Object?.keys(columnWidths)?.length} >
+                                    <TableCell colSpan={Object?.keys(columns)?.length} >
                                         {currentData?.length !== 0 && (
                                             <Box className="TablePaginationBox">
                                                 <Typography className="paginationText">

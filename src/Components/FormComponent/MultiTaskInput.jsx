@@ -231,13 +231,25 @@ const MultiTaskInput = ({ onSave }) => {
                                                                 size="small"
                                                                 fullWidth
                                                                 value={task.estimate}
-                                                                onChange={(e) => handleTaskChange(index, "estimate", e.target.value)}
-                                                                onKeyPress={(e) => handleEstimateKeyPress(e, index)}
-                                                                inputRef={el => estimateRefs.current[index] = el}
+                                                                onChange={(e) => {
+                                                                    const value = e.target.value;
+                                                                    if (/^\d*\.?\d*$/.test(value)) {
+                                                                        handleTaskChange(index, "estimate", value);
+                                                                    }
+                                                                }}
+                                                                onKeyPress={(e) => {
+                                                                    if (['-', '+', 'e'].includes(e.key)) {
+                                                                        e.preventDefault();
+                                                                    }
+                                                                    if (e.key === '.' && task.estimate.includes('.')) {
+                                                                        e.preventDefault();
+                                                                    }
+                                                                    handleEstimateKeyPress(e, index);
+                                                                }}
+                                                                inputRef={(el) => estimateRefs.current[index] = el}
                                                                 className="textfieldsClass"
                                                             />
                                                         </TableCell>
-
                                                         <TableCell sx={{ width: "20%", textAlign: "center" }}>
                                                             {editIndex === index ? (
                                                                 <>
@@ -285,8 +297,21 @@ const MultiTaskInput = ({ onSave }) => {
                                                         fullWidth
                                                         placeholder="Estimate"
                                                         value={newEstimate}
-                                                        onChange={(e) => setNewEstimate(e.target.value)}
-                                                        onKeyPress={handleKeyPress}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            if (/^\d*\.?\d*$/.test(value)) {
+                                                                setNewEstimate(value);
+                                                            }
+                                                        }}
+                                                        onKeyPress={(e) => {
+                                                            if (['-', '+', 'e'].includes(e.key)) {
+                                                                e.preventDefault();
+                                                            }
+                                                            if (e.key === '.' && newEstimate.includes('.')) {
+                                                                e.preventDefault();
+                                                            }
+                                                            handleKeyPress(e);
+                                                        }}
                                                         className="textfieldsClass"
                                                     />
                                                 </TableCell>
