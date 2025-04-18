@@ -9,17 +9,15 @@ import {
     Tooltip,
 } from '@mui/material';
 import { CircleX, Download } from 'lucide-react';
-import StarIcon from '@mui/icons-material/Star';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
 import './Styles/MeetingDetail.scss';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, TaskData } from '../../Recoil/atom';
+import { fetchlistApiCall, formData, openFormDrawer, TaskData } from '../../Recoil/atom';
 import { taskDescGetApi } from '../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../Api/TaskApi/TaskDescAddApi';
 import AttachmentImg from "../../Assests/Attachment.webp";
-import { formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from '../../Utils/globalfun';
+import {getRandomAvatarColor, ImageUrl } from '../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
@@ -30,11 +28,10 @@ import { TaskDescription } from '../ShortcutsComponent/TaskDescription';
 const MeetingDetail = ({ open, onClose, taskData }) => {
     const theme = useTheme();
     const [taskArr, setTaskArr] = useRecoilState(TaskData);
-    // const taskData = useRecoilValue(formData);
     const setCallTaskApi = useSetRecoilState(fetchlistApiCall);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [count, setCount] = useState(2);
-    const [taskDesc, setTaskDesc] = useState('');
+    const [taskDesc, setTaskDesc] = useState();
     const [taskDescEdit, setTaskDescEdit] = useState(false);
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
@@ -42,8 +39,6 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
-    const setSelectedTask = useSetRecoilState(selectedRowData);
-    const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const placeholderImage = AttachmentImg;
 
     // Dummy attachment data
@@ -52,10 +47,6 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
         { filename: 'image.jpg', url: 'https://example.com/image.jpg', size: '1.8 MB' },
         { filename: 'spreadsheet.xlsx', url: 'https://example.com/spreadsheet.xlsx', size: '3.2 MB' },
     ];
-
-    const handleRemoveEvent = () => {
-        setCnfDialogOpen(true);
-    };
 
     // remove Task
     const removeTaskRecursively = (tasks, taskIdToRemove) => {
@@ -104,7 +95,6 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
         onClose();
     }
 
-    const toggleFullScreen = () => setIsFullScreen(!isFullScreen);
     const handleTabChange = (event, newValue) => setActiveTab(newValue);
 
     useEffect(() => {
@@ -112,7 +102,11 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
             try {
                 const taskdesc = await taskDescGetApi(taskData);
                 if (taskdesc) {
-                    setTaskDesc(taskdesc.rd[0]);
+                    if (taskdesc.rd[0]?.descr != '') {
+                        setTaskDesc(taskdesc.rd[0]);
+                    } else {
+                        setTaskDesc(taskData?.description);
+                    }
                 }
 
                 const taskComment = await taskCommentGetApi(taskData);
@@ -189,8 +183,7 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
         try {
             const updateDescResponse = await taskDescAddApi(taskData, desc);
             if (updateDescResponse) {
-                // Update the state with the new description
-                setTaskDesc(desc);  // This line is crucial
+                setTaskDesc(desc);
                 setTaskDescEdit(false);
             } else {
                 console.error('Failed to update description');
@@ -221,7 +214,7 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
         "Tech Support": { color: "#fff", backgroundColor: "#EB2F96" },
         "Training": { color: "#fff", backgroundColor: "#000000" },
         "unassigned": { color: "#000", backgroundColor: "#f5f5f5" },
-      };
+    };
 
     const TagLabel = ({ value, colorMap }) => {
         const colors = colorMap?.[value] || {};
@@ -277,13 +270,13 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
                         />
                         <Box className="modal-body">
                             <Box className="titlebox">
-                                <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <Typography variant="h5" className="task-title">{taskData?.meetingtitle}</Typography>
+                                <Box sx={{width:'80%', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <Typography variant="h5" className="task-title">{taskData?.meetingtitle || taskData?.title}</Typography>
                                 </Box>
                                 <Button
                                     size='small'
                                     variant="contained"
-                                    sx={{ marginRight: "10px" }}
+                                    sx={{ marginRight: "10px", width:'20%', }}
                                     className="dangerbtnClassname"
                                 >
                                     End Meeting
@@ -296,7 +289,7 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
                                         <Typography className="tasklable">ProjectName/Module</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                       <Typography className="taskvalue">{taskData?.ProjectName + " / " + taskData?.taskname}</Typography>
+                                        <Typography className="taskvalue">{(taskData?.ProjectName || taskData?.prModule?.projectname) + " / " + (taskData?.taskname || taskData?.prModule?.taskname)}</Typography>
                                     </Grid>
 
                                     {/* Priority */}
@@ -304,7 +297,7 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
                                         <Typography className="tasklable">Category</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                        <TagLabel value={taskData?.category?.labelname} colorMap={colorPalette} />
+                                        <TagLabel value={taskData?.category?.labelname || taskData?.category} colorMap={colorPalette} />
                                     </Grid>
 
                                     {/* Assignees */}
@@ -355,7 +348,7 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
                                 </Grid>
                                 {/* description */}
                                 <TaskDescription
-                                    taskDesc={taskDesc}
+                                    taskDesc={taskDesc || taskData?.description}
                                     taskDescEdit={taskDescEdit}
                                     handleShowEditDesc={handleShowEditDesc}
                                     handleDescChange={handleDescChange}

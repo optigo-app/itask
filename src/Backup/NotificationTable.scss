@@ -1,0 +1,26 @@
+.notification-table {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  
+    .MuiTableRow-root.unread {
+      background-color: #e3f2fd;
+    }
+  
+    .MuiTableRow-root.read {
+      background-color: #f9f9f9;
+    }
+  
+    .MuiTableCell-root {
+      font-size: 14px;
+      vertical-align: middle;
+    }
+  
+    .MuiAvatar-root {
+      width: 40px;
+      height: 40px;
+    }
+  
+    .MuiIconButton-root {
+      margin-left: 4px;
+    }
+  }
+  

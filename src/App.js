@@ -14,6 +14,8 @@ import SomethingWentWrong from './Components/Auth/SomethingWentWrong';
 import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
 import MuiSortableTable from './Backup/MuiSortableTable';
+import NotificationPage from './Backup/NotificationPage';
+import NotificationTable from './Pages/Notification/NotificationTable';
 
 // Lazy Loaded Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -200,7 +202,7 @@ const App = () => {
                                                 <Route path="/masters" element={<ProtectedRoute><Masters /></ProtectedRoute>} />
                                                 <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                                                 <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-                                                <Route path="/test" element={<MuiSortableTable />} />
+                                                <Route path="/notification" element={<NotificationTable />} />
                                                 <Route path="*" element={<PagenotFound />} />
                                             </Routes>
                                         </Layout>

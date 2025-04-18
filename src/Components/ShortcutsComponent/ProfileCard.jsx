@@ -17,6 +17,8 @@ import "./ProfileCardModal.scss";
 import { commonTextFieldProps, ImageUrl } from "../../Utils/globalfun";
 
 const ProfileCardModal = ({ open, onClose, profileData = [], background }) => {
+    console.log('profileData: ', profileData);
+    console.log('open: ', open);
     const [editIndex, setEditIndex] = useState(null);
     const [tempDesignation, setTempDesignation] = useState("");
     if (!Array.isArray(profileData) || profileData.length === 0) return null;
@@ -47,7 +49,7 @@ const ProfileCardModal = ({ open, onClose, profileData = [], background }) => {
                     <Swiper
                         spaceBetween={10}
                         slidesPerView={1}
-                        loop={true}
+                        loop={false}
                         modules={[Keyboard, Pagination]}
                         keyboard={{
                             enabled: true,
@@ -82,27 +84,35 @@ const ProfileCardModal = ({ open, onClose, profileData = [], background }) => {
                                         <Typography variant="h5" className="name">
                                             {profile?.firstname + " " + profile?.lastname || "Employee"}
                                         </Typography>
-                                        {editIndex === index ? (
-                                            <TextField
-                                                variant="outlined"
-                                                value={tempDesignation}
-                                                onChange={handleDesignationChange}
-                                                onBlur={handleDesignationBlur}
-                                                autoFocus
-                                                {...commonTextFieldProps}
-                                            />
-                                        ) : (
-                                            <Typography
-                                                variant="body1"
-                                                className="role"
-                                                onClick={() =>
-                                                    handleDesignationClick(index, profile?.designation)
-                                                }
-                                                sx={{ cursor: "pointer", textDecoration: "underline" }}
-                                            >
-                                                {profile?.designation ?? "Click to add"}
-                                            </Typography>
-                                        )}
+                                        <Box>
+                                            {editIndex === index ? (
+                                                <Box sx={{ textAlign: 'start' }}>
+                                                    <Typography className="role" variant="body1">Project Role</Typography>
+                                                    <TextField
+                                                        variant="outlined"
+                                                        value={tempDesignation}
+                                                        onChange={handleDesignationChange}
+                                                        onBlur={handleDesignationBlur}
+                                                        autoFocus
+                                                        {...commonTextFieldProps}
+                                                    />
+                                                </Box>
+                                            ) : (
+                                                <Box sx={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                                                    <Typography className="role" variant="body1">Project Role : </Typography>
+                                                    <Typography
+                                                        variant="body1"
+                                                        className="role"
+                                                        onClick={() =>
+                                                            handleDesignationClick(index, profile?.designation)
+                                                        }
+                                                        sx={{ cursor: "pointer", textDecoration: "underline" }}
+                                                    >
+                                                        {profile?.designation ?? "Click to add"}
+                                                    </Typography>
+                                                </Box>
+                                            )}
+                                        </Box>
                                     </Box>
                                 </Box>
                             </SwiperSlide>

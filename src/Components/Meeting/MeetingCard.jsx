@@ -20,7 +20,8 @@ const MeetingCard = ({
   ImageUrl,
   background,
   handleAcceptMeeting,
-  handleReject
+  handleReject,
+  hanldePAvatarClick
 }) => {
   return (
     <Card
@@ -79,7 +80,7 @@ const MeetingCard = ({
               </span>
             )}
           </Typography>
-          {StatusCircles(meeting, {redCount: 5, yellowCount: 10, greenCount: 50})}
+          {StatusCircles(meeting, { redCount: 5, yellowCount: 10, greenCount: 50 })}
         </Box>
 
         <Typography
@@ -127,6 +128,7 @@ const MeetingCard = ({
                   sx={{
                     backgroundColor: background(participant),
                   }}
+                  onClick={() => hanldePAvatarClick(meeting?.guests)}
                 >
                   {!participant.avatar && participant?.firstname?.charAt(0)}
                 </Avatar>

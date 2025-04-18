@@ -27,8 +27,8 @@ const KanbanView = React.lazy(() =>
 );
 
 const Project = () => {
-  const [order, setOrder] = useState("asc");
-  const [orderBy, setOrderBy] = useState("taskname");
+  const [order, setOrder] = useState("desc");
+  const [orderBy, setOrderBy] = useState("entrydate");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(12);
   const [isLoading, setIsLoading] = useState(false);

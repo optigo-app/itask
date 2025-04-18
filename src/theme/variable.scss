@@ -224,6 +224,12 @@ $divider-color: #e0e0e0;
             font-size: 12px !important;
         }
     }
+
+    .MuiFormHelperText-root{
+        font-family: $font-family!important;
+        margin-top: 4px;
+        margin-inline: 5px!important;
+    }
 }
 
 .textareaCustCss {

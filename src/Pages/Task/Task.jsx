@@ -20,8 +20,8 @@ const CardView = React.lazy(() => import("../../Components/Task/CardView/CardVie
 
 const Task = () => {
   const location = useLocation();
-  const [order, setOrder] = useState("asc");
-  const [orderBy, setOrderBy] = useState("taskname");
+  const [order, setOrder] = useState("desc");
+  const [orderBy, setOrderBy] = useState("entrydate");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(12);
   const searchParams = new URLSearchParams(location.search);
@@ -282,24 +282,24 @@ const Task = () => {
     console.log('orderBy: ', orderBy);
     const valA = a[orderBy];
     const valB = b[orderBy];
-  
+
     if (typeof valA === "string" && typeof valB === "string") {
       return valB.trim().localeCompare(valA.trim()); // descending
     }
-  
+
     if (valB < valA) return -1;
     if (valB > valA) return 1;
     return 0;
   }
-  
-  
-  
+
+
+
   function getComparator(order, orderBy) {
     return order === "asc"
       ? (a, b) => -descendingComparator(a, b, orderBy)
       : (a, b) => descendingComparator(a, b, orderBy);
   }
-  
+
   // sorting
   const handleRequestSort = (property) => {
     console.log('property: ', property);
@@ -309,7 +309,7 @@ const Task = () => {
     setOrderBy(property);
   };
 
-
+  debugger
 
   const sortedData = [...(tasks || [])]?.sort(getComparator(order, orderBy));
   console.log('sortedRows: ', sortedData);

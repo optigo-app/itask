@@ -9,6 +9,8 @@ const CustomDateTimePicker = ({
     value,
     width,
     styleprops,
+    error = false,
+    helperText = "",
     onChange,
     customProps = {},
     sx = {},
@@ -79,22 +81,23 @@ const CustomDateTimePicker = ({
                 onChange={onChange}
                 ampm={true}
                 format="DD/MM/YYYY hh:mm A"
+                sx={{ minWidth: width, ...sx }}
                 {...customDateTimePickerProps}
                 {...customProps}
                 {...styleprops}
-                sx={{ minWidth: width, ...sx }}
-                textField={(params) => (
-                    <TextField
-                        {...params}
-                        size="small"
-                        fullWidth
-                        className="textfieldsClass"
-                        sx={{ padding: "0" }}
-                        {...textFieldProps}
-                    />
-                )}
+                slotProps={{
+                    ...customDateTimePickerProps.slotProps,
+                    textField: {
+                        size: "small",
+                        fullWidth: true,
+                        className: "textfieldsClass",
+                        sx: { padding: "0" },
+                        error,
+                        helperText,
+                        ...textFieldProps,
+                    },
+                }}
             />
-
         </Box>
     );
 };

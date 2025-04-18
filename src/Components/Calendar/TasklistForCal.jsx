@@ -23,7 +23,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                 eventData: (eventEl) => {
                     const dragtaskTaskId = eventEl.getAttribute("data-id");
                     const dragtask = calTasksList.find(t => t.taskid == dragtaskTaskId);
-                    
+
                     if (dragtask) {
                         const start = dragtask?.StartDate;
                         const end = dragtask?.DeadLineDate;
@@ -57,7 +57,7 @@ const TasklistForCal = ({ calendarsColor }) => {
     return (
         <>
             <Typography variant="h6" sx={{ m: '0px 10px 10px 10px' }}>Today Tasks</Typography>
-            <Box id="external-tasks" sx={{ padding: 1.25, height: '100%', overflow: 'auto' }}>
+            <Box id="external-tasks" sx={{ padding: 1.25, maxHeight: '100vh', height: '100%', overflow: 'auto' }}>
                 {calTasksList.map((task) => {
                     const colorClass = calendarsColor[task.category] || "default";
 
