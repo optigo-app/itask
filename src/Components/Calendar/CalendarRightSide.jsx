@@ -9,6 +9,7 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData } from '../../Recoil/atom';
 import CalendarForm from './SideBar/CalendarForm';
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
+import MeetingDetail from '../Meeting/MeetingDetails';
 
 const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemoveAMeeting }) => {
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
@@ -21,6 +22,11 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
     const [opencnfDialogOpen, setCnfDialogOpen] = useState(false);
     const [formData, setFormData] = useState();
     const [calEvData, setCalEvData] = useRecoilState(calendarData);
+    const [meetingDetailModalOpen, setMeetingDetailModalOpen] = useState(false);
+
+    const handleTaskModalClose = () => {
+        setMeetingDetailModalOpen(false);
+      };
 
     const handleDrawerToggle = () => {
         setCaledrawerOpen(!caledrawerOpen);
@@ -269,6 +275,12 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
         setCnfDialogOpen(false);
     };
 
+    const handleMeetingDt = (meeting) => {
+        setFormData(meeting);
+        handleDrawerToggle();
+        setMeetingDetailModalOpen(true);
+      }
+
     return (
         <>
             <FullCalendar {...calendarOptions} />
@@ -277,6 +289,7 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
                 onClose={handleDrawerToggle}
                 onSubmit={handleCaleFormSubmit}
                 onRemove={handleRemove}
+                handleMeetingDt={handleMeetingDt}
             />
             <ConfirmationDialog
                 open={opencnfDialogOpen}
@@ -284,6 +297,11 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
                 onConfirm={handleConfirmRemoveAll}
                 title="Confirm"
                 content="Are you sure you want to remove this Event?"
+            />
+            < MeetingDetail
+                open={meetingDetailModalOpen}
+                onClose={handleTaskModalClose}
+                taskData={formData}
             />
         </>
     );

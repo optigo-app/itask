@@ -8,7 +8,9 @@ const MultiSelectChipWithLimit = ({
     placeholder = "Select assignees",
     limitTags = 2,
     onChange,
-    value
+    value,
+    error,
+    helperText
 }) => {
     const [selectedValues, setSelectedValues] = useState([]);
 
@@ -119,6 +121,8 @@ const MultiSelectChipWithLimit = ({
                         variant="outlined"
                         fullWidth
                         size="small"
+                        error={error}
+                    helperText={helperText}
                     />
                 )}
             />

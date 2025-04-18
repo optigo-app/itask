@@ -15,6 +15,7 @@ const MeetingHeader = ({
   searchTerm,
   setSearchTerm,
   tabData,
+  meetingtabData,
   selectedTab,
   handleMeetingList,
   handleAddMeetings,
@@ -43,6 +44,19 @@ const MeetingHeader = ({
     );
   };
 
+  const meetingTab = [
+    {
+      id: 1,
+      label: "Meeting List",
+      onClick: handleMeetingList,
+    },
+    {
+      id: 2,
+      label: "Add Meeting",
+      onClick: handleAddMeetings,
+    },
+  ];
+
   return (
     <Box
       sx={{
@@ -63,7 +77,7 @@ const MeetingHeader = ({
       }}>
         <DasboardTab
           tabData={tabData}
-          selectedTab={selectedTab}
+          selectedTab={selectedTab?.filterTab}
           handleChange={handleTabChange}
         />
         <TextField
@@ -85,23 +99,25 @@ const MeetingHeader = ({
           }}
         />
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <Button
-          variant="contained"
-          className="buttonClassname"
-          onClick={handleMeetingList}
-        >
-          Show ALL
-        </Button>
-        <Button
-          variant="contained"
-          className="buttonClassname"
-          onClick={handleAddMeetings}
-        >
-          <Plus style={{ marginRight: '5px', opacity: '.9' }} size={20} />
-          Add Meeting
-        </Button>
-        <ViewToggleButtons view={viewType} onViewChange={handleViewChange} />
+      <Box sx={{ width: "50%", display: 'flex', justifyContent: "end", alignItems: 'center', gap: '12px' }}>
+        <Box sx={{ width: '50%' }}>
+          <DasboardTab
+            tabData={meetingtabData}
+            selectedTab={selectedTab?.meetingTab}
+            handleChange={handleTabChange}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Button
+            variant="contained"
+            className="buttonClassname"
+            onClick={handleAddMeetings}
+          >
+            <Plus style={{ marginRight: '5px', opacity: '.9' }} size={20} />
+            Add Meeting
+          </Button>
+          <ViewToggleButtons view={viewType} onViewChange={handleViewChange} />
+        </Box>
       </Box>
     </Box>
   );

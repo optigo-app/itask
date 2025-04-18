@@ -17,10 +17,10 @@ import {
 } from "@mui/material";
 import "./Styles/MeetingGrid.scss";
 import { getTimeLeft, ImageUrl, toISTDateTime } from "../../Utils/globalfun";
-import { CircleCheck, Eye, Pencil } from "lucide-react";
+import { Eye, Pencil } from "lucide-react";
 
-const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusCircles, handleAcceptMeeting, handleReject, handleAttendMeeting, handleDrawerToggle, setCalFormData, setFormData, background }) => {
-    const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
+const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusCircles, handleAcceptMeeting, handleReject, handleAttendMeeting, handleDrawerToggle, setCalFormData, setFormData, background, hanldePAvatarClick }) => {
+    const [sortConfig, setSortConfig] = useState({ key: "entrydate", direction: "desc" });
     const handleFormatDate = (startDate) => {
         const date = toISTDateTime(startDate);
         const finalDate = getTimeLeft(date);
@@ -64,7 +64,7 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
         </TableSortLabel>
     );
 
-    const renderAssigneeAvatars = (guests) => (
+    const renderAssigneeAvatars = (guests, row) => (
         <AvatarGroup
             max={10}
             spacing={2}
@@ -89,6 +89,7 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                         src={ImageUrl(user) || ""}
                         alt={user?.firstname}
                         sx={{ backgroundColor: background(user) }}
+                        onClick={() => hanldePAvatarClick(guests)}
                     >
                         {!user.avatar && user?.firstname?.[0]}
                     </Avatar>
@@ -107,7 +108,7 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                         <TableCell>{renderSortCell("Start", "StartDate")}</TableCell>
                         <TableCell>Assignee</TableCell>
                         <TableCell>Status</TableCell>
-                        <TableCell>Action</TableCell>
+                        <TableCell sx={{ width: '100px' }}>Action</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody className="table-body">
@@ -116,11 +117,11 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                             <TableCell>{row.meetingtitle}</TableCell>
                             <TableCell>{row.prModule?.taskPr + "/" + row.prModule?.taskname}</TableCell>
                             <TableCell>{handleFormatDate(row.StartDate)}</TableCell>
-                            <TableCell>{renderAssigneeAvatars(row.guests)}</TableCell>
+                            <TableCell>{renderAssigneeAvatars(row.guests, row)}</TableCell>
                             <TableCell>
                                 {StatusCircles(row, { redCount: 5, yellowCount: 10, greenCount: 50 })}
                             </TableCell>
-                            <TableCell align="center">
+                            <TableCell align="center" sx={{ width: '100px' }}>
                                 <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
                                     {row?.isAction && (
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>

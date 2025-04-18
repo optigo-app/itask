@@ -10,18 +10,14 @@ import {
     Autocomplete,
     Stack,
 } from "@mui/material";
-import { CircleX, List, Logs, X } from "lucide-react";
+import { CircleX } from "lucide-react";
 import "./CalendarForm.scss";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState } from "recoil";
 import { CalformData } from "../../../Recoil/atom";
-import { useTheme } from '@mui/material/styles';
-import { convertToIST } from "../../../Utils/Common/convertToIST";
 import MultiSelectChipWithLimit from "../../ShortcutsComponent/AssigneeAutocomplete";
 import { useLocation } from "react-router-dom";
 import CustomSwitch from "../../../Utils/Common/CustomSwitch";
 import { commonTextFieldProps, mapTaskLabels } from "../../../Utils/globalfun";
-import CustomTimePicker from "../../../Utils/DateComponent/CustomTimePicker";
-import CustomDatePicker from "../../../Utils/DateComponent/CustomDatePicker";
 import { fetchModuleDataApi } from "../../../Api/TaskApi/ModuleDataApi";
 import CustomDateTimePicker from "../../../Utils/DateComponent/CustomDateTimePicker";
 import dayjs from "dayjs";
@@ -33,13 +29,16 @@ const CalendarForm = ({
     onSubmit,
     onRemove,
     isLoading,
+    handleMeetingDt
 }) => {
     const location = useLocation();
     const [view, setView] = useState("meeting");
     const [CalformDataValue, setCalFormDataValue] = useRecoilState(CalformData);
+    console.log('CalformDataValue: ', CalformDataValue);
     const isDelete = Boolean(CalformDataValue?.id || CalformDataValue?.taskid);
     const [prModuleMaster, setPrModuleMaster] = useState([]);
     const [assignees, setAssignees] = useState([]);
+    const [errors, setErrors] = useState({});
     const [formValues, setFormValues] = React.useState({
         id: '',
         title: "",
@@ -56,6 +55,20 @@ const CalendarForm = ({
     const filterRefs = {
         category: useRef(),
         guests: useRef(),
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!formValues.title.trim()) newErrors.title = "Title is required";
+        if (!formValues.prModule) newErrors.prModule = "Project/Module is required";
+        if (!formValues.guests || formValues.guests.length === 0) newErrors.guests = "At least one assignee required";
+        if (!formValues.start) newErrors.start = "Start date/time is required";
+        if (!formValues.end) newErrors.end = "End date/time is required";
+        else if (dayjs(formValues.end).isBefore(dayjs(formValues.start))) newErrors.end = "End must be after Start";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleProjectModuleData = async () => {
@@ -81,7 +94,6 @@ const CalendarForm = ({
         return enhancedTasks;
     }
 
-
     useEffect(() => {
         handleProjectModuleData();
         const taskAssigneeData = JSON?.parse(sessionStorage?.getItem('taskAssigneeData'));
@@ -91,6 +103,7 @@ const CalendarForm = ({
     useEffect(() => {
         setTimeout(() => {
             if (CalformDataValue) {
+                console.log('CalformDataValue: ', CalformDataValue);
                 setFormValues({
                     id: (CalformDataValue?.id || CalformDataValue?.meetingid) ?? "",
                     title: (CalformDataValue?.title || CalformDataValue?.meetingtitle) ?? "",
@@ -122,13 +135,18 @@ const CalendarForm = ({
         }, 300);
     }, [open, CalformDataValue, formValues]);
 
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormValues((prev) => ({
             ...prev,
             [name]: value,
         }));
+        if (errors[name]) {
+            setErrors((prev) => ({
+                ...prev,
+                [name]: '',
+            }));
+        }
     };
 
     const handleProjectModuleChange = (_, newValue) => {
@@ -139,6 +157,7 @@ const CalendarForm = ({
     };
 
     const handleSubmit = () => {
+        if (!validateForm()) return;
         if (view === "meeting") {
             if (formValues) {
                 const idString = formValues?.guests?.map(user => user.id)?.join(",");
@@ -212,8 +231,13 @@ const CalendarForm = ({
                         }}
                     />
                     <Box className="drawer-form">
-                        <Grid item xs={12}>
-                        </Grid>
+                        {formValues.title != "" &&
+                            <Grid item xs={12}>
+                                <Button size='small' className="meetingDtBtn" variant="text" onClick={() => handleMeetingDt(CalformDataValue)}>
+                                    Meeting Detail
+                                </Button>
+                            </Grid>
+                        }
                         <Grid container spacing={1} className="form-row">
                             {/* Task Name and Due Date */}
                             <Grid item xs={12}>
@@ -231,6 +255,8 @@ const CalendarForm = ({
                                         value={formValues.title}
                                         onChange={handleChange}
                                         {...commonTextFieldProps}
+                                        error={!!errors.title}
+                                        helperText={errors.title}
                                     />
                                 </Box>
                             </Grid>
@@ -253,7 +279,13 @@ const CalendarForm = ({
                                         {...commonTextFieldProps}
                                         onChange={handleProjectModuleChange}
                                         renderInput={(params) => (
-                                            <TextField {...params} variant="outlined" placeholder="Select Project/Module" />
+                                            <TextField
+                                                {...params}
+                                                variant="outlined"
+                                                placeholder="Select Project/Module"
+                                                error={!!errors.prModule}
+                                                helperText={errors.prModule}
+                                            />
                                         )}
                                     />
 
@@ -268,6 +300,8 @@ const CalendarForm = ({
                                     label="Assign To"
                                     placeholder="Select assignees"
                                     limitTags={2}
+                                    error={Boolean(errors.guests)}
+                                    helperText={errors.guests}
                                     onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
                                 />
                             </Grid>
@@ -289,6 +323,8 @@ const CalendarForm = ({
                                             }))
                                         }
                                     }}
+                                    error={Boolean(errors.start)}
+                                    helperText={errors.start}
                                 />
                             </Grid>
                             <Grid item xs={12}>
