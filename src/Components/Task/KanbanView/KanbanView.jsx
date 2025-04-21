@@ -14,8 +14,7 @@ import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 function KanbanView({
   taskdata,
   isLoading,
-  masterData,
-  statusData }) {
+}) {
 
   const [data, setData] = useState();
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
@@ -79,7 +78,7 @@ function KanbanView({
   };
 
   const initialData = {
-    columns: taskStatusData.reduce((acc, taskStatus) => {
+    columns: taskStatusData?.reduce((acc, taskStatus) => {
       const filteredTasks = taskdata?.filter(task => task.status === taskStatus.labelname);
       acc[`column-${taskStatus.id}`] = {
         id: `column-${taskStatus.id}`,
@@ -90,10 +89,9 @@ function KanbanView({
 
       return acc;
     }, {}),
-    columnOrder: taskStatusData
-      .filter(status => status.isdelete === 0)
-      .sort((a, b) => a.displayorder - b.displayorder)
-      .map(status => `column-${status.id}`),
+    columnOrder: [6, 1, 3, 4, 2]
+      .filter(id => taskStatusData?.some(status => status.id === id && status.isdelete === 0))
+      .map(id => `column-${id}`),
   };
 
   useEffect(() => {
@@ -130,7 +128,7 @@ function KanbanView({
       const startTasks = Array.from(startColumn.tasks);
       const [movedTask] = startTasks.splice(source.index, 1);
 
-      let statusId = statusData.find(status => status.labelname?.toLowerCase() === endColumn?.title?.toLowerCase())?.id;
+      let statusId = taskStatusData.find(status => status.labelname?.toLowerCase() === endColumn?.title?.toLowerCase())?.id;
       const updatedMovedTask = { ...movedTask, status: endColumn?.title, statusid: statusId };
 
       const endTasks = Array.from(endColumn.tasks);
@@ -160,9 +158,16 @@ function KanbanView({
     }
   };
 
-  const handleDrawerToggle = () => {
+  const handleDrawerToggle = (columnId) => {
+    const status_id = columnId.split('-')[1];
+    const status_name = taskStatusData?.find(status => status.id === Number(status_id))?.labelname;
     setFormDrawerOpen(!formdrawerOpen);
     setFormDataValue({})
+    setFormDataValue((prev) => ({
+      ...prev,
+      status: status_name,
+      statusid: Number(status_id),
+    }));
     setRootSubroot({ Task: "AddTask" })
     setOpenChildTask(false);
     setSelectedTask({})
@@ -203,7 +208,7 @@ function KanbanView({
       ) :
         <Box sx={{ width: '100%', overflow: "auto !important", padding: '0' }}>
           <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-            <Box display="flex" gap={3} p={2}>
+            <Box display="flex" gap={2}>
               {data?.columnOrder?.map((columnId) => {
                 const column = data.columns[columnId];
                 return (
@@ -219,8 +224,8 @@ function KanbanView({
                               ? "#fce6e6"
                               : "#f4f4f4",
                           borderRadius: 2,
-                          width: 300,
-                          minWidth: '300px',
+                          width: 302,
+                          minWidth: '302px',
                           minHeight: '400px',
                           maxHeight: '800px',
                           overflow: 'auto !important',
@@ -258,7 +263,7 @@ function KanbanView({
                                 {column?.tasks?.length}
                               </Typography>
                             </Box>
-                            <IconButton onClick={handleDrawerToggle}>
+                            <IconButton onClick={() => handleDrawerToggle(columnId)}>
                               <Plus strokeWidth={2} />
                             </IconButton>
                           </Box>
@@ -413,16 +418,17 @@ function KanbanView({
                                       </Button>
                                     )}
                                   </Box>
-                                  <Button
+                                  {/* <Button
                                     onClick={() => handleAddTask(task, { Task: 'subroot' })}
                                     className="buttonClassname"
+                                    size="small"
+                                    variant="contained"
                                     sx={{
                                       fontSize: '12px',
                                       marginTop: '5px',
                                       background: 'transparent !important',
                                       color: '#6058F7 !important',
                                       textTransform: 'capitalize !important',
-                                      textDecoration: 'underline !important',
                                       transition: 'all 0.3s ease-in-out',
                                       '&:hover': {
                                         backgroundColor: 'rgba(96, 88, 247, 0.1)',
@@ -431,7 +437,28 @@ function KanbanView({
                                     }}
                                   >
                                     Add Subtask
-                                  </Button>
+                                  </Button> */}
+                                  <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
+                                    <IconButton
+                                      onClick={() => handleAddTask(task, { Task: 'subroot' })}
+                                      size="small"
+                                      sx={{
+                                        fontSize: '12px',
+                                        marginTop: '5px',
+                                        background: '#6058F7 !important',
+                                        color: '#fff !important',
+                                        borderRadius: '50%',
+                                        textTransform: 'capitalize !important',
+                                        transition: 'all 0.3s ease-in-out',
+                                        '&:hover': {
+                                          backgroundColor: 'rgba(96, 88, 247, 0.1)',
+                                          transform: 'scale(1.05)',
+                                        },
+                                      }}
+                                    >
+                                      <Plus width={20} height={20} />
+                                    </IconButton>
+                                  </Box>
                                 </CardContent>
                                 <IconButton
                                   size="small"

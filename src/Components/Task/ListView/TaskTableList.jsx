@@ -499,7 +499,6 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                     sx={{
                         boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
                         borderRadius: "8px",
-
                     }}
                     className="TaskTVMain"
                 >
@@ -516,6 +515,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                             textOverflow: "ellipsis",
                                             whiteSpace: "nowrap",
                                         }}
+                                        className={column.id === "actions" ? "sticky-last-col" : ""}
                                     >
                                         <Box sx={{ display: "flex", alignItems: "center" }}>
                                             <TableSortLabel
@@ -594,7 +594,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                 <TableCell>
                                                     <StatusCircles task={task} />
                                                 </TableCell>
-                                                <TableCell align="center">
+                                                <TableCell align="center" className="sticky-last-col">
                                                     {renderTaskActions(task, taskTimeRunning, handleTimeTrackModalOpen, handleEditTask, handleViewTask)}
                                                 </TableCell>
                                             </TableRow>

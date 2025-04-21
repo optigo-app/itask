@@ -68,38 +68,38 @@ export const formatDate3 = (date) => {
 export function getTimeLeft(dateString) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  
+
     const futureDate = new Date(dateString);
     const target = new Date(futureDate.getFullYear(), futureDate.getMonth(), futureDate.getDate());
-  
+
     const diffMs = target - today;
-  
+
     const formatDateTime = (date) =>
-      date.toLocaleString("en-US", {
-        day: "numeric",
-        month: "short",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      });
-  
+        date.toLocaleString("en-US", {
+            day: "numeric",
+            month: "short",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+        });
+
     if (diffMs < 0) return "Overdue";
     if (diffMs === 0) return formatDateTime(futureDate);
-  
+
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const weeks = Math.floor(diffDays / 7);
     const months = Math.floor(diffDays / 30);
     const years = Math.floor(diffDays / 365);
-  
+
     if (years > 0) return `in ${years} year${years > 1 ? "s" : ""}`;
     if (months > 0) return `in ${months} month${months > 1 ? "s" : ""}`;
     if (weeks > 0) return `in ${weeks} week${weeks > 1 ? "s" : ""}`;
     if (diffDays > 0) return `in ${diffDays} day${diffDays > 1 ? "s" : ""}`;
-  
+
     return "Soon";
-  }
-  
-  
+}
+
+
 
 export function toISTDateTime(isoDate) {
     const istDate = new Date(isoDate).toLocaleString("en-IN", {
@@ -172,68 +172,161 @@ export const getStatusColor = (value) => {
 };
 
 // Task Status color
+// export const statusColors = {
+//     "pending": {
+//         color: "#ff9800", // Orange text color
+//         backgroundColor: "#fff3e0", // Light orange background
+//     },
+//     "just started": {
+//         color: "#4caf50", // Green text color
+//         backgroundColor: "#e8f5e9", // Light green background
+//     },
+//     "running": {
+//         color: "#2196f3", // Blue text color
+//         backgroundColor: "#e3f2fd", // Light blue background
+//     },
+//     "on hold": {
+//         color: "#ff5722", // Red-orange text color
+//         backgroundColor: "#ffccbc", // Light red-orange background
+//     },
+//     "on hold with challenge": {
+//         color: "#f44336", // Red text color
+//         backgroundColor: "#ffebee", // Light red background
+//     },
+//     "challenge running": {
+//         color: "#d32f2f", // Dark red text color
+//         backgroundColor: "#ffcccb", // Light dark red background
+//     },
+//     "doc started": {
+//         color: "#8e24aa", // Purple text color
+//         backgroundColor: "#f3e5f5", // Light purple background
+//     },
+//     "doc completed": {
+//         color: "#9c27b0", // Purple text color
+//         backgroundColor: "#fce4ec", // Light purple background
+//     },
+//     "code started": {
+//         color: "#3f51b5", // Indigo text color
+//         backgroundColor: "#e8eaf6", // Light indigo background
+//     },
+//     "code completed": {
+//         color: "#3949ab", // Dark indigo text color
+//         backgroundColor: "#c5cae9", // Light dark indigo background
+//     },
+//     "test started": {
+//         color: "#f44336", // Red text color
+//         backgroundColor: "#ffebee", // Light red background
+//     },
+//     "test completed": {
+//         color: "#8bc34a", // Light green text color
+//         backgroundColor: "#c8e6c9", // Light green background
+//     },
+//     "completed": {
+//         color: "#4caf50", // Green text color
+//         backgroundColor: "#e8f5e9", // Light green background
+//     },
+//     "delivered": {
+//         color: "#3f51b5", // Indigo text color
+//         backgroundColor: "#e8eaf6", // Light indigo background
+//     },
+//     "in testing": {
+//         color: "#ff9800", // Orange text color
+//         backgroundColor: "#fff3e0", // Light orange background
+//     },
+// };
+
 export const statusColors = {
-    "pending": {
-        color: "#ff9800", // Orange text color
-        backgroundColor: "#fff3e0", // Light orange background
+    "approved": {
+        color: "#2e7d32", // Green - success
+        backgroundColor: "#c8e6c9",
     },
-    "just started": {
-        color: "#4caf50", // Green text color
-        backgroundColor: "#e8f5e9", // Light green background
-    },
-    "running": {
-        color: "#2196f3", // Blue text color
-        backgroundColor: "#e3f2fd", // Light blue background
-    },
-    "on hold": {
-        color: "#ff5722", // Red-orange text color
-        backgroundColor: "#ffccbc", // Light red-orange background
-    },
-    "on hold with challenge": {
-        color: "#f44336", // Red text color
-        backgroundColor: "#ffebee", // Light red background
-    },
-    "challenge running": {
-        color: "#d32f2f", // Dark red text color
-        backgroundColor: "#ffcccb", // Light dark red background
-    },
-    "doc started": {
-        color: "#8e24aa", // Purple text color
-        backgroundColor: "#f3e5f5", // Light purple background
-    },
-    "doc completed": {
-        color: "#9c27b0", // Purple text color
-        backgroundColor: "#fce4ec", // Light purple background
-    },
-    "code started": {
-        color: "#3f51b5", // Indigo text color
-        backgroundColor: "#e8eaf6", // Light indigo background
-    },
-    "code completed": {
-        color: "#3949ab", // Dark indigo text color
-        backgroundColor: "#c5cae9", // Light dark indigo background
-    },
-    "test started": {
-        color: "#f44336", // Red text color
-        backgroundColor: "#ffebee", // Light red background
-    },
-    "test completed": {
-        color: "#8bc34a", // Light green text color
-        backgroundColor: "#c8e6c9", // Light green background
+    "closed": {
+        color: "#d32f2f", // Red - closed/final
+        backgroundColor: "#ffcdd2",
     },
     "completed": {
-        color: "#4caf50", // Green text color
-        backgroundColor: "#e8f5e9", // Light green background
+        color: "#388e3c", // Green - task done
+        backgroundColor: "#dcedc8",
     },
-    "delivered": {
-        color: "#3f51b5", // Indigo text color
-        backgroundColor: "#e8eaf6", // Light indigo background
+    "feedback pending": {
+        color: "#ef6c00", // Orange - waiting
+        backgroundColor: "#ffe0b2",
+    },
+    "feedback received": {
+        color: "#3949ab", // Indigo - info received
+        backgroundColor: "#c5cae9",
+    },
+    "in development": {
+        color: "#1976d2", // Blue - active
+        backgroundColor: "#bbdefb",
+    },
+    "in observation": {
+        color: "#00796b", // Teal - under watch
+        backgroundColor: "#b2dfdb",
+    },
+    "in planning": {
+        color: "#6a1b9a", // Purple - strategy
+        backgroundColor: "#e1bee7",
     },
     "in testing": {
-        color: "#ff9800", // Orange text color
-        backgroundColor: "#fff3e0", // Light orange background
+        color: "#f57c00", // Orange - QA phase
+        backgroundColor: "#ffe0b2",
+    },
+    "in-progress": {
+        color: "#0288d1", // Blue - ongoing
+        backgroundColor: "#b3e5fc",
+    },
+    "in-review": {
+        color: "#8e24aa", // Purple - being checked
+        backgroundColor: "#f3e5f5",
+    },
+    "new": {
+        color: "#1e88e5", // Blue - just added
+        backgroundColor: "#bbdefb",
+    },
+    "pending": {
+        color: "#ffa000", // Amber - waiting
+        backgroundColor: "#ffecb3",
+    },
+    "pending close": {
+        color: "#ff7043", // Coral - about to close
+        backgroundColor: "#ffe0b2",
+    },
+    "pending customer input": {
+        color: "#ef6c00", // Orange - needs action
+        backgroundColor: "#ffe0b2",
+    },
+    "pending maintenance": {
+        color: "#6d4c41", // Brown - backend
+        backgroundColor: "#d7ccc8",
+    },
+    "running": {
+        color: "#0277bd", // Blue - active
+        backgroundColor: "#b3e5fc",
+    },
+    "solved": {
+        color: "#43a047", // Green - resolved
+        backgroundColor: "#c8e6c9",
+    },
+    "solved-upcoming": {
+        color: "#8bc34a", // Lime - will be solved
+        backgroundColor: "#dcedc8",
+    },
+    "training pending": {
+        color: "#fbc02d", // Yellow - needs attention
+        backgroundColor: "#fff9c4",
+    },
+    "upcoming release": {
+        color: "#009688", // Teal - info
+        backgroundColor: "#b2dfdb",
+    },
+    "upload pending": {
+        color: "#e53935", // Red - blocking task
+        backgroundColor: "#ffcdd2",
     },
 };
+
+
 
 // colors.js (Global colors)
 export const colors = [

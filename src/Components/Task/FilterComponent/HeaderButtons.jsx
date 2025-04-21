@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, IconButton, InputAdornment, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from "@mui/material";
+import { Box, Button, IconButton, InputAdornment, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useMediaQuery } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 import SidebarDrawer from "../../FormComponent/Sidedrawer";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, selectedCategoryAtom, filterDrawer, timerCompOpen, Advfilters } from "../../../Recoil/atom";
 import { toast } from "react-toastify";
-import { ChevronsDown, FilterIcon, Kanban, List, SearchIcon, TimerIcon } from "lucide-react";
+import { ChevronsDown, Kanban, List, SearchIcon, TimerIcon } from "lucide-react";
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { useLocation } from "react-router-dom";
 import './Styles.scss'
 import TaskTimeTrackerComp from "../../ShortcutsComponent/TaskTimeTrackerComp";
@@ -25,16 +26,16 @@ const HeaderButtons = ({
   taskCategory,
   taskDepartment,
   taskAssigneeData }) => {
-    console.log('searchTerm: ', searchTerm);
-    const location = useLocation();
-    const [filters, setFilters] = useRecoilState(Advfilters);
+  const isLaptop = useMediaQuery('(max-width:1350px)');
+  const location = useLocation();
+  const [filters, setFilters] = useRecoilState(Advfilters);
   const searchParams = new URLSearchParams(location.search);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const setFormDataValue = useSetRecoilState(formData);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const setSelectedTask = useSetRecoilState(selectedRowData);
   const rootSubrootflagval = useRecoilValue(rootSubrootflag)
-  const [view, setView] = useState(activeButton ?? 'table');
+  const [view, setView] = useState(activeButton);
   const [selectedCategory, setSelectedCategory] = useRecoilState(selectedCategoryAtom);
   const [filterDrawerOpen, setFilterDrawerOpen] = useRecoilState(filterDrawer);
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
@@ -125,12 +126,14 @@ const HeaderButtons = ({
   return (
     <>
       <Box className="headerButtons">
-        <Box className="FirstMainBox" sx={{ display: "flex", justifyContent: 'start', alignItems: 'end', gap: 2 }}>
-          <ScrollableCategoryTabs
-            taskCategory={taskCategory}
-            selectedCategory={filters?.category}
-            handleFilterChange={handleFilterChange}
-          />
+        <Box className="FirstMainBox">
+          {!isLaptop &&
+            <ScrollableCategoryTabs
+              taskCategory={taskCategory}
+              selectedCategory={filters?.category}
+              handleFilterChange={handleFilterChange}
+            />
+          }
           <Box sx={{ display: 'flex', justifyContent: 'end' }}>
             <TextField
               placeholder="Search tasks..."
@@ -152,30 +155,57 @@ const HeaderButtons = ({
               aria-label='Search tasks...'
             />
           </Box>
-          <Tooltip
-            placement="top"
-            title="Filter tasks"
-            arrow
-            classes={{ tooltip: 'custom-tooltip' }}
-          >
-            <IconButton
-              aria-label="Filter tasks"
-              onClick={handleFilterDrOpen}
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: filterDrawerOpen ? '#ffd700' : 'white',
-                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
-                '&:hover': {
-                  backgroundColor: '#f5f5f5',
-                  boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
-                }
-              }}
+          {!isLaptop ?
+            <Tooltip
+              placement="top"
+              title="Filter tasks"
+              arrow
+              classes={{ tooltip: 'custom-tooltip' }}
             >
-              <ChevronsDown size={20} />
-            </IconButton>
-          </Tooltip>
+              <IconButton
+                aria-label="Filter tasks"
+                onClick={handleFilterDrOpen}
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: filterDrawerOpen ? '#ffd700' : 'white',
+                  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
+                  '&:hover': {
+                    backgroundColor: '#f5f5f5',
+                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
+                  }
+                }}
+              >
+                <ChevronsDown size={20} />
+              </IconButton>
+            </Tooltip>
+            :
+            <Tooltip
+              placement="top"
+              title="Filter tasks"
+              arrow
+              classes={{ tooltip: 'custom-tooltip' }}
+            >
+              <IconButton
+                aria-label="Filter tasks"
+                onClick={handleFilterDrOpen}
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: filterDrawerOpen ? '#ffd700' : 'white',
+                  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
+                  '&:hover': {
+                    backgroundColor: '#f5f5f5',
+                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
+                  }
+                }}
+              >
+                <FilterAltIcon color="#0000008a" fontSize="medium" />
+              </IconButton>
+            </Tooltip>
+          }
         </Box>
         <Box className="secondMainBox">
           {location?.pathname?.includes('/tasks') &&

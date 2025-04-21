@@ -20,6 +20,7 @@ const MeetingCard = ({
   ImageUrl,
   background,
   handleAcceptMeeting,
+  handleAttendMeeting,
   handleReject,
   hanldePAvatarClick
 }) => {
@@ -139,6 +140,7 @@ const MeetingCard = ({
           {meeting?.isAction && (
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Button
+                size='small'
                 variant="contained"
                 href={meeting.link}
                 target="_blank"
@@ -149,14 +151,42 @@ const MeetingCard = ({
               </Button>
 
               <Button
+                size='small'
                 variant="contained"
                 onClick={() => handleReject(meeting)}
-                className="secondaryBtnClassname"
+                className="dangerbtnClassname"
               >
                 Reject
               </Button>
             </Box>
           )}
+          {meeting?.isAttendBtn != 0 &&
+            <Button className="buttonClassname"
+              variant="contained" size="small" color="primary" onClick={() => handleAttendMeeting(meeting)}>
+              Attend
+            </Button>
+          }
+          {meeting?.ismeeting_attnd == 1 &&
+            <Box
+              sx={{
+                width: "max-content",
+                background: "linear-gradient(135deg, #43cea2, #185a9d)",
+                color: "#fff",
+                textAlign: "center",
+                lineHeight: "20px",
+                fontSize: "14px",
+                fontWeight: "bold",
+                padding: "6px 20px",
+                borderRadius: "8px",
+                boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+                zIndex: 1000,
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+              }}
+            >
+              Attend
+            </Box>
+          }
         </Box>
       </CardContent>
     </Card>

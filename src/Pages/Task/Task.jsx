@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useMediaQuery } from "@mui/material";
 import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { Advfilters, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength } from "../../Recoil/atom";
@@ -19,6 +19,7 @@ const KanbanView = React.lazy(() => import("../../Components/Task/KanbanView/Kan
 const CardView = React.lazy(() => import("../../Components/Task/CardView/CardView"));
 
 const Task = () => {
+  const isLaptop = useMediaQuery('(max-width:1350px)');
   const location = useLocation();
   const [order, setOrder] = useState("desc");
   const [orderBy, setOrderBy] = useState("entrydate");
@@ -249,7 +250,7 @@ const Task = () => {
         fetchMasterData();
       }
     }, 100);
-  }, [location?.pathname, priorityData, statusData, taskProject, taskDepartment, callFetchTaskApi]);
+  }, [location?.pathname, priorityData, statusData, taskProject, taskDepartment, callFetchTaskApi, activeButton]);
 
   // Filter change handler
   const handleFilterChange = (key, value) => {
@@ -292,8 +293,6 @@ const Task = () => {
     return 0;
   }
 
-
-
   function getComparator(order, orderBy) {
     return order === "asc"
       ? (a, b) => -descendingComparator(a, b, orderBy)
@@ -308,8 +307,6 @@ const Task = () => {
     setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
-
-  debugger
 
   const sortedData = [...(tasks || [])]?.sort(getComparator(order, orderBy));
   console.log('sortedRows: ', sortedData);
@@ -543,55 +540,57 @@ const Task = () => {
       />
 
       {/* Divider */}
-      <AnimatePresence mode="wait">
-        {showAdvancedFil && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-          >
-            <div
-              style={{
-                margin: "20px 0",
-                border: "1px dashed #7d7f85",
-                opacity: 0.3,
-              }}
-            />
+      {!isLaptop &&
+        <AnimatePresence mode="wait">
+          {showAdvancedFil && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+            >
+              <div
+                style={{
+                  margin: "20px 0",
+                  border: "1px dashed #7d7f85",
+                  opacity: 0.3,
+                }}
+              />
 
-            {/* Filters Component */}
-            <Filters
-              {...filters}
-              onFilterChange={handleFilterChange}
-              isLoading={isLoading}
-              masterData={masterData}
-              priorityData={priorityData}
-              statusData={statusData}
-              assigneeData={assigneeData}
-              taskDepartment={taskDepartment}
-              taskProject={taskProject}
-              taskCategory={taskCategory}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {/* Filters Component */}
+              <Filters
+                {...filters}
+                onFilterChange={handleFilterChange}
+                isLoading={isLoading}
+                masterData={masterData}
+                priorityData={priorityData}
+                statusData={statusData}
+                assigneeData={assigneeData}
+                taskDepartment={taskDepartment}
+                taskProject={taskProject}
+                taskCategory={taskCategory}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      }
 
-
-      {/* <FiltersDrawer {...filters}
-        filters={filters}
-        setFilters={setFilters}
-        onFilterChange={handleFilterChange}
-        onClearAll={handleClearAllFilters}
-        isLoading={isLoading}
-        masterData={masterData}
-        priorityData={priorityData}
-        statusData={statusData}
-        assigneeData={assigneeData}
-        taskDepartment={taskDepartment}
-        taskProject={taskProject}
-        taskCategory={taskCategory}
-      /> */}
-
+      {isLaptop &&
+        <FiltersDrawer {...filters}
+          filters={filters}
+          setFilters={setFilters}
+          onFilterChange={handleFilterChange}
+          onClearAll={handleClearAllFilters}
+          isLoading={isLoading}
+          masterData={masterData}
+          priorityData={priorityData}
+          statusData={statusData}
+          assigneeData={assigneeData}
+          taskDepartment={taskDepartment}
+          taskProject={taskProject}
+          taskCategory={taskCategory}
+        />
+      }
 
       {/* Divider */}
       <div
@@ -639,15 +638,14 @@ const Task = () => {
               )}
 
               {activeButton === "kanban" && (
-                // <KanbanView
-                //   taskdata={filteredData ?? null}
-                //   isLoading={isTaskLoading}
-                //   masterData={masterData}
-                //   statusData={statusData}
-                //   handleTaskFavorite={handleTaskFavorite}
-                //   handleFreezeTask={handleFreezeTask}
-                // />
-                <Typography>Comming soon...</Typography>
+                <KanbanView
+                  taskdata={filteredData ?? null}
+                  isLoading={isTaskLoading}
+                  masterData={masterData}
+                  statusData={statusData}
+                  handleTaskFavorite={handleTaskFavorite}
+                  handleFreezeTask={handleFreezeTask}
+                />
               )}
 
               {activeButton === "card" && (

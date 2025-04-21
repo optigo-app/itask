@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Button, Card, CardContent, Table, TableBody, TableCell, TableRow, Typography } from '@mui/material'
-import { formatDate, formatDate2, formatDate3 } from '../../Utils/globalfun'
+import {getTimeLeft } from '../../Utils/globalfun'
 import { Calendar, Plus } from 'lucide-react';
 
 const Agenda = ({ agenda, navigate, isLoding }) => {
@@ -25,7 +25,7 @@ const Agenda = ({ agenda, navigate, isLoding }) => {
                                             </TableCell>
 
                                             <TableCell >
-                                                {event?.StartDate && formatDate3(event?.StartDate)}
+                                                {event?.StartDate && getTimeLeft(event?.StartDate)}
                                             </TableCell>
                                         </TableRow>
                                     ))}

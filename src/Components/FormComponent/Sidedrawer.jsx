@@ -103,11 +103,11 @@ const SidebarDrawer = ({
         assignee: useRef(),
     };
 
-    console.log('formDataValue: ', formDataValue);
+    console.log('rootSubrootflagval?.Task: ', rootSubrootflagval?.Task);
     useEffect(() => {
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
-        if (open && rootSubrootflagval?.Task === "root") {
+        if (open && (rootSubrootflagval?.Task === "AddTask"  || rootSubrootflagval?.Task === "root")) {
             setFormValues({
                 taskName: formDataValue?.taskname ?? "",
                 multiTaskName: formDataValue?.actual ?? [""],
@@ -221,7 +221,6 @@ const SidebarDrawer = ({
 
 
     // useEffect(() => {
-    //     debugger
     //     if (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "subroot") {
     //         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
     //         let arrData = location?.pathname?.includes("/projects") ? projectModuleData ? flattenTasks(taskDataValue) : [] : flattenTasks(taskDataValue);

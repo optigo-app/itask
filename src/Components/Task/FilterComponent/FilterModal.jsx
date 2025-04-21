@@ -29,6 +29,7 @@ const FiltersDrawer = ({
         assignee: useRef(),
         department: useRef(),
         project: useRef(),
+        category: useRef(),
     };
 
     const handleFilterChange = (key, value) => {
@@ -61,6 +62,7 @@ const FiltersDrawer = ({
             assignee: "",
             department: "",
             project: "",
+            category: "",
             dueDate: null,
         });
         onFilterChange("clearFilter", null);
@@ -79,6 +81,7 @@ const FiltersDrawer = ({
                     </Box>
                     <Divider sx={{ mb: 2, mt: 1 }} />
                     {[
+                        { label: "Category", key: "category", data: taskCategory },
                         { label: "Status", key: "status", data: statusData },
                         { label: "Priority", key: "priority", data: priorityData },
                         { label: "Department", key: "department", data: taskDepartment },

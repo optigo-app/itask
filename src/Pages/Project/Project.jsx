@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   Advfilters,
@@ -145,6 +145,7 @@ const Project = () => {
       };
 
       const enhancedTasks = finalTaskData?.map((task) => enhanceTask(task));
+      console.log('enhancedTasks: ', enhancedTasks);
       setProject(enhancedTasks);
     } catch (error) {
       console.error(error);
@@ -267,6 +268,7 @@ const Project = () => {
 
 
   const sortedData = [...(project || [])]?.sort(getComparator(order, orderBy));
+  console.log('sortedData: ', sortedData);
 
   const filteredData = Array.isArray(sortedData)
     ? sortedData?.filter((task) => {
@@ -425,6 +427,7 @@ const Project = () => {
   // Get data for the current page
   const currentData =
     filteredData?.slice((page - 1) * rowsPerPage, page * rowsPerPage) || [];
+  console.log('currentData: ', currentData);
 
   return (
     <Box
@@ -524,25 +527,25 @@ const Project = () => {
             transition={{ duration: 0.5, ease: "easeInOut" }}
           >
             <Suspense fallback={<></>}>
-              {activeButton === "table" && (
-                <TaskTable
-                  data={filteredData ?? null}
-                  currentData={currentData}
-                  page={page}
-                  order={order}
-                  orderBy={orderBy}
-                  rowsPerPage={rowsPerPage}
-                  totalPages={totalPages}
-                  isLoading={isTaskLoading}
-                  masterData={masterData}
-                  handleLockProject={handleLockProject}
-                  handleDeleteModule={handleDeleteModule}
-                  handleRequestSort={handleRequestSort}
-                  handleChangePage={handleChangePage}
-                />
-              )}
+              {/* {activeButton === "table" && ( */}
+              <TaskTable
+                data={filteredData ?? null}
+                currentData={currentData}
+                page={page}
+                order={order}
+                orderBy={orderBy}
+                rowsPerPage={rowsPerPage}
+                totalPages={totalPages}
+                isLoading={isTaskLoading}
+                masterData={masterData}
+                handleLockProject={handleLockProject}
+                handleDeleteModule={handleDeleteModule}
+                handleRequestSort={handleRequestSort}
+                handleChangePage={handleChangePage}
+              />
+              {/* )} */}
 
-              {activeButton === "kanban" && (
+              {/* {activeButton === "kanban" && (
                 <KanbanView
                   taskdata={filteredData ?? null}
                   isLoading={isTaskLoading}
@@ -551,7 +554,7 @@ const Project = () => {
                   handleLockProject={handleLockProject}
                   handleDeleteModule={handleDeleteModule}
                 />
-              )}
+              )} */}
             </Suspense>
           </motion.div>
         )}
