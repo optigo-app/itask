@@ -21,6 +21,8 @@ import { commonTextFieldProps, mapTaskLabels } from "../../../Utils/globalfun";
 import { fetchModuleDataApi } from "../../../Api/TaskApi/ModuleDataApi";
 import CustomDateTimePicker from "../../../Utils/DateComponent/CustomDateTimePicker";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from 'dayjs/plugin/timezone';
 import FileUploader from "../../ShortcutsComponent/FileUploader";
 
 const CalendarForm = ({
@@ -31,10 +33,11 @@ const CalendarForm = ({
     isLoading,
     handleMeetingDt
 }) => {
+    dayjs.extend(utc);
+    dayjs.extend(timezone);
     const location = useLocation();
-    const [view, setView] = useState("meeting");
+    const view = "meeting";
     const [CalformDataValue, setCalFormDataValue] = useRecoilState(CalformData);
-    console.log('CalformDataValue: ', CalformDataValue);
     const isDelete = Boolean(CalformDataValue?.id || CalformDataValue?.taskid);
     const [prModuleMaster, setPrModuleMaster] = useState([]);
     const [assignees, setAssignees] = useState([]);
@@ -154,9 +157,16 @@ const CalendarForm = ({
             ...prev,
             prModule: newValue ?? ""
         }));
+        if (newValue) {
+            setErrors(prev => ({
+                ...prev,
+                prModule: ''
+            }));
+        }
     };
 
     const handleSubmit = () => {
+        debugger
         if (!validateForm()) return;
         if (view === "meeting") {
             if (formValues) {
@@ -311,18 +321,10 @@ const CalendarForm = ({
                                 <CustomDateTimePicker
                                     label="Start Date & Time"
                                     name="startDateTime"
-                                    value={formValues.start}
+                                    value={formValues.start ? dayjs(formValues.start).tz("Asia/Kolkata", true).local() : null}
                                     width='410px'
                                     styleprops={commonTextFieldProps}
-                                    onChange={(value) => {
-                                        if (value) {
-                                            const formattedDate = dayjs(value).utc().format("YYYY-MM-DDTHH:mm:ss.000[Z]");
-                                            setFormValues((prev) => ({
-                                                ...prev,
-                                                start: formattedDate,
-                                            }))
-                                        }
-                                    }}
+                                    onChange={(newValue) => handleChange({ target: { name: 'start', value: newValue } })}
                                     error={Boolean(errors.start)}
                                     helperText={errors.start}
                                 />
@@ -331,18 +333,12 @@ const CalendarForm = ({
                                 <CustomDateTimePicker
                                     label="End Date & Time"
                                     name="endDateTime"
-                                    value={formValues.end}
+                                    value={formValues.end ? dayjs(formValues.end).tz("Asia/Kolkata", true).local() : null}
                                     width='410px'
                                     styleprops={commonTextFieldProps}
-                                    onChange={(value) => {
-                                        if (value) {
-                                            const formattedDate = dayjs(value).utc().format("YYYY-MM-DDTHH:mm:ss.000[Z]");
-                                            setFormValues((prev) => ({
-                                                ...prev,
-                                                end: formattedDate,
-                                            }))
-                                        }
-                                    }}
+                                    onChange={(newValue) => handleChange({ target: { name: 'end', value: newValue } })}
+                                    error={Boolean(errors.end)}
+                                    helperText={errors.end}
                                 />
                             </Grid>
 

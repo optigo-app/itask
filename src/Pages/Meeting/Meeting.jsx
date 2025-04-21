@@ -64,10 +64,8 @@ const MeetingPage = () => {
     meetingTab: meetingtabData[0].label,
     filterTab: tabData[0].label,
   });
-  console.log('selectedTab: ', selectedTab);
   const [meetingDetailModalOpen, setMeetingDetailModalOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  console.log("profileOpen: ", profileOpen);
 
   const handleOpenStatusModal = (meeting) => {
     setOpenStatusModal(true);
@@ -79,18 +77,15 @@ const MeetingPage = () => {
   };
 
   const handleTabChange = (event, newValue) => {
-    console.log('newValue: ', newValue);
     if (newValue !== null) {
-      const isFilterTab = tabData.some((tab) => tab.label === newValue);
-      console.log('isFilterTab: ', isFilterTab);
+      const isFilterTab = tabData?.some((tab) => tab.label === newValue);
 
       setSelectedTab({
-        meetingTab: isFilterTab ? meetingtabData[0].label : newValue,
-        filterTab: isFilterTab ? newValue : tabData[0].label,
+        meetingTab: isFilterTab ? (selectedTab?.meetingTab ?? meetingtabData[0]?.label) : newValue,
+        filterTab: isFilterTab ? newValue : tabData[0]?.label,
       });
     }
   };
-
 
   const handleReject = (meeting) => {
     setOpenRejectModal(true);
@@ -393,12 +388,16 @@ const MeetingPage = () => {
   //   }
   // };
 
-  useEffect(() => {
+  const handleMeetingApiCall = () => {
     if (selectedTab?.meetingTab == "My Schedule") {
       handleMeetingbyLogin();
     } else {
       handleMeetingList();
     }
+  }
+
+  useEffect(() => {
+    handleMeetingApiCall();
   }, [selectedTab]);
 
   // Filter and Sort Meetings
@@ -413,6 +412,7 @@ const MeetingPage = () => {
           (guest) => `${guest.firstname} ${guest.lastname}`
         ),
       ];
+
       const matchesSearch = searchFields.some((field) =>
         field?.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -425,7 +425,7 @@ const MeetingPage = () => {
         new Date(meeting.StartDate).getDate()
       );
 
-      switch (selectedTab) {
+      switch (selectedTab?.filterTab) {
         case "Upcoming":
           return matchesSearch && meetingDate >= today;
         case "Overdue":
@@ -452,7 +452,7 @@ const MeetingPage = () => {
     setCalFormData(formValues);
     const apiRes = await AddMeetingApi(formValues);
     if (apiRes?.rd[0]?.stat == 1) {
-      handleMeetingList();
+      handleMeetingApiCall();
     } else {
       toast.error(apiRes?.rd[0]?.stat_msg);
     }
@@ -461,7 +461,7 @@ const MeetingPage = () => {
   const handleMeetingStatusSave = async (formValues) => {
     const apiRes = await MeetingApprovalAPI(formValues);
     if (apiRes?.rd[0]?.stat == 1) {
-      handleMeetingList();
+      handleMeetingApiCall();
     }
   };
 
@@ -484,7 +484,7 @@ const MeetingPage = () => {
   const handleConfirmRemoveAMeeting = async () => {
     const apiRes = await deleteMeetingApi(formData);
     if (apiRes?.rd[0]?.stat == 1) {
-      handleMeetingList();
+      handleMeetingApiCall();
     }
     handleCloseCnfDialog();
   };
@@ -600,7 +600,6 @@ const MeetingPage = () => {
         <MeetingHeader
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
-          handleMeetingList={handleMeetingList}
           handleAddMeetings={handleAddMeetings}
           viewType={viewType}
           handleViewChange={handleViewChange}

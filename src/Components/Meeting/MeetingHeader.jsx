@@ -17,7 +17,6 @@ const MeetingHeader = ({
   tabData,
   meetingtabData,
   selectedTab,
-  handleMeetingList,
   handleAddMeetings,
   viewType,
   handleViewChange,
@@ -43,19 +42,6 @@ const MeetingHeader = ({
       </ToggleButtonGroup>
     );
   };
-
-  const meetingTab = [
-    {
-      id: 1,
-      label: "Meeting List",
-      onClick: handleMeetingList,
-    },
-    {
-      id: 2,
-      label: "Add Meeting",
-      onClick: handleAddMeetings,
-    },
-  ];
 
   return (
     <Box

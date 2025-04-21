@@ -70,6 +70,19 @@
         }
     }
 
+    // styles.scss
+
+    @media (max-width: 1320px) {
+        .sticky-last-col {
+            position: sticky;
+            right: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding: 2px 0px 2px 6px !important;
+        }
+    }
+
+
     .MuiTableSortLabel-root {
         color: $text2ndColor;
 

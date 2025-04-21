@@ -1,6 +1,6 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { Box, useMediaQuery } from '@mui/material';
+import { Box, useMediaQuery, useTheme } from '@mui/material';
 import { RecoilRoot } from 'recoil';
 import { ToastContainer } from 'react-toastify';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -35,14 +35,23 @@ const UnassignedTaskList = lazy(() => import('./Pages/Task/UnAssignedTask/Unassi
 const ProjectDashboard = lazy(() => import('./Pages/Project/ProjectDashboard'));
 
 const Layout = ({ children }) => {
-    const isMobile = useMediaQuery('(max-width:768px)');
+    const isMobile = useMediaQuery('(max-width:712px)');
+    console.log('isMobile: ', isMobile);
     const location = useLocation();
     const hideLayout = location?.pathname?.includes('/login');
 
     return (
         <Box sx={{ display: isMobile ? 'block' : 'flex', overflow: "hidden" }}>
             {!hideLayout && <Suspense fallback={<LoadingBackdrop />}><Sidebar /></Suspense>}
-            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: '10px 20px', position: 'relative', width: isMobile ? '90%' : '80%' }}>
+            <Box sx={{
+                flexGrow: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                padding: isMobile ? '20px 5px' : '10px 20px',
+                position: 'relative',
+                width: isMobile ? '97%' : '80%',
+                overflow: "auto"
+            }}>
                 {!hideLayout && <Suspense fallback={<LoadingBackdrop />}><Header /></Suspense>}
                 <Suspense fallback={<LoadingBackdrop />}><MetaDataSet /></Suspense>
                 {children}

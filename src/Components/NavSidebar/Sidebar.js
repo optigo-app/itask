@@ -37,7 +37,8 @@ const Sidebar = () => {
     const theme = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
-    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+    const isMobile = useMediaQuery('(max-width:712px)');
+    const isMiniDrawer = useMediaQuery('(max-width:1000px)');
     const [isDrawerOpen, setDrawerOpen] = useState(true);
     const [isFullSidebar, setFullSidebar] = useState(true);
     const [activeItem, setActiveItem] = useState('Home');
@@ -84,6 +85,12 @@ const Sidebar = () => {
         setReportsAnchorEl(null);
     };
 
+    useEffect(() => {
+        if (isMiniDrawer) {
+            setFullSidebar(false);
+            setDrawerOpen(false);
+        }
+    }, [isMiniDrawer])
 
     useEffect(() => {
         const path = location?.pathname?.split('/')[1];
@@ -101,21 +108,21 @@ const Sidebar = () => {
     ];
 
     const reportSubItems = [
-        // { label: 'Admin Report', path: '/reports/admin' },
-        // { label: 'Team Lead Report', path: '/reports/team-lead' },
-        // { label: 'Employee Report', path: '/reports/employee' },
-        // { label: 'Overall Project Status', path: '/reports/overall-project-status' },
-        // { label: 'Team Productivity', path: '/reports/team-productivity' },
-        // { label: 'Task Time Utilization', path: '/reports/task-time-utilization' },
-        // { label: 'Issue & Blocker', path: '/reports/issue-blocker' },
-        // { label: 'Project Status Summary', path: '/reports/project-status-summary' },
+        { label: 'Admin Report', path: '/reports/admin' },
+        { label: 'Team Lead Report', path: '/reports/team-lead' },
+        { label: 'Employee Report', path: '/reports/employee' },
+        { label: 'Overall Project Status', path: '/reports/overall-project-status' },
+        { label: 'Team Productivity', path: '/reports/team-productivity' },
+        { label: 'Task Time Utilization', path: '/reports/task-time-utilization' },
+        { label: 'Issue & Blocker', path: '/reports/issue-blocker' },
+        { label: 'Project Status Summary', path: '/reports/project-status-summary' },
     ];
 
     return (
         <motion.div
             layout
-            initial={{ width: 260 }}
-            animate={{ width: drawerWidth }}
+            initial={{ width: isMobile ? 0 : 260 }}
+            animate={{ width: isMobile ? 0 : drawerWidth }}
             transition={{ type: "spring", stiffness: 200, damping: 25 }}
             className="itask_sidebarDrawer"
         >

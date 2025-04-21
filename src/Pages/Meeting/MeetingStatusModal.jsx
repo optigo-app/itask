@@ -84,7 +84,6 @@ const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
         }
     };
 
-
     useEffect(() => {
         if (open == true) {
             handleMeetingStatus();
@@ -143,7 +142,7 @@ const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
                 {!isLoading ? (
                     <>
                         {filteredRows?.length > 0 ? (
-                            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                            <Box sx={{ height: "50vh", display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                 <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 'rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;', borderRadius: '8px' }}>
                                     <Table stickyHeader>
                                         <TableHead>
