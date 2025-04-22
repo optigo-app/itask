@@ -1,7 +1,8 @@
 import React, { Suspense, useEffect, useState } from "react";
+import "./Project.scss";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useMediaQuery } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   Advfilters,
@@ -18,6 +19,7 @@ import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
 import { deleteTaskDataApi } from "../../Api/TaskApi/DeleteTaskApi";
 import { toast } from "react-toastify";
+import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 
 const TaskTable = React.lazy(() =>
   import("../../Components/Project/ListView/TableList")
@@ -27,6 +29,7 @@ const KanbanView = React.lazy(() =>
 );
 
 const Project = () => {
+  const isLaptop = useMediaQuery("(max-width:1150px)");
   const [order, setOrder] = useState("desc");
   const [orderBy, setOrderBy] = useState("entrydate");
   const [page, setPage] = useState(1);
@@ -430,15 +433,7 @@ const Project = () => {
   console.log('currentData: ', currentData);
 
   return (
-    <Box
-      sx={{
-        boxShadow:
-          "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
-        padding: "30px 20px",
-        borderRadius: "5px",
-        overflow: "hidden !important",
-      }}
-    >
+    <Box className="project-moduleMain">
       {/* Header Buttons */}
       <HeaderButtons
         activeButton={activeButton}
@@ -453,54 +448,57 @@ const Project = () => {
         taskAssigneeData={assigneeData}
       />
 
-      <AnimatePresence mode="wait">
-        {showAdvancedFil && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-          >
-            <div
-              style={{
-                margin: "20px 0",
-                border: "1px dashed #7d7f85",
-                opacity: 0.3,
-              }}
-            />
+      {!isLaptop &&
+        <AnimatePresence mode="wait">
+          {showAdvancedFil && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+            >
+              <div
+                style={{
+                  margin: "20px 0",
+                  border: "1px dashed #7d7f85",
+                  opacity: 0.3,
+                }}
+              />
 
-            {/* Filters Component */}
-            <Filters
-              {...filters}
-              onFilterChange={handleFilterChange}
-              isLoading={isLoading}
-              masterData={masterData}
-              priorityData={priorityData}
-              statusData={statusData}
-              assigneeData={assigneeData}
-              taskDepartment={taskDepartment}
-              taskProject={taskProject}
-              taskCategory={taskCategory}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {/* Filters Component */}
+              <Filters
+                {...filters}
+                onFilterChange={handleFilterChange}
+                isLoading={isLoading}
+                masterData={masterData}
+                priorityData={priorityData}
+                statusData={statusData}
+                assigneeData={assigneeData}
+                taskDepartment={taskDepartment}
+                taskProject={taskProject}
+                taskCategory={taskCategory}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      }
 
-      {/* <FiltersDrawer {...filters}
-        filters={filters}
-        setFilters={setFilters}
-        onFilterChange={handleFilterChange}
-        onClearAll={handleClearAllFilters}
-        isLoading={isLoading}
-        masterData={masterData}
-        priorityData={priorityData}
-        statusData={statusData}
-        assigneeData={assigneeData}
-        taskDepartment={taskDepartment}
-        taskProject={taskProject}
-        taskCategory={taskCategory}
-      /> */}
-
+      {isLaptop &&
+        <FiltersDrawer {...filters}
+          filters={filters}
+          setFilters={setFilters}
+          onFilterChange={handleFilterChange}
+          onClearAll={handleClearAllFilters}
+          isLoading={isLoading}
+          masterData={masterData}
+          priorityData={priorityData}
+          statusData={statusData}
+          assigneeData={assigneeData}
+          taskDepartment={taskDepartment}
+          taskProject={taskProject}
+          taskCategory={taskCategory}
+        />
+      }
       {/* Divider */}
       <div
         style={{

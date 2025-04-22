@@ -59,7 +59,6 @@ const MeetingHeader = ({
         alignItems: "center",
         gap: "16px",
         flexWrap: "wrap",
-        "@media (max-width: 600px)": { width: "100%", gap: "8px" },
       }}>
         <DasboardTab
           tabData={tabData}
@@ -74,7 +73,6 @@ const MeetingHeader = ({
           className="textfieldsClass"
           sx={{
             minWidth: 250,
-            "@media (max-width: 600px)": { minWidth: "100%" },
           }}
           InputProps={{
             startAdornment: (

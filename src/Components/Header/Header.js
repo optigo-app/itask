@@ -225,10 +225,10 @@ const Header = ({ avatarSrc = "" }) => {
                                 },
                             }}
                         >
-                            <Bell size={24} style={{ color: "#7d7f85" }} />
+                            <Bell className="iconbtn" size={24} style={{ color: "#7d7f85" }} />
                         </Badge>
                     ) : (
-                        <Bell size={24} style={{ color: "#7d7f85" }} />
+                        <Bell className="iconbtn" size={24} style={{ color: "#7d7f85" }} />
                     )}
                 </Box>
                 <Avatar
@@ -240,6 +240,7 @@ const Header = ({ avatarSrc = "" }) => {
                         cursor: "pointer",
                     }}
                     onClick={handleAvatarClick}
+                    className="profile-avatar"
                 >
                     {!avatarSrc && userName.charAt(0).toUpperCase()}
                 </Avatar>

@@ -1,4 +1,5 @@
 import React, { Suspense, useEffect, useState } from "react";
+import "./Task.scss";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, Typography, useMediaQuery } from "@mui/material";
@@ -19,7 +20,7 @@ const KanbanView = React.lazy(() => import("../../Components/Task/KanbanView/Kan
 const CardView = React.lazy(() => import("../../Components/Task/CardView/CardView"));
 
 const Task = () => {
-  const isLaptop = useMediaQuery('(max-width:1350px)');
+  const isLaptop = useMediaQuery("(max-width:1150px)");
   const location = useLocation();
   const [order, setOrder] = useState("desc");
   const [orderBy, setOrderBy] = useState("entrydate");
@@ -516,14 +517,7 @@ const Task = () => {
 
 
   return (
-    <Box
-      sx={{
-        boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
-        padding: "20px",
-        borderRadius: "8px",
-        overflow: "hidden !important",
-      }}
-    >
+    <Box className="task-container">
       {/* Header Buttons */}
       <HeaderButtons
         activeButton={activeButton}

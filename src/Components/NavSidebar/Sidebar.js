@@ -147,6 +147,7 @@ const Sidebar = () => {
                         boxShadow: "0 .125rem .5rem 0 rgba(47, 43, 61, .12)",
                     },
                 }}
+                className="itask_Menudrawer"
             >
                 <List>
                     <ListItem className="itask_drawerHeader">

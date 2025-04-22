@@ -41,7 +41,7 @@ const Layout = ({ children }) => {
     const hideLayout = location?.pathname?.includes('/login');
 
     return (
-        <Box sx={{ display: isMobile ? 'block' : 'flex', overflow: "hidden" }}>
+        <Box sx={{ display: 'flex', overflow: "auto" }}>
             {!hideLayout && <Suspense fallback={<LoadingBackdrop />}><Sidebar /></Suspense>}
             <Box sx={{
                 flexGrow: 1,
@@ -58,14 +58,14 @@ const Layout = ({ children }) => {
                 <Box
                     sx={{
                         position: "fixed",
-                        top: "30px",
-                        right: "40px",
+                        top: "25px",
+                        right: "35px",
                         transform: "translateX(50%) rotate(45deg)",
                         background: "linear-gradient(to right, #ff7e5f, #feb47b)",
                         color: "white",
                         padding: "6px 40px",
                         fontWeight: "bold",
-                        fontSize: "14px",
+                        fontSize: "10px",
                         zIndex: 10,
                         whiteSpace: "nowrap",
                         boxShadow: "2px 2px 10px rgba(0,0,0,0.2)",
