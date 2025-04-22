@@ -199,7 +199,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                         },
                     }}
                 >
-                    <Icon size={20} color={isLocked ? "#fff" : "#7d7f85"} />
+                    <Icon size={20} color={isLocked ? "#fff" : "#7d7f85"}  className="iconbtn"/>
                 </IconButton>
             </Tooltip>
         );
@@ -234,6 +234,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                             textOverflow: "ellipsis",
                                             whiteSpace: "nowrap",
                                         }}
+                                        className={column.id === "actions" ? "sticky-last-col" : ""}
                                     >
                                         <Box sx={{ display: "flex", alignItems: "center" }}>
                                             <TableSortLabel
@@ -264,7 +265,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                             <TableRow>
                                                 <TableCell>
                                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                                        <div>
+                                                        <div className="projectModuleName">
                                                             <a
                                                                 href="#"
                                                                 onClick={(e) => {
@@ -295,9 +296,10 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                                         backgroundColor: getStatusColor(task?.progress_per),
                                                                     },
                                                                 }}
+                                                                className="progressBar"
                                                             />
                                                         </Box>
-                                                        <Typography variant="body2" minWidth={100}>
+                                                        <Typography  className="progressBarText" variant="body2" minWidth={100}>
                                                             {`${task?.progress_per}%`}
                                                         </Typography>
                                                     </Box>
@@ -325,12 +327,14 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                         display: 'flex',
                                                         justifyContent: 'center',
                                                         alignItems: 'center',
-                                                    }}>
+                                                    }}
+                                                    className="priorityLabel"
+                                                    >
                                                         {task?.priority}
                                                     </div>
                                                 </TableCell>
                                                 {/* <TableCell>{task?.remark}</TableCell> */}
-                                                <TableCell>
+                                                <TableCell className="sticky-last-col">
                                                     <Box sx={{
                                                         display: 'flex',
                                                         alignItems: 'center',
@@ -352,6 +356,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                             <Eye
                                                                 size={20}
                                                                 color="#808080"
+                                                                className="iconbtn"
                                                             />
                                                         </IconButton>
                                                         <IconButton
@@ -367,6 +372,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                             <Pencil
                                                                 size={20}
                                                                 color={task?.isFreez == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                                                                 className="iconbtn"
                                                             />
                                                         </IconButton>
                                                         <IconButton
@@ -382,6 +388,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                             <Trash
                                                                 size={20}
                                                                 color={task?.isFreez == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                                                                 className="iconbtn"
                                                             />
                                                         </IconButton>
                                                     </Box>

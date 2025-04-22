@@ -7,12 +7,21 @@
     height: 100vh;
 }
 
-.itask_drawerButton {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 1300;
-}
+    .itask_Menudrawer {
+        z-index: 1100 !important;
+
+        .MuiPaper-root {
+            z-index: 1100 !important;
+        }
+    }
+
+    .itask_drawerButton {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 1200 !important;
+    }
+
 
 .itask_drawerButtonOpen {
     left: calc(280px - 50px);
@@ -30,7 +39,7 @@
     color: #fff !important;
 }
 
-.itask_drawerItemActive1{
+.itask_drawerItemActive1 {
     background: $divider-color;
 }
 
@@ -74,24 +83,23 @@
     display: flex;
     align-items: center;
     cursor: pointer;
-    line-height: .8;
-
     .itask_logo {
         height: 40px;
         object-fit: contain;
         mix-blend-mode: darken;
+        line-height: .8px;
     }
 
     .itask_logoTxt {
         margin-top: 0px;
         margin-bottom: 0px;
-        line-height: 0 !important;
 
         span {
-            font-size: 28px;
+            font-size: 30px;
             font-weight: 600;
             font-family: $font-family !important;
             color: $titleColor;
+            line-height: .8px;
         }
     }
 }
@@ -111,7 +119,7 @@
     color: #fff !important;
 }
 
-.iconActive1{
+.iconActive1 {
     color: $secondaryColor !important;
 }
 
@@ -150,6 +158,7 @@
     .itask_sidebarDrawer {
         height: 100% !important;
     }
+
     .itask_drawerButton {
         justify-content: start !important;
         align-items: start !important;

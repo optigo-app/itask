@@ -281,7 +281,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                     },
                 }}
             >
-                <Timer size={20} />
+                <Timer size={20}  className="iconbtn"/>
             </IconButton>
 
             <IconButton
@@ -297,6 +297,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 <Pencil
                     size={20}
                     color={task?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                    className="iconbtn"
                 />
             </IconButton>
 
@@ -307,6 +308,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 <Eye
                     size={20}
                     color="#808080"
+                    className="iconbtn"
                 />
             </IconButton>
         </Box>
@@ -329,7 +331,9 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 display: 'flex',
                 justifyContent: 'start',
                 alignItems: 'center',
-            }}>
+            }}
+                className="priority-label"
+            >
                 {priority ?? '-'}
             </div>
         );

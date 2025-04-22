@@ -141,5 +141,45 @@
             color: $button-color !important;
         }
     }
+}
+
+@media(max-width: 1550px) {
+    .TaskTVMain {
+        .MuiTableCell-root {
+            font-size: 12px !important;
+
+            .priority-label,
+            .status-badge {
+                font-size: 12px !important;
+            }
+        }
+
+        .MuiTableHead-root {
+            .MuiTableCell-root {
+                font-size: 12px !important;
+            }
+        }
+
+        .MuiTableSortLabel-root {
+            font-size: 12px !important;
+        }
+
+        .TablePaginationBox {
+
+            .paginationText,
+            button {
+                font-size: 12px !important;
+            }
+        }
+
+        .iconbtn {
+            width: 16px !important;
+            height: 16px !important;
+        }
+        .estimate-Box{
+            width: 22px;
+            height: 22px;
+        }
+    }
 
 }

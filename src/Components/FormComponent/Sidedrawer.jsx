@@ -107,7 +107,7 @@ const SidebarDrawer = ({
     useEffect(() => {
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
-        if (open && (rootSubrootflagval?.Task === "AddTask"  || rootSubrootflagval?.Task === "root")) {
+        if (open && (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "root")) {
             setFormValues({
                 taskName: formDataValue?.taskname ?? "",
                 multiTaskName: formDataValue?.actual ?? [""],
@@ -542,7 +542,7 @@ const SidebarDrawer = ({
                         {taskType === 'single' &&
                             <>
                                 <Grid container spacing={1} className="form-row">
-                                    <Grid item xs={6}>
+                                    <Grid item xs={12} sm={12} md={6}>
                                         <Box className="form-group">
                                             <Typography
                                                 variant="subtitle1"
@@ -568,7 +568,7 @@ const SidebarDrawer = ({
                                             />
                                         </Box>
                                     </Grid>
-                                    <Grid item xs={6}>
+                                    <Grid item xs={12} sm={12} md={6}>
                                         <CustomAutocomplete
                                             label="Category"
                                             name="category"
@@ -580,7 +580,7 @@ const SidebarDrawer = ({
                                         />
                                     </Grid>
                                     {/* department */}
-                                    <Grid item xs={6}>
+                                    <Grid item xs={12} sm={12} md={6}>
                                         <CustomAutocomplete
                                             label="Department"
                                             name="department"
@@ -592,7 +592,7 @@ const SidebarDrawer = ({
                                         />
                                     </Grid>
                                     {/* Assignee master */}
-                                    <Grid item xs={6}>
+                                    <Grid item xs={12} sm={12} md={6}>
                                         <MultiSelectChipWithLimit
                                             value={formValues?.guests}
                                             options={taskAssigneeData}
@@ -602,7 +602,7 @@ const SidebarDrawer = ({
                                             onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
                                         />
                                     </Grid>
-                                    <Grid item xs={6}>
+                                    <Grid item xs={12} sm={12} md={6}>
                                         <CustomAutocomplete
                                             label="Status"
                                             name="status"
@@ -613,7 +613,7 @@ const SidebarDrawer = ({
                                             refProp={filterRefs.status}
                                         />
                                     </Grid>
-                                    <Grid item xs={6}>
+                                    <Grid item xs={12} sm={12} md={6}>
                                         <CustomAutocomplete
                                             label="Priority"
                                             name="priority"
@@ -624,7 +624,7 @@ const SidebarDrawer = ({
                                             refProp={filterRefs.priority}
                                         />
                                     </Grid>
-                                    <Grid item xs={6}>
+                                    <Grid item xs={12} sm={12} md={6}>
                                         <Box className="form-group">
                                             <Typography className="form-label" variant="subtitle1">
                                                 Start Date
@@ -634,7 +634,7 @@ const SidebarDrawer = ({
                                                 value={formValues.startDate ? dayjs(formValues.startDate).tz("Asia/Kolkata", true).local() : null}
                                                 className="textfieldsClass"
                                                 onChange={(date) => handleDateChange(date, 'startDate')}
-                                                sx={{ minWidth: 325 }}
+                                                sx={{ width: "100%" }}
                                                 format="DD/MM/YYYY"
                                                 textField={(params) => (
                                                     <TextField
@@ -649,7 +649,7 @@ const SidebarDrawer = ({
                                             />
                                         </Box>
                                     </Grid>
-                                    <Grid item xs={6}>
+                                    <Grid item xs={12} sm={12} md={6}>
                                         <Box className="form-group">
                                             <Typography className="form-label" variant="subtitle1">
                                                 Deadline Date
@@ -659,7 +659,7 @@ const SidebarDrawer = ({
                                                 value={formValues.dueDate ? dayjs(formValues.dueDate).tz("Asia/Kolkata", true).local() : null}
                                                 className="textfieldsClass"
                                                 onChange={(date) => handleDateChange(date, 'dueDate')}
-                                                sx={{ minWidth: 325 }}
+                                                sx={{ width: "100%" }}
                                                 format="DD/MM/YYYY"
                                                 textField={(params) => (
                                                     <TextField
@@ -676,7 +676,7 @@ const SidebarDrawer = ({
                                     </Grid>
                                 </Grid>
                                 <Grid container spacing={1} className="form-row" sx={{ mt: 0.5 }}>
-                                    <Grid item xs={4}>
+                                    <Grid item xs={12} sm={12} md={6}>
                                         <Box className="form-group">
                                             <Typography className="form-label" variant="subtitle1">
                                                 Estimate
@@ -687,7 +687,7 @@ const SidebarDrawer = ({
                                             />
                                         </Box>
                                     </Grid>
-                                    <Grid item xs={4}>
+                                    <Grid item xs={12} sm={12} md={6}>
                                         <Box className="form-group">
                                             <Typography className="form-label" variant="subtitle1">
                                                 Actual Estimate
@@ -698,7 +698,7 @@ const SidebarDrawer = ({
                                             />
                                         </Box>
                                     </Grid>
-                                    <Grid item xs={4}>
+                                    <Grid item xs={12} sm={12} md={6}>
                                         <Box className="form-group">
                                             <Typography className="form-label" variant="subtitle1">
                                                 Final Estimate
@@ -798,7 +798,7 @@ const SidebarDrawer = ({
                         />
                         <>
                             <Grid container spacing={1} className="form-row">
-                                <Grid item xs={12}>
+                                <Grid item xs={12} sm={12} md={6}>
                                     <CustomAutocomplete
                                         label="Project"
                                         name="project"
@@ -809,7 +809,7 @@ const SidebarDrawer = ({
                                         refProp={filterRefs.project}
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid item xs={12} sm={12} md={6}>
                                     <Box className="form-group">
                                         <Typography
                                             variant="subtitle1"
@@ -835,7 +835,7 @@ const SidebarDrawer = ({
                                         />
                                     </Box>
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid item xs={12} sm={12} md={6}>
                                     <CustomAutocomplete
                                         label="Category"
                                         name="category"
@@ -846,7 +846,7 @@ const SidebarDrawer = ({
                                         refProp={filterRefs.category}
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid item xs={12} sm={12} md={6}>
                                     <AssigneeAutocomplete
                                         label="project lead"
                                         name="projectLead"
@@ -857,7 +857,7 @@ const SidebarDrawer = ({
                                         inputRef={filterRefs.assignee}
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid item xs={12} sm={12} md={6}>
                                     <CustomAutocomplete
                                         label="Status"
                                         name="status"
@@ -868,7 +868,7 @@ const SidebarDrawer = ({
                                         refProp={filterRefs.status}
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid item xs={12} sm={12} md={6}>
                                     <CustomAutocomplete
                                         label="Priority"
                                         name="priority"
@@ -879,7 +879,7 @@ const SidebarDrawer = ({
                                         refProp={filterRefs.priority}
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid item xs={12} sm={12} md={6}>
                                     <Box className="form-group">
                                         <Typography className="form-label" variant="subtitle1">
                                             Start Date
@@ -889,7 +889,7 @@ const SidebarDrawer = ({
                                             value={formValues.startDate ? dayjs(formValues.startDate).tz("Asia/Kolkata", true).local() : null}
                                             className="textfieldsClass"
                                             onChange={(date) => handleDateChange(date, 'startDate')}
-                                            sx={{ minWidth: 400 }}
+                                            sx={{ width: "100%" }}
                                             format="DD/MM/YYYY"
                                             textField={(params) => (
                                                 <TextField
@@ -904,7 +904,7 @@ const SidebarDrawer = ({
                                         />
                                     </Box>
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid item xs={12} sm={12} md={6}>
                                     <Box className="form-group">
                                         <Typography className="form-label" variant="subtitle1">
                                             Due Date
@@ -914,7 +914,7 @@ const SidebarDrawer = ({
                                             value={formValues.dueDate ? dayjs(formValues.dueDate).tz("Asia/Kolkata", true).local() : null}
                                             className="textfieldsClass"
                                             onChange={(date) => handleDateChange(date, 'dueDate')}
-                                            sx={{ minWidth: 400 }}
+                                            sx={{ width: "100%" }}
                                             format="DD/MM/YYYY"
                                             textField={(params) => (
                                                 <TextField

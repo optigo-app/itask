@@ -27,6 +27,16 @@
         }
     }
 
+    @media (max-width: 1320px) {
+        .sticky-last-col {
+            position: sticky;
+            right: 0;
+            background-color: #fff;
+            z-index: 10;
+            padding: 2px 0px 2px 6px !important;
+        }
+    }
+
     .MuiTableCell-root {
         font-family: $font-family !important;
         color: $text2ndColor;
@@ -159,6 +169,56 @@
         &:hover {
             background: $button-Bgcolor !important;
             color: $button-color !important;
+        }
+    }
+
+}
+
+
+
+@media(max-width: 1550px) {
+    .ProjectTVMain {
+        .MuiTableCell-root {
+            font-size: 12px !important;
+
+            .priorityLabel,
+            .status-badge,
+            .progressBarText {
+                font-size: 12px !important;
+            }
+
+            .projectModuleName a span {
+                font-size: 12px !important;
+            }
+        }
+
+        .MuiTableHead-root {
+            .MuiTableCell-root {
+                font-size: 12px !important;
+            }
+        }
+
+        .MuiTableSortLabel-root {
+            font-size: 12px !important;
+        }
+
+        .TablePaginationBox  {
+            .pagination {
+                button {
+                    font-size: 12px !important;
+                    min-height: 25px !important;
+                }
+            }
+        }
+
+        .iconbtn {
+            width: 16px !important;
+            height: 16px !important;
+        }
+
+        .estimate-Box {
+            width: 22px;
+            height: 22px;
         }
     }
 

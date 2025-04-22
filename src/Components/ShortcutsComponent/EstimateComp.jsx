@@ -22,7 +22,7 @@ const StatusCircles = ({ task }) => {
             {taskEstimate?.map((estimate, index) => {
                 const colors = ["#D3D3D3", "#808080bf", "#404040b8"];
                 return (
-                    <Box key={index} sx={{ ...circleStyle, backgroundColor: colors[index] }}>
+                    <Box className="estimate-Box" key={index} sx={{ ...circleStyle, backgroundColor: colors[index] }}>
                         <Typography variant="caption" sx={{ fontSize: "11px", color: index == 0 ? "#333 !important" : "#fff !important" }}>
                             {estimate}
                         </Typography>

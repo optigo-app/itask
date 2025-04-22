@@ -35,6 +35,7 @@ const StatusBadge = ({ task, statusColors, onStatusChange }) => {
                     alignItems: "center",
                     border: anchorEl ? "1px solid #444050" : "none",
                 }}
+                className="status-badge"
             >
                 {task?.status != "" ? task?.status : '-'}
             </Button>

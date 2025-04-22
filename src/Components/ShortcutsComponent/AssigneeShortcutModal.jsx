@@ -13,17 +13,23 @@ import CloseIcon from "@mui/icons-material/Close";
 import { commonSelectProps, commonTextFieldProps } from "../../Utils/globalfun";
 import MultiSelectChipWithLimit from "./AssigneeAutocomplete";
 
-const modalStyle = {
+const modalStyle = (theme) => ({
     position: "absolute",
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
     width: 460,
+    maxWidth: "95vw",
     bgcolor: "background.paper",
     boxShadow: 24,
     p: 3,
     borderRadius: 2,
-};
+    [theme.breakpoints.down('sm')]: {
+        width: '95vw',
+        p: 2,
+    },
+});
+
 
 const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit }) => {
     const [assigneeMaster, setAssigneeMaster] = useState([]);
@@ -69,9 +75,10 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
 
     return (
         <Modal open={open} onClose={onClose}>
-            <Box sx={modalStyle}>
+            <Box sx={theme => modalStyle(theme)}>
                 <Grid container alignItems="center" justifyContent="space-between">
-                    <Typography id="modal-title" variant="h6" fontWeight="bold">
+                    <Typography id="modal-title" variant="h6" fontWeight="bold"
+                    >
                         Assign Task
                     </Typography>
                     <IconButton onClick={onClose}>
