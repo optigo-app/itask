@@ -2,8 +2,8 @@
 
 .MainDrawer {
     .drawer-container {
-        width: 100%;
         height: 100vh;
+        width: 660px;
         max-width: 660px;
         padding: 5px 24px 24px 24px;
         box-sizing: border-box;
@@ -15,7 +15,7 @@
         z-index: 1500;
     }
     .pr_drawer-container {
-        width: 400px;
+        width: 450px;
         height: 100vh;
         padding: 5px 24px 24px 24px;
         box-sizing: border-box;
@@ -52,6 +52,7 @@
             padding: 15px;
         }
     }
+
     @media(max-width: 350px) {
         .drawer-container {
             width: 320px;

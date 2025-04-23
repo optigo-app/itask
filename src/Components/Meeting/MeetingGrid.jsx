@@ -108,7 +108,7 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                         <TableCell>{renderSortCell("Start", "StartDate")}</TableCell>
                         <TableCell>Assignee</TableCell>
                         <TableCell>Status</TableCell>
-                        <TableCell sx={{ width: '100px' }}>Action</TableCell>
+                        <TableCell sx={{ width: '100px' }} className="sticky-last-col">Action</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody className="table-body">
@@ -121,7 +121,7 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                             <TableCell>
                                 {StatusCircles(row, { redCount: 5, yellowCount: 10, greenCount: 50 })}
                             </TableCell>
-                            <TableCell align="center" sx={{ width: '100px' }}>
+                            <TableCell align="center" sx={{ width: '100px' }} className="sticky-last-col">
                                 <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
                                     {row?.isAction && (
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -140,32 +140,6 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                                             variant="contained" size="small" color="primary" onClick={() => handleAttendMeeting(row)}>
                                             Attend
                                         </Button>
-                                        // <Tooltip
-                                        //     placement="top"
-                                        //     title={row?.ismeeting_attnd == 1 ? "Attended" : "Mark as Attended"}
-                                        //     arrow
-                                        //     classes={{ tooltip: 'custom-tooltip' }}>
-                                        //     <IconButton
-                                        //         onClick={() => handleAttendMeeting(row)}
-                                        //         size="small"
-                                        //         aria-label="meeting-attend"
-                                        //         aria-labelledby="meeting-attend"
-                                        //         sx={{
-                                        //             color: row?.ismeeting_attnd == 1 ? '#ffffff' : '#7d7f85',
-                                        //             backgroundColor: row?.ismeeting_attnd == 1 ? '#7367f0' : 'transparent',
-                                        //             '&:hover': {
-                                        //                 backgroundColor: row?.ismeeting_attnd == 1 ? '#7367f0' : 'rgba(0, 0, 0, 0.04)',
-                                        //             },
-                                        //         }}
-                                        //     >
-                                        //         <CircleCheck
-                                        //             sx={{
-                                        //                 fontSize: '20px',
-                                        //                 color: row?.ismeeting_attnd === 1 ? "#fff" : "#7d7f85"
-                                        //             }}
-                                        //         />
-                                        //     </IconButton>
-                                        // </Tooltip>
                                     }
                                     {selectedTab == "Upcoming" &&
                                         <IconButton

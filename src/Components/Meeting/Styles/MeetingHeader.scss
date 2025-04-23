@@ -1,0 +1,89 @@
+.meetingHeaderContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 16px;
+    width: 100%;
+
+    .meetingHeaderFBox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .prDashboard_ToggleBox {
+            .MuiButtonBase-root {
+                font-size: 14px !important;
+                width: max-content;
+            }
+        }
+    }
+
+    .meetingHeaderSBox {
+        display: flex;
+        align-items: center;
+        justify-content: end;
+        gap: 8px;
+
+        .prDashboard_ToggleBox {
+            .MuiButtonBase-root {
+                font-size: 14px !important;
+                width: 130px;
+            }
+        }
+    }
+
+}
+
+@media(max-width: 1500px) {
+    .meetingHeaderContainer {
+        flex-direction: column;
+        gap: 16px;
+
+        .meetingHeaderFBox {
+            width: 100%;
+            justify-content: start;
+        }
+
+        .meetingHeaderSBox {
+            width: 100%;
+            justify-content: end;
+        }
+    }
+}
+
+@media(max-width: 960px) {
+    .meetingHeaderContainer {
+        flex-direction: column;
+        gap: 16px;
+
+        .meetingHeaderFBox {
+            width: 100%;
+            justify-content: start;
+
+            .prDashboard_ToggleBox {
+                .MuiButtonBase-root {
+                    font-size: 12px !important;
+                }
+            }
+        }
+
+        .meetingHeaderSBox {
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+
+            .prDashboard_ToggleBox {
+                width: 100%;
+                .MuiButtonBase-root {
+                    font-size: 12px !important;
+                    width: 130px;
+                }
+            }
+            .MuiBox-root {
+                justify-content: end;
+                width: 100%;
+            }
+        }
+    }
+}
