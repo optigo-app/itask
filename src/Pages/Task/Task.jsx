@@ -40,10 +40,11 @@ const Task = () => {
   const [taskCategory, setTaskCategory] = useState();
   const [taskAssigneeData, setTaskAssigneeData] = useState();
   const [activeButton, setActiveButton] = useState("table");
+  console.log('activeButton: ', activeButton);
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [filters, setFilters] = useRecoilState(Advfilters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
-  const [tasks, setTasks] = useRecoilState(TaskData);
+  const [tasks, setTasks] = useRecoilState(TaskData); 
   const setTaskDataLength = useSetRecoilState(taskLength)
   const encodedData = searchParams.get("data");
 

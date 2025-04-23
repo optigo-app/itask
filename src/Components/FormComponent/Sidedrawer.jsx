@@ -798,7 +798,7 @@ const SidebarDrawer = ({
                         />
                         <>
                             <Grid container spacing={1} className="form-row">
-                                <Grid item xs={12} sm={12} md={6}>
+                                <Grid item xs={12} sm={12}>
                                     <CustomAutocomplete
                                         label="Project"
                                         name="project"
@@ -809,7 +809,7 @@ const SidebarDrawer = ({
                                         refProp={filterRefs.project}
                                     />
                                 </Grid>
-                                <Grid item xs={12} sm={12} md={6}>
+                                <Grid item xs={12} sm={12}>
                                     <Box className="form-group">
                                         <Typography
                                             variant="subtitle1"
@@ -835,7 +835,7 @@ const SidebarDrawer = ({
                                         />
                                     </Box>
                                 </Grid>
-                                <Grid item xs={12} sm={12} md={6}>
+                                <Grid item xs={12} sm={12}>
                                     <CustomAutocomplete
                                         label="Category"
                                         name="category"
@@ -846,7 +846,7 @@ const SidebarDrawer = ({
                                         refProp={filterRefs.category}
                                     />
                                 </Grid>
-                                <Grid item xs={12} sm={12} md={6}>
+                                <Grid item xs={12} sm={12}>
                                     <AssigneeAutocomplete
                                         label="project lead"
                                         name="projectLead"
@@ -857,7 +857,7 @@ const SidebarDrawer = ({
                                         inputRef={filterRefs.assignee}
                                     />
                                 </Grid>
-                                <Grid item xs={12} sm={12} md={6}>
+                                <Grid item xs={12} sm={12}>
                                     <CustomAutocomplete
                                         label="Status"
                                         name="status"
@@ -868,7 +868,7 @@ const SidebarDrawer = ({
                                         refProp={filterRefs.status}
                                     />
                                 </Grid>
-                                <Grid item xs={12} sm={12} md={6}>
+                                <Grid item xs={12} sm={12}>
                                     <CustomAutocomplete
                                         label="Priority"
                                         name="priority"
@@ -879,7 +879,7 @@ const SidebarDrawer = ({
                                         refProp={filterRefs.priority}
                                     />
                                 </Grid>
-                                <Grid item xs={12} sm={12} md={6}>
+                                <Grid item xs={12} sm={12}>
                                     <Box className="form-group">
                                         <Typography className="form-label" variant="subtitle1">
                                             Start Date
@@ -904,7 +904,7 @@ const SidebarDrawer = ({
                                         />
                                     </Box>
                                 </Grid>
-                                <Grid item xs={12} sm={12} md={6}>
+                                <Grid item xs={12} sm={12}>
                                     <Box className="form-group">
                                         <Typography className="form-label" variant="subtitle1">
                                             Due Date

@@ -55,6 +55,7 @@ const HeaderButtons = ({
   taskDepartment,
   taskAssigneeData,
 }) => {
+  console.log('activeButton: ', activeButton);
 
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const isSmallScreen = useMediaQuery("(max-width:600px)");
@@ -68,13 +69,17 @@ const HeaderButtons = ({
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const setSelectedTask = useSetRecoilState(selectedRowData);
   const rootSubrootflagval = useRecoilValue(rootSubrootflag);
-  const [view, setView] = useState(activeButton);
+  const [view, setView] = useState('');
   const [selectedCategory, setSelectedCategory] =
     useRecoilState(selectedCategoryAtom);
   const [filterDrawerOpen, setFilterDrawerOpen] = useRecoilState(filterDrawer);
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
   const encodedData = searchParams.get("data");
+
+  useEffect(() => {
+    setView(activeButton);
+  }, [activeButton])
 
   const handleDrawerToggle = () => {
     setFormDrawerOpen(!formdrawerOpen);
@@ -147,7 +152,7 @@ const HeaderButtons = ({
         exclusive
         onChange={onViewChange}
         aria-label="view mode"
-        
+
       >
         <ToggleButton value="table" aria-label="table view">
           <List className="iconbtn" size={20} />
@@ -230,7 +235,7 @@ const HeaderButtons = ({
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
-                  padding:'7px',
+                  padding: '7px',
                   backgroundColor: filterDrawerOpen ? "#ffd700" : "white",
                   boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
                   "&:hover": {

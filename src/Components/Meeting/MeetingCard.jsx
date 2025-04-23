@@ -1,5 +1,6 @@
 // src/components/MeetingCard.jsx
 import React from 'react';
+import "./Styles/MeetingCard.scss";
 import {
   Avatar,
   AvatarGroup,
@@ -183,6 +184,7 @@ const MeetingCard = ({
                 textTransform: "uppercase",
                 letterSpacing: "1px",
               }}
+              className="attendBtn"
             >
               Attend
             </Box>

@@ -1,4 +1,5 @@
 import React from 'react';
+import "./Styles/MeetingHeader.scss";
 import {
   Box,
   Button,
@@ -6,6 +7,7 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  useMediaQuery,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { IdCard, List, Plus } from 'lucide-react';
@@ -22,7 +24,7 @@ const MeetingHeader = ({
   handleViewChange,
   handleTabChange
 }) => {
-
+  const isMobile = useMediaQuery('(max-width:960px)');
 
   const ViewToggleButtons = ({ view, onViewChange }) => {
     return (
@@ -45,21 +47,16 @@ const MeetingHeader = ({
 
   return (
     <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: "24px",
-        flexWrap: "wrap",
-        gap: "16px",
-      }}
+      className="meetingHeaderContainer"
     >
       <Box sx={{
         display: "flex",
         alignItems: "center",
         gap: "16px",
         flexWrap: "wrap",
-      }}>
+      }}
+        className="meetingHeaderFBox"
+      >
         <DasboardTab
           tabData={tabData}
           selectedTab={selectedTab?.filterTab}
@@ -83,14 +80,12 @@ const MeetingHeader = ({
           }}
         />
       </Box>
-      <Box sx={{ width: "50%", display: 'flex', justifyContent: "end", alignItems: 'center', gap: '12px' }}>
-        <Box sx={{ width: '50%' }}>
-          <DasboardTab
-            tabData={meetingtabData}
-            selectedTab={selectedTab?.meetingTab}
-            handleChange={handleTabChange}
-          />
-        </Box>
+      <Box className="meetingHeaderSBox">
+        <DasboardTab
+          tabData={meetingtabData}
+          selectedTab={selectedTab?.meetingTab}
+          handleChange={handleTabChange}
+        />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Button
             variant="contained"
@@ -98,7 +93,7 @@ const MeetingHeader = ({
             onClick={handleAddMeetings}
           >
             <Plus style={{ marginRight: '5px', opacity: '.9' }} size={20} />
-            Add Meeting
+            Add {isMobile ? "" : "Meeting"}
           </Button>
           <ViewToggleButtons view={viewType} onViewChange={handleViewChange} />
         </Box>

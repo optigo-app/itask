@@ -521,6 +521,7 @@ const MeetingPage = () => {
     return (
       <Box
         sx={{ display: "flex", justifyContent: "start", alignItems: "center" }}
+        className="statucsCircles"
       >
         <Box
           sx={{
