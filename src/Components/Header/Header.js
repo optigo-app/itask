@@ -170,6 +170,17 @@ const Header = ({ avatarSrc = "" }) => {
         setProfileAnchorEl(null);
     };
 
+
+    const isDecodedTitle =
+        location.pathname.includes("/tasks/") &&
+        decodedData?.module &&
+        title === `${decodedData?.project}/${decodedData?.module}`;
+    const handleback = () => {
+        if (isDecodedTitle) {
+            navigate("/projects");
+        }
+    };
+
     const handleLogout = () => {
         localStorage?.removeItem("isLoggedIn");
         navigate("/login");
@@ -187,7 +198,16 @@ const Header = ({ avatarSrc = "" }) => {
         >
             <Box>
                 <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Typography variant="h6" component="div" className="headerTitle">
+                    <Typography variant="h6" component="div" className="headerTitle"
+                        sx={{
+                            cursor: isDecodedTitle ? 'pointer' : 'default',
+                            '&:hover': isDecodedTitle
+                                ? {
+                                    color: '#7367f0;',
+                                }
+                                : {},
+                        }}
+                        onClick={(() => handleback(title))}>
                         {title}
                     </Typography>
                     {location.pathname.includes("/tasks/") && (

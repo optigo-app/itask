@@ -9,7 +9,7 @@ const RnDTask = lazy(() => import('./RndTask'));
 const TeamMembers = lazy(() => import('./TeamMembers'));
 const Comments = lazy(() => import('./Commnets'));
 
-const DashboardContent = ({ tabData, selectedTab }) => {
+const DashboardContent = ({ selectedTab }) => {
   const renderContent = () => {
     switch (selectedTab) {
       case 'Reference':
@@ -38,7 +38,7 @@ const DashboardContent = ({ tabData, selectedTab }) => {
           opacity: 0.3,
         }}
       />
-      <Suspense fallback={<div style={{ textAlign: 'center' }}><CircularProgress /></div>}>
+      <Suspense fallback={<></>}>
         {renderContent()}
       </Suspense>
     </div>

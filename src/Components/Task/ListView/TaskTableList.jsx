@@ -18,7 +18,7 @@ import {
     Chip,
     Tooltip,
 } from "@mui/material";
-import { CirclePlus, Eye, Pencil, Timer } from "lucide-react";
+import { CirclePlus, Eye, Paperclip, Pencil, Timer } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -32,8 +32,10 @@ import BurningImg from "../../../Assests/fire.webp"
 import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 import StatusCircles from "../../ShortcutsComponent/EstimateComp";
 import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
+import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawerFile";
 
 const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, totalPages, handleChangePage, handleRequestSort, handleTaskFavorite, handleStatusChange, handleAssigneeShortcutSubmit, isLoading }) => {
+    console.log('currentData: ', currentData);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const setFormDataValue = useSetRecoilState(formData);
@@ -45,6 +47,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [openfileDrawerOpen, setFileDrawerOpen] = useState(false);
     const columns = [
         { id: "taskname", label: "Task Name", width: 350 },
         { id: "project", label: "Project", width: 150 },
@@ -281,9 +284,23 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                     },
                 }}
             >
-                <Timer size={20}  className="iconbtn"/>
+                <Timer size={20} className="iconbtn" />
             </IconButton>
-
+            <IconButton
+                aria-label="View Module button"
+                onClick={() => setFileDrawerOpen(true)}
+                sx={{
+                    '&.Mui-disabled': {
+                        color: 'rgba(0, 0, 0, 0.26)',
+                    },
+                }}
+            >
+                <Paperclip
+                    size={20}
+                    color="#808080"
+                    className="iconbtn"
+                />
+            </IconButton>
             <IconButton
                 disabled={task?.isFreezed == 1}
                 onClick={() => handleEditTask(task, { Task: "root" })}
@@ -426,11 +443,11 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
             <React.Fragment key={subtask.taskid}>
                 <TableRow sx={{
                     backgroundColor: hoveredSubtaskId === subtask?.taskid ? '#f5f5f5' : 'inherit',
-                }}>
-                    <TableCell
-                        onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid)}
-                        onMouseLeave={handleSubtaskMouseLeave}
-                    >
+                }}
+                    onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid, { Tbcell: 'TaskName' })}
+                    onMouseLeave={handleSubtaskMouseLeave}
+                >
+                    <TableCell >
                         <div style={{
                             paddingLeft: `${8 * (depth + 1)}px`,
                             display: "flex",
@@ -550,7 +567,16 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                 <>
                                     {currentData?.map((task, taskIndex) => (
                                         <React.Fragment key={taskIndex}>
-                                            <TableRow key={taskIndex}>
+                                            <TableRow key={taskIndex}
+                                                sx={{
+                                                    backgroundColor: hoveredTaskId === task?.taskid ? '#f5f5f5' : 'inherit',
+                                                    // opacity: task?.isnew == 0 ? 0.5 : 1,
+                                                    // pointerEvents: task?.isnew == 0 ? 'none' : 'auto',
+                                                    // cursor: task?.isnew == 0 ? 'not-allowed' : 'pointer',
+                                                }}
+                                                onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
+                                                onMouseLeave={handleTaskMouseLeave}
+                                            >
                                                 <TableCell
                                                     onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
                                                     onMouseLeave={handleTaskMouseLeave}
@@ -670,6 +696,10 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 onClose={() => setProfileOpen(false)}
                 profileData={selectedItem}
                 background={background}
+            />
+            <SidebarDrawerFile
+                open={openfileDrawerOpen}
+                onClose={() => setFileDrawerOpen(false)}
             />
         </>
     );

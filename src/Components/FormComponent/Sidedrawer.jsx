@@ -536,6 +536,26 @@ const SidebarDrawer = ({
                                         label="Milestone"
                                         className="milestone-label"
                                     />
+                                    {rootSubrootflagval?.Task == "root" &&
+                                        <Box display="flex" gap={2}>
+                                            <Button
+                                                size="small"
+                                                variant="contained"
+                                                // onClick={handleApprove}
+                                                className="buttonClassname"
+                                            >
+                                                Approve
+                                            </Button>
+                                            <Button
+                                                size="small"
+                                                variant="contained"
+                                                className="dangerbtnClassname"
+                                            // onClick={handleReject}
+                                            >
+                                                Reject
+                                            </Button>
+                                        </Box>
+                                    }
                                 </Box>
                             </Box>
                         }
@@ -729,9 +749,9 @@ const SidebarDrawer = ({
                                 </Grid>
 
                                 {/* File Upload */}
-                                <Grid item xs={12}>
+                                {/* <Grid item xs={12}>
                                     <FileUploader formValues={formValues} setFormValues={setFormValues} />
-                                </Grid>
+                                </Grid> */}
                             </>
                         }
                         {taskType === 'multi_input' &&
@@ -749,7 +769,7 @@ const SidebarDrawer = ({
                             </>
                         }
                         {(taskType !== 'multi_input' || (taskType === 'multi_input' && formValues.bulkTask.length > 0)) && (
-                            <Grid item xs={12} sx={{ textAlign: "right" }}>
+                            <Grid item xs={12} sx={{ mt: 3, textAlign: "right" }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
                                     <Box>
                                         <Button
@@ -949,12 +969,12 @@ const SidebarDrawer = ({
                             </Grid>
 
                             {/* File Upload */}
-                            <Grid item xs={12}>
+                            {/* <Grid item xs={12}>
                                 <FileUploader formValues={formValues} setFormValues={setFormValues} />
-                            </Grid>
+                            </Grid> */}
 
                             {/* Action button */}
-                            <Grid item xs={12} sx={{ textAlign: "right" }}>
+                            <Grid item xs={12} sx={{ mt: 3, textAlign: "right" }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
                                     <Box>
                                         <Button

@@ -2,7 +2,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import "./Project.scss";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
-import { Box, Typography, useMediaQuery } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   Advfilters,
@@ -46,9 +46,9 @@ const Project = () => {
   const [activeButton, setActiveButton] = useState("table");
   const [project, setProject] = useRecoilState(projectDatasRState);
   const [filters, setFilters] = useRecoilState(Advfilters);
-  console.log('filters: ', filters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const refressPrModule = useRecoilValue(fetchlistApiCall);
+  const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
 
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
@@ -201,6 +201,7 @@ const Project = () => {
   }
 
   const handleFilterChange = (key, value) => {
+    console.log('key: ', key);
     if (key === "clearFilter" && value == null) {
       setFilters({});
       return;
@@ -213,23 +214,35 @@ const Project = () => {
       });
       return;
     }
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [key]: value,
-    }));
+    if (key === "category" && Array.isArray(value) && value.length === 0) {
+      setFilters((prevFilters) => {
+        const updatedFilters = { ...prevFilters };
+        delete updatedFilters[key];
+        return updatedFilters;
+      });
+      setPage(1);
+      return;
+    }
+    setFilters((prevFilters) => ({ ...prevFilters, [key]: value }));
     setPage(1);
   };
 
-  const handleClearFilter = (filterKey) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [filterKey]: "",
-    }));
+  const handleClearFilter = (filterKey, value = null) => {
+    if (filterKey === 'category') {
+      const updatedCategory = value ? filters.category.filter((cat) => cat !== value) : [];
+      setFilters((prev) => ({ ...prev, category: updatedCategory }));
+      setSelectedCategory(updatedCategory);
+    } else if (filterKey === 'dueDate') {
+      setFilters((prev) => ({ ...prev, dueDate: null }));
+    } else {
+      setFilters((prev) => ({ ...prev, [filterKey]: '' }));
+    }
   };
+
 
   const handleClearAllFilters = () => {
     setFilters({
-      category: '',
+      category: [],
       searchTerm: '',
       status: '',
       priority: '',
@@ -238,6 +251,7 @@ const Project = () => {
       project: '',
       dueDate: null,
     });
+    setSelectedCategory([])
   };
 
   function descendingComparator(a, b, orderBy) {
@@ -246,7 +260,7 @@ const Project = () => {
     const valB = b[orderBy];
 
     if (typeof valA === "string" && typeof valB === "string") {
-      return valB.trim().localeCompare(valA.trim()); // descending
+      return valB.trim().localeCompare(valA.trim());
     }
 
     if (valB < valA) return -1;
@@ -283,7 +297,7 @@ const Project = () => {
         dueDate = "",
         department = "",
         project: projectFilter = "",
-        category = "",
+        category = [],
       } = filters || {};
 
       const isValidFilter = (value) =>
@@ -295,24 +309,27 @@ const Project = () => {
           "Select Project",
           "Select Department",
         ].includes(value);
+
       const normalizedSearchTerm = searchTerm?.toLowerCase() || "";
+
       const matchesFilters = (task) => {
         if (!task) return false;
+
         const matches =
-          (!isValidFilter(category) ||
-            (task?.category ?? "")?.toLowerCase() ===
-            category?.toLowerCase()) &&
+          (!Array.isArray(category) || category.length === 0 ||
+            category.some(
+              (cat) =>
+                (task?.category ?? "").toLowerCase() === cat.toLowerCase()
+            )) &&
           (!isValidFilter(status) ||
-            (task?.status ?? "")?.toLowerCase() === status?.toLowerCase()) &&
+            (task?.status ?? "").toLowerCase() === status.toLowerCase()) &&
           (!isValidFilter(priority) ||
-            (task?.priority ?? "")?.toLowerCase() ===
-            priority?.toLowerCase()) &&
+            (task?.priority ?? "").toLowerCase() === priority.toLowerCase()) &&
           (!isValidFilter(department) ||
-            (task?.taskDpt ?? "")?.toLowerCase() ===
-            department?.toLowerCase()) &&
+            (task?.taskDpt ?? "").toLowerCase() === department.toLowerCase()) &&
           (!isValidFilter(projectFilter) ||
-            (task?.taskPr ?? "")?.toLowerCase() ===
-            projectFilter?.toLowerCase()) &&
+            (task?.taskPr ?? "").toLowerCase() ===
+            projectFilter.toLowerCase()) &&
           (!isValidFilter(dueDate) ||
             formatDate(task?.DeadLineDate) === formatDate(dueDate)) &&
           (!isValidFilter(assignee) ||
@@ -365,6 +382,7 @@ const Project = () => {
       return matchesFilters(task);
     })
     : [];
+
 
   const handleTabBtnClick = (button) => {
     setActiveButton(button);

@@ -55,12 +55,9 @@ const HeaderButtons = ({
   taskDepartment,
   taskAssigneeData,
 }) => {
-  console.log('activeButton: ', activeButton);
-
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const isSmallScreen = useMediaQuery("(max-width:600px)");
   const isMediumScreen = useMediaQuery("(min-width:601px) and (max-width:960px)");
-  const isLargeScreen = useMediaQuery("(min-width:961px)");
   const location = useLocation();
   const [filters, setFilters] = useRecoilState(Advfilters);
   const searchParams = new URLSearchParams(location.search);
@@ -70,8 +67,8 @@ const HeaderButtons = ({
   const setSelectedTask = useSetRecoilState(selectedRowData);
   const rootSubrootflagval = useRecoilValue(rootSubrootflag);
   const [view, setView] = useState('');
-  const [selectedCategory, setSelectedCategory] =
-    useRecoilState(selectedCategoryAtom);
+  const [selectedCategory, setSelectedCategory] = useRecoilState(selectedCategoryAtom);
+  console.log('selectedCategory: ', selectedCategory);
   const [filterDrawerOpen, setFilterDrawerOpen] = useRecoilState(filterDrawer);
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
@@ -128,9 +125,18 @@ const HeaderButtons = ({
   };
 
   const handleFilterChange = (key, value) => {
-    setSelectedCategory(value);
-    onFilterChange(key, value);
+    if (key === "category") {
+      const updatedCategory = selectedCategory.includes(value)
+        ? selectedCategory.filter((category) => category !== value)
+        : [...selectedCategory, value];
+
+      setSelectedCategory(updatedCategory);
+      onFilterChange(key, updatedCategory);
+    } else {
+      onFilterChange(key, value);
+    }
   };
+
 
   const handleFilterDrOpen = () => {
     setFilterDrawerOpen(!filterDrawerOpen);
