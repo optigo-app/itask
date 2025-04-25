@@ -40,11 +40,10 @@ const Task = () => {
   const [taskCategory, setTaskCategory] = useState();
   const [taskAssigneeData, setTaskAssigneeData] = useState();
   const [activeButton, setActiveButton] = useState("table");
-  console.log('activeButton: ', activeButton);
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [filters, setFilters] = useRecoilState(Advfilters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
-  const [tasks, setTasks] = useRecoilState(TaskData); 
+  const [tasks, setTasks] = useRecoilState(TaskData);
   const setTaskDataLength = useSetRecoilState(taskLength)
   const encodedData = searchParams.get("data");
 
@@ -256,24 +255,42 @@ const Task = () => {
 
   // Filter change handler
   const handleFilterChange = (key, value) => {
-    if (key === 'clearFilter' && value == null) {
-      setFilters([]);
+    console.log('key: ', key);
+    if (key === "clearFilter" && value == null) {
+      setFilters({});
       return;
     }
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [key]: value,
-    }));
+    if (typeof value === "string" && value.startsWith("Select ")) {
+      setFilters((prevFilters) => {
+        const updatedFilters = { ...prevFilters };
+        delete updatedFilters[key];
+        return updatedFilters;
+      });
+      return;
+    }
+    if (key === "category" && Array.isArray(value) && value.length === 0) {
+      setFilters((prevFilters) => {
+        const updatedFilters = { ...prevFilters };
+        delete updatedFilters[key];
+        return updatedFilters;
+      });
+      setPage(1);
+      return;
+    }
+    setFilters((prevFilters) => ({ ...prevFilters, [key]: value }));
     setPage(1);
   };
 
-  const handleClearFilter = (filterKey) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      [filterKey]: ''
-    }));
-    setSelectedCategory('');
-
+  const handleClearFilter = (filterKey, value = null) => {
+    if (filterKey === 'category') {
+      const updatedCategory = value ? filters.category.filter((cat) => cat !== value) : [];
+      setFilters((prev) => ({ ...prev, category: updatedCategory }));
+      setSelectedCategory(updatedCategory);
+    } else if (filterKey === 'dueDate') {
+      setFilters((prev) => ({ ...prev, dueDate: null }));
+    } else {
+      setFilters((prev) => ({ ...prev, [filterKey]: '' }));
+    }
   };
 
   const handleClearAllFilters = () => {
@@ -331,7 +348,11 @@ const Task = () => {
 
     const matchesFilters = (task) => {
       const matches =
-        (category ? (task?.category)?.toLowerCase() === category?.toLowerCase() : true) &&
+        (!Array.isArray(category) || category.length === 0 ||
+          category.some(
+            (cat) =>
+              (task?.category ?? "").toLowerCase() === cat.toLowerCase()
+          )) &&
         (status ? (task?.status)?.toLowerCase() === status?.toLowerCase() : true) &&
         (priority ? (task?.priority)?.toLowerCase() === priority?.toLowerCase() : true) &&
         (department ? (task?.taskDpt)?.toLowerCase() === department?.toLowerCase() : true) &&
@@ -406,7 +427,6 @@ const Task = () => {
       return updateTasksRecursively(prevTasks);
     });
   };
-
 
   const handleFreezeTask = (taskToUpdate) => {
     const updateTasksRecursively = (tasks) => {
@@ -506,7 +526,6 @@ const Task = () => {
     }
     setTaskDataLength(filteredData?.length);
   }, [filteredData, page, rowsPerPage]);
-
 
   const totalPages = Math?.ceil(filteredData && filteredData?.length / rowsPerPage);
 

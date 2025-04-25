@@ -16,6 +16,7 @@ import Cookies from 'js-cookie';
 import MuiSortableTable from './Backup/MuiSortableTable';
 import NotificationPage from './Backup/NotificationPage';
 import NotificationTable from './Pages/Notification/NotificationTable';
+import FileUploadComp from './Backup/FileUploadComp';
 
 // Lazy Loaded Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -211,7 +212,8 @@ const App = () => {
                                                 <Route path="/masters" element={<ProtectedRoute><Masters /></ProtectedRoute>} />
                                                 <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                                                 <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-                                                <Route path="/notification" element={<NotificationTable />} />
+                                                <Route path="/notification" element={<NotificationTable />} />                  
+                                                <Route path="/test" element={<FileUploadComp />} />
                                                 <Route path="*" element={<PagenotFound />} />
                                             </Routes>
                                         </Layout>

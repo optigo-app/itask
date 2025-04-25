@@ -20,20 +20,24 @@ import {
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { cleanDate, convertWordsToSpecialChars, formatDate2, getStatusColor, priorityColors } from "../../../Utils/globalfun";
-import { Eye, Lock, LockOpen, Pencil, Trash, Unlock } from "lucide-react";
+import { Eye, Lock, LockOpen, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
 import { useNavigate } from "react-router-dom";
+import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawerFile";
 
 const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, totalPages, handleChangePage, handleRequestSort, isLoading, handleLockProject, handleDeleteModule }) => {
     const navigate = useNavigate();
     const [selectedRow, setSelectedRow] = useState({});
+    const [hoveredTaskId, setHoveredTaskId] = useState(null);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const setFormDataValue = useSetRecoilState(formData);
     const setSelectedTask = useSetRecoilState(selectedRowData);
+    const [openfileDrawerOpen, setFileDrawerOpen] = useState(false);
+    console.log('openfileDrawerOpen: ', openfileDrawerOpen);
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
     const columns = [
@@ -45,14 +49,29 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         { id: "actions", label: "Actions", width: 80 },
     ];
 
+    const handleMouseEnter = (taskId) => {
+        setHoveredTaskId(taskId);
+    };
+    const handleMouseLeave = () => {
+        setHoveredTaskId(null);
+    };
+
 
     const handleOpenCnfDialog = (task) => {
         setSelectedRow(task);
         setCnfDialogOpen(true);
     };
 
-    const handleViewPrDashboard = () => {
-        navigate('/projects/dashboard');
+    const handleViewPrDashboard = (task) => {
+        setSelectedRow(task);
+        let urlData = {
+            module: task?.taskname,
+            project: task.taskPr,
+            taskid: task?.taskid,
+            projectid: task?.projectid,
+        }
+        const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
+        navigate(`/projects/dashboard/?d=${encodedFormData}`);
     }
 
     const handleCloseCnfDialog = () => {
@@ -87,80 +106,6 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         setActionMode("delete");
         setSelectedRow(task);
     }
-
-    // const handleChangePage = (event, newPage) => {
-    //     setPage(newPage);
-    // };
-
-    // const handleRequestSort = (property) => {
-    //     const fieldMapping = {
-    //         name: 'taskname',
-    //         due: 'DeadLineDate',
-    //     };
-    //     const mappedProperty = fieldMapping[property] || property;
-    //     const isAscending = orderBy === mappedProperty && order === "asc";
-    //     setOrder(isAscending ? "desc" : "asc");
-    //     setOrderBy(mappedProperty);
-    // };
-
-    // const descendingComparator = (a, b, orderBy) => {
-    //     const fieldMapping = {
-    //         deadline: 'DeadLineDate',
-    //         due: 'DeadLineDate',
-    //         "Project/module": 'taskname',
-    //         "start date": 'StartDate',
-    //     };
-
-    //     const mappedField = fieldMapping[orderBy] || orderBy;
-    //     let aValue = a[mappedField];
-    //     let bValue = b[mappedField];
-
-    //     // Convert to Date if it's a deadline
-    //     if (mappedField === 'DeadLineDate') {
-    //         aValue = aValue ? new Date(aValue) : new Date('2100-01-01');
-    //         bValue = bValue ? new Date(bValue) : new Date('2100-01-01');
-    //     } else if (mappedField === 'start date') {
-    //         aValue = aValue ? new Date(aValue) : new Date('2100-01-01');
-    //         bValue = bValue ? new Date(bValue) : new Date('2100-01-01');
-    //     } else if (mappedField === 'progress_per') {
-    //         aValue = parseFloat(aValue);
-    //         bValue = parseFloat(bValue);
-    //     } else if (mappedField === 'Project/module') {
-    //         aValue = aValue?.toLowerCase();
-    //         bValue = bValue?.toLowerCase();
-    //     }
-
-
-    //     if (bValue < aValue) return -1;
-    //     if (bValue > aValue) return 1;
-    //     return 0;
-    // };
-
-
-    // const getComparator = (order, orderBy) => {
-    //     return order === "desc"
-    //         ? (a, b) => descendingComparator(a, b, orderBy)
-    //         : (a, b) => -descendingComparator(a, b, orderBy);
-    // };
-
-    // const sortData = (array, comparator) => {
-    //     return [...array]?.sort(comparator);
-    // };
-
-    // let sortedData;
-    // if (data) {
-    //     sortedData = sortData(data, getComparator(order, orderBy));
-    // }
-
-    // // for data logic or data manipulation
-    // // Calculate total pages
-    // const totalPages = Math?.ceil(data && data?.length / rowsPerPage);
-
-    // // Get data for the current page
-    // const currentData = sortedData?.slice(
-    //     (page - 1) * rowsPerPage,
-    //     page * rowsPerPage
-    // );
 
     const handleNavigate = (task) => {
         let urlData = {
@@ -199,7 +144,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                         },
                     }}
                 >
-                    <Icon size={20} color={isLocked ? "#fff" : "#7d7f85"}  className="iconbtn"/>
+                    <Icon size={20} color={isLocked ? "#fff" : "#7d7f85"} className="iconbtn" />
                 </IconButton>
             </Tooltip>
         );
@@ -262,7 +207,13 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                 <>
                                     {currentData?.map((task, taskIndex) => (
                                         <React.Fragment key={taskIndex}>
-                                            <TableRow>
+                                            <TableRow
+                                                sx={{
+                                                    backgroundColor: hoveredTaskId === task?.taskid ? '#f5f5f5' : 'inherit',
+                                                }}
+                                                onMouseEnter={() => handleMouseEnter(task?.taskid)}
+                                                onMouseLeave={handleMouseLeave}
+                                            >
                                                 <TableCell>
                                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                                         <div className="projectModuleName">
@@ -299,7 +250,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                                 className="progressBar"
                                                             />
                                                         </Box>
-                                                        <Typography  className="progressBarText" variant="body2" minWidth={100}>
+                                                        <Typography className="progressBarText" variant="body2" minWidth={100}>
                                                             {`${task?.progress_per}%`}
                                                         </Typography>
                                                     </Box>
@@ -328,7 +279,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                         justifyContent: 'center',
                                                         alignItems: 'center',
                                                     }}
-                                                    className="priorityLabel"
+                                                        className="priorityLabel"
                                                     >
                                                         {task?.priority}
                                                     </div>
@@ -346,7 +297,22 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                         />
                                                         <IconButton
                                                             aria-label="View Module button"
-                                                            onClick={handleViewPrDashboard}
+                                                            onClick={() => setFileDrawerOpen(true)}
+                                                            sx={{
+                                                                '&.Mui-disabled': {
+                                                                    color: 'rgba(0, 0, 0, 0.26)',
+                                                                },
+                                                            }}
+                                                        >
+                                                            <Paperclip
+                                                                size={20}
+                                                                color="#808080"
+                                                                className="iconbtn"
+                                                            />
+                                                        </IconButton>
+                                                        <IconButton
+                                                            aria-label="View Module button"
+                                                            onClick={() => handleViewPrDashboard(task)}
                                                             sx={{
                                                                 '&.Mui-disabled': {
                                                                     color: 'rgba(0, 0, 0, 0.26)',
@@ -372,7 +338,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                             <Pencil
                                                                 size={20}
                                                                 color={task?.isFreez == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                                                                 className="iconbtn"
+                                                                className="iconbtn"
                                                             />
                                                         </IconButton>
                                                         <IconButton
@@ -388,7 +354,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                             <Trash
                                                                 size={20}
                                                                 color={task?.isFreez == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                                                                 className="iconbtn"
+                                                                className="iconbtn"
                                                             />
                                                         </IconButton>
                                                     </Box>
@@ -453,6 +419,11 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 cancelLabel="Cancel"
                 confirmLabel="Remove"
                 content='Are you sure you want to Remove this project/module?'
+            />
+
+            <SidebarDrawerFile
+                open={openfileDrawerOpen}
+                onClose={() => setFileDrawerOpen(false)}
             />
         </>
     );

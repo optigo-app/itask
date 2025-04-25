@@ -18,7 +18,7 @@ export const taskLength = atom({
 export const Advfilters = atom({
   key: 'Advfilters',
   default: {
-    category: '',
+    category: [],
     searchTerm: '',
     status: '',
     priority: '',
