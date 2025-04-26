@@ -9,21 +9,21 @@ const RnDTask = lazy(() => import('./RndTask'));
 const TeamMembers = lazy(() => import('./TeamMembers'));
 const Comments = lazy(() => import('./Commnets'));
 
-const DashboardContent = ({ selectedTab }) => {
+const DashboardContent = ({ selectedTab, handleDtopen }) => {
   const renderContent = () => {
     switch (selectedTab) {
       case 'Reference':
-        return <ReferencePr />;
+        return <ReferencePr handleDtopen={handleDtopen}/>;
       case 'Milestone':
-        return <MilestoneTimeline />;
+        return <MilestoneTimeline handleDtopen={handleDtopen}/>;
       case 'Challenges':
-        return <TaskChalenges />;
+        return <TaskChalenges handleDtopen={handleDtopen}/>;
       case 'R&D':
-        return <RnDTask />;
+        return <RnDTask handleDtopen={handleDtopen}/>;
       case 'Team Member':
-        return <TeamMembers />;
+        return <TeamMembers handleDtopen={handleDtopen}/>;
       case 'Comments':
-        return <Comments />;
+        return <Comments handleDtopen={handleDtopen}/>;
       default:
         return <Typography>No Data Found...</Typography>;
     }

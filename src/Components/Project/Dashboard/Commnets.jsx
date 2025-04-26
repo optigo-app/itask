@@ -4,6 +4,7 @@ import { Paperclip, Eye, Send } from "lucide-react";
 import CommentCard from "../../ShortcutsComponent/Comment/CommentCard";
 import "./Styles/Comments.scss";
 import commentsData from "../../../Data/commentsData";
+import AnnouncementCard from "../../ShortcutsComponent/AnouncementCard/AnnouncementCard";
 
 const Comments = () => {
     const [comments, setComments] = useState(commentsData);
@@ -48,48 +49,13 @@ const Comments = () => {
         <div className="comments-container">
                 <Box className="comment_list">
                     {comments.map((comment) => (
-                        <CommentCard
+                        <AnnouncementCard
                             key={comment.id}
-                            comment={comment}
+                            announcement={comment}
                             onEditComment={onEditComment}
                             onDeleteComment={onDeleteComment}
                         />
                     ))}
-                </Box>
-
-                {/* Sticky Comment Box */}
-                <Box className="comment-box">
-                    <TextareaAutosize
-                        value={newComment}
-                        onChange={onCommentChange}
-                        rows={4}
-                        placeholder="Add a comment..."
-                        className="textarea"
-                    />
-                    <Box className="comment-actions">
-                        <Box>
-                            <input type="file" onChange={handleFileChange} style={{ display: "none" }} id="file-upload" />
-                            <label htmlFor="file-upload">
-                                <IconButton component="span">
-                                    <Paperclip size={20} color="#7367f0" />
-                                </IconButton>
-                            </label>
-                            {selectedFile && (
-                                <IconButton onClick={() => window.open(filePreview, "_blank")}>
-                                    <Eye size={20} color="#7367f0" />
-                                </IconButton>
-                            )}
-                        </Box>
-                        <Button
-                            size="small"
-                            variant="contained"
-                            onClick={onSendComment}
-                            startIcon={<Send size={20} />}
-                            className="buttonClassname"
-                        >
-                            Add comment
-                        </Button>
-                    </Box>
                 </Box>
         </div>
     );

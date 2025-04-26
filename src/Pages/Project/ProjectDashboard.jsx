@@ -3,11 +3,22 @@ import { Box } from '@mui/material';
 import DasboardTab from '../../Components/Project/Dashboard/dasboardTab';
 import DashboardContent from '../../Components/Project/Dashboard/DashboardContent';
 import { useLocation } from 'react-router-dom';
+import TaskDetail from '../../Components/Task/TaskDetails/TaskDetails';
+import taskData from "../../Data/taskData.json"
 
 const ProjectDashboard = () => {
     const location = useLocation();
     console.log('location: ', location);
     const [categoryData, setCategoryData] = useState([]);
+    const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
+
+    const handleTaskModalOpen = (item) => {
+        setTaskDetailModalOpen(true);
+    }
+
+    const handleTaskModalClose = () => {
+        setTaskDetailModalOpen(false);
+    };
     console.log('categoryData: ', categoryData);
     const tabData = [
         { label: 'Team Member', content: 'TeamMember' },
@@ -58,7 +69,13 @@ const ProjectDashboard = () => {
                 selectedTab={selectedTab}
                 handleChange={handleChange}
             />
-            <DashboardContent tabData={tabData} selectedTab={selectedTab} />
+            <DashboardContent tabData={tabData} selectedTab={selectedTab} handleDtopen={handleTaskModalOpen} />
+
+            <TaskDetail
+                open={taskDetailModalOpen}
+                onClose={handleTaskModalClose}
+                taskData={taskData}
+            />
         </Box>
     );
 };

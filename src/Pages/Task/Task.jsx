@@ -132,6 +132,7 @@ const Task = () => {
       };
 
       const enhancedTasks = finalTaskData?.map(task => enhanceTask(task));
+      console.log('enhancedTasks: ', enhancedTasks);
       setTaskDataLength(enhancedTasks.length);
 
       if (data?.taskid === parsedData?.taskid) {

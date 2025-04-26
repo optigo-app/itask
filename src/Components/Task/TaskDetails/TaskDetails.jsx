@@ -313,7 +313,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                     variant="contained"
                                     onClick={() => handleRemoveEvent()}
                                     sx={{ marginRight: "10px" }}
-                                    className="danger-btn"
+                                    className="dangerbtnClassname"
                                 // disabled={isLoading}
                                 >
                                     Delete

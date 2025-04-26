@@ -1,0 +1,17 @@
+@import "../../../theme/variable.scss";
+
+.commentCard {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px !important;
+    box-shadow: $box-shadow-value !important;
+
+    .title {
+        font-size: 14px;
+        font-weight: bold;
+    }
+    .caption {
+        font-size: 10px !important;
+        color: $text2ndColor !important;
+    }
+}
