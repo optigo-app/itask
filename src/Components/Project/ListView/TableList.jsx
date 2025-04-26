@@ -20,7 +20,7 @@ import {
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { cleanDate, convertWordsToSpecialChars, formatDate2, getStatusColor, priorityColors } from "../../../Utils/globalfun";
-import { Eye, Lock, LockOpen, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
+import { Eye, Lock, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
@@ -86,6 +86,12 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         setCnfDialogOpen(false);
         handleLockProject(selectedRow?.taskid);
     };
+
+    const handleOpenFileDrawer = (task, additionalInfo) => {
+        setRootSubroot(additionalInfo);
+        setFileDrawerOpen(true);
+        setSelectedTask(task);
+    }
 
     const handleRemovePr = async () => {
         setCnfDelDialogOpen(false);
@@ -297,7 +303,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                         />
                                                         <IconButton
                                                             aria-label="View Module button"
-                                                            onClick={() => setFileDrawerOpen(true)}
+                                                            onClick={() => handleOpenFileDrawer(task, { Task: "root" })}
                                                             sx={{
                                                                 '&.Mui-disabled': {
                                                                     color: 'rgba(0, 0, 0, 0.26)',

@@ -80,6 +80,8 @@
 
   .filePreviewSection {
     padding: 10px;
+    height: 50vh;
+    overflow: auto;
 
     .folder-title {
       font-weight: 600;
