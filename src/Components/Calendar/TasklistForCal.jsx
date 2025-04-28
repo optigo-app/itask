@@ -9,7 +9,6 @@ import { flattenTasks } from "../../Utils/globalfun";
 const TasklistForCal = ({ calendarsColor }) => {
     const task = useRecoilValue(TaskData);
     const [calTasksList, setCalTasksList] = useState([]);
-    console.log('calTasksList: ', calTasksList);
 
     useEffect(() => {
         setCalTasksList(flattenTasks(task));

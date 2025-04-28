@@ -132,7 +132,6 @@ const Task = () => {
       };
 
       const enhancedTasks = finalTaskData?.map(task => enhanceTask(task));
-      console.log('enhancedTasks: ', enhancedTasks);
       setTaskDataLength(enhancedTasks.length);
 
       if (data?.taskid === parsedData?.taskid) {
@@ -251,12 +250,11 @@ const Task = () => {
       } else {
         fetchMasterData();
       }
-    }, 100);
+    }, 10);
   }, [location?.pathname, priorityData, statusData, taskProject, taskDepartment, callFetchTaskApi, activeButton]);
 
   // Filter change handler
   const handleFilterChange = (key, value) => {
-    console.log('key: ', key);
     if (key === "clearFilter" && value == null) {
       setFilters({});
       return;
@@ -300,7 +298,6 @@ const Task = () => {
   };
 
   function descendingComparator(a, b, orderBy) {
-    console.log('orderBy: ', orderBy);
     const valA = a[orderBy];
     const valB = b[orderBy];
 
@@ -321,15 +318,11 @@ const Task = () => {
 
   // sorting
   const handleRequestSort = (property) => {
-    console.log('property: ', property);
     const isAsc = orderBy === property && order === "asc";
-    console.log('orderBy: ', orderBy);
-    setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
 
   const sortedData = [...(tasks || [])]?.sort(getComparator(order, orderBy));
-  console.log('sortedRows: ', sortedData);
 
   const filteredData = sortedData?.filter((task) => {
     const { status, priority, assignee, searchTerm, dueDate, department, project, category } = filters;

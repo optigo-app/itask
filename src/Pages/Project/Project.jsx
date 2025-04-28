@@ -35,7 +35,7 @@ const Project = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(12);
   const [isLoading, setIsLoading] = useState(false);
-  const [isTaskLoading, setIsTaskLoading] = useState(false);
+  const [isTaskLoading, setIsTaskLoading] = useState(null);
   const [masterData, setMasterData] = useRecoilState(masterDataValue);
   const [priorityData, setPriorityData] = useState();
   const [statusData, setStatusData] = useState();
@@ -47,7 +47,7 @@ const Project = () => {
   const [project, setProject] = useRecoilState(projectDatasRState);
   const [filters, setFilters] = useRecoilState(Advfilters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
-  const refressPrModule = useRecoilValue(fetchlistApiCall);
+  const [callFetchTaskApi, setCallFetchTaskApi] = useRecoilState(fetchlistApiCall);
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
 
   const retrieveAndSetData = (key, setter) => {
@@ -60,25 +60,21 @@ const Project = () => {
   const fetchMasterData = async () => {
     setIsLoading(true);
     try {
-      let storedStructuredData = sessionStorage.getItem("structuredMasterData");
-      let structuredData = storedStructuredData
-        ? JSON.parse(storedStructuredData)
-        : null;
+      let storedStructuredData = sessionStorage.getItem('structuredMasterData');
+      let structuredData = storedStructuredData ? JSON.parse(storedStructuredData) : null;
       if (!structuredData) {
         await fetchMasterGlFunc();
-        storedStructuredData = sessionStorage.getItem("structuredMasterData");
-        structuredData = storedStructuredData
-          ? JSON.parse(storedStructuredData)
-          : null;
+        storedStructuredData = sessionStorage.getItem('structuredMasterData');
+        structuredData = storedStructuredData ? JSON.parse(storedStructuredData) : null;
       }
       if (structuredData) {
         setMasterData(structuredData);
-        retrieveAndSetData("taskAssigneeData", setAssigneeData);
-        retrieveAndSetData("taskstatusData", setStatusData);
-        retrieveAndSetData("taskpriorityData", setPriorityData);
-        retrieveAndSetData("taskdepartmentData", setTaskDepartment);
-        retrieveAndSetData("taskprojectData", setTaskProject);
-        retrieveAndSetData("taskworkcategoryData", setTaskCategory);
+        retrieveAndSetData('taskAssigneeData', setAssigneeData);
+        retrieveAndSetData('taskstatusData', setStatusData);
+        retrieveAndSetData('taskpriorityData', setPriorityData);
+        retrieveAndSetData('taskdepartmentData', setTaskDepartment);
+        retrieveAndSetData('taskprojectData', setTaskProject);
+        retrieveAndSetData('taskworkcategoryData', setTaskCategory);
       }
     } catch (error) {
       console.error("Error fetching master data:", error);
@@ -86,27 +82,6 @@ const Project = () => {
       setIsLoading(false);
     }
   };
-
-  // master api call
-  useEffect(() => {
-    const init = sessionStorage.getItem("taskInit");
-    if (init) {
-      fetchMasterData();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
-      fetchModuleData();
-    }
-  }, [
-    isLoading,
-    refressPrModule,
-    priorityData,
-    statusData,
-    taskProject,
-    taskDepartment,
-  ]);
 
   const fetchModuleData = async () => {
     if (project?.length == 0) {
@@ -148,7 +123,6 @@ const Project = () => {
       };
 
       const enhancedTasks = finalTaskData?.map((task) => enhanceTask(task));
-      console.log('enhancedTasks: ', enhancedTasks);
       setProject(enhancedTasks);
     } catch (error) {
       console.error(error);
@@ -200,8 +174,28 @@ const Project = () => {
     return taskData;
   }
 
+    // master api call
+    useEffect(() => {
+      const init = sessionStorage?.getItem('taskInit');
+      if (init) {
+        fetchMasterData();
+      }
+      setCallFetchTaskApi(true);
+    }, []);
+  
+    useEffect(() => {
+      setTimeout(() => {
+        if (priorityData && statusData && taskProject && taskDepartment) {
+          if (callFetchTaskApi) {
+            fetchModuleData();
+          }
+        } else {
+          fetchMasterData();
+        }
+      }, 10);
+    }, [callFetchTaskApi, priorityData,statusData,taskProject,taskDepartment]);
+
   const handleFilterChange = (key, value) => {
-    console.log('key: ', key);
     if (key === "clearFilter" && value == null) {
       setFilters({});
       return;
@@ -255,7 +249,6 @@ const Project = () => {
   };
 
   function descendingComparator(a, b, orderBy) {
-    console.log('orderBy: ', orderBy);
     const valA = a[orderBy];
     const valB = b[orderBy];
 
@@ -276,16 +269,13 @@ const Project = () => {
 
   // sorting
   const handleRequestSort = (property) => {
-    console.log('property: ', property);
     const isAsc = orderBy === property && order === "asc";
-    console.log('orderBy: ', orderBy);
     setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
 
 
   const sortedData = [...(project || [])]?.sort(getComparator(order, orderBy));
-  console.log('sortedData: ', sortedData);
 
   const filteredData = Array.isArray(sortedData)
     ? sortedData?.filter((task) => {
@@ -448,7 +438,6 @@ const Project = () => {
   // Get data for the current page
   const currentData =
     filteredData?.slice((page - 1) * rowsPerPage, page * rowsPerPage) || [];
-  console.log('currentData: ', currentData);
 
   return (
     <Box className="project-moduleMain">

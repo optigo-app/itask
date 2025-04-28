@@ -21,7 +21,7 @@ import {
     ExpandMore
 } from "@mui/icons-material";
 
-import { Asterisk, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
+import { Asterisk, Boxes, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
 import logo from "../../Assests/logo.webp";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -104,7 +104,7 @@ const Sidebar = () => {
         { label: 'Inbox', routes: 'Inbox', path: '/inbox', icon: Inbox },
         { label: 'Meeting', routes: 'Meetings', path: '/meetings', icon: Component },
         { label: 'Calendar', routes: 'Calendar', path: '/calendar', icon: CalendarCheck },
-        { label: 'Masters', routes: 'Masters', path: '/masters', icon: Asterisk }
+        { label: 'Masters', routes: 'Masters', path: '/masters', icon: Boxes }
     ];
 
     const reportSubItems = [

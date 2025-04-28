@@ -78,7 +78,6 @@ const SidebarDrawerFile = ({ open, onClose }) => {
           [folder]: [...(prev.attachment[folder] || []), ...result.files],
         },
       }));
-      console.log('Files uploaded successfully:', result);
     } catch (error) {
       console.error('Upload failed:', error);
     } finally {
@@ -206,7 +205,6 @@ const SidebarDrawerFile = ({ open, onClose }) => {
               <Typography variant="subtitle2" className="folder-title">{folder}</Typography>
               <Box className="preview-grid">
                 {files.map((item, index) => {
-                  console.log('item: ', item);
                   const isImage = item?.fileType?.startsWith("image/");
                   const isPdf = item?.fileType === "application/pdf";
                   const isExcel = item?.fileType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||

@@ -38,7 +38,6 @@ const ProjectDashboard = lazy(() => import('./Pages/Project/ProjectDashboard'));
 
 const Layout = ({ children }) => {
     const isMobile = useMediaQuery('(max-width:712px)');
-    console.log('isMobile: ', isMobile);
     const location = useLocation();
     const hideLayout = location?.pathname?.includes('/login');
 
@@ -90,9 +89,23 @@ const App = () => {
     const [isReady, setIsReady] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const params = getQueryParams();
+            const authData = params?.yc || JSON?.parse(localStorage.getItem("AuthqueryParams"))?.yc;
+            const isLoggedIn = authData !== '' && authData !== null && authData !== undefined;
+            setIsAuthenticated(isLoggedIn);
+            setIsReady(true);
+        }, 500);
+        return () => clearInterval(interval);
+    }, []);
+
     const getQueryParams = () => {
         const token = Cookies.get('skey');
         if (!token) {
+            localStorage?.removeItem("AuthqueryParams");
+            localStorage?.removeItem("token");
+            localStorage?.removeItem("isLoggedIn");
             return <Navigate to="/error_401" replace />;
         }
 
@@ -120,13 +133,13 @@ const App = () => {
         }
     };
 
-    useEffect(() => {
-        const params = getQueryParams();
-        const authData = params?.yc || JSON?.parse(localStorage.getItem("AuthqueryParams"))?.yc;
-        const isLoggedIn = authData !== '' && authData !== null && authData !== undefined;
-        setIsAuthenticated(isLoggedIn);
-        setIsReady(true);
-    }, []);
+    // useEffect(() => {
+    //     const params = getQueryParams();
+    //     const authData = params?.yc || JSON?.parse(localStorage.getItem("AuthqueryParams"))?.yc;
+    //     const isLoggedIn = authData !== '' && authData !== null && authData !== undefined;
+    //     setIsAuthenticated(isLoggedIn);
+    //     setIsReady(true);
+    // }, []);
 
     useEffect(() => {
         let retryCount = 0;

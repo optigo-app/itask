@@ -68,7 +68,6 @@ const HeaderButtons = ({
   const rootSubrootflagval = useRecoilValue(rootSubrootflag);
   const [view, setView] = useState('');
   const [selectedCategory, setSelectedCategory] = useRecoilState(selectedCategoryAtom);
-  console.log('selectedCategory: ', selectedCategory);
   const [filterDrawerOpen, setFilterDrawerOpen] = useRecoilState(filterDrawer);
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);

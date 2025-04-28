@@ -33,7 +33,6 @@ const tabData = [
 
 const NotificationTable = () => {
     const [selectedTab, setSelectedTab] = useState(tabData[0]?.label || '');
-    console.log('selectedTab: ', selectedTab);
 
     const handleTabChange = (event, newValue) => {
         if (newValue !== null) {

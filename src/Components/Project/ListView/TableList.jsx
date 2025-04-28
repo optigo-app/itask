@@ -37,7 +37,6 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
     const setFormDataValue = useSetRecoilState(formData);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const [openfileDrawerOpen, setFileDrawerOpen] = useState(false);
-    console.log('openfileDrawerOpen: ', openfileDrawerOpen);
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
     const columns = [
