@@ -54,7 +54,6 @@ const MuiSortableTable = () => {
   const handleChangePage = (event, newPage) => setPage(newPage);
 
   const sortedRows = rows.sort(getComparator(order, orderBy));
-  console.log('rows: ', rows);
 
   return (
     <Paper sx={{ width: "100%", overflow: "hidden" }}>

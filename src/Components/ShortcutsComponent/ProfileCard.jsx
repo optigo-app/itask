@@ -17,8 +17,6 @@ import "./ProfileCardModal.scss";
 import { commonTextFieldProps, ImageUrl } from "../../Utils/globalfun";
 
 const ProfileCardModal = ({ open, onClose, profileData = [], background }) => {
-    console.log('profileData: ', profileData);
-    console.log('open: ', open);
     const [editIndex, setEditIndex] = useState(null);
     const [tempDesignation, setTempDesignation] = useState("");
     if (!Array.isArray(profileData) || profileData.length === 0) return null;

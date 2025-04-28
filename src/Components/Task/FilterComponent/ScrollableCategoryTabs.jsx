@@ -3,7 +3,6 @@ import { Box, Tabs, Tab } from "@mui/material";
 import "./ScrollableCategoryTabs.scss";
 
 const ScrollableCategoryTabs = ({ taskCategory = [], selectedCategory, handleFilterChange }) => {
-    console.log('selectedCategory: ', selectedCategory);
   const shouldScroll = taskCategory.length > 8;
 
   return (

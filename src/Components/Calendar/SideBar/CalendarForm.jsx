@@ -106,7 +106,6 @@ const CalendarForm = ({
     useEffect(() => {
         setTimeout(() => {
             if (CalformDataValue) {
-                console.log('CalformDataValue: ', CalformDataValue);
                 setFormValues({
                     id: (CalformDataValue?.id || CalformDataValue?.meetingid) ?? "",
                     title: (CalformDataValue?.title || CalformDataValue?.meetingtitle) ?? "",

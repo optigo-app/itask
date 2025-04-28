@@ -11,7 +11,6 @@ const EditableTimer = () => {
 
     const handleBlur = () => {
         setIsEditing(false);
-        console.log("Updated time:", time);
     };
 
     const handleKeyPress = (event) => {

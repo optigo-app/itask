@@ -103,7 +103,6 @@ const SidebarDrawer = ({
         assignee: useRef(),
     };
 
-    console.log('rootSubrootflagval?.Task: ', rootSubrootflagval?.Task);
     useEffect(() => {
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
@@ -284,8 +283,6 @@ const SidebarDrawer = ({
                 ...prev,
                 [key]: istDate.format('YYYY-MM-DDTHH:mm:ss.SSS'),
             }));
-
-            console.log(`Selected ${key} in IST:`, istDate.format('YYYY-MM-DDTHH:mm:ss.SSS'));
         }
     };
 

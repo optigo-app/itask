@@ -35,7 +35,6 @@ import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawerFile";
 
 const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, totalPages, handleChangePage, handleRequestSort, handleTaskFavorite, handleStatusChange, handleAssigneeShortcutSubmit, isLoading }) => {
-    console.log('currentData: ', currentData);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const setFormDataValue = useSetRecoilState(formData);

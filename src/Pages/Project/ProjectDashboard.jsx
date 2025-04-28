@@ -1,52 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import { Box } from '@mui/material';
-import DasboardTab from '../../Components/Project/Dashboard/dasboardTab';
-import DashboardContent from '../../Components/Project/Dashboard/DashboardContent';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
+import { Box, CircularProgress } from '@mui/material';
 import { useLocation } from 'react-router-dom';
-import TaskDetail from '../../Components/Task/TaskDetails/TaskDetails';
 import taskData from "../../Data/taskData.json"
+import FullTasKFromatfile from '../../Backup/FullTasKFromatfile';
+import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
+
+// Lazy-loaded components
+const DasboardTab = lazy(() => import('../../Components/Project/Dashboard/dasboardTab'));
+const DashboardContent = lazy(() => import('../../Components/Project/Dashboard/DashboardContent'));
+const TaskDetail = lazy(() => import('../../Components/Task/TaskDetails/TaskDetails'));
 
 const ProjectDashboard = () => {
+    const { isLoading, taskFinalData } = FullTasKFromatfile();
+    console.log('taskFinalData: ', isLoading, taskFinalData);
+
     const location = useLocation();
-    console.log('location: ', location);
     const [categoryData, setCategoryData] = useState([]);
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
 
     const handleTaskModalOpen = (item) => {
         setTaskDetailModalOpen(true);
-    }
+    };
 
     const handleTaskModalClose = () => {
         setTaskDetailModalOpen(false);
     };
-    console.log('categoryData: ', categoryData);
+
     const tabData = [
         { label: 'Team Member', content: 'TeamMember' },
         { label: 'Milestone', content: 'MilestoneTimeline' },
         { label: 'Reference', content: 'ReferencePr' },
-        // { label: 'SOP Correction', content: 'SopCorrection' },
         { label: 'Comments', content: 'Comments' },
         { label: 'Challenges', content: 'Challenges' },
         { label: 'R&D', content: 'RnD' },
     ];
-
-    const category = [
-        {
-            id: "T10",
-            isdelete: 0,
-            labelname: "Team Member"
-        },
-        {
-            id: "M10",
-            isdelete: 0,
-            labelname: "Milestone"
-        }
-    ]
-
-    useEffect(() => {
-        const cateData = JSON?.parse(sessionStorage.getItem('taskworkcategoryData')) || [];
-        setCategoryData([...category, ...cateData]);
-    }, []);
 
     const [selectedTab, setSelectedTab] = useState(tabData[0]?.label || '');
 
@@ -64,18 +51,34 @@ const ProjectDashboard = () => {
                 borderRadius: "8px",
             }}
         >
-            <DasboardTab
-                tabData={tabData}
-                selectedTab={selectedTab}
-                handleChange={handleChange}
-            />
-            <DashboardContent tabData={tabData} selectedTab={selectedTab} handleDtopen={handleTaskModalOpen} />
+            <Suspense fallback={<></>}>
+                <DasboardTab
+                    tabData={tabData}
+                    selectedTab={selectedTab}
+                    handleChange={handleChange}
+                />
+            </Suspense>
 
-            <TaskDetail
-                open={taskDetailModalOpen}
-                onClose={handleTaskModalClose}
-                taskData={taskData}
-            />
+            <Suspense fallback={<></>}>
+                {isLoading ? (
+                    <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
+                ) :
+                    <DashboardContent
+                        tabData={tabData}
+                        selectedTab={selectedTab}
+                        handleDtopen={handleTaskModalOpen}
+                        taskFinalData={taskFinalData}
+                    />
+                }
+            </Suspense>
+
+            <Suspense fallback={<></>}>
+                <TaskDetail
+                    open={taskDetailModalOpen}
+                    onClose={handleTaskModalClose}
+                    taskData={taskData}
+                />
+            </Suspense>
         </Box>
     );
 };

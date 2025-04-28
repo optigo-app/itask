@@ -15,7 +15,6 @@ const Filters = ({
 }) => {
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom)
   const [filters, setFilters] = useRecoilState(Advfilters);
-  console.log('filters: ', filters);
 
   const [filterVisibility, setFilterVisibility] = useState({
     status: true,

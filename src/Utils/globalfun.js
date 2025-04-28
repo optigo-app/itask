@@ -36,35 +36,6 @@ export const formatDate3 = (date) => {
 
     return formattedDate;
 };
-// "1 day left" or "1 day 2 hr",
-// export function getTimeLeft(dateString) {
-//     const now = new Date();
-//     const future = new Date(dateString);
-//     const diffMs = future - now;
-
-//     if (diffMs <= 0) return "Overdue";
-
-//     const seconds = Math.floor(diffMs / 1000);
-//     const minutes = Math.floor(seconds / 60);
-//     const hours = Math.floor(minutes / 60);
-//     const days = Math.floor(hours / 24);
-//     const weeks = Math.floor(days / 7);
-//     const months = Math.floor(days / 30); // approx
-//     const years = Math.floor(days / 365); // approx
-
-//     if (years > 0) return `${years} year${years > 1 ? "s" : ""}`;
-//     if (months > 0) return `${months} month${months > 1 ? "s" : ""}`;
-//     if (weeks > 0) return `${weeks} week${weeks > 1 ? "s" : ""}`;
-//     if (days > 0) return `${days} day${days > 1 ? "s" : ""}`;
-//     if (hours > 0 || minutes > 0) {
-//         const hr = hours % 24;
-//         const min = minutes % 60;
-//         return `${hr > 0 ? hr + " hr " : ""}${min > 0 ? min + " min" : ""}`.trim();
-//     }
-
-//     return "Less than a minute";
-// }
-
 export function getTimeLeft(dateString) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -98,8 +69,6 @@ export function getTimeLeft(dateString) {
 
     return "Soon";
 }
-
-
 
 export function toISTDateTime(isoDate) {
     const istDate = new Date(isoDate).toLocaleString("en-IN", {
@@ -170,70 +139,6 @@ export const getStatusColor = (value) => {
         return "#9e9e9e"; // Default grey for out-of-range values
     }
 };
-
-// Task Status color
-// export const statusColors = {
-//     "pending": {
-//         color: "#ff9800", // Orange text color
-//         backgroundColor: "#fff3e0", // Light orange background
-//     },
-//     "just started": {
-//         color: "#4caf50", // Green text color
-//         backgroundColor: "#e8f5e9", // Light green background
-//     },
-//     "running": {
-//         color: "#2196f3", // Blue text color
-//         backgroundColor: "#e3f2fd", // Light blue background
-//     },
-//     "on hold": {
-//         color: "#ff5722", // Red-orange text color
-//         backgroundColor: "#ffccbc", // Light red-orange background
-//     },
-//     "on hold with challenge": {
-//         color: "#f44336", // Red text color
-//         backgroundColor: "#ffebee", // Light red background
-//     },
-//     "challenge running": {
-//         color: "#d32f2f", // Dark red text color
-//         backgroundColor: "#ffcccb", // Light dark red background
-//     },
-//     "doc started": {
-//         color: "#8e24aa", // Purple text color
-//         backgroundColor: "#f3e5f5", // Light purple background
-//     },
-//     "doc completed": {
-//         color: "#9c27b0", // Purple text color
-//         backgroundColor: "#fce4ec", // Light purple background
-//     },
-//     "code started": {
-//         color: "#3f51b5", // Indigo text color
-//         backgroundColor: "#e8eaf6", // Light indigo background
-//     },
-//     "code completed": {
-//         color: "#3949ab", // Dark indigo text color
-//         backgroundColor: "#c5cae9", // Light dark indigo background
-//     },
-//     "test started": {
-//         color: "#f44336", // Red text color
-//         backgroundColor: "#ffebee", // Light red background
-//     },
-//     "test completed": {
-//         color: "#8bc34a", // Light green text color
-//         backgroundColor: "#c8e6c9", // Light green background
-//     },
-//     "completed": {
-//         color: "#4caf50", // Green text color
-//         backgroundColor: "#e8f5e9", // Light green background
-//     },
-//     "delivered": {
-//         color: "#3f51b5", // Indigo text color
-//         backgroundColor: "#e8eaf6", // Light indigo background
-//     },
-//     "in testing": {
-//         color: "#ff9800", // Orange text color
-//         backgroundColor: "#fff3e0", // Light orange background
-//     },
-// };
 
 export const statusColors = {
     "approved": {
