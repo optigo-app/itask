@@ -20,10 +20,8 @@ import {
     ExpandLess,
     ExpandMore
 } from "@mui/icons-material";
-
 import { Asterisk, Boxes, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
 import logo from "../../Assests/logo.webp";
-import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
@@ -34,18 +32,52 @@ import { useSetRecoilState } from "recoil";
 import { Advfilters } from "../../Recoil/atom";
 
 const Sidebar = () => {
-    const theme = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
+    const [pageList, setPageList] = useState([]);
     const isMobile = useMediaQuery('(max-width:712px)');
     const isMiniDrawer = useMediaQuery('(max-width:1000px)');
     const [isDrawerOpen, setDrawerOpen] = useState(true);
     const [isFullSidebar, setFullSidebar] = useState(true);
     const [activeItem, setActiveItem] = useState('Home');
-    const [openReports, setOpenReports] = useState(false); // Submenu state
+    const [openReports, setOpenReports] = useState(false);
     const drawerWidth = isFullSidebar || isDrawerOpen ? 260 : 80;
     const [reportsAnchorEl, setReportsAnchorEl] = React.useState(null);
     const setFilters = useSetRecoilState(Advfilters);
+
+
+    // All possible menu items with additional info
+    const allMenuItems = [
+        { pagename: "Home", label: "Home", routes: "Home", path: "/", icon: House },
+        { pagename: "Task", label: "Task", routes: "Tasks", path: "/tasks", icon: FileCheck },
+        { pagename: "Project", label: "Project", routes: "Projects", path: "/projects", icon: SquareChartGantt },
+        { pagename: "Inbox", label: "Inbox", routes: "Inbox", path: "/inbox", icon: Inbox },
+        { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
+        { pagename: "Calender", label: "Calendar", routes: "Calendar", path: "/calendar", icon: CalendarCheck },
+        { pagename: "Maters", label: "Masters", routes: "Masters", path: "/masters", icon: Boxes },
+        { pagename: "Reports", label: "Reports", routes: "Reports", path: "/reports", icon: Ratio }
+    ];
+
+    // Sub menu items for Reports
+    const reportSubItems = [
+        { label: 'Admin Report', path: '/reports/admin' },
+        { label: 'Team Lead Report', path: '/reports/team-lead' },
+        { label: 'Employee Report', path: '/reports/employee' },
+        { label: 'Overall Project Status', path: '/reports/overall-project-status' },
+        { label: 'Team Productivity', path: '/reports/team-productivity' },
+        { label: 'Task Time Utilization', path: '/reports/task-time-utilization' },
+        { label: 'Issue & Blocker', path: '/reports/issue-blocker' },
+        { label: 'Project Status Summary', path: '/reports/project-status-summary' },
+    ];
+
+    useEffect(() => {
+        const pageAccess = JSON?.parse(sessionStorage.getItem('pageAccess')) || [];
+        const filteredMenu = allMenuItems.filter(item =>
+            pageAccess.some(access => access.pagename === item.pagename)
+        );
+        setPageList(filteredMenu);
+    }, [location]);
+
 
 
     const toggleDrawer = () => setDrawerOpen(!isDrawerOpen);
@@ -96,27 +128,6 @@ const Sidebar = () => {
         const path = location?.pathname?.split('/')[1];
         setActiveItem(path.charAt(0)?.toUpperCase() + path?.slice(1) || 'Home');
     }, [location]);
-
-    const menuItems = [
-        { label: 'Home', routes: 'Home', path: '/', icon: House },
-        { label: 'Task', routes: 'Tasks', path: '/tasks', icon: FileCheck },
-        { label: 'Project', routes: 'Projects', path: '/projects', icon: SquareChartGantt },
-        { label: 'Inbox', routes: 'Inbox', path: '/inbox', icon: Inbox },
-        { label: 'Meeting', routes: 'Meetings', path: '/meetings', icon: Component },
-        { label: 'Calendar', routes: 'Calendar', path: '/calendar', icon: CalendarCheck },
-        { label: 'Masters', routes: 'Masters', path: '/masters', icon: Boxes }
-    ];
-
-    const reportSubItems = [
-        { label: 'Admin Report', path: '/reports/admin' },
-        { label: 'Team Lead Report', path: '/reports/team-lead' },
-        { label: 'Employee Report', path: '/reports/employee' },
-        { label: 'Overall Project Status', path: '/reports/overall-project-status' },
-        { label: 'Team Productivity', path: '/reports/team-productivity' },
-        { label: 'Task Time Utilization', path: '/reports/task-time-utilization' },
-        { label: 'Issue & Blocker', path: '/reports/issue-blocker' },
-        { label: 'Project Status Summary', path: '/reports/project-status-summary' },
-    ];
 
     return (
         <motion.div
@@ -188,92 +199,100 @@ const Sidebar = () => {
                         </ListItemButton>
                     </ListItem>
                     <div className="itask_separator" />
-                    {menuItems.map(({ label, path, icon: Icon, routes }) => (
-                        <ListItem key={label} onClick={() => handleItemClick(path, routes)} sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row' }}>
-                            <ListItemButton
-                                className={`itask_drawerListItem ${activeItem === routes ? 'itask_drawerItemActive' : ''}`}>
-                                <ListItemIcon className="itask_drawerItemIcon">
-                                    <Icon className={activeItem === routes ? "iconActive" : 'iconUnactive'} size={22} />
-                                </ListItemIcon>
-                                {isDrawerOpen && <ListItemText className="itask_drawerItemText" primary={label} />}
-                            </ListItemButton>
-                            {!isDrawerOpen && (
-                                <Typography variant="caption" className="itask_drawerItemText">
-                                    {label}
-                                </Typography>
-                            )}
-                        </ListItem>
-                    ))}
+                    {pageList.length > 0 ? (
+                        <>
+                            {pageList.map(({ label, path, icon: Icon, routes }) => (
+                                label !== 'Reports' ? (
+                                    <ListItem key={label} onClick={() => handleItemClick(path, routes)} sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row' }}>
+                                        <ListItemButton className={`itask_drawerListItem ${activeItem === routes ? 'itask_drawerItemActive' : ''}`}>
+                                            <ListItemIcon className="itask_drawerItemIcon">
+                                                <Icon className={activeItem === routes ? "iconActive" : 'iconUnactive'} size={22} />
+                                            </ListItemIcon>
+                                            {isDrawerOpen && <ListItemText primary={label} className="itask_drawerItemText" />}
+                                        </ListItemButton>
+                                        {!isDrawerOpen && (
+                                            <Typography variant="caption" className="itask_drawerItemText">
+                                                {label}
+                                            </Typography>
+                                        )}
+                                    </ListItem>
+                                ) : (
+                                    <ListItem sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row' }} key="Reports">
+                                        <ListItemButton onClick={isDrawerOpen ? toggleReportsMenu : handleReportsClick} className={`itask_drawerListItem ${activeItem === 'Reports' ? 'itask_drawerItemActive1' : ''}`}>
+                                            <ListItemIcon className="itask_drawerItemIcon">
+                                                <Ratio size={22} className={activeItem === 'Reports' ? "iconActive1" : 'iconUnactive'} />
+                                            </ListItemIcon>
+                                            {isDrawerOpen && <ListItemText sx={{ m: 0 }} primary="Reports" />}
+                                            {isDrawerOpen && <span style={{ paddingRight: '8px' }}>{openReports ? <ExpandLess /> : <ExpandMore />}</span>}
+                                        </ListItemButton>
+                                        {!isDrawerOpen && (
+                                            <Typography variant="caption" className="itask_drawerItemText">
+                                                Reports
+                                            </Typography>
+                                        )}
+                                    </ListItem>
+                                )
+                            ))}
 
-                    {/* Reports Menu with Submenu */}
-                    <ListItem sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row' }}>
-                        <ListItemButton onClick={isDrawerOpen ? toggleReportsMenu : handleReportsClick} className={`itask_drawerListItem ${activeItem === 'Reports' ? 'itask_drawerItemActive1' : ''}`}>
-                            <ListItemIcon className="itask_drawerItemIcon">
-                                <Ratio size={22} className={activeItem === 'Reports' ? "iconActive1" : 'iconUnactive'} />
-                            </ListItemIcon>
-                            {isDrawerOpen && <ListItemText sx={{ m: 0 }} primary="Reports" />}
-                            {isDrawerOpen && <span style={{ paddingRight: '8px' }}>{(openReports ? <ExpandLess className="iconUnactive" /> : <ExpandMore className="iconUnactive" />)}</span>}
-                        </ListItemButton>
-                        {!isDrawerOpen && (
-                            <Typography variant="caption" className="itask_drawerItemText">
-                                Reports
-                            </Typography>
-                        )}
-                    </ListItem>
-                    {isDrawerOpen ? (
-                        <Collapse in={openReports} timeout="auto" unmountOnExit className="itask_collapsable">
-                            <Divider className="itask_divider" orientation="vertical" flexItem />
-                            <List component="div" disablePadding className="itask_subMenuList">
-                                {reportSubItems.map(({ label, path }) => (
-                                    <ListItemButton key={label} onClick={() => handleItemClick(path, 'Reports')}
-                                        className={location?.pathname?.includes(path) ? 'itask_drawerItemActive' : ''}>
-                                        <ListItemText primary={label} className="itask_drawerItemText" />
-                                    </ListItemButton>
-                                ))}
-                            </List>
-                        </Collapse>
-                    ) : (
-                        <Menu
-                            anchorEl={reportsAnchorEl}
-                            open={Boolean(reportsAnchorEl)}
-                            onClose={handleReportsClose}
-                            slotProps={{
-                                paper: {
-                                    sx: {
-                                        marginTop: "-10px",
-                                        left: "50px !important",
-                                        borderRadius: "8px !important",
-                                        boxShadow:
-                                            "rgba(0, 0, 0, 0.24) 0px 3px 8px;",
-                                        '& "MuiList-root': {
-                                            paddingTop: "0 !important",
-                                            paddingBottom: "0 !important",
-                                        },
-                                    },
-                                },
-                            }}
-                        >
-                            {reportSubItems.map(({ label, path }) => (
-                                <MenuItem
-                                    sx={{
-                                        margin: "5px 10px !important",
-                                        borderRadius: "8px !important",
-                                        "&:hover": {
-                                            backgroundColor: "#f0f0f0 !important",
-                                            borderRadius: "8px !important",
+                            {isDrawerOpen ? (
+                                <Collapse in={openReports} timeout="auto" unmountOnExit className="itask_collapsable">
+                                    <Divider className="itask_divider" orientation="vertical" flexItem />
+                                    <List component="div" disablePadding className="itask_subMenuList">
+                                        {reportSubItems.map(({ label, path }) => (
+                                            <ListItemButton key={label} onClick={() => handleItemClick(path, 'Reports')}
+                                                className={location?.pathname?.includes(path) ? 'itask_drawerItemActive' : ''}>
+                                                <ListItemText primary={label} className="itask_drawerItemText" />
+                                            </ListItemButton>
+                                        ))}
+                                    </List>
+                                </Collapse>
+                            ) : (
+                                <Menu
+                                    anchorEl={reportsAnchorEl}
+                                    open={Boolean(reportsAnchorEl)}
+                                    onClose={handleReportsClose}
+                                    slotProps={{
+                                        paper: {
+                                            sx: {
+                                                marginTop: "-10px",
+                                                left: "50px !important",
+                                                borderRadius: "8px !important",
+                                                boxShadow:
+                                                    "rgba(0, 0, 0, 0.24) 0px 3px 8px;",
+                                                '& "MuiList-root': {
+                                                    paddingTop: "0 !important",
+                                                    paddingBottom: "0 !important",
+                                                },
+                                            },
                                         },
                                     }}
-                                    className={location?.pathname?.includes(path) ? 'itask_drawerItemActive' : ''}
-                                    key={label} onClick={() => {
-                                        handleItemClick(path, 'Reports');
-                                        handleReportsClose();
-                                    }}>
-                                    <Typography variant="body2" className="itask_drawerItemText">{label}</Typography>
-                                </MenuItem>
-                            ))}
-                        </Menu>
-                    )}
-
+                                >
+                                    {reportSubItems.map(({ label, path }) => (
+                                        <MenuItem
+                                            sx={{
+                                                margin: "5px 10px !important",
+                                                borderRadius: "8px !important",
+                                                "&:hover": {
+                                                    backgroundColor: "#f0f0f0 !important",
+                                                    borderRadius: "8px !important",
+                                                },
+                                            }}
+                                            className={location?.pathname?.includes(path) ? 'itask_drawerItemActive' : ''}
+                                            key={label} onClick={() => {
+                                                handleItemClick(path, 'Reports');
+                                                handleReportsClose();
+                                            }}>
+                                            <Typography variant="body2" className="itask_drawerItemText">{label}</Typography>
+                                        </MenuItem>
+                                    ))}
+                                </Menu>
+                            )}
+                        </>
+                    ) :
+                        <Box sx={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'start', paddingInline: '10px', mt: 5 }}>
+                            <Typography>You don’t have access to any pages. Please contact your administrator.</Typography>
+                        </Box>
+                    }
                 </List>
             </Drawer>
         </motion.div>

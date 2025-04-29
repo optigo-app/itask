@@ -9,7 +9,7 @@ const RnDTask = lazy(() => import('./RndTask'));
 const TeamMembers = lazy(() => import('./TeamMembers'));
 const Comments = lazy(() => import('./Commnets'));
 
-const DashboardContent = ({ selectedTab, handleDtopen, taskFinalData }) => {
+const DashboardContent = ({ selectedTab, handleDtopen, taskFinalData, taskAssigneeData  }) => {
   console.log('taskFinalData: ', taskFinalData);
   const renderContent = () => {
     switch (selectedTab) {
@@ -22,7 +22,7 @@ const DashboardContent = ({ selectedTab, handleDtopen, taskFinalData }) => {
       case 'R&D':
         return <RnDTask handleDtopen={handleDtopen} taskRnd={taskFinalData?.RndTask} />;
       case 'Team Member':
-        return <TeamMembers handleDtopen={handleDtopen} />;
+        return <TeamMembers handleDtopen={handleDtopen} taskAssigneeData={taskAssigneeData}/>;
       case 'Comments':
         return <Comments handleDtopen={handleDtopen} />;
       default:
