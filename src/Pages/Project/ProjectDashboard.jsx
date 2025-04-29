@@ -2,8 +2,8 @@ import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import taskData from "../../Data/taskData.json"
-import FullTasKFromatfile from '../../Backup/FullTasKFromatfile';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
+import FullTasKFromatfile from '../../Utils/TaskList/FullTasKFromatfile';
 
 // Lazy-loaded components
 const DasboardTab = lazy(() => import('../../Components/Project/Dashboard/dasboardTab'));
@@ -11,7 +11,7 @@ const DashboardContent = lazy(() => import('../../Components/Project/Dashboard/D
 const TaskDetail = lazy(() => import('../../Components/Task/TaskDetails/TaskDetails'));
 
 const ProjectDashboard = () => {
-    const { isLoading, taskFinalData } = FullTasKFromatfile();
+    const { isLoading, taskFinalData, taskAssigneeData } = FullTasKFromatfile();
     console.log('taskFinalData: ', isLoading, taskFinalData);
 
     const location = useLocation();
@@ -68,6 +68,7 @@ const ProjectDashboard = () => {
                         selectedTab={selectedTab}
                         handleDtopen={handleTaskModalOpen}
                         taskFinalData={taskFinalData}
+                        taskAssigneeData={taskAssigneeData}
                     />
                 }
             </Suspense>

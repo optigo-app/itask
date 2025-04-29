@@ -35,6 +35,7 @@ const MetaDataSet = lazy(() => import('./Utils/MetaData/MetaDataSet'));
 const Profile = lazy(() => import('./Pages/ProfilePage/Profile'));
 const UnassignedTaskList = lazy(() => import('./Pages/Task/UnAssignedTask/UnassignedTaskList'));
 const ProjectDashboard = lazy(() => import('./Pages/Project/ProjectDashboard'));
+const Error401Page = lazy(() => import('./Pages/ErrorPages/Error401Page'));
 
 const Layout = ({ children }) => {
     const isMobile = useMediaQuery('(max-width:712px)');
@@ -79,10 +80,13 @@ const Layout = ({ children }) => {
     );
 };
 
-const ProtectedRoute = ({ children }) => {
-    const authData = JSON.parse(localStorage.getItem("AuthqueryParams"));
-    const isLoggedIn = authData?.yc !== '' && authData?.yc !== null && authData?.yc !== undefined;
-    return isLoggedIn ? children : <Navigate to="/error_401" replace />;
+const ProtectedRoute = ({ children, pageName, pageId }) => {
+    console.log('pageId: ', pageId);
+    const accessData = JSON.parse(sessionStorage.getItem("pageAccess"));
+    const userPages = accessData?.map((item) => item.id.toString());
+    const hasAccess = userPages?.includes(pageId.toString());
+
+    return hasAccess ? children : <Navigate to="/error401" replace />;
 };
 
 const App = () => {
@@ -209,24 +213,25 @@ const App = () => {
                         <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
                             <Routes>
                                 <Route path="/error_401" element={isAuthenticated ? <Navigate to="/" replace /> : <SomethingWentWrong />} />
+                                <Route path="/error401" element={<Error401Page />} />
                                 <Route
                                     path="*"
                                     element={
                                         <Layout>
                                             <Routes>
-                                                <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                                                <Route path="/projects" element={<ProtectedRoute><Project /></ProtectedRoute>} />
-                                                <Route path="/projects/Dashboard" element={<ProtectedRoute><ProjectDashboard /></ProtectedRoute>} />
-                                                <Route path="/tasks/*" element={<ProtectedRoute><Task /></ProtectedRoute>} />
-                                                <Route path="/tasks/unassigned" element={<ProtectedRoute><UnassignedTaskList /></ProtectedRoute>} />
-                                                <Route path="/taskDetails" element={<ProtectedRoute><TaskDetails /></ProtectedRoute>} />
-                                                <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-                                                <Route path="/meetings" element={<ProtectedRoute><Meeting /></ProtectedRoute>} />
-                                                <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
-                                                <Route path="/masters" element={<ProtectedRoute><Masters /></ProtectedRoute>} />
-                                                <Route path="/account-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                                                <Route path="/reports/*" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-                                                <Route path="/notification" element={<NotificationTable />} />                  
+                                                <Route path="/" element={<ProtectedRoute pageName="Home" pageId="-1001"><Home /></ProtectedRoute>} />
+                                                <Route path="/projects" element={<ProtectedRoute pageName="Project" pageId="-1003"><Project /></ProtectedRoute>} />
+                                                <Route path="/projects/Dashboard" element={<ProtectedRoute pageName="Project" pageId="-1003"><ProjectDashboard /></ProtectedRoute>} />
+                                                <Route path="/tasks/*" element={<ProtectedRoute pageName="Task" pageId="-1002"><Task /></ProtectedRoute>} />
+                                                <Route path="/tasks/unassigned" element={<ProtectedRoute pageName="Task" pageId="-1002"><UnassignedTaskList /></ProtectedRoute>} />
+                                                <Route path="/taskDetails" element={<ProtectedRoute pageName="Task" pageId="-1002"><TaskDetails /></ProtectedRoute>} />
+                                                <Route path="/calendar" element={<ProtectedRoute pageName="Calender" pageId="-1006"><Calendar /></ProtectedRoute>} />
+                                                <Route path="/meetings" element={<ProtectedRoute pageName="Meeting" pageId="-1005"><Meeting /></ProtectedRoute>} />
+                                                <Route path="/inbox" element={<ProtectedRoute pageName="Inbox" pageId="-1004"><Inbox /></ProtectedRoute>} />
+                                                <Route path="/masters" element={<ProtectedRoute pageName="Maters" pageId="-1007"><Masters /></ProtectedRoute>} />
+                                                <Route path="/account-profile" element={<ProtectedRoute pageName="account-profile" pageId=""><Profile /></ProtectedRoute>} />
+                                                <Route path="/reports/*" element={<ProtectedRoute pageName="Reports" pageId="-1008"><Reports /></ProtectedRoute>} />
+                                                <Route path="/notification" element={<NotificationTable />} />
                                                 <Route path="/test" element={<FullTasKFromatfile />} />
                                                 <Route path="*" element={<PagenotFound />} />
                                             </Routes>

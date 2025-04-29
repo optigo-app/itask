@@ -1,0 +1,30 @@
+@import "../../../../theme/variable.scss";
+
+.TMainDrawer {
+    .tMainBox {
+        width: 450px;
+        height: 100%;
+        padding: 0 20px;
+
+        .drawerHeader {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            .drawer-title {
+                font-size: 20px;
+                font-weight: bold;
+                color: $titleColor !important;
+            }
+        }
+
+        .drawerContent {
+            .form-group{
+                .MuiFormControl-root{
+                    margin-top: 0 !important;
+                }
+            }
+        }
+    }
+}

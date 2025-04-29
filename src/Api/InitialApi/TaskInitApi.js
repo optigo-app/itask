@@ -3,9 +3,10 @@ import { APIURL, getHeaders } from "./config";
 
 export const taskInit = async () => {
   const headers = getHeaders();
+  const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
 
   const body = {
-    con: JSON.stringify({ id: "", mode: "gettoken" }),
+    con: JSON.stringify({ id: "", mode: "gettoken", appuserid: AuthData?.uid ?? '' }),
     p: "",
     f: "init api for initialization",
   };
@@ -15,6 +16,7 @@ export const taskInit = async () => {
 
     if (data?.Data?.rd?.[0]) {
       sessionStorage.setItem("taskInit", JSON.stringify(data.Data.rd[0]));
+      sessionStorage.setItem("pageAccess", JSON.stringify(data.Data.rd1));
     } else {
       console.warn("No `rd` data found in response:", data);
     }

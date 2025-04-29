@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Typography, Avatar, Menu, MenuItem, Divider, Button, Chip, Tooltip, IconButton, Badge } from "@mui/material";
 import { Bell, MailOpen, User, Settings, LogOut } from "lucide-react";
-import { getRandomAvatarColor } from "../../Utils/globalfun";
+import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
 import "./header.scss";
 import NotificationCard from "../Notification/NotificationCard";
 import { taskLength } from "../../Recoil/atom";
@@ -21,6 +21,13 @@ const Header = ({ avatarSrc = "" }) => {
     const encodedData = searchParams.get("data");
     const [decodedData, setDecodedData] = useState(null);
     const taskDataLength = useRecoilValue(taskLength);
+    const [profileData, setProfileData] = useState();
+    console.log('profileData: ', profileData);
+
+    useEffect(() => {
+        const UserProfileData = JSON?.parse(localStorage.getItem("UserProfileData"));
+        setProfileData(UserProfileData);
+    }, [])
 
     useEffect(() => {
         if (encodedData) {
@@ -97,11 +104,9 @@ const Header = ({ avatarSrc = "" }) => {
 
     const { title, subtitle } = dataMap[matchedKey];
 
-    const userName = "Shivam Shukla";
-
     const avatarBackgroundColor = avatarSrc
         ? "transparent"
-        : getRandomAvatarColor(userName);
+        : getRandomAvatarColor(`${profileData?.firstname + " " + profileData?.lastname}`);
 
 
     const notifications = [
@@ -252,8 +257,8 @@ const Header = ({ avatarSrc = "" }) => {
                     )}
                 </Box>
                 <Avatar
-                    alt={userName}
-                    src={avatarSrc}
+                    alt={profileData?.firstname + " " + profileData?.lastname}
+                    src={ImageUrl(profileData)}
                     sx={{
                         backgroundColor: avatarBackgroundColor,
                         color: "#fff",
@@ -262,7 +267,7 @@ const Header = ({ avatarSrc = "" }) => {
                     onClick={handleAvatarClick}
                     className="profile-avatar"
                 >
-                    {!avatarSrc && userName.charAt(0).toUpperCase()}
+                    {!avatarSrc && profileData && profileData?.firstname?.charAt(0).toUpperCase()}
                 </Avatar>
             </Box>
 
@@ -376,8 +381,8 @@ const Header = ({ avatarSrc = "" }) => {
                     }}
                 >
                     <Avatar
-                        alt={userName}
-                        src={avatarSrc}
+                        alt={profileData?.firstname + " " + profileData?.lastname}
+                        src={ImageUrl(profileData)}
                         sx={{
                             backgroundColor: avatarBackgroundColor,
                             color: "#fff",
@@ -386,14 +391,14 @@ const Header = ({ avatarSrc = "" }) => {
                             marginRight: "12px",
                         }}
                     >
-                        {!avatarSrc && userName.charAt(0).toUpperCase()}
+                        {!avatarSrc && profileData?.firstname.charAt(0).toUpperCase()}
                     </Avatar>
                     <Box>
                         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                            {userName}
+                            {profileData?.firstname + " " + profileData?.lastname}
                         </Typography>
                         <Typography variant="body2" sx={{ color: "#7d7f85" }}>
-                            Developer
+                            {profileData?.designation}
                         </Typography>
                     </Box>
                 </Box>
@@ -431,7 +436,7 @@ const Header = ({ avatarSrc = "" }) => {
                             color: "#fff !important",
                         }}
                         onClick={() => handleLogout()}
-                        variant="contained"
+                        variant="contained"                                    
                         fullWidth
                         endIcon={<LogOut size={20} />}
                     >
