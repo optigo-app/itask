@@ -1,13 +1,6 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
-import {
-    BrowserRouter as Router,
-    Routes,
-    Route,
-    useLocation,
-    Navigate,
-    useNavigate
-} from "react-router-dom";
-import { Box, useMediaQuery } from '@mui/material';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { Box, useMediaQuery, useTheme } from '@mui/material';
 import { RecoilRoot } from 'recoil';
 import { ToastContainer } from 'react-toastify';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -20,9 +13,13 @@ import Reports from './Pages/Reports/Reports';
 import SomethingWentWrong from './Components/Auth/SomethingWentWrong';
 import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
+import MuiSortableTable from './Backup/MuiSortableTable';
+import NotificationPage from './Backup/NotificationPage';
 import NotificationTable from './Pages/Notification/NotificationTable';
+import FileUploadComp from './Backup/FileUploadComp';
+import FullTasKFromatfile from './Backup/FullTasKFromatfile';
 
-// Lazy Components
+// Lazy Loaded Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
 const Header = lazy(() => import('./Components/Header/Header'));
 const Home = lazy(() => import('./Pages/Home/Home'));
@@ -83,7 +80,7 @@ const Layout = ({ children }) => {
     );
 };
 
-const ProtectedRoute = ({ children, pageId }) => {
+const ProtectedRoute = ({ children, pageName, pageId }) => {
     const accessData = JSON.parse(sessionStorage.getItem("pageAccess"));
     const userPages = accessData?.map((item) => item.id.toString());
     const hasAccess = userPages?.includes(pageId.toString());
@@ -91,10 +88,9 @@ const ProtectedRoute = ({ children, pageId }) => {
     return hasAccess ? children : <Navigate to="/error401" replace />;
 };
 
-const AppWrapper = () => {
+const App = () => {
     const [isReady, setIsReady] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const navigate = useNavigate();
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -114,45 +110,22 @@ const AppWrapper = () => {
             localStorage?.removeItem("token");
             localStorage?.removeItem("isLoggedIn");
             localStorage?.removeItem("UserProfileData");
-            return navigate('/error_401', { replace: true });
+            return null;
         }
-
+    
         const decoded = jwtDecode(token);
         const decodedPayload = {
             ...decoded,
             uid: decodeBase64(decoded.uid),
         };
-
+    
         if (decodedPayload) {
             localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
         }
-
+    
         return decodedPayload;
     };
-
-    useEffect(() => {
-        const checkAndInit = async () => {
-            const token = JSON?.parse(localStorage.getItem("token"));
-            if (!token) {
-                const result = await taskInit();
-                if (result?.Data?.rd) {
-                    fetchMasterGlFunc();
-                }
-            } else {
-                fetchMasterGlFunc();
-            }
-        };
-
-        checkAndInit();
-    }, []);
-
-    useEffect(() => {
-        const handleStorageChange = () => {
-            setIsAuthenticated(localStorage.getItem("isLoggedIn") === "true");
-        };
-        window.addEventListener("storage", handleStorageChange);
-        return () => window.removeEventListener("storage", handleStorageChange);
-    }, []);
+    
 
     const decodeBase64 = (str) => {
         if (!str) return null;
@@ -163,6 +136,37 @@ const AppWrapper = () => {
             return null;
         }
     };
+
+    useEffect(() => {
+        let retryCount = 0;
+        const maxRetries = 5;
+
+        const checkAndInit = async () => {
+            if (retryCount >= maxRetries) return console.log("Api call failed after 5 retries");
+
+            const token = JSON?.parse(localStorage.getItem("token"));
+            let result;
+            if (!token) {
+                result = await taskInit();
+            }
+            if (result?.Data?.rd || token) {
+                fetchMasterGlFunc();
+            } else {
+                retryCount++;
+                setTimeout(checkAndInit, 1000);
+            }
+        };
+
+        checkAndInit();
+    }, []);
+
+    useEffect(() => {
+        const handleAuthChange = () => {
+            setIsAuthenticated(localStorage.getItem("isLoggedIn") === "true");
+        };
+        window.addEventListener("storage", handleAuthChange);
+        return () => window.removeEventListener("storage", handleAuthChange);
+    }, []);
 
     const toastStyle = {
         borderRadius: "8px",
@@ -186,7 +190,6 @@ const AppWrapper = () => {
     if (!isReady) {
         return <LoadingBackdrop />;
     }
-
     return (
         <>
             <ToastContainer
@@ -196,47 +199,43 @@ const AppWrapper = () => {
                 closeButton={false}
                 autoClose={2000}
             />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
-                    <Routes>
-                        <Route path="/error_401" element={<SomethingWentWrong />} />
-                        <Route path="/error401" element={<Error401Page />} />
-                        <Route
-                            path="*"
-                            element={
-                                <Layout>
-                                    <Routes>
-                                        <Route path="/" element={<ProtectedRoute pageName="Home" pageId="-1001"><Home /></ProtectedRoute>} />
-                                        <Route path="/projects" element={<ProtectedRoute pageName="Project" pageId="-1003"><Project /></ProtectedRoute>} />
-                                        <Route path="/projects/Dashboard" element={<ProtectedRoute pageName="Project" pageId="-1003"><ProjectDashboard /></ProtectedRoute>} />
-                                        <Route path="/tasks/*" element={<ProtectedRoute pageName="Task" pageId="-1002"><Task /></ProtectedRoute>} />
-                                        <Route path="/tasks/unassigned" element={<ProtectedRoute pageName="Task" pageId="-1002"><UnassignedTaskList /></ProtectedRoute>} />
-                                        <Route path="/taskDetails" element={<ProtectedRoute pageName="Task" pageId="-1002"><TaskDetails /></ProtectedRoute>} />
-                                        <Route path="/calendar" element={<ProtectedRoute pageName="Calender" pageId="-1006"><Calendar /></ProtectedRoute>} />
-                                        <Route path="/meetings" element={<ProtectedRoute pageName="Meeting" pageId="-1005"><Meeting /></ProtectedRoute>} />
-                                        <Route path="/inbox" element={<ProtectedRoute pageName="Inbox" pageId="-1004"><Inbox /></ProtectedRoute>} />
-                                        <Route path="/masters" element={<ProtectedRoute pageName="Maters" pageId="-1007"><Masters /></ProtectedRoute>} />
-                                        <Route path="/account-profile" element={<ProtectedRoute pageName="account-profile" pageId=""><Profile /></ProtectedRoute>} />
-                                        <Route path="/reports/*" element={<ProtectedRoute pageName="Reports" pageId="-1008"><Reports /></ProtectedRoute>} />
-                                        <Route path="/notification" element={<NotificationTable />} />
-                                        <Route path="*" element={<PagenotFound />} />
-                                    </Routes>
-                                </Layout>
-                            }
-                        />
-                    </Routes>
-                </Suspense>
-            </LocalizationProvider>
+            <RecoilRoot>
+                <Router>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
+                            <Routes>
+                                <Route path="/error_401" element={isAuthenticated ? <Navigate to="/" replace /> : <SomethingWentWrong />} />
+                                <Route path="/error401" element={<Error401Page />} />
+                                <Route
+                                    path="*"
+                                    element={
+                                        <Layout>
+                                            <Routes>
+                                                <Route path="/" element={<ProtectedRoute pageName="Home" pageId="-1001"><Home /></ProtectedRoute>} />
+                                                <Route path="/projects" element={<ProtectedRoute pageName="Project" pageId="-1003"><Project /></ProtectedRoute>} />
+                                                <Route path="/projects/Dashboard" element={<ProtectedRoute pageName="Project" pageId="-1003"><ProjectDashboard /></ProtectedRoute>} />
+                                                <Route path="/tasks/*" element={<ProtectedRoute pageName="Task" pageId="-1002"><Task /></ProtectedRoute>} />
+                                                <Route path="/tasks/unassigned" element={<ProtectedRoute pageName="Task" pageId="-1002"><UnassignedTaskList /></ProtectedRoute>} />
+                                                <Route path="/taskDetails" element={<ProtectedRoute pageName="Task" pageId="-1002"><TaskDetails /></ProtectedRoute>} />
+                                                <Route path="/calendar" element={<ProtectedRoute pageName="Calender" pageId="-1006"><Calendar /></ProtectedRoute>} />
+                                                <Route path="/meetings" element={<ProtectedRoute pageName="Meeting" pageId="-1005"><Meeting /></ProtectedRoute>} />
+                                                <Route path="/inbox" element={<ProtectedRoute pageName="Inbox" pageId="-1004"><Inbox /></ProtectedRoute>} />
+                                                <Route path="/masters" element={<ProtectedRoute pageName="Maters" pageId="-1007"><Masters /></ProtectedRoute>} />
+                                                <Route path="/account-profile" element={<ProtectedRoute pageName="account-profile" pageId=""><Profile /></ProtectedRoute>} />
+                                                <Route path="/reports/*" element={<ProtectedRoute pageName="Reports" pageId="-1008"><Reports /></ProtectedRoute>} />
+                                                <Route path="/notification" element={<NotificationTable />} />
+                                                <Route path="*" element={<PagenotFound />} />
+                                            </Routes>
+                                        </Layout>
+                                    }
+                                />
+                            </Routes>
+                        </Suspense>
+                    </LocalizationProvider>
+                </Router>
+            </RecoilRoot>
         </>
     );
 };
-
-const App = () => (
-    <RecoilRoot>
-        <Router>
-            <AppWrapper />
-        </Router>
-    </RecoilRoot>
-);
 
 export default App;

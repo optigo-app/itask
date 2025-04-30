@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Avatar, Box, Button, Typography } from "@mui/material";
 import ReusableTable from "./ReusableTable";
 import { Add as AddIcon } from "@mui/icons-material";
 import TeamSidebar from "./Team/TeamSidebar";
+import { ImageUrl } from "../../../Utils/globalfun";
 
 const teamMembers = [
     { id: 1, name: "John Doe", designation: "Project Manager", avatar: "https://i.pravatar.cc/150?img=1" },
@@ -12,8 +13,18 @@ const teamMembers = [
     { id: 5, name: "Michael Brown", designation: "DevOps Engineer", avatar: "https://i.pravatar.cc/150?img=5" },
 ];
 
-const TeamMembers = ({ taskAssigneeData }) => {
+const TeamMembers = ({ taskAssigneeData, teamMemberData, decodedData, background }) => {
     const [open, setOpen] = React.useState(false);
+    const [filteredTeamMembers, setFilteredTeamMembers] = React.useState([]);
+
+    useEffect(() => {
+        if (decodedData?.projectid && teamMemberData) {
+            const projectId = String(decodedData.projectid); // Ensure key is string
+            const members = teamMemberData[projectId] || [];
+            setFilteredTeamMembers(members);
+        }
+    }, [decodedData, teamMemberData]);
+
     const handleSidebarOpen = () => {
         setOpen(true);
     }
@@ -39,17 +50,21 @@ const TeamMembers = ({ taskAssigneeData }) => {
                 className="reusable-table-container"
                 columns={[
                     { id: "id", label: "ID" },
-                    { id: "task", label: "Task Module" },
                     { id: "name", label: "Team Member" },
-                    { id: "designation", label: "Designation" }
+                    { id: "designation", label: "Designation" },
+                    { id: "role", label: "Role" }
                 ]}
-                data={teamMembers}
+                data={filteredTeamMembers}
                 renderCell={(columnId, row) => {
                     if (columnId === "name") {
                         return (
                             <div className="reusa_uploadedBy">
-                                <Avatar src={row.avatar} alt={row.name} className="reusa_avatar" />
-                                <Typography>{row.name}</Typography>
+                                <Avatar src={ImageUrl(row)} alt={row.firstname} className="reusa_avatar"
+                                    sx={{
+                                        backgroundColor: background(row?.firstname),
+                                    }}
+                                />
+                                <Typography>{row?.firstname + " " + row?.lastname}</Typography>
                             </div>
                         );
                     }

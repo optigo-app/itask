@@ -18,6 +18,9 @@ import { commonTextFieldProps } from '../../../Utils/globalfun';
 import { useRecoilValue } from 'recoil';
 import { selectedRowData } from '../../../Recoil/atom';
 import { filesUploadApi } from '../../../Api/UploadApi/filesUploadApi';
+import pdfIcon from '../../../Assests/pdf.png';
+import sheetIcon from '../../../Assests/xls.png';
+import Document from '../../../Assests/document.png'
 
 const tabData = [
   { id: 1, value: "file", label: "File", icon: <File size={18} /> },
@@ -214,13 +217,13 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                   return (
                     <Box key={index} className="file-card">
                       {isImage ? (
-                        <img src={fileURL} alt={item.fileName} className="preview-image" />
+                        <img src={fileURL} alt={item.fileName} className="preview-image" loading='lazy'/>
                       ) : isPdf ? (
-                        <PdfIcon className="preview-icon" />
+                        <img src={pdfIcon} alt="pdf-file" className="preview-file" loading='lazy'/>
                       ) : isExcel ? (
-                        <Sheet className="preview-icon" />
+                        <img src={sheetIcon} alt='xlx-file' className="preview-file" loading='lazy'/>
                       ) : (
-                        <File className="preview-icon" />
+                        <img src={Document} alt='file' className="preview-file" loading='lazy'/>
                       )}
                       <Typography className="file-title">
                         {item ? item.fileName : item.fileName}

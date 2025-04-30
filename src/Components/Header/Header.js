@@ -22,7 +22,6 @@ const Header = ({ avatarSrc = "" }) => {
     const [decodedData, setDecodedData] = useState(null);
     const taskDataLength = useRecoilValue(taskLength);
     const [profileData, setProfileData] = useState();
-    console.log('profileData: ', profileData);
 
     useEffect(() => {
         const UserProfileData = JSON?.parse(localStorage.getItem("UserProfileData"));

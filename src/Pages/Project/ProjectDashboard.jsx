@@ -1,9 +1,11 @@
 import React, { useEffect, useState, Suspense, lazy } from 'react';
-import { Box, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import { useLocation } from 'react-router-dom';
-import taskData from "../../Data/taskData.json"
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import FullTasKFromatfile from '../../Utils/TaskList/FullTasKFromatfile';
+import { getRandomAvatarColor } from '../../Utils/globalfun';
+import { useRecoilValue } from 'recoil';
+import { selectedRowData } from '../../Recoil/atom';
 
 // Lazy-loaded components
 const DasboardTab = lazy(() => import('../../Components/Project/Dashboard/dasboardTab'));
@@ -11,14 +13,35 @@ const DashboardContent = lazy(() => import('../../Components/Project/Dashboard/D
 const TaskDetail = lazy(() => import('../../Components/Task/TaskDetails/TaskDetails'));
 
 const ProjectDashboard = () => {
-    const { isLoading, taskFinalData, taskAssigneeData } = FullTasKFromatfile();
-    console.log('taskFinalData: ', isLoading, taskFinalData);
-
     const location = useLocation();
-    const [categoryData, setCategoryData] = useState([]);
+    const selectedData = useRecoilValue(selectedRowData);
+    const [decodedData, setDecodedData] = useState(null);
+    const { isLoading, taskFinalData, taskAssigneeData } = FullTasKFromatfile();                          
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
 
-    const handleTaskModalOpen = (item) => {
+    const background = (assignee) => {
+        const avatarBackgroundColor = assignee?.avatar
+            ? "transparent"
+            : getRandomAvatarColor(assignee);
+        return avatarBackgroundColor;
+    };
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const encodedData = searchParams.get('d');
+
+        if (encodedData) {
+            try {
+                const decodedString = atob(encodedData);
+                const parsedData = JSON.parse(decodedString);
+                setDecodedData(parsedData);
+            } catch (error) {
+                console.error('Error decoding or parsing search data:', error);
+            }
+        }
+    }, [location.search]);
+
+    const handleTaskModalOpen = () => {
         setTaskDetailModalOpen(true);
     };
 
@@ -27,10 +50,11 @@ const ProjectDashboard = () => {
     };
 
     const tabData = [
-        { label: 'Team Member', content: 'TeamMember' },
-        { label: 'Milestone', content: 'MilestoneTimeline' },
         { label: 'Reference', content: 'ReferencePr' },
-        { label: 'Comments', content: 'Comments' },
+        { label: 'Milestone', content: 'MilestoneTimeline' },
+        { label: 'Team Member', content: 'TeamMember' },
+        { label: 'Announcement', content: 'Announcement' },
+        // { label: 'Comments', content: 'Comments' },
         { label: 'Challenges', content: 'Challenges' },
         { label: 'R&D', content: 'RnD' },
     ];
@@ -66,6 +90,8 @@ const ProjectDashboard = () => {
                     <DashboardContent
                         tabData={tabData}
                         selectedTab={selectedTab}
+                        decodedData={decodedData}
+                        background={background}
                         handleDtopen={handleTaskModalOpen}
                         taskFinalData={taskFinalData}
                         taskAssigneeData={taskAssigneeData}
@@ -77,7 +103,7 @@ const ProjectDashboard = () => {
                 <TaskDetail
                     open={taskDetailModalOpen}
                     onClose={handleTaskModalClose}
-                    taskData={taskData}
+                    taskData={selectedData}
                 />
             </Suspense>
         </Box>
