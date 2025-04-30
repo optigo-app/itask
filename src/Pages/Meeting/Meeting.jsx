@@ -577,7 +577,6 @@ const MeetingPage = () => {
 
   const hanldePAvatarClick = (task) => {
     setProfileOpen(true);
-    console.log("task: ", task);
     setCalFormData(task);
   };
 

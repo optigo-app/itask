@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { Typography } from '@mui/material';
+import Announcement from './Announcement';
 
 // Lazy-loaded components
 const ReferencePr = lazy(() => import('./ReferencePr'));
@@ -9,7 +10,7 @@ const RnDTask = lazy(() => import('./RndTask'));
 const TeamMembers = lazy(() => import('./TeamMembers'));
 const Comments = lazy(() => import('./Commnets'));
 
-const DashboardContent = ({ selectedTab, handleDtopen, taskFinalData, taskAssigneeData  }) => {
+const DashboardContent = ({ selectedTab, decodedData, handleDtopen, taskFinalData, taskAssigneeData, background }) => {
   console.log('taskFinalData: ', taskFinalData);
   const renderContent = () => {
     switch (selectedTab) {
@@ -18,11 +19,18 @@ const DashboardContent = ({ selectedTab, handleDtopen, taskFinalData, taskAssign
       case 'Milestone':
         return <MilestoneTimeline handleDtopen={handleDtopen} milestoneData={taskFinalData?.MilestoneData} />;
       case 'Challenges':
-        return <TaskChalenges handleDtopen={handleDtopen} TaskChalenges={taskFinalData?.ChallengesTask} />;
+        return <TaskChalenges handleDtopen={handleDtopen} TaskChalenges={taskFinalData?.ChallengesTask} decodedData={decodedData}/>;
       case 'R&D':
-        return <RnDTask handleDtopen={handleDtopen} taskRnd={taskFinalData?.RndTask} />;
+        return <RnDTask handleDtopen={handleDtopen} taskRnd={taskFinalData?.RndTask} decodedData={decodedData}/>;
+        case 'Announcement':
+        return <Announcement handleDtopen={handleDtopen} taskAnnouncement={taskFinalData?.Announcement} decodedData={decodedData}/>;
       case 'Team Member':
-        return <TeamMembers handleDtopen={handleDtopen} taskAssigneeData={taskAssigneeData}/>;
+        return <TeamMembers
+          handleDtopen={handleDtopen}
+          taskAssigneeData={taskAssigneeData}
+          teamMemberData={taskFinalData?.TeamMembers}
+          decodedData={decodedData}
+          background={background} />;
       case 'Comments':
         return <Comments handleDtopen={handleDtopen} />;
       default:

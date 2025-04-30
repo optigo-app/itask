@@ -86,7 +86,6 @@ const FullTasKFromatfile = () => {
       const data = labeledTasks?.map((task) => enhanceTask(task));
       const finalTaskData = formatDataToTree(data);
       setTaskFinalData(finalTaskData);
-      console.log("finalTaskData: ", finalTaskData);
     } catch (error) {
       console.error(error);
     } finally {
@@ -169,6 +168,7 @@ const FullTasKFromatfile = () => {
         ?.map(extractMilestoneTree),
       RndTask: data.filter((task) => task.workcategoryid === 2),
       ChallengesTask: data.filter((task) => task.workcategoryid === 10),
+      Announcement : data.filter((task) => task.workcategoryid === 11),
       TeamMembers,
     };
   }

@@ -484,7 +484,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                     </TableCell>
                     <TableCell>{subtask?.taskPr}</TableCell>
                     <TableCell>
-                        <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange} />
+                        <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange} disable={false} />
                     </TableCell>
                     <TableCell
                         onMouseEnter={() => handleTaskMouseEnter(subtask?.taskid, { Tbcell: 'Assignee' })}
@@ -607,7 +607,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                 </TableCell>
                                                 <TableCell>{task?.taskPr}</TableCell>
                                                 <TableCell>
-                                                    <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange} />
+                                                    <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange} disable={false} />
                                                 </TableCell>
                                                 <TableCell
                                                     onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}

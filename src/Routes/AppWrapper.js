@@ -12,33 +12,32 @@ import { RecoilRoot } from 'recoil';
 import { ToastContainer } from 'react-toastify';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { taskInit } from './Api/InitialApi/TaskInitApi';
-import { fetchMasterGlFunc } from './Utils/globalfun';
 import 'react-toastify/dist/ReactToastify.css';
-import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
-import Reports from './Pages/Reports/Reports';
-import SomethingWentWrong from './Components/Auth/SomethingWentWrong';
 import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
-import NotificationTable from './Pages/Notification/NotificationTable';
+import { fetchMasterGlFunc } from '../Utils/globalfun';
+import LoadingBackdrop from '../Utils/Common/LoadingBackdrop';
+import { taskInit } from '../Api/InitialApi/TaskInitApi';
 
 // Lazy Components
-const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
-const Header = lazy(() => import('./Components/Header/Header'));
-const Home = lazy(() => import('./Pages/Home/Home'));
-const Inbox = lazy(() => import('./Pages/Inbox/Inbox'));
-const Calendar = lazy(() => import('./Pages/Calendar/CalendarPage'));
-const Meeting = lazy(() => import('./Pages/Meeting/Meeting'));
-const Task = lazy(() => import('./Pages/Task/Task'));
-const Project = lazy(() => import('./Pages/Project/Project'));
-const Masters = lazy(() => import('./Pages/Master/Masters'));
-const TaskDetails = lazy(() => import('./Components/Task/TaskDetails/TaskDetails'));
-const PagenotFound = lazy(() => import('./Pages/404Page/PagenotFound'));
-const MetaDataSet = lazy(() => import('./Utils/MetaData/MetaDataSet'));
-const Profile = lazy(() => import('./Pages/ProfilePage/Profile'));
-const UnassignedTaskList = lazy(() => import('./Pages/Task/UnAssignedTask/UnassignedTaskList'));
-const ProjectDashboard = lazy(() => import('./Pages/Project/ProjectDashboard'));
-const Error401Page = lazy(() => import('./Pages/ErrorPages/Error401Page'));
+const Sidebar = lazy(() => import('../Components/NavSidebar/Sidebar'));
+const Header = lazy(() => import('../Components/Header/Header'));
+const Home = lazy(() => import('../Pages/Home/Home'));
+const Inbox = lazy(() => import('../Pages/Inbox/Inbox'));
+const Calendar = lazy(() => import('../Pages/Calendar/CalendarPage'));
+const Meeting = lazy(() => import('../Pages/Meeting/Meeting'));
+const Task = lazy(() => import('../Pages/Task/Task'));
+const Project = lazy(() => import('../Pages/Project/Project'));
+const Masters = lazy(() => import('../Pages/Master/Masters'));
+const TaskDetails = lazy(() => import('../Components/Task/TaskDetails/TaskDetails'));
+const PagenotFound = lazy(() => import('../Pages/404Page/PagenotFound'));
+const MetaDataSet = lazy(() => import('../Utils/MetaData/MetaDataSet'));
+const Profile = lazy(() => import('../Pages/ProfilePage/Profile'));
+const UnassignedTaskList = lazy(() => import('../Pages/Task/UnAssignedTask/UnassignedTaskList'));
+const ProjectDashboard = lazy(() => import('../Pages/Project/ProjectDashboard'));
+const Reports = lazy(() => import('../Pages/Reports/Reports'));
+const NotificationTable = lazy(() => import('../Pages/Notification/NotificationTable'));
+const Error401Page = lazy(() => import('../Pages/ErrorPages/Error401Page'));
 
 const Layout = ({ children }) => {
     const isMobile = useMediaQuery('(max-width:712px)');
@@ -97,38 +96,34 @@ const AppWrapper = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            const params = getQueryParams();
-            const authData = params?.yc || JSON?.parse(localStorage.getItem("AuthqueryParams"))?.yc;
-            const isLoggedIn = authData !== '' && authData !== null && authData !== undefined;
-            setIsAuthenticated(isLoggedIn);
+        const initAuth = () => {
+            const token = Cookies.get('skey');
+            if (!token) {
+                localStorage.clear();
+                navigate('/error_401', { replace: true });
+                return;
+            }
+
+            try {
+                const decoded = jwtDecode(token);
+                const decodedPayload = {
+                    ...decoded,
+                    uid: decodeBase64(decoded.uid),
+                };
+                if (decodedPayload) {
+                    localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
+                    setIsAuthenticated(true);
+                }
+            } catch (error) {
+                console.error("JWT decode failed:", error);
+                localStorage.clear();
+                navigate('/error_401', { replace: true });
+            }
             setIsReady(true);
-        }, 500);
-        return () => clearInterval(interval);
-    }, []);
-
-    const getQueryParams = () => {
-        const token = Cookies.get('skey');
-        if (!token) {
-            localStorage?.removeItem("AuthqueryParams");
-            localStorage?.removeItem("token");
-            localStorage?.removeItem("isLoggedIn");
-            localStorage?.removeItem("UserProfileData");
-            return navigate('/error_401', { replace: true });
-        }
-
-        const decoded = jwtDecode(token);
-        const decodedPayload = {
-            ...decoded,
-            uid: decodeBase64(decoded.uid),
         };
 
-        if (decodedPayload) {
-            localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
-        }
-
-        return decodedPayload;
-    };
+        initAuth();
+    }, [navigate]);
 
     useEffect(() => {
         const checkAndInit = async () => {
@@ -164,6 +159,10 @@ const AppWrapper = () => {
         }
     };
 
+    if (!isReady) {
+        return <LoadingBackdrop />;
+    }
+
     const toastStyle = {
         borderRadius: "8px",
         backgroundColor: "#fff",
@@ -183,10 +182,6 @@ const AppWrapper = () => {
         backgroundClip: "padding-box, border-box",
     };
 
-    if (!isReady) {
-        return <LoadingBackdrop />;
-    }
-
     return (
         <>
             <ToastContainer
@@ -199,7 +194,6 @@ const AppWrapper = () => {
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
                     <Routes>
-                        <Route path="/error_401" element={<SomethingWentWrong />} />
                         <Route path="/error401" element={<Error401Page />} />
                         <Route
                             path="*"
@@ -231,12 +225,5 @@ const AppWrapper = () => {
     );
 };
 
-const App = () => (
-    <RecoilRoot>
-        <Router>
-            <AppWrapper />
-        </Router>
-    </RecoilRoot>
-);
 
-export default App;
+export default AppWrapper;
