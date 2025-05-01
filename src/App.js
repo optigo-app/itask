@@ -3,7 +3,6 @@ import {
     BrowserRouter as Router,
     Routes,
     Route,
-    useLocation,
     Navigate,
     useNavigate
 } from "react-router-dom";
@@ -40,14 +39,12 @@ const UnassignedTaskList = lazy(() => import('./Pages/Task/UnAssignedTask/Unassi
 const ProjectDashboard = lazy(() => import('./Pages/Project/ProjectDashboard'));
 const Error401Page = lazy(() => import('./Pages/ErrorPages/Error401Page'));
 
-const Layout = ({ children }) => {
+const Layout = ({ children, pageDataLoaded }) => {
     const isMobile = useMediaQuery('(max-width:712px)');
-    const location = useLocation();
-    const hideLayout = location?.pathname?.includes('/login');
 
     return (
         <Box sx={{ display: 'flex', overflow: "auto" }}>
-            {!hideLayout && <Suspense fallback={<LoadingBackdrop />}><Sidebar /></Suspense>}
+            {!pageDataLoaded && <Suspense fallback={<LoadingBackdrop />}><Sidebar /></Suspense>}
             <Box sx={{
                 flexGrow: 1,
                 display: 'flex',
@@ -57,7 +54,7 @@ const Layout = ({ children }) => {
                 width: isMobile ? '97%' : '80%',
                 overflow: "auto"
             }}>
-                {!hideLayout && <Suspense fallback={<LoadingBackdrop />}><Header /></Suspense>}
+                {!pageDataLoaded && <Suspense fallback={<LoadingBackdrop />}><Header /></Suspense>}
                 <Suspense fallback={<LoadingBackdrop />}><MetaDataSet /></Suspense>
                 {children}
                 <Box
@@ -83,76 +80,27 @@ const Layout = ({ children }) => {
     );
 };
 
-const ProtectedRoute = ({ children, pageId }) => {
-    const accessData = JSON.parse(sessionStorage.getItem("pageAccess"));
-    const userPages = accessData?.map((item) => item.id.toString());
-    const hasAccess = userPages?.includes(pageId.toString());
-
-    return hasAccess ? children : <Navigate to="/error401" replace />;
+const ProtectedRoute = ({ children, pageId, pageData, pageDataLoaded }) => {
+    if (pageDataLoaded && pageData?.length != 0) {
+        const userPages = pageData?.map((item) => item.id.toString());
+        const hasAccess = userPages?.includes(pageId.toString());
+        return hasAccess ? children : <Navigate to="/error401" replace />;
+    }
 };
 
 const AppWrapper = () => {
+    const [pageData, setPageData] = useState([]);
+    const [pageDataLoaded, setPageDataLoaded] = useState(false);
     const [isReady, setIsReady] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [cookieData, setCookieData] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         const interval = setInterval(() => {
-            const params = getQueryParams();
-            const authData = params?.yc || JSON?.parse(localStorage.getItem("AuthqueryParams"))?.yc;
-            const isLoggedIn = authData !== '' && authData !== null && authData !== undefined;
-            setIsAuthenticated(isLoggedIn);
-            setIsReady(true);
+            getQueryParams();
         }, 500);
         return () => clearInterval(interval);
-    }, []);
-
-    const getQueryParams = () => {
-        const token = Cookies.get('skey');
-        if (!token) {
-            localStorage?.removeItem("AuthqueryParams");
-            localStorage?.removeItem("token");
-            localStorage?.removeItem("isLoggedIn");
-            localStorage?.removeItem("UserProfileData");
-            return navigate('/error_401', { replace: true });
-        }
-
-        const decoded = jwtDecode(token);
-        const decodedPayload = {
-            ...decoded,
-            uid: decodeBase64(decoded.uid),
-        };
-
-        if (decodedPayload) {
-            localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
-        }
-
-        return decodedPayload;
-    };
-
-    useEffect(() => {
-        const checkAndInit = async () => {
-            const token = JSON?.parse(localStorage.getItem("token"));
-            if (!token) {
-                const result = await taskInit();
-                if (result?.Data?.rd) {
-                    fetchMasterGlFunc();
-                }
-            } else {
-                fetchMasterGlFunc();
-            }
-        };
-
-        checkAndInit();
-    }, []);
-
-    useEffect(() => {
-        const handleStorageChange = () => {
-            setIsAuthenticated(localStorage.getItem("isLoggedIn") === "true");
-        };
-        window.addEventListener("storage", handleStorageChange);
-        return () => window.removeEventListener("storage", handleStorageChange);
-    }, []);
+    }, [isReady]);
 
     const decodeBase64 = (str) => {
         if (!str) return null;
@@ -163,6 +111,58 @@ const AppWrapper = () => {
             return null;
         }
     };
+
+    const getQueryParams = () => {
+        const token = Cookies.get('skey');
+        if (!token) {
+            localStorage?.removeItem("AuthqueryParams");
+            localStorage?.removeItem("token");
+            localStorage?.removeItem("isLoggedIn");
+            localStorage?.removeItem("UserProfileData");
+            setIsReady(true);
+            setPageDataLoaded(true);
+            return navigate('/error_401', { replace: true });
+        }
+
+        const decoded = jwtDecode(token);
+        const decodedPayload = {
+            ...decoded,
+            uid: decodeBase64(decoded.uid),
+        };
+
+        if (decodedPayload) {
+            setCookieData(decodedPayload);
+            localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
+            setIsReady(true);
+        }
+
+        return decodedPayload;
+    };
+
+    useEffect(() => {
+        const checkAndInit = async () => {
+            const token = JSON?.parse(sessionStorage.getItem("taskInit"));
+            if (!token) {
+                const result = await taskInit();
+                console.log('result: ', result);
+                setPageData(result?.Data?.rd1)
+                if (result?.Data?.rd) {
+                    fetchMasterGlFunc();
+                }
+            } else {
+                const pageData = JSON?.parse(sessionStorage.getItem("pageAccess"));
+                if (pageData) {
+                    setPageData(pageData)
+                }
+                fetchMasterGlFunc();
+            }
+            setPageDataLoaded(true);
+        };
+        if (cookieData) {
+            checkAndInit();
+        }
+
+    }, [isReady]);
 
     const toastStyle = {
         borderRadius: "8px",
@@ -183,9 +183,10 @@ const AppWrapper = () => {
         backgroundClip: "padding-box, border-box",
     };
 
-    if (!isReady) {
-        return <LoadingBackdrop />;
+    if (!isReady || !pageDataLoaded) {
+        return <LoadingBackdrop isLoading={true} />;
     }
+
 
     return (
         <>
@@ -206,18 +207,18 @@ const AppWrapper = () => {
                             element={
                                 <Layout>
                                     <Routes>
-                                        <Route path="/" element={<ProtectedRoute pageName="Home" pageId="-1001"><Home /></ProtectedRoute>} />
-                                        <Route path="/projects" element={<ProtectedRoute pageName="Project" pageId="-1003"><Project /></ProtectedRoute>} />
-                                        <Route path="/projects/Dashboard" element={<ProtectedRoute pageName="Project" pageId="-1003"><ProjectDashboard /></ProtectedRoute>} />
-                                        <Route path="/tasks/*" element={<ProtectedRoute pageName="Task" pageId="-1002"><Task /></ProtectedRoute>} />
-                                        <Route path="/tasks/unassigned" element={<ProtectedRoute pageName="Task" pageId="-1002"><UnassignedTaskList /></ProtectedRoute>} />
-                                        <Route path="/taskDetails" element={<ProtectedRoute pageName="Task" pageId="-1002"><TaskDetails /></ProtectedRoute>} />
-                                        <Route path="/calendar" element={<ProtectedRoute pageName="Calender" pageId="-1006"><Calendar /></ProtectedRoute>} />
-                                        <Route path="/meetings" element={<ProtectedRoute pageName="Meeting" pageId="-1005"><Meeting /></ProtectedRoute>} />
-                                        <Route path="/inbox" element={<ProtectedRoute pageName="Inbox" pageId="-1004"><Inbox /></ProtectedRoute>} />
-                                        <Route path="/masters" element={<ProtectedRoute pageName="Maters" pageId="-1007"><Masters /></ProtectedRoute>} />
-                                        <Route path="/account-profile" element={<ProtectedRoute pageName="account-profile" pageId=""><Profile /></ProtectedRoute>} />
-                                        <Route path="/reports/*" element={<ProtectedRoute pageName="Reports" pageId="-1008"><Reports /></ProtectedRoute>} />
+                                        <Route path="/" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1001"><Home /></ProtectedRoute>} />
+                                        <Route path="/projects" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1003"><Project /></ProtectedRoute>} />
+                                        <Route path="/projects/Dashboard" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1003"><ProjectDashboard /></ProtectedRoute>} />
+                                        <Route path="/tasks/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><Task /></ProtectedRoute>} />
+                                        <Route path="/tasks/unassigned" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><UnassignedTaskList /></ProtectedRoute>} />
+                                        <Route path="/taskDetails" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><TaskDetails /></ProtectedRoute>} />
+                                        <Route path="/calendar" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1006"><Calendar /></ProtectedRoute>} />
+                                        <Route path="/meetings" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1005"><Meeting /></ProtectedRoute>} />
+                                        <Route path="/inbox" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1004"><Inbox /></ProtectedRoute>} />
+                                        <Route path="/masters" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1007"><Masters /></ProtectedRoute>} />
+                                        <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
+                                        <Route path="/reports/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><Reports /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
@@ -233,6 +234,7 @@ const AppWrapper = () => {
 
 const App = () => (
     <RecoilRoot>
+        {/* <Router basename="/itaskweb"> */}
         <Router>
             <AppWrapper />
         </Router>

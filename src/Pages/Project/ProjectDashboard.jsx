@@ -54,7 +54,7 @@ const ProjectDashboard = () => {
         { label: 'Milestone', content: 'MilestoneTimeline' },
         { label: 'Team Member', content: 'TeamMember' },
         { label: 'Announcement', content: 'Announcement' },
-        // { label: 'Comments', content: 'Comments' },
+        { label: 'Comments', content: 'Comments' },
         { label: 'Challenges', content: 'Challenges' },
         { label: 'R&D', content: 'RnD' },
     ];

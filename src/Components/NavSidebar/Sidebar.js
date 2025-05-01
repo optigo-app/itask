@@ -45,6 +45,7 @@ const Sidebar = () => {
     const drawerWidth = isFullSidebar || isDrawerOpen ? 260 : 80;
     const [reportsAnchorEl, setReportsAnchorEl] = React.useState(null);
     const setFilters = useSetRecoilState(Advfilters);
+    const taskInit = JSON?.parse(sessionStorage?.getItem('taskInit'));
 
 
     // All possible menu items with additional info
@@ -72,16 +73,22 @@ const Sidebar = () => {
     ];
 
     useEffect(() => {
+        let intervalId;
         setLoading(true);
-        const pageAccess = JSON?.parse(sessionStorage.getItem('pageAccess')) || [];
-        const filteredMenu = allMenuItems.filter(item =>
-            pageAccess.some(access => access.pagename === item.pagename)
-        );
-        setPageList(filteredMenu);
-        setLoading(false);
-    }, [location]);
-
-
+        const checkPageAccess = () => {
+            const pageAccess = JSON.parse(sessionStorage.getItem('pageAccess'));
+            if (pageAccess && Array.isArray(pageAccess)) {
+                const filteredMenu = allMenuItems.filter(item =>
+                    pageAccess.some(access => access.pagename === item.pagename)
+                );
+                setPageList(filteredMenu);
+                setLoading(false);
+                clearInterval(intervalId);
+            }
+        };
+        intervalId = setInterval(checkPageAccess, 200);
+        return () => clearInterval(intervalId);
+    }, []);
 
     const toggleDrawer = () => setDrawerOpen(!isDrawerOpen);
     const toggleSidebar = (event) => setFullSidebar(event.target.checked);
@@ -163,7 +170,7 @@ const Sidebar = () => {
                 }}
                 className="itask_Menudrawer"
             >
-                {!isLoading  &&
+                {!isLoading &&
                     <List>
                         <ListItem className="itask_drawerHeader">
                             <ListItemButton className="itask_drawerListItem">
@@ -202,6 +209,9 @@ const Sidebar = () => {
                                 </Box>
                             </ListItemButton>
                         </ListItem>
+                        <Typography sx={{paddingInline:'22px'}} variant="caption" className="itask_drawerText">
+                            CompanyCode : {taskInit?.companycode}
+                        </Typography>
                         <div className="itask_separator" />
                         {pageList.length > 0 ? (
                             <>

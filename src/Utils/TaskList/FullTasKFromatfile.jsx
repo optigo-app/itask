@@ -148,7 +148,6 @@ const FullTasKFromatfile = () => {
         }
       });
 
-      // Set progress_per: if there are subtasks, otherwise 100%
       clone.progress_per =
         total > 0 ? Math?.round((completed / total) * 100) : 100;
       return clone;
