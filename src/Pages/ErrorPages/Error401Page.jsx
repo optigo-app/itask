@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import Image401 from '../../Assests/error_401.avif';
+import Image401 from '../../Assests/error_401.webp';
 import './Styles/ErrorPage.scss';
 
 const Error401Page = () => {
@@ -23,7 +23,7 @@ const Error401Page = () => {
           401 - Unauthorized Access
         </Typography>
         <Typography variant="body1" className="error-message">
-          You do not have permission to view this page. Please contact your administrator.
+          You do not have permission to view any page. Please contact your administrator.
         </Typography>
         <Button variant="contained" className="buttonClassname" onClick={handleGoBack}>
           Go Back

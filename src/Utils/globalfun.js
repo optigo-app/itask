@@ -258,7 +258,7 @@ export const fetchMasterGlFunc = async () => {
             const UserProfileData = assigneeRes?.rd?.find(item => item?.userid == AuthUrlData?.uid);
             localStorage.setItem('UserProfileData', JSON?.stringify(UserProfileData));
         } else {
-            const UserProfileData = AssigneeMasterData?.find(item => item?.userid == AuthUrlData?.uid);
+            const UserProfileData = AssigneeMasterData?.find(item => item?.userid == AuthUrlData?.uid) ?? {};
             localStorage.setItem('UserProfileData', JSON?.stringify(UserProfileData));
         }
         let masterData = JSON?.parse(sessionStorage.getItem('structuredMasterData'));
