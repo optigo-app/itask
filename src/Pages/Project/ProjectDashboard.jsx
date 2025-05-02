@@ -2,10 +2,10 @@ import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { Box } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
-import FullTasKFromatfile from '../../Utils/TaskList/FullTasKFromatfile';
 import { getRandomAvatarColor } from '../../Utils/globalfun';
 import { useRecoilValue } from 'recoil';
 import { selectedRowData } from '../../Recoil/atom';
+import useFullTaskFormatFile from '../../Utils/TaskList/FullTasKFromatfile';
 
 // Lazy-loaded components
 const DasboardTab = lazy(() => import('../../Components/Project/Dashboard/dasboardTab'));
@@ -16,7 +16,7 @@ const ProjectDashboard = () => {
     const location = useLocation();
     const selectedData = useRecoilValue(selectedRowData);
     const [decodedData, setDecodedData] = useState(null);
-    const { isLoading, taskFinalData, taskAssigneeData } = FullTasKFromatfile();                          
+    const { isLoading, taskFinalData, taskAssigneeData } = useFullTaskFormatFile();                          
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
 
     const background = (assignee) => {
@@ -53,8 +53,8 @@ const ProjectDashboard = () => {
         { label: 'Reference', content: 'ReferencePr' },
         { label: 'Milestone', content: 'MilestoneTimeline' },
         { label: 'Team Member', content: 'TeamMember' },
-        { label: 'Announcement', content: 'Announcement' },
         { label: 'Comments', content: 'Comments' },
+        { label: 'Announcement', content: 'Announcement' },
         { label: 'Challenges', content: 'Challenges' },
         { label: 'R&D', content: 'RnD' },
     ];

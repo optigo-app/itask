@@ -26,7 +26,7 @@ const RnDTask = ({ handleDtopen, taskRnd, decodedData, onStatusChange }) => {
                 { id: "priority", label: "Priority" },
                 { id: "action", label: "Action" }
             ]}
-            data={taskRnd.map(row => ({
+            data={taskRnd?.map(row => ({
                 ...row,
                 status: <StatusBadge task={row} statusColors={statusColors} onStatusChange={onStatusChange} disable={true} />,
                 "project/module": `${decodedData?.project}/${decodedData?.module}`,

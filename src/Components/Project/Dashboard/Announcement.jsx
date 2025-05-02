@@ -25,7 +25,7 @@ const Announcement = ({ handleDtopen, taskAnnouncement, decodedData, onStatusCha
         { id: "priority", label: "Priority" },
         { id: "action", label: "Action" }
       ]}
-      data={taskAnnouncement.map(row => ({
+      data={taskAnnouncement?.map(row => ({
         ...row,
         status: <StatusBadge task={row} statusColors={statusColors} onStatusChange={onStatusChange} disable={true} />,
         "project/module": `${decodedData?.project}/${decodedData?.module}`,
