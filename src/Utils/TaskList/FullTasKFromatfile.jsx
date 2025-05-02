@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { fetchTaskDataFullApi } from "../../Api/TaskApi/TaskDataFullApi";
 import { fetchMasterGlFunc } from "../globalfun";
 
-const FullTasKFromatfile = () => {
+const useFullTaskFormatFile = () => {
   const [isLoading, setIsLoading] = useState(null);
   const [taskFinalData, setTaskFinalData] = useState([]);
   const [priorityData, setPriorityData] = useState();
@@ -93,84 +93,106 @@ const FullTasKFromatfile = () => {
     }
   };
 
-  function formatDataToTree(data) {
-    const taskMap = new Map();
-    const teamMembersMap = new Map();
+  const formatDataToTree = useMemo(() => {
+    return (data) => {
+      const taskMap = new Map();
+      const teamMembersMap = new Map();
+      const categoryMap = {};
+      const category = {};
 
-    // Step 1: Build task map and initialize subtasks
-    data.forEach((task) => {
-      task.subtasks = [];
-      taskMap.set(task.taskid, task);
+      // Step 0: Create category map from label list
+      taskCategory.forEach((label) => {
+        const key = label.labelname.toLowerCase().replace(/\s+/g, '');
+        categoryMap[label.id] = key;
+        category[key] = [];
+      });
 
-      if (
-        task.assignee &&
-        Array.isArray(task.assignee) &&
-        task.assignee.length > 0
-      ) {
-        if (!teamMembersMap.has(task.projectid)) {
-          teamMembersMap.set(task.projectid, new Map()); // Use Map to avoid duplicate IDs
-        }
-        const projectMembers = teamMembersMap.get(task.projectid);
+      // Step 1: Build task map and initialize subtasks
+      data.forEach((task) => {
+        task.subtasks = [];
+        taskMap.set(task.taskid, task);
 
-        task.assignee.forEach((member) => {
-          if (member.id && member.firstname) {
-            // Ensure member has valid data
-            projectMembers.set(member.id, member); // Store full member object
+        if (
+          task.assignee &&
+          Array.isArray(task.assignee) &&
+          task.assignee.length > 0
+        ) {
+          if (!teamMembersMap.has(task.projectid)) {
+            teamMembersMap.set(task.projectid, new Map());
           }
-        });
-      }
-    });
+          const projectMembers = teamMembersMap.get(task.projectid);
 
-    // Step 2: Assign subtasks to parents
-    data.forEach((task) => {
-      if (task.parentid !== 0) {
-        const parent = taskMap?.get(task.parentid);
-        if (parent) parent?.subtasks?.push(task);
-      }
-    });
-
-    // Step 3: Recursively extract Milestone tree and calculate progress_per
-    const extractMilestoneTree = (task) => {
-      const clone = { ...task };
-      let completed = 0;
-      let total = 0;
-
-      clone.subtasks = task.subtasks.map((child) => {
-        if (child.ismilestone === 1) {
-          const childClone = extractMilestoneTree(child);
-          return childClone;
-        } else {
-          total++;
-          if (child.statusid === 2) {
-            completed++;
-          }
-          return { statusid: child.statusid };
+          task.assignee.forEach((member) => {
+            if (member.id && member.firstname) {
+              projectMembers.set(member.id, member);
+            }
+          });
         }
       });
 
-      clone.progress_per =
-        total > 0 ? Math?.round((completed / total) * 100) : 100;
-      return clone;
-    };
+      // Step 2: Assign subtasks to parents
+      data.forEach((task) => {
+        if (task.parentid !== 0) {
+          const parent = taskMap.get(task.parentid);
+          if (parent) parent.subtasks.push(task);
+        }
+      });
 
-    // Convert team member sets to arrays
-    const TeamMembers = {};
-    for (const [projectid, membersMap] of teamMembersMap.entries()) {
-      TeamMembers[projectid] = Array.from(membersMap.values()); // Only values (array of member objects)
+      // Step 3: Extract Milestone Tree and calculate progress
+      const extractMilestoneTree = (task) => {
+        const clone = { ...task };
+        let completed = 0;
+        let total = 0;
+
+        clone.subtasks = task.subtasks.map((child) => {
+          if (child.ismilestone === 1) {
+            return extractMilestoneTree(child);
+          } else {
+            total++;
+            if (child.statusid === 2) completed++;
+            return { statusid: child.statusid };
+          }
+        });
+
+        clone.progress_per = total > 0 ? Math.round((completed / total) * 100) : 100;
+        return clone;
+      };
+
+      // Step 4: Recursively find category-based tasks
+      const collectCategoryTasks = (task) => {
+        const categoryKey = categoryMap[task.workcategoryid];
+        if (categoryKey) category[categoryKey].push(task);
+
+        task.subtasks?.forEach((subtask) => {
+          collectCategoryTasks(subtask);
+        });
+      };
+
+      // Collect top-level tasks and also populate category-based group
+      const TaskData = data.filter((task) => task.parentid === 0);
+      TaskData.forEach((task) => {
+        collectCategoryTasks(task);
+      });
+
+      // Convert team member sets to arrays
+      const TeamMembers = {};
+      for (const [projectid, membersMap] of teamMembersMap.entries()) {
+        TeamMembers[projectid] = Array.from(membersMap.values());
+      }
+
+      return {
+        TaskData,
+        MilestoneData: data
+          .filter((task) => task.ismilestone === 1)
+          .map(extractMilestoneTree),
+        RndTask: data.filter((task) => task.workcategoryid === 2),
+        ChallengesTask: data.filter((task) => task.workcategoryid === 10),
+        Announcement: data.filter((task) => task.workcategoryid === 11),
+        TeamMembers,
+        Category: category,
+      };
     }
-
-    // Final structured result
-    return {
-      TaskData: data?.filter((task) => task.parentid === 0),
-      MilestoneData: data
-        ?.filter((task) => task.ismilestone === 1)
-        ?.map(extractMilestoneTree),
-      RndTask: data.filter((task) => task.workcategoryid === 2),
-      ChallengesTask: data.filter((task) => task.workcategoryid === 10),
-      Announcement: data.filter((task) => task.workcategoryid === 11),
-      TeamMembers,
-    };
-  }
+  }, [taskCategory]);
 
   function mapTaskLabels(data) {
     const labels = data?.rd[0];
@@ -226,4 +248,4 @@ const FullTasKFromatfile = () => {
   };
 };
 
-export default FullTasKFromatfile;
+export default useFullTaskFormatFile;
