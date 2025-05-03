@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const filesUploadApi = async ({ attachments, folderName, uniqueNo }) => {
-  const isLocal = ["localhost", "zen", "itask.web"]?.includes(
+  const isLocal = ["localhost", "nzen"]?.includes(
     window.location.hostname
   );
   const { ukey } = JSON.parse(sessionStorage.getItem('taskInit'));
