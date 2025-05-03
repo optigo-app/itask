@@ -69,7 +69,7 @@ const Task = () => {
         retrieveAndSetData('taskAssigneeData', setAssigneeData);
         retrieveAndSetData('taskstatusData', setStatusData);
         retrieveAndSetData('taskpriorityData', setPriorityData);
-        retrieveAndSetData('taskdepartmentData', setTaskDepartment);
+        retrieveAndSetData('taskDepartments', setTaskDepartment);
         retrieveAndSetData('taskprojectData', setTaskProject);
         retrieveAndSetData('taskworkcategoryData', setTaskCategory);
         retrieveAndSetData('taskAssigneeData', setTaskAssigneeData);
