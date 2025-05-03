@@ -20,6 +20,7 @@ import SomethingWentWrong from './Components/Auth/SomethingWentWrong';
 import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
+import DepartmentMain from './Backup/DepartmentMain';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -220,6 +221,7 @@ const AppWrapper = () => {
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
                                         <Route path="/reports/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><Reports /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
+                                        <Route path="/test" element={<DepartmentMain />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>

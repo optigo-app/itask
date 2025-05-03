@@ -27,6 +27,30 @@
         }
     }
 
+    .prNameTypo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px !important;
+        color: $text2ndColor !important;
+        font-weight: 500 !important;
+        line-height: 1.6;
+
+        .pr-md_count {
+            background-color: #7d7f8799;
+            color: #fff;
+            width: fit-content;
+            padding: 0.05rem 0.4rem;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+
     @media (max-width: 1320px) {
         .sticky-last-col {
             position: sticky;
@@ -50,6 +74,7 @@
         a {
             font-size: 15px !important;
             color: #3724ff;
+            font-weight: 500;
             font-family: $font-family;
             text-decoration: none;
 
@@ -175,7 +200,6 @@
 }
 
 
-
 @media(max-width: 1550px) {
     .ProjectTVMain {
         .MuiTableCell-root {
@@ -202,7 +226,7 @@
             font-size: 12px !important;
         }
 
-        .TablePaginationBox  {
+        .TablePaginationBox {
             .pagination {
                 button {
                     font-size: 12px !important;

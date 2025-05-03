@@ -5,14 +5,12 @@ import {
   Button,
   Drawer,
   IconButton,
-  LinearProgress,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
   Typography
 } from '@mui/material';
-import PdfIcon from '@mui/icons-material/PictureAsPdf';
-import { CircleX, File, Link, Sheet } from 'lucide-react';
+import { CircleX, File, Link } from 'lucide-react';
 import FileDropzone from './FileDropzone';
 import { commonTextFieldProps } from '../../../Utils/globalfun';
 import { useRecoilValue } from 'recoil';
@@ -21,6 +19,7 @@ import { filesUploadApi } from '../../../Api/UploadApi/filesUploadApi';
 import pdfIcon from '../../../Assests/pdf.png';
 import sheetIcon from '../../../Assests/xls.png';
 import Document from '../../../Assests/document.png'
+import { filesUploadSaveApi } from '../../../Api/UploadApi/filesUploadSaveApi';
 
 const tabData = [
   { id: 1, value: "file", label: "File", icon: <File size={18} /> },
@@ -31,16 +30,9 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   const selectedRow = useRecoilValue(selectedRowData);
   const [selectedTab, setSelectedTab] = useState(tabData[0].value);
   const [uploading, setUploading] = useState(false);
-  const [formValues, setFormValues] = useState({
-    folderName: "",
-    url: "",
-    attachment: {},
-  });
-  const [uploadedFile, setUploadedFile] = useState({
-    folderName: "",
-    url: "",
-    attachment: {},
-  });
+  const [formValues, setFormValues] = useState({ folderName: '', url: '', attachment: {} });
+  const [uploadedFile, setUploadedFile] = useState({ attachment: {}, url: {} });
+  console.log('uploadedFile: ', uploadedFile);
 
   const handleTabChange = (event, newValue) => {
     if (newValue !== null) {
@@ -89,17 +81,19 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   };
 
   const handleAddUrl = () => {
-    const folder = formValues.folderName || "Untitled";
-    const newUrl = formValues.url.trim();
-    if (!newUrl) return;
-    setFormValues((prev) => ({
+    const folder = formValues.folderName || 'Untitled';
+    const url = formValues.url.trim();
+    if (!url) return;
+
+    setUploadedFile((prev) => ({
       ...prev,
-      url: "",
-      attachment: {
-        ...prev.attachment,
-        [folder]: [...(prev.attachment[folder] || []), { url: newUrl }],
+      url: {
+        ...prev.url,
+        [folder]: [...(prev.url[folder] || []), url],
       },
     }));
+
+    setFormValues((prev) => ({ ...prev, url: '' }));
   };
 
   const handleDeleteFile = (folder, index) => {
@@ -116,8 +110,38 @@ const SidebarDrawerFile = ({ open, onClose }) => {
     });
   };
 
-  const handleSave = () => {
-    console.log('Files and URLs saved:', formValues.attachment);
+  const handleDeleteUrl = (folder, index) => {
+    setUploadedFile((prev) => {
+      const updatedUrls = [...(prev.url[folder] || [])];
+      updatedUrls.splice(index, 1);
+      return {
+        ...prev,
+        url: {
+          ...prev.url,
+          [folder]: updatedUrls,
+        },
+      };
+    });
+  };
+
+
+  const handleSave = async () => {
+    debugger
+    const attachments = Object.entries(uploadedFile?.attachment)?.map(([folderName, files]) => {
+      const fileUrls = files.map(f => f.url).join(',');
+      const urlList = (uploadedFile.url[folderName] || []).join(',');
+      return {
+        folderName,
+        documents: [
+          {
+            documents: fileUrls,
+            documentsurl: urlList
+          }
+        ]
+      };
+    });
+    const uploadRes = await filesUploadSaveApi(attachments, selectedRow?.taskid)
+    console.log('uploadRes---?>>>>>: ', uploadRes);
     onClose();
   };
 
@@ -201,39 +225,46 @@ const SidebarDrawerFile = ({ open, onClose }) => {
             <Typography variant="body2" gutterBottom>Uploading...</Typography>
           </Box>
         )}
-
         <Box className="filePreviewSection">
           {Object.entries(uploadedFile.attachment).map(([folder, files]) => (
             <Box key={folder} className="folder-preview">
               <Typography variant="subtitle2" className="folder-title">{folder}</Typography>
               <Box className="preview-grid">
                 {files.map((item, index) => {
-                  const isImage = item?.fileType?.startsWith("image/");
-                  const isPdf = item?.fileType === "application/pdf";
-                  const isExcel = item?.fileType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-                    item?.fileType === "application/vnd.ms-excel";
-                  const fileURL = item ? item.url : item.url;
-
+                  const isImage = item?.fileType?.startsWith('image/');
+                  const isPdf = item?.fileType === 'application/pdf';
+                  const isExcel = item?.fileType?.includes('spreadsheet') || item?.fileType?.includes('excel');
+                  const fileURL = item.url;
                   return (
                     <Box key={index} className="file-card">
                       {isImage ? (
-                        <img src={fileURL} alt={item.fileName} className="preview-image" loading='lazy'/>
+                        <img src={fileURL} alt={item.fileName} className="preview-image" loading="lazy" />
                       ) : isPdf ? (
-                        <img src={pdfIcon} alt="pdf-file" className="preview-file" loading='lazy'/>
+                        <img src={pdfIcon} alt="pdf-file" className="preview-file" loading="lazy" />
                       ) : isExcel ? (
-                        <img src={sheetIcon} alt='xlx-file' className="preview-file" loading='lazy'/>
+                        <img src={sheetIcon} alt="xls-file" className="preview-file" loading="lazy" />
                       ) : (
-                        <img src={Document} alt='file' className="preview-file" loading='lazy'/>
+                        <img src={Document} alt="file" className="preview-file" loading="lazy" />
                       )}
-                      <Typography className="file-title">
-                        {item ? item.fileName : item.fileName}
-                      </Typography>
+                      <Typography className="file-title">{item.fileName}</Typography>
                       <IconButton className="delete-icon" onClick={() => handleDeleteFile(folder, index)}>
                         <CircleX size={16} />
                       </IconButton>
                     </Box>
                   );
                 })}
+
+                {(uploadedFile.url[folder] || []).map((link, idx) => (
+                  <Box key={`url-${idx}`} className="file-card">
+                    <Box className="preview-file url-icon-box">
+                      <Link size={32} />
+                    </Box>
+                    <Typography className="file-title url-title">{link}</Typography>
+                    <IconButton className="delete-icon" onClick={() => handleDeleteUrl(folder, idx)}>
+                      <CircleX size={16} />
+                    </IconButton>
+                  </Box>
+                ))}
               </Box>
             </Box>
           ))}

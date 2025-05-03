@@ -10,8 +10,9 @@ import {
     IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { commonSelectProps, commonTextFieldProps } from "../../Utils/globalfun";
-import MultiSelectChipWithLimit from "./AssigneeAutocomplete";
+import { commonSelectProps, commonTextFieldProps } from "../../../Utils/globalfun";
+import MultiSelectChipWithLimit from "../AssigneeAutocomplete";
+import DepartmentAssigneeAutocomplete from "./DepartmentAssigneeAutocomplete";
 
 const modalStyle = (theme) => ({
     position: "absolute",
@@ -33,12 +34,10 @@ const modalStyle = (theme) => ({
 
 const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit }) => {
     const [assigneeMaster, setAssigneeMaster] = useState([]);
-    const [taskDepartment, setTaskDepartment] = useState([]);
     const [formValues, setFormValues] = React.useState({});
 
     useEffect(() => {
         const data = {
-            department: taskData?.departmentid,
             guests: taskData?.assignee,
         }
         setFormValues(data);
@@ -49,8 +48,6 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
     useEffect(() => {
         const assigneeMaster = JSON?.parse(sessionStorage.getItem("taskAssigneeData"));
         setAssigneeMaster(assigneeMaster);
-        const departmentMaster = JSON?.parse(sessionStorage.getItem("taskDepartments"));
-        setTaskDepartment(departmentMaster);
     }, [])
 
     const handleChange = (e) => {
@@ -65,17 +62,12 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
         const idString = formValues?.guests?.map(user => user.id)?.join(",");
         const updatedRowData = {
             ...taskData,
-            departmentid: formValues.department ?? taskData.departmentid,
             assigneids: idString ?? taskData.assigneids,
             assignee: formValues?.guests
         };
         handleAssigneSubmit(updatedRowData);
         onClose();
     };
-
-    const departmentId = formValues?.department;
-    const departmentName = taskDepartment?.find(dept => dept.id == departmentId)?.labelname;
-    const filterAssigneeData = departmentName ? assigneeMaster?.filter((item) => item.department == departmentName) : assigneeMaster;
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -98,33 +90,9 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
                 <Grid container spacing={2} className="form-row">
                     <Grid item xs={12}>
                         <Box className="form-group">
-                            <Typography className="form-label" variant="subtitle1">
-                                Department
-                            </Typography>
-                            <TextField
-                                name="department"
-                                value={formValues.department || ""}
-                                onChange={handleChange}
-                                select
-                                {...commonTextFieldProps}
-                                {...commonSelectProps}
-                            >
-                                <MenuItem value="">
-                                    <em>Select Department</em>
-                                </MenuItem>
-                                {taskDepartment?.map((department) => (
-                                    <MenuItem name={department?.id} key={department?.id} value={department?.id}>
-                                        {department.labelname}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Box className="form-group">
-                            <MultiSelectChipWithLimit
+                            <DepartmentAssigneeAutocomplete
                                 value={formValues?.guests}
-                                options={filterAssigneeData}
+                                options={assigneeMaster}
                                 label="Assign To"
                                 placeholder="Select assignees"
                                 limitTags={2}

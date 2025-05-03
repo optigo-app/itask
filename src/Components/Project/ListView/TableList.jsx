@@ -16,7 +16,7 @@ import {
     IconButton,
     Tooltip,
 } from "@mui/material";
-
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { cleanDate, convertWordsToSpecialChars, formatDate2, getStatusColor, priorityColors } from "../../../Utils/globalfun";
@@ -47,7 +47,13 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         { id: "priority", label: "Priority", width: 100 },
         { id: "actions", label: "Actions", width: 80 },
     ];
-
+    const [toggleState, setToggleState] = useState({});
+    const handleToggle = (projectId) => {
+        setToggleState((prev) => ({
+            ...prev,
+            [projectId]: !prev[projectId],
+        }));
+    };
     const handleMouseEnter = (taskId) => {
         setHoveredTaskId(taskId);
     };
@@ -155,6 +161,98 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         );
     };
 
+    const renderTaskButtons = (task) => {
+        return (
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <LockButton
+                    isLocked={task?.isFreez === 1}
+                    onClick={() => handleOpenCnfDialog(task)}
+                    id={task?.taskid}
+                />
+                <IconButton
+                    aria-label="View Module button"
+                    onClick={() => handleOpenFileDrawer(task, { Task: "root" })}
+                    sx={{
+                        '&.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                        },
+                    }}
+                >
+                    <Paperclip size={20} color="#808080" className="iconbtn" />
+                </IconButton>
+                <IconButton
+                    aria-label="View Module button"
+                    onClick={() => handleViewPrDashboard(task)}
+                    sx={{
+                        '&.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                        },
+                    }}
+                >
+                    <Eye size={20} color="#808080" className="iconbtn" />
+                </IconButton>
+                <IconButton
+                    aria-label="Edit-Task button"
+                    disabled={task?.isFreez === 1}
+                    onClick={() => handleEditProject(task, { Task: "root" })}
+                    sx={{
+                        '&.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                        },
+                    }}
+                >
+                    <Pencil
+                        size={20}
+                        color={task?.isFreez === 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                        className="iconbtn"
+                    />
+                </IconButton>
+                <IconButton
+                    aria-label="Delete Task button"
+                    disabled={task?.isFreez === 1}
+                    onClick={() => handleDeleteProject(task, { Task: "sub" })}
+                    sx={{
+                        '&.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                        },
+                    }}
+                >
+                    <Trash
+                        size={20}
+                        color={task?.isFreez === 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                        className="iconbtn"
+                    />
+                </IconButton>
+            </Box>
+        );
+    };
+
+    const renderPriorityLabel = (task) => {
+        const priorityColor = priorityColors[task?.priority] || {};
+        return (
+            <div
+                style={{
+                    color: priorityColor.color,
+                    backgroundColor: priorityColor.backgroundColor,
+                    width: 'fit-content',
+                    padding: '0.2rem 0.8rem',
+                    borderRadius: '5px',
+                    textAlign: 'center',
+                    fontSize: '13.5px',
+                    fontWeight: '500',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+                className="priorityLabel"
+            >
+                {task?.priority}
+            </div>
+        );
+    };
+
+
+
     return (
         <>
             {(isLoading === null || isLoading || (!data && isLoading !== false)) ? (
@@ -208,177 +306,129 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                         </TableHead>
 
                         <TableBody>
-                            {data?.length != 0 ? (
+                            {data?.length !== 0 ? (
                                 <>
-                                    {currentData?.map((task, taskIndex) => (
-                                        <React.Fragment key={taskIndex}>
-                                            <TableRow
-                                                sx={{
-                                                    backgroundColor: hoveredTaskId === task?.taskid ? '#f5f5f5' : 'inherit',
-                                                }}
-                                                onMouseEnter={() => handleMouseEnter(task?.taskid)}
-                                                onMouseLeave={handleMouseLeave}
-                                            >
-                                                <TableCell>
-                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                                        <div className="projectModuleName">
-                                                            <a
-                                                                href="#"
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    if (!task?.isLocked) {
-                                                                        handleNavigate(task);
-                                                                    }
+                                    {data.map((project) => (
+                                        <React.Fragment key={project.projectid}>
+                                            {/* Render Project Name Row with Toggle Icon */}
+                                            <TableRow>
+                                                <TableCell colSpan={7}>
+                                                    <Box display="flex" alignItems="center" gap={.5}>
+                                                        {/* Toggle IconButton */}
+                                                        <IconButton
+                                                            id="toggle-task"
+                                                            aria-label="toggle-task"
+                                                            aria-labelledby="toggle-task"
+                                                            size="small"
+                                                            onClick={() => handleToggle(project.projectid, project)}
+                                                        >
+                                                            <PlayArrowIcon
+                                                                style={{
+                                                                    color: toggleState[project.projectid] ? "#444050" : "#c7c7c7",
+                                                                    fontSize: "1rem",
+                                                                    transform: toggleState[project.projectid] ? "rotate(90deg)" : "rotate(0deg)",
+                                                                    transition: "transform 0.2s ease-in-out",
                                                                 }}
-                                                            >
-                                                                <span style={{ fontWeight: 'bold' }}>{task?.taskPr}</span>/<span style={{ fontWeight: 'bold', color: '#7d7f85' }}>{convertWordsToSpecialChars(task?.taskname)}</span>
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                    <span className="prShDesc">{convertWordsToSpecialChars(task?.descr)}</span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Box display="flex" alignItems="center" gap={2} width="100%">
-                                                        <Box width="100%" position="relative">
-                                                            <LinearProgress
-                                                                aria-label="Task progress status"
-                                                                variant="determinate"
-                                                                value={task?.progress_per}
-                                                                sx={{
-                                                                    height: 7,
-                                                                    borderRadius: 5,
-                                                                    backgroundColor: "#e0e0e0",
-                                                                    "& .MuiLinearProgress-bar": {
-                                                                        backgroundColor: getStatusColor(task?.progress_per),
-                                                                    },
-                                                                }}
-                                                                className="progressBar"
                                                             />
-                                                        </Box>
-                                                        <Typography className="progressBarText" variant="body2" minWidth={100}>
-                                                            {`${task?.progress_per}%`}
+                                                        </IconButton>
+                                                        {/* Project Name */}
+                                                        <Typography variant="body" className="prNameTypo">
+                                                            {project.projectName} {project?.taskcount != 0 && (
+                                                                <span className="pr-md_count">
+                                                                    {project?.taskcount}
+                                                                </span>
+                                                            )}
                                                         </Typography>
                                                     </Box>
                                                 </TableCell>
-                                                <TableCell>
-                                                    {task?.StartDate && cleanDate(task?.StartDate)
-                                                        ? formatDate2(cleanDate(task?.StartDate))
-                                                        : '-'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {task?.DeadLineDate && cleanDate(task?.DeadLineDate)
-                                                        ? formatDate2(cleanDate(task?.DeadLineDate))
-                                                        : '-'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div style={{
-                                                        color: priorityColors[task?.priority]?.color,
-                                                        backgroundColor: priorityColors[task?.priority]?.backgroundColor,
-                                                        width: 'fit-content',
-                                                        padding: '0.2rem 0.8rem',
-                                                        borderRadius: '5px',
-                                                        textAlign: 'center',
-                                                        fontSize: '13.5px',
-                                                        fontWeight: '500',
-                                                        display: 'flex',
-                                                        justifyContent: 'center',
-                                                        alignItems: 'center',
-                                                    }}
-                                                        className="priorityLabel"
-                                                    >
-                                                        {task?.priority}
-                                                    </div>
-                                                </TableCell>
-                                                {/* <TableCell>{task?.remark}</TableCell> */}
-                                                <TableCell className="sticky-last-col">
-                                                    <Box sx={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                    }}>
-                                                        <LockButton
-                                                            isLocked={task?.isFreez === 1}
-                                                            onClick={() => handleOpenCnfDialog(task)}
-                                                            id={task?.taskid}
-                                                        />
-                                                        <IconButton
-                                                            aria-label="View Module button"
-                                                            onClick={() => handleOpenFileDrawer(task, { Task: "root" })}
-                                                            sx={{
-                                                                '&.Mui-disabled': {
-                                                                    color: 'rgba(0, 0, 0, 0.26)',
-                                                                },
-                                                            }}
-                                                        >
-                                                            <Paperclip
-                                                                size={20}
-                                                                color="#808080"
-                                                                className="iconbtn"
-                                                            />
-                                                        </IconButton>
-                                                        <IconButton
-                                                            aria-label="View Module button"
-                                                            onClick={() => handleViewPrDashboard(task)}
-                                                            sx={{
-                                                                '&.Mui-disabled': {
-                                                                    color: 'rgba(0, 0, 0, 0.26)',
-                                                                },
-                                                            }}
-                                                        >
-                                                            <Eye
-                                                                size={20}
-                                                                color="#808080"
-                                                                className="iconbtn"
-                                                            />
-                                                        </IconButton>
-                                                        <IconButton
-                                                            aria-label="Edit-Task button"
-                                                            disabled={task?.isFreez == 1}
-                                                            onClick={() => handleEditProject(task, { Task: "root" })}
-                                                            sx={{
-                                                                '&.Mui-disabled': {
-                                                                    color: 'rgba(0, 0, 0, 0.26)',
-                                                                },
-                                                            }}
-                                                        >
-                                                            <Pencil
-                                                                size={20}
-                                                                color={task?.isFreez == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                                                                className="iconbtn"
-                                                            />
-                                                        </IconButton>
-                                                        <IconButton
-                                                            aria-label="Delete Task button"
-                                                            disabled={task?.isFreez == 1}
-                                                            onClick={() => handleDeleteProject(task, { Task: "sub" })}
-                                                            sx={{
-                                                                '&.Mui-disabled': {
-                                                                    color: 'rgba(0, 0, 0, 0.26)',
-                                                                },
-                                                            }}
-                                                        >
-                                                            <Trash
-                                                                size={20}
-                                                                color={task?.isFreez == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                                                                className="iconbtn"
-                                                            />
-                                                        </IconButton>
-                                                    </Box>
-                                                </TableCell>
                                             </TableRow>
+
+                                            {/* Conditionally Render Tasks for the Project */}
+                                            {toggleState[project.projectid] && project.tasks.map((task, taskIndex) => (
+                                                <React.Fragment key={task.taskid}>
+                                                    <TableRow
+                                                        sx={{
+                                                            backgroundColor: hoveredTaskId === task?.taskid ? '#f5f5f5' : 'inherit',
+                                                        }}
+                                                        onMouseEnter={() => handleMouseEnter(task?.taskid)}
+                                                        onMouseLeave={handleMouseLeave}
+                                                    >
+                                                        <TableCell sx={{ paddingLeft: '55px' }}>
+                                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                                                <div className="projectModuleName">
+                                                                    <a
+                                                                        href="#"
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            if (!task?.isLocked) {
+                                                                                handleNavigate(task);
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <span>{convertWordsToSpecialChars(task?.taskname)}</span>
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                            <span className="prShDesc">{convertWordsToSpecialChars(task?.descr)}</span>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Box display="flex" alignItems="center" gap={2} width="100%">
+                                                                <Box width="100%" position="relative">
+                                                                    <LinearProgress
+                                                                        aria-label="Task progress status"
+                                                                        variant="determinate"
+                                                                        value={task?.progress_per}
+                                                                        sx={{
+                                                                            height: 7,
+                                                                            borderRadius: 5,
+                                                                            backgroundColor: "#e0e0e0",
+                                                                            "& .MuiLinearProgress-bar": {
+                                                                                backgroundColor: getStatusColor(task?.progress_per),
+                                                                            },
+                                                                        }}
+                                                                        className="progressBar"
+                                                                    />
+                                                                </Box>
+                                                                <Typography className="progressBarText" variant="body2" minWidth={100}>
+                                                                    {`${task?.progress_per}%`}
+                                                                </Typography>
+                                                            </Box>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {task?.StartDate && cleanDate(task?.StartDate)
+                                                                ? formatDate2(cleanDate(task?.StartDate))
+                                                                : '-'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {task?.DeadLineDate && cleanDate(task?.DeadLineDate)
+                                                                ? formatDate2(cleanDate(task?.DeadLineDate))
+                                                                : '-'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {renderPriorityLabel(task)}
+                                                        </TableCell>
+                                                        <TableCell className="sticky-last-col">
+                                                            {renderTaskButtons(task)}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                </React.Fragment>
+                                            ))}
                                         </React.Fragment>
                                     ))}
                                 </>
-                            ) :
+                            ) : (
                                 <TableRow>
-                                    <TableCell colSpan={7} >
-                                        <Typography variant="body2" sx={{ p: 2, textAlign: 'center', color: '#7d7f85 !important' }}>No Project/Module found.</Typography>
+                                    <TableCell colSpan={7}>
+                                        <Typography variant="body2" sx={{ p: 2, textAlign: 'center', color: '#7d7f85 !important' }}>
+                                            No Project/Module found.
+                                        </Typography>
                                     </TableCell>
                                 </TableRow>
-                            }
+                            )}
 
-                            {!isLoading && data?.length != 0 &&
+                            {!isLoading && data?.length !== 0 &&
                                 <TableRow>
-                                    <TableCell colSpan={7} >
+                                    <TableCell colSpan={7}>
                                         {currentData?.length !== 0 && (
                                             <Box className="TablePaginationBox">
                                                 <Typography className="paginationText">

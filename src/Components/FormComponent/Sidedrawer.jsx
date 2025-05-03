@@ -30,6 +30,7 @@ import MultiTaskInput from "./MultiTaskInput";
 import FileUploader from "../ShortcutsComponent/FileUploader";
 import timezone from 'dayjs/plugin/timezone';
 import CustomAutocomplete from "../ShortcutsComponent/CustomAutocomplete";
+import DepartmentAssigneeAutocomplete from "../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete";
 
 const TASK_OPTIONS = [
     { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -256,6 +257,20 @@ const SidebarDrawer = ({
     const handleSubmit = (module) => {
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const idString = formValues?.guests?.map(user => user.id)?.join(",");
+        const assignees = Object.values(
+            formValues?.guests?.reduce((acc, user) => {
+                const dept = user.department;
+                if (!acc[dept]) {
+                    acc[dept] = {
+                        department: dept,
+                        assignee: user.id.toString()
+                    };
+                } else {
+                    acc[dept].assignee += `,${user.id}`;
+                }
+                return acc;
+            }, {})
+        );
         const updatedFormDataValue = {
             taskid: moduleData?.taskid ?? formDataValue.taskid ?? "",
             taskname: formValues.taskName ?? formDataValue.taskname,
@@ -270,6 +285,7 @@ const SidebarDrawer = ({
             remark: formValues.remark ?? formDataValue.remark,
             departmentid: formValues.department ?? formDataValue.departmentid,
             assigneids: idString ?? formDataValue.assigneids,
+            departmentAssigneelist: assignees ?? formDataValue.assigneids,
             descr: formValues.description ?? formDataValue.descr,
             ismilestone: formValues.milestoneChecked ? 1 : 0 ?? formDataValue.ismilestone,
             estimate_hrs: formValues?.estimate_hrs ?? formDataValue.estimate_hrs,
@@ -550,7 +566,7 @@ const SidebarDrawer = ({
                                         />
                                     </Grid>
                                     {/* department */}
-                                    <Grid item xs={12} sm={12} md={6}>
+                                    {/* <Grid item xs={12} sm={12} md={6}>
                                         <CustomAutocomplete
                                             label="Department"
                                             name="department"
@@ -560,10 +576,18 @@ const SidebarDrawer = ({
                                             placeholder="Select Department"
                                             refProp={filterRefs.department}
                                         />
-                                    </Grid>
+                                    </Grid> */}
                                     {/* Assignee master */}
-                                    <Grid item xs={12} sm={12} md={6}>
-                                        <MultiSelectChipWithLimit
+                                    <Grid item xs={12} sm={12} md={12}>
+                                        {/* <MultiSelectChipWithLimit
+                                            value={formValues?.guests}
+                                            options={filterAssigneeData}
+                                            label="Assign To"
+                                            placeholder="Select assignees"
+                                            limitTags={2}
+                                            onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
+                                        /> */}
+                                        <DepartmentAssigneeAutocomplete
                                             value={formValues?.guests}
                                             options={filterAssigneeData}
                                             label="Assign To"
@@ -610,7 +634,6 @@ const SidebarDrawer = ({
                                                     <TextField
                                                         {...params}
                                                         size="small"
-                                                        fullWidth
                                                         className="textfieldsClass"
                                                         sx={{ padding: "0" }}
                                                     />
@@ -635,7 +658,6 @@ const SidebarDrawer = ({
                                                     <TextField
                                                         {...params}
                                                         size="small"
-                                                        fullWidth
                                                         className="textfieldsClass"
                                                         sx={{ padding: "0" }}
                                                     />
@@ -646,7 +668,7 @@ const SidebarDrawer = ({
                                     </Grid>
                                 </Grid>
                                 <Grid container spacing={1} className="form-row" sx={{ mt: 0.5 }}>
-                                    <Grid item xs={12} sm={12} md={6}>
+                                    <Grid item xs={12} sm={12} md={4}>
                                         <Box className="form-group">
                                             <Typography className="form-label" variant="subtitle1">
                                                 Estimate
@@ -657,7 +679,7 @@ const SidebarDrawer = ({
                                             />
                                         </Box>
                                     </Grid>
-                                    <Grid item xs={12} sm={12} md={6}>
+                                    <Grid item xs={12} sm={12} md={4}>
                                         <Box className="form-group">
                                             <Typography className="form-label" variant="subtitle1">
                                                 Actual Estimate
@@ -668,7 +690,7 @@ const SidebarDrawer = ({
                                             />
                                         </Box>
                                     </Grid>
-                                    <Grid item xs={12} sm={12} md={6}>
+                                    <Grid item xs={12} sm={12} md={4}>
                                         <Box className="form-group">
                                             <Typography className="form-label" variant="subtitle1">
                                                 Final Estimate
@@ -816,7 +838,7 @@ const SidebarDrawer = ({
                                         refProp={filterRefs.category}
                                     />
                                 </Grid>
-                                {/* <Grid item xs={12} sm={12}>
+                                <Grid item xs={12} sm={12}>
                                     <AssigneeAutocomplete
                                         label="project lead"
                                         name="projectLead"
@@ -826,7 +848,7 @@ const SidebarDrawer = ({
                                         placeholder="Select Assignee"
                                         inputRef={filterRefs.assignee}
                                     />
-                                </Grid> */}
+                                </Grid>
                                 <Grid item xs={12} sm={12}>
                                     <CustomAutocomplete
                                         label="Status"
@@ -865,7 +887,6 @@ const SidebarDrawer = ({
                                                 <TextField
                                                     {...params}
                                                     size="small"
-                                                    fullWidth
                                                     className="textfieldsClass"
                                                     sx={{ padding: "0" }}
                                                 />
@@ -890,7 +911,6 @@ const SidebarDrawer = ({
                                                 <TextField
                                                     {...params}
                                                     size="small"
-                                                    fullWidth
                                                     className="textfieldsClass"
                                                     sx={{ padding: "0" }}
                                                 />
