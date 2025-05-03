@@ -49,7 +49,7 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
     useEffect(() => {
         const assigneeMaster = JSON?.parse(sessionStorage.getItem("taskAssigneeData"));
         setAssigneeMaster(assigneeMaster);
-        const departmentMaster = JSON?.parse(sessionStorage.getItem("taskdepartmentData"));
+        const departmentMaster = JSON?.parse(sessionStorage.getItem("taskDepartments"));
         setTaskDepartment(departmentMaster);
     }, [])
 
@@ -72,6 +72,10 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
         handleAssigneSubmit(updatedRowData);
         onClose();
     };
+
+    const departmentId = formValues?.department;
+    const departmentName = taskDepartment?.find(dept => dept.id == departmentId)?.labelname;
+    const filterAssigneeData = departmentName ? assigneeMaster?.filter((item) => item.department == departmentName) : assigneeMaster;
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -120,7 +124,7 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
                         <Box className="form-group">
                             <MultiSelectChipWithLimit
                                 value={formValues?.guests}
-                                options={assigneeMaster}
+                                options={filterAssigneeData}
                                 label="Assign To"
                                 placeholder="Select assignees"
                                 limitTags={2}

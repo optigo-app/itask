@@ -253,14 +253,30 @@ export const fetchMasterGlFunc = async () => {
     try {
         const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
         const AuthUrlData = JSON?.parse(localStorage.getItem('AuthqueryParams'));
+        const uniqueDepartments = new Set();
         if (!AssigneeMasterData) {
             const assigneeRes = await AssigneeMaster();
             const UserProfileData = assigneeRes?.rd?.find(item => item?.userid == AuthUrlData?.uid);
             localStorage.setItem('UserProfileData', JSON?.stringify(UserProfileData));
+            assigneeRes?.rd?.forEach(item => {
+                if (item.department) {
+                    uniqueDepartments.add(item.department);
+                }
+            });
         } else {
             const UserProfileData = AssigneeMasterData?.find(item => item?.userid == AuthUrlData?.uid) ?? {};
             localStorage.setItem('UserProfileData', JSON?.stringify(UserProfileData));
+            AssigneeMasterData?.forEach(item => {
+                if (item.department) {
+                    uniqueDepartments.add(item.department);
+                }
+            });
         }
+        const departmentArray = Array.from(uniqueDepartments).map((department, index) => ({
+            id: index + 1,
+            labelname:department
+        }));
+        sessionStorage.setItem('taskDepartments', JSON?.stringify(departmentArray));
         let masterData = JSON?.parse(sessionStorage.getItem('structuredMasterData'));
         if (!masterData || masterData?.length == 0) {
             masterData = await fetchMaster();

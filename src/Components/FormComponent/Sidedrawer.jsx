@@ -112,7 +112,7 @@ const SidebarDrawer = ({
                 multiTaskName: formDataValue?.actual ?? [""],
                 bulkTask: formDataValue?.bulk ?? [],
                 dueDate: cleanDate(formDataValue?.DeadLineDate) ?? null,
-                department: formDataValue?.departmentid != 0 ? formDataValue?.departmentid : "",
+                department: formDataValue?.department != 0 ? formDataValue?.department : "",
                 guests: matchedAssignees ?? [],
                 projectLead: formDataValue?.projectLead ?? "",
                 assignee: formDataValue?.assigneids ?? "",
@@ -218,54 +218,6 @@ const SidebarDrawer = ({
         formDataValue?.taskname
     ]);
 
-
-    // useEffect(() => {
-    //     if (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "subroot") {
-    //         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
-    //         let arrData = location?.pathname?.includes("/projects") ? projectModuleData ? flattenTasks(taskDataValue) : [] : flattenTasks(taskDataValue);
-    //         const taskName = formValues?.taskName?.trim() || "";
-    //         const projectId = formValues?.project || moduleData?.projectid || formDataValue?.projectid;
-    //         if (projectId) {
-    //             setIsTaskNameEmpty(taskName === "");
-    //         }
-    //         if (projectId && taskName && Array.isArray(arrData)) {
-    //             const match = arrData.find(
-    //                 task =>
-    //                     task?.projectid === projectId &&
-    //                     task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
-    //             );
-    //             setIsDuplicateTask(!!match);
-    //         } else {
-    //             setIsDuplicateTask(false);
-    //         }
-    //     } else if (rootSubrootflagval?.Task === "root") {
-    //         const taskName = formValues?.taskName?.trim() || "";
-    //         const projectId = formValues?.project || formDataValue?.projectid;
-    //         if (projectId) {
-    //             setIsTaskNameEmpty(taskName === "");
-    //         }
-    //         if (projectId && taskName && Array.isArray(data)) {
-    //             if (formDataValue?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()) {
-    //                 setIsDuplicateTask(false);
-    //             } else {
-    //                 const match = data.find(
-    //                     task =>
-    //                         task?.projectid === projectId &&
-    //                         task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
-    //                 );
-    //                 setIsDuplicateTask(!!match);
-    //             }
-    //         } else {
-    //             setIsDuplicateTask(false);
-    //         }
-    //     } else {
-    //         setIsDuplicateTask(false);
-    //         setIsTaskNameEmpty(false);
-    //     }
-    // }, [open, formValues, formValues.project, formValues.taskName, projectModuleData, taskDataValue, location?.pathname]);
-
-
-
     // Handle form value changes
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -285,7 +237,6 @@ const SidebarDrawer = ({
             }));
         }
     };
-
 
     // Handle estimate form value changes
     const handleEstimateChange = (field, newValue) => {
@@ -376,7 +327,9 @@ const SidebarDrawer = ({
     }
 
     // departmentwise assignee
-    // const filterAssigneeData = formValues?.department ? taskAssigneeData?.filter((item) => item.departmentId == formValues?.department) : taskAssigneeData;
+    const departmentId = formValues?.department;
+    const departmentName = taskDepartment?.find(dept => dept.id == departmentId)?.labelname;
+    const filterAssigneeData = departmentName ? taskAssigneeData?.filter((item) => item.department == departmentName) : taskAssigneeData;
 
     useEffect(() => {
         if (encodedData) {
@@ -612,7 +565,7 @@ const SidebarDrawer = ({
                                     <Grid item xs={12} sm={12} md={6}>
                                         <MultiSelectChipWithLimit
                                             value={formValues?.guests}
-                                            options={taskAssigneeData}
+                                            options={filterAssigneeData}
                                             label="Assign To"
                                             placeholder="Select assignees"
                                             limitTags={2}
@@ -863,7 +816,7 @@ const SidebarDrawer = ({
                                         refProp={filterRefs.category}
                                     />
                                 </Grid>
-                                <Grid item xs={12} sm={12}>
+                                {/* <Grid item xs={12} sm={12}>
                                     <AssigneeAutocomplete
                                         label="project lead"
                                         name="projectLead"
@@ -873,7 +826,7 @@ const SidebarDrawer = ({
                                         placeholder="Select Assignee"
                                         inputRef={filterRefs.assignee}
                                     />
-                                </Grid>
+                                </Grid> */}
                                 <Grid item xs={12} sm={12}>
                                     <CustomAutocomplete
                                         label="Status"
