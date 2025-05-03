@@ -209,8 +209,8 @@ const Sidebar = () => {
                                 </Box>
                             </ListItemButton>
                         </ListItem>
-                        <Typography sx={{paddingInline:'22px'}} variant="caption" className="itask_drawerText">
-                            CompanyCode : {taskInit?.companycode}
+                        <Typography sx={{ paddingInline: isDrawerOpen ? '22px' : "15px" }} variant={isDrawerOpen ? "body1" : "caption"} className="itask_drawerText">
+                            {taskInit?.companycode}
                         </Typography>
                         <div className="itask_separator" />
                         {pageList.length > 0 ? (
