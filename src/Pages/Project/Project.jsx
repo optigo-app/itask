@@ -72,7 +72,7 @@ const Project = () => {
         retrieveAndSetData('taskAssigneeData', setAssigneeData);
         retrieveAndSetData('taskstatusData', setStatusData);
         retrieveAndSetData('taskpriorityData', setPriorityData);
-        retrieveAndSetData('taskDepartments', setTaskDepartment);
+        retrieveAndSetData('taskdepartmentData', setTaskDepartment);
         retrieveAndSetData('taskprojectData', setTaskProject);
         retrieveAndSetData('taskworkcategoryData', setTaskCategory);
       }
@@ -123,13 +123,40 @@ const Project = () => {
       };
 
       const enhancedTasks = finalTaskData?.map((task) => enhanceTask(task));
-      setProject(enhancedTasks);
+      const groupedTasks = groupByProject(enhancedTasks);
+      console.log('groupedTasks: ', groupedTasks);
+      setProject(groupedTasks);
     } catch (error) {
       console.error(error);
     } finally {
       setIsTaskLoading(false);
     }
   };
+
+  const groupByProject = (tasks) => {
+    const grouped = {};
+  
+    tasks.forEach((task) => {
+      const projectId = task.projectid;
+      if (!grouped[projectId]) {
+        grouped[projectId] = {
+          projectid: projectId,
+          projectName: task.taskPr,
+          tasks: []
+        };
+      }
+      grouped[projectId].tasks.push(task);
+    });
+  
+    // Add taskcount to each group
+    const result = Object.values(grouped).map(group => ({
+      ...group,
+      taskcount: group.tasks.length
+    }));
+  
+    return result;
+  };
+  
   function mapTaskLabels(data) {
     const labels = data?.rd[0];
     const tasks = data?.rd1;

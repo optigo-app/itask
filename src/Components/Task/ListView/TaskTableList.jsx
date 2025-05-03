@@ -26,7 +26,7 @@ import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { cleanDate, convertWordsToSpecialChars, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import AssigneeShortcutModal from "../../ShortcutsComponent/AssigneeShortcutModal";
+import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 import TaskTimeTracking from "../../ShortcutsComponent/TaskTimeTracking";
 import BurningImg from "../../../Assests/fire.webp"
 import StatusBadge from "../../ShortcutsComponent/StatusBadge";
@@ -160,6 +160,12 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         setSelectedItem(task);
     };
 
+    const handleOpenFileDrawer = (task, additionalInfo) => {
+        setRootSubroot(additionalInfo);
+        setFileDrawerOpen(true);
+        setSelectedTask(task);
+    }
+
     const onStatusChange = (task, newStatus) => {
         handleStatusChange(task, newStatus);
     };
@@ -287,7 +293,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
             </IconButton>
             <IconButton
                 aria-label="View Module button"
-                onClick={() => setFileDrawerOpen(true)}
+                onClick={() => handleOpenFileDrawer(task, { Task: "root" })}
                 sx={{
                     '&.Mui-disabled': {
                         color: 'rgba(0, 0, 0, 0.26)',

@@ -2,29 +2,10 @@
 
 .modal-container {
   .modal-container2 {
-    width: 660px;
+    width: 650px;
+    max-width: 650px;
     padding: 5px 24px 24px 24px;
-
   }
-
-  // &.full-screen {
-  //   width: 50vw;
-  //   height: 100vh;
-  // }
-
-  // @media (max-width: 768px) {
-  //   &.full-screen {
-  //     width: 75vw;
-  //     height: 100vh;
-  //   }
-  // }
-
-  // @media (max-width: 480px) {
-  //   &.full-screen {
-  //     width: 100vw;
-  //     height: 100vh;
-  //   }
-  // }
 }
 
 .modal-header {

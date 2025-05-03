@@ -45,8 +45,10 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "ismilestone": formValues?.ismilestone ?? 0,
                 "isfavourite": formValues?.isfavourite ?? 0,
                 "assigneids": formValues?.assigneids ?? "",
+                "departmentAssigneelist": formValues?.departmentAssigneelist ?? "",
             });
         }
+        console.log('combinedValue: ', combinedValue);
 
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"tasksave\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,

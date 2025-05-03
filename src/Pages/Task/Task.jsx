@@ -473,6 +473,20 @@ const Task = () => {
   };
 
   const handleAssigneeShortcutSubmit = (updatedRowData) => {
+    const assignees = Object.values(
+      updatedRowData?.assignee?.reduce((acc, user) => {
+        const dept = user.department;
+        if (!acc[dept]) {
+          acc[dept] = {
+                  department: dept,
+                  assignee: user.id.toString()
+              };
+            } else {
+              acc[dept].assignee += `,${user.id}`;
+            }
+            return acc;
+          }, {})
+        );
     setTasks((prevTasks) => {
       const updateTasksRecursively = (tasks) => {
         return tasks?.map((task) => {
@@ -481,7 +495,8 @@ const Task = () => {
               ...task,
               departmentid: updatedRowData?.departmentid,
               assigneids: updatedRowData?.assigneids,
-              assignee: updatedRowData?.assignee
+              assignee: updatedRowData?.assignee,
+              departmentAssigneelist: assignees,
             };
             handleAddApicall(updatedRowData);
             return updatedTask;
