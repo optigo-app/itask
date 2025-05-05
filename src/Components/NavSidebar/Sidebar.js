@@ -13,6 +13,7 @@ import {
     Divider,
     MenuItem,
     Menu,
+    Chip,
 } from "@mui/material";
 import {
     Menu as MenuIcon,
@@ -209,9 +210,24 @@ const Sidebar = () => {
                                 </Box>
                             </ListItemButton>
                         </ListItem>
-                        <Typography sx={{ paddingInline: isDrawerOpen ? '22px' : "15px" }} variant={isDrawerOpen ? "body1" : "caption"} className="itask_drawerText">
+                        {/* <Typography sx={{ paddingInline: isDrawerOpen ? '22px' : "15px" }} variant={isDrawerOpen ? "body1" : "caption"} className="itask_drawerText">
                             {taskInit?.companycode}
-                        </Typography>
+                        </Typography> */}
+                        <Chip
+                            label={taskInit?.companycode || '--'}
+                            size={isDrawerOpen ? 'medium' : 'small'}
+                            sx={{
+                                mt: 0.5,
+                                mx: isDrawerOpen ? 2.75 : 1,
+                                fontSize: isDrawerOpen ? '16px' : '12px',
+                                height: isDrawerOpen ? 32 : 24,
+                                borderRadius: '8px',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                            }}
+                            className="itask_drawerText"
+                        />
                         <div className="itask_separator" />
                         {pageList.length > 0 ? (
                             <>

@@ -254,9 +254,10 @@ export const fetchMasterGlFunc = async () => {
         const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
         const AuthUrlData = JSON?.parse(localStorage.getItem('AuthqueryParams'));
         const uniqueDepartments = new Set();
+        let UserProfileData
         if (!AssigneeMasterData) {
             const assigneeRes = await AssigneeMaster();
-            const UserProfileData = assigneeRes?.rd?.find(item => item?.userid == AuthUrlData?.uid);
+            UserProfileData = assigneeRes?.rd?.find(item => item?.userid == AuthUrlData?.uid);
             localStorage.setItem('UserProfileData', JSON?.stringify(UserProfileData));
             assigneeRes?.rd?.forEach(item => {
                 if (item.department) {
@@ -264,7 +265,7 @@ export const fetchMasterGlFunc = async () => {
                 }
             });
         } else {
-            const UserProfileData = AssigneeMasterData?.find(item => item?.userid == AuthUrlData?.uid) ?? {};
+            UserProfileData = AssigneeMasterData?.find(item => item?.userid == AuthUrlData?.uid) ?? {};
             localStorage.setItem('UserProfileData', JSON?.stringify(UserProfileData));
             AssigneeMasterData?.forEach(item => {
                 if (item.department) {
@@ -274,7 +275,7 @@ export const fetchMasterGlFunc = async () => {
         }
         const departmentArray = Array.from(uniqueDepartments).map((department, index) => ({
             id: index + 1,
-            labelname:department
+            labelname: department
         }));
         sessionStorage.setItem('taskDepartments', JSON?.stringify(departmentArray));
         let masterData = JSON?.parse(sessionStorage.getItem('structuredMasterData'));
@@ -299,6 +300,7 @@ export const fetchMasterGlFunc = async () => {
             }
             sessionStorage.setItem('structuredMasterData', JSON?.stringify(structuredData));
         }
+        return UserProfileData
     } catch (error) {
         console.error("Error fetching master data:", error);
     }
@@ -370,23 +372,23 @@ export function mapKeyValuePair(data) {
     const tasks = data?.rd1;
     const labelMap = {};
     Object.keys(labels).forEach((key, index) => {
-      labelMap[index + 1] = key;
+        labelMap[index + 1] = key;
     });
     function convertTask(task) {
-      let taskObj = {};
-      for (let key in task) {
-        if (task.hasOwnProperty(key)) {
-          const label = labelMap[key];
-          if (label) {
-            taskObj[label] = task[key];
-          }
+        let taskObj = {};
+        for (let key in task) {
+            if (task.hasOwnProperty(key)) {
+                const label = labelMap[key];
+                if (label) {
+                    taskObj[label] = task[key];
+                }
+            }
         }
-      }
-      return taskObj;
+        return taskObj;
     }
     let taskData = tasks?.map((task) => convertTask(task));
     return taskData;
-  }
+}
 
 export const flattenTasks = (tasks, level = 0) => {
     return tasks?.reduce((flatList, task) => {
@@ -401,7 +403,49 @@ export const flattenTasks = (tasks, level = 0) => {
         return flatList;
     }, []);
 };
+export function transformAttachments(data) {
+    const mimeTypes = {
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        png: "image/png",
+        webp: "image/webp",
+        gif: "image/gif",
+        jfif: "image/jfif",
+        avif: "image/avif",
+        svg: "image/svg+xml"
+    };
 
+    const result = {
+        attachment: {},
+        url: {}
+    };
+
+    data.forEach(({ foldername, DocumentName, DocumentUrl }) => {
+        const folder = foldername;
+        const docUrls = (DocumentName || "").split(",").filter(Boolean);
+        const urlLinks = (DocumentUrl || "").split(",").filter(Boolean);
+
+        // Process attachments
+        if (!result.attachment[folder]) result.attachment[folder] = [];
+        docUrls.forEach(url => {
+            const fileName = url.substring(url.lastIndexOf("/") + 1);
+            const ext = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+            result.attachment[folder].push({
+                url,
+                extention: ext,
+                fileName,
+                fileType: mimeTypes[ext] || "application/octet-stream"
+            });
+        });
+
+        // Process additional URLs
+        if (urlLinks.length) {
+            result.url[folder] = urlLinks;
+        }
+    });
+
+    return result;
+}
 
 //Selectmenu custom styles
 export const commonSelectProps = {
