@@ -94,6 +94,45 @@
     }
   }
 
+  .fileSideBarTDBox {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    position: relative;
+    padding: 5px;
+    max-width: 80%;
+    overflow: auto;
+
+    .toggle-group {
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      padding: 4px;
+      min-width: 200px;
+      display: flex;
+      gap: 5px;
+
+      .toggle-button {
+        display: flex;
+        gap: 8px;
+        flex: 1;
+        font-size: 14px;
+        font-family: $font-family !important;
+        color: #666;
+        border: none;
+        line-height: .4rem;
+        padding: 10px 4px;
+        text-transform: none;
+        transition: all 0.2s ease-in-out;
+
+        &.Mui-selected {
+          background-color: #fff !important;
+          color: #000 !important;
+          font-weight: 700;
+        }
+      }
+    }
+  }
+
   .attachment-header {
     display: flex;
     justify-content: space-between;
@@ -101,17 +140,24 @@
   }
 
   .attachment-card {
-    display: flex;
-    border: 1px solid #e1e1e1;
-    border-radius: 8px;
-    box-shadow: none !important;
-    position: relative;
+    border-radius: 12px;
+    box-shadow: $box-shadow-value;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      border: 1px solid #e0e0e0;
+      cursor: pointer;
+    }
 
     .attachment-image {
-      width: 120px;
-      border-radius: 8px 0 0 8px;
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
     }
   }
+
 
   .muiTaskTabs {
     .MuiButtonBase-root {

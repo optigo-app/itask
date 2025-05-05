@@ -7,7 +7,7 @@ import {
     useNavigate
 } from "react-router-dom";
 import { Box, useMediaQuery } from '@mui/material';
-import { RecoilRoot } from 'recoil';
+import { RecoilRoot, useSetRecoilState } from 'recoil';
 import { ToastContainer } from 'react-toastify';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -20,7 +20,7 @@ import SomethingWentWrong from './Components/Auth/SomethingWentWrong';
 import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
-import DepartmentMain from './Backup/DepartmentMain';
+import { userRoleAtom } from './Recoil/atom';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -95,11 +95,13 @@ const AppWrapper = () => {
     const [isReady, setIsReady] = useState(false);
     const [cookieData, setCookieData] = useState(null);
     const navigate = useNavigate();
+    const setRole = useSetRecoilState(userRoleAtom);
+
 
     useEffect(() => {
         const interval = setInterval(() => {
             getQueryParams();
-        }, 50000000000);
+        }, 500);
         return () => clearInterval(interval);
     }, [isReady]);
 
@@ -148,14 +150,16 @@ const AppWrapper = () => {
                 console.log('result: ', result);
                 setPageData(result?.Data?.rd1)
                 if (result?.Data?.rd) {
-                    fetchMasterGlFunc();
+                    const data = await fetchMasterGlFunc();
+                    setRole(data?.designation);
                 }
             } else {
                 const pageData = JSON?.parse(sessionStorage.getItem("pageAccess"));
                 if (pageData) {
                     setPageData(pageData)
                 }
-                fetchMasterGlFunc();
+                const data = await fetchMasterGlFunc();
+                setRole(data?.designation);
             }
             setPageDataLoaded(true);
         };
@@ -221,7 +225,6 @@ const AppWrapper = () => {
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
                                         <Route path="/reports/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><Reports /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
-                                        <Route path="/test" element={<DepartmentMain />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>

@@ -1,5 +1,10 @@
 import { atom } from "recoil";
 
+export const userRoleAtom = atom({
+  key: "userRole",
+  default: null, // e.g., 'admin', 'team_lead', 'user'
+});
+
 export const TaskData = atom({
   key: 'TaskData',
   default: []

@@ -7,21 +7,25 @@
     height: 100vh;
 }
 
-    .itask_Menudrawer {
+.itask_Menudrawer {
+    z-index: 1100 !important;
+
+    .MuiPaper-root {
         z-index: 1100 !important;
-
-        .MuiPaper-root {
-            z-index: 1100 !important;
-        }
     }
+}
 
-    .itask_drawerButton {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        z-index: 1200 !important;
-    }
+.itask_drawerButton {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1200 !important;
+}
 
+.itask_drawerText {
+    font-family: $font-family;
+    color: $titleColor;
+}
 
 .itask_drawerButtonOpen {
     left: calc(280px - 50px);
@@ -83,6 +87,7 @@
     display: flex;
     align-items: center;
     cursor: pointer;
+
     .itask_logo {
         height: 40px;
         object-fit: contain;

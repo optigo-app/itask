@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { CircleX, File, Link } from 'lucide-react';
 import FileDropzone from './FileDropzone';
-import { commonTextFieldProps, mapKeyValuePair } from '../../../Utils/globalfun';
+import { commonTextFieldProps, mapKeyValuePair, transformAttachments } from '../../../Utils/globalfun';
 import { useRecoilValue } from 'recoil';
 import { selectedRowData } from '../../../Recoil/atom';
 import { filesUploadApi } from '../../../Api/UploadApi/filesUploadApi';
@@ -22,6 +22,7 @@ import Document from '../../../Assests/document.png'
 import { filesUploadSaveApi } from '../../../Api/UploadApi/filesUploadSaveApi';
 import { getAttachmentApi } from '../../../Api/UploadApi/GetAttachmentApi';
 import ImageSkeleton from './ImageSkeleton';
+import { toast } from 'react-toastify';
 
 const tabData = [
   { id: 1, value: "file", label: "File", icon: <File size={18} /> },
@@ -34,48 +35,8 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   const [uploading, setUploading] = useState(false);
   const [formValues, setFormValues] = useState({ folderName: '', url: '', attachment: {} });
   const [uploadedFile, setUploadedFile] = useState({ attachment: {}, url: {} });
+  console.log('uploadedFile: ', uploadedFile);
   const [isLoading, setIsLoading] = useState(false);
-
-  function transformAttachments(data) {
-    const mimeTypes = {
-      jpg: "image/jpeg",
-      jpeg: "image/jpeg",
-      png: "image/png",
-      webp: "image/webp",
-      gif: "image/gif"
-    };
-
-    const result = {
-      attachment: {},
-      url: {}
-    };
-
-    data.forEach(({ foldername, DocumentName, DocumentUrl }) => {
-      const folder = foldername;
-      const docUrls = (DocumentName || "").split(",").filter(Boolean);
-      const urlLinks = (DocumentUrl || "").split(",").filter(Boolean);
-
-      // Process attachments
-      if (!result.attachment[folder]) result.attachment[folder] = [];
-      docUrls.forEach(url => {
-        const fileName = url.substring(url.lastIndexOf("/") + 1);
-        const ext = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-        result.attachment[folder].push({
-          url,
-          extention: ext,
-          fileName,
-          fileType: mimeTypes[ext] || "application/octet-stream"
-        });
-      });
-
-      // Process additional URLs
-      if (urlLinks.length) {
-        result.url[folder] = urlLinks;
-      }
-    });
-
-    return result;
-  }
 
   useEffect(() => {
     const getAttachment = async () => {
@@ -205,7 +166,23 @@ const SidebarDrawerFile = ({ open, onClose }) => {
       };
     });
     const uploadRes = await filesUploadSaveApi(attachments, selectedRow?.taskid)
-    console.log('uploadRes---?>>>>>: ', uploadRes);
+    if (uploadRes?.rd[0]?.stat == 1) {
+      toast.success("Attachment saved successfully");
+    }
+    handleClear();
+  };
+
+  const handleClear = () => {
+    setFormValues({
+      folderName: "",
+      url: "",
+      attachment: {},
+    });
+    setUploadedFile({
+      attachment: {},
+      url: {}
+    });
+    setSelectedTab("file");
     onClose();
   };
 
@@ -215,7 +192,6 @@ const SidebarDrawerFile = ({ open, onClose }) => {
       url: "",
       attachment: {},
     });
-    onClose();
   };
 
   return (

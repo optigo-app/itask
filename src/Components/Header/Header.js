@@ -390,7 +390,7 @@ const Header = ({ avatarSrc = "" }) => {
                             marginRight: "12px",
                         }}
                     >
-                        {!avatarSrc && profileData?.firstname.charAt(0).toUpperCase()}
+                        {!avatarSrc && profileData?.firstname?.charAt(0).toUpperCase()}
                     </Avatar>
                     <Box>
                         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
@@ -435,7 +435,7 @@ const Header = ({ avatarSrc = "" }) => {
                             color: "#fff !important",
                         }}
                         onClick={() => handleLogout()}
-                        variant="contained"                                    
+                        variant="contained"
                         fullWidth
                         endIcon={<LogOut size={20} />}
                     >

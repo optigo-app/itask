@@ -33,8 +33,11 @@ import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 import StatusCircles from "../../ShortcutsComponent/EstimateComp";
 import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawerFile";
+import useAccess from "../../Auth/Role/useAccess";
+import { PERMISSIONS } from "../../Auth/Role/permissions";
 
 const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, totalPages, handleChangePage, handleRequestSort, handleTaskFavorite, handleStatusChange, handleAssigneeShortcutSubmit, isLoading }) => {
+    const { hasAccess } = useAccess();
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const setFormDataValue = useSetRecoilState(formData);
@@ -306,23 +309,24 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                     className="iconbtn"
                 />
             </IconButton>
-            <IconButton
-                disabled={task?.isFreezed == 1}
-                onClick={() => handleEditTask(task, { Task: "root" })}
-                sx={{
-                    '&.Mui-disabled': {
-                        color: 'rgba(0, 0, 0, 0.26)',
-                    },
-                }}
-                aria-label="Edit-Task button"
-            >
-                <Pencil
-                    size={20}
-                    color={task?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                    className="iconbtn"
-                />
-            </IconButton>
-
+            {hasAccess(PERMISSIONS.canEdit) &&
+                <IconButton
+                    disabled={task?.isFreezed == 1}
+                    onClick={() => handleEditTask(task, { Task: "root" })}
+                    sx={{
+                        '&.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                        },
+                    }}
+                    aria-label="Edit-Task button"
+                >
+                    <Pencil
+                        size={20}
+                        color={task?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                        className="iconbtn"
+                    />
+                </IconButton>
+            }
             <IconButton
                 aria-label="view Task button"
                 onClick={() => handleViewTask(task, { Task: "root" })}

@@ -7,6 +7,8 @@ import {
     Button,
     AvatarGroup,
     Tooltip,
+    ToggleButtonGroup,
+    ToggleButton,
 } from '@mui/material';
 import { CircleX, Download } from 'lucide-react';
 import StarIcon from '@mui/icons-material/Star';
@@ -19,7 +21,7 @@ import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
 import AttachmentImg from "../../../Assests/Attachment.webp";
-import { formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from '../../../Utils/globalfun';
+import { formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments } from '../../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
@@ -27,14 +29,16 @@ import CommentSection from '../../ShortcutsComponent/Comment/TaskComment';
 import SubtaskCard from './SubTaskcard';
 import AttachmentGrid from '../../ShortcutsComponent/AttachmentGrid';
 import { TaskDescription } from '../../ShortcutsComponent/TaskDescription';
+import { getAttachmentApi } from '../../../Api/UploadApi/GetAttachmentApi';
+import AttachmentSidebar from './AttachmentSidebar';
 
 const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
+    console.log('taskData: ', taskData);
     const theme = useTheme();
     const [taskArr, setTaskArr] = useRecoilState(TaskData);
-    // const taskData = useRecoilValue(formData);
     const setCallTaskApi = useSetRecoilState(fetchlistApiCall);
     const [isFullScreen, setIsFullScreen] = useState(false);
-    const [count, setCount] = useState(2);
+    const [uploadedFile, setUploadedFile] = useState([]);
     const [taskDesc, setTaskDesc] = useState('');
     const [taskDescEdit, setTaskDescEdit] = useState(false);
     const [comments, setComments] = useState([]);
@@ -45,7 +49,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
-    const placeholderImage = AttachmentImg;
+    const [selectedFolder, setSelectedFolder] = useState("Project_Ref");
 
     // Dummy attachment data
     const dummyAttachments = [
@@ -53,6 +57,26 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
         { filename: 'image.jpg', url: 'https://example.com/image.jpg', size: '1.8 MB' },
         { filename: 'spreadsheet.xlsx', url: 'https://example.com/spreadsheet.xlsx', size: '3.2 MB' },
     ];
+
+    useEffect(() => {
+        const getAttachment = async () => {
+            try {
+                const res = await getAttachmentApi(taskData);
+                if (res) {
+                    const labeledTasks = mapKeyValuePair(res);
+                    const transformedData = transformAttachments(labeledTasks);
+                    console.log('transformedData: ', transformedData);
+                    setUploadedFile(transformedData);
+                }
+            } catch (error) {
+                console.error("Failed to fetch attachments:", error);
+            } finally {
+            }
+        };
+        if (taskData?.taskid && open) {
+            getAttachment();
+        }
+    }, [open]);
 
     const handleRemoveEvent = () => {
         setCnfDialogOpen(true);
@@ -243,8 +267,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
         );
     };
 
-
-
     return (
         <div>
             <Drawer
@@ -433,15 +455,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         }
                                         {activeTab === 1 &&
                                             <Box>
-                                                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end', mb: .2 }}>
-                                                    <Button
-                                                        variant="text"
-                                                        onClick={() => alert('Download Attachment')}
-                                                        startIcon={<Download color='#7367f0' size={20} />}>
-                                                        <Typography sx={{ textTransform: 'capitalize', color: '#7367f0 !important' }}>Download All</Typography>
-                                                    </Button>
-                                                </Box>
-                                                <AttachmentGrid count={count} placeholderImage={placeholderImage} />
+                                                <AttachmentSidebar uploadedFile={uploadedFile} />
                                             </Box>
                                         }
                                         {activeTab === 2 && (
