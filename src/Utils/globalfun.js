@@ -365,6 +365,29 @@ export function mapTaskLabels(data) {
     return taskData;
 }
 
+export function mapKeyValuePair(data) {
+    const labels = data?.rd[0];
+    const tasks = data?.rd1;
+    const labelMap = {};
+    Object.keys(labels).forEach((key, index) => {
+      labelMap[index + 1] = key;
+    });
+    function convertTask(task) {
+      let taskObj = {};
+      for (let key in task) {
+        if (task.hasOwnProperty(key)) {
+          const label = labelMap[key];
+          if (label) {
+            taskObj[label] = task[key];
+          }
+        }
+      }
+      return taskObj;
+    }
+    let taskData = tasks?.map((task) => convertTask(task));
+    return taskData;
+  }
+
 export const flattenTasks = (tasks, level = 0) => {
     return tasks?.reduce((flatList, task) => {
         const { subtasks, ...taskWithoutSubtasks } = task;
