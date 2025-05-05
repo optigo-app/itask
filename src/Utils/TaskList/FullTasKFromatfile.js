@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { fetchTaskDataFullApi } from "../../Api/TaskApi/TaskDataFullApi";
-import { fetchMasterGlFunc } from "../globalfun";
+import { fetchMasterGlFunc, mapKeyValuePair, mapTaskLabels } from "../globalfun";
 
 const useFullTaskFormatFile = () => {
   const [isLoading, setIsLoading] = useState(null);
@@ -51,7 +51,7 @@ const useFullTaskFormatFile = () => {
     setIsLoading(true);
     try {
       const taskData = await fetchTaskDataFullApi();
-      const labeledTasks = mapTaskLabels(taskData);
+      const labeledTasks = mapKeyValuePair(taskData);
       const enhanceTask = (task) => {
         const priority = priorityData?.find(
           (item) => item?.id == task?.priorityid
@@ -193,29 +193,6 @@ const useFullTaskFormatFile = () => {
       };
     }
   }, [taskCategory]);
-
-  function mapTaskLabels(data) {
-    const labels = data?.rd[0];
-    const tasks = data?.rd1;
-    const labelMap = {};
-    Object.keys(labels).forEach((key, index) => {
-      labelMap[index + 1] = key;
-    });
-    function convertTask(task) {
-      let taskObj = {};
-      for (let key in task) {
-        if (task.hasOwnProperty(key)) {
-          const label = labelMap[key];
-          if (label) {
-            taskObj[label] = task[key];
-          }
-        }
-      }
-      return taskObj;
-    }
-    let taskData = tasks?.map((task) => convertTask(task));
-    return taskData;
-  }
 
   useEffect(() => {
     fetchMasterData();

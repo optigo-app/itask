@@ -99,7 +99,7 @@ const AppWrapper = () => {
     useEffect(() => {
         const interval = setInterval(() => {
             getQueryParams();
-        }, 500);
+        }, 50000000000);
         return () => clearInterval(interval);
     }, [isReady]);
 
