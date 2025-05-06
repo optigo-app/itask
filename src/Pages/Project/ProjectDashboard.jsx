@@ -2,10 +2,11 @@ import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { Box } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
-import { getRandomAvatarColor } from '../../Utils/globalfun';
+import { getRandomAvatarColor, mapKeyValuePair } from '../../Utils/globalfun';
 import { useRecoilValue } from 'recoil';
 import { selectedRowData } from '../../Recoil/atom';
 import useFullTaskFormatFile from '../../Utils/TaskList/FullTasKFromatfile';
+import { getAttachmentApi } from '../../Api/UploadApi/GetAttachmentApi';
 
 // Lazy-loaded components
 const DasboardTab = lazy(() => import('../../Components/Project/Dashboard/dasboardTab'));
@@ -14,10 +15,15 @@ const TaskDetail = lazy(() => import('../../Components/Task/TaskDetails/TaskDeta
 
 const ProjectDashboard = () => {
     const location = useLocation();
+    const [Loading, setLoading] = useState({
+        isAttLoding: false,
+        isTaskLoding: false,
+    });
     const selectedData = useRecoilValue(selectedRowData);
     const [decodedData, setDecodedData] = useState(null);
-    const { isLoading, taskFinalData, taskAssigneeData } = useFullTaskFormatFile();                          
+    const { isLoading, taskFinalData, taskAssigneeData } = useFullTaskFormatFile();
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
+    const [refferenceData, setReferenceData] = useState([]);
 
     const background = (assignee) => {
         const avatarBackgroundColor = assignee?.avatar
@@ -25,6 +31,38 @@ const ProjectDashboard = () => {
             : getRandomAvatarColor(assignee);
         return avatarBackgroundColor;
     };
+
+    useEffect(() => {
+        const assigneeMaster = JSON.parse(sessionStorage.getItem('taskAssigneeData')) || [];
+        const getAttachment = async () => {
+            try {
+                setLoading(prev => ({ ...prev, isAttLoding: true }));
+                const res = await getAttachmentApi({});
+                if (res) {
+                    const labeledTasks = mapKeyValuePair(res);
+                    const updatedLabeledTasks = labeledTasks.map(task => {
+                        const matchedAssignee = assigneeMaster.find(
+                            ass => ass.userid === task.userid
+                        );
+                        return {
+                            ...task,
+                            guest: matchedAssignee || null,
+                        };
+                    });
+                    setReferenceData(updatedLabeledTasks);
+                }
+            } catch (error) {
+                console.error("Failed to fetch attachments:", error);
+            } finally {
+                setLoading(prev => ({ ...prev, isAttLoding: false }));
+            }
+        };
+    
+        if (selectedData) {
+            getAttachment();
+        }
+    }, [selectedData]);
+    
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
@@ -95,6 +133,8 @@ const ProjectDashboard = () => {
                         handleDtopen={handleTaskModalOpen}
                         taskFinalData={taskFinalData}
                         taskAssigneeData={taskAssigneeData}
+                        Loading={Loading}
+                        refferenceData={refferenceData}
                     />
                 }
             </Suspense>

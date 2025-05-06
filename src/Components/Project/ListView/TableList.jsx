@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./projectTable.scss";
 import {
     Table,
@@ -15,20 +15,25 @@ import {
     LinearProgress,
     IconButton,
     Tooltip,
+    AvatarGroup,
+    Avatar,
 } from "@mui/material";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, convertWordsToSpecialChars, formatDate2, getStatusColor, priorityColors } from "../../../Utils/globalfun";
-import { Eye, Lock, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
+import { cleanDate, convertWordsToSpecialChars, formatDate2, getRandomAvatarColor, getStatusColor, ImageUrl, priorityColors } from "../../../Utils/globalfun";
+import { CirclePlus, Eye, Lock, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
 import { useNavigate } from "react-router-dom";
 import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawerFile";
+import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
+import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 
-const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, totalPages, handleChangePage, handleRequestSort, isLoading, handleLockProject, handleDeleteModule }) => {
+const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, totalPages, handleChangePage, handleRequestSort, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit }) => {
     const navigate = useNavigate();
+    const [projectData, setProjectData] = useState([]);
     const [selectedRow, setSelectedRow] = useState({});
     const [hoveredTaskId, setHoveredTaskId] = useState(null);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
@@ -39,14 +44,25 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
     const [openfileDrawerOpen, setFileDrawerOpen] = useState(false);
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
+    const [hoveredColumnname, setHoveredColumnName] = useState('');
+    const [profileOpen, setProfileOpen] = useState(false);
+    const [openAssigneeModal, setOpenAssigneeModal] = useState(false);
     const columns = [
         { id: "taskname", label: "Project/Module", width: 350 },
         { id: "progress", label: "Progress", width: 180 },
+        { id: "assignee", label: "Assignee", width: 100 },
         { id: "StartDate", label: "Start Date", width: 100 },
         { id: "DeadLineDate", label: "Deadline", width: 100 },
         { id: "priority", label: "Priority", width: 100 },
         { id: "actions", label: "Actions", width: 80 },
     ];
+
+    const background = (assignee) => {
+        const avatarBackgroundColor = assignee?.avatar
+            ? "transparent"
+            : getRandomAvatarColor(assignee);
+        return avatarBackgroundColor;
+    };
     const [toggleState, setToggleState] = useState({});
     const handleToggle = (projectId) => {
         setToggleState((prev) => ({
@@ -54,18 +70,67 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
             [projectId]: !prev[projectId],
         }));
     };
-    const handleMouseEnter = (taskId) => {
+    const handleMouseEnter = (taskId, value) => {
         setHoveredTaskId(taskId);
+        setHoveredColumnName(value?.Tbcell)
     };
     const handleMouseLeave = () => {
         setHoveredTaskId(null);
     };
 
+    const hanldePAvatarClick = (task) => {
+        setSelectedRow(task);
+        setProfileOpen(true);
+    }
+
+    const handleAssigneeShortcut = (task, additionalInfo) => {
+        setSelectedRow(task);
+        setRootSubroot(additionalInfo);
+        setOpenAssigneeModal(true);
+    }
+
+    const handleCloseAssigneeModal = () => {
+        setOpenAssigneeModal(false);
+        setSelectedRow(null);
+    }
+
+    const handleAssigneSubmit = (updatedRowData) => {
+        handleAssigneeShortcutSubmit(updatedRowData)
+    }
 
     const handleOpenCnfDialog = (task) => {
         setSelectedRow(task);
         setCnfDialogOpen(true);
     };
+
+    const groupByProject = (tasks) => {
+        const grouped = {};
+
+        tasks.forEach((task) => {
+            const projectId = task.projectid;
+            if (!grouped[projectId]) {
+                grouped[projectId] = {
+                    projectid: projectId,
+                    projectName: task.taskPr,
+                    tasks: []
+                };
+            }
+            grouped[projectId].tasks.push(task);
+        });
+
+        // Add taskcount to each group
+        const result = Object.values(grouped).map(group => ({
+            ...group,
+            taskcount: group.tasks.length
+        }));
+
+        return result;
+    };
+
+    useEffect(() => {
+        const groupedTasks = groupByProject(data);
+        setProjectData(groupedTasks);
+    }, [data]);
 
     const handleViewPrDashboard = (task) => {
         setSelectedRow(task);
@@ -251,7 +316,65 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         );
     };
 
+    const renderAssigneeAvatars = (assignees, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            {console.log('hoveredColumnname: ', hoveredColumnname)}
+            {console.log('hoveredTaskId: ', hoveredTaskId, hoveredColumnname)}
+            <AvatarGroup
+                max={10}
+                spacing={2}
+                sx={{
+                    '& .MuiAvatar-root': {
+                        width: 22,
+                        height: 22,
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        border: 'none',
+                        transition: 'transform 0.3s ease-in-out',
+                        '&:hover': {
+                            transform: 'scale(1.2)',
+                            zIndex: 10,
+                        },
+                    },
+                }}
+            >
+                {assignees?.map((assignee, teamIdx) => (
+                    <Tooltip
+                        placement="top"
+                        key={assignee?.id}
+                        title={`${assignee?.firstname} ${assignee?.lastname}`}
+                        arrow
+                        classes={{ tooltip: 'custom-tooltip' }}
+                    >
+                        <Avatar
+                            key={teamIdx}
+                            alt={`${assignee?.firstname} ${assignee?.lastname}`}
+                            src={ImageUrl(assignee) || null}
+                            sx={{
+                                backgroundColor: background(assignee?.firstname),
+                            }}
+                            onClick={() => hanldePAvatarClick(assignees)}
+                        >
+                            {!assignee.avatar && assignee?.firstname?.charAt(0)}
+                        </Avatar>
+                    </Tooltip>
+                ))}
+            </AvatarGroup>
 
+            {/* <IconButton
+                id="add-task"
+                aria-label="add-task"
+                aria-labelledby="add-task"
+                size="small"
+                onClick={() => handleAssigneeShortcut(task, { Task: 'root' })}
+                style={{
+                    visibility: hoveredTaskId === task?.taskid && hoveredColumnname === 'Assignee' ? 'visible' : 'hidden',
+                }}
+            >
+                <CirclePlus size={20} color="#7367f0" />
+            </IconButton> */}
+        </Box>
+    );
 
     return (
         <>
@@ -308,7 +431,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                         <TableBody>
                             {data?.length !== 0 ? (
                                 <>
-                                    {data.map((project) => (
+                                    {projectData.map((project) => (
                                         <React.Fragment key={project.projectid}>
                                             {/* Render Project Name Row with Toggle Icon */}
                                             <TableRow>
@@ -350,7 +473,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                         sx={{
                                                             backgroundColor: hoveredTaskId === task?.taskid ? '#f5f5f5' : 'inherit',
                                                         }}
-                                                        onMouseEnter={() => handleMouseEnter(task?.taskid)}
+                                                        onMouseEnter={() => handleMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
                                                         onMouseLeave={handleMouseLeave}
                                                     >
                                                         <TableCell sx={{ paddingLeft: '55px' }}>
@@ -393,6 +516,11 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                                     {`${task?.progress_per}%`}
                                                                 </Typography>
                                                             </Box>
+                                                        </TableCell>
+                                                        <TableCell
+                                                            onMouseEnter={() => handleMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
+                                                            onMouseLeave={handleMouseLeave}>
+                                                            {renderAssigneeAvatars(task?.assignee, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
                                                         </TableCell>
                                                         <TableCell>
                                                             {task?.StartDate && cleanDate(task?.StartDate)
@@ -474,6 +602,20 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 cancelLabel="Cancel"
                 confirmLabel="Remove"
                 content='Are you sure you want to Remove this project/module?'
+            />
+
+            <AssigneeShortcutModal
+                taskData={selectedRow}
+                open={openAssigneeModal}
+                onClose={handleCloseAssigneeModal}
+                handleAssigneSubmit={handleAssigneSubmit}
+            />
+
+            <ProfileCardModal
+                open={profileOpen}
+                onClose={() => setProfileOpen(false)}
+                profileData={selectedRow}
+                background={background}
             />
 
             <SidebarDrawerFile

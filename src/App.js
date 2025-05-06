@@ -119,13 +119,11 @@ const AppWrapper = () => {
     const getQueryParams = () => {
         const token = Cookies.get('skey');
         if (!token) {
-            localStorage?.removeItem("AuthqueryParams");
-            localStorage?.removeItem("token");
-            localStorage?.removeItem("isLoggedIn");
-            localStorage?.removeItem("UserProfileData");
+            localStorage.clear();
+            sessionStorage.clear();
             setIsReady(true);
             setPageDataLoaded(true);
-            return navigate('/error_401', { replace: true });
+            return navigate('/error401', { replace: true });
         }
 
         const decoded = jwtDecode(token);
@@ -148,7 +146,6 @@ const AppWrapper = () => {
             const token = JSON?.parse(sessionStorage.getItem("taskInit"));
             if (!token) {
                 const result = await taskInit();
-                console.log('result: ', result);
                 setPageData(result?.Data?.rd1)
                 if (result?.Data?.rd) {
                     const data = await fetchMasterGlFunc();
@@ -206,7 +203,6 @@ const AppWrapper = () => {
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
                     <Routes>
-                        <Route path="/error_401" element={<SomethingWentWrong />} />
                         <Route path="/error401" element={<Error401Page />} />
                         <Route
                             path="*"

@@ -309,7 +309,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                     className="iconbtn"
                 />
             </IconButton>
-            {hasAccess(PERMISSIONS.canEdit) &&
+            {/* {hasAccess(PERMISSIONS.canEdit) && */}
                 <IconButton
                     disabled={task?.isFreezed == 1}
                     onClick={() => handleEditTask(task, { Task: "root" })}
@@ -326,7 +326,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                         className="iconbtn"
                     />
                 </IconButton>
-            }
+            {/* } */}
             <IconButton
                 aria-label="view Task button"
                 onClick={() => handleViewTask(task, { Task: "root" })}

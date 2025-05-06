@@ -1,132 +1,112 @@
 @import "../../../../theme/variable.scss";
 
 .ref_MainDiv {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .fileSideBarTDBox {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    justify-content: end;
+    align-items: center;
+    padding: 5px;
+    overflow: auto;
 
-    .ref_attachments {
+    .toggle-group {
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      padding: 4px 10px;
+      min-width: 200px;
+      display: flex;
+      gap: 5px;
+
+      .toggle-button {
         display: flex;
-        flex-wrap: wrap;
-        gap: 16px;
-    }
-
-    .ref_card {
-        max-width: 300px;
-        border-radius: 8px !important;
-        position: relative;
-        box-shadow: $box-shadow-value !important;
-    }
-
-    .ref_cardBox {
-        width: 100%;
-        display: flex;
-        align-items: center;
-    }
-
-    .ref_cardMedia {
-        width: 40% !important;
-        height: 100px;
-        object-fit: cover;
-    }
-
-    .ref_cardContent {
-        width: 60%;
-    }
-
-    .typo {
-        font-size: 14px !important;
-        font-weight: bold !important;
-        color: $text2ndColor !important;
-    }
-
-    .subtypo {
-        font-size: 10px !important;
-        color:  $text2ndColor !important;
-    }
-
-    .ref_iconButton {
-        position: absolute !important;
-        top: 0 !important;
-        right: 0 !important;
-    }
-
-    .ref_tableContainer {
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .ref_table {
-        width: 100%;
-    }
-
-    .ref_uploadedBy {
-        display: flex;
-        align-items: center;
         gap: 8px;
-    }
+        flex: 1;
+        font-size: 14px;
+        font-family: $font-family !important;
+        color: $text2ndColor;
+        border: none;
+        line-height: 1.2;
+        padding: 10px;
+        text-transform: none;
+        transition: all 0.2s ease-in-out;
 
-    .ref_fileLink {
-        color: #1976d2;
-        text-decoration: none;
-
-        &:hover {
-            text-decoration: underline;
+        &.Mui-selected {
+          background-color: #fff !important;
+          color: #000 !important;
+          font-weight: 700;
         }
+      }
+    }
+  }
+
+  .MuiTableContainer-root {
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px,
+      rgba(0, 0, 0, 0.03) 0px 0px 0px 1px;
+  }
+
+  .MuiTableHead-root {
+    background-color: #f5f5f5;
+
+    .MuiTableCell-root {
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+  }
+
+  .MuiTableRow-root {
+    &.MuiTableRow-hover:hover {
+      background-color: #f0f0f0;
+    }
+  }
+
+  .MuiTableCell-root {
+    font-size: 14px;
+    font-family: $font-family !important;
+    padding: 10px 12px;
+    color: $text2ndColor;
+
+    .MuiTypography-root {
+      font-size: 14px;
+      font-family: $font-family !important;
+      color: $text2ndColor;
+    }
+  }
+
+  .reference-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px,
+      rgba(0, 0, 0, 0.03) 0px 0px 0px 1px;
+    transition: box-shadow 0.3s ease;
+    height: 100%;
+
+    &:hover {
+      box-shadow: rgba(0, 0, 0, 0.1) 0px 8px 28px,
+        rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
     }
 
-    .ref_tableContainer {
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: $box-shadow-value !important;
-
-
-        .ref_table {
-            width: 100%;
-            border-collapse: collapse;
-            font-family: $font-family !important;
-            color: $text2ndColor !important;
-
-            th,
-            td {
-                padding: 12px 16px;
-                text-align: left;
-                border-bottom: 1px solid #e0e0e0;
-                font-family: $font-family !important;
-                color: $text2ndColor !important;
-            }
-
-            th {
-                background-color: #f5f5f5;
-                font-weight: bold;
-                text-transform: uppercase;
-                font-size: 14px;
-                font-family: $font-family !important;
-            }
-
-            td {
-                font-size: 14px;
-            }
-
-            tbody {
-                tr {
-                    .ref_uploadedBy {
-                        .ref_avatar {
-                            width: 30px;
-                            height: 30px;
-                        }
-
-                        p {
-                            font-size: 14px;
-                            color: $text2ndColor !important;
-                        }
-                    }
-
-                    &:hover {
-                        background-color: #f9f9f9;
-                    }
-                }
-            }
-        }
+    .MuiCardMedia-root {
+      object-fit: cover;
     }
+
+    .MuiCardContent-root {
+      padding: 8px;
+      font-size: 13px;
+      color: $text2ndColor;
+    }
+
+    a {
+      word-break: break-word;
+      font-size: 13px;
+      color: $text2ndColor;
+    }
+  }
+
+  .collapse-grid {
+    padding: 12px 8px;
+  }
 }

@@ -4,11 +4,8 @@ import { CloudDownload, Link } from 'lucide-react';  // Import the Link icon
 import placeholderImage from "../../Assests/Attachment.webp";
 
 const AttachmentGrid = ({ uploadedFile, selectedFolder }) => {
-    console.log('uploadedFile: ', uploadedFile);
     const attachments = uploadedFile?.attachment?.[selectedFolder] || [];
     const urlData = uploadedFile?.url?.[selectedFolder] || [];
-    console.log('attachments: ', attachments);
-    console.log('urlData: ', urlData);
 
     return (
         <Grid item xs={12} mt={1}>

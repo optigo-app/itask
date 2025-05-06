@@ -111,7 +111,8 @@ const Project = () => {
         const category = taskCategory?.find(
           (item) => item?.id == task?.workcategoryid
         );
-
+        const assigneeIdArray = task?.assigneeid?.split(',')?.map(id => Number(id));
+        const matchedAssignees = assigneeData?.filter(user => assigneeIdArray?.includes(user.id));
         return {
           ...task,
           priority: priority ? priority?.labelname : "",
@@ -119,13 +120,12 @@ const Project = () => {
           taskPr: project ? project?.labelname : "",
           taskDpt: department ? department?.labelname : "",
           category: category?.labelname,
+          assignee: matchedAssignees ?? [],
         };
       };
 
       const enhancedTasks = finalTaskData?.map((task) => enhanceTask(task));
-      const groupedTasks = groupByProject(enhancedTasks);
-      console.log('groupedTasks: ', groupedTasks);
-      setProject(groupedTasks);
+      setProject(enhancedTasks);
     } catch (error) {
       console.error(error);
     } finally {
@@ -133,30 +133,6 @@ const Project = () => {
     }
   };
 
-  const groupByProject = (tasks) => {
-    const grouped = {};
-  
-    tasks.forEach((task) => {
-      const projectId = task.projectid;
-      if (!grouped[projectId]) {
-        grouped[projectId] = {
-          projectid: projectId,
-          projectName: task.taskPr,
-          tasks: []
-        };
-      }
-      grouped[projectId].tasks.push(task);
-    });
-  
-    // Add taskcount to each group
-    const result = Object.values(grouped).map(group => ({
-      ...group,
-      taskcount: group.tasks.length
-    }));
-  
-    return result;
-  };
-  
   function mapTaskLabels(data) {
     const labels = data?.rd[0];
     const tasks = data?.rd1;
@@ -201,26 +177,26 @@ const Project = () => {
     return taskData;
   }
 
-    // master api call
-    useEffect(() => {
-      const init = sessionStorage?.getItem('taskInit');
-      if (init) {
+  // master api call
+  useEffect(() => {
+    const init = sessionStorage?.getItem('taskInit');
+    if (init) {
+      fetchMasterData();
+    }
+    setCallFetchTaskApi(true);
+  }, []);
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (priorityData && statusData && taskProject && taskDepartment) {
+        if (callFetchTaskApi) {
+          fetchModuleData();
+        }
+      } else {
         fetchMasterData();
       }
-      setCallFetchTaskApi(true);
-    }, []);
-  
-    useEffect(() => {
-      setTimeout(() => {
-        if (priorityData && statusData && taskProject && taskDepartment) {
-          if (callFetchTaskApi) {
-            fetchModuleData();
-          }
-        } else {
-          fetchMasterData();
-        }
-      }, 10);
-    }, [callFetchTaskApi, priorityData,statusData,taskProject,taskDepartment]);
+    }, 10);
+  }, [callFetchTaskApi, priorityData, statusData, taskProject, taskDepartment]);
 
   const handleFilterChange = (key, value) => {
     if (key === "clearFilter" && value == null) {
@@ -451,6 +427,7 @@ const Project = () => {
 
   useEffect(() => {
     if (filteredData) {
+      console.log('filteredData: ', filteredData);
       const maxPage = Math.ceil(filteredData.length / rowsPerPage);
       if (page > maxPage && maxPage > 0) {
         setPage(maxPage);

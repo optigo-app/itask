@@ -8,6 +8,7 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography
 } from '@mui/material';
 import { CircleX, File, Link } from 'lucide-react';
@@ -35,7 +36,6 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   const [uploading, setUploading] = useState(false);
   const [formValues, setFormValues] = useState({ folderName: '', url: '', attachment: {} });
   const [uploadedFile, setUploadedFile] = useState({ attachment: {}, url: {} });
-  console.log('uploadedFile: ', uploadedFile);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -194,8 +194,12 @@ const SidebarDrawerFile = ({ open, onClose }) => {
     });
   };
 
+  const handleImgError = (e) => {
+    e.target.src = Document;
+  };
+
   return (
-    <Drawer anchor="right" open={open} onClose={onClose}>
+    <Drawer anchor="right" open={open}>
       <Box className="filedrawerMainBox">
         <Box className="drawer-header">
           <Typography variant="h6" className="drawer-title">Attachment</Typography>
@@ -269,11 +273,16 @@ const SidebarDrawerFile = ({ open, onClose }) => {
           <ImageSkeleton />
         ) :
           <Box className="filePreviewSection">
-            {Object.entries(uploadedFile.attachment).map(([folder, files]) => (
+            {Array.from(
+              new Set([
+                ...Object.keys(uploadedFile.attachment || {}),
+                ...Object.keys(uploadedFile.url || {}),
+              ])
+            )?.map((folder) => (
               <Box key={folder} className="folder-preview">
                 <Typography variant="subtitle2" className="folder-title">{folder}</Typography>
                 <Box className="preview-grid">
-                  {files.map((item, index) => {
+                  {(uploadedFile.attachment[folder] || []).map((item, index) => {
                     const isImage = item?.fileType?.startsWith('image/');
                     const isPdf = item?.fileType === 'application/pdf';
                     const isExcel = item?.fileType?.includes('spreadsheet') || item?.fileType?.includes('excel');
@@ -281,13 +290,13 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                     return (
                       <Box key={index} className="file-card">
                         {isImage ? (
-                          <img src={fileURL} alt={item.fileName} className="preview-image" loading="lazy" />
+                          <img src={fileURL} alt={item.fileName} className="preview-image" loading="lazy" onError={handleImgError} />
                         ) : isPdf ? (
-                          <img src={pdfIcon} alt="pdf-file" className="preview-file" loading="lazy" />
+                          <img src={pdfIcon} alt="pdf-file" className="preview-file" loading="lazy" onError={handleImgError} />
                         ) : isExcel ? (
-                          <img src={sheetIcon} alt="xls-file" className="preview-file" loading="lazy" />
+                          <img src={sheetIcon} alt="xls-file" className="preview-file" loading="lazy" onError={handleImgError} />
                         ) : (
-                          <img src={Document} alt="file" className="preview-file" loading="lazy" />
+                          <img src={Document} alt="file" className="preview-file" loading="lazy" onError={handleImgError} />
                         )}
                         <Typography className="file-title">{item.fileName}</Typography>
                         <IconButton className="delete-icon" onClick={() => handleDeleteFile(folder, index)}>
@@ -302,7 +311,16 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                       <Box className="preview-file url-icon-box">
                         <Link size={32} />
                       </Box>
-                      <Typography className="file-title url-title">{link}</Typography>
+                      <Tooltip title={link} classes={{ tooltip: 'custom-tooltip' }}>
+                        <Typography
+                          className="file-title url-title"
+                          noWrap
+                          sx={{ maxWidth: '150px', cursor: 'pointer' }}
+                          onClick={() => window.open(link, '_blank')}
+                        >
+                          {link.replace(/^https?:\/\//, '').split('?')[0].slice(0, 30)}...
+                        </Typography>
+                      </Tooltip>
                       <IconButton className="delete-icon" onClick={() => handleDeleteUrl(folder, idx)}>
                         <CircleX size={16} />
                       </IconButton>
@@ -312,6 +330,7 @@ const SidebarDrawerFile = ({ open, onClose }) => {
               </Box>
             ))}
           </Box>
+
         }
         <Box className="bottom-buttons" sx={{ position: 'absolute', bottom: 16, right: 16, display: 'flex' }}>
           <Button variant="outlined" className="secondaryBtnClassname" onClick={handleCancel} sx={{ marginRight: 1 }}>

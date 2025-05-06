@@ -21,7 +21,7 @@ import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
 import AttachmentImg from "../../../Assests/Attachment.webp";
-import { formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments } from '../../../Utils/globalfun';
+import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments } from '../../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
@@ -69,7 +69,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                 if (res) {
                     const labeledTasks = mapKeyValuePair(res);
                     const transformedData = transformAttachments(labeledTasks);
-                    console.log('transformedData: ', transformedData);
                     setUploadedFile(transformedData);
                 }
             } catch (error) {
@@ -414,7 +413,9 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         <Typography className="tasklable">Due Date</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                        <Typography>{formatDate2(taskData?.DeadLineDate)}</Typography>
+                                        <Typography>{taskData?.DeadLineDate && cleanDate(taskData?.DeadLineDate)
+                                            ? formatDate2(cleanDate(taskData?.DeadLineDate))
+                                            : '-'}</Typography>
                                     </Grid>
                                 </Grid>
                                 {/* description */}
@@ -461,7 +462,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         }
                                         {activeTab === 1 &&
                                             <Box>
-                                                <AttachmentSidebar uploadedFile={uploadedFile}  isAtttLoading={isLoading?.isAtttLoading}/>
+                                                <AttachmentSidebar uploadedFile={uploadedFile} isAtttLoading={isLoading?.isAtttLoading} />
                                             </Box>
                                         }
                                         {activeTab === 2 && (

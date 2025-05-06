@@ -1,98 +1,154 @@
-import React from "react";
-import {
-    Card, CardContent, CardMedia, IconButton, Avatar, Typography,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box
-} from "@mui/material";
-import { CloudDownload } from "lucide-react";
+import React, { useState, useMemo } from "react";
 import "./Styles/ReferencePr.scss";
 import placeholderImg from "../../../Assests/Attachment.webp";
-import { formatDate2 } from "../../../Utils/globalfun";
-import ReusableTable from "./ReusableTable";
+import {
+    Box,
+    Typography,
+    ToggleButton,
+    ToggleButtonGroup,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Collapse,
+    Grid,
+    Card,
+    CardMedia,
+    CardContent,
+    IconButton,
+    Avatar,
+    Link
+} from "@mui/material";
+import { ImageUrl } from "../../../Utils/globalfun";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import LinkIcon from "@mui/icons-material/Link";
 
-const referenceData = {
-    attachments: [
-        {
-            name: "Project Requirement Document",
-            details: "Contains project specifications and guidelines",
-            image: placeholderImg
-        },
-        {
-            name: "System Architecture",
-            details: "Blueprint of system design and components",
-            image: placeholderImg
-        }
-    ],
-    tasks: [
-        {
-            taskName: "Requirement Analysis",
-            uploadedBy: "John Doe",
-            avatar: "",
-            uploadDate: "2025-03-25",
-            fileLink: "#"
-        },
-        {
-            taskName: "Design Document",
-            uploadedBy: "Jane Smith",
-            avatar: "",
-            uploadDate: "2025-03-24",
-            fileLink: "#"
-        }
-    ]
-};
+const ReferencePr = ({ Loading, background, refferenceData = [] }) => {
+    console.log('refferenceData: ', refferenceData);
+    const uniqueFolders = useMemo(() => {
+        const seen = new Set();
+        return refferenceData.filter(item => {
+            if (!item?.foldername || seen.has(item.foldername)) return false;
+            seen.add(item.foldername);
+            return true;
+        });
+    }, [refferenceData]);
 
-const ReferencePr = () => {
+    const [selectedFolder, setSelectedFolder] = useState(uniqueFolders[0]?.foldername || "");
+    const [expanded, setExpanded] = useState(null);
+
+    const handleRowExpand = (index) => {
+        setExpanded(expanded === index ? null : index);
+    };
+
+    const filteredData = useMemo(() => {
+        return refferenceData.filter(item => item.foldername === selectedFolder);
+    }, [refferenceData, selectedFolder]);
+
     return (
         <div className="ref_MainDiv">
-            <div className="ref_attachments">
-                {referenceData.attachments.map((attachment, index) => (
-                    <Card key={index} className="ref_card">
-                        <Box className="ref_cardBox">
-                            <CardMedia
-                                component="img"
-                                image={attachment.image}
-                                alt="Attachment"
-                                className="ref_cardMedia"
-                            />
-                            <CardContent className="ref_cardContent">
-                                <Typography className="typo">{attachment.name}</Typography>
-                                <Typography className="subtypo">{attachment.details}</Typography>
-                            </CardContent>
-                        </Box>
-                        <IconButton className="ref_iconButton">
-                            <CloudDownload size={22} color="#7367f0" />
-                        </IconButton>
-                    </Card>
-                ))}
-            </div>
+            <Box className="fileSideBarTDBox" mb={2}>
+                <ToggleButtonGroup
+                    value={selectedFolder}
+                    exclusive
+                    onChange={(e, value) => value && setSelectedFolder(value)}
+                    className="toggle-group"
+                >
+                    {uniqueFolders.map((folder) => (
+                        <ToggleButton
+                            className="toggle-button"
+                            key={folder.foldername}
+                            value={folder.foldername}
+                        >
+                            {folder.foldername}
+                        </ToggleButton>
+                    ))}
+                </ToggleButtonGroup>
+            </Box>
 
-            <ReusableTable
-              className="reusable-table-container"
-                columns={[
-                    { id: "taskName", label: "Task Name" },
-                    { id: "uploadedBy", label: "Uploaded By" },
-                    { id: "uploadDate", label: "Upload Date" },
-                    { id: "file", label: "File" }
-                ]}
-                data={referenceData.tasks}
-                renderCell={(columnId, row) => {
-                    if (columnId === "uploadedBy") {
-                        return (
-                            <div className="reusa_uploadedBy">
-                                <Avatar className="reusa_avatar" src={row.avatar} alt={row.uploadedBy} />
-                                <Typography>{row.uploadedBy}</Typography>
-                            </div>
-                        );
-                    }
-                    if (columnId === "uploadDate") {
-                        return formatDate2(row.uploadDate);
-                    }
-                    if (columnId === "file") {
-                        return <a href={row.fileLink} className="ref_fileLink">View File</a>;
-                    }
-                    return row[columnId];
-                }}
-            />
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell width={30}/>
+                            <TableCell>Task Name</TableCell>
+                            <TableCell>Folder Name</TableCell>
+                            <TableCell>Uploaded By</TableCell>
+                            <TableCell>Upload Date</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {filteredData.map((item, index) => (
+                            <React.Fragment key={index}>
+                                <TableRow>
+                                    <TableCell width={30}>
+                                        <IconButton onClick={() => handleRowExpand(index)} size="small">
+                                            {expanded === index ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                        </IconButton>
+                                    </TableCell>
+                                    <TableCell>{item.taskname}</TableCell>
+                                    <TableCell>{item.foldername}</TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                            <Avatar
+                                                src={ImageUrl(item?.guest)}
+                                                alt={item?.guest?.firstname}
+                                                sx={{ width: 28, height: 28 }}
+                                            />
+                                            <Typography variant="body2">
+                                                {item?.guest?.firstname} {item?.guest?.lastname}
+                                            </Typography>
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell>{item.entrydate}</TableCell>
+                                </TableRow>
 
+                                <TableRow>
+                                    <TableCell colSpan={5} style={{ paddingBottom: 0, paddingTop: 0 }}>
+                                        <Collapse in={expanded === index} timeout="auto" unmountOnExit>
+                                            <Box margin={1}>
+                                                <Grid container spacing={2} className="collapse-grid">
+                                                    {(item.DocumentName?.split(",") || []).map((doc, i) => (
+                                                        <Grid item xs={12} sm={6} md={3} key={`doc-${i}`}>
+                                                            <Card className="reference-card">
+                                                                <CardMedia
+                                                                    component="img"
+                                                                    height="140"
+                                                                    image={doc || placeholderImg}
+                                                                    alt={`Document ${i + 1}`}
+                                                                />
+                                                                <CardContent>
+                                                                    <Typography variant="body2">Image File</Typography>
+                                                                </CardContent>
+                                                            </Card>
+                                                        </Grid>
+                                                    ))}
+                                                    {(item.DocumentUrl?.split(",") || []).map((url, i) => (
+                                                        <Grid item xs={12} sm={6} md={3} key={`url-${i}`}>
+                                                            <Card className="reference-card">
+                                                                <CardContent sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                                    <LinkIcon />
+                                                                    <Link href={url} target="_blank" rel="noopener noreferrer">
+                                                                        {url}
+                                                                    </Link>
+                                                                </CardContent>
+                                                            </Card>
+                                                        </Grid>
+                                                    ))}
+                                                </Grid>
+                                            </Box>
+                                        </Collapse>
+                                    </TableCell>
+                                </TableRow>
+                            </React.Fragment>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </div>
     );
 };
