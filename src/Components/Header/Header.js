@@ -10,7 +10,6 @@ import { useRecoilValue } from "recoil";
 
 const Header = ({ avatarSrc = "" }) => {
     const location = useLocation();
-    console.log('location: ', location);
     const navigate = useNavigate();
     const searchParams = new URLSearchParams(location.search);
 

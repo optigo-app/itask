@@ -14,7 +14,6 @@ const AttachmentSidebar = ({ uploadedFile, isAtttLoading }) => {
 
     const hasNoData = !uploadedFile || !uploadedFile.attachment || Object.keys(uploadedFile.attachment).length === 0;
     const hasNoUrl = !uploadedFile || !uploadedFile.url || Object.keys(uploadedFile.url).length === 0;
-    console.log('hasNoData: ', hasNoData, hasNoUrl);
 
     return (
         <>

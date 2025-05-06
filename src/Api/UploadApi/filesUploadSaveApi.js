@@ -1,9 +1,6 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const filesUploadSaveApi = async (attachments, taskid) => {
-    debugger;
-    console.log("taskid: ", taskid);
-    console.log("attachments: ", attachments);
     const AuthData = JSON.parse(localStorage.getItem("AuthqueryParams"));
     try {
         const combinedValue = JSON.stringify({
@@ -11,7 +8,6 @@ export const filesUploadSaveApi = async (attachments, taskid) => {
             folders: attachments ?? [],
         });
 
-        console.log("combinedValue: ", combinedValue);
         const body = {
             con: `{\"id\":\"\",\"mode\":\"save_attachment\",\"appuserid\":\"${AuthData?.uid ?? ""
                 }\"}`,

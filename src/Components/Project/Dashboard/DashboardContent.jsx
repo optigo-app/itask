@@ -10,11 +10,11 @@ const TeamMembers = lazy(() => import('./TeamMembers'));
 const Comments = lazy(() => import('./Commnets'));
 const Announcement = lazy(() => import('./Announcement'));
 
-const DashboardContent = ({ selectedTab, decodedData, handleDtopen, taskFinalData, taskAssigneeData, background }) => {
+const DashboardContent = ({Loading, selectedTab, decodedData, handleDtopen, taskFinalData, taskAssigneeData, background, refferenceData }) => {
   const renderContent = () => {
     switch (selectedTab) {
       case 'Reference':
-        return <ReferencePr handleDtopen={handleDtopen} />;
+        return <ReferencePr handleDtopen={handleDtopen} Loading={Loading?.isAttLoding} refferenceData={refferenceData} background={background}/>;
       case 'Milestone':
         return <MilestoneTimeline handleDtopen={handleDtopen} milestoneData={taskFinalData?.MilestoneData} />;
       case 'Challenges':

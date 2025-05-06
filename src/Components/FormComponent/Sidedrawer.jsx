@@ -72,6 +72,7 @@ const SidebarDrawer = ({
         dueDate: null,
         startDate: null,
         assignee: "",
+        projectLead: "",
         status: "",
         priority: "",
         description: "",
@@ -255,9 +256,10 @@ const SidebarDrawer = ({
     }
 
     const handleSubmit = (module) => {
+        debugger
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const idString = formValues?.guests?.map(user => user.id)?.join(",");
-        const assignees = Object.values(
+        const assignees = formValues?.guests && Object.values(
             formValues?.guests?.reduce((acc, user) => {
                 const dept = user.department;
                 if (!acc[dept]) {
@@ -828,6 +830,16 @@ const SidebarDrawer = ({
                                     </Box>
                                 </Grid>
                                 <Grid item xs={12} sm={12}>
+                                    <DepartmentAssigneeAutocomplete
+                                        value={formValues?.projectLead}
+                                        options={filterAssigneeData}
+                                        label="Assign To"
+                                        placeholder="Select assignee"
+                                        limitTags={2}
+                                        onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={12}>
                                     <CustomAutocomplete
                                         label="Category"
                                         name="category"
@@ -836,17 +848,6 @@ const SidebarDrawer = ({
                                         options={taskCategory}
                                         placeholder="Select Category"
                                         refProp={filterRefs.category}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={12}>
-                                    <AssigneeAutocomplete
-                                        label="project lead"
-                                        name="projectLead"
-                                        value={formValues.assignee}
-                                        onChange={handleChange}
-                                        options={taskAssigneeData}
-                                        placeholder="Select Assignee"
-                                        inputRef={filterRefs.assignee}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sm={12}>
