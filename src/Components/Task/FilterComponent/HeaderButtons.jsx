@@ -37,7 +37,7 @@ import {
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import { useLocation } from "react-router-dom";
 import "./Styles.scss";
-import TaskTimeTrackerComp from "../../ShortcutsComponent/TaskTimeTrackerComp";
+import TaskTimeTrackerComp from "../../ShortcutsComponent/TimerComponent/TaskTimeTrackerComp";
 import ScrollableCategoryTabs from "./ScrollableCategoryTabs";
 import { isMediumScreen, isSmallScreen } from "../../../Utils/globalfun";
 

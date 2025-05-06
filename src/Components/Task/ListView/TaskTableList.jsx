@@ -27,7 +27,7 @@ import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { cleanDate, convertWordsToSpecialChars, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
-import TaskTimeTracking from "../../ShortcutsComponent/TaskTimeTracking";
+import TaskTimeTracking from "../../ShortcutsComponent/TimerComponent/TaskTimeTracking";
 import BurningImg from "../../../Assests/fire.webp"
 import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 import StatusCircles from "../../ShortcutsComponent/EstimateComp";

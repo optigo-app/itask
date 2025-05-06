@@ -1,4 +1,5 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
+import "./App.scss";
 import {
     BrowserRouter as Router,
     Routes,

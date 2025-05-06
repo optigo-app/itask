@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Typography, Avatar, Menu, MenuItem, Divider, Button, Chip, Tooltip, IconButton, Badge } from "@mui/material";
 import { Bell, MailOpen, User, Settings, LogOut } from "lucide-react";
-import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
+import { getRandomAvatarColor, ImageUrl, showNotification } from "../../Utils/globalfun";
 import "./header.scss";
 import NotificationCard from "../Notification/NotificationCard";
 import { taskLength } from "../../Recoil/atom";
@@ -10,6 +10,7 @@ import { useRecoilValue } from "recoil";
 
 const Header = ({ avatarSrc = "" }) => {
     const location = useLocation();
+    console.log('location: ', location);
     const navigate = useNavigate();
     const searchParams = new URLSearchParams(location.search);
 
@@ -155,10 +156,20 @@ const Header = ({ avatarSrc = "" }) => {
 
     const handleViewAllNoti = () => {
         handleCloseMenu();
-        navigate('/inbox');
+        navigate('/notification');
     }
 
     const handleBellClick = (event) => {
+        showNotification({
+            title: 'Task Reminder',
+            body: 'You have a task due in 10 minutes!',
+            icon: 'https://media.istockphoto.com/id/517188688/photo/mountain-landscape.jpg?s=1024x1024&w=0&k=20&c=z8_rWaI8x4zApNEEG9DnWlGXyDIXe-OmsAyQ5fGPVV8=',
+            url: location.pathname,
+            actions: [
+                { action: 'open', title: 'View Task' },
+                { action: 'dismiss', title: 'Dismiss' }
+            ]
+        });
         setAnchorEl(event.currentTarget);
     };
 
@@ -173,7 +184,6 @@ const Header = ({ avatarSrc = "" }) => {
     const handleCloseProfileMenu = () => {
         setProfileAnchorEl(null);
     };
-
 
     const isDecodedTitle =
         location.pathname.includes("/tasks/") &&

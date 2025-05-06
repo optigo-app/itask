@@ -33,8 +33,12 @@ import { getAttachmentApi } from '../../../Api/UploadApi/GetAttachmentApi';
 import AttachmentSidebar from './AttachmentSidebar';
 
 const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
-    console.log('taskData: ', taskData);
     const theme = useTheme();
+    const [isLoading, setIsLoading] = useState(
+        {
+            isAtttLoading: false,
+        }
+    );
     const [taskArr, setTaskArr] = useRecoilState(TaskData);
     const setCallTaskApi = useSetRecoilState(fetchlistApiCall);
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -49,7 +53,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
-    const [selectedFolder, setSelectedFolder] = useState("Project_Ref");
 
     // Dummy attachment data
     const dummyAttachments = [
@@ -59,6 +62,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     ];
 
     useEffect(() => {
+        setIsLoading({ isAtttLoading: true });
         const getAttachment = async () => {
             try {
                 const res = await getAttachmentApi(taskData);
@@ -71,6 +75,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
             } catch (error) {
                 console.error("Failed to fetch attachments:", error);
             } finally {
+                setIsLoading({ isAtttLoading: false });
             }
         };
         if (taskData?.taskid && open) {
@@ -127,6 +132,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
 
     const handleClose = () => {
         onClose();
+        setUploadedFile([]);
     }
 
     const toggleFullScreen = () => setIsFullScreen(!isFullScreen);
@@ -455,7 +461,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         }
                                         {activeTab === 1 &&
                                             <Box>
-                                                <AttachmentSidebar uploadedFile={uploadedFile} />
+                                                <AttachmentSidebar uploadedFile={uploadedFile}  isAtttLoading={isLoading?.isAtttLoading}/>
                                             </Box>
                                         }
                                         {activeTab === 2 && (
