@@ -28,7 +28,7 @@ const AttachmentGrid = ({ uploadedFile, selectedFolder }) => {
                                     {item.fileName}
                                 </Typography>
                             </CardContent>
-                            <Box sx={{ position: 'absolute', top: 5, right: 5, display: 'flex', gap: 1 }}>
+                            <Box sx={{ position: 'absolute', top: 0, right: 0, display: 'flex', gap: 1 }}>
                                 {/* Download Button */}
                                 <IconButton
                                     sx={{
@@ -54,7 +54,7 @@ const AttachmentGrid = ({ uploadedFile, selectedFolder }) => {
                     <Typography variant="h6">Project Reference URL(s):</Typography>
                     <Grid container spacing={1}>
                         {urlData.map((url, index) => (
-                            <Grid item xs={12} sm={6} md={4} key={index}>
+                            <Grid item xs={12} sm={12} md={12} key={index}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Link size={18} color='#7367f0' />
                                     <Typography variant="body2" component="a" href={url} target="_blank" sx={{ color: '#7367f0', textDecoration: 'none' }}>

@@ -16,13 +16,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { CircleX, GitMerge, Play } from "lucide-react";
 import './TimeTracker.scss';
-import { formatDate2, formatDate3 } from "../../Utils/globalfun";
-import taskJson from "../../Data/taskData.json";
+import { formatDate2, formatDate3 } from "../../../Utils/globalfun";
+import taskJson from "../../../Data/taskData.json";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
-import timerImg from "../../Assests/no-timesheet.svg"
+import timerImg from "../../../Assests/no-timesheet.svg"
 import { useRecoilState, useRecoilValue } from "recoil";
-import { TaskData, timerCompOpen } from "../../Recoil/atom";
+import { TaskData, timerCompOpen } from "../../../Recoil/atom";
 
 const TaskTimeTrackerComp = () => {
     const [drawerOpen, setDrawerOpen] = useRecoilState(timerCompOpen);
