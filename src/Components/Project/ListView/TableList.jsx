@@ -31,8 +31,10 @@ import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawer
 import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 
-const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, totalPages, handleChangePage, handleRequestSort, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit }) => {
+const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit }) => {
     const navigate = useNavigate();
+    const [order, setOrder] = useState("asc");
+    const [orderBy, setOrderBy] = useState("projectName");
     const [projectData, setProjectData] = useState([]);
     const [selectedRow, setSelectedRow] = useState({});
     const [hoveredTaskId, setHoveredTaskId] = useState(null);
@@ -48,7 +50,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
     const [profileOpen, setProfileOpen] = useState(false);
     const [openAssigneeModal, setOpenAssigneeModal] = useState(false);
     const columns = [
-        { id: "taskname", label: "Project/Module", width: 350 },
+        { id: "projectName", label: "Project/Module", width: 350 },
         { id: "progress", label: "Progress", width: 180 },
         { id: "assignee", label: "Assignee", width: 100 },
         { id: "StartDate", label: "Start Date", width: 100 },
@@ -134,6 +136,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
 
     const handleViewPrDashboard = (task) => {
         setSelectedRow(task);
+        setSelectedTask(task);
         let urlData = {
             module: task?.taskname,
             project: task.taskPr,
@@ -182,6 +185,43 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         setActionMode("delete");
         setSelectedRow(task);
     }
+
+    function descendingComparator(a, b, orderBy) {
+        const valA = a[orderBy];
+        const valB = b[orderBy];
+
+        if (typeof valA === "string" && typeof valB === "string") {
+            return valB.trim().localeCompare(valA.trim());
+        }
+
+        if (valB < valA) return -1;
+        if (valB > valA) return 1;
+        return 0;
+    }
+
+    function getComparator(order, orderBy) {
+        return order === "asc"
+            ? (a, b) => -descendingComparator(a, b, orderBy)
+            : (a, b) => descendingComparator(a, b, orderBy);
+    }
+
+    // sorting
+    const handleRequestSort = (property) => {
+        const isAsc = orderBy === property && order === "asc";
+        setOrder(isAsc ? "desc" : "asc");
+        setOrderBy(property);
+    };
+
+
+    const sortedData = [...(projectData || [])]?.sort(getComparator(order, orderBy));
+
+    const totalPages = Math?.ceil(
+        sortedData && sortedData?.length / rowsPerPage
+    );
+
+    // Get data for the current page
+    const currentData =
+        sortedData?.slice((page - 1) * rowsPerPage, page * rowsPerPage) || [];
 
     const handleNavigate = (task) => {
         let urlData = {
@@ -245,7 +285,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 >
                     <Paperclip size={20} color="#808080" className="iconbtn" />
                 </IconButton>
-                <IconButton
+                {/* <IconButton
                     aria-label="View Module button"
                     onClick={() => handleViewPrDashboard(task)}
                     sx={{
@@ -255,7 +295,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                     }}
                 >
                     <Eye size={20} color="#808080" className="iconbtn" />
-                </IconButton>
+                </IconButton> */}
                 <IconButton
                     aria-label="Edit-Task button"
                     disabled={task?.isFreez === 1}
@@ -431,11 +471,11 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                         <TableBody>
                             {data?.length !== 0 ? (
                                 <>
-                                    {projectData.map((project) => (
+                                    {currentData?.map((project) => (
                                         <React.Fragment key={project.projectid}>
                                             {/* Render Project Name Row with Toggle Icon */}
                                             <TableRow>
-                                                <TableCell colSpan={7}>
+                                                <TableCell colSpan={6}>
                                                     <Box display="flex" alignItems="center" gap={.5}>
                                                         {/* Toggle IconButton */}
                                                         <IconButton
@@ -463,6 +503,19 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                             )}
                                                         </Typography>
                                                     </Box>
+                                                </TableCell>
+                                                <TableCell colSpan={1} sx={{ textAlign: "right" }}>
+                                                    <IconButton
+                                                        aria-label="View Module button"
+                                                        onClick={() => handleViewPrDashboard(project)}
+                                                        sx={{
+                                                            '&.Mui-disabled': {
+                                                                color: 'rgba(0, 0, 0, 0.26)',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <Eye size={20} color="#808080" className="iconbtn" />
+                                                    </IconButton>
                                                 </TableCell>
                                             </TableRow>
 
@@ -561,7 +614,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                             <Box className="TablePaginationBox">
                                                 <Typography className="paginationText">
                                                     Showing {(page - 1) * rowsPerPage + 1} to{' '}
-                                                    {Math.min(page * rowsPerPage, data?.length)} of {data?.length} entries
+                                                    {Math.min(page * rowsPerPage, sortedData?.length)} of {sortedData?.length} entries
                                                 </Typography>
                                                 {totalPages > 0 && (
                                                     <Pagination

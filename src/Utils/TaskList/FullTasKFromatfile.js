@@ -99,6 +99,7 @@ const useFullTaskFormatFile = () => {
       const teamMembersMap = new Map();
       const categoryMap = {};
       const category = {};
+      const projectCategoryTasks = {};
 
       // Step 0: Create category map from label list
       taskCategory.forEach((label) => {
@@ -158,23 +159,39 @@ const useFullTaskFormatFile = () => {
         return clone;
       };
 
-      // Step 4: Recursively find category-based tasks
+      // Step 4: Recursively group tasks by project and category
       const collectCategoryTasks = (task) => {
         const categoryKey = categoryMap[task.workcategoryid];
-        if (categoryKey) category[categoryKey].push(task);
+        const projectId = task.projectid;
+
+        if (categoryKey) {
+          // Global category grouping
+          category[categoryKey].push(task);
+
+          // Initialize structure if missing
+          if (!projectCategoryTasks[projectId]) {
+            projectCategoryTasks[projectId] = {};
+          }
+          if (!projectCategoryTasks[projectId][categoryKey]) {
+            projectCategoryTasks[projectId][categoryKey] = [];
+          }
+
+          // Push task to project+category group
+          projectCategoryTasks[projectId][categoryKey].push(task);
+        }
 
         task.subtasks?.forEach((subtask) => {
           collectCategoryTasks(subtask);
         });
       };
 
-      // Collect top-level tasks and also populate category-based group
+      // Step 5: Collect top-level tasks and fill category groups
       const TaskData = data.filter((task) => task.parentid === 0);
       TaskData.forEach((task) => {
         collectCategoryTasks(task);
       });
 
-      // Convert team member sets to arrays
+      // Step 6: Convert team member sets to arrays
       const TeamMembers = {};
       for (const [projectid, membersMap] of teamMembersMap.entries()) {
         TeamMembers[projectid] = Array.from(membersMap.values());
@@ -190,9 +207,11 @@ const useFullTaskFormatFile = () => {
         Announcement: data.filter((task) => task.workcategoryid === 11),
         TeamMembers,
         Category: category,
+        ProjectCategoryTasks: projectCategoryTasks,
       };
-    }
+    };
   }, [taskCategory]);
+
 
   useEffect(() => {
     fetchMasterData();

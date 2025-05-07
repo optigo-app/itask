@@ -30,8 +30,6 @@ const KanbanView = React.lazy(() =>
 
 const Project = () => {
   const isLaptop = useMediaQuery("(max-width:1150px)");
-  const [order, setOrder] = useState("desc");
-  const [orderBy, setOrderBy] = useState("entrydate");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(12);
   const [isLoading, setIsLoading] = useState(false);
@@ -251,37 +249,8 @@ const Project = () => {
     setSelectedCategory([])
   };
 
-  function descendingComparator(a, b, orderBy) {
-    const valA = a[orderBy];
-    const valB = b[orderBy];
-
-    if (typeof valA === "string" && typeof valB === "string") {
-      return valB.trim().localeCompare(valA.trim());
-    }
-
-    if (valB < valA) return -1;
-    if (valB > valA) return 1;
-    return 0;
-  }
-
-  function getComparator(order, orderBy) {
-    return order === "asc"
-      ? (a, b) => -descendingComparator(a, b, orderBy)
-      : (a, b) => descendingComparator(a, b, orderBy);
-  }
-
-  // sorting
-  const handleRequestSort = (property) => {
-    const isAsc = orderBy === property && order === "asc";
-    setOrder(isAsc ? "desc" : "asc");
-    setOrderBy(property);
-  };
-
-
-  const sortedData = [...(project || [])]?.sort(getComparator(order, orderBy));
-
-  const filteredData = Array.isArray(sortedData)
-    ? sortedData?.filter((task) => {
+  const filteredData = Array.isArray(project)
+    ? project?.filter((task) => {
       const {
         status = "",
         priority = "",
@@ -376,7 +345,6 @@ const Project = () => {
     })
     : [];
 
-
   const handleTabBtnClick = (button) => {
     setActiveButton(button);
     localStorage?.setItem("activeTaskTab", button);
@@ -435,13 +403,7 @@ const Project = () => {
     }
   }, [filteredData, page, rowsPerPage]);
 
-  const totalPages = Math?.ceil(
-    filteredData && filteredData?.length / rowsPerPage
-  );
 
-  // Get data for the current page
-  const currentData =
-    filteredData?.slice((page - 1) * rowsPerPage, page * rowsPerPage) || [];
 
   return (
     <Box className="project-moduleMain">
@@ -539,17 +501,12 @@ const Project = () => {
               {/* {activeButton === "table" && ( */}
               <TaskTable
                 data={filteredData ?? null}
-                currentData={currentData}
                 page={page}
-                order={order}
-                orderBy={orderBy}
                 rowsPerPage={rowsPerPage}
-                totalPages={totalPages}
                 isLoading={isTaskLoading}
                 masterData={masterData}
                 handleLockProject={handleLockProject}
                 handleDeleteModule={handleDeleteModule}
-                handleRequestSort={handleRequestSort}
                 handleChangePage={handleChangePage}
               />
               {/* )} */}

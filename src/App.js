@@ -101,10 +101,12 @@ const AppWrapper = () => {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            getQueryParams();
-        }, 500);
+          getQueryParams();
+        }, 1000);
+      
         return () => clearInterval(interval);
-    }, [isReady]);
+      }, [isReady]);
+      
 
     const decodeBase64 = (str) => {
         if (!str) return null;

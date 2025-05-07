@@ -3,7 +3,6 @@
 .ref_MainDiv {
   display: flex;
   flex-direction: column;
-  gap: 16px;
 
   .fileSideBarTDBox {
     display: flex;
@@ -21,6 +20,7 @@
       gap: 5px;
 
       .toggle-button {
+        min-width: 150px;
         display: flex;
         gap: 8px;
         flex: 1;
@@ -29,7 +29,7 @@
         color: $text2ndColor;
         border: none;
         line-height: 1.2;
-        padding: 10px;
+        padding: 6px 10px;
         text-transform: none;
         transition: all 0.2s ease-in-out;
 
