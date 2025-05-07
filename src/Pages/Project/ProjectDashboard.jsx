@@ -22,6 +22,7 @@ const ProjectDashboard = () => {
     const selectedData = useRecoilValue(selectedRowData);
     const [decodedData, setDecodedData] = useState(null);
     const { isLoading, taskFinalData, taskAssigneeData } = useFullTaskFormatFile();
+    console.log('taskFinalData: ', taskFinalData);
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
     const [refferenceData, setReferenceData] = useState([]);
 
@@ -40,8 +41,8 @@ const ProjectDashboard = () => {
                 const res = await getAttachmentApi({});
                 if (res) {
                     const labeledTasks = mapKeyValuePair(res);
-                    const updatedLabeledTasks = labeledTasks.map(task => {
-                        const matchedAssignee = assigneeMaster.find(
+                    const updatedLabeledTasks = labeledTasks?.map(task => {
+                        const matchedAssignee = assigneeMaster?.find(
                             ass => ass.userid === task.userid
                         );
                         return {

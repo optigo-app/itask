@@ -250,6 +250,7 @@ export const getRandomAvatarColor = (name) => {
 
 // make structure master data function
 export const fetchMasterGlFunc = async () => {
+    debugger
     try {
         const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
         const AuthUrlData = JSON?.parse(localStorage.getItem('AuthqueryParams'));

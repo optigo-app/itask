@@ -170,9 +170,16 @@ const Home = () => {
 
   let profileData = JSON?.parse(localStorage.getItem("UserProfileData"));
 
-  let prFilterData = prTasksList?.filter((task) => {
-    return typeof task?.priority === 'string' && task.priority.toLowerCase().trim() === "high" && task?.assignee?.some((assignee) => assignee.id == profileData?.id);
-  });
+  let prFilterData = prTasksList
+    ?.filter((task) => {
+      return (
+        typeof task?.priority === 'string' &&
+        task.priority.toLowerCase().trim() === "critical" &&
+        task?.assignee?.some((assignee) => assignee.id == profileData?.id)
+      );
+    })
+    .slice(0, 10);
+
 
   return (
     <>

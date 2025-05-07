@@ -23,8 +23,7 @@ import {
     Link
 } from "@mui/material";
 import { ImageUrl } from "../../../Utils/globalfun";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import LinkIcon from "@mui/icons-material/Link";
 
 const ReferencePr = ({ Loading, background, refferenceData = [] }) => {
@@ -74,7 +73,7 @@ const ReferencePr = ({ Loading, background, refferenceData = [] }) => {
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell width={30}/>
+                            <TableCell width={10} />
                             <TableCell>Task Name</TableCell>
                             <TableCell>Folder Name</TableCell>
                             <TableCell>Uploaded By</TableCell>
@@ -85,9 +84,16 @@ const ReferencePr = ({ Loading, background, refferenceData = [] }) => {
                         {filteredData.map((item, index) => (
                             <React.Fragment key={index}>
                                 <TableRow>
-                                    <TableCell width={30}>
+                                    <TableCell width={10}>
                                         <IconButton onClick={() => handleRowExpand(index)} size="small">
-                                            {expanded === index ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                            <PlayArrowIcon
+                                                style={{
+                                                    color: expanded === index ? "#444050" : "#c7c7c7",
+                                                    fontSize: "1rem",
+                                                    transform: expanded === index ? "rotate(90deg)" : "rotate(0deg)",
+                                                    transition: "transform 0.2s ease-in-out",
+                                                }}
+                                            />
                                         </IconButton>
                                     </TableCell>
                                     <TableCell>{item.taskname}</TableCell>

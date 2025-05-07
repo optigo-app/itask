@@ -92,7 +92,7 @@ const Filters = ({
                 onChange={(event, newValue) =>
                   handleFilterChange(filter.key, newValue)
                 }
-                options={filter.data.map((item) =>
+                options={filter?.data?.map((item) =>
                   filter.key === "assignee"
                     ? `${item?.firstname} ${item?.lastname}`
                     : item?.labelname
@@ -128,9 +128,9 @@ const Filters = ({
           </Box>
         )}
 
-        <Button size='small' className="clearAllBtn" variant="text" onClick={handleClearFilter}>
+        {/* <Button size='small' className="clearAllBtn" variant="text" onClick={handleClearFilter}>
           Clear All
-        </Button>
+        </Button> */}
       </Box>
 
 
