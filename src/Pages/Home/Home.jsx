@@ -174,7 +174,7 @@ const Home = () => {
     ?.filter((task) => {
       return (
         typeof task?.priority === 'string' &&
-        task.priority.toLowerCase().trim() === "critical" &&
+        task.priority.toLowerCase().trim() === "urgent" &&
         task?.assignee?.some((assignee) => assignee.id == profileData?.id)
       );
     })
@@ -193,19 +193,20 @@ const Home = () => {
               <Agenda agenda={meetings} navigate={navigate} isLoding={isLoding} />
             </Grid>
 
-            <Grid item>
+            {/* <Grid item>
               <Projects projects={Project} navigate={navigate} isLoding={isLoding} />
-            </Grid>
+            </Grid> */}
           </Grid>
         </Grid>
-
-        <Grid item xs={12} md={7}>
-          <Grid container direction="column" spacing={2}>
-            <Grid item>
-              <UrgentTask urgentTask={prFilterData} navigate={navigate} isLoding={isLoding} />
+        {prFilterData?.length > 0 &&
+          <Grid item xs={12} md={7}>
+            <Grid container direction="column" spacing={2}>
+              <Grid item>
+                <UrgentTask urgentTask={prFilterData} navigate={navigate} isLoding={isLoding} />
+              </Grid>
             </Grid>
           </Grid>
-        </Grid>
+        }
       </Grid>
     </>
   )

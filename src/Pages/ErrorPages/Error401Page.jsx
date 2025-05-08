@@ -1,15 +1,9 @@
 import React from 'react';
-import { Box, Typography, Button } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Box, Typography } from '@mui/material';
 import Image401 from '../../Assests/error_401.webp';
 import './Styles/ErrorPage.scss';
 
 const Error401Page = () => {
-  const navigate = useNavigate();
-
-  const handleGoBack = () => {
-    navigate(-1);
-  };
 
   return (
     <Box className="error-page-container">
@@ -25,9 +19,6 @@ const Error401Page = () => {
         <Typography variant="body1" className="error-message">
           You do not have permission to view any page. Please contact your administrator.
         </Typography>
-        <Button variant="contained" className="buttonClassname" onClick={handleGoBack}>
-          Go Back
-        </Button>
       </Box>
     </Box>
   );

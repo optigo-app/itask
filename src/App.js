@@ -17,7 +17,6 @@ import { fetchMasterGlFunc } from './Utils/globalfun';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
 import Reports from './Pages/Reports/Reports';
-import SomethingWentWrong from './Components/Auth/SomethingWentWrong';
 import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
@@ -98,15 +97,32 @@ const AppWrapper = () => {
     const navigate = useNavigate();
     const setRole = useSetRecoilState(userRoleAtom);
 
-
     useEffect(() => {
-        const interval = setInterval(() => {
-          getQueryParams();
-        }, 1000);
-      
-        return () => clearInterval(interval);
-      }, [isReady]);
-      
+        let timeout;
+        const handleRefetch = () => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                getQueryParams();
+            }, 100);
+        };
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                handleRefetch();
+            }
+        };
+        const handleFocus = () => {
+            handleRefetch();
+        };
+        getQueryParams();
+        window.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('focus', handleFocus);
+        return () => {
+            clearTimeout(timeout);
+            window.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, []);
+
 
     const decodeBase64 = (str) => {
         if (!str) return null;
@@ -145,29 +161,31 @@ const AppWrapper = () => {
 
     useEffect(() => {
         const checkAndInit = async () => {
-            const token = JSON?.parse(sessionStorage.getItem("taskInit"));
-            if (!token) {
+            const taskInitToken = sessionStorage.getItem("taskInit");
+            let roleData;
+
+            if (!taskInitToken) {
                 const result = await taskInit();
-                setPageData(result?.Data?.rd1)
-                if (result?.Data?.rd) {
-                    const data = await fetchMasterGlFunc();
-                    setRole(data?.designation);
+                if (result?.Data?.rd1) {
+                    setPageData(result.Data.rd1);
+                    setPageDataLoaded(true);
                 }
             } else {
-                const pageData = JSON?.parse(sessionStorage.getItem("pageAccess"));
+                const pageData = JSON.parse(sessionStorage.getItem("pageAccess"));
                 if (pageData) {
-                    setPageData(pageData)
+                    setPageData(pageData);
+                    setPageDataLoaded(true);
                 }
-                const data = await fetchMasterGlFunc();
-                setRole(data?.designation);
             }
-            setPageDataLoaded(true);
+            roleData = await fetchMasterGlFunc();
+            setRole(roleData?.designation);
         };
+
         if (cookieData) {
             checkAndInit();
         }
-
     }, [isReady]);
+
 
     const toastStyle = {
         borderRadius: "8px",
@@ -191,7 +209,6 @@ const AppWrapper = () => {
     if (!isReady || !pageDataLoaded) {
         return <LoadingBackdrop isLoading={true} />;
     }
-
 
     return (
         <>
