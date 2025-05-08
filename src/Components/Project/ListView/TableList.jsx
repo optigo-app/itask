@@ -22,7 +22,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { cleanDate, convertWordsToSpecialChars, formatDate2, getRandomAvatarColor, getStatusColor, ImageUrl, priorityColors } from "../../../Utils/globalfun";
-import { CirclePlus, Eye, Lock, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
+import { Eye, Lock, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
@@ -135,16 +135,15 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
     }, [data]);
 
     const handleViewPrDashboard = (task) => {
+        console.log('task: ', task);
         setSelectedRow(task);
         setSelectedTask(task);
         let urlData = {
-            module: task?.taskname,
-            project: task.taskPr,
-            taskid: task?.taskid,
+            project: task.projectName,
             projectid: task?.projectid,
         }
         const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
-        navigate(`/projects/dashboard/?d=${encodedFormData}`);
+        navigate(`/projects/dashboard/?data=${encodedFormData}`);
     }
 
     const handleCloseCnfDialog = () => {

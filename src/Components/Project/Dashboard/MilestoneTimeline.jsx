@@ -1,7 +1,7 @@
 import React from "react";
 import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot } from "@mui/lab";
 import { Card, Typography, LinearProgress, Box } from "@mui/material";
-import { formatDate2 } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2 } from "../../../Utils/globalfun";
 import "./Styles/MilestoneTimeline.scss";
 
 const getProgressColor = (progress) => {
@@ -39,7 +39,11 @@ const MilestoneTimeline = ({ milestoneData }) => {
                                 <Typography variant="subtitle1" className="milestone-name"><strong>{milestone?.taskname}</strong></Typography>
                                 <Typography variant="body2" className="milestone-department">Department: {milestone?.taskDpt}</Typography>
                                 <Typography variant="body2" className="milestone-dates">
-                                    Start: {formatDate2(milestone?.StartDate)} | End: {formatDate2(milestone?.DeadLineDate)}
+                                    Start: {milestone?.StartDate && cleanDate(milestone?.StartDate)
+                                        ? formatDate2(cleanDate(milestone?.StartDate))
+                                        : '-'} | End: {milestone?.DeadLineDate && cleanDate(milestone?.DeadLineDate)
+                                            ? formatDate2(cleanDate(milestone?.DeadLineDate))
+                                            : '-'}
                                 </Typography>
                                 <Box className="progress-container">
                                     <LinearProgress

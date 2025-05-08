@@ -1,6 +1,6 @@
 import React, { useEffect, useState, Suspense, lazy } from 'react';
-import { Box } from '@mui/material';
-import { useLocation } from 'react-router-dom';
+import { Box, Typography } from '@mui/material';
+import { useLocation, useNavigate } from 'react-router-dom';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import { getRandomAvatarColor, mapKeyValuePair } from '../../Utils/globalfun';
 import { useRecoilValue } from 'recoil';
@@ -22,7 +22,6 @@ const ProjectDashboard = () => {
     const selectedData = useRecoilValue(selectedRowData);
     const [decodedData, setDecodedData] = useState(null);
     const { isLoading, taskFinalData, taskAssigneeData } = useFullTaskFormatFile();
-    console.log('taskFinalData: ', taskFinalData);
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
     const [refferenceData, setReferenceData] = useState([]);
 
@@ -58,12 +57,12 @@ const ProjectDashboard = () => {
                 setLoading(prev => ({ ...prev, isAttLoding: false }));
             }
         };
-    
+
         if (selectedData) {
             getAttachment();
         }
     }, [selectedData]);
-    
+
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
@@ -110,7 +109,7 @@ const ProjectDashboard = () => {
         <Box
             sx={{
                 boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
-                padding: "30px 20px",
+                padding: "10px 20px 30px 20px",
                 borderRadius: "8px",
             }}
         >

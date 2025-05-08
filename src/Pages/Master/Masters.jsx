@@ -82,7 +82,8 @@ const MasterToggle = () => {
                     const masterIndApi = await fetchIndidualApiMaster({ mode: modeValue });
                     const finalMasterData = masterIndApi?.rd || [];
                     const sortedMasterData = finalMasterData.sort((a, b) => a.displayorder - b.displayorder);
-                    const mergedData = sortedMasterData.map(item => ({
+                    const mergedData = sortedMasterData.map((item, index) => ({
+                        srno: index + 1,
                         ...item,
                         tabData: tableTabData.find(tabItem => tabItem.id === item.masterid) || null
                     }));
@@ -304,7 +305,7 @@ const MasterToggle = () => {
                     </Box>
                     <MasterFormDrawer
                         open={drawerOpen}
-                        activeTab = {value}
+                        activeTab={value}
                         onClose={handleCloseDrawer}
                         onSubmit={handleAddOrSaveRow}
                         formData={formData}

@@ -97,8 +97,11 @@ const Header = ({ avatarSrc = "" }) => {
         return null;
     }
 
+    console.log('decodedData: ', decodedData);
     if (decodedData?.module && location?.pathname.includes("/tasks/")) {
         dataMap[matchedKey].title = `${decodedData?.project}/${decodedData?.module}`;
+    } else if (decodedData?.project && location?.pathname.includes("/projects/dashboard")) {
+        dataMap[matchedKey].title = `${decodedData?.project}`;
     }
 
     const { title, subtitle } = dataMap[matchedKey];
@@ -188,9 +191,16 @@ const Header = ({ avatarSrc = "" }) => {
         location.pathname.includes("/tasks/") &&
         decodedData?.module &&
         title === `${decodedData?.project}/${decodedData?.module}`;
+    const isDecodedProjectTitle =
+        location.pathname.includes("/projects/dashboard") &&
+        decodedData?.project &&
+        title === `${decodedData?.project}`;
+
     const handleback = () => {
         if (isDecodedTitle) {
             navigate("/projects");
+        } else {
+            navigate(-1);
         }
     };
 
@@ -213,8 +223,8 @@ const Header = ({ avatarSrc = "" }) => {
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                     <Typography variant="h6" component="div" className="headerTitle"
                         sx={{
-                            cursor: isDecodedTitle ? 'pointer' : 'default',
-                            '&:hover': isDecodedTitle
+                            cursor: isDecodedTitle || isDecodedProjectTitle ? 'pointer' : 'default',
+                            '&:hover': isDecodedTitle || isDecodedProjectTitle
                                 ? {
                                     color: '#7367f0;',
                                 }

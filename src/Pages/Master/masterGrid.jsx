@@ -94,7 +94,7 @@ const Mastergrid = ({
                     <TableBody>
                         {sortedMaster?.map((row, index) => (
                             <TableRow key={row.id}>
-                                <TableCell>{index + 1}</TableCell>
+                                <TableCell>{row?.srno}</TableCell>
                                 <TableCell style={{
                                     textDecoration: row.isdelete !== 0 ? 'line-through' : 'none',
                                     color: row.isdelete !== 0 ? '#ab003c' : '#444050',

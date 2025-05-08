@@ -504,7 +504,7 @@ const SidebarDrawer = ({
                                         label="Milestone"
                                         className="milestone-label"
                                     />
-                                    {rootSubrootflagval?.Task == "root" &&
+                                    {/* {rootSubrootflagval?.Task == "root" &&
                                         <Box display="flex" gap={2}>
                                             <Button
                                                 size="small"
@@ -523,7 +523,7 @@ const SidebarDrawer = ({
                                                 Reject
                                             </Button>
                                         </Box>
-                                    }
+                                    } */}
                                 </Box>
                             </Box>
                         }
