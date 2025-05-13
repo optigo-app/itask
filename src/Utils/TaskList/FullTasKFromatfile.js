@@ -100,10 +100,11 @@ const useFullTaskFormatFile = () => {
       const categoryMap = {};
       const category = {};
       const projectCategoryTasks = {};
+      const projectMilestoneData = {};
 
       // Step 0: Create category map from label list
       taskCategory.forEach((label) => {
-        const key = label.labelname.toLowerCase().replace(/\s+/g, '');
+        const key = label.labelname.toLowerCase().replace(/\s+/g, '_');
         categoryMap[label.id] = key;
         category[key] = [];
       });
@@ -168,15 +169,13 @@ const useFullTaskFormatFile = () => {
           // Global category grouping
           category[categoryKey].push(task);
 
-          // Initialize structure if missing
+          // Project-wise category grouping
           if (!projectCategoryTasks[projectId]) {
             projectCategoryTasks[projectId] = {};
           }
           if (!projectCategoryTasks[projectId][categoryKey]) {
             projectCategoryTasks[projectId][categoryKey] = [];
           }
-
-          // Push task to project+category group
           projectCategoryTasks[projectId][categoryKey].push(task);
         }
 
@@ -191,7 +190,17 @@ const useFullTaskFormatFile = () => {
         collectCategoryTasks(task);
       });
 
-      // Step 6: Convert team member sets to arrays
+      // Step 6: Project-wise Milestone Data
+      const allMilestones = data.filter((task) => task.ismilestone === 1);
+      allMilestones.forEach((milestone) => {
+        const projectId = milestone.projectid;
+        if (!projectMilestoneData[projectId]) {
+          projectMilestoneData[projectId] = [];
+        }
+        projectMilestoneData[projectId].push(extractMilestoneTree(milestone));
+      });
+
+      // Step 7: Convert team member maps to arrays
       const TeamMembers = {};
       for (const [projectid, membersMap] of teamMembersMap.entries()) {
         TeamMembers[projectid] = Array.from(membersMap.values());
@@ -199,18 +208,13 @@ const useFullTaskFormatFile = () => {
 
       return {
         TaskData,
-        MilestoneData: data
-          .filter((task) => task.ismilestone === 1)
-          .map(extractMilestoneTree),
-        RndTask: data.filter((task) => task.workcategoryid === 2),
-        ChallengesTask: data.filter((task) => task.workcategoryid === 10),
-        Announcement: data.filter((task) => task.workcategoryid === 11),
+        ProjectMilestoneData: projectMilestoneData,
         TeamMembers,
-        Category: category,
         ProjectCategoryTasks: projectCategoryTasks,
       };
     };
   }, [taskCategory]);
+
 
 
   useEffect(() => {

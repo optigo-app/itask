@@ -114,7 +114,7 @@ const CalendarLeftSide = ({ calendarsColor, isLoding, handleCaleFormSubmit  }) =
                     sx={{ borderRadius: '8px' }}
                 >
                     <ToggleButton value="filter" aria-label="filter" className='toggle-button'>
-                        Filter
+                        Event
                     </ToggleButton>
                     <ToggleButton value="tasklist" aria-label="task list" className='toggle-button'>
                         Task List

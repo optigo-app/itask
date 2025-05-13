@@ -72,10 +72,33 @@ const HeaderButtons = ({
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
   const encodedData = searchParams.get("data");
+  const [categoryMaster, setCategoryMaster] = useState([]);
 
   useEffect(() => {
-    setView(activeButton);
-  }, [activeButton])
+    if (Array.isArray(taskCategory)) {
+      const isProjectPath = location?.pathname?.includes("/projects");
+      const newTask = {
+        id: taskCategory.length + 1,
+        labelname: "New Task",
+        displayorder: taskCategory.length + 1,
+        isdelete: 0,
+        masterid: 1,
+      };
+      const dueTask = {
+        id: taskCategory.length + 2,
+        labelname: "Due Task",
+        displayorder: taskCategory.length + 2,
+        isdelete: 0,
+        masterid: 1,
+      };
+
+      const categoryData = isProjectPath
+        ? [dueTask, ...taskCategory]
+        : [newTask, dueTask, ...taskCategory];
+
+      setCategoryMaster(categoryData);
+    }
+  }, [taskCategory, location]);
 
   const handleDrawerToggle = () => {
     setFormDrawerOpen(!formdrawerOpen);
@@ -136,7 +159,6 @@ const HeaderButtons = ({
     }
   };
 
-
   const handleFilterDrOpen = () => {
     setFilterDrawerOpen(!filterDrawerOpen);
   };
@@ -175,7 +197,7 @@ const HeaderButtons = ({
         <Box className="FirstMainBox">
           {!isLaptop && (
             <ScrollableCategoryTabs
-              taskCategory={taskCategory}
+              taskCategory={categoryMaster}
               selectedCategory={filters?.category}
               handleFilterChange={handleFilterChange}
             />

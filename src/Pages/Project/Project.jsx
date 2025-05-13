@@ -47,6 +47,7 @@ const Project = () => {
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [callFetchTaskApi, setCallFetchTaskApi] = useRecoilState(fetchlistApiCall);
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
+  const now = new Date();
 
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
@@ -109,7 +110,7 @@ const Project = () => {
         const category = taskCategory?.find(
           (item) => item?.id == task?.workcategoryid
         );
-        const assigneeIdArray = task?.assigneeid?.split(',')?.map(id => Number(id));
+        const assigneeIdArray = task?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = assigneeData?.filter(user => assigneeIdArray?.includes(user.id));
         return {
           ...task,
@@ -274,15 +275,26 @@ const Project = () => {
 
       const normalizedSearchTerm = searchTerm?.toLowerCase() || "";
 
+      const isTaskDue = (dateStr) => {
+        if (!dateStr) return false;
+        return new Date(dateStr) < now;
+      };
+
       const matchesFilters = (task) => {
         if (!task) return false;
+        const matchesCategory =
+          !Array.isArray(category) || category.length === 0 ||
+          category.some((cat) => {
+            if (cat.toLowerCase()?.includes("due")) {
+              return isTaskDue(task?.DeadLineDate);
+            } else if (cat.toLowerCase()?.includes("new")) {
+              return task?.isnew == 1;
+            }
+            return (task?.category ?? "").toLowerCase() === cat.toLowerCase();
+          });
 
         const matches =
-          (!Array.isArray(category) || category.length === 0 ||
-            category.some(
-              (cat) =>
-                (task?.category ?? "").toLowerCase() === cat.toLowerCase()
-            )) &&
+          matchesCategory &&
           (!isValidFilter(status) ||
             (task?.status ?? "").toLowerCase() === status.toLowerCase()) &&
           (!isValidFilter(priority) ||

@@ -2,7 +2,7 @@ import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
-import { getRandomAvatarColor, mapKeyValuePair } from '../../Utils/globalfun';
+import { getRandomAvatarColor, mapKeyValuePair, transformAttachments } from '../../Utils/globalfun';
 import { useRecoilValue } from 'recoil';
 import { selectedRowData } from '../../Recoil/atom';
 import useFullTaskFormatFile from '../../Utils/TaskList/FullTasKFromatfile';
@@ -22,6 +22,7 @@ const ProjectDashboard = () => {
     const selectedData = useRecoilValue(selectedRowData);
     const [decodedData, setDecodedData] = useState(null);
     const { isLoading, taskFinalData, taskAssigneeData } = useFullTaskFormatFile();
+    console.log('taskFinalData: ', taskFinalData);
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
     const [refferenceData, setReferenceData] = useState([]);
 
@@ -49,6 +50,7 @@ const ProjectDashboard = () => {
                             guest: matchedAssignee || null,
                         };
                     });
+                    const transformedData = transformAttachments(updatedLabeledTasks);
                     setReferenceData(updatedLabeledTasks);
                 }
             } catch (error) {
@@ -65,8 +67,9 @@ const ProjectDashboard = () => {
 
 
     useEffect(() => {
+        debugger
         const searchParams = new URLSearchParams(location.search);
-        const encodedData = searchParams.get('d');
+        const encodedData = searchParams.get('data');
 
         if (encodedData) {
             try {
@@ -77,7 +80,7 @@ const ProjectDashboard = () => {
                 console.error('Error decoding or parsing search data:', error);
             }
         }
-    }, [location.search]);
+    }, [location]);
 
     const handleTaskModalOpen = () => {
         setTaskDetailModalOpen(true);
@@ -92,12 +95,32 @@ const ProjectDashboard = () => {
         { label: 'Milestone', content: 'MilestoneTimeline' },
         { label: 'Team Member', content: 'TeamMember' },
         { label: 'Comments', content: 'Comments' },
-        { label: 'Announcement', content: 'Announcement' },
-        { label: 'Challenges', content: 'Challenges' },
-        { label: 'R&D', content: 'RnD' },
     ];
+    const [tabs, setTabs] = useState(tabData);
+    const [selectedTab, setSelectedTab] = useState(tabs[0]?.label || '');
 
-    const [selectedTab, setSelectedTab] = useState(tabData[0]?.label || '');
+    useEffect(() => {
+        if (!taskFinalData || Object.keys(taskFinalData).length === 0) return;
+
+        const projectTasks = taskFinalData?.ProjectCategoryTasks?.[decodedData?.projectid];
+        if (projectTasks) {
+            const categories = Object.keys(projectTasks);
+            const dynamicTabs = categories.map((category) => {
+                const label = category
+                    .split('_')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+                return {
+                    label,
+                    content: category,
+                };
+            });
+
+            setTabs((prevTabs) => {
+                return [...prevTabs, ...dynamicTabs];
+            });
+        }
+    }, [taskFinalData]);
 
     const handleChange = (event, newValue) => {
         if (newValue !== null) {
@@ -115,7 +138,7 @@ const ProjectDashboard = () => {
         >
             <Suspense fallback={<></>}>
                 <DasboardTab
-                    tabData={tabData}
+                    tabData={tabs}
                     selectedTab={selectedTab}
                     handleChange={handleChange}
                 />
@@ -126,7 +149,7 @@ const ProjectDashboard = () => {
                     <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
                 ) :
                     <DashboardContent
-                        tabData={tabData}
+                        tabData={tabs}
                         selectedTab={selectedTab}
                         decodedData={decodedData}
                         background={background}
