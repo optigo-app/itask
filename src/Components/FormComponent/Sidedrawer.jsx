@@ -106,6 +106,7 @@ const SidebarDrawer = ({
     };
 
     useEffect(() => {
+        debugger
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
         if (open && (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "root")) {
@@ -831,7 +832,7 @@ const SidebarDrawer = ({
                                 </Grid>
                                 <Grid item xs={12} sm={12}>
                                     <DepartmentAssigneeAutocomplete
-                                        value={formValues?.projectLead}
+                                        value={formValues?.guests}
                                         options={filterAssigneeData}
                                         label="Assign To"
                                         placeholder="Select assignee"

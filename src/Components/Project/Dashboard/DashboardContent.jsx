@@ -1,5 +1,12 @@
 import React, { lazy, Suspense } from 'react';
-import { Typography } from '@mui/material';
+import { IconButton, Typography } from '@mui/material';
+import ReusableTable from './ReusableTable';
+import StatusBadge from '../../ShortcutsComponent/StatusBadge';
+import { priorityColors, statusColors } from '../../../Utils/globalfun';
+import TaskPriority from '../../ShortcutsComponent/TaskPriority';
+import { Eye } from 'lucide-react';
+import { selectedRowData } from '../../../Recoil/atom';
+import { useSetRecoilState } from 'recoil';
 
 // Lazy-loaded components
 const ReferencePr = lazy(() => import('./ReferencePr'));
@@ -10,32 +17,104 @@ const TeamMembers = lazy(() => import('./TeamMembers'));
 const Comments = lazy(() => import('./Commnets'));
 const Announcement = lazy(() => import('./Announcement'));
 
-const DashboardContent = ({Loading, selectedTab, decodedData, handleDtopen, taskFinalData, taskAssigneeData, background, refferenceData }) => {
-  const renderContent = () => {
-    switch (selectedTab) {
-      case 'Reference':
-        return <ReferencePr handleDtopen={handleDtopen} Loading={Loading?.isAttLoding} refferenceData={refferenceData} background={background}/>;
-      case 'Milestone':
-        return <MilestoneTimeline handleDtopen={handleDtopen} milestoneData={taskFinalData?.MilestoneData} />;
-      case 'Challenges':
-        return <TaskChalenges handleDtopen={handleDtopen} TaskChalenges={taskFinalData?.ChallengesTask} decodedData={decodedData} />;
-      case 'R&D':
-        return <RnDTask handleDtopen={handleDtopen} taskRnd={taskFinalData?.RndTask} decodedData={decodedData} />;
-      case 'Announcement':
-        return <Announcement handleDtopen={handleDtopen} taskAnnouncement={taskFinalData?.Announcement} decodedData={decodedData} />;
-      case 'Team Member':
-        return <TeamMembers
-          handleDtopen={handleDtopen}
-          taskAssigneeData={taskAssigneeData}
-          teamMemberData={taskFinalData?.TeamMembers}
-          decodedData={decodedData}
-          background={background} />;
-      case 'Comments':
-        return <Comments handleDtopen={handleDtopen} />;
-      default:
-        return <Typography>No Data Found...</Typography>;
+const DashboardContent = ({ tabData, Loading, selectedTab, decodedData, handleDtopen, taskFinalData, taskAssigneeData, background, refferenceData }) => {
+  console.log('selectedTab: ', selectedTab);
+  const categoryData = JSON.parse(sessionStorage.getItem('taskworkcategoryData')) || [];
+  const selectedTabLower = selectedTab?.toLowerCase();
+  const setSelectedTask = useSetRecoilState(selectedRowData);
+
+
+  const tabConfig = {
+    Reference: {
+      component: ReferencePr,
+      props: {
+        handleDtopen,
+        Loading: Loading?.isAttLoding,
+        refferenceData,
+        background,
+        decodedData
+      }
+    },
+    Milestone: {
+      component: MilestoneTimeline,
+      props: {
+        handleDtopen,
+        milestoneData: taskFinalData?.ProjectMilestoneData,
+        decodedData
+      }
+    },
+    "Team Member": {
+      component: TeamMembers,
+      props: {
+        handleDtopen,
+        taskAssigneeData,
+        teamMemberData: taskFinalData?.TeamMembers,
+        decodedData,
+        background
+      }
+    },
+    Comments: {
+      component: Comments,
+      props: { handleDtopen }
     }
   };
+  const renderContent = () => {
+    if (tabConfig[selectedTab]) {
+      const { component: Component, props } = tabConfig[selectedTab];
+      return <Component {...props} />;
+    }
+    const matchedCategory = categoryData.find(
+      (cat) => cat.labelname?.toLowerCase() === selectedTabLower
+    );
+
+    if (matchedCategory) {
+      debugger
+      const dataKey = selectedTab.replace(/\s+/g, '_');
+
+      const prwiseData = taskFinalData?.ProjectCategoryTasks[decodedData?.projectid];
+      const taskData = prwiseData?.[(dataKey)?.toLowerCase()] || [];
+      console.log('data-->>>: ', taskData);
+
+      const handleEyeClick = (row) => {
+        setSelectedTask(row);
+        handleDtopen(true);
+      };
+
+      return (
+        <ReusableTable
+          className="reusable-table-container"
+          columns={[
+            { id: "taskname", label: "Task Name" },
+            { id: "project", label: "Project" },
+            { id: "status", label: "Status" },
+            { id: "priority", label: "Priority" },
+            { id: "action", label: "Action" }
+          ]}
+          data={taskData?.map(row => ({
+            ...row,
+            status: <StatusBadge task={row} statusColors={statusColors} onStatusChange={{}} disable={true} />,
+            "project": `${decodedData?.project}`,
+            priority: TaskPriority(row.priority, priorityColors),
+            action: (
+              <IconButton
+                aria-label="view Task button"
+                onClick={() => handleEyeClick(row)}
+              >
+                <Eye
+                  size={20}
+                  color="#808080"
+                  className="iconbtn"
+                />
+              </IconButton>
+            )
+          }))}
+        />
+      );
+    }
+
+    return <Typography>No Data Found...</Typography>;
+  };
+
 
   return (
     <div>
@@ -54,77 +133,3 @@ const DashboardContent = ({Loading, selectedTab, decodedData, handleDtopen, task
 };
 
 export default DashboardContent;
-
-
-
-//latest code
-
-// import React from "react";
-// import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot } from "@mui/lab";
-// import { Card, Typography, LinearProgress, Box } from "@mui/material";
-// import { formatDate2 } from "../../../Utils/globalfun";
-// import "./Styles/MilestoneTimeline.scss";
-
-// const milestones = [
-//     { name: "Project Initiation", startDate: "2024-03-01", endDate: "2024-03-10", progress: 100, department: "Management" },
-//     { name: "Design Phase", startDate: "2024-03-11", endDate: "2024-04-01", progress: 70, department: "Design Team" },
-//     { name: "Development", startDate: "2024-04-02", endDate: "2024-06-30", progress: 40, department: "Engineering" },
-//     { name: "Testing & QA", startDate: "2024-07-01", endDate: "2024-08-15", progress: 10, department: "QA Team" },
-// ];
-
-// const getProgressColor = (progress) => {
-//     if (progress === 100) {
-//         return "success";
-//     } else if (progress >= 60) {
-//         return "primary";
-//     } else if (progress >= 30) {
-//         return "warning";
-//     } else {
-//         return "error";
-//     }
-// };
-
-// const MilestoneTimeline = ({ milestoneData }) => {
-//     const sortedMilestones = milestoneData.sort((a, b) => {
-//         if (a.progress_per === 100) return -1;
-//         if (b.progress_per === 100) return 1;
-//         if (a.progress_per === 0) return 1;
-//         if (b.progress_per === 0) return -1;
-//         return b.progress_per - a.progress_per;
-//     });
-//     console.log('sortedMilestones: ', sortedMilestones);
-//     return (
-//         <Box className="milestone-container">
-//             <Timeline position="alternate">
-//                 {sortedMilestones.map((milestone, index) => (
-//                     <TimelineItem key={index}>
-//                         <TimelineSeparator>
-//                             <TimelineDot className={`dot-${getProgressColor(milestone.progress_per)}`} />
-//                             {index !== milestones.length - 1 && <TimelineConnector />}
-//                         </TimelineSeparator>
-//                         <TimelineContent>
-//                             <Card className="milestone-card">
-//                                 <Typography variant="subtitle1" className="milestone-name"><strong>{milestone.taskname}</strong></Typography>
-//                                 <Typography variant="body2" className="milestone-department">Department: {milestone.taskDpt}</Typography>
-//                                 <Typography variant="body2" className="milestone-dates">
-//                                     Start: {formatDate2(milestone.StartDate)} | End: {formatDate2(milestone.entrydate)}
-//                                 </Typography>
-//                                 <Box className="progress-container">
-//                                     <LinearProgress
-//                                         variant="determinate"
-//                                         value={milestone.progress_per}
-//                                         className={`progress-bar ${getProgressColor(milestone.progress_per)}`}
-//                                     />
-//                                     <Typography variant="caption" className={`progress-text text-${getProgressColor(milestone.progress_per)}`}>{milestone.progress_per}% Completed</Typography>
-//                                 </Box>
-//                             </Card>
-//                         </TimelineContent>
-//                     </TimelineItem>
-//                 ))}
-//             </Timeline>
-//         </Box>
-//     );
-// };
-
-// export default MilestoneTimeline;
-

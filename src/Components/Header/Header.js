@@ -97,7 +97,6 @@ const Header = ({ avatarSrc = "" }) => {
         return null;
     }
 
-    console.log('decodedData: ', decodedData);
     if (decodedData?.module && location?.pathname.includes("/tasks/")) {
         dataMap[matchedKey].title = `${decodedData?.project}/${decodedData?.module}`;
     } else if (decodedData?.project && location?.pathname.includes("/projects/dashboard")) {
@@ -457,6 +456,7 @@ const Header = ({ avatarSrc = "" }) => {
                         variant="contained"
                         fullWidth
                         endIcon={<LogOut size={20} />}
+                        disabled={true}
                     >
                         Logout
                     </Button>

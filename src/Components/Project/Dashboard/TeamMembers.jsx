@@ -5,21 +5,13 @@ import { Add as AddIcon } from "@mui/icons-material";
 import TeamSidebar from "./Team/TeamSidebar";
 import { ImageUrl } from "../../../Utils/globalfun";
 
-const teamMembers = [
-    { id: 1, name: "John Doe", designation: "Project Manager", avatar: "https://i.pravatar.cc/150?img=1" },
-    { id: 2, name: "Jane Smith", designation: "UI/UX Designer", avatar: "https://i.pravatar.cc/150?img=2" },
-    { id: 3, name: "Alex Johnson", designation: "Software Engineer", avatar: "https://i.pravatar.cc/150?img=3" },
-    { id: 4, name: "Emily Davis", designation: "QA Engineer", avatar: "https://i.pravatar.cc/150?img=4" },
-    { id: 5, name: "Michael Brown", designation: "DevOps Engineer", avatar: "https://i.pravatar.cc/150?img=5" },
-];
-
 const TeamMembers = ({ taskAssigneeData, teamMemberData, decodedData, background }) => {
     const [open, setOpen] = React.useState(false);
     const [filteredTeamMembers, setFilteredTeamMembers] = React.useState([]);
 
     useEffect(() => {
         if (decodedData?.projectid && teamMemberData) {
-            const projectId = String(decodedData.projectid); // Ensure key is string
+            const projectId = String(decodedData.projectid);
             const members = teamMemberData[projectId] || [];
             setFilteredTeamMembers(members);
         }

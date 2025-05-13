@@ -405,6 +405,7 @@ export const flattenTasks = (tasks, level = 0) => {
     }, []);
 };
 export function transformAttachments(data) {
+    console.log('data: ', data);
     const mimeTypes = {
         jpg: "image/jpeg",
         jpeg: "image/jpeg",
@@ -421,7 +422,7 @@ export function transformAttachments(data) {
         url: {}
     };
 
-    data.forEach(({ foldername, DocumentName, DocumentUrl }) => {
+    data?.forEach(({ foldername, DocumentName, DocumentUrl }) => {
         const folder = foldername;
         const docUrls = (DocumentName || "").split(",").filter(Boolean);
         const urlLinks = (DocumentUrl || "").split(",").filter(Boolean);

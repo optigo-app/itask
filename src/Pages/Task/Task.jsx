@@ -46,6 +46,7 @@ const Task = () => {
   const [tasks, setTasks] = useRecoilState(TaskData);
   const setTaskDataLength = useSetRecoilState(taskLength)
   const encodedData = searchParams.get("data");
+  const now = new Date();
 
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
@@ -339,14 +340,26 @@ const Task = () => {
     };
     // Reset filters before applying them
     resetInvalidFilters();
+    debugger
+    const isTaskDue = (dateStr) => {
+      if (!dateStr) return false;
+      return new Date(dateStr) < now;
+    };
 
     const matchesFilters = (task) => {
+      const matchesCategory =
+        !Array.isArray(category) || category.length === 0 ||
+        category.some((cat) => {
+          if (cat.toLowerCase()?.includes("due")) {
+            return isTaskDue(task?.DeadLineDate);
+          } else if (cat.toLowerCase()?.includes("new")) {
+            return task?.isnew == 1;
+          }
+          return (task?.category ?? "").toLowerCase() === cat.toLowerCase();
+        });
+
       const matches =
-        (!Array.isArray(category) || category.length === 0 ||
-          category.some(
-            (cat) =>
-              (task?.category ?? "").toLowerCase() === cat.toLowerCase()
-          )) &&
+        matchesCategory &&
         (status ? (task?.status)?.toLowerCase() === status?.toLowerCase() : true) &&
         (priority ? (task?.priority)?.toLowerCase() === priority?.toLowerCase() : true) &&
         (department ? (task?.taskDpt)?.toLowerCase() === department?.toLowerCase() : true) &&
@@ -478,15 +491,15 @@ const Task = () => {
         const dept = user.department;
         if (!acc[dept]) {
           acc[dept] = {
-                  department: dept,
-                  assignee: user.id.toString()
-              };
-            } else {
-              acc[dept].assignee += `,${user.id}`;
-            }
-            return acc;
-          }, {})
-        );
+            department: dept,
+            assignee: user.id.toString()
+          };
+        } else {
+          acc[dept].assignee += `,${user.id}`;
+        }
+        return acc;
+      }, {})
+    );
     setTasks((prevTasks) => {
       const updateTasksRecursively = (tasks) => {
         return tasks?.map((task) => {
