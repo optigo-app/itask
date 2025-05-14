@@ -165,7 +165,6 @@ const CalendarForm = ({
     };
 
     const handleSubmit = () => {
-        debugger
         if (!validateForm()) return;
         if (view === "meeting") {
             if (formValues) {

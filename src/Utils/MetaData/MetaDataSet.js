@@ -30,7 +30,7 @@ const MetaDataSet = () => {
       url: window.location.href,
     },
     "/tasks": {
-      title: "Task Manager - Organize Your Work",
+      title: "Task Page - Organize Your Work",
       description: "Create, assign, and track tasks efficiently with our task management tool.",
       image: "https://example.com/tasks-image.jpg",
       keywords: "task management, to-do list, productivity, project planning",

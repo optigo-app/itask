@@ -340,7 +340,6 @@ const Task = () => {
     };
     // Reset filters before applying them
     resetInvalidFilters();
-    debugger
     const isTaskDue = (dateStr) => {
       if (!dateStr) return false;
       return new Date(dateStr) < now;

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Box, Typography, Avatar, Menu, MenuItem, Divider, Button, Chip, Tooltip, IconButton, Badge } from "@mui/material";
-import { Bell, MailOpen, User, Settings, LogOut } from "lucide-react";
-import { getRandomAvatarColor, ImageUrl, showNotification } from "../../Utils/globalfun";
+import { Box, Typography, Avatar, Menu, MenuItem, Divider, Button, Chip, Tooltip, IconButton, Badge, ToggleButtonGroup, ToggleButton } from "@mui/material";
+import { Bell, MailOpen, User, LogOut, House, FileCheck } from "lucide-react";
+import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
 import "./header.scss";
 import NotificationCard from "../Notification/NotificationCard";
 import { taskLength } from "../../Recoil/atom";
@@ -22,11 +22,13 @@ const Header = ({ avatarSrc = "" }) => {
     const [decodedData, setDecodedData] = useState(null);
     const taskDataLength = useRecoilValue(taskLength);
     const [profileData, setProfileData] = useState();
+    const [selectedTab, setSelectedTab] = useState("");
 
     useEffect(() => {
+        location.pathname.includes("/tasks/") ? setSelectedTab("taskView") : setSelectedTab("projectHome");
         const UserProfileData = JSON?.parse(localStorage.getItem("UserProfileData"));
         setProfileData(UserProfileData);
-    }, [])
+    }, []);
 
     useEffect(() => {
         if (encodedData) {
@@ -161,16 +163,17 @@ const Header = ({ avatarSrc = "" }) => {
     }
 
     const handleBellClick = (event) => {
-        showNotification({
-            title: 'Task Reminder',
-            body: 'You have a task due in 10 minutes!',
-            icon: 'https://media.istockphoto.com/id/517188688/photo/mountain-landscape.jpg?s=1024x1024&w=0&k=20&c=z8_rWaI8x4zApNEEG9DnWlGXyDIXe-OmsAyQ5fGPVV8=',
-            url: location.pathname,
-            actions: [
-                { action: 'open', title: 'View Task' },
-                { action: 'dismiss', title: 'Dismiss' }
-            ]
-        });
+        // for service worker
+        // showNotification({
+        //     title: 'Task Reminder',
+        //     body: 'You have a task due in 10 minutes!',
+        //     icon: 'https://media.istockphoto.com/id/517188688/photo/mountain-landscape.jpg?s=1024x1024&w=0&k=20&c=z8_rWaI8x4zApNEEG9DnWlGXyDIXe-OmsAyQ5fGPVV8=',
+        //     url: location.pathname,
+        //     actions: [
+        //         { action: 'open', title: 'View Task' },
+        //         { action: 'dismiss', title: 'Dismiss' }
+        //     ]
+        // });
         setAnchorEl(event.currentTarget);
     };
 
@@ -199,7 +202,22 @@ const Header = ({ avatarSrc = "" }) => {
         if (isDecodedTitle) {
             navigate("/projects");
         } else {
-            navigate(-1);
+            navigate("/projects");
+        }
+    };
+
+    const handleRedirection = (value) => {
+        let urlData = {
+            project: decodedData.project,
+            projectid: decodedData?.projectid,
+            module: decodedData?.module,
+            taskid: decodedData?.taskid,
+        }
+        const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
+        if (value === "projectHome") {
+            navigate(`/projects/dashboard/?data=${encodedFormData}`);
+        } else if (value === "taskView") {
+            navigate(`/tasks/?data=${encodedFormData}`);
         }
     };
 
@@ -207,6 +225,20 @@ const Header = ({ avatarSrc = "" }) => {
         localStorage?.removeItem("isLoggedIn");
         navigate("/login");
     };
+
+    const toggleOptions = [
+        {
+            label: "Project Home",
+            value: "projectHome",
+            icon: House
+        },
+        {
+            label: "Task View",
+            value: "taskView",
+            icon: FileCheck
+        },
+    ];
+
 
     return (
         <Box
@@ -247,6 +279,33 @@ const Header = ({ avatarSrc = "" }) => {
                 </Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center" }}>
+                {(location?.pathname?.includes("/tasks/") || location?.pathname?.includes("/projects/")) && (
+                    <Box className="taskHeaderTDBox">
+                        <ToggleButtonGroup
+                            value={selectedTab}
+                            exclusive
+                            onChange={(e, value) => value && setSelectedTab(value)}
+                            className="toggle-group"
+                            size="small"
+                        >
+                            {toggleOptions.map((option) => (
+                                <ToggleButton
+                                    key={option.value}
+                                    value={option.value}
+                                    className="toggle-button"
+                                    onClick={() => handleRedirection(option.value)}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                        {option.icon && (
+                                            <option.icon size={20} />
+                                        )}
+                                        {option.label}
+                                    </Box>
+                                </ToggleButton>
+                            ))}
+                        </ToggleButtonGroup>
+                    </Box>
+                )}
                 <Box
                     sx={{ marginRight: "10px", cursor: "pointer" }}
                     onClick={handleBellClick}

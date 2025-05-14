@@ -22,7 +22,6 @@ const ProjectDashboard = () => {
     const selectedData = useRecoilValue(selectedRowData);
     const [decodedData, setDecodedData] = useState(null);
     const { isLoading, taskFinalData, taskAssigneeData } = useFullTaskFormatFile();
-    console.log('taskFinalData: ', taskFinalData);
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
     const [refferenceData, setReferenceData] = useState([]);
 
@@ -67,7 +66,6 @@ const ProjectDashboard = () => {
 
 
     useEffect(() => {
-        debugger
         const searchParams = new URLSearchParams(location.search);
         const encodedData = searchParams.get('data');
 

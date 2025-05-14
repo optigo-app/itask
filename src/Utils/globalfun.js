@@ -250,7 +250,6 @@ export const getRandomAvatarColor = (name) => {
 
 // make structure master data function
 export const fetchMasterGlFunc = async () => {
-    debugger
     try {
         const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
         const AuthUrlData = JSON?.parse(localStorage.getItem('AuthqueryParams'));
@@ -405,7 +404,6 @@ export const flattenTasks = (tasks, level = 0) => {
     }, []);
 };
 export function transformAttachments(data) {
-    console.log('data: ', data);
     const mimeTypes = {
         jpg: "image/jpeg",
         jpeg: "image/jpeg",

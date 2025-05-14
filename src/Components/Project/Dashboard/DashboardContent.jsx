@@ -18,7 +18,6 @@ const Comments = lazy(() => import('./Commnets'));
 const Announcement = lazy(() => import('./Announcement'));
 
 const DashboardContent = ({ tabData, Loading, selectedTab, decodedData, handleDtopen, taskFinalData, taskAssigneeData, background, refferenceData }) => {
-  console.log('selectedTab: ', selectedTab);
   const categoryData = JSON.parse(sessionStorage.getItem('taskworkcategoryData')) || [];
   const selectedTabLower = selectedTab?.toLowerCase();
   const setSelectedTask = useSetRecoilState(selectedRowData);
@@ -68,12 +67,10 @@ const DashboardContent = ({ tabData, Loading, selectedTab, decodedData, handleDt
     );
 
     if (matchedCategory) {
-      debugger
       const dataKey = selectedTab.replace(/\s+/g, '_');
 
       const prwiseData = taskFinalData?.ProjectCategoryTasks[decodedData?.projectid];
       const taskData = prwiseData?.[(dataKey)?.toLowerCase()] || [];
-      console.log('data-->>>: ', taskData);
 
       const handleEyeClick = (row) => {
         setSelectedTask(row);
