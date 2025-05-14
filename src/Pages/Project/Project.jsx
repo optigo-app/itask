@@ -407,7 +407,6 @@ const Project = () => {
 
   useEffect(() => {
     if (filteredData) {
-      console.log('filteredData: ', filteredData);
       const maxPage = Math.ceil(filteredData.length / rowsPerPage);
       if (page > maxPage && maxPage > 0) {
         setPage(maxPage);

@@ -135,7 +135,6 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
     }, [data]);
 
     const handleViewPrDashboard = (task) => {
-        console.log('task: ', task);
         setSelectedRow(task);
         setSelectedTask(task);
         let urlData = {
@@ -234,7 +233,8 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
         const formattedPrName = task?.taskPr?.trim()?.replace(/\s+/g, '-') || '';
         const formattedTaskName = task?.taskname?.trim()?.replace(/\s+/g, '-') || '';
         const url = `/tasks/${formattedPrName}/${formattedTaskName}?data=${encodedFormData}`;
-        window.open(url, '_blank');
+        navigate(url);
+        // window.open(url, '_blank');
     };
 
     const LockButton = ({ isLocked, onClick }) => {
@@ -357,8 +357,6 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
 
     const renderAssigneeAvatars = (assignees, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut) => (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            {console.log('hoveredColumnname: ', hoveredColumnname)}
-            {console.log('hoveredTaskId: ', hoveredTaskId, hoveredColumnname)}
             <AvatarGroup
                 max={10}
                 spacing={2}

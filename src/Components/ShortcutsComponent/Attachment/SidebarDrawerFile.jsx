@@ -151,7 +151,6 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   };
 
   const handleSave = async () => {
-    debugger
     const attachments = Object.entries(uploadedFile?.attachment)?.map(([folderName, files]) => {
       const fileUrls = files.map(f => f.url).join(',');
       const urlList = (uploadedFile.url[folderName] || []).join(',');

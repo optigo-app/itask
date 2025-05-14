@@ -33,7 +33,6 @@ const ReferencePr = ({ Loading, background, refferenceData = [], decodedData }) 
     const [expanded, setExpanded] = useState(null);
     const [selectedFolder, setSelectedFolder] = useState("");
     const [reffData, setReffData] = useState([]);
-    console.log('reffData: ', reffData);
 
     const groupedByProjectId = refferenceData.reduce((acc, item) => {
         const { projectid } = item;
@@ -104,7 +103,6 @@ const ReferencePr = ({ Loading, background, refferenceData = [], decodedData }) 
     const filteredData = useMemo(() => {
         return reffData?.filter(item => item.foldername === selectedFolder);
     }, [reffData, selectedFolder]);
-    console.log('filteredData: ', filteredData);
 
     const getFilePreviewIcon = (extension) => {
         switch (extension?.toLowerCase()) {

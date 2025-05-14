@@ -78,14 +78,14 @@ const HeaderButtons = ({
     if (Array.isArray(taskCategory)) {
       const isProjectPath = location?.pathname?.includes("/projects");
       const newTask = {
-        id: taskCategory.length + 1,
+        id: taskCategory.length * 2,
         labelname: "New Task",
         displayorder: taskCategory.length + 1,
         isdelete: 0,
         masterid: 1,
       };
       const dueTask = {
-        id: taskCategory.length + 2,
+        id: taskCategory.length * 3,
         labelname: "Due Task",
         displayorder: taskCategory.length + 2,
         isdelete: 0,

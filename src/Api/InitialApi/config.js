@@ -4,8 +4,8 @@ const isLocal = ["localhost", "nzen"].includes(window.location.hostname);
 
 
 
-// export const APIURL = !isLocal ? "http://nextjstest.web/api/report" : "https://livenx.optigoapps.com/api/report";
-export const APIURL = !isLocal ? "http://nextjstest.web/api/report" : "https://testnx.optigoapps.com/api/report";
+export const APIURL = !isLocal ? "http://nextjstest.web/api/report" : "https://livenx.optigoapps.com/api/report";
+// export const APIURL = !isLocal ? "http://nextjstest.web/api/report" : "https://testnx.optigoapps.com/api/report";
 
 export const getHeaders = (init = {}) => {
   const { version = "v4", token = "" } = init;
