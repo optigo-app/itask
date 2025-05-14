@@ -299,14 +299,14 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                           <img src={Document} alt="file" className="preview-file" loading="lazy" onError={handleImgError} />
                         )}
                         <Typography className="file-title">{item.fileName}</Typography>
-                        <IconButton className="delete-icon" onClick={() => handleDeleteFile(folder, index)}>
+                        <IconButton className="delete-icon" onClick={() => handleDeleteFile(folder, index)} disabled>
                           <CircleX size={16} />
                         </IconButton>
                       </Box>
                     );
                   })}
 
-                  {(uploadedFile.url[folder] || []).map((link, idx) => (
+                  {(uploadedFile?.url[folder] || [])?.map((link, idx) => (
                     <Box key={`url-${idx}`} className="file-card">
                       <Box className="preview-file url-icon-box">
                         <Link size={32} />
@@ -321,7 +321,7 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                           {link.replace(/^https?:\/\//, '').split('?')[0].slice(0, 30)}...
                         </Typography>
                       </Tooltip>
-                      <IconButton className="delete-icon" onClick={() => handleDeleteUrl(folder, idx)}>
+                      <IconButton className="delete-icon" onClick={() => handleDeleteUrl(folder, idx)} disabled>
                         <CircleX size={16} />
                       </IconButton>
                     </Box>

@@ -24,8 +24,10 @@ import {
 } from "@mui/material";
 import { ImageUrl, transformAttachments } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import LinkIcon from "@mui/icons-material/Link";
-import { Link as Linkicons } from "lucide-react";
+import { Link as Linkicons } from 'lucide-react';
+import pdfIcon from '../../../Assests/pdf.png';
+import sheetIcon from '../../../Assests/xls.png';
+import Document from '../../../Assests/document.png'
 
 const ReferencePr = ({ Loading, background, refferenceData = [], decodedData }) => {
     const [expanded, setExpanded] = useState(null);
@@ -46,28 +48,36 @@ const ReferencePr = ({ Loading, background, refferenceData = [], decodedData }) 
         const filteredProjectData = groupedByProjectId[decodedData?.projectid];
 
         const transformedData = filteredProjectData?.map(item => {
-            const documentNameParts = item.DocumentName?.split('/');
-            const fileNameWithExt = documentNameParts?.[documentNameParts.length - 1] || '';
-            const extension = fileNameWithExt.split('.').pop();
-            const filetype = extension?.match(/jpg|jpeg|png|gif/i) ? 'image' : 'other';
+            const parseFiles = (value) => {
+                if (!value) return [];
+
+                return value.split(',').map(url => {
+                    const trimmedUrl = url.trim();
+                    const parts = trimmedUrl.split('/');
+                    const filename = parts[parts.length - 1] || '';
+                    const extension = filename.split('.').pop()?.toLowerCase();
+                    const filetype = extension?.match(/jpg|jpeg|png|gif/i) ? 'image' : 'other';
+
+                    return {
+                        url: trimmedUrl,
+                        filename,
+                        extension,
+                        filetype
+                    };
+                });
+            };
 
             return {
                 ...item,
-                DocumentName: {
-                    url: item.DocumentName,
-                    filename: fileNameWithExt,
-                    extension: extension,
-                    filetype: filetype
-                },
-                DocumentUrl: {
-                    filetype: "other",
-                    url: item.DocumentUrl
-                }
+                DocumentName: parseFiles(item.DocumentName),
+                DocumentUrl: parseFiles(item.DocumentUrl)
             };
         });
 
         setReffData(transformedData);
     }, []);
+
+
 
 
     const uniqueFolders = useMemo(() => {
@@ -95,6 +105,19 @@ const ReferencePr = ({ Loading, background, refferenceData = [], decodedData }) 
         return reffData?.filter(item => item.foldername === selectedFolder);
     }, [reffData, selectedFolder]);
     console.log('filteredData: ', filteredData);
+
+    const getFilePreviewIcon = (extension) => {
+        switch (extension?.toLowerCase()) {
+            case 'xlsx':
+            case 'xls':
+                return sheetIcon;
+            case 'pdf':
+                return pdfIcon;
+            default:
+                return Document;
+        }
+    };
+
 
     return (
         <div className="ref_MainDiv">
@@ -175,47 +198,75 @@ const ReferencePr = ({ Loading, background, refferenceData = [], decodedData }) 
                                                 <Collapse in={expanded === index} timeout="auto" unmountOnExit>
                                                     <Box margin={1}>
                                                         <Grid container spacing={2} className="collapse-grid">
-                                                            {item.DocumentName.filetype === 'image' && (
-                                                                <Grid item xs={12} sm={6} md={3} key={`image-${index}`}>
+                                                            {/* Render from DocumentName */}
+                                                            {item.DocumentName?.map((doc, docIndex) => (
+                                                                <Grid item xs={12} sm={6} md={3} key={`docname-${docIndex}`}>
                                                                     <Card className="reference-card">
-                                                                        <CardMedia
-                                                                            component="img"
-                                                                            height="140"
-                                                                            image={item.DocumentName.url || placeholderImg}
-                                                                            alt={`Document ${index + 1}`}
-                                                                        />
-                                                                        <CardContent>
-                                                                            <Typography variant="body2">
-                                                                                {item.DocumentName.filename}
-                                                                            </Typography>
-                                                                        </CardContent>
-                                                                    </Card>
-                                                                </Grid>
-                                                            )}
-
-                                                            {item.DocumentUrl.filetype === 'other' && (
-                                                                <Grid item xs={12} sm={6} md={3} key={`other-${index}`}>
-                                                                    <Card className="reference-card">
-                                                                        <Box
-                                                                            sx={{
-                                                                                display: "flex",
-                                                                                justifyContent: "center",
-                                                                                alignItems: "center",
-                                                                                height: 100,
-                                                                                pt: 2
-                                                                            }}
-                                                                        >
-                                                                            <LinkIcon sx={{ fontSize: 48, color: "#666" }} />
-                                                                        </Box>
-                                                                        <CardContent sx={{ display: "flex", justifyContent: "center" }}>
-                                                                            <Link href={item.DocumentUrl.url} target="_blank" rel="noopener noreferrer" underline="hover">
-                                                                                {item.DocumentUrl.url}
+                                                                        {doc.filetype === 'image' ? (
+                                                                            <CardMedia
+                                                                                component="img"
+                                                                                height="140"
+                                                                                image={doc.url || placeholderImg}
+                                                                                alt={`Document ${docIndex + 1}`}
+                                                                            />
+                                                                        ) : (
+                                                                            <Box
+                                                                                component="img"
+                                                                                src={getFilePreviewIcon(doc.extension)}
+                                                                                alt="File icon"
+                                                                                sx={{
+                                                                                    height: 120,
+                                                                                    width: 'auto',
+                                                                                    objectFit: 'contain',
+                                                                                    display: 'block',
+                                                                                    mx: 'auto',
+                                                                                    mt: 2,
+                                                                                    filter: doc.filetype === 'image' ? 'none' : 'opacity(0.6)',
+                                                                                }}
+                                                                            />
+                                                                        )}
+                                                                        <CardContent sx={{ textAlign: 'center' }}>
+                                                                            <Link
+                                                                                href={doc.url}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                underline="hover"
+                                                                            >
+                                                                                {doc.filename}
                                                                             </Link>
                                                                         </CardContent>
                                                                     </Card>
                                                                 </Grid>
-                                                            )}
+                                                            ))}
 
+                                                            {/* Render from DocumentUrl */}
+                                                            {item.DocumentUrl?.map((doc, docIndex) => (
+                                                                <Grid item xs={12} sm={6} md={3} key={`docurl-${docIndex}`}>
+                                                                    <Card className="reference-card">
+                                                                        <CardContent sx={{ textAlign: 'center' }}>
+                                                                            <Box
+                                                                                sx={{
+                                                                                    display: "flex",
+                                                                                    justifyContent: "center",
+                                                                                    alignItems: "center",
+                                                                                    height: 120,
+                                                                                    pt: 2
+                                                                                }}
+                                                                            >
+                                                                                <Linkicons size={48} sx={{ color: "#666" }} />
+                                                                            </Box>
+                                                                            <Link
+                                                                                href={doc.url}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                underline="hover"
+                                                                            >
+                                                                                {doc.url}
+                                                                            </Link>
+                                                                        </CardContent>
+                                                                    </Card>
+                                                                </Grid>
+                                                            ))}
                                                         </Grid>
                                                     </Box>
                                                 </Collapse>
