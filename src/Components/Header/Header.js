@@ -18,14 +18,19 @@ const Header = ({ avatarSrc = "" }) => {
     const [profileAnchorEl, setProfileAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
     const profileOpen = Boolean(profileAnchorEl);
-    const encodedData = searchParams.get("data");
+    const encodedData = searchParams.get("data");   
     const [decodedData, setDecodedData] = useState(null);
     const taskDataLength = useRecoilValue(taskLength);
     const [profileData, setProfileData] = useState();
-    const [selectedTab, setSelectedTab] = useState("");
+    const [selectedTab, setSelectedTab] = useState("taskView");
 
     useEffect(() => {
-        location.pathname.includes("/tasks/") ? setSelectedTab("taskView") : setSelectedTab("projectHome");
+        location.pathname.includes("/tasks/") ?
+            setSelectedTab("taskView") :
+            setSelectedTab("projectHome");
+    }, [location]);
+
+    useEffect(() => {
         const UserProfileData = JSON?.parse(localStorage.getItem("UserProfileData"));
         setProfileData(UserProfileData);
     }, []);
