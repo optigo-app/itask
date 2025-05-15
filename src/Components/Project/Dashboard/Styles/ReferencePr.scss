@@ -83,10 +83,11 @@
       rgba(0, 0, 0, 0.03) 0px 0px 0px 1px;
     transition: box-shadow 0.3s ease;
     height: 100%;
+    transition: transform 0.2s ease-in-out;
 
     &:hover {
-      box-shadow: rgba(0, 0, 0, 0.1) 0px 8px 28px,
-        rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
+      transform: translateY(-4px);
+      box-shadow: rgba(0, 0, 0, 0.1) 0px 6px 24px, rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
     }
 
     .MuiCardMedia-root {

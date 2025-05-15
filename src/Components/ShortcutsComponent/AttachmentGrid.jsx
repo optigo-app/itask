@@ -36,7 +36,12 @@ const AttachmentGrid = ({ uploadedFile, selectedFolder }) => {
                                     component="img"
                                     image={previewImage}
                                     alt={item.fileName}
-                                    sx={{ height: 120, objectFit: 'contain', borderRadius: 2, filter: extension === 'xlsx' || extension === 'xls' ? 'opacity(.6)' : 'none' }}
+                                    sx={{
+                                        height: 120,
+                                        objectFit: 'contain',
+                                        borderRadius: 2,
+                                        filter: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension) ? 'none' : 'opacity(.5)'
+                                    }}
                                 />
                                 <CardContent sx={{ p: 0.5, pt: 1 }}>
                                     <Typography variant="body2" noWrap fontWeight={500}>
