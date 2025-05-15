@@ -191,6 +191,7 @@ const SidebarDrawerFile = ({ open, onClose }) => {
       url: "",
       attachment: {},
     });
+    onClose();
   };
 
   const handleImgError = (e) => {
@@ -238,31 +239,39 @@ const SidebarDrawerFile = ({ open, onClose }) => {
               placeholder="Enter Folder name"
               value={formValues.folderName}
               onChange={handleChange}
+              error={!formValues.folderName.trim()}
+              helperText={!formValues.folderName.trim() ? 'Folder name is required' : ''}
               {...commonTextFieldProps}
             />
           </Box>
         </Box>
 
-        {selectedTab === "file" ? (
-          <FileDropzone onDrop={handleFileDrop} />
-        ) : (
-          <Box className="urlInBox">
-            <Box className="form-group">
-              <Typography variant="subtitle1" className="form-label">URL address</Typography>
-              <TextField
-                name="url"
-                placeholder="Add your URL"
-                value={formValues.url}
-                onChange={handleChange}
-                {...commonTextFieldProps}
-              />
+        <Box sx={{
+          pointerEvents: !formValues.folderName.trim() ? 'none' : 'auto',
+          opacity: !formValues.folderName.trim() ? 0.5 : 1,
+          backgroundColor: !formValues.folderName.trim() ? '#f5f5f5' : 'transparent',
+          cursor: !formValues.folderName.trim() ? 'not-allowed' : 'auto',
+        }}>
+          {selectedTab === "file" ? (
+            <FileDropzone onDrop={handleFileDrop} />
+          ) : (
+            <Box className="urlInBox">
+              <Box className="form-group">
+                <Typography variant="subtitle1" className="form-label">URL address</Typography>
+                <TextField
+                  name="url"
+                  placeholder="Add your URL"
+                  value={formValues.url}
+                  onChange={handleChange}
+                  {...commonTextFieldProps}
+                />
+              </Box>
+              <Box className="linkButton">
+                <Button className="buttonClassname" onClick={handleAddUrl}>Add</Button>
+              </Box>
             </Box>
-            <Box className="linkButton">
-              <Button className="buttonClassname" onClick={handleAddUrl}>Add</Button>
-            </Box>
-          </Box>
-        )}
-
+          )}
+        </Box>
         {uploading && (
           <Box sx={{ padding: '10px 0' }}>
             <Typography variant="body2" gutterBottom>Uploading...</Typography>
@@ -335,7 +344,7 @@ const SidebarDrawerFile = ({ open, onClose }) => {
           <Button variant="outlined" className="secondaryBtnClassname" onClick={handleCancel} sx={{ marginRight: 1 }}>
             Cancel
           </Button>
-          <Button variant="contained" className="buttonClassname" onClick={handleSave}>
+          <Button variant="contained" className="buttonClassname" onClick={handleSave} disabled={!formValues?.folderName?.trim()}>
             Save Attachment
           </Button>
         </Box>
