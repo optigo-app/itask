@@ -4,7 +4,7 @@ import { Box, Typography, Button, Grid } from "@mui/material";
 import { Calendar, Plus } from "lucide-react";
 import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
 import CalendarForm from "../../Components/Calendar/SideBar/CalendarForm";
-import { CalformData } from "../../Recoil/atom";
+import { assigneeId, CalformData } from "../../Recoil/atom";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import StatusModal from "./MeetingStatusModal";
 import {
@@ -55,6 +55,7 @@ const MeetingPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [caledrawerOpen, setCaledrawerOpen] = useState(false);
   const [calFormData, setCalFormData] = useRecoilState(CalformData);
+  const setAssigneeId = useSetRecoilState(assigneeId);
   const [formData, setFormData] = useState();
   const [opencnfDialogOpen, setCnfDialogOpen] = useState(false);
   const [openStatusModal, setOpenStatusModal] = useState(false);
@@ -575,7 +576,8 @@ const MeetingPage = () => {
     }
   };
 
-  const hanldePAvatarClick = (task) => {
+  const hanldePAvatarClick = (task, id) => {
+    setAssigneeId(id);
     setProfileOpen(true);
     setCalFormData(task);
   };

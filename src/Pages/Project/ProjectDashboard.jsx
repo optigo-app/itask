@@ -15,13 +15,10 @@ const TaskDetail = lazy(() => import('../../Components/Task/TaskDetails/TaskDeta
 
 const ProjectDashboard = () => {
     const location = useLocation();
-    const [Loading, setLoading] = useState({
-        isAttLoding: false,
-        isTaskLoding: false,
-    });
+    const [isAttLoding, setIsAttLoding] = useState(null);
     const selectedData = useRecoilValue(selectedRowData);
     const [decodedData, setDecodedData] = useState(null);
-    const { isLoading, taskFinalData, taskAssigneeData } = useFullTaskFormatFile();
+    const { iswhLoading, taskFinalData, taskAssigneeData } = useFullTaskFormatFile();
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
     const [refferenceData, setReferenceData] = useState([]);
 
@@ -33,10 +30,10 @@ const ProjectDashboard = () => {
     };
 
     useEffect(() => {
+        setIsAttLoding(true);
         const assigneeMaster = JSON.parse(sessionStorage.getItem('taskAssigneeData')) || [];
         const getAttachment = async () => {
             try {
-                setLoading(prev => ({ ...prev, isAttLoding: true }));
                 const res = await getAttachmentApi({});
                 if (res) {
                     const labeledTasks = mapKeyValuePair(res);
@@ -49,13 +46,14 @@ const ProjectDashboard = () => {
                             guest: matchedAssignee || null,
                         };
                     });
-                    const transformedData = transformAttachments(updatedLabeledTasks);
                     setReferenceData(updatedLabeledTasks);
                 }
             } catch (error) {
                 console.error("Failed to fetch attachments:", error);
             } finally {
-                setLoading(prev => ({ ...prev, isAttLoding: false }));
+                setTimeout(() => {
+                    setIsAttLoding(false);
+                }, 10);
             }
         };
 
@@ -143,8 +141,8 @@ const ProjectDashboard = () => {
             </Suspense>
 
             <Suspense fallback={<></>}>
-                {isLoading ? (
-                    <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
+                {iswhLoading ? (
+                    <LoadingBackdrop isLoading={iswhLoading ? 'true' : 'false'} />
                 ) :
                     <DashboardContent
                         tabData={tabs}
@@ -154,7 +152,7 @@ const ProjectDashboard = () => {
                         handleDtopen={handleTaskModalOpen}
                         taskFinalData={taskFinalData}
                         taskAssigneeData={taskAssigneeData}
-                        Loading={Loading}
+                        isAttLoding={isAttLoding}
                         refferenceData={refferenceData}
                     />
                 }

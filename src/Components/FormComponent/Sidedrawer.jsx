@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Drawer,
     Box,
@@ -12,8 +12,6 @@ import {
     ToggleButton,
     FormControlLabel,
     Checkbox,
-    Autocomplete,
-    Avatar,
 } from "@mui/material";
 import { CircleX, Grid2x2, ListTodo } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -24,10 +22,8 @@ import dayjs from 'dayjs';
 import utc from "dayjs/plugin/utc";
 import { useLocation } from "react-router-dom";
 import EstimateInput from "../../Utils/Common/EstimateInput";
-import MultiSelectChipWithLimit from "../ShortcutsComponent/AssigneeAutocomplete";
-import { cleanDate, commonTextFieldProps, convertWordsToSpecialChars, customDatePickerProps, flattenTasks, ImageUrl } from "../../Utils/globalfun";
+import { cleanDate, commonTextFieldProps, convertWordsToSpecialChars, customDatePickerProps, flattenTasks } from "../../Utils/globalfun";
 import MultiTaskInput from "./MultiTaskInput";
-import FileUploader from "../ShortcutsComponent/FileUploader";
 import timezone from 'dayjs/plugin/timezone';
 import CustomAutocomplete from "../ShortcutsComponent/CustomAutocomplete";
 import DepartmentAssigneeAutocomplete from "../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete";
@@ -94,17 +90,6 @@ const SidebarDrawer = ({
         handleResetState();
     };
 
-    const filterRefs = {
-        priority: useRef(),
-        project: useRef(),
-        assignee: useRef(),
-        progress: useRef(),
-        status: useRef(),
-        category: useRef(),
-        department: useRef(),
-        assignee: useRef(),
-    };
-
     useEffect(() => {
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
@@ -136,26 +121,7 @@ const SidebarDrawer = ({
         }
     }, [open, formDataValue, rootSubrootflagval]);
 
-    useEffect(() => {
-        setTimeout(() => {
-            if (open && rootSubrootflagval?.Task !== "root") {
-                Object.keys(filterRefs).forEach((key) => {
-                    const element = filterRefs[key].current;
-                    if (element) {
-                        const span = element.querySelector(".notranslate");
-                        if (span && !formValues[key]) {
-                            span.textContent = `Select ${key.charAt(0).toUpperCase() + key.slice(1)}`;
-                            span.style.color = "#9e9e9e8f";
-                        }
-                    }
-                });
-            }
-        }, 300);
-    }, [open, checkedMultiTask, formValues, rootSubrootflagval]);
-
     let data = flattenTasks(taskDataValue)
-
-
     const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);
 
     const projectId = useMemo(() => {
@@ -361,76 +327,12 @@ const SidebarDrawer = ({
         }
     }, [encodedData]);
 
-    const AssigneeAutocomplete = ({
-        label,
-        name,
-        value,
-        onChange,
-        options,
-        placeholder,
-        inputRef,
-    }) => {
-        return (
-            <Box className="form-group">
-                <Typography
-                    variant="subtitle1"
-                    className="form-label"
-                    htmlFor="taskName"
-                >
-                    Project Lead
-                </Typography>
-                <Autocomplete
-                    options={options}
-                    getOptionLabel={(option) =>
-                        option?.firstname && option?.lastname
-                            ? `${option.firstname} ${option.lastname} (${option.designation})`
-                            : ''
-                    }
-                    value={value}
-                    onChange={(event, newValue) => {
-                        onChange({
-                            target: {
-                                name,
-                                value: newValue,
-                            },
-                        });
-                    }}
-                    isOptionEqualToValue={(option, value) =>
-                        option?.userid === value?.userid
-                    }
-                    renderOption={(props, option) => (
-                        <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Avatar
-                                src={ImageUrl(option) || ''}
-                                alt={option.firstname}
-                                sx={{ width: 30, height: 30 }}
-                            >
-                                {(!option.empphoto && option.firstname) ? option.firstname[0] : ''}
-                            </Avatar>
-                            <Box>
-                                {option.firstname} {option.lastname}
-                            </Box>
-                        </Box>
-                    )}
-                    {...commonTextFieldProps}
-                    renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            placeholder={placeholder}
-                            inputRef={inputRef}
-                        />
-                    )}
-                />
-            </Box>
-        );
-    };
-
     return (
         <>
             <Drawer
                 anchor="right"
                 open={open}
-                onClose={handleClear}
+                // onClose={handleClear}
                 className="MainDrawer"
                 sx={{ display: open == true ? 'block' : 'none', zIndex: theme.zIndex.drawer + 2, }}
             >
@@ -503,26 +405,6 @@ const SidebarDrawer = ({
                                         label="Milestone"
                                         className="milestone-label"
                                     />
-                                    {/* {rootSubrootflagval?.Task == "root" &&
-                                        <Box display="flex" gap={2}>
-                                            <Button
-                                                size="small"
-                                                variant="contained"
-                                                // onClick={handleApprove}
-                                                className="buttonClassname"
-                                            >
-                                                Approve
-                                            </Button>
-                                            <Button
-                                                size="small"
-                                                variant="contained"
-                                                className="dangerbtnClassname"
-                                            // onClick={handleReject}
-                                            >
-                                                Reject
-                                            </Button>
-                                        </Box>
-                                    } */}
                                 </Box>
                             </Box>
                         }
@@ -563,31 +445,10 @@ const SidebarDrawer = ({
                                             onChange={handleChange}
                                             options={taskCategory}
                                             placeholder="Select Category"
-                                            refProp={filterRefs.category}
                                         />
                                     </Grid>
-                                    {/* department */}
-                                    {/* <Grid item xs={12} sm={12} md={6}>
-                                        <CustomAutocomplete
-                                            label="Department"
-                                            name="department"
-                                            value={formValues.department}
-                                            onChange={handleChange}
-                                            options={taskDepartment}
-                                            placeholder="Select Department"
-                                            refProp={filterRefs.department}
-                                        />
-                                    </Grid> */}
                                     {/* Assignee master */}
                                     <Grid item xs={12} sm={12} md={12}>
-                                        {/* <MultiSelectChipWithLimit
-                                            value={formValues?.guests}
-                                            options={filterAssigneeData}
-                                            label="Assign To"
-                                            placeholder="Select assignees"
-                                            limitTags={2}
-                                            onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
-                                        /> */}
                                         <DepartmentAssigneeAutocomplete
                                             value={formValues?.guests}
                                             options={filterAssigneeData}
@@ -605,7 +466,6 @@ const SidebarDrawer = ({
                                             onChange={handleChange}
                                             options={statusData}
                                             placeholder="Select Status"
-                                            refProp={filterRefs.status}
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={12} md={6}>
@@ -616,7 +476,6 @@ const SidebarDrawer = ({
                                             onChange={handleChange}
                                             options={priorityData}
                                             placeholder="Select Priority"
-                                            refProp={filterRefs.priority}
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={12} md={6}>
@@ -703,7 +562,6 @@ const SidebarDrawer = ({
                                         </Box>
                                     </Grid>
                                 </Grid>
-                                {/* Comment & Remark */}
                                 <Grid item xs={12}>
                                     <Box className="form-group">
                                         <Typography variant="subtitle1" className="form-label">
@@ -720,11 +578,6 @@ const SidebarDrawer = ({
                                         />
                                     </Box>
                                 </Grid>
-
-                                {/* File Upload */}
-                                {/* <Grid item xs={12}>
-                                    <FileUploader formValues={formValues} setFormValues={setFormValues} />
-                                </Grid> */}
                             </>
                         }
                         {taskType === 'multi_input' &&
@@ -799,7 +652,6 @@ const SidebarDrawer = ({
                                         onChange={handleChange}
                                         options={projectData}
                                         placeholder="Select Project"
-                                        refProp={filterRefs.project}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sm={12}>
@@ -846,7 +698,6 @@ const SidebarDrawer = ({
                                         onChange={handleChange}
                                         options={taskCategory}
                                         placeholder="Select Category"
-                                        refProp={filterRefs.category}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sm={12}>
@@ -857,7 +708,6 @@ const SidebarDrawer = ({
                                         onChange={handleChange}
                                         options={statusData}
                                         placeholder="Select Status"
-                                        refProp={filterRefs.status}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sm={12}>
@@ -868,7 +718,6 @@ const SidebarDrawer = ({
                                         onChange={handleChange}
                                         options={priorityData}
                                         placeholder="Select Priority"
-                                        refProp={filterRefs.priority}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sm={12}>
@@ -920,7 +769,6 @@ const SidebarDrawer = ({
                                     </Box>
                                 </Grid>
                             </Grid>
-                            {/* Comment & Remark */}
                             <Grid item xs={12}>
                                 <Box className="form-group">
                                     <Typography variant="subtitle1" className="form-label">
@@ -937,13 +785,6 @@ const SidebarDrawer = ({
                                     />
                                 </Box>
                             </Grid>
-
-                            {/* File Upload */}
-                            {/* <Grid item xs={12}>
-                                <FileUploader formValues={formValues} setFormValues={setFormValues} />
-                            </Grid> */}
-
-                            {/* Action button */}
                             <Grid item xs={12} sx={{ mt: 3, textAlign: "right" }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
                                     <Box>

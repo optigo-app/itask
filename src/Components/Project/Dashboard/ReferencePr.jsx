@@ -26,12 +26,14 @@ import { Link as Linkicons } from 'lucide-react';
 import pdfIcon from '../../../Assests/pdf.png';
 import sheetIcon from '../../../Assests/xls.png';
 import Document from '../../../Assests/document.png'
+import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 
-const ReferencePr = ({ Loading, background, refferenceData = [], decodedData }) => {
+const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
+    console.log('Loading: ', Loading);
+    console.log('refferenceData: ', refferenceData);
     const [expanded, setExpanded] = useState(null);
     const [selectedFolder, setSelectedFolder] = useState("");
     const [reffData, setReffData] = useState([]);
-
     const groupedByProjectId = refferenceData.reduce((acc, item) => {
         const { projectid } = item;
         if (!acc[projectid]) {
@@ -72,7 +74,7 @@ const ReferencePr = ({ Loading, background, refferenceData = [], decodedData }) 
         });
 
         setReffData(transformedData);
-    }, []);
+    }, [Loading, refferenceData]);
 
 
 
@@ -114,217 +116,216 @@ const ReferencePr = ({ Loading, background, refferenceData = [], decodedData }) 
         }
     };
 
-
     return (
         <div className="ref_MainDiv">
-            {Loading && (
-                <div className="ref_Loading">
-                    <div className="ref_LoadingInner">
-                        <Typography variant="h6">Loading...</Typography>
-                    </div>
-                </div>
-            )}
-            {filteredData ? (
+            {(Loading === null || Loading === true || (!filteredData && Loading !== false)) ? (
+                <LoadingBackdrop isLoading={Loading ? 'true' : 'false'} />
+            ) :
                 <>
-                    <Box className="fileSideBarTDBox" mb={2}>
-                        <ToggleButtonGroup
-                            value={selectedFolder}
-                            exclusive
-                            onChange={(e, value) => value && setSelectedFolder(value)}
-                            className="toggle-group"
-                        >
-                            {uniqueFolders?.map((folder) => (
-                                <ToggleButton
-                                    className="toggle-button"
-                                    key={folder.foldername}
-                                    value={folder.foldername}
+
+                    {filteredData ? (
+                        <>
+                            <Box className="fileSideBarTDBox" mb={2}>
+                                <ToggleButtonGroup
+                                    value={selectedFolder}
+                                    exclusive
+                                    onChange={(e, value) => value && setSelectedFolder(value)}
+                                    className="toggle-group"
                                 >
-                                    {folder.foldername}
-                                </ToggleButton>
-                            ))}
-                        </ToggleButtonGroup>
-                    </Box>
+                                    {uniqueFolders?.map((folder) => (
+                                        <ToggleButton
+                                            className="toggle-button"
+                                            key={folder.foldername}
+                                            value={folder.foldername}
+                                        >
+                                            {folder.foldername}
+                                        </ToggleButton>
+                                    ))}
+                                </ToggleButtonGroup>
+                            </Box>
 
-                    <TableContainer component={Paper}>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell width={10} />
-                                    <TableCell>Task Name</TableCell>
-                                    <TableCell>Folder Name</TableCell>
-                                    <TableCell>Uploaded By</TableCell>
-                                    <TableCell>Upload Date</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {filteredData?.map((item, index) => (
-                                    <React.Fragment key={index}>
-                                        <TableRow onClick={() => handleRowExpand(index)} sx={{ cursor: 'pointer' }}>
-                                            <TableCell width={10}>
-                                                <IconButton onClick={() => handleRowExpand(index)} size="small">
-                                                    <PlayArrowIcon
-                                                        style={{
-                                                            color: expanded === index ? "#444050" : "#c7c7c7",
-                                                            fontSize: "1rem",
-                                                            transform: expanded === index ? "rotate(90deg)" : "rotate(0deg)",
-                                                            transition: "transform 0.2s ease-in-out",
-                                                        }}
-                                                    />
-                                                </IconButton>
-                                            </TableCell>
-                                            <TableCell>{item.taskname}</TableCell>
-                                            <TableCell>{item.foldername}</TableCell>
-                                            <TableCell>
-                                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                    <Avatar
-                                                        src={ImageUrl(item?.guest)}
-                                                        alt={item?.guest?.firstname}
-                                                        sx={{ width: 28, height: 28 }}
-                                                    />
-                                                    <Typography variant="body2">
-                                                        {item?.guest?.firstname} {item?.guest?.lastname}
-                                                    </Typography>
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell>{item.entrydate}</TableCell>
-                                        </TableRow>
-
+                            <TableContainer component={Paper}>
+                                <Table>
+                                    <TableHead>
                                         <TableRow>
-                                            <TableCell colSpan={5} style={{ paddingBottom: 0, paddingTop: 0 }}>
-                                                <Collapse in={expanded === index} timeout="auto" unmountOnExit>
-                                                    <Box margin={2}>
-                                                        <Grid container spacing={2} className="collapse-grid">
-                                                            {/* DocumentName Files */}
-                                                            {item?.DocumentName?.map((doc, docIndex) => (
-                                                                <Grid item xs={12} sm={6} md={3} key={`docname-${docIndex}`}>
-                                                                    <Card
-                                                                        sx={{
-                                                                            borderRadius: 2,
-                                                                            boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.08)',
-                                                                            overflow: 'hidden',
-                                                                            backgroundColor: '#fff',
-                                                                        }}
-                                                                    >
-                                                                        <Box
-                                                                            sx={{
-                                                                                backgroundColor: '#6d6b7712',
-                                                                                height: 140,
-                                                                                display: 'flex',
-                                                                                justifyContent: 'center',
-                                                                                alignItems: 'center',
-                                                                            }}
-                                                                        >
-                                                                            {doc.filetype === 'image' ? (
-                                                                                <Box
-                                                                                    component="img"
-                                                                                    src={doc.url || placeholderImg}
-                                                                                    alt={`Document ${docIndex + 1}`}
-                                                                                    sx={{
-                                                                                        maxHeight: '100%',
-                                                                                        maxWidth: '100%',
-                                                                                        objectFit: 'contain',
-                                                                                    }}
-                                                                                />
-                                                                            ) : (
-                                                                                <Box
-                                                                                    component="img"
-                                                                                    src={getFilePreviewIcon(doc.extension)}
-                                                                                    alt="File icon"
-                                                                                    sx={{
-                                                                                        width: 40,
-                                                                                        height: 40,
-                                                                                        opacity: 0.6,
-                                                                                    }}
-                                                                                />
-                                                                            )}
-                                                                        </Box>
-                                                                        <Box sx={{ textAlign: 'center', p: 1 }}>
-                                                                            <Link
-                                                                                href={doc.url}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                underline="hover"
-                                                                                sx={{
-                                                                                    fontSize: 14,
-                                                                                    display: 'inline-block',
-                                                                                    maxWidth: '100%',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                    overflow: 'hidden',
-                                                                                    textOverflow: 'ellipsis',
-                                                                                    color: '#3724FF !important',
-                                                                                }}
-                                                                                title={doc.filename}
-                                                                            >
-                                                                                {doc.filename}
-                                                                            </Link>
-                                                                        </Box>
-                                                                    </Card>
-                                                                </Grid>
-                                                            ))}
-
-                                                            {/* Document URLs */}
-                                                            {item?.DocumentUrl?.map((doc, docIndex) => (
-                                                                <Grid item xs={12} sm={6} md={3} key={`docurl-${docIndex}`}>
-                                                                    <Card
-                                                                        sx={{
-                                                                            borderRadius: 2,
-                                                                            boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.08)',
-                                                                            overflow: 'hidden',
-                                                                            backgroundColor: '#fff',
-                                                                        }}
-                                                                    >
-                                                                        <Box
-                                                                            sx={{
-                                                                                backgroundColor: '#6d6b7712',
-                                                                                height: 140,
-                                                                                display: 'flex',
-                                                                                justifyContent: 'center',
-                                                                                alignItems: 'center',
-                                                                            }}
-                                                                        >
-                                                                            <Linkicons size={40} style={{ color: '#888' }} />
-                                                                        </Box>
-                                                                        <Box sx={{ textAlign: 'center', p: 1 }}>
-                                                                            <Link
-                                                                                href={doc.url}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                underline="hover"
-                                                                                sx={{
-                                                                                    fontSize: 14,
-                                                                                    display: 'inline-block',
-                                                                                    maxWidth: '100%',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                    overflow: 'hidden',
-                                                                                    textOverflow: 'ellipsis',
-                                                                                    color: '#3724FF !important',
-                                                                                }}
-                                                                                title={doc.url}
-                                                                            >
-                                                                                {doc.url}
-                                                                            </Link>
-                                                                        </Box>
-                                                                    </Card>
-                                                                </Grid>
-                                                            ))}
-                                                        </Grid>
-                                                    </Box>
-                                                </Collapse>
-                                            </TableCell>
+                                            <TableCell width={10} />
+                                            <TableCell>Task Name</TableCell>
+                                            <TableCell>Folder Name</TableCell>
+                                            <TableCell>Uploaded By</TableCell>
+                                            <TableCell>Upload Date</TableCell>
                                         </TableRow>
-                                    </React.Fragment>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                                    </TableHead>
+                                    <TableBody>
+                                        {filteredData?.map((item, index) => (
+                                            <React.Fragment key={index}>
+                                                <TableRow onClick={() => handleRowExpand(index)} sx={{ cursor: 'pointer' }}>
+                                                    <TableCell width={10}>
+                                                        <IconButton onClick={() => handleRowExpand(index)} size="small">
+                                                            <PlayArrowIcon
+                                                                style={{
+                                                                    color: expanded === index ? "#444050" : "#c7c7c7",
+                                                                    fontSize: "1rem",
+                                                                    transform: expanded === index ? "rotate(90deg)" : "rotate(0deg)",
+                                                                    transition: "transform 0.2s ease-in-out",
+                                                                }}
+                                                            />
+                                                        </IconButton>
+                                                    </TableCell>
+                                                    <TableCell>{item.taskname}</TableCell>
+                                                    <TableCell>{item.foldername}</TableCell>
+                                                    <TableCell>
+                                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                            <Avatar
+                                                                src={ImageUrl(item?.guest)}
+                                                                alt={item?.guest?.firstname}
+                                                                sx={{ width: 28, height: 28 }}
+                                                            />
+                                                            <Typography variant="body2">
+                                                                {item?.guest?.firstname} {item?.guest?.lastname}
+                                                            </Typography>
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell>{item.entrydate}</TableCell>
+                                                </TableRow>
+
+                                                <TableRow>
+                                                    <TableCell colSpan={5} style={{ paddingBottom: 0, paddingTop: 0 }}>
+                                                        <Collapse in={expanded === index} timeout="auto" unmountOnExit>
+                                                            <Box margin={2}>
+                                                                <Grid container spacing={2} className="collapse-grid">
+                                                                    {/* DocumentName Files */}
+                                                                    {item?.DocumentName?.map((doc, docIndex) => (
+                                                                        <Grid item xs={12} sm={6} md={3} key={`docname-${docIndex}`}>
+                                                                            <Card
+                                                                                sx={{
+                                                                                    borderRadius: 2,
+                                                                                    boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.08)',
+                                                                                    overflow: 'hidden',
+                                                                                    backgroundColor: '#fff',
+                                                                                }}
+                                                                            >
+                                                                                <Box
+                                                                                    sx={{
+                                                                                        backgroundColor: '#6d6b7712',
+                                                                                        height: 140,
+                                                                                        display: 'flex',
+                                                                                        justifyContent: 'center',
+                                                                                        alignItems: 'center',
+                                                                                    }}
+                                                                                >
+                                                                                    {doc.filetype === 'image' ? (
+                                                                                        <Box
+                                                                                            component="img"
+                                                                                            src={doc.url || placeholderImg}
+                                                                                            alt={`Document ${docIndex + 1}`}
+                                                                                            sx={{
+                                                                                                maxHeight: '100%',
+                                                                                                maxWidth: '100%',
+                                                                                                objectFit: 'contain',
+                                                                                            }}
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <Box
+                                                                                            component="img"
+                                                                                            src={getFilePreviewIcon(doc.extension)}
+                                                                                            alt="File icon"
+                                                                                            sx={{
+                                                                                                width: 40,
+                                                                                                height: 40,
+                                                                                                opacity: 0.6,
+                                                                                            }}
+                                                                                        />
+                                                                                    )}
+                                                                                </Box>
+                                                                                <Box sx={{ textAlign: 'center', p: 1 }}>
+                                                                                    <Link
+                                                                                        href={doc.url}
+                                                                                        target="_blank"
+                                                                                        rel="noopener noreferrer"
+                                                                                        underline="hover"
+                                                                                        sx={{
+                                                                                            fontSize: 14,
+                                                                                            display: 'inline-block',
+                                                                                            maxWidth: '100%',
+                                                                                            whiteSpace: 'nowrap',
+                                                                                            overflow: 'hidden',
+                                                                                            textOverflow: 'ellipsis',
+                                                                                            color: '#3724FF !important',
+                                                                                        }}
+                                                                                        title={doc.filename}
+                                                                                    >
+                                                                                        {doc.filename}
+                                                                                    </Link>
+                                                                                </Box>
+                                                                            </Card>
+                                                                        </Grid>
+                                                                    ))}
+
+                                                                    {/* Document URLs */}
+                                                                    {item?.DocumentUrl?.map((doc, docIndex) => (
+                                                                        <Grid item xs={12} sm={6} md={3} key={`docurl-${docIndex}`}>
+                                                                            <Card
+                                                                                sx={{
+                                                                                    borderRadius: 2,
+                                                                                    boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.08)',
+                                                                                    overflow: 'hidden',
+                                                                                    backgroundColor: '#fff',
+                                                                                }}
+                                                                            >
+                                                                                <Box
+                                                                                    sx={{
+                                                                                        backgroundColor: '#6d6b7712',
+                                                                                        height: 140,
+                                                                                        display: 'flex',
+                                                                                        justifyContent: 'center',
+                                                                                        alignItems: 'center',
+                                                                                    }}
+                                                                                >
+                                                                                    <Linkicons size={40} style={{ color: '#888' }} />
+                                                                                </Box>
+                                                                                <Box sx={{ textAlign: 'center', p: 1 }}>
+                                                                                    <Link
+                                                                                        href={doc.url}
+                                                                                        target="_blank"
+                                                                                        rel="noopener noreferrer"
+                                                                                        underline="hover"
+                                                                                        sx={{
+                                                                                            fontSize: 14,
+                                                                                            display: 'inline-block',
+                                                                                            maxWidth: '100%',
+                                                                                            whiteSpace: 'nowrap',
+                                                                                            overflow: 'hidden',
+                                                                                            textOverflow: 'ellipsis',
+                                                                                            color: '#3724FF !important',
+                                                                                        }}
+                                                                                        title={doc.url}
+                                                                                    >
+                                                                                        {doc.url}
+                                                                                    </Link>
+                                                                                </Box>
+                                                                            </Card>
+                                                                        </Grid>
+                                                                    ))}
+                                                                </Grid>
+                                                            </Box>
+                                                        </Collapse>
+                                                    </TableCell>
+                                                </TableRow>
+                                            </React.Fragment>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </>
+                    ) : (
+                        <Box className="noHistoryBox">
+                            <Linkicons className="emptyImg" color="#6D6B77" />
+                            <Typography>No Reference Found!</Typography>
+                            <Typography></Typography>
+                        </Box>
+                    )}
                 </>
-            ) : (
-                <Box className="noHistoryBox">
-                    <Linkicons className="emptyImg" color="#6D6B77" />
-                    <Typography>No Reference Found!</Typography>
-                    <Typography></Typography>
-                </Box>
-            )}
+            }
         </div>
     );
 };

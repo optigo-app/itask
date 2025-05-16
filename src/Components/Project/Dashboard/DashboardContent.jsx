@@ -11,13 +11,10 @@ import { useSetRecoilState } from 'recoil';
 // Lazy-loaded components
 const ReferencePr = lazy(() => import('./ReferencePr'));
 const MilestoneTimeline = lazy(() => import('./MilestoneTimeline'));
-const TaskChalenges = lazy(() => import('./TaskChalenges'));
-const RnDTask = lazy(() => import('./RndTask'));
 const TeamMembers = lazy(() => import('./TeamMembers'));
 const Comments = lazy(() => import('./Commnets'));
-const Announcement = lazy(() => import('./Announcement'));
 
-const DashboardContent = ({ tabData, Loading, selectedTab, decodedData, handleDtopen, taskFinalData, taskAssigneeData, background, refferenceData }) => {
+const DashboardContent = ({ tabData, isAttLoding, selectedTab, decodedData, handleDtopen, taskFinalData, taskAssigneeData, background, refferenceData }) => {
   const categoryData = JSON.parse(sessionStorage.getItem('taskworkcategoryData')) || [];
   const selectedTabLower = selectedTab?.toLowerCase();
   const setSelectedTask = useSetRecoilState(selectedRowData);
@@ -28,7 +25,7 @@ const DashboardContent = ({ tabData, Loading, selectedTab, decodedData, handleDt
       component: ReferencePr,
       props: {
         handleDtopen,
-        Loading: Loading?.isAttLoding,
+        Loading: isAttLoding,
         refferenceData,
         background,
         decodedData

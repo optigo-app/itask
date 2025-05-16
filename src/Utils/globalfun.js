@@ -653,24 +653,23 @@ export function convertWordsToSpecialChars(str) {
 
 export function showNotification({ title, body, icon, actions, url }) {
     if ('serviceWorker' in navigator && 'Notification' in window) {
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          navigator.serviceWorker.getRegistration().then(registration => {
-            if (registration) {
-              registration.showNotification(title || 'Itask', {
-                body: body || 'This is a default notification message!',
-                icon: icon || '/logo.webp',
-                actions: actions || [
-                  { action: 'open', title: 'Open Page' },
-                  { action: 'dismiss', title: 'Dismiss' }
-                ],
-                data: { url: url || 'https://your-link-here.com' }
-              });
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                navigator.serviceWorker.getRegistration().then(registration => {
+                    if (registration) {
+                        registration.showNotification(title || 'Itask', {
+                            body: body || 'This is a default notification message!',
+                            icon: icon || '/logo.webp',
+                            actions: actions || [
+                                { action: 'open', title: 'Open Page' },
+                                { action: 'dismiss', title: 'Dismiss' }
+                            ],
+                            data: { url: url || 'https://your-link-here.com' }
+                        });
+                    }
+                });
             }
-          });
-        }
-      });
+        });
     }
-  }
-  
-  
+}
+

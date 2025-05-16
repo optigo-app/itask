@@ -2,8 +2,10 @@ import { Box, ToggleButton, ToggleButtonGroup, IconButton } from '@mui/material'
 import React, { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import './Styles/dashboard.scss';
+import { useLocation } from 'react-router-dom';
 
 const DasboardTab = ({ tabData, selectedTab, handleChange }) => {
+  const locction = useLocation();
   const scrollRef = useRef(null);
   const [showScrollButtons, setShowScrollButtons] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -38,7 +40,7 @@ const DasboardTab = ({ tabData, selectedTab, handleChange }) => {
   }, []);
 
   const handleScroll = (direction) => {
-    const scrollAmount = 150;
+    const scrollAmount = 192;
     if (scrollRef.current) {
       const newScroll =
         direction === 'left'
@@ -77,7 +79,7 @@ const DasboardTab = ({ tabData, selectedTab, handleChange }) => {
           className="toggle-group"
         >
           {tabData.map((item) => (
-            <ToggleButton key={item.label} value={item.label} className="toggle-button">
+            <ToggleButton key={item.label} value={item.label} className="toggle-button" sx={{ minWidth: locction?.pathname?.includes('/projects/') ? "192px !important" : '110px !important' }}>
               {item.label}
             </ToggleButton>
           ))}

@@ -196,9 +196,12 @@
             color: $button-color !important;
         }
     }
-
 }
 
+.progressBarText {
+    color: $text2ndColor !important;
+    font-weight: 500 !important;
+}
 
 @media(max-width: 1550px) {
     .ProjectTVMain {

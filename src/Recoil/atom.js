@@ -49,6 +49,11 @@ export const formData = atom({
   default: {}
 })
 
+export const assigneeId = atom({
+  key: 'assigneeId',
+  default: ""
+})
+
 export const taskActionMode = atom({
   key: 'taskActionMode',
   default: ''

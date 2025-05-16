@@ -226,9 +226,9 @@ const TaskTimeTrackerComp = () => {
 
                                     {/* Render Flattened Task List */}
                                     <Box sx={{ maxHeight: "300px", overflowY: "auto" }}>
-                                        {flatTasks
-                                            .filter(task => task?.taskname?.toLowerCase().includes(searchTerm.toLowerCase()))
-                                            .map((task) => (
+                                        {flatTasks && flatTasks
+                                            ?.filter(task => task?.taskname?.toLowerCase().includes(searchTerm.toLowerCase()))
+                                            ?.map((task) => (
                                                 <MenuItem
                                                     key={task.taskid}
                                                     onClick={() => handleSelectTask(task)}
