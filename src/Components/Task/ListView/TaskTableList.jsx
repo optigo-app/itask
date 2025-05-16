@@ -21,7 +21,7 @@ import {
 import { CirclePlus, Eye, Paperclip, Pencil, Timer } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
-import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
+import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { cleanDate, convertWordsToSpecialChars, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
@@ -48,11 +48,12 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
     const [hoveredSubtaskId, setHoveredSubtaskId] = useState(null);
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const setSelectedTask = useSetRecoilState(selectedRowData);
+    const setAssigneeId = useSetRecoilState(assigneeId);
     const [selectedItem, setSelectedItem] = useState(null);
     const [openfileDrawerOpen, setFileDrawerOpen] = useState(false);
     const columns = [
         { id: "taskname", label: "Task Name", width: 350 },
-        { id: "project", label: "Project", width: 150 },
+        { id: "taskPr", label: "Project", width: 150 },
         { id: "status", label: "Status", width: 180 },
         { id: "assignee", label: "Assignee", width: 150 },
         { id: "DeadLineDate", label: "Deadline", width: 150 },
@@ -173,7 +174,8 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         handleStatusChange(task, newStatus);
     };
 
-    const hanldePAvatarClick = (task) => {
+    const hanldePAvatarClick = (task, id) => {
+        setAssigneeId(id);
         setSelectedItem(task);
         setProfileOpen(true);
     }
@@ -248,7 +250,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                             sx={{
                                 backgroundColor: background(assignee?.firstname),
                             }}
-                            onClick={() => hanldePAvatarClick(assignees)}
+                            onClick={() => hanldePAvatarClick(assignees, assignee?.id)}
                         >
                             {!assignee.avatar && assignee?.firstname?.charAt(0)}
                         </Avatar>
@@ -310,22 +312,22 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 />
             </IconButton>
             {/* {hasAccess(PERMISSIONS.canEdit) && */}
-                <IconButton
-                    disabled={task?.isFreezed == 1}
-                    onClick={() => handleEditTask(task, { Task: "root" })}
-                    sx={{
-                        '&.Mui-disabled': {
-                            color: 'rgba(0, 0, 0, 0.26)',
-                        },
-                    }}
-                    aria-label="Edit-Task button"
-                >
-                    <Pencil
-                        size={20}
-                        color={task?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                        className="iconbtn"
-                    />
-                </IconButton>
+            <IconButton
+                disabled={task?.isFreezed == 1}
+                onClick={() => handleEditTask(task, { Task: "root" })}
+                sx={{
+                    '&.Mui-disabled': {
+                        color: 'rgba(0, 0, 0, 0.26)',
+                    },
+                }}
+                aria-label="Edit-Task button"
+            >
+                <Pencil
+                    size={20}
+                    color={task?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                    className="iconbtn"
+                />
+            </IconButton>
             {/* } */}
             <IconButton
                 aria-label="view Task button"
@@ -395,7 +397,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                             </IconButton>
                         </div>
                         <div>
-                            <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'start', cursor:'pointer' }}  onClick={() => toggleSubtasks(task.taskid, task)}>
                                 <span style={{ flex: 1 }}>
                                     {task?.taskname?.length > 35
                                         ? `${task?.taskname?.slice(0, 35)}...`
@@ -521,7 +523,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
 
     return (
         <>
-            {(isLoading === null || isLoading || (!data && isLoading !== false)) ? (
+            {(isLoading == null || isLoading == true || (!data && isLoading !== false)) ? (
                 <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
             ) :
                 <TableContainer

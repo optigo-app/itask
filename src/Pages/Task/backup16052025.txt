@@ -53,11 +53,18 @@ const Task = () => {
     taskAssigneeData } = useFullTaskFormatFile();
   console.log('taskFinalData: ', taskFinalData);
 
-  useEffect(() => {
-    setTasks([]);
-  }, [location.pathname]);
+  // const handleFecthTask = async () => {
+  //   debugger
+  //   console.log('selectedRow: ', selectedRow);
+  //   const apires = await fetchTaskDataApi(selectedRow);
+  //   const formatedData = mapTaskLabels(apires);
+  //   console.log('formatedData: ', formatedData);
+  // };
 
   useEffect(() => {
+    // if (selectedRow != {} || selectedRow != null) {
+    //   handleFecthTask();
+    // }
     let parsedData = null;
     if (encodedData) {
       try {
@@ -76,12 +83,9 @@ const Task = () => {
 
     if (matchedTask && matchedTask.subtasks?.length > 0) {
       setTasks(matchedTask.subtasks);
+    } else {
+      setTasks(taskFinalData?.TaskData);
     }
-    setTimeout(() => {
-      if (!encodedData && taskFinalData) {
-        setTasks(taskFinalData?.TaskData);
-      }
-    }, 10);
 
   }, [encodedData, taskFinalData, callFetchTaskApi, selectedRow]);
 

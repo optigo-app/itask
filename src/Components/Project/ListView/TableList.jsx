@@ -24,14 +24,14 @@ import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { cleanDate, convertWordsToSpecialChars, formatDate2, getRandomAvatarColor, getStatusColor, ImageUrl, priorityColors } from "../../../Utils/globalfun";
 import { Eye, Lock, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
-import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
+import { assigneeId, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
 import { useNavigate } from "react-router-dom";
 import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawerFile";
 import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 
-const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit }) => {
+const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit }) => {
     const navigate = useNavigate();
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("projectName");
@@ -43,6 +43,7 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const setFormDataValue = useSetRecoilState(formData);
     const setSelectedTask = useSetRecoilState(selectedRowData);
+    const setAssigneeId = useSetRecoilState(assigneeId);
     const [openfileDrawerOpen, setFileDrawerOpen] = useState(false);
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
@@ -56,7 +57,7 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
         { id: "StartDate", label: "Start Date", width: 100 },
         { id: "DeadLineDate", label: "Deadline", width: 100 },
         { id: "priority", label: "Priority", width: 100 },
-        { id: "actions", label: "Actions", width: 80 },
+        { id: "actions", label: "Actions", width: 150 },
     ];
 
     const background = (assignee) => {
@@ -80,7 +81,8 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
         setHoveredTaskId(null);
     };
 
-    const hanldePAvatarClick = (task) => {
+    const hanldePAvatarClick = (task, id) => {
+        setAssigneeId(id);
         setSelectedRow(task);
         setProfileOpen(true);
     }
@@ -114,6 +116,7 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
                 grouped[projectId] = {
                     projectid: projectId,
                     projectName: task.taskPr,
+                    projectProgress: task?.projectProgress,
                     tasks: []
                 };
             }
@@ -221,6 +224,7 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
     const currentData =
         sortedData?.slice((page - 1) * rowsPerPage, page * rowsPerPage) || [];
 
+    console.log('currentData: ', currentData);
     const handleNavigate = (task) => {
         let urlData = {
             module: task?.taskname,
@@ -390,7 +394,7 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
                             sx={{
                                 backgroundColor: background(assignee?.firstname),
                             }}
-                            onClick={() => hanldePAvatarClick(assignees)}
+                            onClick={() => hanldePAvatarClick(assignees, assignee?.id)}
                         >
                             {!assignee.avatar && assignee?.firstname?.charAt(0)}
                         </Avatar>
@@ -472,7 +476,7 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
                                         <React.Fragment key={project.projectid}>
                                             {/* Render Project Name Row with Toggle Icon */}
                                             <TableRow>
-                                                <TableCell colSpan={6}>
+                                                <TableCell colSpan={1}>
                                                     <Box display="flex" alignItems="center" gap={.5}>
                                                         {/* Toggle IconButton */}
                                                         <IconButton
@@ -492,7 +496,7 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
                                                             />
                                                         </IconButton>
                                                         {/* Project Name */}
-                                                        <Typography variant="body" className="prNameTypo">
+                                                        <Typography variant="body" className="prNameTypo" sx={{ cursor: "pointer" }} onClick={() => handleToggle(project.projectid, project)}>
                                                             {project.projectName} {project?.taskcount != 0 && (
                                                                 <span className="pr-md_count">
                                                                     {project?.taskcount}
@@ -501,6 +505,30 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
                                                         </Typography>
                                                     </Box>
                                                 </TableCell>
+                                                <TableCell colSpan={1}>
+                                                    <Box display="flex" alignItems="center" gap={2} width="100%">
+                                                        <Box width="100%" position="relative">
+                                                            <LinearProgress
+                                                                aria-label="Task progress status"
+                                                                variant="determinate"
+                                                                value={project?.projectProgress}
+                                                                sx={{
+                                                                    height: 7,
+                                                                    borderRadius: 5,
+                                                                    backgroundColor: "#e0e0e0",
+                                                                    "& .MuiLinearProgress-bar": {
+                                                                        backgroundColor: getStatusColor(project?.projectProgress),
+                                                                    },
+                                                                }}
+                                                                className="progressBar"
+                                                            />
+                                                        </Box>
+                                                        <Typography className="progressBarText" variant="body2" minWidth={100}>
+                                                            {`${project?.projectProgress}%`}
+                                                        </Typography>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell colSpan={4} />
                                                 <TableCell colSpan={1} sx={{ textAlign: "right" }}>
                                                     <IconButton
                                                         aria-label="View Module button"
@@ -545,7 +573,7 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
                                                             <span className="prShDesc">{convertWordsToSpecialChars(task?.descr)}</span>
                                                         </TableCell>
                                                         <TableCell>
-                                                            <Box display="flex" alignItems="center" gap={2} width="100%">
+                                                            {/* <Box display="flex" alignItems="center" gap={2} width="100%">
                                                                 <Box width="100%" position="relative">
                                                                     <LinearProgress
                                                                         aria-label="Task progress status"
@@ -565,7 +593,7 @@ const TableView = ({ data, page, rowsPerPage, handleChangePage, isLoading, handl
                                                                 <Typography className="progressBarText" variant="body2" minWidth={100}>
                                                                     {`${task?.progress_per}%`}
                                                                 </Typography>
-                                                            </Box>
+                                                            </Box> */}
                                                         </TableCell>
                                                         <TableCell
                                                             onMouseEnter={() => handleMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}

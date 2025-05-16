@@ -130,7 +130,7 @@ const MeetingCard = ({
                   sx={{
                     backgroundColor: background(participant),
                   }}
-                  onClick={() => hanldePAvatarClick(meeting?.guests)}
+                  onClick={() => hanldePAvatarClick(meeting?.guests, meeting?.id)}
                 >
                   {!participant.avatar && participant?.firstname?.charAt(0)}
                 </Avatar>

@@ -78,14 +78,14 @@ const HeaderButtons = ({
     if (Array.isArray(taskCategory)) {
       const isProjectPath = location?.pathname?.includes("/projects");
       const newTask = {
-        id: taskCategory.length * 2,
+        id: taskCategory.length * 20,
         labelname: "New Task",
         displayorder: taskCategory.length + 1,
         isdelete: 0,
         masterid: 1,
       };
       const dueTask = {
-        id: taskCategory.length * 3,
+        id: taskCategory.length * 25,
         labelname: "Due Task",
         displayorder: taskCategory.length + 2,
         isdelete: 0,
@@ -120,7 +120,7 @@ const HeaderButtons = ({
         : rootSubrootflagval;
     setOpenChildTask(false);
     const addTaskApi = await AddTaskDataApi(formValues, rootflag ?? {}, module);
-    if (addTaskApi?.rd[0]?.stat == 1) {
+    if (addTaskApi && addTaskApi?.rd[0]?.stat == 1) {
       setFormDrawerOpen(false);
       setOpenChildTask(true);
       setTimeout(() => {
@@ -328,7 +328,7 @@ const HeaderButtons = ({
           taskAssigneeData={taskAssigneeData}
         />
       </Box>
-      <TaskTimeTrackerComp />
+      {/* <TaskTimeTrackerComp /> */}
     </>
   );
 };

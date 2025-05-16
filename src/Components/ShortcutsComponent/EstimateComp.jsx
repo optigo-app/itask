@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Typography } from "@mui/material";
 
 const StatusCircles = ({ task }) => {
-    const taskEstimate = [task.estimate_hrs, task.estimate1_hrs, task.estimate2_hrs];
+    const taskEstimate = [task.estimate_hrsT, task.estimate1_hrsT, task.estimate2_hrsT];
     const circleStyle = {
         minWidth: 28,
         minHeight: 28,

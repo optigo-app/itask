@@ -89,7 +89,7 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                         src={ImageUrl(user) || ""}
                         alt={user?.firstname}
                         sx={{ backgroundColor: background(user) }}
-                        onClick={() => hanldePAvatarClick(guests)}
+                        onClick={() => hanldePAvatarClick(user, user.id)}
                     >
                         {!user.avatar && user?.firstname?.[0]}
                     </Avatar>

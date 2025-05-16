@@ -18,7 +18,7 @@ const Header = ({ avatarSrc = "" }) => {
     const [profileAnchorEl, setProfileAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
     const profileOpen = Boolean(profileAnchorEl);
-    const encodedData = searchParams.get("data");   
+    const encodedData = searchParams.get("data");
     const [decodedData, setDecodedData] = useState(null);
     const taskDataLength = useRecoilValue(taskLength);
     const [profileData, setProfileData] = useState();
@@ -31,8 +31,18 @@ const Header = ({ avatarSrc = "" }) => {
     }, [location]);
 
     useEffect(() => {
-        const UserProfileData = JSON?.parse(localStorage.getItem("UserProfileData"));
-        setProfileData(UserProfileData);
+        const fetchProfileData = () => {
+            const userData = JSON?.parse(localStorage.getItem("UserProfileData"));
+            setProfileData(userData);
+            if (userData?.isLoggedIn) {
+                clearInterval(interval);
+            }
+        };
+        fetchProfileData();
+        const interval = setInterval(() => {
+            fetchProfileData();
+        }, 5000);
+        return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
@@ -269,11 +279,15 @@ const Header = ({ avatarSrc = "" }) => {
                         onClick={(() => handleback(title))}>
                         {title}
                     </Typography>
-                    {location.pathname.includes("/tasks/") && (
-                        <div className="header_task-count">
-                            {taskDataLength}
-                        </div>
-                    )}
+                    {taskDataLength > 0 &&
+                        <>
+                            {location.pathname.includes("/tasks/") && (
+                                <div className="header_task-count">
+                                    {taskDataLength}
+                                </div>
+                            )}
+                        </>
+                    }
                 </Box>
                 <Typography
                     variant="subtitle1"

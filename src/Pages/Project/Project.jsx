@@ -12,190 +12,55 @@ import {
   projectDatasRState,
   selectedCategoryAtom,
 } from "../../Recoil/atom";
-import { fetchMasterGlFunc, formatDate } from "../../Utils/globalfun";
+import {formatDate } from "../../Utils/globalfun";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
-import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
 import { deleteTaskDataApi } from "../../Api/TaskApi/DeleteTaskApi";
 import { toast } from "react-toastify";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
+import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
 
 const TaskTable = React.lazy(() =>
   import("../../Components/Project/ListView/TableList")
 );
+
 const KanbanView = React.lazy(() =>
   import("../../Components/Project/KanbanView/KanbanView")
 );
 
 const Project = () => {
   const isLaptop = useMediaQuery("(max-width:1150px)");
-  const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(12);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isTaskLoading, setIsTaskLoading] = useState(null);
+  const [page, setPage] = useState(1);  
+  const [rowsPerPage, setRowsPerPage] = useState(14);
   const [masterData, setMasterData] = useRecoilState(masterDataValue);
-  const [priorityData, setPriorityData] = useState();
-  const [statusData, setStatusData] = useState();
-  const [assigneeData, setAssigneeData] = useState();
-  const [taskDepartment, setTaskDepartment] = useState();
-  const [taskProject, setTaskProject] = useState();
-  const [taskCategory, setTaskCategory] = useState();
   const [activeButton, setActiveButton] = useState("table");
   const [project, setProject] = useRecoilState(projectDatasRState);
+  console.log('project: ', project);
   const [filters, setFilters] = useRecoilState(Advfilters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [callFetchTaskApi, setCallFetchTaskApi] = useRecoilState(fetchlistApiCall);
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const now = new Date();
+  const {
+    iswhMLoading,
+    iswhTLoading,
+    taskFinalData,
+    taskDepartment,
+    taskProject,
+    taskCategory,
+    priorityData,
+    statusData,
+    taskAssigneeData } = useFullTaskFormatFile();
 
-  const retrieveAndSetData = (key, setter) => {
-    const data = sessionStorage.getItem(key);
-    if (data) {
-      setter(JSON.parse(data));
-    }
-  };
-
-  const fetchMasterData = async () => {
-    setIsLoading(true);
-    try {
-      let storedStructuredData = sessionStorage.getItem('structuredMasterData');
-      let structuredData = storedStructuredData ? JSON.parse(storedStructuredData) : null;
-      if (!structuredData) {
-        await fetchMasterGlFunc();
-        storedStructuredData = sessionStorage.getItem('structuredMasterData');
-        structuredData = storedStructuredData ? JSON.parse(storedStructuredData) : null;
-      }
-      if (structuredData) {
-        setMasterData(structuredData);
-        retrieveAndSetData('taskAssigneeData', setAssigneeData);
-        retrieveAndSetData('taskstatusData', setStatusData);
-        retrieveAndSetData('taskpriorityData', setPriorityData);
-        retrieveAndSetData('taskdepartmentData', setTaskDepartment);
-        retrieveAndSetData('taskprojectData', setTaskProject);
-        retrieveAndSetData('taskworkcategoryData', setTaskCategory);
-      }
-    } catch (error) {
-      console.error("Error fetching master data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchModuleData = async () => {
-    if (project?.length == 0) {
-      setIsTaskLoading(true);
-    }
-    try {
-      if (!priorityData || !statusData || !taskProject || !taskDepartment) {
-        setIsTaskLoading(false);
-        return;
-      }
-
-      const taskData = await fetchModuleDataApi();
-      const labeledTasks = mapTaskLabels(taskData);
-      const finalTaskData = [...labeledTasks];
-
-      const enhanceTask = (task) => {
-        const priority = priorityData?.find(
-          (item) => item?.id == task?.priorityid
-        );
-        const status = statusData?.find((item) => item?.id == task?.statusid);
-        const project = taskProject?.find(
-          (item) => item?.id == task?.projectid
-        );
-        const department = taskDepartment?.find(
-          (item) => item?.id == task?.departmentid
-        );
-        const category = taskCategory?.find(
-          (item) => item?.id == task?.workcategoryid
-        );
-        const assigneeIdArray = task?.assigneids?.split(',')?.map(id => Number(id));
-        const matchedAssignees = assigneeData?.filter(user => assigneeIdArray?.includes(user.id));
-        return {
-          ...task,
-          priority: priority ? priority?.labelname : "",
-          status: status ? status?.labelname : "",
-          taskPr: project ? project?.labelname : "",
-          taskDpt: department ? department?.labelname : "",
-          category: category?.labelname,
-          assignee: matchedAssignees ?? [],
-        };
-      };
-
-      const enhancedTasks = finalTaskData?.map((task) => enhanceTask(task));
-      setProject(enhancedTasks);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsTaskLoading(false);
-    }
-  };
-
-  function mapTaskLabels(data) {
-    const labels = data?.rd[0];
-    const tasks = data?.rd1;
-    const labelMap = {};
-    Object?.keys(labels)?.forEach((key, index) => {
-      labelMap[index + 1] = key;
-    });
-    function convertTask(task) {
-      let taskObj = {};
-      for (let key in task) {
-        if (task.hasOwnProperty(key)) {
-          const label = labelMap[key];
-          if (label) {
-            taskObj[label] = task[key];
-          }
+    useEffect(() => {
+      setTimeout(() => {
+        if (taskFinalData) {
+          setProject(taskFinalData?.ModuleList);
         }
-      }
-      if (task.subtasks) {
-        try {
-          const parsedSubtasks = JSON?.parse(task.subtasks);
-          taskObj.subtasks = parsedSubtasks?.map((subtask) => {
-            let subtaskObj = {};
-            for (let key in subtask) {
-              if (subtask?.hasOwnProperty(key)) {
-                const label = labelMap[key];
-                if (label) {
-                  subtaskObj[label] = subtask[key];
-                }
-              }
-            }
-            return subtaskObj;
-          });
-        } catch (error) {
-          console.error("Error parsing subtasks:", error);
-        }
-      }
-
-      return taskObj;
-    }
-    let taskData = tasks?.map((task) => convertTask(task));
-
-    return taskData;
-  }
-
-  // master api call
-  useEffect(() => {
-    const init = sessionStorage?.getItem('taskInit');
-    if (init) {
-      fetchMasterData();
-    }
-    setCallFetchTaskApi(true);
-  }, []);
-
-  useEffect(() => {
-    setTimeout(() => {
-      if (priorityData && statusData && taskProject && taskDepartment) {
-        if (callFetchTaskApi) {
-          fetchModuleData();
-        }
-      } else {
-        fetchMasterData();
-      }
-    }, 10);
-  }, [callFetchTaskApi, priorityData, statusData, taskProject, taskDepartment]);
+      }, 10);
+  
+    }, [taskFinalData, callFetchTaskApi]);
 
   const handleFilterChange = (key, value) => {
     if (key === "clearFilter" && value == null) {
@@ -423,13 +288,13 @@ const Project = () => {
         activeButton={activeButton}
         onButtonClick={handleTabBtnClick}
         onFilterChange={handleFilterChange}
-        isLoading={isLoading}
+        isLoading={iswhMLoading}
         masterData={masterData}
         priorityData={priorityData}
         projectData={taskProject}
         statusData={statusData}
         taskCategory={taskCategory}
-        taskAssigneeData={assigneeData}
+        taskAssigneeData={taskAssigneeData}
       />
 
       {!isLaptop &&
@@ -453,11 +318,11 @@ const Project = () => {
               <Filters
                 {...filters}
                 onFilterChange={handleFilterChange}
-                isLoading={isLoading}
+                isLoading={iswhMLoading}
                 masterData={masterData}
                 priorityData={priorityData}
                 statusData={statusData}
-                assigneeData={assigneeData}
+                assigneeData={taskAssigneeData}
                 taskDepartment={taskDepartment}
                 taskProject={taskProject}
                 taskCategory={taskCategory}
@@ -473,11 +338,11 @@ const Project = () => {
           setFilters={setFilters}
           onFilterChange={handleFilterChange}
           onClearAll={handleClearAllFilters}
-          isLoading={isLoading}
+          isLoading={iswhMLoading}
           masterData={masterData}
           priorityData={priorityData}
           statusData={statusData}
-          assigneeData={assigneeData}
+          assigneeData={taskAssigneeData}
           taskDepartment={taskDepartment}
           taskProject={taskProject}
           taskCategory={taskCategory}
@@ -512,9 +377,10 @@ const Project = () => {
               {/* {activeButton === "table" && ( */}
               <TaskTable
                 data={filteredData ?? null}
+                projectProgress={project?.projectProgress}
                 page={page}
                 rowsPerPage={rowsPerPage}
-                isLoading={isTaskLoading}
+                isLoading={iswhTLoading}
                 masterData={masterData}
                 handleLockProject={handleLockProject}
                 handleDeleteModule={handleDeleteModule}

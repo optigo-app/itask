@@ -15,8 +15,11 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "./ProfileCardModal.scss";
 import { commonTextFieldProps, ImageUrl } from "../../Utils/globalfun";
+import { useRecoilValue } from "recoil";
+import { assigneeId } from "../../Recoil/atom";
 
 const ProfileCardModal = ({ open, onClose, profileData = [], background }) => {
+    const assigneeIDvalue = useRecoilValue(assigneeId);
     const [editIndex, setEditIndex] = useState(null);
     const [tempDesignation, setTempDesignation] = useState("");
     if (!Array.isArray(profileData) || profileData.length === 0) return null;
@@ -33,6 +36,15 @@ const ProfileCardModal = ({ open, onClose, profileData = [], background }) => {
     const handleDesignationBlur = () => {
         setEditIndex(null);
     };
+
+    const sortingAssignee = (a, b) => {
+        if (a.id === assigneeIDvalue) return -1;
+        if (b.id === assigneeIDvalue) return 1;
+        return 0;
+    };
+
+    // Sort the profileData array
+    const sortedProfileData = [...profileData].sort(sortingAssignee);
 
     return (
         <Modal
@@ -55,7 +67,7 @@ const ProfileCardModal = ({ open, onClose, profileData = [], background }) => {
                         pagination={{ clickable: true }}
                         className="profile-swiper mySwiper"
                     >
-                        {profileData.map((profile, index) => (
+                        {sortedProfileData?.map((profile, index) => (
                             <SwiperSlide key={profile.id || index}>
                                 <Box className="profile-card">
                                     {/* Profile Image */}
