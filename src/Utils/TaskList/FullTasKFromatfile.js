@@ -3,8 +3,10 @@ import { fetchTaskDataFullApi } from "../../Api/TaskApi/TaskDataFullApi";
 import { fetchMasterGlFunc, mapKeyValuePair, mapTaskLabels } from "../globalfun";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { fetchlistApiCall, projectDatasRState, TaskData } from "../../Recoil/atom";
+import { useLocation } from "react-router-dom";
 
 const useFullTaskFormatFile = () => {
+  const location = useLocation();
   const [iswhTLoading, setIsWhTLoading] = useState(null);
   const [iswhMLoading, setIsWhMLoading] = useState(null);
   const [taskFinalData, setTaskFinalData] = useState([]);
@@ -55,7 +57,9 @@ const useFullTaskFormatFile = () => {
   };
 
   const fetchTaskData = async () => {
-    if (tasks?.length > 0 || project?.length > 0) {
+    const filterCon = location?.pathname?.includes("/projects") ? project : tasks;
+    debugger;
+    if (filterCon?.length > 0) {
       setIsWhTLoading(false);
     } else {
       setIsWhTLoading(true);
@@ -265,7 +269,7 @@ const useFullTaskFormatFile = () => {
 
       setTimeout(() => {
         setIsWhTLoading(false);
-      }, 20);
+      }, 50);
       return {
         TaskData,
         ProjectMilestoneData: projectMilestoneData,

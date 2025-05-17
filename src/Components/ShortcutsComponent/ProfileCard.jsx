@@ -91,7 +91,7 @@ const ProfileCardModal = ({ open, onClose, profileData = [], background }) => {
 
                                     {/* Profile Data */}
                                     <Box className="data">
-                                        <Typography variant="h5" className="name">
+                                        <Typography variant="h5" className="name" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                             {profile?.firstname + " " + profile?.lastname || "Employee"}
                                         </Typography>
                                         <Box>
