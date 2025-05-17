@@ -12,7 +12,7 @@ import {
   projectDatasRState,
   selectedCategoryAtom,
 } from "../../Recoil/atom";
-import {formatDate } from "../../Utils/globalfun";
+import { formatDate } from "../../Utils/globalfun";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
@@ -20,6 +20,7 @@ import { deleteTaskDataApi } from "../../Api/TaskApi/DeleteTaskApi";
 import { toast } from "react-toastify";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
+import { useLocation } from "react-router-dom";
 
 const TaskTable = React.lazy(() =>
   import("../../Components/Project/ListView/TableList")
@@ -30,8 +31,9 @@ const KanbanView = React.lazy(() =>
 );
 
 const Project = () => {
+  const location = useLocation();
   const isLaptop = useMediaQuery("(max-width:1150px)");
-  const [page, setPage] = useState(1);  
+  const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(14);
   const [masterData, setMasterData] = useRecoilState(masterDataValue);
   const [activeButton, setActiveButton] = useState("table");
@@ -53,14 +55,19 @@ const Project = () => {
     statusData,
     taskAssigneeData } = useFullTaskFormatFile();
 
-    useEffect(() => {
-      setTimeout(() => {
-        if (taskFinalData) {
-          setProject(taskFinalData?.ModuleList);
-        }
-      }, 10);
-  
-    }, [taskFinalData, callFetchTaskApi]);
+  useEffect(() => {
+    setProject([])
+  }, [location])
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (taskFinalData) {
+        setProject(taskFinalData?.ModuleList);
+      }
+    }, 0);
+
+  }, [taskFinalData, callFetchTaskApi]);
+
 
   const handleFilterChange = (key, value) => {
     if (key === "clearFilter" && value == null) {

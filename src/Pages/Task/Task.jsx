@@ -55,7 +55,7 @@ const Task = () => {
 
   useEffect(() => {
     setTasks([]);
-  }, [location.pathname]);
+  }, [location]);
 
   useEffect(() => {
     let parsedData = null;

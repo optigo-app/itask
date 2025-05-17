@@ -25,7 +25,7 @@ const AttachmentGrid = ({ uploadedFile, selectedFolder }) => {
     return (
         <Grid item xs={12} mt={1}>
             <Grid container spacing={2}>
-                {attachments.map((item, index) => {
+                {attachments?.map((item, index) => {
                     const extension = item.fileName?.split('.').pop();
                     const previewImage = getFilePreview(item.url, extension);
 
@@ -40,7 +40,7 @@ const AttachmentGrid = ({ uploadedFile, selectedFolder }) => {
                                         height: 120,
                                         objectFit: 'contain',
                                         borderRadius: 2,
-                                        filter: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension) ? 'none' : 'opacity(.5)'
+                                        filter: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']?.includes(extension) ? 'none' : 'opacity(.5)'
                                     }}
                                 />
                                 <CardContent sx={{ p: 0.5, pt: 1 }}>
