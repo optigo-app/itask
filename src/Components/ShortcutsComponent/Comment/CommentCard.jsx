@@ -2,10 +2,11 @@ import React from "react";
 import { Card, Grid, Typography, Box, IconButton, Avatar, Link } from "@mui/material";
 import { Download, MoreVertical } from "lucide-react";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { formatDate3, getRandomAvatarColor } from "../../../Utils/globalfun";
+import { formatDate3, getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
 import './style.scss';
 
 const CommentCard = ({ comment }) => {
+    console.log('comment: ', comment);
     const background = (assignee) => {
         const avatarBackgroundColor = assignee?.avatar
             ? "transparent"
@@ -18,30 +19,30 @@ const CommentCard = ({ comment }) => {
                 {/* User Profile & Name */}
                 <Grid item>
                     <Avatar
-                        alt={comment?.user?.name}
-                        src={comment?.user?.avatar || null}
+                        alt={comment?.assignee?.firstname}
+                        src={ImageUrl(comment?.assignee)}
                         sx={{
                             width: 30,
                             height: 30,
-                            backgroundColor: background(comment?.user?.name),
+                            backgroundColor: background(comment?.assignee?.firstname + " " + comment?.assignee?.lastname),
                         }}
                     >
-                        {!comment?.user?.avatar && comment?.user?.name?.charAt(0)}
+                        {!comment?.assignee?.avatar && comment?.assignee?.firstname?.charAt(0)}
                     </Avatar>
                 </Grid>
                 <Grid item xs>
                     <Typography className="title">
-                        {comment?.user?.name}
+                        {comment?.assignee?.firstname + " " + comment?.assignee?.lastname}
                     </Typography>
                     <Typography className="caption">
                         {formatDate3(comment?.entrydate)}
                     </Typography>
                 </Grid>
-                <Grid item>
+                {/* <Grid item>
                     <IconButton>
                         <MoreVertical size={18} />
                     </IconButton>
-                </Grid>
+                </Grid> */}
             </Grid>
 
             {/* Comment Text */}

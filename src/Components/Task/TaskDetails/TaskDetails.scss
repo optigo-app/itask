@@ -100,29 +100,37 @@
     align-items: center;
     position: relative;
     padding: 5px;
-    max-width: 80%;
+    max-width: 100%;
     overflow: auto;
 
     .toggle-group {
       background-color: #f5f5f5;
       border-radius: 8px;
       padding: 4px;
-      min-width: 200px;
       display: flex;
       gap: 5px;
 
       .toggle-button {
+        width: 120px;
         display: flex;
+        align-items: center;
         gap: 8px;
-        flex: 1;
         font-size: 14px;
         font-family: $font-family !important;
         color: #666;
         border: none;
-        line-height: .4rem;
+        line-height: .7rem;
         padding: 10px 4px;
         text-transform: none;
         transition: all 0.2s ease-in-out;
+
+        // Use a span to control ellipsis text
+        .toggle-label {
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          flex: 1; // take remaining space
+        }
 
         &.Mui-selected {
           background-color: #fff !important;

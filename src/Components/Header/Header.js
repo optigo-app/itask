@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Typography, Avatar, Menu, MenuItem, Divider, Button, Chip, Tooltip, IconButton, Badge, ToggleButtonGroup, ToggleButton } from "@mui/material";
-import { Bell, MailOpen, User, LogOut, House, FileCheck } from "lucide-react";
+import { Bell, MailOpen, User, LogOut, House, FileCheck, RefreshCcw } from "lucide-react";
 import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
 import "./header.scss";
 import NotificationCard from "../Notification/NotificationCard";
-import { taskLength } from "../../Recoil/atom";
-import { useRecoilValue } from "recoil";
+import { taskLength, webReload } from "../../Recoil/atom";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 
 const Header = ({ avatarSrc = "" }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const searchParams = new URLSearchParams(location.search);
-
+    const setReload = useSetRecoilState(webReload);
     // Menu state
     const [anchorEl, setAnchorEl] = useState(null);
     const [profileAnchorEl, setProfileAnchorEl] = useState(null);
@@ -240,6 +240,10 @@ const Header = ({ avatarSrc = "" }) => {
         localStorage?.removeItem("isLoggedIn");
         navigate("/login");
     };
+
+    const hableReload = () => {
+        setReload(true);
+    }
 
     const toggleOptions = [
         {
@@ -522,14 +526,19 @@ const Header = ({ avatarSrc = "" }) => {
 
                 {/* Logout Button */}
                 <Box textAlign="center" p={1.5}>
-                    <Button
+                <Button
                         size="small"
                         className="buttonClassname"
-                        sx={{
-                            background: "#ff4c51 !important",
-                            borderColor: "#ff4c51 !important",
-                            color: "#fff !important",
-                        }}
+                        onClick={() => hableReload()}
+                        variant="contained"
+                        fullWidth
+                        sx={{marginBottom: "10px"}}
+                    >
+                        Reload
+                    </Button>
+                    <Button
+                        size="small"
+                        className="dangerbtnClassname"
                         onClick={() => handleLogout()}
                         variant="contained"
                         fullWidth

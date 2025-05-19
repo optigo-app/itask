@@ -134,7 +134,7 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
             setCaledrawerOpen(true);
         },
         customButtons: {
-            sidebarToggle: {
+            sidebarToggle: {    
                 icon: 'bi bi-list',
                 click() {
                     setSidebarToggle(prevState => !prevState);
@@ -142,9 +142,10 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
             },
         },
         dateClick(info) {
+            debugger
             const eventDetails = {
-                start: info.dateStr,
-            };
+                start: new Date(info.dateStr).toISOString(),
+              };
             setCalFormData(eventDetails);
             setCaledrawerOpen(true);
         },

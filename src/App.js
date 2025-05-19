@@ -8,7 +8,7 @@ import {
     useNavigate
 } from "react-router-dom";
 import { Box, useMediaQuery } from '@mui/material';
-import { RecoilRoot, useSetRecoilState } from 'recoil';
+import { RecoilRoot, useRecoilState, useSetRecoilState } from 'recoil';
 import { ToastContainer } from 'react-toastify';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -20,7 +20,8 @@ import Reports from './Pages/Reports/Reports';
 import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
-import { userRoleAtom } from './Recoil/atom';
+import { userRoleAtom, webReload } from './Recoil/atom';
+import MuiDateTimePickerExample from './Backup/MuiDateTimePickerExample';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -90,6 +91,7 @@ const ProtectedRoute = ({ children, pageId, pageData, pageDataLoaded }) => {
 };
 
 const AppWrapper = () => {
+    const [reload, setReload] = useRecoilState(webReload);
     const [pageData, setPageData] = useState([]);
     const [pageDataLoaded, setPageDataLoaded] = useState(false);
     const [isReady, setIsReady] = useState(false);
@@ -158,6 +160,23 @@ const AppWrapper = () => {
 
         return decodedPayload;
     };
+
+    console.log('reload: ', reload);
+    useEffect(() => {
+        debugger
+        const masterFuncCall = async () => {
+            if (reload) {
+                sessionStorage.clear();
+                localStorage.clear();
+                window.location.reload();
+                const roleData = await fetchMasterGlFunc();
+                setRole(roleData?.designation);
+                setReload(false);
+
+            }
+        }
+        masterFuncCall();
+    }, [reload]);
 
     useEffect(() => {
         const checkAndInit = async () => {
@@ -241,6 +260,7 @@ const AppWrapper = () => {
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
                                         <Route path="/reports/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><Reports /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
+                                        <Route path="/test" element={<MuiDateTimePickerExample />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>
