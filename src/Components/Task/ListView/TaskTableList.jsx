@@ -218,12 +218,12 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
     const renderAssigneeAvatars = (assignees, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut) => (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <AvatarGroup
-                max={10}
+                max={6}
                 spacing={2}
                 sx={{
                     '& .MuiAvatar-root': {
-                        width: 22,
-                        height: 22,
+                        width: 25,
+                        height: 25,
                         fontSize: '0.8rem',
                         cursor: 'pointer',
                         border: 'none',

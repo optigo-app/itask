@@ -19,7 +19,7 @@ export const filesUploadApi = async ({ attachments, folderName, uniqueNo }) => {
   formData.append('uKey', ukey);
   formData.append('uniqueNo', uniqueNo);
 
-  let APIURL = isLocal ? 'http://nextjstest.web/api/upload' : 'https://livenx.optigoapps.com/api/upload';
+  let APIURL = !isLocal ? 'http://nextjstest.web/api/upload' : 'https://livenx.optigoapps.com/api/upload';
 
   try {
     const response = await axios.post(APIURL, formData, {

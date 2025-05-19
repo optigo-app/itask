@@ -12,13 +12,24 @@ const MultiTaskInput = ({ onSave }) => {
     const [text, setText] = useState("");
     const [newTask, setNewTask] = useState("");
     const [newEstimate, setNewEstimate] = useState("");
+    console.log('newEstimate: ', newEstimate);
     const [errorMessage, setErrorMessage] = useState("");
     const inputRef = useRef(null);
     const estimateRefs = useRef([]);
+    const [totalEstimate, setTotalEstimate] = useState('');
 
     useEffect(() => {
         estimateRefs.current = estimateRefs.current.slice(0, tasks.length);
     }, [tasks]);
+
+    const updateTotalEstimate = (updatedTasks) => {
+        const total = updatedTasks.reduce((sum, task) => sum + parseFloat(task.estimate || 0), 0);
+        setTotalEstimate(total.toFixed(2));
+    };
+
+    const handleEstimateChange = (e) => {
+        setTotalEstimate(e.target.value);
+    };
 
     // Handle bulk text entry
     const handleSaveTextArea = () => {
@@ -52,6 +63,7 @@ const MultiTaskInput = ({ onSave }) => {
         const newTasks = [...tasks, { taskName: newTask, estimate: newEstimate }];
         setTasks(newTasks);
         onSave(newTasks);
+        updateTotalEstimate(newTasks);
 
         setNewTask("");
         setNewEstimate("");
@@ -108,6 +120,7 @@ const MultiTaskInput = ({ onSave }) => {
         updatedTasks[index][key] = value;
         setTasks(updatedTasks);
         onSave(updatedTasks);
+        updateTotalEstimate(updatedTasks);
     };
 
     const handleDelete = (index) => {
@@ -129,6 +142,19 @@ const MultiTaskInput = ({ onSave }) => {
         onSave([]);
         setShowEdit(true);
     };
+
+    const splitEstimate = (total) => {
+        if (!tasks.length || isNaN(total)) return;
+        const estimatePerTask = total / tasks.length;
+        const updatedTasks = tasks.map(task => ({
+            ...task,
+            estimate: estimatePerTask.toFixed(2),
+        }));
+        setTasks(updatedTasks);
+        onSave(updatedTasks);
+        setTotalEstimate(total.toFixed(2));
+    };
+
 
     const BackButton = ({ onClick }) => (
         <Button
@@ -191,7 +217,35 @@ const MultiTaskInput = ({ onSave }) => {
                         {tasks.length !== 0 && (
                             <>
                                 <Box className="taskCount">
-                                    <Typography className="taskCountTypo" variant="body">Count: {tasks?.length}</Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'end', gap: '10px' }}>
+                                        <Typography className="taskCountTypo" variant="body">Count: {tasks?.length}</Typography>
+                                        <Box>
+                                            <Typography
+                                                variant="subtitle1"
+                                                className="form-label"
+                                                htmlFor="taskName"
+                                            >
+                                                Estimate Total
+                                            </Typography>
+                                            <TextField
+                                                variant="outlined"
+                                                size="small"
+                                                type="number"
+                                                placeholder="Enter Total est..."
+                                                className="textfieldsClass"
+                                                sx={{ maxWidth: '150px' }}
+                                                onChange={(e) => setTotalEstimate(e.target.value)}
+                                                value={totalEstimate}
+                                                onBlur={(e) => {
+                                                    const val = parseFloat(e.target.value);
+                                                    if (!isNaN(val)) {
+                                                        splitEstimate(val);
+                                                    }
+                                                }}
+                                                onKeyPress={handleEstimateKeyPress}
+                                            />
+                                        </Box>
+                                    </Box>
                                     <BackButton onClick={handleBack} />
                                 </Box>
                                 <TableContainer component={Paper} sx={{
