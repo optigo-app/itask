@@ -77,7 +77,7 @@ const CustomDateTimePicker = ({
             </Typography>
             <DateTimePicker
                 name={name}
-                value={value ? dayjs(value) : null}
+                value={value ? value : null}
                 onChange={onChange}
                 ampm={true}
                 format="DD/MM/YYYY hh:mm A"

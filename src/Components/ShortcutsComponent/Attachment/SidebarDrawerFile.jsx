@@ -203,7 +203,7 @@ const SidebarDrawerFile = ({ open, onClose }) => {
       <Box className="filedrawerMainBox">
         <Box className="drawer-header">
           <Typography variant="h6" className="drawer-title">Attachment</Typography>
-          <IconButton onClick={onClose}><CircleX /></IconButton>
+          <IconButton onClick={handleClear}><CircleX /></IconButton>
         </Box>
 
         <div style={{ margin: "10px 0", border: "1px dashed #7d7f85", opacity: 0.3 }} />

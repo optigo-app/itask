@@ -27,6 +27,7 @@ import pdfIcon from '../../../Assests/pdf.png';
 import sheetIcon from '../../../Assests/xls.png';
 import Document from '../../../Assests/document.png'
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
+import DocsViewerModal from "../../DocumentViewer/DocsViewerModal";
 
 const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
     console.log('Loading: ', Loading);
@@ -34,6 +35,8 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
     const [expanded, setExpanded] = useState(null);
     const [selectedFolder, setSelectedFolder] = useState("");
     const [reffData, setReffData] = useState([]);
+    const [fileUrl, setFileUrl] = useState(null);
+    const [viewerOpen, setViewerOpen] = useState(false);
     const groupedByProjectId = refferenceData.reduce((acc, item) => {
         const { projectid } = item;
         if (!acc[projectid]) {
@@ -42,6 +45,11 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
         acc[projectid].push(item);
         return acc;
     }, {});
+
+    const handlePreviewClick = (url) => {
+        setFileUrl(url);
+        setViewerOpen(true);
+    };
 
     useEffect(() => {
         const filteredProjectData = groupedByProjectId[decodedData?.projectid];
@@ -195,7 +203,7 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
                                                                 <Grid container spacing={2} className="collapse-grid">
                                                                     {/* DocumentName Files */}
                                                                     {item?.DocumentName?.map((doc, docIndex) => (
-                                                                        <Grid item xs={12} sm={6} md={3} key={`docname-${docIndex}`}>
+                                                                        <Grid item xs={12} sm={4} md={2} key={`docname-${docIndex}`}>
                                                                             <Card
                                                                                 sx={{
                                                                                     borderRadius: 2,
@@ -203,6 +211,7 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
                                                                                     overflow: 'hidden',
                                                                                     backgroundColor: '#fff',
                                                                                 }}
+                                                                                onClick={() => handlePreviewClick(doc.url)}
                                                                             >
                                                                                 <Box
                                                                                     sx={{
@@ -263,7 +272,7 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
 
                                                                     {/* Document URLs */}
                                                                     {item?.DocumentUrl?.map((doc, docIndex) => (
-                                                                        <Grid item xs={12} sm={6} md={3} key={`docurl-${docIndex}`}>
+                                                                        <Grid item xs={12} sm={4} md={2} key={`docurl-${docIndex}`}>
                                                                             <Card
                                                                                 sx={{
                                                                                     borderRadius: 2,
@@ -326,6 +335,11 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
                     )}
                 </>
             }
+            <DocsViewerModal
+                url={fileUrl}
+                modalOpen={viewerOpen}
+                closeModal={() => setViewerOpen(false)}
+            />
         </div>
     );
 };
