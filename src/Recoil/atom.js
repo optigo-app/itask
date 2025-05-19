@@ -5,6 +5,11 @@ export const userRoleAtom = atom({
   default: null, // e.g., 'admin', 'team_lead', 'user'
 });
 
+export const webReload = atom({
+  key: "webReload",
+  default: false,
+});
+
 export const TaskData = atom({
   key: 'TaskData',
   default: []

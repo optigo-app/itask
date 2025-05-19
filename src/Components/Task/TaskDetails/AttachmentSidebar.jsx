@@ -36,7 +36,7 @@ const AttachmentSidebar = ({ uploadedFile, isAtttLoading }) => {
                             >
                                 {Object.keys(uploadedFile.attachment || {}).map((folder) => (
                                     <ToggleButton className="toggle-button" key={folder} value={folder}>
-                                        {folder}
+                                       <span className="toggle-label">{folder}</span>
                                     </ToggleButton>
                                 ))}
                             </ToggleButtonGroup>

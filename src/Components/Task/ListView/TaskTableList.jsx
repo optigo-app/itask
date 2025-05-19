@@ -37,6 +37,7 @@ import useAccess from "../../Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
 
 const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, totalPages, handleChangePage, handleRequestSort, handleTaskFavorite, handleStatusChange, handleAssigneeShortcutSubmit, isLoading }) => {
+    console.log('data: ', data);
     const { hasAccess } = useAccess();
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
@@ -193,7 +194,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
 
             if (!isCurrentlyExpanded) {
                 setTimeout(() => {
-                    setOpenChildTask(true);
+                    // setOpenChildTask(true);
                     setSelectedTask(task);
                 }, 0);
             } else {
@@ -397,7 +398,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                             </IconButton>
                         </div>
                         <div>
-                            <div style={{ display: 'flex', gap: '10px', alignItems: 'start', cursor:'pointer' }}  onClick={() => toggleSubtasks(task.taskid, task)}>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'start', cursor: 'pointer' }} onClick={() => toggleSubtasks(task.taskid, task)}>
                                 <span style={{ flex: 1 }}>
                                     {task?.taskname?.length > 35
                                         ? `${task?.taskname?.slice(0, 35)}...`

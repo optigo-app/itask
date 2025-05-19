@@ -7,10 +7,8 @@ import {
     Button,
     AvatarGroup,
     Tooltip,
-    ToggleButtonGroup,
-    ToggleButton,
 } from '@mui/material';
-import { CircleX, Download } from 'lucide-react';
+import { CircleX } from 'lucide-react';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import './TaskDetails.scss';
@@ -20,19 +18,18 @@ import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
-import AttachmentImg from "../../../Assests/Attachment.webp";
 import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments } from '../../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
 import CommentSection from '../../ShortcutsComponent/Comment/TaskComment';
 import SubtaskCard from './SubTaskcard';
-import AttachmentGrid from '../../ShortcutsComponent/AttachmentGrid';
 import { TaskDescription } from '../../ShortcutsComponent/TaskDescription';
 import { getAttachmentApi } from '../../../Api/UploadApi/GetAttachmentApi';
 import AttachmentSidebar from './AttachmentSidebar';
 
 const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
+    console.log('taskData: ', taskData);
     const theme = useTheme();
     const [isLoading, setIsLoading] = useState(
         {
@@ -134,10 +131,11 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
         setUploadedFile([]);
     }
 
-    const toggleFullScreen = () => setIsFullScreen(!isFullScreen);
     const handleTabChange = (event, newValue) => setActiveTab(newValue);
 
     useEffect(() => {
+        const assigneesMaster = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"))
+        console.log('assigneesMaster: ', assigneesMaster);
         const fetchTaskDesc = async () => {
             try {
                 const taskdesc = await taskDescGetApi(taskData);
@@ -149,8 +147,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                 if (taskComment) {
                     const commentsWithAttachments = taskComment.rd.map(comment => ({
                         ...comment,
-                        user: { name: 'John Doe', avatar: null },
-                        attachments: dummyAttachments.slice(0, Math.floor(Math.random() * 3))
+                        assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid),
                     }));
                     setComments(commentsWithAttachments);
                 }
@@ -369,7 +366,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         <Typography className="tasklable">Assignees</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                        <AvatarGroup max={10}
+                                        {/* <AvatarGroup max={10}
                                             spacing={2}
                                             sx={{
                                                 flexDirection: 'row',
@@ -402,6 +399,47 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                         sx={{
                                                             backgroundColor: background(assignee),
                                                         }}
+                                                    >
+                                                        {!assignee.avatar && assignee?.firstname?.charAt(0)}
+                                                    </Avatar>
+                                                </Tooltip>
+                                            ))}
+                                        </AvatarGroup> */}
+                                        <AvatarGroup
+                                            max={10}
+                                            spacing={2}
+                                            sx={{
+                                                justifyContent: 'start !important',
+                                                '& .MuiAvatar-root': {
+                                                    width: 30,
+                                                    height: 30,
+                                                    fontSize: '0.8rem',
+                                                    cursor: 'pointer',
+                                                    border: 'none',
+                                                    transition: 'transform 0.3s ease-in-out',
+                                                    '&:hover': {
+                                                        transform: 'scale(1.2)',
+                                                        zIndex: 10,
+                                                    },
+                                                },
+                                            }}
+                                        >
+                                            {taskData?.assignee?.map((assignee, teamIdx) => (
+                                                <Tooltip
+                                                    placement="top"
+                                                    key={assignee?.id}
+                                                    title={`${assignee?.firstname} ${assignee?.lastname}`}
+                                                    arrow
+                                                    classes={{ tooltip: 'custom-tooltip' }}
+                                                >
+                                                    <Avatar
+                                                        key={teamIdx}
+                                                        alt={`${assignee?.firstname} ${assignee?.lastname}`}
+                                                        src={ImageUrl(assignee) || null}
+                                                        sx={{
+                                                            backgroundColor: background(assignee),
+                                                        }}
+                                                    // onClick={() => hanldePAvatarClick(assignees, assignee?.id)}
                                                     >
                                                         {!assignee.avatar && assignee?.firstname?.charAt(0)}
                                                     </Avatar>

@@ -151,9 +151,13 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   };
 
   const handleSave = async () => {
-    const attachments = Object.entries(uploadedFile?.attachment)?.map(([folderName, files]) => {
-      const fileUrls = files.map(f => f.url).join(',');
-      const urlList = (uploadedFile.url[folderName] || []).join(',');
+    const allFolders = new Set([
+      ...Object.keys(uploadedFile?.attachment || {}),
+      ...Object.keys(uploadedFile?.url || {}),
+    ]);
+    const attachments = Array.from(allFolders).map((folderName) => {
+      const fileUrls = (uploadedFile?.attachment?.[folderName] || []).map(f => f.url).join(',');
+      const urlList = (uploadedFile?.url?.[folderName] || []).join(',');
       return {
         folderName,
         documents: [
@@ -164,12 +168,14 @@ const SidebarDrawerFile = ({ open, onClose }) => {
         ]
       };
     });
-    const uploadRes = await filesUploadSaveApi(attachments, selectedRow?.taskid)
-    if (uploadRes?.rd[0]?.stat == 1) {
+    const uploadRes = await filesUploadSaveApi(attachments, selectedRow?.taskid);
+    if (uploadRes?.rd?.[0]?.stat == 1) {
       toast.success("Attachment saved successfully");
     }
+  
     handleClear();
   };
+  
 
   const handleClear = () => {
     setFormValues({
