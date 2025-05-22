@@ -214,16 +214,14 @@ const Header = ({ avatarSrc = "" }) => {
         title === `${decodedData?.project}`;
 
     const handleback = () => {
-        if (isDecodedTitle) {
-            navigate("/projects");
-        } else {
+        if (isDecodedTitle || isDecodedProjectTitle) {
             navigate("/projects");
         }
     };
 
     const handleRedirection = (value) => {
         let urlData = {
-            project: decodedData.project,
+            project: decodedData?.project,
             projectid: decodedData?.projectid,
             module: decodedData?.module,
             taskid: decodedData?.taskid,
@@ -526,13 +524,13 @@ const Header = ({ avatarSrc = "" }) => {
 
                 {/* Logout Button */}
                 <Box textAlign="center" p={1.5}>
-                <Button
+                    <Button
                         size="small"
                         className="buttonClassname"
                         onClick={() => hableReload()}
                         variant="contained"
                         fullWidth
-                        sx={{marginBottom: "10px"}}
+                        sx={{ marginBottom: "10px" }}
                     >
                         Reload
                     </Button>
