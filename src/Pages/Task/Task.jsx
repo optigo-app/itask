@@ -260,7 +260,6 @@ const Task = () => {
             subtasks: filteredSubtasks,
           };
         }
-
         return null;
       };
 

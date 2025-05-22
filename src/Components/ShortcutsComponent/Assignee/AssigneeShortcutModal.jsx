@@ -4,14 +4,10 @@ import {
     Box,
     Typography,
     Button,
-    MenuItem,
-    TextField,
     Grid,
     IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { commonSelectProps, commonTextFieldProps } from "../../../Utils/globalfun";
-import MultiSelectChipWithLimit from "../AssigneeAutocomplete";
 import DepartmentAssigneeAutocomplete from "./DepartmentAssigneeAutocomplete";
 
 const modalStyle = (theme) => ({
@@ -33,9 +29,16 @@ const modalStyle = (theme) => ({
 
 
 const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit }) => {
-    const [assigneeMaster, setAssigneeMaster] = useState([]);
+    const [taskAssigneeData, setTaskAssigneeData] = useState([]);
+    const [taskDepartment, setTaskDepartment] = useState([]);
     const [formValues, setFormValues] = React.useState({});
 
+    useEffect(() => {
+        const assigneeMaster = JSON?.parse(sessionStorage.getItem("taskAssigneeData"));
+        const departmentMaster = JSON?.parse(sessionStorage.getItem("taskDepartments"));
+        setTaskAssigneeData(assigneeMaster);
+        setTaskDepartment(departmentMaster);
+    }, [])
     useEffect(() => {
         const data = {
             guests: taskData?.assignee,
@@ -45,10 +48,6 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
     }, [taskData])
 
 
-    useEffect(() => {
-        const assigneeMaster = JSON?.parse(sessionStorage.getItem("taskAssigneeData"));
-        setAssigneeMaster(assigneeMaster);
-    }, [])
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -68,6 +67,11 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
         handleAssigneSubmit(updatedRowData);
         onClose();
     };
+
+    // departmentwise assignee
+    const departmentId = formValues?.department;
+    const departmentName = taskDepartment?.find(dept => dept.id == departmentId)?.labelname;
+    const filterAssigneeData = departmentName ? taskAssigneeData?.filter((item) => item.department == departmentName) : taskAssigneeData;
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -92,9 +96,9 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
                         <Box className="form-group">
                             <DepartmentAssigneeAutocomplete
                                 value={formValues?.guests}
-                                options={assigneeMaster}
+                                options={filterAssigneeData}
                                 label="Assign To"
-                                placeholder="Select assignees"
+                                placeholder="Select assignee"
                                 limitTags={2}
                                 onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
                             />
