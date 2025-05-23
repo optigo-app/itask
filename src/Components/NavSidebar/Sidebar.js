@@ -210,9 +210,6 @@ const Sidebar = () => {
                                 </Box>
                             </ListItemButton>
                         </ListItem>
-                        {/* <Typography sx={{ paddingInline: isDrawerOpen ? '22px' : "15px" }} variant={isDrawerOpen ? "body1" : "caption"} className="itask_drawerText">
-                            {taskInit?.companycode}
-                        </Typography> */}
                         <Chip
                             label={taskInit?.companycode || '--'}
                             size={isDrawerOpen ? 'medium' : 'small'}

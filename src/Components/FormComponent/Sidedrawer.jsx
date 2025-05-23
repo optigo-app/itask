@@ -91,8 +91,9 @@ const SidebarDrawer = ({
     };
 
     useEffect(() => {
+        const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
-        const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id));
+        const matchedAssignees = formDataValue?.assigneids ? taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id)) : [logedAssignee];
         if (open && (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "root")) {
             setFormValues({
                 taskName: formDataValue?.taskname ?? "",
@@ -100,7 +101,7 @@ const SidebarDrawer = ({
                 bulkTask: formDataValue?.bulk ?? [],
                 dueDate: cleanDate(formDataValue?.DeadLineDate) ?? null,
                 department: formDataValue?.department != 0 ? formDataValue?.department : "",
-                guests: matchedAssignees ?? [],
+                guests: matchedAssignees  ?? [],
                 projectLead: formDataValue?.projectLead ?? "",
                 assignee: formDataValue?.assigneids ?? "",
                 status: formDataValue?.statusid ?? "",
@@ -117,6 +118,11 @@ const SidebarDrawer = ({
                 estimate_hrs: formDataValue.estimate_hrs ?? 0,
                 estimate1_hrs: formDataValue.estimate1_hrs ?? 0,
                 estimate2_hrs: formDataValue.estimate2_hrs ?? 0,
+            });
+        }else if(rootSubrootflagval?.Task === "subroot"){
+            setFormValues({
+                ...formValues,
+                guests: matchedAssignees  ?? [],
             });
         }
     }, [open, formDataValue, rootSubrootflagval]);

@@ -6,7 +6,6 @@ import { formatDate3, getRandomAvatarColor, ImageUrl } from "../../../Utils/glob
 import './style.scss';
 
 const CommentCard = ({ comment }) => {
-    console.log('comment: ', comment);
     const background = (assignee) => {
         const avatarBackgroundColor = assignee?.avatar
             ? "transparent"

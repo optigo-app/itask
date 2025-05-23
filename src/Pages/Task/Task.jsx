@@ -1,12 +1,11 @@
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import "./Task.scss";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, useMediaQuery } from "@mui/material";
-import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { Advfilters, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength } from "../../Recoil/atom";
-import { formatDate2, mapTaskLabels } from "../../Utils/globalfun";
+import { formatDate2 } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
@@ -35,13 +34,9 @@ const Task = () => {
   const [filters, setFilters] = useRecoilState(Advfilters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
-  console.log('tasks: ', tasks);
   const setTaskDataLength = useSetRecoilState(taskLength)
   const selectedRow = useRecoilValue(selectedRowData);
-  console.log('selectedRow: ', selectedRow);
   const encodedData = searchParams.get("data");
-  const now = new Date();
-  const hasFetchedTask = useRef(false);
   const {
     iswhMLoading,
     iswhTLoading,
@@ -52,10 +47,11 @@ const Task = () => {
     priorityData,
     statusData,
     taskAssigneeData } = useFullTaskFormatFile();
-  console.log('taskFinalData: ', taskFinalData);
 
   useEffect(() => {
-    setTasks([]);
+    if (!location?.pathname?.includes("/task")) {
+      setTasks([]);
+    }
   }, [location]);
 
   useEffect(() => {
@@ -70,7 +66,6 @@ const Task = () => {
         parsedData = null;
       }
     }
-    console.log('parsedData: ', parsedData);
     const matchedTask = taskFinalData?.TaskData?.find(
       (task) => task.taskid === parsedData?.taskid
     );

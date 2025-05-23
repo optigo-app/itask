@@ -18,9 +18,7 @@ const getProgressColor = (progress) => {
 };
 
 const MilestoneTimeline = ({ milestoneData, decodedData }) => {
-    console.log('decodedData: ', decodedData);
     const filteredMileStone = milestoneData[decodedData.projectid] ?? [];
-    console.log('filteredMileStone: ', filteredMileStone);
 
     const sortedMilestones = filteredMileStone?.sort((a, b) => {
         if (a.progress_per === 100) return -1;
@@ -29,7 +27,6 @@ const MilestoneTimeline = ({ milestoneData, decodedData }) => {
         if (b.progress_per === 0) return -1;
         return b.progress_per - a.progress_per;
     });
-    console.log('sortedMilestones: ', sortedMilestones);
     return (
         <Box className="milestone-container">
             {sortedMilestones?.length <= 0 ? (

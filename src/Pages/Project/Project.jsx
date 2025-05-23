@@ -38,7 +38,6 @@ const Project = () => {
   const [masterData, setMasterData] = useRecoilState(masterDataValue);
   const [activeButton, setActiveButton] = useState("table");
   const [project, setProject] = useRecoilState(projectDatasRState);
-  console.log('project: ', project);
   const [filters, setFilters] = useRecoilState(Advfilters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [callFetchTaskApi, setCallFetchTaskApi] = useRecoilState(fetchlistApiCall);
@@ -56,7 +55,9 @@ const Project = () => {
     taskAssigneeData } = useFullTaskFormatFile();
 
   useEffect(() => {
-    setProject([])
+    if (!location?.pathname?.includes("/projects")) {
+      setProject([])
+    }
   }, [location])
 
   useEffect(() => {

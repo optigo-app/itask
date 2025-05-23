@@ -12,8 +12,9 @@ const EstimateInput = ({ value, onChange }) => {
 
     const handleInputChange = (e) => {
         const newValue = e.target.value;
-        if (!/^\d*\.?\d{0,2}$/.test(newValue)) return;
+        if (!/^\d{0,2}(\.\d{0,2})?$/.test(newValue)) return;
         setInputValue(newValue);
+    
         const numericValue = parseFloat(newValue);
         if (!isNaN(numericValue) && numericValue > 0) {
             onChange(numericValue);
@@ -21,6 +22,7 @@ const EstimateInput = ({ value, onChange }) => {
             onChange("");
         }
     };
+    
 
     return (
         <Box>
