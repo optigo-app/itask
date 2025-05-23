@@ -69,9 +69,10 @@ export default function DepartmentAssigneeAutocomplete({
                 renderTags={(value, getTagProps) =>
                     value.map((option, index) => {
                         const imageSrc = ImageUrl(option);
+                        const { key, ...tagProps } = getTagProps({ index });
                         return (
                             <Chip
-                                key={option.id}
+                                key={key}
                                 avatar={
                                     imageSrc ? (
                                         <Avatar src={imageSrc} alt={option.firstname} />
@@ -99,6 +100,7 @@ export default function DepartmentAssigneeAutocomplete({
                                         {option.firstname + " " + option.lastname}
                                     </Box>
                                 }
+                                {...tagProps}
                                 sx={{ borderRadius: "8px", fontSize: "14px", textTransform: "capitalize", mr: 0.5, }}
                                 {...commonTextFieldProps}
                             />

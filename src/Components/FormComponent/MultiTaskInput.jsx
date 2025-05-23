@@ -12,7 +12,6 @@ const MultiTaskInput = ({ onSave }) => {
     const [text, setText] = useState("");
     const [newTask, setNewTask] = useState("");
     const [newEstimate, setNewEstimate] = useState("");
-    console.log('newEstimate: ', newEstimate);
     const [errorMessage, setErrorMessage] = useState("");
     const inputRef = useRef(null);
     const estimateRefs = useRef([]);
@@ -230,20 +229,44 @@ const MultiTaskInput = ({ onSave }) => {
                                             <TextField
                                                 variant="outlined"
                                                 size="small"
-                                                type="number"
+                                                type="text"
                                                 placeholder="Enter Total est..."
                                                 className="textfieldsClass"
                                                 sx={{ maxWidth: '150px' }}
-                                                onChange={(e) => setTotalEstimate(e.target.value)}
                                                 value={totalEstimate}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    if (/^\d{0,2}(\.\d{0,2})?$/.test(value)) {
+                                                        setTotalEstimate(value);
+                                                    }
+                                                }}
                                                 onBlur={(e) => {
                                                     const val = parseFloat(e.target.value);
                                                     if (!isNaN(val)) {
                                                         splitEstimate(val);
                                                     }
                                                 }}
-                                                onKeyPress={handleEstimateKeyPress}
+                                                onKeyPress={(e) => {
+                                                    const char = e.key;
+                                                    const currentValue = totalEstimate || "";
+                                                    if (['-', '+', 'e'].includes(char)) {
+                                                        e.preventDefault();
+                                                    }
+                                                    if (char === '.' && currentValue.includes('.')) {
+                                                        e.preventDefault();
+                                                    }
+                                                    const [beforeDecimal, afterDecimal = ""] = currentValue.split('.');
+                                                    const cursorAtDecimal = currentValue.includes('.') && e.target.selectionStart > currentValue.indexOf('.');
+                                                    if (!currentValue.includes('.') && beforeDecimal.length >= 2 && char !== '.') {
+                                                        e.preventDefault();
+                                                    }
+                                                    if (cursorAtDecimal && afterDecimal.length >= 2) {
+                                                        e.preventDefault();
+                                                    }
+                                                    handleEstimateKeyPress(e);
+                                                }}
                                             />
+
                                         </Box>
                                     </Box>
                                     <BackButton onClick={handleBack} />
@@ -281,23 +304,37 @@ const MultiTaskInput = ({ onSave }) => {
 
                                                         <TableCell sx={{ width: "20%" }}>
                                                             <TextField
-                                                                type="number"
+                                                                type="text"
                                                                 size="small"
                                                                 fullWidth
                                                                 value={task.estimate}
                                                                 onChange={(e) => {
                                                                     const value = e.target.value;
-                                                                    if (/^\d*\.?\d*$/.test(value)) {
+                                                                    if (/^\d{0,2}(\.\d{0,2})?$/.test(value)) {
                                                                         handleTaskChange(index, "estimate", value);
                                                                     }
                                                                 }}
                                                                 onKeyPress={(e) => {
-                                                                    if (['-', '+', 'e'].includes(e.key)) {
+                                                                    const char = e.key;
+                                                                    const currentValue = task.estimate || "";
+                                                                    if (['-', '+', 'e'].includes(char)) {
                                                                         e.preventDefault();
                                                                     }
-                                                                    if (e.key === '.' && task.estimate.includes('.')) {
+                                                                    if (char === '.' && currentValue.includes('.')) {
                                                                         e.preventDefault();
                                                                     }
+
+                                                                    const [beforeDecimal, afterDecimal = ""] = currentValue.split('.');
+                                                                    const cursorAtDecimal = currentValue.includes('.') && e.target.selectionStart > currentValue.indexOf('.');
+
+                                                                    if (!currentValue.includes('.') && beforeDecimal.length >= 2 && char !== '.') {
+                                                                        e.preventDefault();
+                                                                    }
+
+                                                                    if (cursorAtDecimal && afterDecimal.length >= 2) {
+                                                                        e.preventDefault();
+                                                                    }
+
                                                                     handleEstimateKeyPress(e, index);
                                                                 }}
                                                                 inputRef={(el) => estimateRefs.current[index] = el}
@@ -346,28 +383,39 @@ const MultiTaskInput = ({ onSave }) => {
                                                 </TableCell>
                                                 <TableCell>
                                                     <TextField
-                                                        type="number"
+                                                        type="text"
                                                         size="small"
                                                         fullWidth
                                                         placeholder="Estimate"
                                                         value={newEstimate}
                                                         onChange={(e) => {
                                                             const value = e.target.value;
-                                                            if (/^\d*\.?\d*$/.test(value)) {
+                                                            if (/^\d{0,2}(\.\d{0,2})?$/.test(value)) {
                                                                 setNewEstimate(value);
                                                             }
                                                         }}
                                                         onKeyPress={(e) => {
-                                                            if (['-', '+', 'e'].includes(e.key)) {
+                                                            const char = e.key;
+                                                            const currentValue = newEstimate || "";
+                                                            if (['-', '+', 'e'].includes(char)) {
                                                                 e.preventDefault();
                                                             }
-                                                            if (e.key === '.' && newEstimate.includes('.')) {
+                                                            if (char === '.' && currentValue.includes('.')) {
+                                                                e.preventDefault();
+                                                            }
+                                                            const [beforeDecimal, afterDecimal = ""] = currentValue.split('.');
+                                                            const cursorAtDecimal = currentValue.includes('.') && e.target.selectionStart > currentValue.indexOf('.');
+                                                            if (!currentValue.includes('.') && beforeDecimal.length >= 2 && char !== '.') {
+                                                                e.preventDefault();
+                                                            }
+                                                            if (cursorAtDecimal && afterDecimal.length >= 2) {
                                                                 e.preventDefault();
                                                             }
                                                             handleKeyPress(e);
                                                         }}
                                                         className="textfieldsClass"
                                                     />
+
                                                 </TableCell>
                                                 <TableCell sx={{ textAlign: "center" }}>
                                                     <IconButton onClick={addNewTask}

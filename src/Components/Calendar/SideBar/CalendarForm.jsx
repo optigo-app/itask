@@ -38,7 +38,6 @@ const CalendarForm = ({
     const location = useLocation();
     const view = "meeting";
     const [CalformDataValue, setCalFormDataValue] = useRecoilState(CalformData);
-    console.log('CalformDataValue: ', CalformDataValue);
     const isDelete = Boolean(CalformDataValue?.id || CalformDataValue?.taskid);
     const [prModuleMaster, setPrModuleMaster] = useState([]);
     const [assignees, setAssignees] = useState([]);

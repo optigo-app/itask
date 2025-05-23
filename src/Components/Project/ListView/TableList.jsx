@@ -30,9 +30,11 @@ import { useNavigate } from "react-router-dom";
 import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawerFile";
 import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
+import useAccess from "../../Auth/Role/useAccess";
+import { PERMISSIONS } from "../../Auth/Role/permissions";
 
 const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit }) => {
-    console.log('isLoading: ', isLoading);
+    const { hasAccess } = useAccess();
     const navigate = useNavigate();
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("projectName");
@@ -225,7 +227,6 @@ const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage,
     const currentData =
         sortedData?.slice((page - 1) * rowsPerPage, page * rowsPerPage) || [];
 
-    console.log('currentData: ', currentData);
     const handleNavigate = (task) => {
         let urlData = {
             module: task?.taskname,
@@ -273,11 +274,13 @@ const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage,
     const renderTaskButtons = (task) => {
         return (
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <LockButton
-                    isLocked={task?.isFreez === 1}
-                    onClick={() => handleOpenCnfDialog(task)}
-                    id={task?.taskid}
-                />
+                {hasAccess(PERMISSIONS.canLockPrModule) &&
+                    <LockButton
+                        isLocked={task?.isFreez === 1}
+                        onClick={() => handleOpenCnfDialog(task)}
+                        id={task?.taskid}
+                    />
+                }
                 <IconButton
                     aria-label="View Module button"
                     onClick={() => handleOpenFileDrawer(task, { Task: "root" })}
@@ -316,22 +319,24 @@ const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage,
                         className="iconbtn"
                     />
                 </IconButton>
-                <IconButton
-                    aria-label="Delete Task button"
-                    disabled={task?.isFreez === 1}
-                    onClick={() => handleDeleteProject(task, { Task: "sub" })}
-                    sx={{
-                        '&.Mui-disabled': {
-                            color: 'rgba(0, 0, 0, 0.26)',
-                        },
-                    }}
-                >
-                    <Trash
-                        size={20}
-                        color={task?.isFreez === 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                        className="iconbtn"
-                    />
-                </IconButton>
+                {hasAccess(PERMISSIONS.canPrModuleDelete) &&
+                    <IconButton
+                        aria-label="Delete Task button"
+                        disabled={task?.isFreez === 1}
+                        onClick={() => handleDeleteProject(task, { Task: "sub" })}
+                        sx={{
+                            '&.Mui-disabled': {
+                                color: 'rgba(0, 0, 0, 0.26)',
+                            },
+                        }}
+                    >
+                        <Trash
+                            size={20}
+                            color={task?.isFreez === 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                            className="iconbtn"
+                        />
+                    </IconButton>
+                }
             </Box>
         );
     };

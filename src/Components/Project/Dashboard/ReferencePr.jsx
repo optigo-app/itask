@@ -30,8 +30,6 @@ import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import DocsViewerModal from "../../DocumentViewer/DocsViewerModal";
 
 const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
-    console.log('Loading: ', Loading);
-    console.log('refferenceData: ', refferenceData);
     const [expanded, setExpanded] = useState(null);
     const [selectedFolder, setSelectedFolder] = useState("");
     const [reffData, setReffData] = useState([]);

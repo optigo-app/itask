@@ -29,7 +29,6 @@ import { getAttachmentApi } from '../../../Api/UploadApi/GetAttachmentApi';
 import AttachmentSidebar from './AttachmentSidebar';
 
 const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
-    console.log('taskData: ', taskData);
     const theme = useTheme();
     const [isLoading, setIsLoading] = useState(
         {
@@ -135,7 +134,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
 
     useEffect(() => {
         const assigneesMaster = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"))
-        console.log('assigneesMaster: ', assigneesMaster);
         const fetchTaskDesc = async () => {
             try {
                 const taskdesc = await taskDescGetApi(taskData);

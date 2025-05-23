@@ -40,6 +40,8 @@ import "./Styles.scss";
 import TaskTimeTrackerComp from "../../ShortcutsComponent/TimerComponent/TaskTimeTrackerComp";
 import ScrollableCategoryTabs from "./ScrollableCategoryTabs";
 import { isMediumScreen, isSmallScreen } from "../../../Utils/globalfun";
+import { PERMISSIONS } from "../../Auth/Role/permissions";
+import useAccess from "../../Auth/Role/useAccess";
 
 const HeaderButtons = ({
   searchTerm,
@@ -55,6 +57,7 @@ const HeaderButtons = ({
   taskDepartment,
   taskAssigneeData,
 }) => {
+  const { hasAccess } = useAccess();
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const isSmallScreen = useMediaQuery("(max-width:600px)");
   const isMediumScreen = useMediaQuery("(min-width:601px) and (max-width:960px)");
@@ -303,14 +306,16 @@ const HeaderButtons = ({
           )}
           {location?.pathname?.includes("/projects") && (
             <Box sx={{ display: "flex", justifyContent: "end" }}>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                className="buttonClassname"
-                onClick={handleDrawerToggle}
-              >
-                New
-              </Button>
+              {hasAccess(PERMISSIONS.canLockPrModule) &&
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  className="buttonClassname"
+                  onClick={handleDrawerToggle}
+                >
+                  New
+                </Button>
+              }
             </Box>
           )}
         </Box>

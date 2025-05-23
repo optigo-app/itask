@@ -161,7 +161,6 @@ const AppWrapper = () => {
         return decodedPayload;
     };
 
-    console.log('reload: ', reload);
     useEffect(() => {
         debugger
         const masterFuncCall = async () => {
@@ -247,7 +246,7 @@ const AppWrapper = () => {
                             element={
                                 <Layout>
                                     <Routes>
-                                        <Route path="/" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1001"><Home /></ProtectedRoute>} />
+                                        <Route path="/" element={<Home />} />
                                         <Route path="/projects" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1003"><Project /></ProtectedRoute>} />
                                         <Route path="/projects/Dashboard" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1003"><ProjectDashboard /></ProtectedRoute>} />
                                         <Route path="/tasks/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><Task /></ProtectedRoute>} />
