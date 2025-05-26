@@ -128,7 +128,7 @@ const MeetingCard = ({
                   alt={participant?.firstname + " " + participant?.lastname}
                   src={ImageUrl(participant) || null}
                   sx={{
-                    backgroundColor: background(participant),
+                    backgroundColor: background(`${participant?.firstname + " " + participant?.lastname}`),
                   }}
                   onClick={() => hanldePAvatarClick(meeting?.guests, meeting?.id)}
                 >

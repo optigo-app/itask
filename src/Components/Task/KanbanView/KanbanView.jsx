@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Box, Card, CardContent, Typography, IconButton, Avatar, AvatarGroup, Button, Tooltip } from "@mui/material";
 import { Circle, CircleCheck, CircleDotDashed, CirclePlus, CircleX, Plus, StickyNote, Target, Volleyball, Workflow } from "lucide-react";
-import { formatDate, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors } from "../../../Utils/globalfun";
+import { cleanDate, formatDate, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors } from "../../../Utils/globalfun";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi"
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
@@ -307,7 +307,9 @@ function KanbanView({
                                           {task.taskname}
                                         </Typography>
                                         <Typography variant="caption" sx={{ lineHeight: 1.4 }}>
-                                          {formatDate2(task.DeadLineDate)}
+                                          {task?.DeadLineDate && cleanDate(task?.DeadLineDate)
+                                            ? formatDate2(cleanDate(task?.DeadLineDate))
+                                            : '-'}
                                         </Typography>
                                       </Box>
                                     </Box>

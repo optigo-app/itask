@@ -500,12 +500,12 @@ const MeetingPage = () => {
     setMeetingDetailModalOpen(true);
   };
 
-  const background = (team) => {
-    const avatarBackgroundColor = team?.empphoto
-      ? "transparent"
-      : getRandomAvatarColor(team?.firstname);
+  const background = (assignee) => {
+    const avatarBackgroundColor = assignee?.avatar
+        ? "transparent"
+        : getRandomAvatarColor(assignee);
     return avatarBackgroundColor;
-  };
+};
 
   const StatusCircles = (meeting, { redCount, yellowCount, greenCount }) => {
     const circleStyle = {

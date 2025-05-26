@@ -42,6 +42,7 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
     useEffect(() => {
         const data = {
             guests: taskData?.assignee,
+            department: taskData?.department || "",
         }
         setFormValues(data);
 
@@ -68,11 +69,6 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
         onClose();
     };
 
-    // departmentwise assignee
-    const departmentId = formValues?.department;
-    const departmentName = taskDepartment?.find(dept => dept.id == departmentId)?.labelname;
-    const filterAssigneeData = departmentName ? taskAssigneeData?.filter((item) => item.department == departmentName) : taskAssigneeData;
-
     return (
         <Modal open={open} onClose={onClose}>
             <Box sx={theme => modalStyle(theme)}>
@@ -96,7 +92,7 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
                         <Box className="form-group">
                             <DepartmentAssigneeAutocomplete
                                 value={formValues?.guests}
-                                options={filterAssigneeData}
+                                options={taskAssigneeData}
                                 label="Assign To"
                                 placeholder="Select assignee"
                                 limitTags={2}

@@ -30,8 +30,23 @@ const tabData = [
   { id: 2, value: "url", label: "URL", icon: <Link size={18} /> },
 ];
 
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
+const ALLOWED_TYPES = [
+  'image/',
+  'image/svg+xml',
+  'image/webp',
+  'application/pdf',
+  'text/plain',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'video/',
+];
+
 const SidebarDrawerFile = ({ open, onClose }) => {
   const selectedRow = useRecoilValue(selectedRowData);
+  console.log('selectedRow: ', selectedRow);
   const [selectedTab, setSelectedTab] = useState(tabData[0].value);
   const [uploading, setUploading] = useState(false);
   const [formValues, setFormValues] = useState({ folderName: '', url: '', attachment: {} });
@@ -74,37 +89,44 @@ const SidebarDrawerFile = ({ open, onClose }) => {
     }));
   };
 
-  const handleFileDrop = async (acceptedFiles) => {
+
+  const handleFileDrop = (acceptedFiles) => {
     const folder = formValues.folderName || "Untitled";
-    setFormValues((prev) => ({
+    const validFiles = [];
+    const errors = [];
+
+    acceptedFiles.forEach(file => {
+      if (file.size > MAX_FILE_SIZE) {
+        errors.push(`${file.name} exceeds the 1MB size limit.`);
+      } else if (!ALLOWED_TYPES.some(type => file.type.startsWith(type))) {
+        errors.push(`${file.name} is not a supported file type.`);
+      } else {
+        const extension = file.name.split('.').pop();
+        validFiles.push({
+          url: URL.createObjectURL(file),
+          extention: extension,
+          fileName: file.name,
+          fileType: file.type,
+          file,
+          isLocalfile: true,
+        });
+      }
+    });
+
+    if (errors.length) {
+      errors.forEach(err => toast.error(err));
+      return;
+    }
+
+    setUploadedFile(prev => ({
       ...prev,
       attachment: {
         ...prev.attachment,
-        [folder]: [...(prev.attachment[folder] || []), ...acceptedFiles.map(file => ({ file }))],
-      },
+        [folder]: [...(prev.attachment?.[folder] || []), ...validFiles],
+      }
     }));
-
-    // Upload files
-    try {
-      setUploading(true);
-      const result = await filesUploadApi({
-        attachments: acceptedFiles.map(file => ({ file })),
-        folderName: folder,
-        uniqueNo: selectedRow?.taskid || 'defaultNo',
-      });
-      setUploadedFile((prev) => ({
-        ...prev,
-        attachment: {
-          ...prev.attachment,
-          [folder]: [...(prev.attachment[folder] || []), ...result.files],
-        },
-      }));
-    } catch (error) {
-      console.error('Upload failed:', error);
-    } finally {
-      setUploading(false);
-    }
   };
+
 
   const handleAddUrl = () => {
     const folder = formValues.folderName || 'Untitled';
@@ -123,59 +145,106 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   };
 
   const handleDeleteFile = (folder, index) => {
-    setFormValues((prev) => {
-      const updatedFiles = [...prev.attachment[folder]];
+    setUploadedFile((prev) => {
+      const prevAttachment = prev?.attachment || {};
+      const updatedFiles = [...(prevAttachment[folder] || [])];
       updatedFiles.splice(index, 1);
+      const newAttachment = { ...prevAttachment };
+
+      if (updatedFiles.length === 0) {
+        delete newAttachment[folder];
+      } else {
+        newAttachment[folder] = updatedFiles;
+      }
+      const prevUrl = prev?.url || {};
+      const newUrl = { ...prevUrl };
+      if (!newAttachment[folder]) {
+        delete newUrl[folder];
+      }
+
       return {
         ...prev,
-        attachment: {
-          ...prev.attachment,
-          [folder]: updatedFiles,
-        },
+        attachment: newAttachment,
+        url: newUrl,
       };
     });
   };
 
   const handleDeleteUrl = (folder, index) => {
     setUploadedFile((prev) => {
-      const updatedUrls = [...(prev.url[folder] || [])];
+      const prevUrl = prev?.url || {};
+      const updatedUrls = [...(prevUrl[folder] || [])];
       updatedUrls.splice(index, 1);
+      const newUrl = { ...prevUrl };
+      if (updatedUrls.length === 0) {
+        delete newUrl[folder];
+      } else {
+        newUrl[folder] = updatedUrls;
+      }
       return {
         ...prev,
-        url: {
-          ...prev.url,
-          [folder]: updatedUrls,
-        },
+        url: newUrl,
       };
     });
   };
 
   const handleSave = async () => {
     const allFolders = new Set([
-      ...Object.keys(uploadedFile?.attachment || {}),
+      ...Object.keys(formValues?.attachment || {}),
       ...Object.keys(uploadedFile?.url || {}),
     ]);
-    const attachments = Array.from(allFolders).map((folderName) => {
-      const fileUrls = (uploadedFile?.attachment?.[folderName] || []).map(f => f.url).join(',');
-      const urlList = (uploadedFile?.url?.[folderName] || []).join(',');
-      return {
-        folderName,
-        documents: [
-          {
-            documents: fileUrls,
-            documentsurl: urlList
-          }
-        ]
-      };
-    });
-    const uploadRes = await filesUploadSaveApi(attachments, selectedRow?.taskid);
-    if (uploadRes?.rd?.[0]?.stat == 1) {
-      toast.success("Attachment saved successfully");
+    let updatedAttachments = {};
+    try {
+      setUploading(true);
+      for (const folderName of allFolders) {
+        const localFiles = formValues?.attachment?.[folderName] || [];
+        if (localFiles.length) {
+          const res = await filesUploadApi({
+            attachments: localFiles,
+            folderName,
+            uniqueNo: selectedRow?.taskid || 'defaultNo',
+          });
+          updatedAttachments[folderName] = res.files;
+          setUploadedFile(prev => ({
+            ...prev,
+            attachment: {
+              ...prev.attachment,
+              [folderName]: [
+                ...(prev.attachment?.[folderName] || []),
+                ...res.files
+              ]
+            }
+          }));
+        }
+      }
+      const attachmentsPayload = Array.from(allFolders).map(folderName => {
+        const fileUrls = (uploadedFile?.attachment?.[folderName] || [])
+          .concat(updatedAttachments?.[folderName] || [])
+          .map(f => f.url)
+          .join(',');
+        const urlList = (uploadedFile?.url?.[folderName] || []).join(',');
+        return {
+          folderName,
+          documents: [
+            {
+              documents: fileUrls,
+              documentsurl: urlList
+            }
+          ]
+        };
+      });
+      const uploadRes = await filesUploadSaveApi(attachmentsPayload, selectedRow?.taskid);
+      if (uploadRes?.rd?.[0]?.stat == 1) {
+        toast.success("Attachment saved successfully");
+      }
+      handleClear();
+    } catch (error) {
+      toast.error("Failed to save attachments.");
+      console.error("Save error:", error);
+    } finally {
+      setUploading(false);
     }
-  
-    handleClear();
   };
-  
 
   const handleClear = () => {
     setFormValues({
@@ -213,6 +282,11 @@ const SidebarDrawerFile = ({ open, onClose }) => {
         </Box>
 
         <div style={{ margin: "10px 0", border: "1px dashed #7d7f85", opacity: 0.3 }} />
+        {selectedRow && <Typography variant="caption"
+          sx={{ color: '#7D7f85 !important' }}
+        >
+          {selectedRow?.taskPr + '/' + selectedRow?.taskname}
+        </Typography>}
 
         <Box className="fileSideBarTgBox">
           <ToggleButtonGroup
@@ -245,18 +319,18 @@ const SidebarDrawerFile = ({ open, onClose }) => {
               placeholder="Enter Folder name"
               value={formValues.folderName}
               onChange={handleChange}
-              error={!formValues.folderName.trim()}
-              helperText={!formValues.folderName.trim() ? 'Folder name is required' : ''}
+              error={!formValues?.folderName?.trim()}
+              helperText={!formValues?.folderName?.trim() ? 'Folder name is required' : ''}
               {...commonTextFieldProps}
             />
           </Box>
         </Box>
 
         <Box sx={{
-          pointerEvents: !formValues.folderName.trim() ? 'none' : 'auto',
-          opacity: !formValues.folderName.trim() ? 0.5 : 1,
-          backgroundColor: !formValues.folderName.trim() ? '#f5f5f5' : 'transparent',
-          cursor: !formValues.folderName.trim() ? 'not-allowed' : 'auto',
+          pointerEvents: !formValues?.folderName?.trim() ? 'none' : 'auto',
+          opacity: !formValues?.folderName?.trim() ? 0.5 : 1,
+          backgroundColor: !formValues?.folderName?.trim() ? '#f5f5f5' : 'transparent',
+          cursor: !formValues?.folderName?.trim() ? 'not-allowed' : 'auto',
         }}>
           {selectedTab === "file" ? (
             <FileDropzone onDrop={handleFileDrop} />
@@ -296,13 +370,17 @@ const SidebarDrawerFile = ({ open, onClose }) => {
               <Box key={folder} className="folder-preview">
                 <Typography variant="subtitle2" className="folder-title">{folder}</Typography>
                 <Box className="preview-grid">
-                  {(uploadedFile.attachment[folder] || []).map((item, index) => {
+                  {(uploadedFile?.attachment[folder] || []).map((item, index) => {
+                    console.log('item: ', item);
                     const isImage = item?.fileType?.startsWith('image/');
                     const isPdf = item?.fileType === 'application/pdf';
                     const isExcel = item?.fileType?.includes('spreadsheet') || item?.fileType?.includes('excel');
                     const fileURL = item.url;
                     return (
-                      <Box key={index} className="file-card">
+                      <Box key={index} className="file-card" sx={{
+                        border: item?.isLocalfile == true ? "1px solid #FFD700 !important" : "transparent",
+                        background: item?.isLocalfile == true ? "linear-gradient(to right, #ffd70000, #FFECB3) !important" : "transparent"
+                      }}>
                         {isImage ? (
                           <img src={fileURL} alt={item.fileName} className="preview-image" loading="lazy" onError={handleImgError} />
                         ) : isPdf ? (
@@ -313,7 +391,7 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                           <img src={Document} alt="file" className="preview-file" loading="lazy" onError={handleImgError} />
                         )}
                         <Typography className="file-title">{item.fileName}</Typography>
-                        <IconButton className="delete-icon" onClick={() => handleDeleteFile(folder, index)} disabled>
+                        <IconButton className="delete-icon" onClick={() => handleDeleteFile(folder, index)}>
                           <CircleX size={16} />
                         </IconButton>
                       </Box>
@@ -335,7 +413,7 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                           {link.replace(/^https?:\/\//, '').split('?')[0].slice(0, 30)}...
                         </Typography>
                       </Tooltip>
-                      <IconButton className="delete-icon" onClick={() => handleDeleteUrl(folder, idx)} disabled>
+                      <IconButton className="delete-icon" onClick={() => handleDeleteUrl(folder, idx)}>
                         <CircleX size={16} />
                       </IconButton>
                     </Box>

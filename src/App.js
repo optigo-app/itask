@@ -162,7 +162,6 @@ const AppWrapper = () => {
     };
 
     useEffect(() => {
-        debugger
         const masterFuncCall = async () => {
             if (reload) {
                 sessionStorage.clear();

@@ -24,7 +24,7 @@ import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, convertWordsToSpecialChars, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 import TaskTimeTracking from "../../ShortcutsComponent/TimerComponent/TaskTimeTracking";
@@ -248,7 +248,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                             alt={`${assignee?.firstname} ${assignee?.lastname}`}
                             src={ImageUrl(assignee) || null}
                             sx={{
-                                backgroundColor: background(assignee?.firstname),
+                                backgroundColor: background(`${assignee?.firstname + " " + assignee?.lastname}`)
                             }}
                             onClick={() => hanldePAvatarClick(assignees, assignee?.id)}
                         >
@@ -371,7 +371,6 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         task,
         expandedTasks,
         toggleSubtasks,
-        convertWordsToSpecialChars,
         BurningImg
     ) => {
         return (
@@ -401,7 +400,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                 <span style={{ flex: 1 }}>
                                     {task?.taskname?.length > 35
                                         ? `${task?.taskname?.slice(0, 35)}...`
-                                        : convertWordsToSpecialChars(task?.taskname)}
+                                        : task?.taskname}
                                 </span>
                                 {task?.subtasks?.length > 0 && (
                                     <div className="task-sub_count">
@@ -468,7 +467,6 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                 subtask,
                                 expandedTasks,
                                 toggleSubtasks,
-                                convertWordsToSpecialChars,
                                 handleAddTask,
                                 hoveredTaskId,
                                 hoveredColumnname,
@@ -597,7 +595,6 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                             task,
                                                             expandedTasks,
                                                             toggleSubtasks,
-                                                            convertWordsToSpecialChars,
                                                             handleAddTask,
                                                             hoveredTaskId,
                                                             hoveredColumnname,

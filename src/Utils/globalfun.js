@@ -36,6 +36,33 @@ export const formatDate3 = (date) => {
 
     return formattedDate;
 };
+
+export const formatDate4 = (date) => {
+    if (!date) return 'N/A';
+  
+    try {
+      const entryDate = new Date(date);
+  
+      // Handle invalid dates
+      if (isNaN(entryDate.getTime())) return 'Invalid Date';
+  
+      const formatted = entryDate.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'UTC' // Ensure UTC display
+      });
+  
+      return formatted;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'N/A';
+    }
+  };
+  
 export function getTimeLeft(dateString) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());

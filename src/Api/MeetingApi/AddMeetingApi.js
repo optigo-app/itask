@@ -1,4 +1,3 @@
-import { convertSpecialCharsToWords } from "../../Utils/globalfun";
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const AddMeetingApi = async (formValues) => {
@@ -10,12 +9,12 @@ export const AddMeetingApi = async (formValues) => {
             "meetingid": formValues?.id ?? 0,
             "taskid": formValues?.prModule?.taskid ?? 0,
             "projectid": formValues?.prModule?.projectid ?? 0,
-            "meetingtitle": convertSpecialCharsToWords(formValues?.title) ?? "",
+            "meetingtitle": formValues?.title ?? "",
             "StartDate": formValues?.start ?? '',
             "EndDate": formValues?.end ?? '',
             "assigneids": formValues?.assigneids ?? "",
             "isAllDay": formValues?.allDay ? 1 : 0 ?? 0,
-            "descr": convertSpecialCharsToWords(formValues?.description) ?? "",
+            "descr": formValues?.description ?? "",
         });
 
         const body = {

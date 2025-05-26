@@ -1,4 +1,3 @@
-import { convertSpecialCharsToWords } from "../../Utils/globalfun";
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const taskDescAddApi = async (selectedRow, taskDesc) => {
@@ -8,7 +7,7 @@ export const taskDescAddApi = async (selectedRow, taskDesc) => {
 
         const combinedValue = JSON.stringify({
             taskid: `${selectedRow?.taskid ?? '0'}`,
-            descr: `${convertSpecialCharsToWords(taskDesc) ?? ''}`,
+            descr: `${taskDesc ?? ''}`,
         });
 
         const body = {

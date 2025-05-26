@@ -145,7 +145,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                 if (taskComment) {
                     const commentsWithAttachments = taskComment.rd.map(comment => ({
                         ...comment,
-                        assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid),
+                        assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
                     }));
                     setComments(commentsWithAttachments);
                 }
@@ -164,6 +164,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     };
 
     const handleSendComment = async () => {
+        const assigneesMaster = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"))
         if (!newComment.trim()) return;
 
         try {
@@ -178,6 +179,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                     ...comment,
                     id: comment?.id,
                     user: comment?.user,
+                    assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
                     attachments: comment?.attachments || []
                 }));
 
@@ -232,7 +234,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const background = (assignee) => {
         const avatarBackgroundColor = assignee?.avatar
             ? "transparent"
-            : getRandomAvatarColor(assignee?.firstname);
+            : getRandomAvatarColor(assignee);
         return avatarBackgroundColor;
     };
 
@@ -435,7 +437,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                         alt={`${assignee?.firstname} ${assignee?.lastname}`}
                                                         src={ImageUrl(assignee) || null}
                                                         sx={{
-                                                            backgroundColor: background(assignee),
+                                                            backgroundColor: background(`${assignee?.firstname + " " + assignee?.lastname}`),
                                                         }}
                                                     // onClick={() => hanldePAvatarClick(assignees, assignee?.id)}
                                                     >

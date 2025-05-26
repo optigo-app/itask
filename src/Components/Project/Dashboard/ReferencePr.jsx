@@ -20,7 +20,7 @@ import {
     Avatar,
     Link
 } from "@mui/material";
-import { ImageUrl } from "../../../Utils/globalfun";
+import { getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { Link as Linkicons } from 'lucide-react';
 import pdfIcon from '../../../Assests/pdf.png';
@@ -184,7 +184,11 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
                                                             <Avatar
                                                                 src={ImageUrl(item?.guest)}
                                                                 alt={item?.guest?.firstname}
-                                                                sx={{ width: 28, height: 28 }}
+                                                                sx={{
+                                                                    width: 28,
+                                                                    height: 28,
+                                                                    backgroundColor: background(`${item?.guest?.firstname + " " + item?.guest?.lastname}`),
+                                                                }}
                                                             />
                                                             <Typography variant="body2">
                                                                 {item?.guest?.firstname} {item?.guest?.lastname}

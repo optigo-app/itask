@@ -1,7 +1,6 @@
 import React from 'react';
 import { Grid, Typography, Box, IconButton, TextareaAutosize, Button } from '@mui/material';
 import { SquarePen } from 'lucide-react';
-import { convertWordsToSpecialChars } from '../../Utils/globalfun';
 
 const TaskDescription = ({ taskDesc, taskDescEdit, handleShowEditDesc, handleDescChange, handleDescCancel, handleUpdateDesc }) => {
     return (
@@ -18,7 +17,7 @@ const TaskDescription = ({ taskDesc, taskDescEdit, handleShowEditDesc, handleDes
                 <Box sx={{ position: 'relative' }}>
                     {!taskDescEdit ? (
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography>{typeof taskDesc === 'string' ? convertWordsToSpecialChars(taskDesc) : convertWordsToSpecialChars(taskDesc?.descr)}</Typography>
+                            <Typography>{typeof taskDesc === 'string' ? taskDesc : taskDesc?.descr}</Typography>
                         </Box>
                     ) : (
                         <Box sx={{
@@ -29,7 +28,7 @@ const TaskDescription = ({ taskDesc, taskDescEdit, handleShowEditDesc, handleDes
                             padding: '12px'
                         }}>
                             <TextareaAutosize
-                                value={typeof taskDesc === 'string' ? convertWordsToSpecialChars(taskDesc) : convertWordsToSpecialChars(taskDesc?.descr)}
+                                value={typeof taskDesc === 'string' ? taskDesc : taskDesc?.descr}
                                 rows={8}
                                 onChange={handleDescChange}
                                 placeholder="Enter description here..."

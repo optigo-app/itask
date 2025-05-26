@@ -73,11 +73,11 @@ const Filters = ({
     <Box className="filterMainContainer">
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: 'end', gap: 2 }}>
         {[
+          { label: "Project", key: "project", data: taskProject },
           { label: "Status", key: "status", data: statusData },
+          { label: "Assignee", key: "assignee", data: assigneeData },
           { label: "Priority", key: "priority", data: priorityData },
           { label: "Department", key: "department", data: taskDepartment },
-          { label: "Assignee", key: "assignee", data: assigneeData },
-          { label: "Project", key: "project", data: taskProject },
         ]?.map((filter) =>
           filterVisibility[filter.key] ? (
             <Box key={filter.key} className="form-group" sx={{ minWidth: 180 }}>

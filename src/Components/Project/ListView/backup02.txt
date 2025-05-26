@@ -19,7 +19,7 @@ import {
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, convertWordsToSpecialChars, formatDate2, getStatusColor, priorityColors } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, getStatusColor, priorityColors } from "../../../Utils/globalfun";
 import { Eye, Lock, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -355,7 +355,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                                     {task?.taskPr}
                                                                 </div>
                                                             </div>
-                                                            <span className="prShDesc">{convertWordsToSpecialChars(task?.descr)}</span>
+                                                            <span className="prShDesc">{task?.descr}</span>
                                                         </TableCell>
                                                         <TableCell>
                                                             <Box display="flex" alignItems="center" gap={2} width="100%">
