@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Grid, Typography, Box, Button, IconButton } from '@mui/material';
-import { formatDate2, formatDate3, getStatusColor, priorityColors } from '../../../Utils/globalfun';
+import { cleanDate, formatDate2, formatDate3, getStatusColor, priorityColors } from '../../../Utils/globalfun';
 import AddIcon from '@mui/icons-material/Add';
 
 const SubtaskCard = ({ subtasks, onAddDubTask }) => {
@@ -27,12 +27,14 @@ const SubtaskCard = ({ subtasks, onAddDubTask }) => {
                         <Grid item xs={12} sm={4} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             {/* Due Date */}
                             <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px !important' }}>
-                                <strong>Due Date:</strong> {formatDate2(subtask?.DeadLineDate)}
+                                <strong>Due Date:</strong> {subtask?.DeadLineDate && cleanDate(subtask?.DeadLineDate)
+                                    ? formatDate2(cleanDate(subtask?.DeadLineDate))
+                                    : '-'}
                             </Typography>
                             <IconButton
                                 size="small"
                                 onClick={() => onAddDubTask(subtask, { Task: 'subroot' })}
-                                sx={{borderRadius:'50% !important', mt: '5px', backgroundColor: '#7367f0', color: '#fff', '&:hover': { backgroundColor: '#7367f0' } }}
+                                sx={{ borderRadius: '50% !important', mt: '5px', backgroundColor: '#7367f0', color: '#fff', '&:hover': { backgroundColor: '#7367f0' } }}
                             >
                                 <AddIcon fontSize="small" />
                             </IconButton>

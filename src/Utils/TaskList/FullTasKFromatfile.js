@@ -58,7 +58,6 @@ const useFullTaskFormatFile = () => {
 
   const fetchTaskData = async () => {
     const filterCon = location?.pathname?.includes("/projects") ? project : tasks;
-    debugger;
     if (filterCon?.length > 0) {
       setIsWhTLoading(false);
     } else {

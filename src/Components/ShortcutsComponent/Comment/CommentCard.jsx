@@ -1,8 +1,8 @@
 import React from "react";
-import { Card, Grid, Typography, Box, IconButton, Avatar, Link } from "@mui/material";
-import { Download, MoreVertical } from "lucide-react";
+import { Card, Grid, Typography, Box, Avatar, Link } from "@mui/material";
+import { Download } from "lucide-react";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { formatDate3, getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
+import { formatDate4, getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
 import './style.scss';
 
 const CommentCard = ({ comment }) => {
@@ -34,14 +34,9 @@ const CommentCard = ({ comment }) => {
                         {comment?.assignee?.firstname + " " + comment?.assignee?.lastname}
                     </Typography>
                     <Typography className="caption">
-                        {formatDate3(comment?.entrydate)}
+                        {formatDate4(comment?.entrydate)}
                     </Typography>
                 </Grid>
-                {/* <Grid item>
-                    <IconButton>
-                        <MoreVertical size={18} />
-                    </IconButton>
-                </Grid> */}
             </Grid>
 
             {/* Comment Text */}

@@ -54,7 +54,6 @@ const Task = () => {
   console.log('taskFinalData: ', taskFinalData);
 
   // const handleFecthTask = async () => {
-  //   debugger
   //   console.log('selectedRow: ', selectedRow);
   //   const apires = await fetchTaskDataApi(selectedRow);
   //   const formatedData = mapTaskLabels(apires);

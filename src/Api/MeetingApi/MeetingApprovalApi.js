@@ -1,4 +1,3 @@
-import { convertSpecialCharsToWords } from "../../Utils/globalfun";
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const MeetingApprovalAPI = async (formValues) => {
@@ -7,7 +6,7 @@ export const MeetingApprovalAPI = async (formValues) => {
         const combinedValue = JSON.stringify({
             "meetingid": formValues?.id ?? 0,
             "isAccept": formValues?.isAccept ?? 0,       // isAccept 1 for accept and isAccept 2 for reject
-            "comment": convertSpecialCharsToWords(formValues?.comment) ?? "",
+            "comment": formValues?.comment ?? "",
         });
 
         const body = {

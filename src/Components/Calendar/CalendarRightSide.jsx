@@ -142,7 +142,6 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
             },
         },
         dateClick(info) {
-            debugger
             const eventDetails = {
                 start: new Date(info.dateStr).toISOString(),
               };

@@ -1,13 +1,24 @@
-import React from 'react';
-import { Card, CardContent, CardMedia, Grid, IconButton, Typography, Box } from '@mui/material';
-import { CloudDownload, Link } from 'lucide-react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardMedia, Grid, IconButton, Typography, Box, Tooltip } from '@mui/material';
+import { Clipboard, CloudDownload, Link } from 'lucide-react';
 import pdfIcon from '../../Assests/pdf.png';
 import sheetIcon from '../../Assests/xls.png';
 import Document from '../../Assests/document.png'
+import { ContentCopy } from '@mui/icons-material';
+import { toast } from 'react-toastify';
 
 const AttachmentGrid = ({ uploadedFile, selectedFolder }) => {
     const attachments = uploadedFile?.attachment?.[selectedFolder] || [];
     const urlData = uploadedFile?.url?.[selectedFolder] || [];
+
+    const handleCopy = async (url) => {
+        try {
+            await navigator.clipboard.writeText(url)
+            toast.success('URL copied to clipboard!')
+        } catch (err) {
+            toast.error('Failed to copy:', err)
+        }
+    }
 
     const getFilePreview = (url, extension) => {
         const ext = extension?.toLowerCase();
@@ -74,13 +85,22 @@ const AttachmentGrid = ({ uploadedFile, selectedFolder }) => {
                 <Box mt={2}>
                     <Typography variant="h6">Project Reference URL(s):</Typography>
                     <Grid container spacing={1}>
-                        {urlData.map((url, index) => (
-                            <Grid item xs={12} sm={12} md={12} key={index}>
+                        {urlData?.map((url, index) => (
+                            <Grid item xs={12} key={index}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Link size={18} color='#7367f0' />
-                                    <Typography variant="body2" component="a" href={url} target="_blank" sx={{ color: '#7367f0', textDecoration: 'none' }}>
+                                    <Link size={18} color="#7367f0" />
+                                    <Typography
+                                        variant="body2"
+                                        component="a"
+                                        href={url}
+                                        target="_blank"
+                                        sx={{ color: '#7367f0', textDecoration: 'none', flexGrow: 1 }}
+                                    >
                                         {url}
                                     </Typography>
+                                    <IconButton size="small" onClick={() => handleCopy(url)}>
+                                        <Clipboard size={16} />
+                                    </IconButton>
                                 </Box>
                             </Grid>
                         ))}

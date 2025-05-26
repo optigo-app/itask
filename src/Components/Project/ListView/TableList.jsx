@@ -21,7 +21,7 @@ import {
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, convertWordsToSpecialChars, formatDate2, getRandomAvatarColor, getStatusColor, ImageUrl, priorityColors } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, ImageUrl, priorityColors } from "../../../Utils/globalfun";
 import { Eye, Lock, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { assigneeId, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -398,7 +398,7 @@ const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage,
                             alt={`${assignee?.firstname} ${assignee?.lastname}`}
                             src={ImageUrl(assignee) || null}
                             sx={{
-                                backgroundColor: background(assignee?.firstname),
+                                backgroundColor: background(`${assignee?.firstname + " " + assignee?.lastname}`),
                             }}
                             onClick={() => hanldePAvatarClick(assignees, assignee?.id)}
                         >
@@ -572,11 +572,11 @@ const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage,
                                                                             }
                                                                         }}
                                                                     >
-                                                                        <span>{convertWordsToSpecialChars(task?.taskname)}</span>
+                                                                        <span>{task?.taskname}</span>
                                                                     </a>
                                                                 </div>
                                                             </div>
-                                                            <span className="prShDesc">{convertWordsToSpecialChars(task?.descr)}</span>
+                                                            <span className="prShDesc">{task?.descr}</span>
                                                         </TableCell>
                                                         <TableCell>
                                                             {/* <Box display="flex" alignItems="center" gap={2} width="100%">

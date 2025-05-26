@@ -22,7 +22,7 @@ import dayjs from 'dayjs';
 import utc from "dayjs/plugin/utc";
 import { useLocation } from "react-router-dom";
 import EstimateInput from "../../Utils/Common/EstimateInput";
-import { cleanDate, commonTextFieldProps, convertWordsToSpecialChars, customDatePickerProps, flattenTasks } from "../../Utils/globalfun";
+import { cleanDate, commonTextFieldProps, customDatePickerProps, flattenTasks } from "../../Utils/globalfun";
 import MultiTaskInput from "./MultiTaskInput";
 import timezone from 'dayjs/plugin/timezone';
 import CustomAutocomplete from "../ShortcutsComponent/CustomAutocomplete";
@@ -575,7 +575,7 @@ const SidebarDrawer = ({
                                         </Typography>
                                         <TextField
                                             name="description"
-                                            value={convertWordsToSpecialChars(formValues.description)}
+                                            value={formValues.description}
                                             onChange={handleChange}
                                             multiline
                                             rows={2}
@@ -782,7 +782,7 @@ const SidebarDrawer = ({
                                     </Typography>
                                     <TextField
                                         name="description"
-                                        value={convertWordsToSpecialChars(formValues.description)}
+                                        value={formValues.description}
                                         onChange={handleChange}
                                         multiline
                                         rows={2}

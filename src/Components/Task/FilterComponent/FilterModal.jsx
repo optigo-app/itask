@@ -81,12 +81,12 @@ const FiltersDrawer = ({
                     </Box>
                     <Divider sx={{ mb: 2, mt: 1 }} />
                     {[
-                        { label: "Category", key: "category", data: taskCategory },
-                        { label: "Status", key: "status", data: statusData },
-                        { label: "Priority", key: "priority", data: priorityData },
-                        { label: "Department", key: "department", data: taskDepartment },
-                        { label: "Assignee", key: "assignee", data: assigneeData },
                         { label: "Project", key: "project", data: taskProject },
+                        { label: "Status", key: "status", data: statusData },
+                        { label: "Assignee", key: "assignee", data: assigneeData },
+                        { label: "Priority", key: "priority", data: priorityData },
+                        { label: "Category", key: "category", data: taskCategory },
+                        { label: "Department", key: "department", data: taskDepartment },
                     ]?.map((filter) => (
                         <Box key={filter.key} className="form-group" sx={{ mb: 2 }}>
                             <Typography variant="subtitle2">{filter.label}</Typography>

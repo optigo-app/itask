@@ -59,6 +59,7 @@ export default function DepartmentAssigneeAutocomplete({
                 options={options}
                 filterOptions={filterOptions}
                 getOptionLabel={(option) => getDeptAssignee(option)}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
                 value={selectedValues}
                 onChange={handleChange}
                 sx={{

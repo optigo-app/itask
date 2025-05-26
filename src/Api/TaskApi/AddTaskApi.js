@@ -1,4 +1,3 @@
-import { convertSpecialCharsToWords } from "../../Utils/globalfun";
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => {
@@ -22,7 +21,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
             combinedValue = JSON.stringify({
                 "ismodule": 2,
                 "projectid": formValues?.projectid ?? 0,
-                "taskname": convertSpecialCharsToWords(formattedString) ?? "",
+                "taskname": formattedString ?? "",
                 "parentid": formValues?.taskid ?? 0,
             });
         } else {
@@ -30,7 +29,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "ismodule": module?.module ? 1 : 0,
                 "taskid": taskid ?? 0,
                 "projectid": formValues?.projectid ?? 0,
-                "taskname": convertSpecialCharsToWords(formValues?.taskname) ?? "",
+                "taskname": formValues?.taskname ?? "",
                 "StartDate": formValues?.StartDate ?? '',
                 "estimate_hrs": (formValues?.estimate_hrs != "" ? formValues?.estimate_hrs : 0) ?? 0,
                 "estimate1_hrs": (formValues?.estimate1_hrs != "" ? formValues?.estimate1_hrs : 0) ?? 0,
@@ -41,7 +40,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "workcategoryid": formValues?.workcategoryid ?? 0,
                 "departmentid": formValues?.departmentid ?? 0,
                 "parentid": parentid ?? 0,
-                "descr": convertSpecialCharsToWords(formValues?.descr) ?? "",
+                "descr": formValues?.descr ?? "",
                 "ismilestone": formValues?.ismilestone ?? 0,
                 "isfavourite": formValues?.isfavourite ?? 0,
                 "assigneids": formValues?.assigneids ?? "",

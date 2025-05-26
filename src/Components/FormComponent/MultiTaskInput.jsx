@@ -16,18 +16,21 @@ const MultiTaskInput = ({ onSave }) => {
     const inputRef = useRef(null);
     const estimateRefs = useRef([]);
     const [totalEstimate, setTotalEstimate] = useState('');
+    const [editingName, setEditingName] = useState("");
+    const [editingEstimate, setEditingEstimate] = useState("");
 
     useEffect(() => {
         estimateRefs.current = estimateRefs.current.slice(0, tasks.length);
     }, [tasks]);
 
-    const updateTotalEstimate = (updatedTasks) => {
-        const total = updatedTasks.reduce((sum, task) => sum + parseFloat(task.estimate || 0), 0);
-        setTotalEstimate(total.toFixed(2));
+    const parseEstimate = (val) => {
+        const num = parseFloat(val);
+        return isNaN(num) ? 0 : num;
     };
 
-    const handleEstimateChange = (e) => {
-        setTotalEstimate(e.target.value);
+    const updateTotalEstimate = (taskList = tasks) => {
+        const total = taskList.reduce((sum, task) => sum + parseEstimate(task.estimate), 0);
+        setTotalEstimate(total.toFixed(2));
     };
 
     // Handle bulk text entry
@@ -58,12 +61,11 @@ const MultiTaskInput = ({ onSave }) => {
             return;
         }
         setErrorMessage("");
+        let newTasks = [...tasks, { taskName: newTask, estimate: newEstimate ?? '' }];
 
-        const newTasks = [...tasks, { taskName: newTask, estimate: newEstimate }];
         setTasks(newTasks);
         onSave(newTasks);
         updateTotalEstimate(newTasks);
-
         setNewTask("");
         setNewEstimate("");
         inputRef.current?.focus();
@@ -95,13 +97,36 @@ const MultiTaskInput = ({ onSave }) => {
     };
 
     // Task edit functions
-    const handleEdit = (index) => setEditIndex(index);
+    const handleEdit = (index) => {
+        setEditIndex(index);
+        setEditingName(tasks[index].taskName);
+        setEditingEstimate(tasks[index].estimate);
+    };
+
     const handleCancelEdit = () => {
         setEditIndex(null);
+        setEditingName("");
+        setEditingEstimate("");
         setErrorMessage("");
     };
     const handleSaveEdit = () => {
-        setEditIndex(null)
+        if (editingName?.trim() === "") {
+            setErrorMessage("Task name is required.");
+            return;
+        }
+
+        const updatedTasks = [...tasks];
+        updatedTasks[editIndex] = {
+            ...updatedTasks[editIndex],
+            taskName: editingName?.trim(),
+            estimate: editingEstimate || ""
+        };
+
+        setTasks(updatedTasks);
+        updateTotalEstimate(updatedTasks);
+        setEditIndex(null);
+        setEditingName("");
+        setEditingEstimate("");
         setErrorMessage("");
     };
 
@@ -109,22 +134,10 @@ const MultiTaskInput = ({ onSave }) => {
         return !/[,#]/.test(value); // Disallow "," and "#"
     };
 
-    const handleTaskChange = (index, key, value) => {
-        if (!isValidInput(value)) {
-            setErrorMessage("Task name cannot contain ',' or '#'.");
-            return;
-        }
-        setErrorMessage("");
-        const updatedTasks = [...tasks];
-        updatedTasks[index][key] = value;
-        setTasks(updatedTasks);
-        onSave(updatedTasks);
-        updateTotalEstimate(updatedTasks);
-    };
-
     const handleDelete = (index) => {
         const updatedTasks = tasks.filter((_, i) => i !== index);
         setTasks(updatedTasks);
+        updateTotalEstimate(updatedTasks);
         onSave(updatedTasks);
     };
 
@@ -143,17 +156,17 @@ const MultiTaskInput = ({ onSave }) => {
     };
 
     const splitEstimate = (total) => {
-        if (!tasks.length || isNaN(total)) return;
-        const estimatePerTask = total / tasks.length;
+        const parsedTotal = parseFloat(total);
+        if (!tasks.length || isNaN(parsedTotal)) return;
+        const estimatePerTask = parsedTotal / tasks.length;
         const updatedTasks = tasks.map(task => ({
             ...task,
             estimate: estimatePerTask.toFixed(2),
         }));
         setTasks(updatedTasks);
         onSave(updatedTasks);
-        setTotalEstimate(total.toFixed(2));
+        setTotalEstimate(estimatePerTask.toFixed(2));
     };
-
 
     const BackButton = ({ onClick }) => (
         <Button
@@ -175,6 +188,24 @@ const MultiTaskInput = ({ onSave }) => {
             <Typography variant="body2">Back</Typography>
         </Button>
     );
+
+    const isValidDecimalInput = (value) => /^\d{0,2}(\.\d{0,2})?$/.test(value);
+    const handleDecimalInputKeyPress = (e, currentValue = "") => {
+        const char = e.key;
+        if (['-', '+', 'e'].includes(char) || (char === '.' && currentValue.includes('.'))) {
+            e.preventDefault();
+            return;
+        }
+        const [beforeDecimal, afterDecimal = ""] = currentValue.split('.');
+        const cursorAtDecimal = currentValue.includes('.') && e.target.selectionStart > currentValue.indexOf('.');
+        if (!currentValue.includes('.') && beforeDecimal.length >= 2 && char !== '.') {
+            e.preventDefault();
+        }
+        if (cursorAtDecimal && afterDecimal.length >= 2) {
+            e.preventDefault();
+        }
+    };
+
 
     return (
         <Box className="mltMainBox">
@@ -236,7 +267,7 @@ const MultiTaskInput = ({ onSave }) => {
                                                 value={totalEstimate}
                                                 onChange={(e) => {
                                                     const value = e.target.value;
-                                                    if (/^\d{0,2}(\.\d{0,2})?$/.test(value)) {
+                                                    if (isValidDecimalInput(value)) {
                                                         setTotalEstimate(value);
                                                     }
                                                 }}
@@ -247,26 +278,10 @@ const MultiTaskInput = ({ onSave }) => {
                                                     }
                                                 }}
                                                 onKeyPress={(e) => {
-                                                    const char = e.key;
-                                                    const currentValue = totalEstimate || "";
-                                                    if (['-', '+', 'e'].includes(char)) {
-                                                        e.preventDefault();
-                                                    }
-                                                    if (char === '.' && currentValue.includes('.')) {
-                                                        e.preventDefault();
-                                                    }
-                                                    const [beforeDecimal, afterDecimal = ""] = currentValue.split('.');
-                                                    const cursorAtDecimal = currentValue.includes('.') && e.target.selectionStart > currentValue.indexOf('.');
-                                                    if (!currentValue.includes('.') && beforeDecimal.length >= 2 && char !== '.') {
-                                                        e.preventDefault();
-                                                    }
-                                                    if (cursorAtDecimal && afterDecimal.length >= 2) {
-                                                        e.preventDefault();
-                                                    }
+                                                    handleDecimalInputKeyPress(e, totalEstimate || "");
                                                     handleEstimateKeyPress(e);
                                                 }}
                                             />
-
                                         </Box>
                                     </Box>
                                     <BackButton onClick={handleBack} />
@@ -287,14 +302,14 @@ const MultiTaskInput = ({ onSave }) => {
                                         <TableBody>
                                             {tasks.map((task, index) => (
                                                 <>
-                                                    <TableRow key={task?.taskid}>
+                                                    <TableRow key={index}>
                                                         <TableCell sx={{ width: "60%" }}>
                                                             {editIndex === index ? (
                                                                 <TextField
                                                                     size="small"
                                                                     fullWidth
-                                                                    value={task.taskName}
-                                                                    onChange={(e) => handleTaskChange(index, "taskName", e.target.value)}
+                                                                    value={editingName}
+                                                                    onChange={(e) => setEditingName(e.target.value)}
                                                                     className="textfieldsClass"
                                                                 />
                                                             ) : (
@@ -307,37 +322,13 @@ const MultiTaskInput = ({ onSave }) => {
                                                                 type="text"
                                                                 size="small"
                                                                 fullWidth
-                                                                value={task.estimate}
+                                                                value={editIndex === index ? editingEstimate : task.estimate}
                                                                 onChange={(e) => {
                                                                     const value = e.target.value;
-                                                                    if (/^\d{0,2}(\.\d{0,2})?$/.test(value)) {
-                                                                        handleTaskChange(index, "estimate", value);
+                                                                    if (isValidDecimalInput(value)) {
+                                                                        setEditingEstimate(value);
                                                                     }
                                                                 }}
-                                                                onKeyPress={(e) => {
-                                                                    const char = e.key;
-                                                                    const currentValue = task.estimate || "";
-                                                                    if (['-', '+', 'e'].includes(char)) {
-                                                                        e.preventDefault();
-                                                                    }
-                                                                    if (char === '.' && currentValue.includes('.')) {
-                                                                        e.preventDefault();
-                                                                    }
-
-                                                                    const [beforeDecimal, afterDecimal = ""] = currentValue.split('.');
-                                                                    const cursorAtDecimal = currentValue.includes('.') && e.target.selectionStart > currentValue.indexOf('.');
-
-                                                                    if (!currentValue.includes('.') && beforeDecimal.length >= 2 && char !== '.') {
-                                                                        e.preventDefault();
-                                                                    }
-
-                                                                    if (cursorAtDecimal && afterDecimal.length >= 2) {
-                                                                        e.preventDefault();
-                                                                    }
-
-                                                                    handleEstimateKeyPress(e, index);
-                                                                }}
-                                                                inputRef={(el) => estimateRefs.current[index] = el}
                                                                 className="textfieldsClass"
                                                             />
                                                         </TableCell>

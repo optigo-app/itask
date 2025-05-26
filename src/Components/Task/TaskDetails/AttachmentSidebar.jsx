@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, Typography, ToggleButton, ToggleButtonGroup, Tooltip } from '@mui/material';
 import AttachmentGrid from '../../ShortcutsComponent/AttachmentGrid';
 import attachment from "../../../Assests/document.png"
 
@@ -35,9 +35,16 @@ const AttachmentSidebar = ({ uploadedFile, isAtttLoading }) => {
                                 className="toggle-group"
                             >
                                 {Object.keys(uploadedFile.attachment || {}).map((folder) => (
-                                    <ToggleButton className="toggle-button" key={folder} value={folder}>
-                                       <span className="toggle-label">{folder}</span>
-                                    </ToggleButton>
+                                    <Tooltip
+                                        placement="top"
+                                        title={folder}
+                                        arrow
+                                        classes={{ tooltip: 'custom-tooltip' }}
+                                    >
+                                        <ToggleButton className="toggle-button" key={folder} value={folder}>
+                                            <span className="toggle-label">{folder}</span>
+                                        </ToggleButton>
+                                    </Tooltip>
                                 ))}
                             </ToggleButtonGroup>
                         </Box>
