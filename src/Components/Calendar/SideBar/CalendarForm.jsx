@@ -55,6 +55,7 @@ const CalendarForm = ({
         allDay: false
     });
 
+    console.log('formValues: ', formValues);
     const filterRefs = {
         category: useRef(),
         guests: useRef(),
@@ -62,7 +63,6 @@ const CalendarForm = ({
 
     const validateForm = () => {
         const newErrors = {};
-
         if (!formValues.title.trim()) newErrors.title = "Title is required";
         if (!formValues.prModule) newErrors.prModule = "Project/Module is required";
         if (!formValues.guests || formValues.guests.length === 0) newErrors.guests = "At least one assignee required";
@@ -104,38 +104,23 @@ const CalendarForm = ({
     }, [])
 
     useEffect(() => {
-        setTimeout(() => {
-            if (CalformDataValue) {
-                setFormValues({
-                    id: (CalformDataValue?.id || CalformDataValue?.meetingid) ?? "",
-                    title: (CalformDataValue?.title || CalformDataValue?.meetingtitle) ?? "",
-                    category: CalformDataValue?.category ?? "",
-                    prModule: (CalformDataValue?.prModule || CalformDataValue?.prModule) ?? null,
-                    start: (CalformDataValue?.start || CalformDataValue?.StartDate) ?? null,
-                    end: (CalformDataValue?.end || CalformDataValue?.EndDate) ?? null,
-                    guests: CalformDataValue?.guests ?? [],
-                    description: (CalformDataValue?.description || CalformDataValue?.Desc) ?? "",
-                    allDay: (CalformDataValue?.allDay || CalformDataValue?.isAllDay) ?? 0
-                });
-            }
-        }, 300);
-    }, [open, CalformDataValue]);
+        debugger
+        const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
+        if (CalformDataValue) {
+            setFormValues({
+                id: (CalformDataValue?.id || CalformDataValue?.meetingid) ?? "",
+                title: (CalformDataValue?.title || CalformDataValue?.meetingtitle) ?? "",
+                category: CalformDataValue?.category ?? "",
+                prModule: (CalformDataValue?.prModule || CalformDataValue?.prModule) ?? null,
+                start: (CalformDataValue?.start || CalformDataValue?.StartDate) ?? null,
+                end: (CalformDataValue?.end || CalformDataValue?.EndDate) ?? null,
+                guests: CalformDataValue?.guests ?? [logedAssignee],
+                description: (CalformDataValue?.description || CalformDataValue?.Desc) ?? "",
+                allDay: (CalformDataValue?.allDay || CalformDataValue?.isAllDay) ?? 0
+            });
+        }
 
-    useEffect(() => {
-        setTimeout(() => {
-            if (open && CalformDataValue) {
-                Object.keys(filterRefs).forEach((key) => {
-                    const element = filterRefs[key].current;
-                    if (element) {
-                        const span = element.querySelector(".notranslate");
-                        if (span && !formValues[key]) {
-                            span.textContent = `Select ${key.charAt(0).toUpperCase() + key.slice(1)}`;
-                        }
-                    }
-                });
-            }
-        }, 300);
-    }, [open, CalformDataValue, formValues]);
+    }, [open, CalformDataValue]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -208,8 +193,8 @@ const CalendarForm = ({
     };
 
     const getFormTitle = () => {
-        const isMeetingPath = location.pathname.includes('meeting');
-        const isUpdate = CalformDataValue?.id && CalformDataValue.id !== '';
+        const isMeetingPath = location.pathname.includes('meetings');
+        const isUpdate = CalformDataValue?.meetingid && CalformDataValue.meetingid !== '';
 
         if (isMeetingPath) {
             return isUpdate ? "Update Meeting" : "Add Meeting";

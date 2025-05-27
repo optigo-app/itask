@@ -331,64 +331,6 @@ const MeetingPage = () => {
     }
   };
 
-  // const handleMeetingbyLogin = async () => {
-  //   setIsLoding(true);
-  //   try {
-  //     const meetingApiRes = await fetchMettingListByLoginApi();
-  //     const meetingFullDt = await fetchMettingFullDetailsListApi();
-
-  //     let meetingDtRes;
-  //     if (meetingFullDt?.rd1[0]?.stat == 1) {
-  //       meetingDtRes = meetingFullDt?.rd;
-  //     } else {
-  //       toast.error(meetingFullDt?.rd1[0]?.stat_msg);
-  //     }
-
-  //     const data = meetingApiRes?.rd || [];
-  //     const taskAssigneeData = JSON.parse(
-  //       sessionStorage.getItem("taskAssigneeData") || "[]"
-  //     );
-  //     const loginUserData = JSON.parse(
-  //       localStorage.getItem("UserProfileData") || "{}"
-  //     );
-
-  //     const enhancedMeetings = data.map((meeting) => {
-  //       const meetingDt =
-  //         meetingDtRes?.find((m) => m?.meetingid == meeting?.meetingid) || {};
-  //       const assigneeIds = meeting?.assigneids?.split(",")?.map(Number) || [];
-
-  //       const isUserAssigned = assigneeIds.includes(loginUserData?.id);
-  //       const isMeetingDtEmpty = Object.keys(meetingDt).length === 0;
-  //       const isAcceptStatusValid =
-  //         isMeetingDtEmpty || meetingDt?.isAccept === 0;
-
-  //       const isAction = isUserAssigned && isAcceptStatusValid;
-
-  //       return {
-  //         ...meeting,
-  //         isAction,
-  //         guests:
-  //           taskAssigneeData?.filter((user) => assigneeIds.includes(user.id)) ||
-  //           [],
-  //         prModule: {
-  //           projectid: meeting?.projectid,
-  //           taskid: meeting?.taskid,
-  //           projectname: meeting?.ProjectName,
-  //           taskname: meeting?.taskname,
-  //           taskPr: meeting?.ProjectName,
-  //         },
-  //         meetingDt,
-  //       };
-  //     });
-
-  //     setMeetings(enhancedMeetings);
-  //   } catch (error) {
-  //     console.error("Error fetching meeting list:", error);
-  //   } finally {
-  //     setIsLoding(false);
-  //   }
-  // };
-
   const handleMeetingApiCall = () => {
     if (selectedTab?.meetingTab == "My Schedule") {
       handleMeetingbyLogin();
@@ -499,6 +441,13 @@ const MeetingPage = () => {
     handleDrawerToggle();
     setMeetingDetailModalOpen(true);
   };
+
+  
+  const handleMeetingEdit = (meeting) => {
+    setFormData(meeting);
+    handleTaskModalClose();
+    setCaledrawerOpen(true);
+}
 
   const background = (assignee) => {
     const avatarBackgroundColor = assignee?.avatar
@@ -727,6 +676,7 @@ const MeetingPage = () => {
           open={meetingDetailModalOpen}
           onClose={handleTaskModalClose}
           taskData={formData}
+          handleMeetingEdit={handleMeetingEdit}
         />
         <ProfileCardModal
           open={profileOpen}

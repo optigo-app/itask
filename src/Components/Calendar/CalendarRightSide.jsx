@@ -26,7 +26,7 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
 
     const handleTaskModalClose = () => {
         setMeetingDetailModalOpen(false);
-      };
+    };
 
     const handleDrawerToggle = () => {
         setCaledrawerOpen(!caledrawerOpen);
@@ -134,7 +134,7 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
             setCaledrawerOpen(true);
         },
         customButtons: {
-            sidebarToggle: {    
+            sidebarToggle: {
                 icon: 'bi bi-list',
                 click() {
                     setSidebarToggle(prevState => !prevState);
@@ -144,7 +144,7 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
         dateClick(info) {
             const eventDetails = {
                 start: new Date(info.dateStr).toISOString(),
-              };
+            };
             setCalFormData(eventDetails);
             setCaledrawerOpen(true);
         },
@@ -279,7 +279,13 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
         setFormData(meeting);
         handleDrawerToggle();
         setMeetingDetailModalOpen(true);
-      }
+    }
+
+    const handleMeetingEdit = (meeting) => {
+        setFormData(meeting);
+        handleTaskModalClose();
+        setCaledrawerOpen(true);
+    }
 
     return (
         <>
@@ -302,6 +308,7 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
                 open={meetingDetailModalOpen}
                 onClose={handleTaskModalClose}
                 taskData={formData}
+                handleMeetingEdit={handleMeetingEdit}
             />
         </>
     );

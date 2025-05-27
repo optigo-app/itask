@@ -7,6 +7,7 @@ import './SidebarDrawer.scss';
 
 const MultiTaskInput = ({ onSave }) => {
     const [tasks, setTasks] = useState([]);
+    console.log('tasks: ', tasks);
     const [editIndex, setEditIndex] = useState(null);
     const [showEdit, setShowEdit] = useState(true);
     const [text, setText] = useState("");
@@ -16,6 +17,7 @@ const MultiTaskInput = ({ onSave }) => {
     const inputRef = useRef(null);
     const estimateRefs = useRef([]);
     const [totalEstimate, setTotalEstimate] = useState('');
+    console.log('totalEstimate: ', totalEstimate);
     const [editingName, setEditingName] = useState("");
     const [editingEstimate, setEditingEstimate] = useState("");
 
@@ -165,7 +167,7 @@ const MultiTaskInput = ({ onSave }) => {
         }));
         setTasks(updatedTasks);
         onSave(updatedTasks);
-        setTotalEstimate(estimatePerTask.toFixed(2));
+        // setTotalEstimate(estimatePerTask.toFixed(2));
     };
 
     const BackButton = ({ onClick }) => (
@@ -318,19 +320,23 @@ const MultiTaskInput = ({ onSave }) => {
                                                         </TableCell>
 
                                                         <TableCell sx={{ width: "20%" }}>
-                                                            <TextField
-                                                                type="text"
-                                                                size="small"
-                                                                fullWidth
-                                                                value={editIndex === index ? editingEstimate : task.estimate}
-                                                                onChange={(e) => {
-                                                                    const value = e.target.value;
-                                                                    if (isValidDecimalInput(value)) {
-                                                                        setEditingEstimate(value);
-                                                                    }
-                                                                }}
-                                                                className="textfieldsClass"
-                                                            />
+                                                            {editIndex === index ? (
+                                                                <TextField
+                                                                    type="text"
+                                                                    size="small"
+                                                                    fullWidth
+                                                                    value={editIndex === index ? editingEstimate : task.estimate}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (isValidDecimalInput(value)) {
+                                                                            setEditingEstimate(value);
+                                                                        }
+                                                                    }}
+                                                                    className="textfieldsClass"
+                                                                />
+                                                            ) : (
+                                                                <Typography>{task.estimate}</Typography>
+                                                            )}
                                                         </TableCell>
                                                         <TableCell sx={{ width: "20%", textAlign: "center" }}>
                                                             {editIndex === index ? (
