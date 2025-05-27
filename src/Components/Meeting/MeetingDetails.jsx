@@ -11,13 +11,13 @@ import {
 import { CircleX, Download } from 'lucide-react';
 import './Styles/MeetingDetail.scss';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { fetchlistApiCall, formData, openFormDrawer, TaskData } from '../../Recoil/atom';
+import { CalformData, fetchlistApiCall, formData, openFormDrawer, TaskData } from '../../Recoil/atom';
 import { taskDescGetApi } from '../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../Api/TaskApi/TaskDescAddApi';
 import AttachmentImg from "../../Assests/Attachment.webp";
-import {getRandomAvatarColor, ImageUrl } from '../../Utils/globalfun';
+import { getRandomAvatarColor, ImageUrl } from '../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
@@ -25,7 +25,7 @@ import CommentSection from '../ShortcutsComponent/Comment/TaskComment';
 import AttachmentGrid from '../ShortcutsComponent/AttachmentGrid';
 import { TaskDescription } from '../ShortcutsComponent/TaskDescription';
 
-const MeetingDetail = ({ open, onClose, taskData }) => {
+const MeetingDetail = ({ open, onClose, taskData, handleMeetingEdit }) => {
     const theme = useTheme();
     const [taskArr, setTaskArr] = useRecoilState(TaskData);
     const setCallTaskApi = useSetRecoilState(fetchlistApiCall);
@@ -241,6 +241,13 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
     };
 
 
+    const onEditClick = (formData) => {
+        if (handleMeetingEdit) {
+            handleMeetingEdit(formData);
+        } else {
+            console.warn("handleMeetingEdit is undefined");
+        }
+    };
 
     return (
         <div>
@@ -270,13 +277,20 @@ const MeetingDetail = ({ open, onClose, taskData }) => {
                         />
                         <Box className="modal-body">
                             <Box className="titlebox">
-                                <Box sx={{width:'80%', display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <Typography variant="h5" className="task-title">{taskData?.meetingtitle || taskData?.title}</Typography>
+                                <Box sx={{ width: '80%', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <Typography variant="h5" className="task-title"
+                                        sx={{
+                                            "&:hover": {
+                                                cursor: "pointer",
+                                                color: '#7367f0'
+                                            }
+                                        }}
+                                        onClick={() => onEditClick(formData)}>{taskData?.meetingtitle || taskData?.title}</Typography>
                                 </Box>
                                 <Button
                                     size='small'
                                     variant="contained"
-                                    sx={{ marginRight: "10px", width:'20%', }}
+                                    sx={{ marginRight: "10px", width: '20%', }}
                                     className="dangerbtnClassname"
                                 >
                                     End Meeting

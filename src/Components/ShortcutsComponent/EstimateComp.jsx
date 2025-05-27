@@ -24,7 +24,7 @@ const StatusCircles = ({ task }) => {
                 return (
                     <Box className="estimate-Box" key={index} sx={{ ...circleStyle, backgroundColor: colors[index] }}>
                         <Typography variant="caption" sx={{ fontSize: "11px", color: index == 0 ? "#333 !important" : "#fff !important" }}>
-                            {estimate}
+                            {(estimate)?.toFixed(2) || ""}
                         </Typography>
                     </Box>
                 );
