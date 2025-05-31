@@ -17,14 +17,15 @@ export default function DepartmentAssigneeAutocomplete({
     onChange,
     value,
     error,
-    helperText }) {
-    const [selectedValues, setSelectedValues] = useState([]);
+    multiple = true, // Fixed typo
+    minWidth = 180,
+    helperText,
+}) {
+    const [selectedValues, setSelectedValues] = useState(multiple ? [] : null);
 
     useEffect(() => {
-        if (value) {
-            setSelectedValues(value);
-        }
-    }, [value]);
+        setSelectedValues(value || (multiple ? [] : null));
+    }, [value, multiple]);
 
     const handleChange = (event, newValue) => {
         setSelectedValues(newValue);
@@ -54,60 +55,71 @@ export default function DepartmentAssigneeAutocomplete({
         <Box className="form-group">
             <Typography variant="subtitle1" className="form-label">{label}</Typography>
             <Autocomplete
-                multiple
+                multiple={multiple}
                 limitTags={limitTags}
                 options={options}
                 filterOptions={filterOptions}
-                getOptionLabel={(option) => getDeptAssignee(option)}
+                getOptionLabel={(option) =>
+                    option && option.firstname ? getDeptAssignee(option) : ""
+                }
                 isOptionEqualToValue={(option, value) => option.id === value.id}
                 value={selectedValues}
                 onChange={handleChange}
                 sx={{
                     "& .MuiOutlinedInput-root.Mui-focused": {
-                        paddingTop: selectedValues.length > 2 ? "5px !important" : "0px",
+                        paddingTop: multiple && selectedValues.length > 2 ? "5px !important" : "0px",
                     },
+                    minWidth: minWidth,
                 }}
-                renderTags={(value, getTagProps) =>
-                    value.map((option, index) => {
-                        const imageSrc = ImageUrl(option);
-                        const { key, ...tagProps } = getTagProps({ index });
-                        return (
-                            <Chip
-                                key={key}
-                                avatar={
-                                    imageSrc ? (
-                                        <Avatar src={imageSrc} alt={option.firstname} />
-                                    ) : (
-                                        <Avatar
-                                            sx={{
-                                                fontSize: "14px",
-                                                textTransform: "capitalize",
-                                                backgroundColor: background(option?.firstname),
-                                            }}
-                                        >
-                                            {option.firstname.charAt(0)}
-                                        </Avatar>
-                                    )
-                                }
-                                label={
-                                    <Box
+                {...(multiple
+                    ? {
+                        renderTags: (value, getTagProps) =>
+                            value.map((option, index) => {
+                                const imageSrc = ImageUrl(option);
+                                const { key, ...tagProps } = getTagProps({ index });
+                                return (
+                                    <Chip
+                                        key={key}
+                                        avatar={
+                                            imageSrc ? (
+                                                <Avatar src={imageSrc} alt={option.firstname} />
+                                            ) : (
+                                                <Avatar
+                                                    sx={{
+                                                        fontSize: "14px",
+                                                        textTransform: "capitalize",
+                                                        backgroundColor: background(option?.firstname),
+                                                    }}
+                                                >
+                                                    {option.firstname.charAt(0)}
+                                                </Avatar>
+                                            )
+                                        }
+                                        label={
+                                            <Box
+                                                sx={{
+                                                    maxWidth: "80px",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                {option.firstname + " " + option.lastname}
+                                            </Box>
+                                        }
+                                        {...tagProps}
                                         sx={{
-                                            maxWidth: "80px",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
+                                            borderRadius: "8px",
+                                            fontSize: "14px",
+                                            textTransform: "capitalize",
+                                            mr: 0.5,
                                         }}
-                                    >
-                                        {option.firstname + " " + option.lastname}
-                                    </Box>
-                                }
-                                {...tagProps}
-                                sx={{ borderRadius: "8px", fontSize: "14px", textTransform: "capitalize", mr: 0.5, }}
-                                {...commonTextFieldProps}
-                            />
-                        );
-                    })
-                }
+                                        {...commonTextFieldProps}
+                                    />
+                                );
+                            }),
+                    }
+                    : {})}
                 renderOption={(props, option) => {
                     const imageSrc = ImageUrl(option);
                     return (
@@ -139,7 +151,15 @@ export default function DepartmentAssigneeAutocomplete({
                     <TextField
                         {...params}
                         {...commonTextFieldProps}
-                        placeholder={selectedValues.length === 0 ? placeholder : ''}
+                        placeholder={
+                            multiple
+                                ? selectedValues.length === 0
+                                    ? placeholder
+                                    : ""
+                                : !selectedValues || !selectedValues.firstname
+                                    ? placeholder
+                                    : ""
+                        }
                         variant="outlined"
                         fullWidth
                         size="small"
@@ -151,5 +171,3 @@ export default function DepartmentAssigneeAutocomplete({
         </Box>
     );
 }
-
-

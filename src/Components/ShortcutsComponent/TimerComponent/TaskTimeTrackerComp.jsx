@@ -266,7 +266,7 @@ const TaskTimeTrackerComp = () => {
                                         }
 
                                         {/* Show "No results found" if no matches */}
-                                        {flatTasks.filter(task => task?.taskname?.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+                                        {flatTasks?.filter(task => task?.taskname?.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
                                             <MenuItem disabled sx={{ display: 'flex', justifyContent: 'center' }}>No results found</MenuItem>
                                         )}
                                     </Box>

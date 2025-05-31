@@ -7,7 +7,6 @@ import './SidebarDrawer.scss';
 
 const MultiTaskInput = ({ onSave }) => {
     const [tasks, setTasks] = useState([]);
-    console.log('tasks: ', tasks);
     const [editIndex, setEditIndex] = useState(null);
     const [showEdit, setShowEdit] = useState(true);
     const [text, setText] = useState("");
@@ -17,7 +16,6 @@ const MultiTaskInput = ({ onSave }) => {
     const inputRef = useRef(null);
     const estimateRefs = useRef([]);
     const [totalEstimate, setTotalEstimate] = useState('');
-    console.log('totalEstimate: ', totalEstimate);
     const [editingName, setEditingName] = useState("");
     const [editingEstimate, setEditingEstimate] = useState("");
 
@@ -71,6 +69,18 @@ const MultiTaskInput = ({ onSave }) => {
         setNewTask("");
         setNewEstimate("");
         inputRef.current?.focus();
+    };
+
+    const handleTaskChange = (index, key, value) => {
+        if (!isValidInput(value)) {
+            setErrorMessage("Task name cannot contain ',' or '#'.");
+            return;
+        }
+        setErrorMessage("");
+        const updatedTasks = [...tasks];
+        updatedTasks[index][key] = value;
+        setTasks(updatedTasks);
+        onSave(updatedTasks);
     };
 
     // Handle Enter key
@@ -320,23 +330,29 @@ const MultiTaskInput = ({ onSave }) => {
                                                         </TableCell>
 
                                                         <TableCell sx={{ width: "20%" }}>
-                                                            {editIndex === index ? (
-                                                                <TextField
-                                                                    type="text"
-                                                                    size="small"
-                                                                    fullWidth
-                                                                    value={editIndex === index ? editingEstimate : task.estimate}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        if (isValidDecimalInput(value)) {
-                                                                            setEditingEstimate(value);
-                                                                        }
-                                                                    }}
-                                                                    className="textfieldsClass"
-                                                                />
-                                                            ) : (
-                                                                <Typography>{task.estimate}</Typography>
-                                                            )}
+                                                            <TextField
+                                                                type="number"
+                                                                size="small"
+                                                                fullWidth
+                                                                value={task.estimate}
+                                                                onChange={(e) => {
+                                                                    const value = e.target.value;
+                                                                    if (/^\d*\.?\d*$/.test(value)) {
+                                                                        handleTaskChange(index, "estimate", value);
+                                                                    }
+                                                                }}
+                                                                onKeyPress={(e) => {
+                                                                    if (['-', '+', 'e'].includes(e.key)) {
+                                                                        e.preventDefault();
+                                                                    }
+                                                                    if (e.key === '.' && task.estimate.includes('.')) {
+                                                                        e.preventDefault();
+                                                                    }
+                                                                    handleEstimateKeyPress(e, index);
+                                                                }}
+                                                                inputRef={(el) => estimateRefs.current[index] = el}
+                                                                className="textfieldsClass"
+                                                            />
                                                         </TableCell>
                                                         <TableCell sx={{ width: "20%", textAlign: "center" }}>
                                                             {editIndex === index ? (
@@ -448,3 +464,20 @@ const MultiTaskInput = ({ onSave }) => {
 };
 
 export default MultiTaskInput;
+// {editIndex === index ? (
+//     <TextField
+//         type="text"
+//         size="small"
+//         fullWidth
+//         value={editIndex === index ? editingEstimate : task.estimate}
+//         onChange={(e) => {
+//             const value = e.target.value;
+//             if (isValidDecimalInput(value)) {
+//                 setEditingEstimate(value);
+//             }
+//         }}
+//         className="textfieldsClass"
+//     />
+// ) : (
+//     <Typography>{task.estimate}</Typography>
+// )}

@@ -36,6 +36,7 @@ export const Advfilters = atom({
     assignee: '',
     project: '',
     dueDate: null,
+    startDate: null,
   }
 })
 

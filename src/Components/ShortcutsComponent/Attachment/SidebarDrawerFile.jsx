@@ -46,7 +46,6 @@ const ALLOWED_TYPES = [
 
 const SidebarDrawerFile = ({ open, onClose }) => {
   const selectedRow = useRecoilValue(selectedRowData);
-  console.log('selectedRow: ', selectedRow);
   const [selectedTab, setSelectedTab] = useState(tabData[0].value);
   const [uploading, setUploading] = useState(false);
   const [formValues, setFormValues] = useState({ folderName: '', url: '', attachment: {} });
@@ -371,7 +370,6 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                 <Typography variant="subtitle2" className="folder-title">{folder}</Typography>
                 <Box className="preview-grid">
                   {(uploadedFile?.attachment[folder] || []).map((item, index) => {
-                    console.log('item: ', item);
                     const isImage = item?.fileType?.startsWith('image/');
                     const isPdf = item?.fileType === 'application/pdf';
                     const isExcel = item?.fileType?.includes('spreadsheet') || item?.fileType?.includes('excel');

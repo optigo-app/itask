@@ -26,7 +26,7 @@ const FilterChips = ({ filters, onClearFilter, onClearAll }) => {
                                 </Typography>
                             }
                             onDelete={() =>
-                                onClearFilter('category', cat) // pass both key and value to remove a single category
+                                onClearFilter('category', cat)
                             }
                             deleteIcon={<CloseIcon className="closeIcon" />}
                             className="filterChip"

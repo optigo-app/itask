@@ -130,7 +130,8 @@ const Project = () => {
         priority = "",
         assignee = "",
         searchTerm = "",
-        dueDate = "",
+        dueDate = null,
+        startDate = null,
         department = "",
         project: projectFilter = "",
         category = [],
@@ -179,6 +180,8 @@ const Project = () => {
             projectFilter.toLowerCase()) &&
           (!isValidFilter(dueDate) ||
             formatDate(task?.DeadLineDate) === formatDate(dueDate)) &&
+          (!isValidFilter(startDate) ||
+            formatDate(task?.StartDate) === formatDate(startDate)) &&
           (!isValidFilter(assignee) ||
             (Array.isArray(task?.assignee)
               ? task.assignee.some(
