@@ -81,7 +81,7 @@ const Task = () => {
       }
     }, 0);
 
-  }, [encodedData, taskFinalData, callFetchTaskApi, selectedRow]);
+  }, [encodedData, taskFinalData, selectedRow]);
 
   useEffect(() => {
     const activeTab = localStorage?.getItem('activeTaskTab');
