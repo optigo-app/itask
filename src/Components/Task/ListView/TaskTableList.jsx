@@ -459,7 +459,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 >
                     <TableCell >
                         <div style={{
-                            paddingLeft: `${8 * (depth + 1)}px`,
+                            paddingLeft: `${12 * (depth + 1)}px`,
                             display: "flex",
                             justifyContent: "space-between"
                         }}>

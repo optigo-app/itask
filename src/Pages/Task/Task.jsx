@@ -34,6 +34,7 @@ const Task = () => {
   const [filters, setFilters] = useRecoilState(Advfilters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
+  console.log('tasks: ', tasks);
   const setTaskDataLength = useSetRecoilState(taskLength)
   const selectedRow = useRecoilValue(selectedRowData);
   const encodedData = searchParams.get("data");
@@ -47,9 +48,10 @@ const Task = () => {
     priorityData,
     statusData,
     taskAssigneeData } = useFullTaskFormatFile();
+  console.log('iswhTLoading: ', iswhTLoading);
 
   useEffect(() => {
-    if (!location?.pathname?.includes("/task")) {
+    if (!location?.pathname?.includes("/tasks")) {
       setTasks([]);
     }
   }, [location]);
@@ -77,7 +79,7 @@ const Task = () => {
       if (!encodedData && taskFinalData) {
         setTasks(taskFinalData?.TaskData);
       }
-    }, 10);
+    }, 0);
 
   }, [encodedData, taskFinalData, callFetchTaskApi, selectedRow]);
 
@@ -129,6 +131,17 @@ const Task = () => {
 
   const handleClearAllFilters = () => {
     setFilters({});
+    setFilters({
+      category: [],
+      searchTerm: '',
+      status: '',
+      priority: '',
+      department: '',
+      assignee: '',
+      project: '',
+      dueDate: null,
+      startDate: null,
+    })
     setSelectedCategory('');
   };
 
@@ -169,6 +182,7 @@ const Task = () => {
         assignee,
         searchTerm,
         dueDate,
+        startDate,
         department,
         project,
         category,
@@ -219,6 +233,7 @@ const Task = () => {
           (department ? (item?.taskDpt)?.toLowerCase() === department?.toLowerCase() : true) &&
           (project ? (item?.taskPr)?.toLowerCase() === project?.toLowerCase() : true) &&
           (dueDate ? formatDate2(item?.DeadLineDate) === formatDate2(dueDate) : true) &&
+          (startDate ? formatDate2(item?.StartDate) === formatDate2(startDate) : true) &&
           (assignee
             ? item?.assignee?.some((a) => {
               const fullName = `${a?.firstname} ${a?.lastname}`?.toLowerCase();

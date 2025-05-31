@@ -39,6 +39,7 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
         setTaskAssigneeData(assigneeMaster);
         setTaskDepartment(departmentMaster);
     }, [])
+    
     useEffect(() => {
         const data = {
             guests: taskData?.assignee,

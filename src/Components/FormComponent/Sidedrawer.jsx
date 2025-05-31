@@ -101,7 +101,7 @@ const SidebarDrawer = ({
                 bulkTask: formDataValue?.bulk ?? [],
                 dueDate: cleanDate(formDataValue?.DeadLineDate) ?? null,
                 department: formDataValue?.department != 0 ? formDataValue?.department : "",
-                guests: matchedAssignees  ?? [],
+                guests: matchedAssignees ?? [],
                 projectLead: formDataValue?.projectLead ?? "",
                 assignee: formDataValue?.assigneids ?? "",
                 status: formDataValue?.statusid ?? "",
@@ -119,10 +119,10 @@ const SidebarDrawer = ({
                 estimate1_hrs: formDataValue.estimate1_hrs ?? 0,
                 estimate2_hrs: formDataValue.estimate2_hrs ?? 0,
             });
-        }else if(rootSubrootflagval?.Task === "subroot"){
+        } else if (rootSubrootflagval?.Task === "subroot") {
             setFormValues({
                 ...formValues,
-                guests: matchedAssignees  ?? [],
+                guests: matchedAssignees ?? [],
             });
         }
     }, [open, formDataValue, rootSubrootflagval]);
@@ -296,6 +296,7 @@ const SidebarDrawer = ({
     };
 
     const handleResetState = () => {
+        const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
         setFormValues({
             taskName: "",
             bulkTask: [],
@@ -303,14 +304,15 @@ const SidebarDrawer = ({
             dueDate: null,
             assignee: "",
             priority: "",
-            remark: "",
+            description: "",
             attachment: null,
-            comment: "",
+            guests: [logedAssignee],
             progress: "",
             startDate: null,
             category: "",
-            estimate: [""],
-            actual: [""],
+            estimate_hrs: "",
+            estimate1_hrs: "",
+            estimate2_hrs: "",
             milestoneChecked: false,
         });
     }
@@ -346,7 +348,14 @@ const SidebarDrawer = ({
                     <Box className="drawer-container">
                         <Box className="drawer-header">
                             <Typography variant="h6" className="drawer-title">
-                                {taskType === 'multi_input' ? "Add Tasks" : rootSubrootflagval?.Task == "AddTask" ? "Add Task" : rootSubrootflagval?.Task == "subroot" ? "Add Sub-Task" : "Edit Task"}
+                                {taskType === 'multi_input'
+                                    ? (rootSubrootflagval?.Task === "subroot" ? "Add Sub-Tasks" : "Add Tasks")
+                                    : rootSubrootflagval?.Task === "AddTask"
+                                        ? "Add Task"
+                                        : rootSubrootflagval?.Task === "subroot"
+                                            ? "Add Sub-Task"
+                                            : "Edit Task"
+                                }
                             </Typography>
                             <IconButton onClick={handleClear}>
                                 <CircleX />
@@ -358,12 +367,19 @@ const SidebarDrawer = ({
                             opacity: 0.3,
                         }}
                         />
-                        <Box sx={{ display: 'flex', justifyContent: decodedData ? 'space-between' : "end", alignItems: 'start' }}>
-                            {decodedData && <Typography variant="caption"
+                        <Box sx={{ display: 'flex', justifyContent: decodedData || rootSubrootflagval?.Task === "subroot" ? 'space-between' : "end", alignItems: 'start' }}>
+                            {rootSubrootflagval?.Task === "subroot" ? <Typography variant="caption"
                                 sx={{ color: '#7D7f85 !important' }}
                             >
-                                {decodedData?.project + '/' + decodedData?.module + (rootSubrootflagval?.Task == "subroot" ? '/' + formDataValue?.taskname : '')}
-                            </Typography>}
+                                {rootSubrootflagval?.Task === "subroot" && `/${formDataValue?.taskname}`}
+                            </Typography>
+                                :
+                                <Typography variant="caption"
+                                    sx={{ color: '#7D7f85 !important' }}
+                                >
+                                    {decodedData?.project + '/' + decodedData?.module + (rootSubrootflagval?.Task == "subroot" ? '/' + formDataValue?.taskname : '')}
+                                </Typography>
+                            }
                             {rootSubrootflagval?.Task !== "root" &&
                                 <Box className="tSideBarTgBox">
                                     <ToggleButtonGroup

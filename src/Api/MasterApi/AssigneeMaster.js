@@ -11,8 +11,14 @@ export const AssigneeMaster = async () => {
         };
         const response = await CommonAPI(body);
         if (response?.Data) {
-            sessionStorage.setItem('taskAssigneeData', JSON.stringify(response?.Data?.rd));
-            return response?.Data;
+            const sortedData = response.Data.rd.sort((a, b) => {
+                if (a?.firstname?.localeCompare(b?.firstname) === 0) {
+                    return a?.lastname?.localeCompare(b?.lastname);
+                }
+                return a?.firstname?.localeCompare(b?.firstname);
+            });
+            sessionStorage.setItem('taskAssigneeData', JSON.stringify(sortedData));
+            return response.Data;
         } else {
             return [];
         }

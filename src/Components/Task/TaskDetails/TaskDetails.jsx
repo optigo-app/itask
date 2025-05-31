@@ -128,6 +128,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const handleClose = () => {
         onClose();
         setUploadedFile([]);
+        setNewComment('');
     }
 
     const handleTabChange = (event, newValue) => setActiveTab(newValue);
