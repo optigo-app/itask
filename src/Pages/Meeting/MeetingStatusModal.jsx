@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import "./meeting.scss";
 import {
     Modal,
     Box,
@@ -16,7 +17,8 @@ import {
     Paper,
     ToggleButtonGroup,
     ToggleButton,
-    Tooltip
+    Tooltip,
+    Divider
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import LoadingBackdrop from "../../Utils/Common/LoadingBackdrop";
@@ -44,7 +46,8 @@ const statusColors = {
     Pending: { background: "#FFF4E5", color: "#ED6C02" }
 };
 
-const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
+const ReadOnlyModal = ({ open, mettingData, handleClose, handleFetchMeetingDetails }) => {
+    console.log('mettingData: ', mettingData);
     const [rows, setRows] = useState([]);
     const [page, setPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
@@ -108,125 +111,84 @@ const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
 
     return (
         <Modal open={open} onClose={handleClose} aria-labelledby="modal-title">
-            <Box sx={modalStyle}>
+            <Box className="meetingModal">
                 <Grid container alignItems="center" justifyContent="space-between">
                     <Typography id="modal-title" variant="h6" fontWeight="bold">
-                        Status Overview
+                        {mettingData?.meetingtitle}
                     </Typography>
                     <IconButton onClick={handleClose}>
                         <CloseIcon />
                     </IconButton>
                 </Grid>
-                <Box sx={{ textAlign: 'end' }}>
-                    <div style={{
-                        margin: "10px 0",
-                        border: "1px dashed #7d7f85",
-                        opacity: 0.3,
-                    }}
-                    />
-                    <ToggleButtonGroup
-                        value={filterStatus}
-                        exclusive
-                        onChange={handleFilterChange}
-                        aria-label="filter status"
-                        size="small"
-                        className="toggle-button-group"
-                    >
-                        <ToggleButton value="All">All</ToggleButton>
-                        <ToggleButton value="Accept">Accept</ToggleButton>
-                        <ToggleButton value="Reject">Reject</ToggleButton>
-                        <ToggleButton value="Pending">Pending</ToggleButton>
-                        <ToggleButton value="Attend">Attend</ToggleButton>
-                    </ToggleButtonGroup>
+
+                <Box className="divider-container">
+                    <div className="dashed-divider" />
+                    <Box className="mtStatusToggleBox">
+                        <ToggleButtonGroup
+                            value={filterStatus}
+                            exclusive
+                            onChange={handleFilterChange}
+                            aria-label="filter status"
+                            size="small"
+                            className="toggle-group"
+                        >
+                            <ToggleButton className="toggle-button" value="All"><span className="toggle-label">All</span></ToggleButton>
+                            <ToggleButton className="toggle-button" value="Accept"><span className="toggle-label">Accepted</span></ToggleButton>
+                            <ToggleButton className="toggle-button" value="Reject"><span className="toggle-label">Rejected</span></ToggleButton>
+                            <ToggleButton className="toggle-button" value="Pending"><span className="toggle-label">Pending</span></ToggleButton>
+                            <ToggleButton className="toggle-button" value="Attend"><span className="toggle-label">Attending</span></ToggleButton>
+                        </ToggleButtonGroup>
+                    </Box>
                 </Box>
+
                 {!isLoading ? (
                     <>
                         {filteredRows?.length > 0 ? (
-                            <Box sx={{ height: "50vh", display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                                <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 'rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;', borderRadius: '8px' }}>
+                            <Box className="table-wrapper">
+                                <TableContainer component={Paper} className="custom-table-container">
                                     <Table stickyHeader>
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell>
-                                                    <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Name</Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Status</Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Remark</Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Typography sx={{ fontSize: "14px", fontWeight: '600' }}>Attend</Typography>
-                                                </TableCell>
+                                                <TableCell><Typography className="table-heading">Name</Typography></TableCell>
+                                                <TableCell><Typography className="table-heading">Status</Typography></TableCell>
+                                                <TableCell><Typography className="table-heading">Attendence</Typography></TableCell>
+                                                <TableCell><Typography className="table-heading">Remark</Typography></TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {filteredRows && filteredRows?.slice((page - 1) * rowsPerPage, page * rowsPerPage)?.map((row) => (
+                                            {filteredRows?.slice((page - 1) * rowsPerPage, page * rowsPerPage).map((row) => (
                                                 <TableRow key={row.meetingid}>
-                                                    <TableCell sx={{ minWidth: '150px' }}>
-                                                        <Typography sx={{ fontSize: "14px" }}>{row?.userData?.firstname + " " + row?.userData?.lastname}</Typography>
+                                                    <TableCell className="name-cell">
+                                                        <Typography className="table-text">{row?.userData?.firstname + " " + row?.userData?.lastname}</Typography>
                                                     </TableCell>
                                                     <TableCell>
                                                         <Chip
                                                             label={row.status}
+                                                            className="status-chip"
                                                             sx={{
                                                                 bgcolor: statusColors[row.status]?.background,
-                                                                color: statusColors[row.status]?.color,
-                                                                fontWeight: "bold",
-                                                                fontFamily: '"Public Sans", sans-serif',
-                                                                borderRadius: "4px",
-                                                                padding: "4px 8px",
-                                                                fontSize: "14px"
+                                                                color: statusColors[row.status]?.color
                                                             }}
                                                         />
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Typography sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: "14px" }}>
-                                                            {row?.Comment || "—"}
-                                                        </Typography>
+                                                        <Box className={`attendance-box ${row?.ismeeting_attnd === 1 ? 'present' : 'absent'}`}>
+                                                            <CircleIcon className="attendance-icon" />
+                                                            <Typography className="table-text">{row?.ismeeting_attnd === 1 ? 'Present' : 'Absent'}</Typography>
+                                                        </Box>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Tooltip title={row?.ismeeting_attnd === 1 ? "Attended" : "Mark as Attended"}>
-                                                            <IconButton
-                                                                onClick={handleToggle}
-                                                                size="small"
-                                                                aria-label="meeting-attend"
-                                                                aria-labelledby="meeting-attend"
-                                                                sx={{
-                                                                    width: '30px',
-                                                                    height: '30px',
-                                                                    padding: '4px',
-                                                                    boxShadow: row?.ismeeting_attnd === 1
-                                                                        ? '0px 0px 8px rgba(0, 200, 83, 0.6)'
-                                                                        : '0px 2px 8px rgba(99, 99, 99, 0.2)',
-                                                                    transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
-                                                                    background: row?.ismeeting_attnd === 1 ? '#4CAF50' : '#fff',
-                                                                    '&:hover': {
-                                                                        boxShadow: row?.ismeeting_attnd === 1
-                                                                            ? '0px 0px 12px rgba(0, 200, 83, 0.9)'
-                                                                            : '0px 4px 12px rgba(99, 99, 99, 0.3)',
-                                                                        background: row?.ismeeting_attnd === 1 ? '#43A047' : '#f5f5f5',
-                                                                    },
-                                                                }}
-                                                                disabled={row?.ismeeting_attnd === 1}
-                                                            >
-                                                                {row?.ismeeting_attnd === 1 ? (
-                                                                    <CircleIcon sx={{ fontSize: '20px', color: '#2E7D32' }} />
-                                                                ) : (
-                                                                    <CircleIcon sx={{ fontSize: '20px', color: '#9e9e9e' }} />
-                                                                )}
-                                                            </IconButton>
-                                                        </Tooltip>
-
+                                                        <Typography className="remark-text">
+                                                            {row?.Comment || "—"}
+                                                        </Typography>
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
                                     </Table>
                                 </TableContainer>
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px" }}>
-                                    <Typography variant="body2">
+                                <Box className="pagination-wrapper">
+                                    <Typography variant="body2" className="pagination-text">
                                         Showing {(page - 1) * rowsPerPage + 1} to {Math?.min(page * rowsPerPage, filteredRows?.length)} of {filteredRows?.length} entries
                                     </Typography>
                                     <Pagination
@@ -237,34 +199,22 @@ const ReadOnlyModal = ({ open, handleClose, handleFetchMeetingDetails }) => {
                                         color="primary"
                                         variant="outlined"
                                         shape="rounded"
-                                        sx={{
-                                            ".MuiPaginationItem-root": {
-                                                minHeight: "30px !important",
-                                                fontFamily: '"Public Sans", sans-serif',
-                                                color: "#444050",
-                                                "&.Mui-selected": {
-                                                    backgroundColor: "#7D7f85",
-                                                    color: "#fff",
-                                                    borderColor: "#7D7f85"
-                                                }
-                                            },
-                                        }}
+                                        className="custom-pagination"
                                     />
                                 </Box>
                             </Box>
-                        ) :
-                            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50%' }}>
-                                <Typography variant="body2" sx={{ fontSize: "14px", color: "#444050" }}>
-                                    No records found
-                                </Typography>
+                        ) : (
+                            <Box className="no-record-box">
+                                <Typography variant="body2" className="table-text">No records found</Typography>
                             </Box>
-                        }
+                        )}
                     </>
-                ) :
+                ) : (
                     <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
-                }
+                )}
             </Box>
         </Modal>
+
     );
 };
 

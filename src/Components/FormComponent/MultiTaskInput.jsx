@@ -80,6 +80,7 @@ const MultiTaskInput = ({ onSave }) => {
         const updatedTasks = [...tasks];
         updatedTasks[index][key] = value;
         setTasks(updatedTasks);
+        updateTotalEstimate(updatedTasks);
         onSave(updatedTasks);
     };
 

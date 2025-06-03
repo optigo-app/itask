@@ -1,0 +1,165 @@
+@import "../../theme/variable.scss";
+
+.meetingModal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 700px;
+    max-height: 65vh;
+    height: 63vh;
+    overflow-y: auto;
+    background-color: #fff;
+    box-shadow: 0px 3px 24px rgba(0, 0, 0, 0.2);
+    padding: 10px 20px;
+    border-radius: 8px;
+    outline: none;
+}
+
+.divider-container {
+    text-align: end;
+    margin-top: 10px;
+}
+
+.dashed-divider {
+    margin: 10px 0;
+    border: 1px dashed #7d7f85;
+    opacity: 0.3;
+}
+
+.mtStatusToggleBox {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    position: relative;
+    padding: 5px;
+    max-width: 100%;
+    overflow: auto;
+
+    .toggle-group {
+        background-color: #f5f5f5;
+        border-radius: 8px;
+        padding: 4px;
+        display: flex;
+        gap: 5px;
+
+        .toggle-button {
+            width: 100px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-family: $font-family !important;
+            color: $text2ndColor;
+            border: none;
+            padding: 4px 4px;
+            text-transform: none;
+            transition: all 0.2s ease-in-out;
+
+            .toggle-label {
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                flex: 1;
+            }
+
+            &.Mui-selected {
+                background-color: #fff !important;
+                color: #000 !important;
+                font-weight: 700;
+            }
+        }
+    }
+}
+
+.table-wrapper {
+    height: 50vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.custom-table-container {
+    margin-top: 16px;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
+    border-radius: 8px;
+}
+
+.table-heading {
+    font-size: 14px;
+    font-weight: 600;
+    color: $text2ndColor !important;
+}
+
+.table-text {
+    font-size: 14px;
+    color: $text2ndColor !important;
+}
+
+.name-cell {
+    min-width: 150px;
+}
+
+.status-chip {
+    font-weight: bold;
+    font-family: "Public Sans", sans-serif;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 14px;
+}
+
+.attendance-box {
+    display: flex;
+    align-items: center;
+
+    &.present .attendance-icon {
+        color: #22c55e;
+    }
+
+    &.absent .attendance-icon {
+        color: #d1d5db;
+    }
+
+    .attendance-icon {
+        font-size: 12px;
+        margin-right: 5px;
+    }
+}
+
+.remark-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 14px;
+    color: $text2ndColor !important;
+}
+
+.pagination-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-top: 1px solid #8080804a;
+    .pagination-text{
+        color: $text2ndColor!important;
+    }
+}
+
+.custom-pagination {
+    .MuiPaginationItem-root {
+        min-height: 30px !important;
+        font-family: $font-family !important;
+
+        &.Mui-selected {
+            background-color: #7367f0;
+            color: #fff;
+            border-color: #7367f0;
+        }
+    }
+}
+
+.no-record-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50%;
+}

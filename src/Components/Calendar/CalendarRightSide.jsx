@@ -10,6 +10,9 @@ import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformD
 import CalendarForm from './SideBar/CalendarForm';
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
 import MeetingDetail from '../Meeting/MeetingDetails';
+import { v4 as uuidv4 } from 'uuid';
+import { Box, Button, Menu, TextField } from '@mui/material';
+import { AddMeetingApi } from '../../Api/MeetingApi/AddMeetingApi';
 
 const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemoveAMeeting }) => {
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
@@ -23,6 +26,14 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
     const [formData, setFormData] = useState();
     const [calEvData, setCalEvData] = useRecoilState(calendarData);
     const [meetingDetailModalOpen, setMeetingDetailModalOpen] = useState(false);
+    const [contextMenu, setContextMenu] = useState(null);
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const inputRef = useRef(null);
+
+    const handleClose = () => {
+        setContextMenu(null);
+        setSelectedEvent(null);
+    };
 
     const handleTaskModalClose = () => {
         setMeetingDetailModalOpen(false);
@@ -51,18 +62,79 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
         }, 500);
     }, [date, calendarApi]);
 
+    const handleSplit = async (type) => {
+        const days = parseInt(inputRef.current?.value);
+        if (!days || days < 1) return alert("Enter valid number of days");
+        if (!selectedEvent) return alert("No selected date");
+    
+        const originalEvent = calEvData?.find(ev => ev.meetingid    == selectedEvent.id);
+        if (!originalEvent) return alert("Original event not found");
+    
+        const originalStart = new Date(originalEvent.StartDate);
+        const originalEnd = new Date(originalEvent.EndDate);
+        const totalDurationMs = originalEnd.getTime() - originalStart.getTime();
+        const dailyDurationMs = Math.floor(totalDurationMs / days);
+    
+        const startHour = originalStart.getHours();
+        const startMin = originalStart.getMinutes();
+        const startSec = originalStart.getSeconds();
+    
+        const newEvents = [];
+    
+        for (let i = 0; i < days; i++) {
+            const baseDate = new Date(originalStart);
+            baseDate.setDate(originalStart.getDate() + i);
+            baseDate.setHours(startHour, startMin, startSec, 0);
+    
+            const splitStart = new Date(baseDate);
+            const splitEnd = new Date(splitStart.getTime() + dailyDurationMs);
+    
+            const idString = (originalEvent?.guests ?? []).map(user => user.id)?.join(",");
+    
+            newEvents.push({
+                meetingid: uuidv4(),
+                meetingtitle: originalEvent.meetingtitle,
+                category: originalEvent?.category,
+                ProjectName: originalEvent?.ProjectName,
+                projectid: originalEvent?.projectid,
+                taskname: originalEvent?.taskname,
+                taskid: originalEvent?.taskid,
+                prModule: originalEvent?.prModule,
+                StartDate: splitStart.toISOString(),
+                EndDate: splitEnd.toISOString(),
+                guests: originalEvent?.guests,
+                Desc: originalEvent.Desc,
+                isAllDay: originalEvent.isAllDay ? 1 : 0,
+                assigneids: idString ?? "",
+                type,
+                entrydate: new Date().toISOString(),
+            });
+            const apiRes = await AddMeetingApi(newEvents[i]);
+            console.log('apiRes: ', apiRes);
+        }
+    
+        setCalEvData(prev => {
+            return [
+                ...prev.filter(ev => ev.meetingid != selectedEvent.id),
+                ...newEvents
+            ];
+        });
+    
+        handleClose();
+    };
+    
     const filterEvents = (events, selectedCalendars) => {
         return events && events?.filter((event) => selectedCalendars?.includes(event?.category));
     };
 
     const filteredEvents = filterEvents(calEvData, selectedEventfilter);
+    console.log('filteredEvents: ', filteredEvents);
     // const filteredEvents = calEvData
-
 
     const calendarOptions = {
         events: filteredEvents.map(event => {
             return {
-                id: event.meetingid.toString(),
+                id: event?.meetingid?.toString(),
                 title: event.meetingtitle || '',
                 start: event.StartDate,
                 end: event.EndDate,
@@ -103,8 +175,18 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
         eventResizableFromStart: true,
         resizable: true,
         dragScroll: true,
-        dayMaxEvents: 2,
+        dayMaxEvents: false,
         navLinks: true,
+        eventDidMount: function (info) {
+            info.el.addEventListener('contextmenu', function (e) {
+                e.preventDefault();
+                setSelectedEvent(info.event);
+                setContextMenu({
+                    mouseX: e.clientX - 2,
+                    mouseY: e.clientY - 4,
+                });
+            });
+        },
         eventClassNames({ event }) {
             const category = event.extendedProps.category || 'ETC';
             const colorClass = calendarsColor[category] || 'primary';
@@ -254,9 +336,8 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
             setCalEvData(data);
             setCalFormData(updatedEvent);
             handleCaleFormSubmit(updatedEvent);
-        }
+        },
     };
-
 
     const handleRemove = (formValue) => {
         setFormData(formValue)
@@ -310,6 +391,46 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
                 taskData={formData}
                 handleMeetingEdit={handleMeetingEdit}
             />
+            <Menu
+                open={contextMenu !== null}
+                onClose={handleClose}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                    contextMenu !== null
+                        ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+                        : undefined
+                }
+                slotProps={{
+                    paper: {
+                        sx: {
+                            borderRadius: "8px !important",
+                            padding: '10px',
+                            boxShadow:
+                                "rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px",
+                        },
+                    },
+                }}
+            >
+                <TextField
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    placeholder="Enter days"
+                    inputRef={inputRef}
+                    className="textfieldsClass"
+                    inputProps={{
+                        inputMode: "decimal",
+                        pattern: "^\\d*\\.?\\d{0,2}$"
+                    }}
+                    sx={{ mb: 2 }}
+                />
+                <Box sx={{ display: "flex", justifyContent: 'end', gap: '10px' }}>
+                    <Button className="secondaryBtnClassname" onClick={handleClose}>Cancel</Button>
+                    <Button className="buttonClassname" onClick={() => handleSplit("Split")}>
+                        Split
+                    </Button>
+                </Box>
+            </Menu>
         </>
     );
 };

@@ -21,6 +21,7 @@ const MultiSelectChipWithLimit = ({
     }, [value]);
 
     const handleChange = (event, newValue) => {
+        console.log('newValue: ', newValue);
         setSelectedValues(newValue);
         if (onChange) {
             onChange(newValue);
