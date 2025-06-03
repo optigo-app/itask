@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import ReactDOM from 'react-dom/client';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -13,8 +14,10 @@ import MeetingDetail from '../Meeting/MeetingDetails';
 import { v4 as uuidv4 } from 'uuid';
 import { Box, Button, Menu, TextField } from '@mui/material';
 import { AddMeetingApi } from '../../Api/MeetingApi/AddMeetingApi';
+import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
+import { PERMISSIONS } from '../Auth/Role/permissions';
 
-const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemoveAMeeting }) => {
+const Calendar = ({ isLoding, assigneeData, hasAccess, calendarsColor, handleCaleFormSubmit, handleRemoveAMeeting, handleAssigneeChange }) => {
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
     const calendarRef = useRef();
     const [calendarApi, setCalendarApi] = useState(null);
@@ -66,31 +69,31 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
         const days = parseInt(inputRef.current?.value);
         if (!days || days < 1) return alert("Enter valid number of days");
         if (!selectedEvent) return alert("No selected date");
-    
-        const originalEvent = calEvData?.find(ev => ev.meetingid    == selectedEvent.id);
+
+        const originalEvent = calEvData?.find(ev => ev.meetingid == selectedEvent.id);
         if (!originalEvent) return alert("Original event not found");
-    
+
         const originalStart = new Date(originalEvent.StartDate);
         const originalEnd = new Date(originalEvent.EndDate);
         const totalDurationMs = originalEnd.getTime() - originalStart.getTime();
         const dailyDurationMs = Math.floor(totalDurationMs / days);
-    
+
         const startHour = originalStart.getHours();
         const startMin = originalStart.getMinutes();
         const startSec = originalStart.getSeconds();
-    
+
         const newEvents = [];
-    
+
         for (let i = 0; i < days; i++) {
             const baseDate = new Date(originalStart);
             baseDate.setDate(originalStart.getDate() + i);
             baseDate.setHours(startHour, startMin, startSec, 0);
-    
+
             const splitStart = new Date(baseDate);
             const splitEnd = new Date(splitStart.getTime() + dailyDurationMs);
-    
+
             const idString = (originalEvent?.guests ?? []).map(user => user.id)?.join(",");
-    
+
             newEvents.push({
                 meetingid: uuidv4(),
                 meetingtitle: originalEvent.meetingtitle,
@@ -112,17 +115,17 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
             const apiRes = await AddMeetingApi(newEvents[i]);
             console.log('apiRes: ', apiRes);
         }
-    
+
         setCalEvData(prev => {
             return [
                 ...prev.filter(ev => ev.meetingid != selectedEvent.id),
                 ...newEvents
             ];
         });
-    
+
         handleClose();
     };
-    
+
     const filterEvents = (events, selectedCalendars) => {
         return events && events?.filter((event) => selectedCalendars?.includes(event?.category));
     };
@@ -130,6 +133,32 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
     const filteredEvents = filterEvents(calEvData, selectedEventfilter);
     console.log('filteredEvents: ', filteredEvents);
     // const filteredEvents = calEvData
+
+    useEffect(() => {
+        if (hasAccess(PERMISSIONS.CALENDAR_A_DROPDOWN)) {
+            const toolbarChunks = document.querySelectorAll('.fc-header-toolbar .fc-toolbar-chunk');
+            if (toolbarChunks.length >= 2) {
+                const targetDiv = toolbarChunks[1];
+                targetDiv.innerHTML = '';
+                const container = document.createElement('div');
+                targetDiv.appendChild(container);
+                const root = ReactDOM.createRoot(container);
+                root.render(
+                    <Box className="meetingAssigneBox" sx={{ minWidth: 250 }}>
+                        <DepartmentAssigneeAutocomplete
+                            name="assignee"
+                            options={assigneeData}
+                            label="Assignee"
+                            placeholder="Select assignees"
+                            limitTags={2}
+                            onChange={handleAssigneeChange}
+                            multiple={false}
+                        />
+                    </Box>
+                );
+            }
+        }
+    }, [assigneeData, handleAssigneeChange]);
 
     const calendarOptions = {
         events: filteredEvents.map(event => {
@@ -163,6 +192,7 @@ const Calendar = ({ isLoding, calendarsColor, handleCaleFormSubmit, handleRemove
         slotDuration: "00:30:00",
         headerToolbar: {
             start: 'sidebarToggle, prev, next, title',
+            center: '',
             end: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
         },
         views: {

@@ -8,13 +8,17 @@ import CalendarDrawer from "../../Components/Calendar/SideBar/CalendarDrawer";
 import { calendarData, calendarM, CalformData } from "../../Recoil/atom";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import TasklistForCal from "../../Components/Calendar/TasklistForCal";
-import { fetchMettingListApi } from "../../Api/MeetingApi/MeetingListApi";
+import { fetchMettingListApi, fetchMettingListByLoginApi } from "../../Api/MeetingApi/MeetingListApi";
 import { AddMeetingApi } from "../../Api/MeetingApi/AddMeetingApi";
 import { deleteMeetingApi } from "../../Api/MeetingApi/DeleteMeetingApi";
 import TaskAPiCallWithFormat from "../../Utils/TaskList/TaskAPiCallWithFormat";
 import { toast } from "react-toastify";
+import DepartmentAssigneeAutocomplete from "../../Components/ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete";
+import useAccess from "../../Components/Auth/Role/useAccess";
+import { PERMISSIONS } from "../../Components/Auth/Role/permissions";
 
 const Calendar = () => {
+  const { hasAccess } = useAccess();
   const { fetchTaskData } = TaskAPiCallWithFormat();
   const isLaptop = useMediaQuery("(max-width:1420px)");
   const isLaptop1 = useMediaQuery("(max-width:1600px) and (min-width:1421px)");
@@ -23,6 +27,8 @@ const Calendar = () => {
   const setCalEvData = useSetRecoilState(calendarData);
   const setCalFormData = useSetRecoilState(CalformData);
   const [isLoding, setIsLoding] = useState(false);
+  const [selectedAssignee, setSelectedAssignee] = useState();
+  const assigneeData = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"));
 
   useEffect(() => {
     setSelectedMon(new Date());
@@ -40,6 +46,36 @@ const Calendar = () => {
     setCalendarsColor(dynamicCalendarsColor);
     setSelectedMon(new Date());
   }, []);
+
+
+  const handleMeetingListByLogin = async () => {
+    setIsLoding(true);
+    try {
+      const meetingApiRes = await fetchMettingListByLoginApi(selectedAssignee);
+      const data = meetingApiRes && meetingApiRes?.rd || [];
+      if (data) {
+        const taskAssigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
+        const taskCategory = JSON.parse(sessionStorage.getItem("taskworkcategoryData") || "[]");
+        const enhancedMeetings = data.map((meeting) => ({
+          ...meeting,
+          guests: taskAssigneeData.filter((user) => meeting?.assigneids?.split(",").map(Number).includes(user.id)) || [],
+          prModule: [],
+          category: taskCategory?.find(item => item?.id == meeting?.workcategoryid)?.labelname || '',
+          prModule: {
+            projectid: meeting?.projectid,
+            taskid: meeting?.taskid,
+          }
+        }));
+        setCalEvData(enhancedMeetings);
+      } else {
+        setCalEvData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching meeting list:", error);
+    } finally {
+      setIsLoding(false);
+    }
+  };
 
 
   const handleMeetingList = async () => {
@@ -73,8 +109,17 @@ const Calendar = () => {
 
 
   useEffect(() => {
-    handleMeetingList();
-  }, [])
+    if (selectedAssignee) {
+      handleMeetingListByLogin();
+    } else {
+      if (hasAccess(PERMISSIONS.CALENDAR_VIEW_ALL)) {
+        handleMeetingList()
+      } else {
+        handleMeetingListByLogin()
+      }
+    }
+
+  }, [selectedAssignee])
 
   const handleCaleFormSubmit = async (formValues) => {
     console.log('formValues: ', formValues);
@@ -101,6 +146,10 @@ const Calendar = () => {
   useEffect(() => {
     fetchTaskData();
   }, [])
+
+  const handleAssigneeChange = (newValue) => {
+    setSelectedAssignee(newValue);
+  }
 
 
 
@@ -147,7 +196,15 @@ const Calendar = () => {
           zIndex: 0,
         }}
       >
-        <CalendarRightSide calendarsColor={calendarsColor} handleCaleFormSubmit={handleCaleFormSubmit} handleRemoveAMeeting={handleRemoveAMeeting} isLoding={isLoding} />
+        <CalendarRightSide
+          calendarsColor={calendarsColor}
+          handleCaleFormSubmit={handleCaleFormSubmit}
+          handleRemoveAMeeting={handleRemoveAMeeting}
+          isLoding={isLoding}
+          assigneeData={assigneeData}
+          handleAssigneeChange={handleAssigneeChange}
+          hasAccess={hasAccess}
+        />
 
       </Box>
     </Box>
