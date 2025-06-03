@@ -16,10 +16,10 @@ import {
     TableSortLabel,
 } from "@mui/material";
 import "./Styles/MeetingGrid.scss";
-import { getTimeLeft, ImageUrl, toISTDateTime } from "../../Utils/globalfun";
+import { formatDate2, formatDate3, getTimeLeft, ImageUrl, toISTDateTime } from "../../Utils/globalfun";
 import { Eye, Pencil } from "lucide-react";
 
-const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusCircles, handleAcceptMeeting, handleReject, handleAttendMeeting, handleDrawerToggle, setCalFormData, setFormData, background, hanldePAvatarClick }) => {
+const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusCircles, handleAcceptMeeting, handleReject, handleAttendMeeting, handleDrawerToggle, setCalFormData, setFormData, background, hanldePAvatarClick, handleOpenStatusModal }) => {
     const [sortConfig, setSortConfig] = useState({ key: "entrydate", direction: "desc" });
     const handleFormatDate = (startDate) => {
         const date = toISTDateTime(startDate);
@@ -106,7 +106,7 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                         <TableCell>{renderSortCell("Title", "meetingtitle")}</TableCell>
                         <TableCell>{renderSortCell("Project / Module", "taskname")}</TableCell>
                         <TableCell>{renderSortCell("Start", "StartDate")}</TableCell>
-                        <TableCell>Assignee</TableCell>
+                        <TableCell>Participant</TableCell>
                         <TableCell>Status</TableCell>
                         <TableCell sx={{ width: '100px' }} className="sticky-last-col">Action</TableCell>
                     </TableRow>
@@ -116,10 +116,16 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                         <TableRow key={row.meetingid}>
                             <TableCell>{row.meetingtitle}</TableCell>
                             <TableCell>{row.prModule?.taskPr + "/" + row.prModule?.taskname}</TableCell>
-                            <TableCell>{handleFormatDate(row.StartDate)}</TableCell>
+                            <TableCell>{formatDate3(row.StartDate)}</TableCell>
                             <TableCell>{renderAssigneeAvatars(row.guests, row)}</TableCell>
-                            <TableCell>
+                            {/* <TableCell>
                                 {StatusCircles(row, { redCount: 5, yellowCount: 10, greenCount: 50 })}
+                            </TableCell> */}
+                            <TableCell>
+                                <a href="#"
+                                     onClick={() => handleOpenStatusModal(row)} className="status-link">
+                                    Check Status
+                                </a>
                             </TableCell>
                             <TableCell align="center" sx={{ width: '100px' }} className="sticky-last-col">
                                 <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>

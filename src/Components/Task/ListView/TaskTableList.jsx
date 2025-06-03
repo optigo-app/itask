@@ -188,18 +188,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         setExpandedTasks((prev) => {
             const isCurrentlyExpanded = prev[taskId];
             const newState = { ...prev, [taskId]: !isCurrentlyExpanded };
-
             setOpenChildTask(false);
-
-            if (!isCurrentlyExpanded) {
-                setTimeout(() => {
-                    // setOpenChildTask(true);
-                    setSelectedTask(task);
-                }, 0);
-            } else {
-                setSelectedTask(null);
-            }
-
             return newState;
         });
     };

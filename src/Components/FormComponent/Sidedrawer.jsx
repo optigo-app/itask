@@ -377,7 +377,7 @@ const SidebarDrawer = ({
                                 <Typography variant="caption"
                                     sx={{ color: '#7D7f85 !important' }}
                                 >
-                                    {decodedData?.project + '/' + decodedData?.module + (rootSubrootflagval?.Task == "subroot" ? '/' + formDataValue?.taskname : '')}
+                                    {decodedData && decodedData?.project + '/' + decodedData?.module + (rootSubrootflagval?.Task == "subroot" ? '/' + formDataValue?.taskname : '')}
                                 </Typography>
                             }
                             {rootSubrootflagval?.Task !== "root" &&

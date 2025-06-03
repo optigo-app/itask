@@ -38,6 +38,19 @@
                     background-color: #f9f9f9;
                 }
             }
+
+            .status-link {
+                font-size: 14px;
+                font-weight: 600;
+                color: #3734FF;
+                text-decoration: none;
+                cursor: pointer;
+                transition: all 0.2s ease-in-out;
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
         }
     }
 }

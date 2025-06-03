@@ -368,18 +368,23 @@ const MeetingPage = () => {
         new Date(meeting.StartDate).getDate()
       );
 
+      const diffTime = today - meetingDate;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
       switch (selectedTab?.filterTab) {
         case "Upcoming":
           return matchesSearch && meetingDate >= today;
         case "Overdue":
-          return matchesSearch && meetingDate < today;
+          return matchesSearch && meetingDate < today && diffDays <= 15;
         case "Completed":
           return (
-            matchesSearch && meetingDate < today && meeting.isAttendBtn == 2
+            matchesSearch && meetingDate < today && meeting.isAttendBtn === 2
           );
         case "History":
           return (
-            matchesSearch && meetingDate < today && meeting.isAttendBtn === 0
+            matchesSearch &&
+            meetingDate < today &&
+            (meeting.isAttendBtn === 0 && diffDays > 15)
           );
         default:
           return matchesSearch;
@@ -442,19 +447,19 @@ const MeetingPage = () => {
     setMeetingDetailModalOpen(true);
   };
 
-  
+
   const handleMeetingEdit = (meeting) => {
     setFormData(meeting);
     handleTaskModalClose();
     setCaledrawerOpen(true);
-}
+  }
 
   const background = (assignee) => {
     const avatarBackgroundColor = assignee?.avatar
-        ? "transparent"
-        : getRandomAvatarColor(assignee);
+      ? "transparent"
+      : getRandomAvatarColor(assignee);
     return avatarBackgroundColor;
-};
+  };
 
   const StatusCircles = (meeting, { redCount, yellowCount, greenCount }) => {
     const circleStyle = {
@@ -585,6 +590,7 @@ const MeetingPage = () => {
                           StatusCircles={StatusCircles}
                           ImageUrl={ImageUrl}
                           background={background}
+                          handleOpenStatusModal={handleOpenStatusModal}
                           handleAcceptMeeting={handleAcceptMeeting}
                           handleReject={handleReject}
                           handleAttendMeeting={handleAttendMeeting}
@@ -648,6 +654,7 @@ const MeetingPage = () => {
         )}
         <StatusModal
           open={openStatusModal}
+          mettingData={formData}
           handleFetchMeetingDetails={handleFetchMeetingDetails}
           handleClose={() => setOpenStatusModal(false)}
         />

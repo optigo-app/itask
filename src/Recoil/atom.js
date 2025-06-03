@@ -115,6 +115,16 @@ export const CalEventsFilter = atom({
   default: []
 })
 
+export const Calevent = atom({
+  key: 'Calevent',
+  default: null
+})
+
+export const CaleContext = atom({
+  key: 'CaleContext',
+  default: null
+})
+
 export const timerCompOpen = atom({
   key: 'timerCompOpen',
   default: false

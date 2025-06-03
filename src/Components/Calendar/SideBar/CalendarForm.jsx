@@ -103,7 +103,6 @@ const CalendarForm = ({
     }, [])
 
     useEffect(() => {
-        debugger
         const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
         if (CalformDataValue) {
             setFormValues({
