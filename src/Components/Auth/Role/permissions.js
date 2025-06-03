@@ -11,5 +11,7 @@ export const ROLES = {
     canPrModuleDelete: [ROLES.ADMIN, ROLES.TEAM_LEAD],
     canEdit: [ROLES.ADMIN, ROLES.TEAM_LEAD],
     canChangeStatus: [ROLES.ADMIN],
+    CALENDAR_A_DROPDOWN: [ROLES.ADMIN],
+    CALENDAR_VIEW_ALL: [ROLES.ADMIN],
   };
   

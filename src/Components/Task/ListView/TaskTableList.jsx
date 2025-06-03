@@ -441,7 +441,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         return subtasks?.map((subtask) => (
             <React.Fragment key={subtask.taskid}>
                 <TableRow sx={{
-                    backgroundColor: hoveredSubtaskId === subtask?.taskid ? '#f5f5f5' : 'inherit',
+                    backgroundColor: hoveredSubtaskId === subtask?.taskid ? '#f5f5f5' : expandedTasks[subtask.taskid] ? '#80808030' : 'inherit',
                 }}
                     onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid, { Tbcell: 'TaskName' })}
                     onMouseLeave={handleSubtaskMouseLeave}
@@ -567,7 +567,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                         <React.Fragment key={taskIndex}>
                                             <TableRow key={taskIndex}
                                                 sx={{
-                                                    backgroundColor: hoveredTaskId === task?.taskid ? '#f5f5f5' : 'inherit',
+                                                    backgroundColor: hoveredTaskId === task?.taskid ? '#f5f5f5' : expandedTasks[task.taskid] ? '#80808030' : 'inherit',
                                                     // opacity: task?.isnew == 0 ? 0.5 : 1,
                                                     // pointerEvents: task?.isnew == 0 ? 'none' : 'auto',
                                                     // cursor: task?.isnew == 0 ? 'not-allowed' : 'pointer',

@@ -73,7 +73,7 @@
         position: relative;
         z-index: 1;
 
- 
+
 
         .toggle-button {
             flex: 1;
@@ -88,7 +88,7 @@
                 background-color: #fff !important;
                 color: #000 !important;
                 font-weight: 700;
-                
+
                 // &::before {
                 //     content: "";
                 //     position: absolute;
@@ -105,6 +105,13 @@
                 // }
             }
         }
+    }
+}
+
+.meetingAssigneBox {
+    .MuiBox-root {
+        display: flex;
+        gap: 10px;
     }
 }
 

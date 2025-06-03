@@ -8,14 +8,12 @@
     font-family: $font-family;
     color: $titleColor !important;
     box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important;
-    // border: 1px solid black;
     border-radius: 8px !important;
+    position: relative;
 
     .MuiPickersLayout-root {
         display: block !important;
     }
-
-    .MuiPickersLayout-root {}
 
     .calendarRightMain {
         .fc {

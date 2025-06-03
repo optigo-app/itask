@@ -3,12 +3,9 @@ import { CommonAPI } from "../InitialApi/CommonApi";
 export const fetchMettingListApi = async (selectedRow) => {
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
-        const init = JSON.parse(sessionStorage.getItem('taskInit'));
-        
         const combinedValue = JSON.stringify({
             taskid: `${selectedRow?.taskid ?? ''}`,
         });
-
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"meetinglist\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (tasklist)",
@@ -28,16 +25,9 @@ export const fetchMettingListApi = async (selectedRow) => {
 
 
 export const fetchMettingListByLoginApi = async (selectedRow) => {
-    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
-        const init = JSON.parse(sessionStorage.getItem('taskInit'));
-        
-        const combinedValue = JSON.stringify({
-            taskid: `${selectedRow?.taskid ?? ''}`,
-        });
-
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"meetinglistbylogin\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"meetinglistbylogin\",\"appuserid\":\"${selectedRow?.uid ?? ''}\"}`,
             "f": "Task Management (tasklist)",
             "p": "",
         };
@@ -56,12 +46,6 @@ export const fetchMettingListByLoginApi = async (selectedRow) => {
 export const fetchMettingFullDetailsListApi = async (selectedRow) => {
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
-        const init = JSON.parse(sessionStorage.getItem('taskInit'));
-        
-        const combinedValue = JSON.stringify({
-            taskid: `${selectedRow?.taskid ?? ''}`,
-        });
-
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"meetingdetailslist\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (tasklist)",

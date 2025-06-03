@@ -1,42 +1,55 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import listPlugin from "@fullcalendar/list";
 import {
     Menu,
-    MenuItem,
     TextField,
     Button,
-    ButtonGroup,
-    Popover,
     Box,
 } from "@mui/material";
 import { v4 as uuidv4 } from 'uuid';
+import { createRoot } from 'react-dom/client';
+
+const DepartmentAssigneeAutocomplete = () => (
+    <TextField
+        placeholder="Select Department/Assignee"
+        size="small"
+        variant="outlined"
+        sx={{ minWidth: 200 }}
+    />
+);
 
 const CalendarWithMuiMenu = () => {
     const inputRef = useRef(null);
     const [contextMenu, setContextMenu] = useState(null);
     const [selectedDate, setSelectedDate] = useState(null);
-    console.log('selectedDate: ', selectedDate);
-    const [dropdownAnchorEl, setDropdownAnchorEl] = useState(null);
     const [events, setEvents] = useState([
-        {
-            id: uuidv4(),
-            title: "Demo Event A",
-            start: new Date("2025-06-03T00:00:00"),
-        },
-        {
-            id: uuidv4(),
-            title: "Demo Event B",
-            start: new Date("2025-06-05T00:00:00"),
-        },
-        {
-            id: uuidv4(),
-            title: "Demo Event C",
-            start: new Date("2025-06-10T00:00:00"),
-        }
+        { id: uuidv4(), title: "Demo Event A", start: new Date("2025-06-03") },
+        { id: uuidv4(), title: "Demo Event B", start: new Date("2025-06-05") },
+        { id: uuidv4(), title: "Demo Event C", start: new Date("2025-06-10") }
     ]);
 
-    console.log('events: ', events);
+    const customToolbarRef = useRef(null);
+    const calendarRef = useRef(null);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+          const el = document.querySelector(".fc-departmentSelector-button");
+          if (el && el.parentNode) {
+            const wrapper = document.createElement("div");
+            wrapper.style.display = "inline-block";
+            el.parentNode.replaceChild(wrapper, el);
+            const root = createRoot(wrapper);
+            root.render(<DepartmentAssigneeAutocomplete />);
+            clearInterval(interval);
+          }
+        }, 100);
+      
+        return () => clearInterval(interval);
+      }, []);
+      
 
     const handleDayRightClick = (dateStr, event) => {
         event.preventDefault();
@@ -46,11 +59,9 @@ const CalendarWithMuiMenu = () => {
 
     const handleClose = () => {
         setContextMenu(null);
-        setDropdownAnchorEl(null);
     };
 
-    const handleSplit = async (type) => {
-        debugger
+    const handleSplit = () => {
         const days = parseInt(inputRef.current?.value);
         if (!days || days < 1) return alert("Enter valid number of days");
         if (!selectedDate) return alert("No selected date");
@@ -58,7 +69,6 @@ const CalendarWithMuiMenu = () => {
         const baseDate = new Date(selectedDate);
         baseDate.setHours(0, 0, 0, 0);
 
-        // Find the original event on selectedDate
         const originalEvent = events.find(event => {
             const eventDate = new Date(event.start);
             eventDate.setHours(0, 0, 0, 0);
@@ -75,14 +85,13 @@ const CalendarWithMuiMenu = () => {
 
             newEvents.push({
                 id: uuidv4(),
-                title: `${originalEvent.title}`,
+                title: `${originalEvent.title} (Split)`,
                 start: currentDate.toISOString(),
-                type,
                 createdAt: new Date().toISOString(),
+                color: "#1976d2",
             });
         }
 
-        // Remove the original event and add the new split ones
         setEvents(prev => {
             const updatedEvents = prev.filter(event => {
                 const eventDate = new Date(event.start);
@@ -92,31 +101,38 @@ const CalendarWithMuiMenu = () => {
             return [...updatedEvents, ...newEvents];
         });
 
-
         handleClose();
     };
 
     return (
         <div onClick={handleClose} style={{ padding: 20 }}>
+            <div style={{ marginBottom: 10 }} ref={customToolbarRef}></div>
+
             <FullCalendar
-                plugins={[dayGridPlugin]}
+                plugins={[dayGridPlugin, timeGridPlugin, listPlugin]}
                 initialView="dayGridMonth"
                 events={events}
+                ref={calendarRef}
+                headerToolbar={{
+                    left: "prev,next today departmentSelector",
+                    center: "title",
+                    right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek"
+                  }}
+                views={{
+                    listWeek: {
+                        buttonText: 'list',
+                    },
+                }}
                 dayCellDidMount={(info) => {
-                    debugger
                     info.el.addEventListener("contextmenu", (e) => {
                         e.preventDefault();
-
                         const clickedDate = new Date(info.date);
                         clickedDate.setHours(0, 0, 0, 0);
 
                         const isEventOnDate = events.some(event => {
                             const eventStart = new Date(event.start);
-                            const eventEnd = event.end ? new Date(event.end) : eventStart;
                             eventStart.setHours(0, 0, 0, 0);
-                            eventEnd.setHours(0, 0, 0, 0);
-
-                            return clickedDate >= eventStart && clickedDate <= eventEnd;
+                            return clickedDate.getTime() === eventStart.getTime();
                         });
 
                         if (isEventOnDate) {
@@ -152,21 +168,13 @@ const CalendarWithMuiMenu = () => {
                     size="small"
                     placeholder="Enter days"
                     inputRef={inputRef}
-                    className="textfieldsClass"
-                    inputProps={{
-                        inputMode: "decimal",
-                        pattern: "^\\d*\\.?\\d{0,2}$"
-                    }}
+                    inputProps={{ inputMode: "decimal", pattern: "^\\d*$" }}
                     sx={{ mb: 2 }}
                 />
                 <Box sx={{ display: "flex", justifyContent: 'end', gap: '10px' }}>
-                    <Button className="secondaryBtnClassname">Cancel</Button>
-                    <Button className="buttonClassname" onClick={() => handleSplit("Split")}>
-                        Split
-                    </Button>
-
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleSplit}>Split</Button>
                 </Box>
-
             </Menu>
         </div>
     );
