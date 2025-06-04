@@ -4,8 +4,6 @@ export const AddMeetingApi = async (formValues) => {
     debugger
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
-        const init = JSON.parse(sessionStorage.getItem('taskInit'));
-
         const combinedValue = JSON.stringify({
             "meetingid": formValues?.id ?? 0,
             "taskid": formValues?.prModule?.taskid ?? 0,
@@ -23,7 +21,6 @@ export const AddMeetingApi = async (formValues) => {
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };
-        console.log('body: ', body);
 
         const response = await CommonAPI(body);
 

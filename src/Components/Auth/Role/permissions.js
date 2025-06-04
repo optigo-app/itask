@@ -13,5 +13,6 @@ export const ROLES = {
     canChangeStatus: [ROLES.ADMIN],
     CALENDAR_A_DROPDOWN: [ROLES.ADMIN],
     CALENDAR_VIEW_ALL: [ROLES.ADMIN],
+    MEETING_VIEW_ALL: [ROLES.ADMIN],
   };
   

@@ -63,7 +63,6 @@ const HeaderButtons = ({
   const isMediumScreen = useMediaQuery("(min-width:601px) and (max-width:960px)");
   const location = useLocation();
   const [filters, setFilters] = useRecoilState(Advfilters);
-  console.log('filters: ', filters);
   const searchParams = new URLSearchParams(location.search);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const setFormDataValue = useSetRecoilState(formData);

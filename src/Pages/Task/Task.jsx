@@ -34,7 +34,6 @@ const Task = () => {
   const [filters, setFilters] = useRecoilState(Advfilters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
-  console.log('tasks: ', tasks);
   const setTaskDataLength = useSetRecoilState(taskLength)
   const selectedRow = useRecoilValue(selectedRowData);
   const encodedData = searchParams.get("data");

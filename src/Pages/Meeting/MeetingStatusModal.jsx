@@ -47,7 +47,6 @@ const statusColors = {
 };
 
 const ReadOnlyModal = ({ open, mettingData, handleClose, handleFetchMeetingDetails }) => {
-    console.log('mettingData: ', mettingData);
     const [rows, setRows] = useState([]);
     const [page, setPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);

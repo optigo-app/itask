@@ -132,7 +132,7 @@ const MultiTaskInput = ({ onSave }) => {
         updatedTasks[editIndex] = {
             ...updatedTasks[editIndex],
             taskName: editingName?.trim(),
-            estimate: editingEstimate || ""
+            estimate: tasks?.[editIndex]?.estimate || ""
         };
 
         setTasks(updatedTasks);
