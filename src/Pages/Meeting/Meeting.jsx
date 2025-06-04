@@ -22,6 +22,8 @@ import { fetchMettingDetailApi } from "../../Api/MeetingApi/FetchMeetingStatus.j
 import { toast } from "react-toastify";
 import { MeetingAttendAPI } from "../../Api/MeetingApi/MeetingAttendApi.js";
 import ProfileCardModal from "../../Components/ShortcutsComponent/ProfileCard.jsx";
+import useAccess from "../../Components/Auth/Role/useAccess.js";
+import { PERMISSIONS } from "../../Components/Auth/Role/permissions.js";
 
 const MeetingTable = lazy(() =>
   import("../../Components/Meeting/MeetingGrid.jsx")
@@ -49,6 +51,7 @@ const meetingtabData = [
 ];
 
 const MeetingPage = () => {
+  const { hasAccess } = useAccess();
   const [viewType, setViewType] = useState("list");
   const [meetings, setMeetings] = useState([]);
   const [isLoding, setIsLoding] = useState(false);
@@ -332,10 +335,14 @@ const MeetingPage = () => {
   };
 
   const handleMeetingApiCall = () => {
-    if (selectedTab?.meetingTab == "My Schedule") {
-      handleMeetingbyLogin();
+    if (hasAccess(PERMISSIONS.MEETING_VIEW_ALL)) {
+      if (selectedTab?.meetingTab == "My Schedule") {
+        handleMeetingbyLogin();
+      } else {
+        handleMeetingList();
+      }
     } else {
-      handleMeetingList();
+      handleMeetingbyLogin();
     }
   }
 

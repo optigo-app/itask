@@ -15,7 +15,6 @@ const Filters = ({
   taskDepartment,
 }) => {
   const [filters, setFilters] = useRecoilState(Advfilters);
-  console.log('filters: ', filters);
 
   const [filterVisibility, setFilterVisibility] = useState({
     status: true,
@@ -32,7 +31,6 @@ const Filters = ({
   const [startDateVisible, setStartDateVisible] = useState(true);
   const [assigneeVisible, setAssigneeVisible] = useState(true);
   const [guest, setGuest] = useState({});
-  console.log('guest: ', guest);
 
   const openMenu = Boolean(anchorEl);
 

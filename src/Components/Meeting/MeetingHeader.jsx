@@ -12,6 +12,8 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import { IdCard, List, Plus } from 'lucide-react';
 import DasboardTab from '../Project/Dashboard/dasboardTab';
+import useAccess from '../Auth/Role/useAccess';
+import { PERMISSIONS } from '../Auth/Role/permissions';
 
 const MeetingHeader = ({
   searchTerm,
@@ -25,6 +27,7 @@ const MeetingHeader = ({
   handleTabChange
 }) => {
   const isMobile = useMediaQuery('(max-width:960px)');
+  const { hasAccess } = useAccess();
 
   const ViewToggleButtons = ({ view, onViewChange }) => {
     return (
@@ -81,11 +84,13 @@ const MeetingHeader = ({
         />
       </Box>
       <Box className="meetingHeaderSBox">
-        <DasboardTab
-          tabData={meetingtabData}
-          selectedTab={selectedTab?.meetingTab}
-          handleChange={handleTabChange}
-        />
+        {hasAccess(PERMISSIONS.MEETING_VIEW_ALL) &&
+          <DasboardTab
+            tabData={meetingtabData}
+            selectedTab={selectedTab?.meetingTab}
+            handleChange={handleTabChange}
+          />
+        }
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Button
             variant="contained"

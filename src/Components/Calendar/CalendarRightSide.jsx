@@ -113,7 +113,6 @@ const Calendar = ({ isLoding, assigneeData, hasAccess, calendarsColor, handleCal
                 entrydate: new Date().toISOString(),
             });
             const apiRes = await AddMeetingApi(newEvents[i]);
-            console.log('apiRes: ', apiRes);
         }
 
         setCalEvData(prev => {
@@ -131,7 +130,6 @@ const Calendar = ({ isLoding, assigneeData, hasAccess, calendarsColor, handleCal
     };
 
     const filteredEvents = filterEvents(calEvData, selectedEventfilter);
-    console.log('filteredEvents: ', filteredEvents);
     // const filteredEvents = calEvData
 
     useEffect(() => {

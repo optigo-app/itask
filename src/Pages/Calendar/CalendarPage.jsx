@@ -122,7 +122,6 @@ const Calendar = () => {
   }, [selectedAssignee])
 
   const handleCaleFormSubmit = async (formValues) => {
-    console.log('formValues: ', formValues);
     setCalFormData(formValues);
     const apiRes = await AddMeetingApi(formValues);
     if (apiRes && apiRes?.rd[0]?.stat == 1) {
