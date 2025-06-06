@@ -8,7 +8,6 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
-  Typography,
   useMediaQuery,
 } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
@@ -28,6 +27,7 @@ import {
 } from "../../../Recoil/atom";
 import { toast } from "react-toastify";
 import {
+  Calendar,
   ChevronsDown,
   Kanban,
   List,
@@ -35,17 +35,14 @@ import {
   TimerIcon,
 } from "lucide-react";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./Styles.scss";
 import TaskTimeTrackerComp from "../../ShortcutsComponent/TimerComponent/TaskTimeTrackerComp";
 import ScrollableCategoryTabs from "./ScrollableCategoryTabs";
-import { isMediumScreen, isSmallScreen } from "../../../Utils/globalfun";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
 import useAccess from "../../Auth/Role/useAccess";
 
 const HeaderButtons = ({
-  searchTerm,
-  activeButton,
   onFilterChange,
   onButtonClick,
   isLoading,
@@ -56,8 +53,11 @@ const HeaderButtons = ({
   taskCategory,
   taskDepartment,
   taskAssigneeData,
+  CategorySummary,
 }) => {
+  console.log('CategorySummary: ', CategorySummary);
   const { hasAccess } = useAccess();
+  const navigate = useNavigate()
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const isSmallScreen = useMediaQuery("(max-width:600px)");
   const isMediumScreen = useMediaQuery("(min-width:601px) and (max-width:960px)");
@@ -76,32 +76,14 @@ const HeaderButtons = ({
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
   const encodedData = searchParams.get("data");
   const [categoryMaster, setCategoryMaster] = useState([]);
+  console.log('categoryMaster: ', categoryMaster);
 
   useEffect(() => {
-    if (Array.isArray(taskCategory)) {
-      const isProjectPath = location?.pathname?.includes("/projects");
-      const newTask = {
-        id: taskCategory.length * 20,
-        labelname: "New Task",
-        displayorder: taskCategory.length + 1,
-        isdelete: 0,
-        masterid: 1,
-      };
-      const dueTask = {
-        id: taskCategory.length * 25,
-        labelname: "Due Task",
-        displayorder: taskCategory.length + 2,
-        isdelete: 0,
-        masterid: 1,
-      };
-
-      const categoryData = isProjectPath
-        ? [dueTask, ...taskCategory]
-        : [newTask, dueTask, ...taskCategory];
-
-      setCategoryMaster(categoryData);
+    if (Array.isArray(CategorySummary)) {
+      setCategoryMaster(CategorySummary);
     }
-  }, [taskCategory, location]);
+  }, [CategorySummary, location, isLoading]);
+
 
   const handleDrawerToggle = () => {
     setFormDrawerOpen(!formdrawerOpen);
@@ -143,7 +125,9 @@ const HeaderButtons = ({
   };
 
   const handleViewChange = (event, newView) => {
-    if (newView !== null) {
+    if (newView == "calendar") {
+      navigate('/calendar')
+    } else {
       setView(newView);
       onButtonClick(newView);
     }
@@ -154,7 +138,6 @@ const HeaderButtons = ({
       const updatedCategory = selectedCategory.includes(value)
         ? selectedCategory.filter((category) => category !== value)
         : [...selectedCategory, value];
-
       setSelectedCategory(updatedCategory);
       onFilterChange(key, updatedCategory);
     } else {
@@ -189,6 +172,9 @@ const HeaderButtons = ({
         </ToggleButton>
         <ToggleButton value="kanban" aria-label="kanban view">
           <Kanban className="iconbtn" size={20} />
+        </ToggleButton>
+        <ToggleButton value="calendar" aria-label="Calendar view">
+          <Calendar className="iconbtn" size={20} />
         </ToggleButton>
       </ToggleButtonGroup>
     );

@@ -1,8 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { fetchTaskDataFullApi } from "../../Api/TaskApi/TaskDataFullApi";
-import { fetchMasterGlFunc, mapKeyValuePair, mapTaskLabels } from "../globalfun";
+import {
+  fetchMasterGlFunc,
+  mapKeyValuePair,
+  mapTaskLabels,
+} from "../globalfun";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { fetchlistApiCall, projectDatasRState, TaskData } from "../../Recoil/atom";
+import {
+  fetchlistApiCall,
+  projectDatasRState,
+  TaskData,
+} from "../../Recoil/atom";
 import { useLocation } from "react-router-dom";
 
 const useFullTaskFormatFile = () => {
@@ -16,9 +24,12 @@ const useFullTaskFormatFile = () => {
   const [taskProject, setTaskProject] = useState();
   const [taskCategory, setTaskCategory] = useState();
   const [taskAssigneeData, setTaskAssigneeData] = useState();
-  const [callFetchTaskApi, setCallFetchTaskApi] = useRecoilState(fetchlistApiCall);
+  const [callFetchTaskApi, setCallFetchTaskApi] =
+    useRecoilState(fetchlistApiCall);
   const tasks = useRecoilValue(TaskData);
   const project = useRecoilValue(projectDatasRState);
+  const searchParams = new URLSearchParams(location.search);
+  const encodedData = searchParams.get("data");
 
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
@@ -57,7 +68,9 @@ const useFullTaskFormatFile = () => {
   };
 
   const fetchTaskData = async () => {
-    const filterCon = location?.pathname?.includes("/projects") ? project : tasks;
+    const filterCon = location?.pathname?.includes("/projects")
+      ? project
+      : tasks;
     if (filterCon?.length > 0) {
       setIsWhTLoading(false);
     } else {
@@ -96,9 +109,17 @@ const useFullTaskFormatFile = () => {
           category: category?.labelname,
         };
       };
+      debugger;
+      let parsedData = null;
+      console.log("parsedData: ", parsedData);
+      if (encodedData) {
+        const decodedString = decodeURIComponent(encodedData);
+        const jsonString = atob(decodedString);
+        parsedData = JSON.parse(jsonString);
+      }
 
       const data = labeledTasks?.map((task) => enhanceTask(task));
-      const finalTaskData = formatDataToTree(data);
+      const finalTaskData = formatDataToTree(data, parsedData);
       setTaskFinalData(finalTaskData);
     } catch (error) {
       console.error(error);
@@ -106,20 +127,22 @@ const useFullTaskFormatFile = () => {
   };
 
   const formatDataToTree = useMemo(() => {
-    return (data) => {
+    return (data, parsedData) => {
       const taskMap = new Map();
       const teamMembersMap = new Map();
       const categoryMap = {};
       const category = {};
+      const categoryTaskCount = {};
       const projectCategoryTasks = {};
       const projectMilestoneData = {};
       const ModuleList = [];
 
       // Step 0: Create category map from label list
       taskCategory?.forEach((label) => {
-        const key = label?.labelname?.toLowerCase()?.replace(/\s+/g, '_');
+        const key = label?.labelname?.toLowerCase()?.replace(/\s+/g, "_");
         categoryMap[label.id] = key;
         category[key] = [];
+        categoryTaskCount[key] = 0;
       });
 
       // Step 1: Build task map and initialize subtasks
@@ -169,10 +192,10 @@ const useFullTaskFormatFile = () => {
             return { statusid: child.statusid };
           }
         });
-        clone.progress_per = total > 0 ? Math.round((completed / total) * 100) : 100;
+        clone.progress_per =
+          total > 0 ? Math.round((completed / total) * 100) : 100;
         return clone;
       };
-
 
       // Step 4: Recursively group tasks by project and category, and calculate estimate totals
       const collectCategoryTasks = (task) => {
@@ -205,6 +228,7 @@ const useFullTaskFormatFile = () => {
         // Global category grouping
         if (categoryKey) {
           category[categoryKey].push(task);
+          categoryTaskCount[categoryKey] += 1;
 
           // Project-wise category grouping
           if (!projectCategoryTasks[projectId]) {
@@ -223,12 +247,22 @@ const useFullTaskFormatFile = () => {
           estimate2_hrsT,
         };
       };
-
+      let TaskData;
       // Step 5: Collect top-level tasks and fill category groups
-      const TaskData = data?.filter((task) => task.parentid === 0);
-      TaskData.forEach((task) => {
-        collectCategoryTasks(task);
-      });
+      if (parsedData?.taskid) {
+        const matchedTask = data?.find(
+          (task) => task.taskid === parsedData.taskid
+        );
+        if (matchedTask) {
+          TaskData = [matchedTask];
+          collectCategoryTasks(matchedTask);
+        }
+      } else {
+        TaskData = data?.filter((task) => task.parentid === 0);
+        TaskData.forEach((task) => {
+          collectCategoryTasks(task);
+        });
+      }
 
       // Step 6: Project-wise Milestone Data
       const allMilestones = data?.filter((task) => task.ismilestone === 1);
@@ -248,9 +282,17 @@ const useFullTaskFormatFile = () => {
 
       // Step 8: Calculate project-wise average progress
       const ProjectProgress = {};
-      for (const [projectId, milestones] of Object.entries(projectMilestoneData)) {
-        const totalProgress = milestones?.reduce((sum, m) => sum + (m.progress_per || 0), 0);
-        const avgProgress = milestones?.length > 0 ? Math.round(totalProgress / milestones.length) : 0;
+      for (const [projectId, milestones] of Object.entries(
+        projectMilestoneData
+      )) {
+        const totalProgress = milestones?.reduce(
+          (sum, m) => sum + (m.progress_per || 0),
+          0
+        );
+        const avgProgress =
+          milestones?.length > 0
+            ? Math.round(totalProgress / milestones.length)
+            : 0;
         ProjectProgress[projectId] = avgProgress;
       }
 
@@ -265,6 +307,92 @@ const useFullTaskFormatFile = () => {
         });
       });
 
+      // === Helper Utilities ===
+      const isValidDate = (dateStr) => {
+        const date = new Date(dateStr);
+        return dateStr && date.toISOString().slice(0, 10) !== "1900-01-01";
+      };
+
+      const isToday = (dateStr) => {
+        if (!isValidDate(dateStr)) return false;
+        const date = new Date(dateStr);
+        const today = new Date();
+        return (
+          date.getFullYear() === today.getFullYear() &&
+          date.getMonth() === today.getMonth() &&
+          date.getDate() === today.getDate()
+        );
+      };
+
+      const isPast = (dateStr) => {
+        if (!isValidDate(dateStr)) return false;
+        return new Date(dateStr) < new Date();
+      };
+
+      // === Ordered Summary ===
+      const CategoryTaskSummary = [
+        // 1. Today Tasks (based on StartDate)
+        {
+          id: "today_tasks",
+          labelname: "Today Tasks",
+          count: data?.filter((task) => isToday(task.StartDate))?.length || 0,
+        },
+
+        // 2. New Tasks
+        {
+          id: "new_tasks",
+          labelname: "New Tasks",
+          count: data?.filter((task) => task.isnew === 1)?.length || 0,
+        },
+
+        // 3. Due Tasks (based on DeadLineDate)
+        {
+          id: "due_tasks",
+          labelname: "Due Tasks",
+          count: data?.filter((task) => isPast(task.DeadLineDate))?.length || 0,
+        },
+
+        // 4. Category-wise Task Summary
+        ...taskCategory?.map((label) => {
+          const key = label?.labelname?.toLowerCase()?.replace(/\s+/g, "_");
+          return {
+            id: label.id,
+            labelname: label.labelname,
+            count: categoryTaskCount[key] || 0,
+          };
+        }),
+      ];
+
+      // === Module-wise Summary for parentid === 0 only ===
+      const topLevelTasks = data?.filter(task => task.parentid === 0);
+
+      const ModulewiseCategoryTaskSummary = [
+        {
+          id: "today_tasks",
+          labelname: "Today Tasks",
+          count: topLevelTasks?.filter((task) => isToday(task.StartDate))?.length || 0,
+        },
+        {
+          id: "new_tasks",
+          labelname: "New Tasks",
+          count: topLevelTasks?.filter((task) => task.isnew === 1)?.length || 0,
+        },
+        {
+          id: "due_tasks",
+          labelname: "Due Tasks",
+          count: topLevelTasks?.filter((task) => isPast(task.DeadLineDate))?.length || 0,
+        },
+        ...taskCategory?.map((label) => {
+          const key = label?.labelname?.toLowerCase()?.replace(/\s+/g, "_");
+          return {
+            id: label.id,
+            labelname: label.labelname,
+            count: topLevelTasks?.filter(
+              (task) => categoryMap[task.workcategoryid] === key
+            )?.length || 0,
+          };
+        }),
+      ];
 
       setTimeout(() => {
         setIsWhTLoading(false);
@@ -276,9 +404,11 @@ const useFullTaskFormatFile = () => {
         ProjectCategoryTasks: projectCategoryTasks,
         ModuleList,
         ProjectProgress,
+        CategoryTaskSummary,
+        ModulewiseCategoryTaskSummary
       };
     };
-  }, [taskCategory]);
+  }, [taskCategory, location.pathname]);
 
   useEffect(() => {
     fetchMasterData();
@@ -302,7 +432,8 @@ const useFullTaskFormatFile = () => {
     taskProject,
     taskCategory,
     taskAssigneeData,
-    callFetchTaskApi
+    callFetchTaskApi,
+    location.pathname,
   ]);
 
   return {

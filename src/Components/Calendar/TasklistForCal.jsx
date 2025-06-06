@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Box, Card, CardContent, Typography } from "@mui/material";
+import {
+    Box, Card, CardContent, Typography, TextField
+} from "@mui/material";
 import { Draggable } from "@fullcalendar/interaction";
-import './TasklistForCal.scss'
-import { TaskData } from "../../Recoil/atom"
 import { useRecoilValue } from "recoil";
-import { flattenTasks } from "../../Utils/globalfun";
+import Fuse from "fuse.js";
+
+import './TasklistForCal.scss';
+import { TaskData } from "../../Recoil/atom";
+import { commonTextFieldProps, flattenTasks } from "../../Utils/globalfun";
 
 const TasklistForCal = ({ calendarsColor }) => {
     const task = useRecoilValue(TaskData);
     const [calTasksList, setCalTasksList] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         setCalTasksList(flattenTasks(task));
     }, [task]);
 
-    // Initialize draggable tasks
+    // Drag only children (parentid !== 0)
     useEffect(() => {
         const container = document.getElementById("external-tasks");
         if (container) {
@@ -54,31 +59,98 @@ const TasklistForCal = ({ calendarsColor }) => {
     }, [calTasksList]);
 
 
+    // Fuzzy match using Fuse.js
+    const getFilteredHierarchy = () => {
+        const fuse = new Fuse(calTasksList, {
+            keys: [
+                "taskname",
+                "descr",
+                "status",
+                "taskPr",
+                "assignee.firstname",
+                "assignee.lastname"
+            ],
+            threshold: 0.4
+        });
+
+        const matched = searchQuery
+            ? fuse.search(searchQuery).map(res => res.item)
+            : calTasksList;
+
+        const matchedIds = new Set(matched.map(t => t.taskid));
+
+        const parentMap = {};
+        calTasksList.forEach(task => {
+            if (task.parentid === 0) {
+                parentMap[task.taskid] = { ...task, children: [] };
+            }
+        });
+
+        calTasksList.forEach(task => {
+            if (task.parentid !== 0 && parentMap[task.parentid]) {
+                parentMap[task.parentid].children.push(task);
+            }
+        });
+
+        return Object.values(parentMap).filter(parent => {
+            const parentMatch = matchedIds.has(parent.taskid);
+            const filteredChildren = parent.children.filter(child => matchedIds.has(child.taskid));
+            parent.children = parentMatch ? parent.children : filteredChildren;
+            return parentMatch || filteredChildren.length > 0;
+        });
+    };
+
+    const groupedTasks = getFilteredHierarchy();
+
     return (
         <>
-            <Typography variant="h6" sx={{ m: '0px 10px 10px 10px' }}>Today Tasks</Typography>
-            <Box id="external-tasks" sx={{ padding: 1.25, maxHeight: '100vh', height: '100%', overflow: 'auto' }}>
-                {calTasksList.map((task) => {
-                    const colorClass = calendarsColor[task.category] || "default";
+            <Box sx={{ px: 1.25, my: 1 }}>
+                <TextField
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    placeholder="Search tasks..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    {...commonTextFieldProps}
+                />
+            </Box>
 
-                    return (
-                        <Card
-                            key={task.taskid}
-                            className={`draggable-task bg-${colorClass} text-white`}
-                            data-id={task.taskid}
-                            sx={{
-                                cursor: "grab",
-                                mb: 1.25,
-                                borderRadius: 1,
-                                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-                            }}
+            <Box id="external-tasks" sx={{ padding: 1.25, maxHeight: '88vh', overflow: 'auto' }}>
+                {groupedTasks?.map(parent => (
+                    <Box key={parent.taskid} sx={{ mb: 2 }}>
+                        <Typography
+                            variant="body1"
+                            fontWeight="bold"
+                            color="text.primary"
+                            sx={{ ml: 1, mb: 0.5 }}
                         >
-                            <CardContent className={`bg-${colorClass} text-${colorClass}`} sx={{ p: '10px !important', m: 0 }}>
-                                <Typography variant="body1">{task.taskname}</Typography>
-                            </CardContent>
-                        </Card>
-                    );
-                })}
+                            {parent.taskname}
+                        </Typography>
+
+                        {parent?.children?.map(child => {
+                            const colorClass = calendarsColor[child.category] || "default";
+                            return (
+                                <Card
+                                    key={child.taskid}
+                                    className={`draggable-task bg-${colorClass} text-white`}
+                                    data-id={child.taskid}
+                                    sx={{
+                                        cursor: "grab",
+                                        mb: 1,
+                                        ml: 2,
+                                        borderRadius: 1,
+                                        boxShadow: "0px 1px 3px rgba(0,0,0,0.1)"
+                                    }}
+                                >
+                                    <CardContent className={`bg-${colorClass} text-${colorClass}`} sx={{ p: '10px !important', m: 0 }}>
+                                        <Typography variant="body2">{child.taskname}</Typography>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </Box>
+                ))}
             </Box>
         </>
     );

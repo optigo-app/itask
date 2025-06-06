@@ -1,6 +1,7 @@
 import { AssigneeMaster } from "../Api/MasterApi/AssigneeMaster";
 import { fetchMaster } from "../Api/MasterApi/MasterApi";
-import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi";
+import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi"
+
 
 // output like 01/01/2023
 export const formatDate = (dateStr) => {
@@ -39,30 +40,30 @@ export const formatDate3 = (date) => {
 
 export const formatDate4 = (date) => {
     if (!date) return 'N/A';
-  
+
     try {
-      const entryDate = new Date(date);
-  
-      // Handle invalid dates
-      if (isNaN(entryDate.getTime())) return 'Invalid Date';
-  
-      const formatted = entryDate.toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'UTC' // Ensure UTC display
-      });
-  
-      return formatted;
+        const entryDate = new Date(date);
+
+        // Handle invalid dates
+        if (isNaN(entryDate.getTime())) return 'Invalid Date';
+
+        const formatted = entryDate.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'UTC' // Ensure UTC display
+        });
+
+        return formatted;
     } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'N/A';
+        console.error('Error formatting date:', error);
+        return 'N/A';
     }
-  };
-  
+};
+
 export function getTimeLeft(dateString) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -700,3 +701,20 @@ export function showNotification({ title, body, icon, actions, url }) {
     }
 }
 
+
+export const isTaskDue = (dateStr) => {
+    const now = new Date();
+    if (!dateStr) return false;
+    return new Date(dateStr) < now;
+};
+
+export const isTaskToday = (dateStr) => {
+    const now = new Date();
+    if (!dateStr) return false;
+    const taskDate = new Date(dateStr);
+    return (
+        taskDate.getDate() === now.getDate() &&
+        taskDate.getMonth() === now.getMonth() &&
+        taskDate.getFullYear() === now.getFullYear()
+    );
+};

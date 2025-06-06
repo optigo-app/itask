@@ -5,7 +5,7 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, useMediaQuery } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { Advfilters, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength } from "../../Recoil/atom";
-import { formatDate2 } from "../../Utils/globalfun";
+import { formatDate2, isTaskDue, isTaskToday } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
@@ -47,13 +47,11 @@ const Task = () => {
     priorityData,
     statusData,
     taskAssigneeData } = useFullTaskFormatFile();
-  console.log('iswhTLoading: ', iswhTLoading);
-
-  useEffect(() => {
-    if (!location?.pathname?.includes("/tasks")) {
-      setTasks([]);
-    }
-  }, [location]);
+    
+    console.log('taskFinalData: ', taskFinalData);
+    useEffect(() => {
+    setTasks([]);
+  }, [location.pathname]);
 
   useEffect(() => {
     let parsedData = null;
@@ -187,7 +185,6 @@ const Task = () => {
         category,
       } = filters;
 
-      const now = new Date();
       const normalizedSearchTerm = searchTerm?.toLowerCase();
 
       const resetInvalidFilters = () => {
@@ -206,12 +203,6 @@ const Task = () => {
       };
 
       resetInvalidFilters();
-
-      const isTaskDue = (dateStr) => {
-        if (!dateStr) return false;
-        return new Date(dateStr) < now;
-      };
-
       const matchesFilters = (item) => {
         const matchesCategory =
           !Array.isArray(category) ||
@@ -219,11 +210,14 @@ const Task = () => {
           category.some((cat) => {
             if (cat.toLowerCase()?.includes("due")) {
               return isTaskDue(item?.DeadLineDate);
+            } else if (cat.toLowerCase()?.includes("today tasks")) {
+              return isTaskToday(item?.StartDate);
             } else if (cat.toLowerCase()?.includes("new")) {
               return item?.isnew == 1;
             }
             return (item?.category ?? "").toLowerCase() === cat.toLowerCase();
           });
+
 
         return (
           matchesCategory &&
@@ -436,7 +430,7 @@ const Task = () => {
         activeButton={activeButton}
         onButtonClick={handleTabBtnClick}
         onFilterChange={handleFilterChange}
-        isLoading={iswhMLoading}
+        isLoading={iswhTLoading}
         masterData={masterData}
         priorityData={priorityData}
         projectData={taskProject}
@@ -444,6 +438,7 @@ const Task = () => {
         taskCategory={taskCategory}
         taskDepartment={taskDepartment}
         taskAssigneeData={taskAssigneeData}
+        CategorySummary={taskFinalData?.CategoryTaskSummary}
       />
 
       {/* Divider */}
