@@ -1,10 +1,9 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => {
+    debugger
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
-        const init = JSON.parse(sessionStorage.getItem('taskInit'));
-
         let taskid;
         let parentid;
         if (rootSubrootflagval?.Task == 'subroot') {
@@ -44,6 +43,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "ismilestone": formValues?.ismilestone ?? 0,
                 "isfavourite": formValues?.isfavourite ?? 0,
                 "assigneids": formValues?.assigneids ?? "",
+                "createdBy":formValues?.createdBy[0]?.id,
                 "departmentAssigneelist": formValues?.departmentAssigneelist ?? "",
             });
         }

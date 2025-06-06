@@ -20,20 +20,20 @@ import {
 import { KeyboardArrowDown, KeyboardArrowRight } from "@mui/icons-material";
 
 const employees = [
-    { id: 101, name: "Alice" },
-    { id: 102, name: "Bob" },
-    { id: 103, name: "Charlie" },
-    { id: 104, name: "Diana" },
+    { id: 101, name: "Alice", teamId: 5 },
+    { id: 102, name: "Bob", teamId: 5 },
+    { id: 103, name: "Charlie", teamId: 6 },
+    { id: 104, name: "Diana", teamId: 5 },
 ];
 
 const currentUser = { id: 101, teamId: 5 };
 
-// Load from localStorage or fallback to initial data
+// Load from localStorage or fallback to default data
 const loadTasksFromStorage = () => {
     try {
         const stored = localStorage.getItem("tasks");
         if (stored) return JSON.parse(stored);
-    } catch { }
+    } catch {}
     return [
         {
             taskId: 1,
@@ -94,11 +94,6 @@ function filterTasks(tasks, viewMode, userId, teamId) {
         .filter(Boolean);
 }
 
-function getEmployeeName(id) {
-    const emp = employees.find((e) => e.id === id);
-    return emp ? emp.name : "Unassigned";
-}
-
 function TaskRow({ task, onAssign }) {
     const [open, setOpen] = useState(false);
     return (
@@ -132,7 +127,7 @@ function TaskRow({ task, onAssign }) {
                     <TableCell colSpan={2} style={{ paddingBottom: 0, paddingTop: 0 }}>
                         <Collapse in={open} timeout="auto" unmountOnExit>
                             <Box sx={{ marginLeft: 4 }}>
-                                <Table size="small" aria-label="children">
+                                <Table size="small">
                                     <TableBody>
                                         {task.children.map((child) => (
                                             <TaskRow key={child.taskId} task={child} onAssign={onAssign} />
@@ -148,16 +143,26 @@ function TaskRow({ task, onAssign }) {
     );
 }
 
+function flattenTasksWithPath(tasks, path = []) {
+    let result = [];
+    for (const task of tasks) {
+        const currentPath = [...path, task.title];
+        result.push({ taskId: task.taskId, title: currentPath.join(" > ") });
+        if (task.children && task.children.length > 0) {
+            result = result.concat(flattenTasksWithPath(task.children, currentPath));
+        }
+    }
+    return result;
+}
+
 export default function TaskTreeGrid() {
     const [viewMode, setViewMode] = useState("me");
     const [tasks, setTasks] = useState(loadTasksFromStorage);
 
-    // New task form states
     const [newTaskTitle, setNewTaskTitle] = useState("");
     const [newAssigneeId, setNewAssigneeId] = useState(currentUser.id);
     const [newParentId, setNewParentId] = useState(null);
 
-    // Save tasks to localStorage whenever tasks change
     useEffect(() => {
         saveTasksToStorage(tasks);
     }, [tasks]);
@@ -179,24 +184,14 @@ export default function TaskTreeGrid() {
         setTasks((prev) => updateTasks(prev));
     };
 
-    // Flatten tasks for parent selection dropdown
-    const flattenTasks = (tasks) => {
-        let result = [];
-        for (const task of tasks) {
-            result.push({ taskId: task.taskId, title: task.title });
-            if (task.children && task.children.length > 0) {
-                result = result.concat(flattenTasks(task.children));
-            }
-        }
-        return result;
-    };
-
     const handleAddTask = () => {
         if (!newTaskTitle.trim()) return alert("Please enter task title");
-        debugger
-        // Create new task object
+        if (!employees.find((e) => e.id === newAssigneeId)) {
+            return alert("Please select a valid assignee");
+        }
+
         const newTask = {
-            taskId: Date.now(), // simple unique id
+            taskId: Date.now(),
             title: newTaskTitle.trim(),
             assigneeId: newAssigneeId,
             teamId: employees.find((e) => e.id === newAssigneeId)?.teamId || currentUser.teamId,
@@ -204,10 +199,8 @@ export default function TaskTreeGrid() {
         };
 
         if (!newParentId) {
-            // Add as root task
             setTasks((prev) => [...prev, newTask]);
         } else {
-            // Add as child to selected parent
             const addChild = (tasks) =>
                 tasks.map((task) => {
                     if (task.taskId === newParentId) {
@@ -220,7 +213,6 @@ export default function TaskTreeGrid() {
             setTasks((prev) => addChild(prev));
         }
 
-        // Reset form
         setNewTaskTitle("");
         setNewAssigneeId(currentUser.id);
         setNewParentId(null);
@@ -293,7 +285,7 @@ export default function TaskTreeGrid() {
                         }
                     >
                         <MenuItem value="">-- No Parent (Root Task) --</MenuItem>
-                        {flattenTasks(tasks).map((task) => (
+                        {flattenTasksWithPath(tasks).map((task) => (
                             <MenuItem key={task.taskId} value={task.taskId}>
                                 {task.title}
                             </MenuItem>
@@ -306,6 +298,7 @@ export default function TaskTreeGrid() {
                 </Button>
             </Box>
 
+            {/* Tree Table */}
             <Table>
                 <TableHead>
                     <TableRow>
