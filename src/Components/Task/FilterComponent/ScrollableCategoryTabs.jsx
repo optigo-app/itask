@@ -3,7 +3,8 @@ import { Box, Tabs, Tab } from "@mui/material";
 import "./ScrollableCategoryTabs.scss";
 
 const ScrollableCategoryTabs = ({ taskCategory = [], selectedCategory, handleFilterChange }) => {
-  const shouldScroll = taskCategory.length > 8;
+  const filteredCategories = taskCategory.filter((category) => category.count > 0);
+  const shouldScroll = filteredCategories.length > 8;
 
   return (
     <Box className="scrollable-tabs-container">
@@ -16,10 +17,10 @@ const ScrollableCategoryTabs = ({ taskCategory = [], selectedCategory, handleFil
         className="scrollable-tabs"
         aria-label="task category tabs"
       >
-        {taskCategory.map((category) => (
+        {filteredCategories.map((category) => (
           <Tab
             key={category.id}
-            label={category.labelname}
+            label={`${category.labelname} (${category.count})`}
             value={category.labelname}
             className={selectedCategory?.includes(category.labelname) ? "active-tab" : "tab-item"}
           />

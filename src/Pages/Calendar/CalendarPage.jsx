@@ -1,25 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, Typography, useMediaQuery } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import "./Calendar.scss";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import CalendarLeftSide from "../../Components/Calendar/CalendarLeftSide";
 import CalendarRightSide from "../../Components/Calendar/CalendarRightSide";
 import CalendarDrawer from "../../Components/Calendar/SideBar/CalendarDrawer";
-import { calendarData, calendarM, CalformData } from "../../Recoil/atom";
+import { calendarData, calendarM, CalformData, TaskData } from "../../Recoil/atom";
 import { useRecoilState, useSetRecoilState } from "recoil";
-import TasklistForCal from "../../Components/Calendar/TasklistForCal";
 import { fetchMettingListApi, fetchMettingListByLoginApi } from "../../Api/MeetingApi/MeetingListApi";
 import { AddMeetingApi } from "../../Api/MeetingApi/AddMeetingApi";
 import { deleteMeetingApi } from "../../Api/MeetingApi/DeleteMeetingApi";
-import TaskAPiCallWithFormat from "../../Utils/TaskList/TaskAPiCallWithFormat";
 import { toast } from "react-toastify";
-import DepartmentAssigneeAutocomplete from "../../Components/ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete";
 import useAccess from "../../Components/Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Components/Auth/Role/permissions";
+import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
 
 const Calendar = () => {
   const { hasAccess } = useAccess();
-  const { fetchTaskData } = TaskAPiCallWithFormat();
   const isLaptop = useMediaQuery("(max-width:1420px)");
   const isLaptop1 = useMediaQuery("(max-width:1600px) and (min-width:1421px)");
   const setSelectedMon = useSetRecoilState(calendarM);
@@ -29,6 +26,17 @@ const Calendar = () => {
   const [isLoding, setIsLoding] = useState(false);
   const [selectedAssignee, setSelectedAssignee] = useState();
   const assigneeData = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"));
+  const setTasks = useSetRecoilState(TaskData);
+  const {
+    iswhTLoading,
+    taskFinalData,
+  } = useFullTaskFormatFile();
+
+  useEffect(() => {
+    if(!iswhTLoading){
+      setTasks(taskFinalData?.TaskData)
+    }
+  }, [iswhTLoading])
 
   useEffect(() => {
     setSelectedMon(new Date());
@@ -46,7 +54,6 @@ const Calendar = () => {
     setCalendarsColor(dynamicCalendarsColor);
     setSelectedMon(new Date());
   }, []);
-
 
   const handleMeetingListByLogin = async () => {
     setIsLoding(true);
@@ -77,7 +84,6 @@ const Calendar = () => {
     }
   };
 
-
   const handleMeetingList = async () => {
     setIsLoding(true);
     try {
@@ -106,7 +112,6 @@ const Calendar = () => {
       setIsLoding(false);
     }
   };
-
 
   useEffect(() => {
     if (selectedAssignee) {
@@ -142,15 +147,9 @@ const Calendar = () => {
   };
 
 
-  useEffect(() => {
-    fetchTaskData();
-  }, [])
-
   const handleAssigneeChange = (newValue) => {
     setSelectedAssignee(newValue);
   }
-
-
 
   return (
     <Box

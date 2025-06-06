@@ -12,7 +12,7 @@ import {
   projectDatasRState,
   selectedCategoryAtom,
 } from "../../Recoil/atom";
-import { formatDate } from "../../Utils/globalfun";
+import { formatDate, isTaskToday } from "../../Utils/globalfun";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
@@ -153,7 +153,6 @@ const Project = () => {
         if (!dateStr) return false;
         return new Date(dateStr) < now;
       };
-
       const matchesFilters = (task) => {
         if (!task) return false;
         const matchesCategory =
@@ -161,10 +160,12 @@ const Project = () => {
           category.some((cat) => {
             if (cat.toLowerCase()?.includes("due")) {
               return isTaskDue(task?.DeadLineDate);
+            } else if (cat.toLowerCase()?.includes("today tasks")) {
+              return isTaskToday(task?.StartDate);
             } else if (cat.toLowerCase()?.includes("new")) {
               return task?.isnew == 1;
             }
-            return (task?.category ?? "").toLowerCase() === cat.toLowerCase();
+            return (task?.category ?? "").toLowerCase() == cat.toLowerCase();
           });
 
         const matches =
@@ -224,8 +225,8 @@ const Project = () => {
         if (matches) {
           return true;
         }
-        return Array.isArray(task?.subtasks)
-          ? task.subtasks.some(matchesFilters)
+        return Array.isArray(task)
+          ? task?.some(matchesFilters)
           : false;
       };
 
@@ -306,6 +307,7 @@ const Project = () => {
         statusData={statusData}
         taskCategory={taskCategory}
         taskAssigneeData={taskAssigneeData}
+        CategorySummary={taskFinalData?.ModulewiseCategoryTaskSummary}
       />
 
       {!isLaptop &&

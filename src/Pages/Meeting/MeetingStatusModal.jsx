@@ -24,22 +24,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import LoadingBackdrop from "../../Utils/Common/LoadingBackdrop";
 import CircleIcon from '@mui/icons-material/Circle';
 
-const modalStyle = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: 600,
-    maxHeight: "65vh",
-    height: "63vh",
-    overflowY: "auto",
-    bgcolor: "background.paper",
-    boxShadow: 24,
-    padding: "10px 20px",
-    borderRadius: 2,
-    outline: 'none'
-};
-
 const statusColors = {
     Accept: { background: "#E6F4EA", color: "#2E7D32" },
     Reject: { background: "#FCE8E6", color: "#D32F2F" },
@@ -53,10 +37,6 @@ const ReadOnlyModal = ({ open, mettingData, handleClose, handleFetchMeetingDetai
     const [filterStatus, setFilterStatus] = useState("All");
     const rowsPerPage = 5;
     const [attended, setAttended] = useState(false);
-
-    const handleToggle = () => {
-        setAttended(!attended);
-    };
 
     const handleMeetingStatus = async () => {
         setIsLoading(true);

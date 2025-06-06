@@ -21,8 +21,7 @@ import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
-import MuiDateTimePickerExample from './Backup/MuiDateTimePickerExample';
-import CalendarDemo from './Backup/CalendarDemo';
+import TaskTreeGrid from './Backup/TaskTreeGrid';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -241,6 +240,7 @@ const AppWrapper = () => {
                 <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
                     <Routes>
                         <Route path="/error401" element={<Error401Page />} />
+                        <Route path="/test" element={<TaskTreeGrid />} />
                         <Route
                             path="*"
                             element={
@@ -259,7 +259,6 @@ const AppWrapper = () => {
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
                                         <Route path="/reports/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><Reports /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
-                                        <Route path="/test" element={<CalendarDemo />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>

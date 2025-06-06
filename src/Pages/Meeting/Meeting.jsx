@@ -65,7 +65,7 @@ const MeetingPage = () => {
   const [openRejectModal, setOpenRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [selectedTab, setSelectedTab] = useState({
-    meetingTab: meetingtabData[0].label,
+    meetingTab: meetingtabData[1].label,
     filterTab: tabData[0].label,
   });
   const [meetingDetailModalOpen, setMeetingDetailModalOpen] = useState(false);
