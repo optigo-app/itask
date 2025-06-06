@@ -68,6 +68,7 @@ const SidebarDrawer = ({
         dueDate: null,
         startDate: null,
         assignee: "",
+        createdBy: [],
         projectLead: "",
         status: "",
         priority: "",
@@ -85,6 +86,7 @@ const SidebarDrawer = ({
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
+    console.log('formValues: ', formValues);
     const handleTaskChange = (event, newTaskType) => {
         if (newTaskType !== null) setTaskType(newTaskType);
         handleResetState();
@@ -102,6 +104,7 @@ const SidebarDrawer = ({
                 dueDate: cleanDate(formDataValue?.DeadLineDate) ?? null,
                 department: formDataValue?.department != 0 ? formDataValue?.department : "",
                 guests: matchedAssignees ?? [],
+                createdBy: matchedAssignees ?? [],
                 projectLead: formDataValue?.projectLead ?? "",
                 assignee: formDataValue?.assigneids ?? "",
                 status: formDataValue?.statusid ?? "",
@@ -258,6 +261,7 @@ const SidebarDrawer = ({
             remark: formValues.remark ?? formDataValue.remark,
             departmentid: formValues.department ?? formDataValue.departmentid,
             assigneids: idString ?? formDataValue.assigneids,
+            createdBy: formValues.createdBy ?? formDataValue.createdBy,
             departmentAssigneelist: assignees ?? formDataValue.assigneids,
             descr: formValues.description ?? formDataValue.descr,
             ismilestone: formValues.milestoneChecked ? 1 : 0 ?? formDataValue.ismilestone,
@@ -467,6 +471,18 @@ const SidebarDrawer = ({
                                             onChange={handleChange}
                                             options={taskCategory}
                                             placeholder="Select Category"
+                                        />
+                                    </Grid>
+                                    {/* created at assignee */}
+                                    <Grid item xs={12} sm={12} md={12}>
+                                        <DepartmentAssigneeAutocomplete
+                                            value={formValues?.createdBy}
+                                            options={filterAssigneeData}
+                                            label="Created By"
+                                            placeholder="Select assignees"
+                                            limitTags={2}
+                                            onChange={(newValue) => handleChange({ target: { name: 'createdBy', value: newValue } })}
+                                            disabled={true}
                                         />
                                     </Grid>
                                     {/* Assignee master */}
@@ -701,6 +717,17 @@ const SidebarDrawer = ({
                                             }
                                         />
                                     </Box>
+                                </Grid>
+                                <Grid item xs={12} sm={12} md={12}>
+                                    <DepartmentAssigneeAutocomplete
+                                        value={formValues?.createdBy}
+                                        options={filterAssigneeData}
+                                        label="Created By"
+                                        placeholder="Select assignees"
+                                        limitTags={2}
+                                        onChange={(newValue) => handleChange({ target: { name: 'createdBy', value: newValue } })}
+                                        disabled={true}
+                                    />
                                 </Grid>
                                 <Grid item xs={12} sm={12}>
                                     <DepartmentAssigneeAutocomplete

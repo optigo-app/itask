@@ -20,6 +20,7 @@ export default function DepartmentAssigneeAutocomplete({
     multiple = true, // Fixed typo
     minWidth = 180,
     helperText,
+    disabled = false
 }) {
     const [selectedValues, setSelectedValues] = useState(multiple ? [] : null);
 
@@ -58,6 +59,7 @@ export default function DepartmentAssigneeAutocomplete({
                 multiple={multiple}
                 limitTags={limitTags}
                 options={options}
+                disabled={disabled}
                 filterOptions={filterOptions}
                 getOptionLabel={(option) =>
                     option && option.firstname ? getDeptAssignee(option) : ""
