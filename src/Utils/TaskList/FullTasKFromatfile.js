@@ -314,6 +314,7 @@ const useFullTaskFormatFile = () => {
 
         // Helper to collect all tasks under this module
         const collectModuleTasks = (task) => {
+          task.moduleid = moduleId;
           moduleTasks.push(task);
           task.subtasks?.forEach(collectModuleTasks);
         };

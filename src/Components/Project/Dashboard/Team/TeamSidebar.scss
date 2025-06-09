@@ -20,9 +20,28 @@
         }
 
         .drawerContent {
-            .form-group{
-                .MuiFormControl-root{
+            .form-group {
+                margin-top: 10px !important;
+
+                .MuiFormControl-root {
                     margin-top: 0 !important;
+                }
+            }
+        }
+
+        .AssigneeTable {
+            .MuiTableCell-head {
+                font-weight: bold;
+            }
+
+            .MuiTableCell-root {
+                font-family: $font-family !important;
+                padding: 5px 10px !important;
+                margin: 0 !important;
+                color: $text2ndColor !important;
+
+                p {
+                    font-size: 14px !important;
                 }
             }
         }

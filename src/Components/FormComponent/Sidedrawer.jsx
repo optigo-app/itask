@@ -27,6 +27,8 @@ import MultiTaskInput from "./MultiTaskInput";
 import timezone from 'dayjs/plugin/timezone';
 import CustomAutocomplete from "../ShortcutsComponent/CustomAutocomplete";
 import DepartmentAssigneeAutocomplete from "../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete";
+import { GetPrTeamsApi } from "../../Api/TaskApi/prTeamListApi";
+import { toast } from "react-toastify";
 
 const TASK_OPTIONS = [
     { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -61,6 +63,7 @@ const SidebarDrawer = ({
     const [decodedData, setDecodedData] = useState(null);
     const [isDuplicateTask, setIsDuplicateTask] = useState(false);
     const [isTaskNameEmpty, setIsTaskNameEmpty] = useState(false);
+    const [teams, setTeams] = useState([]);
     const [formValues, setFormValues] = React.useState({
         taskName: "",
         bulkTask: [],
@@ -86,6 +89,34 @@ const SidebarDrawer = ({
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
+
+    const handleGetTeamMembers = async () => {
+        let decodedData = formDataValue
+        console.log('formDataValue: ', formDataValue);
+        const apiRes = await GetPrTeamsApi(decodedData);
+        if (apiRes?.rd) {
+            const assigneeMaster =
+                JSON.parse(sessionStorage?.getItem("taskAssigneeData")) || [];
+            const enrichedTeamMembers = apiRes.rd.map((member) => {
+                const empDetails = assigneeMaster.find(
+                    (emp) => emp.id === member.assigneeid
+                );
+                return {
+                    ...member,
+                    ...empDetails,
+                };
+            });
+            setTeams(enrichedTeamMembers);
+        } else {
+            toast.error("Something went wrong");
+            setTeams([]);
+        }
+    };
+
+    useEffect(() => {
+        handleGetTeamMembers();
+    },[formDataValue])
+
     const handleTaskChange = (event, newTaskType) => {
         if (newTaskType !== null) setTaskType(newTaskType);
         handleResetState();
@@ -94,7 +125,7 @@ const SidebarDrawer = ({
     useEffect(() => {
         const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
-        const matchedAssignees = formDataValue?.assigneids ? taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id)) : [logedAssignee];
+        const matchedAssignees = formDataValue?.assigneids ? taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id)) : "";
         if (open && (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "root")) {
             setFormValues({
                 taskName: formDataValue?.taskname ?? "",
@@ -103,7 +134,7 @@ const SidebarDrawer = ({
                 dueDate: cleanDate(formDataValue?.DeadLineDate) ?? null,
                 department: formDataValue?.department != 0 ? formDataValue?.department : "",
                 guests: matchedAssignees ?? [],
-                createdBy: matchedAssignees ?? [],
+                createdBy: [logedAssignee] ?? [],
                 projectLead: formDataValue?.projectLead ?? "",
                 assignee: formDataValue?.assigneids ?? "",
                 status: formDataValue?.statusid ?? "",
@@ -320,10 +351,12 @@ const SidebarDrawer = ({
         });
     }
 
-    // departmentwise assignee
-    const departmentId = formValues?.department;
-    const departmentName = taskDepartment?.find(dept => dept.id == departmentId)?.labelname;
-    const filterAssigneeData = departmentName ? taskAssigneeData?.filter((item) => item.department == departmentName) : taskAssigneeData;
+    // // departmentwise assignee
+    // const departmentId = formValues?.department;
+    // const departmentName = taskDepartment?.find(dept => dept.id == departmentId)?.labelname;
+    // const filterAssigneeData = departmentName ? taskAssigneeData?.filter((item) => item.department == departmentName) : taskAssigneeData;
+
+
 
     useEffect(() => {
         if (encodedData) {
@@ -476,7 +509,7 @@ const SidebarDrawer = ({
                                     <Grid item xs={12} sm={12} md={12}>
                                         <DepartmentAssigneeAutocomplete
                                             value={formValues?.createdBy}
-                                            options={filterAssigneeData}
+                                            options={teams}
                                             label="Created By"
                                             placeholder="Select assignees"
                                             limitTags={2}
@@ -488,7 +521,7 @@ const SidebarDrawer = ({
                                     <Grid item xs={12} sm={12} md={12}>
                                         <DepartmentAssigneeAutocomplete
                                             value={formValues?.guests}
-                                            options={filterAssigneeData}
+                                            options={teams}
                                             label="Assign To"
                                             placeholder="Select assignees"
                                             limitTags={2}
@@ -720,7 +753,7 @@ const SidebarDrawer = ({
                                 <Grid item xs={12} sm={12} md={12}>
                                     <DepartmentAssigneeAutocomplete
                                         value={formValues?.createdBy}
-                                        options={filterAssigneeData}
+                                        options={teams}
                                         label="Created By"
                                         placeholder="Select assignees"
                                         limitTags={2}
@@ -728,7 +761,7 @@ const SidebarDrawer = ({
                                         disabled={true}
                                     />
                                 </Grid>
-                                <Grid item xs={12} sm={12}>
+                                {/* <Grid item xs={12} sm={12}>
                                     <DepartmentAssigneeAutocomplete
                                         value={formValues?.guests}
                                         options={filterAssigneeData}
@@ -737,7 +770,7 @@ const SidebarDrawer = ({
                                         limitTags={2}
                                         onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
                                     />
-                                </Grid>
+                                </Grid> */}
                                 <Grid item xs={12} sm={12}>
                                     <CustomAutocomplete
                                         label="Category"
