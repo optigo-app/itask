@@ -5,7 +5,7 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, useMediaQuery } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { Advfilters, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength } from "../../Recoil/atom";
-import { formatDate2, isTaskDue, isTaskToday } from "../../Utils/globalfun";
+import { formatDate2, getCategoryTaskSummary, isTaskDue, isTaskToday } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
@@ -37,6 +37,7 @@ const Task = () => {
   const setTaskDataLength = useSetRecoilState(taskLength)
   const selectedRow = useRecoilValue(selectedRowData);
   const encodedData = searchParams.get("data");
+  const [CategoryTSummary, setCategoryTSummary] = useState([]);
   const {
     iswhMLoading,
     iswhTLoading,
@@ -47,14 +48,16 @@ const Task = () => {
     priorityData,
     statusData,
     taskAssigneeData } = useFullTaskFormatFile();
-    
-    console.log('taskFinalData: ', taskFinalData);
-    useEffect(() => {
+
+  console.log("taskFinalData", taskFinalData);
+
+  useEffect(() => {
     setTasks([]);
   }, [location.pathname]);
 
   useEffect(() => {
     let parsedData = null;
+
     if (encodedData) {
       try {
         const decodedString = decodeURIComponent(encodedData);
@@ -62,23 +65,30 @@ const Task = () => {
         parsedData = JSON.parse(jsonString);
       } catch (error) {
         console.error("Error decoding or parsing encodedData:", error);
-        parsedData = null;
       }
     }
-    const matchedTask = taskFinalData?.TaskData?.find(
-      (task) => task.taskid === parsedData?.taskid
-    );
 
-    if (matchedTask && matchedTask.subtasks?.length > 0) {
-      setTasks(matchedTask.subtasks);
-    }
-    setTimeout(() => {
-      if (!encodedData && taskFinalData) {
-        setTasks(taskFinalData?.TaskData);
+    if (parsedData && parsedData.taskid) {
+      const matchedTask = taskFinalData?.TaskData?.find(
+        (task) => task.taskid === parsedData.taskid
+      );
+
+      if (matchedTask && matchedTask.subtasks?.length > 0) {
+        const summary = getCategoryTaskSummary(matchedTask.subtasks, taskCategory);
+        setCategoryTSummary(summary);
+        setTasks(matchedTask.subtasks);
+        return;
       }
-    }, 0);
+    }
+
+    if (!encodedData && taskFinalData?.TaskData) {
+      const summary = getCategoryTaskSummary(taskFinalData.TaskData, taskCategory);
+      setCategoryTSummary(summary);
+      setTasks(taskFinalData.TaskData);
+    }
 
   }, [encodedData, taskFinalData, selectedRow]);
+
 
   useEffect(() => {
     const activeTab = localStorage?.getItem('activeTaskTab');
@@ -422,7 +432,6 @@ const Task = () => {
     page * rowsPerPage
   ) || [];
 
-
   return (
     <Box className="task-container">
       {/* Header Buttons */}
@@ -438,7 +447,7 @@ const Task = () => {
         taskCategory={taskCategory}
         taskDepartment={taskDepartment}
         taskAssigneeData={taskAssigneeData}
-        CategorySummary={taskFinalData?.CategoryTaskSummary}
+        CategorySummary={CategoryTSummary}
       />
 
       {/* Divider */}

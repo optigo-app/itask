@@ -28,7 +28,7 @@ import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors,
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 import TaskTimeTracking from "../../ShortcutsComponent/TimerComponent/TaskTimeTracking";
-import BurningImg from "../../../Assests/fire.webp"
+import BurningImage from "../../../Assests/fire.webp";
 import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 import StatusCircles from "../../ShortcutsComponent/EstimateComp";
 import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
@@ -360,7 +360,6 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         task,
         expandedTasks,
         toggleSubtasks,
-        BurningImg
     ) => {
         return (
             <>
@@ -400,7 +399,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                             <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
                                 {task?.isburning === 1 && (
                                     <img
-                                        src={BurningImg}
+                                        src={BurningImage}
                                         alt="burningTask"
                                         style={{ width: '15px', height: '15px', borderRadius: '50%' }}
                                     />
@@ -459,7 +458,6 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                 handleAddTask,
                                 hoveredTaskId,
                                 hoveredColumnname,
-                                BurningImg
                             )}
                             <IconButton
                                 id="add-task"
@@ -587,7 +585,6 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                             handleAddTask,
                                                             hoveredTaskId,
                                                             hoveredColumnname,
-                                                            BurningImg
                                                         )}
                                                         <IconButton
                                                             id="add-task"

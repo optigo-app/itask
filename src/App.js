@@ -22,6 +22,7 @@ import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
 import TaskTreeGrid from './Backup/TaskTreeGrid';
+import CalendarGridView from './Pages/Calendar/CalendarGridView';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -240,7 +241,6 @@ const AppWrapper = () => {
                 <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
                     <Routes>
                         <Route path="/error401" element={<Error401Page />} />
-                        <Route path="/test" element={<TaskTreeGrid />} />
                         <Route
                             path="*"
                             element={
@@ -248,7 +248,7 @@ const AppWrapper = () => {
                                     <Routes>
                                         <Route path="/" element={<Home />} />
                                         <Route path="/projects" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1003"><Project /></ProtectedRoute>} />
-                                        <Route path="/projects/Dashboard" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1003"><ProjectDashboard /></ProtectedRoute>} />
+                                        <Route path="/projects/Dashboard/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1003"><ProjectDashboard /></ProtectedRoute>} />
                                         <Route path="/tasks/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><Task /></ProtectedRoute>} />
                                         <Route path="/tasks/unassigned" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><UnassignedTaskList /></ProtectedRoute>} />
                                         <Route path="/taskDetails" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><TaskDetails /></ProtectedRoute>} />
@@ -259,6 +259,7 @@ const AppWrapper = () => {
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
                                         <Route path="/reports/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><Reports /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
+                                        <Route path="/test" element={<CalendarGridView />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>

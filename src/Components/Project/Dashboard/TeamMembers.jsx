@@ -10,9 +10,10 @@ const TeamMembers = ({ taskAssigneeData, teamMemberData, decodedData, background
     const [filteredTeamMembers, setFilteredTeamMembers] = React.useState([]);
 
     useEffect(() => {
-        if (decodedData?.projectid && teamMemberData) {
+        if ((decodedData?.projectid || decodedData?.taskid) && teamMemberData) {
             const projectId = String(decodedData.projectid);
-            const members = teamMemberData[projectId] || [];
+            const moduleId = String(decodedData.taskid);
+            const members = teamMemberData[decodedData?.taskid ? moduleId : projectId] || [];
             setFilteredTeamMembers(members);
         }
     }, [decodedData, teamMemberData]);

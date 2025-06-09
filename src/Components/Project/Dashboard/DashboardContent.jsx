@@ -19,7 +19,6 @@ const DashboardContent = ({ tabData, isAttLoding, selectedTab, decodedData, hand
   const selectedTabLower = selectedTab?.toLowerCase();
   const setSelectedTask = useSetRecoilState(selectedRowData);
 
-
   const tabConfig = {
     Reference: {
       component: ReferencePr,
@@ -35,7 +34,7 @@ const DashboardContent = ({ tabData, isAttLoding, selectedTab, decodedData, hand
       component: MilestoneTimeline,
       props: {
         handleDtopen,
-        milestoneData: taskFinalData?.ProjectMilestoneData,
+        milestoneData: decodedData?.taskid ? taskFinalData?.ModuleMilestoneData : taskFinalData?.ProjectMilestoneData,
         decodedData
       }
     },
@@ -44,7 +43,7 @@ const DashboardContent = ({ tabData, isAttLoding, selectedTab, decodedData, hand
       props: {
         handleDtopen,
         taskAssigneeData,
-        teamMemberData: taskFinalData?.TeamMembers,
+        teamMemberData: decodedData?.taskid ? taskFinalData?.ModuleTeamMembers : taskFinalData?.TeamMembers,
         decodedData,
         background
       }
@@ -66,7 +65,7 @@ const DashboardContent = ({ tabData, isAttLoding, selectedTab, decodedData, hand
     if (matchedCategory) {
       const dataKey = selectedTab.replace(/\s+/g, '_');
 
-      const prwiseData = taskFinalData?.ProjectCategoryTasks[decodedData?.projectid];
+      const prwiseData = decodedData?.taskid ? taskFinalData?.ModuleCategoryTasks[decodedData?.taskid] : taskFinalData?.ProjectCategoryTasks[decodedData?.projectid];
       const taskData = prwiseData?.[(dataKey)?.toLowerCase()] || [];
 
       const handleEyeClick = (row) => {

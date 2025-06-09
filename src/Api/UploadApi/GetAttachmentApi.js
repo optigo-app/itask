@@ -1,16 +1,17 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
-export const getAttachmentApi = async (selectedRow) => {
+export const getAttachmentApi = async (decodedData) => {
+    debugger
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
         const combinedValue = JSON.stringify({
-            taskid: `${selectedRow?.taskid ?? ''}`,
+            taskid: `${decodedData?.taskid ?? ''}`,
         });
 
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"get_attachment\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
-            "f": "Task Management (task_trash)",
-            "p": selectedRow?.taskid ? combinedValue : "",
+            "f": "Task Management (Get Attachment)",
+            "p": decodedData?.taskid ? combinedValue : "",
         };
         const response = await CommonAPI(body);
         if (response?.Data) {

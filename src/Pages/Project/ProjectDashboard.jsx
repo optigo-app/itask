@@ -34,7 +34,7 @@ const ProjectDashboard = () => {
         const assigneeMaster = JSON.parse(sessionStorage.getItem('taskAssigneeData')) || [];
         const getAttachment = async () => {
             try {
-                const res = await getAttachmentApi({});
+                const res = await getAttachmentApi(decodedData);
                 if (res) {
                     const labeledTasks = mapKeyValuePair(res);
                     const updatedLabeledTasks = labeledTasks?.map(task => {
@@ -57,10 +57,10 @@ const ProjectDashboard = () => {
             }
         };
 
-        if (selectedData) {
+        if (selectedData && decodedData) {
             getAttachment();
         }
-    }, [selectedData]);
+    }, [selectedData, decodedData]);
 
 
     useEffect(() => {

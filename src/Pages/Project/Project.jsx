@@ -12,7 +12,7 @@ import {
   projectDatasRState,
   selectedCategoryAtom,
 } from "../../Recoil/atom";
-import { formatDate, isTaskToday } from "../../Utils/globalfun";
+import { formatDate, getCategoryTaskSummary, isTaskToday } from "../../Utils/globalfun";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
@@ -32,6 +32,7 @@ const KanbanView = React.lazy(() =>
 
 const Project = () => {
   const location = useLocation();
+  const now = new Date();
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(14);
@@ -42,7 +43,7 @@ const Project = () => {
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [callFetchTaskApi, setCallFetchTaskApi] = useRecoilState(fetchlistApiCall);
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
-  const now = new Date();
+  const [CategoryTSummary, setCategoryTSummary] = useState([]);
   const {
     iswhMLoading,
     iswhTLoading,
@@ -63,6 +64,9 @@ const Project = () => {
   useEffect(() => {
     setTimeout(() => {
       if (taskFinalData) {
+        const summary = getCategoryTaskSummary(taskFinalData?.ModuleList, taskCategory);
+        console.log('taskFinalData?.ModuleList: ', taskFinalData?.ModuleList);
+        setCategoryTSummary(summary);
         setProject(taskFinalData?.ModuleList);
       }
     }, 0);
@@ -307,7 +311,7 @@ const Project = () => {
         statusData={statusData}
         taskCategory={taskCategory}
         taskAssigneeData={taskAssigneeData}
-        CategorySummary={taskFinalData?.ModulewiseCategoryTaskSummary}
+        CategorySummary={CategoryTSummary}
       />
 
       {!isLaptop &&
@@ -391,6 +395,7 @@ const Project = () => {
               <TaskTable
                 data={filteredData ?? null}
                 projectProgress={project?.projectProgress}
+                moduleProgress = {taskFinalData?.ModuleProgress}
                 page={page}
                 rowsPerPage={rowsPerPage}
                 isLoading={iswhTLoading}

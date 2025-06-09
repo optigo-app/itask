@@ -33,7 +33,7 @@ import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeSho
 import useAccess from "../../Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
 
-const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit }) => {
+const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit }) => {
     const { hasAccess } = useAccess();
     const navigate = useNavigate();
     const [order, setOrder] = useState("asc");
@@ -140,15 +140,26 @@ const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage,
         setProjectData(groupedTasks);
     }, [data]);
 
-    const handleViewPrDashboard = (task) => {
+    const handleViewPrDashboard = (task, flag) => {
         setSelectedRow(task);
         setSelectedTask(task);
-        let urlData = {
-            project: task.projectName,
-            projectid: task?.projectid,
+        if (flag === "pr") {
+            let urlData = {
+                project: task.projectName,
+                projectid: task?.projectid,
+            }
+            const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
+            navigate(`/projects/dashboard/${urlData?.project}/?data=${encodedFormData}`);
+        } else {
+            let urlData = {
+                project: task.taskPr,
+                projectid: task?.projectid,
+                taskid: task?.taskid,
+                taskname: task?.taskname
+            }
+            const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
+            navigate(`/projects/dashboard/${urlData?.project}/${urlData?.taskname}/?data=${encodedFormData}`);
         }
-        const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
-        navigate(`/projects/dashboard/?data=${encodedFormData}`);
     }
 
     const handleCloseCnfDialog = () => {
@@ -292,9 +303,9 @@ const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage,
                 >
                     <Paperclip size={20} color="#808080" className="iconbtn" />
                 </IconButton>
-                {/* <IconButton
+                <IconButton
                     aria-label="View Module button"
-                    onClick={() => handleViewPrDashboard(task)}
+                    onClick={() => handleViewPrDashboard(task, "md")}
                     sx={{
                         '&.Mui-disabled': {
                             color: 'rgba(0, 0, 0, 0.26)',
@@ -302,7 +313,7 @@ const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage,
                     }}
                 >
                     <Eye size={20} color="#808080" className="iconbtn" />
-                </IconButton> */}
+                </IconButton>
                 <IconButton
                     aria-label="Edit-Task button"
                     disabled={task?.isFreez === 1}
@@ -538,7 +549,7 @@ const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage,
                                                 <TableCell colSpan={1} sx={{ textAlign: "right" }}>
                                                     <IconButton
                                                         aria-label="View Module button"
-                                                        onClick={() => handleViewPrDashboard(project)}
+                                                        onClick={() => handleViewPrDashboard(project, "pr")}
                                                         sx={{
                                                             '&.Mui-disabled': {
                                                                 color: 'rgba(0, 0, 0, 0.26)',
@@ -579,27 +590,27 @@ const TableView = ({ data, projectProgress, page, rowsPerPage, handleChangePage,
                                                             <span className="prShDesc">{task?.descr}</span>
                                                         </TableCell>
                                                         <TableCell>
-                                                            {/* <Box display="flex" alignItems="center" gap={2} width="100%">
+                                                            <Box display="flex" alignItems="center" gap={2} width="100%">
                                                                 <Box width="100%" position="relative">
                                                                     <LinearProgress
                                                                         aria-label="Task progress status"
                                                                         variant="determinate"
-                                                                        value={task?.progress_per}
+                                                                        value={moduleProgress[task?.taskid]}
                                                                         sx={{
                                                                             height: 7,
                                                                             borderRadius: 5,
                                                                             backgroundColor: "#e0e0e0",
                                                                             "& .MuiLinearProgress-bar": {
-                                                                                backgroundColor: getStatusColor(task?.progress_per),
+                                                                                backgroundColor: getStatusColor(moduleProgress[task?.taskid]),
                                                                             },
                                                                         }}
                                                                         className="progressBar"
                                                                     />
                                                                 </Box>
                                                                 <Typography className="progressBarText" variant="body2" minWidth={100}>
-                                                                    {`${task?.progress_per}%`}
+                                                                    {`${moduleProgress[task?.taskid]}%`}
                                                                 </Typography>
-                                                            </Box> */}
+                                                            </Box>
                                                         </TableCell>
                                                         <TableCell
                                                             onMouseEnter={() => handleMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
