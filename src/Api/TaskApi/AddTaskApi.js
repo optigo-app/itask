@@ -42,7 +42,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "ismilestone": formValues?.ismilestone ?? 0,
                 "isfavourite": formValues?.isfavourite ?? 0,
                 "assigneids": formValues?.assigneids ?? "",
-                "createdBy":formValues?.createdBy[0]?.id,
+                "createdbyid":formValues?.createdBy[0]?.id,
                 "departmentAssigneelist": formValues?.departmentAssigneelist ?? "",
             });
         }

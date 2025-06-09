@@ -117,7 +117,7 @@ const Header = ({ avatarSrc = "" }) => {
     if (decodedData?.module && location?.pathname.includes("/tasks/")) {
         dataMap[matchedKey].title = `${decodedData?.project}/${decodedData?.module}`;
     } else if (decodedData?.project && location?.pathname.includes("/projects/dashboard")) {
-        dataMap[matchedKey].title = `${decodedData?.project}/${decodedData?.module ?? decodedData?.taskname}`;
+        dataMap[matchedKey].title = `${decodedData?.project}${(decodedData?.module ?? decodedData?.taskname) ? `/${decodedData?.module ?? decodedData?.taskname}` : ""}`;
     }
 
     const { title, subtitle } = dataMap[matchedKey];
