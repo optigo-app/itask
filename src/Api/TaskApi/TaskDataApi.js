@@ -3,8 +3,6 @@ import { CommonAPI } from "../InitialApi/CommonApi";
 export const fetchTaskDataApi = async (selectedRow) => {
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
-        const init = JSON.parse(sessionStorage.getItem('taskInit'));
-        
         const combinedValue = JSON.stringify({
             taskid: `${selectedRow?.taskid ?? ''}`,
         });

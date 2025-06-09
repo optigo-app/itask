@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
+    Box,
+    Typography,
     Table,
     TableBody,
     TableCell,
@@ -10,8 +12,6 @@ import {
     TextField,
     Collapse,
     IconButton,
-    Box,
-    Typography,
     MenuItem,
     Select,
     FormControl,
@@ -19,82 +19,67 @@ import {
 } from "@mui/material";
 import { KeyboardArrowDown, KeyboardArrowRight } from "@mui/icons-material";
 
+// Example project and team structure
+const projects = [
+    {
+        id: 1,
+        name: "E-Commerce Website",
+        teams: [
+            { id: 5, name: "Frontend" },
+            { id: 6, name: "Backend" },
+        ],
+    },
+    {
+        id: 2,
+        name: "Mobile App",
+        teams: [
+            { id: 7, name: "iOS" },
+            { id: 8, name: "Android" },
+        ],
+    },
+];
+
+// All employees with team mapping
 const employees = [
     { id: 101, name: "Alice", teamId: 5 },
     { id: 102, name: "Bob", teamId: 5 },
     { id: 103, name: "Charlie", teamId: 6 },
-    { id: 104, name: "Diana", teamId: 5 },
+    { id: 104, name: "Diana", teamId: 7 },
+    { id: 105, name: "Eve", teamId: 8 },
 ];
 
-const currentUser = { id: 101, teamId: 5 };
+// Simulated logged-in user
+const currentUser = { id: 101, teamId: 5, projectId: 1 };
 
-// Load from localStorage or fallback to default data
-const loadTasksFromStorage = () => {
-    try {
-        const stored = localStorage.getItem("tasks");
-        if (stored) return JSON.parse(stored);
-    } catch {}
-    return [
+const defaultTasks = {
+    1: [ // Project ID
         {
             taskId: 1,
             title: "Design Website",
             assigneeId: 101,
             teamId: 5,
-            children: [
-                {
-                    taskId: 2,
-                    title: "Create Wireframes",
-                    assigneeId: 102,
-                    teamId: 5,
-                    children: [],
-                },
-                {
-                    taskId: 3,
-                    title: "Design UI",
-                    assigneeId: 101,
-                    teamId: 5,
-                    children: [],
-                },
-            ],
+            children: [],
         },
         {
-            taskId: 4,
-            title: "Backend API",
+            taskId: 2,
+            title: "API Integration",
             assigneeId: 103,
             teamId: 6,
             children: [],
         },
-    ];
+    ],
+    2: [
+        {
+            taskId: 3,
+            title: "Login Screen",
+            assigneeId: 104,
+            teamId: 7,
+            children: [],
+        },
+    ],
 };
 
-function saveTasksToStorage(tasks) {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-}
-
-function filterTasks(tasks, viewMode, userId, teamId) {
-    return tasks
-        .map((task) => {
-            const filteredChildren = filterTasks(
-                task.children || [],
-                viewMode,
-                userId,
-                teamId
-            );
-
-            const isVisible =
-                viewMode === "me"
-                    ? task.assigneeId === userId
-                    : task.teamId === teamId;
-
-            if (isVisible || filteredChildren.length > 0) {
-                return { ...task, children: filteredChildren };
-            }
-            return null;
-        })
-        .filter(Boolean);
-}
-
-function TaskRow({ task, onAssign }) {
+const TaskRow = ({ task, onAssign }) => {
     const [open, setOpen] = useState(false);
     return (
         <>
@@ -112,21 +97,21 @@ function TaskRow({ task, onAssign }) {
                 <TableCell>
                     <Autocomplete
                         size="small"
-                        options={employees}
-                        getOptionLabel={(option) => option.name}
+                        options={employees.filter((e) => e.teamId === task.teamId)}
+                        getOptionLabel={(opt) => opt.name}
                         value={employees.find((e) => e.id === task.assigneeId) || null}
-                        onChange={(e, newValue) => onAssign(task.taskId, newValue?.id || null)}
+                        onChange={(e, newVal) => onAssign(task.taskId, newVal?.id || null)}
                         renderInput={(params) => <TextField {...params} variant="standard" />}
                         disableClearable
                         sx={{ width: 200 }}
                     />
                 </TableCell>
             </TableRow>
-            {task.children && task.children.length > 0 && (
+            {task.children.length > 0 && (
                 <TableRow>
-                    <TableCell colSpan={2} style={{ paddingBottom: 0, paddingTop: 0 }}>
+                    <TableCell colSpan={2} sx={{ p: 0 }}>
                         <Collapse in={open} timeout="auto" unmountOnExit>
-                            <Box sx={{ marginLeft: 4 }}>
+                            <Box sx={{ ml: 4 }}>
                                 <Table size="small">
                                     <TableBody>
                                         {task.children.map((child) => (
@@ -141,76 +126,96 @@ function TaskRow({ task, onAssign }) {
             )}
         </>
     );
-}
+};
 
-function flattenTasksWithPath(tasks, path = []) {
+const flattenTasksWithPath = (tasks, path = []) => {
     let result = [];
     for (const task of tasks) {
         const currentPath = [...path, task.title];
         result.push({ taskId: task.taskId, title: currentPath.join(" > ") });
-        if (task.children && task.children.length > 0) {
+        if (task.children.length > 0) {
             result = result.concat(flattenTasksWithPath(task.children, currentPath));
         }
     }
     return result;
-}
+};
 
-export default function TaskTreeGrid() {
+export default function ProjectTaskManager() {
+    const [selectedProjectId, setSelectedProjectId] = useState(currentUser.projectId);
     const [viewMode, setViewMode] = useState("me");
-    const [tasks, setTasks] = useState(loadTasksFromStorage);
+    const [tasksByProject, setTasksByProject] = useState(defaultTasks);
+
+    const tasks = tasksByProject[selectedProjectId] || [];
 
     const [newTaskTitle, setNewTaskTitle] = useState("");
     const [newAssigneeId, setNewAssigneeId] = useState(currentUser.id);
     const [newParentId, setNewParentId] = useState(null);
 
-    useEffect(() => {
-        saveTasksToStorage(tasks);
-    }, [tasks]);
+    const currentProject = projects.find((p) => p.id === selectedProjectId);
+    const currentTeamIds = currentProject.teams.map((t) => t.id);
+    const teamEmployees = employees.filter((e) => currentTeamIds.includes(e.teamId));
 
     const filteredTasks = useMemo(() => {
-        return filterTasks(tasks, viewMode, currentUser.id, currentUser.teamId);
-    }, [tasks, viewMode]);
+        const filter = (taskList) =>
+            taskList
+                .map((task) => {
+                    const visible =
+                        viewMode === "me"
+                            ? task.assigneeId === currentUser.id
+                            : currentTeamIds.includes(task.teamId);
+                    const filteredChildren = filter(task.children || []);
+                    if (visible || filteredChildren.length > 0) {
+                        return { ...task, children: filteredChildren };
+                    }
+                    return null;
+                })
+                .filter(Boolean);
+        return filter(tasks);
+    }, [tasks, viewMode, selectedProjectId]);
 
     const handleAssign = (taskId, assigneeId) => {
-        const updateTasks = (tasks) =>
-            tasks.map((task) => {
-                if (task.taskId === taskId) {
-                    return { ...task, assigneeId };
-                } else if (task.children && task.children.length > 0) {
-                    return { ...task, children: updateTasks(task.children) };
-                }
-                return task;
+        const update = (taskList) =>
+            taskList.map((t) => {
+                if (t.taskId === taskId) return { ...t, assigneeId };
+                return { ...t, children: update(t.children) };
             });
-        setTasks((prev) => updateTasks(prev));
+        setTasksByProject((prev) => ({
+            ...prev,
+            [selectedProjectId]: update(prev[selectedProjectId] || []),
+        }));
     };
 
     const handleAddTask = () => {
-        if (!newTaskTitle.trim()) return alert("Please enter task title");
-        if (!employees.find((e) => e.id === newAssigneeId)) {
-            return alert("Please select a valid assignee");
-        }
-
+        if (!newTaskTitle.trim()) return;
+        const assignee = employees.find((e) => e.id === newAssigneeId);
         const newTask = {
             taskId: Date.now(),
             title: newTaskTitle.trim(),
-            assigneeId: newAssigneeId,
-            teamId: employees.find((e) => e.id === newAssigneeId)?.teamId || currentUser.teamId,
+            assigneeId: assignee.id,
+            teamId: assignee.teamId,
             children: [],
         };
 
-        if (!newParentId) {
-            setTasks((prev) => [...prev, newTask]);
-        } else {
-            const addChild = (tasks) =>
-                tasks.map((task) => {
-                    if (task.taskId === newParentId) {
-                        return { ...task, children: [...task.children, newTask] };
-                    } else if (task.children && task.children.length > 0) {
-                        return { ...task, children: addChild(task.children) };
+        const updatedTasks = [...(tasksByProject[selectedProjectId] || [])];
+
+        if (newParentId) {
+            const insert = (list) =>
+                list.map((t) => {
+                    if (t.taskId === newParentId) {
+                        return { ...t, children: [...t.children, newTask] };
                     }
-                    return task;
+                    return { ...t, children: insert(t.children) };
                 });
-            setTasks((prev) => addChild(prev));
+            setTasksByProject((prev) => ({
+                ...prev,
+                [selectedProjectId]: insert(updatedTasks),
+            }));
+        } else {
+            updatedTasks.push(newTask);
+            setTasksByProject((prev) => ({
+                ...prev,
+                [selectedProjectId]: updatedTasks,
+            }));
         }
 
         setNewTaskTitle("");
@@ -220,9 +225,22 @@ export default function TaskTreeGrid() {
 
     return (
         <Box sx={{ p: 2 }}>
-            <Typography variant="h5" mb={2}>
-                Task Tree Grid ({viewMode === "me" ? "My Tasks" : "Team Tasks"})
-            </Typography>
+            <Typography variant="h5" mb={2}>Project Task Manager</Typography>
+
+            <FormControl sx={{ mb: 3, minWidth: 300 }}>
+                <InputLabel>Project</InputLabel>
+                <Select
+                    value={selectedProjectId}
+                    label="Project"
+                    onChange={(e) => setSelectedProjectId(Number(e.target.value))}
+                >
+                    {projects.map((p) => (
+                        <MenuItem key={p.id} value={p.id}>
+                            {p.name}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
 
             <Box mb={2}>
                 <Button
@@ -240,7 +258,7 @@ export default function TaskTreeGrid() {
                 </Button>
             </Box>
 
-            {/* Add Task Form */}
+            {/* Add Task */}
             <Box
                 sx={{
                     mb: 4,
@@ -250,9 +268,7 @@ export default function TaskTreeGrid() {
                     maxWidth: 600,
                 }}
             >
-                <Typography variant="h6" mb={2}>
-                    Add New Task
-                </Typography>
+                <Typography variant="h6" mb={2}>Add New Task</Typography>
 
                 <TextField
                     fullWidth
@@ -263,21 +279,19 @@ export default function TaskTreeGrid() {
                 />
 
                 <Autocomplete
-                    options={employees}
+                    options={teamEmployees}
                     getOptionLabel={(option) => option.name}
-                    value={employees.find((e) => e.id === newAssigneeId) || null}
+                    value={teamEmployees.find((e) => e.id === newAssigneeId) || null}
                     onChange={(e, newValue) => setNewAssigneeId(newValue?.id || null)}
                     renderInput={(params) => (
                         <TextField {...params} label="Assignee" sx={{ mb: 2 }} />
                     )}
                     disableClearable
-                    sx={{ width: 300 }}
                 />
 
                 <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel id="parent-task-label">Parent Task</InputLabel>
+                    <InputLabel>Parent Task</InputLabel>
                     <Select
-                        labelId="parent-task-label"
                         value={newParentId || ""}
                         label="Parent Task"
                         onChange={(e) =>
@@ -298,7 +312,7 @@ export default function TaskTreeGrid() {
                 </Button>
             </Box>
 
-            {/* Tree Table */}
+            {/* Task Tree */}
             <Table>
                 <TableHead>
                     <TableRow>

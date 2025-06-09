@@ -718,3 +718,76 @@ export const isTaskToday = (dateStr) => {
         taskDate.getFullYear() === now.getFullYear()
     );
 };
+
+
+
+export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
+    // Flatten recursive tasks and subtasks
+    const flattenTasks = (tasks) => {
+        let result = [];
+
+        for (const task of tasks) {
+            result.push(task);
+            if (Array.isArray(task.subtasks) && task.subtasks.length > 0) {
+                result = result.concat(flattenTasks(task.subtasks));
+            }
+        }
+        return result;
+    };
+    const flatData = flattenTasks(nestedData);
+    const isValidDate = (dateStr) => {
+        const date = new Date(dateStr);
+        return dateStr && date.toISOString().slice(0, 10) !== "1900-01-01";
+    };
+    const isToday = (dateStr) => {
+        if (!isValidDate(dateStr)) return false;
+        const date = new Date(dateStr);
+        const today = new Date();
+        return (
+            date.getFullYear() === today.getFullYear() &&
+            date.getMonth() === today.getMonth() &&
+            date.getDate() === today.getDate()
+        );
+    };
+    const isPast = (dateStr) => {
+        if (!isValidDate(dateStr)) return false;
+        const date = new Date(dateStr);
+        const now = new Date();
+        return date < now && !isToday(dateStr);
+    };
+    const categoryTaskCount = flatData.reduce((acc, task) => {
+        const categoryKey = task?.category?.toLowerCase()?.replace(/\s+/g, "_");
+        if (categoryKey) {
+            acc[categoryKey] = (acc[categoryKey] || 0) + 1;
+        }
+        return acc;
+    }, {});
+    const summary = [
+        {
+            id: "today_tasks",
+            labelname: "Today Tasks",
+            count: flatData.filter((task) => isToday(task.StartDate)).length,
+        },
+        {
+            id: "new_tasks",
+            labelname: "New Tasks",
+            count: flatData.filter((task) => task.isnew === 1).length,
+        },
+        {
+            id: "due_tasks",
+            labelname: "Due Tasks",
+            count: flatData.filter((task) => isPast(task.DeadLineDate)).length,
+        },
+        ...(Array.isArray(taskCategory)
+            ? taskCategory.map((label) => {
+                const key = label.labelname.toLowerCase().replace(/\s+/g, "_");
+                return {
+                    id: label.id,
+                    labelname: label.labelname,
+                    count: categoryTaskCount[key] || 0,
+                };
+            })
+            : []),
+    ];
+    return summary;
+};

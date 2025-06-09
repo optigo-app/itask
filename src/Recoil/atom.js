@@ -9,6 +9,10 @@ export const webReload = atom({
   key: "webReload",
   default: false,
 });
+export const viewMode = atom({
+  key: 'viewMode',
+  default: "me"
+})
 
 export const TaskData = atom({
   key: 'TaskData',

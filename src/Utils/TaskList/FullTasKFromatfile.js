@@ -76,8 +76,14 @@ const useFullTaskFormatFile = () => {
     } else {
       setIsWhTLoading(true);
     }
+    let parsedData = null;
+    if (encodedData) {
+      const decodedString = decodeURIComponent(encodedData);
+      const jsonString = atob(decodedString);
+      parsedData = JSON.parse(jsonString);
+    }
     try {
-      const taskData = await fetchTaskDataFullApi();
+      const taskData = await fetchTaskDataFullApi(parsedData);
       const labeledTasks = mapKeyValuePair(taskData);
       const enhanceTask = (task) => {
         const priority = priorityData?.find(
@@ -109,15 +115,6 @@ const useFullTaskFormatFile = () => {
           category: category?.labelname,
         };
       };
-      debugger;
-      let parsedData = null;
-      console.log("parsedData: ", parsedData);
-      if (encodedData) {
-        const decodedString = decodeURIComponent(encodedData);
-        const jsonString = atob(decodedString);
-        parsedData = JSON.parse(jsonString);
-      }
-
       const data = labeledTasks?.map((task) => enhanceTask(task));
       const finalTaskData = formatDataToTree(data, parsedData);
       setTaskFinalData(finalTaskData);
@@ -132,7 +129,6 @@ const useFullTaskFormatFile = () => {
       const teamMembersMap = new Map();
       const categoryMap = {};
       const category = {};
-      const categoryTaskCount = {};
       const projectCategoryTasks = {};
       const projectMilestoneData = {};
       const ModuleList = [];
@@ -142,7 +138,6 @@ const useFullTaskFormatFile = () => {
         const key = label?.labelname?.toLowerCase()?.replace(/\s+/g, "_");
         categoryMap[label.id] = key;
         category[key] = [];
-        categoryTaskCount[key] = 0;
       });
 
       // Step 1: Build task map and initialize subtasks
@@ -228,7 +223,6 @@ const useFullTaskFormatFile = () => {
         // Global category grouping
         if (categoryKey) {
           category[categoryKey].push(task);
-          categoryTaskCount[categoryKey] += 1;
 
           // Project-wise category grouping
           if (!projectCategoryTasks[projectId]) {
@@ -301,98 +295,64 @@ const useFullTaskFormatFile = () => {
         const projectId = module.projectid;
         const projectProgress = ProjectProgress[projectId] || 0;
 
+        const { subtasks, ...moduleWithoutSubtasks } = module; // Remove subtasks
         ModuleList.push({
-          ...module,
+          ...moduleWithoutSubtasks,
           projectProgress,
         });
       });
 
-      // === Helper Utilities ===
-      const isValidDate = (dateStr) => {
-        const date = new Date(dateStr);
-        return dateStr && date.toISOString().slice(0, 10) !== "1900-01-01";
-      };
+      // Step 10: Module-wise Calculations (parentid === 0 treated as modules)
+      const ModuleCategoryTasks = {};
+      const ModuleMilestoneData = {};
+      const ModuleProgress = {};
+      const ModuleTeamMembers = {};
 
-      const isToday = (dateStr) => {
-        if (!isValidDate(dateStr)) return false;
-        const date = new Date(dateStr);
-        const today = new Date();
-        return (
-          date.getFullYear() === today.getFullYear() &&
-          date.getMonth() === today.getMonth() &&
-          date.getDate() === today.getDate()
+      TaskData?.forEach((module) => {
+        const moduleId = module.taskid;
+        const moduleTasks = [];
+
+        // Helper to collect all tasks under this module
+        const collectModuleTasks = (task) => {
+          moduleTasks.push(task);
+          task.subtasks?.forEach(collectModuleTasks);
+        };
+        collectModuleTasks(module);
+
+        // === Module Category Tasks ===
+        ModuleCategoryTasks[moduleId] = {};
+        moduleTasks.forEach((task) => {
+          const categoryKey = categoryMap[task.workcategoryid];
+          if (!categoryKey) return;
+
+          if (!ModuleCategoryTasks[moduleId][categoryKey]) {
+            ModuleCategoryTasks[moduleId][categoryKey] = [];
+          }
+          ModuleCategoryTasks[moduleId][categoryKey].push(task);
+        });
+
+        // === Module Milestones ===
+        const milestones = moduleTasks.filter((task) => task.ismilestone === 1);
+        ModuleMilestoneData[moduleId] = milestones.map(extractMilestoneTree);
+
+        // === Module Progress ===
+        const totalProgress = ModuleMilestoneData[moduleId].reduce(
+          (sum, m) => sum + (m.progress_per || 0),
+          0
         );
-      };
+        ModuleProgress[moduleId] = milestones.length > 0
+          ? Math.round(totalProgress / milestones.length)
+          : 0;
 
-      const isPast = (dateStr) => {
-        if (!isValidDate(dateStr)) return false;
-        return new Date(dateStr) < new Date();
-      };
-
-      // === Ordered Summary ===
-      const CategoryTaskSummary = [
-        // 1. Today Tasks (based on StartDate)
-        {
-          id: "today_tasks",
-          labelname: "Today Tasks",
-          count: data?.filter((task) => isToday(task.StartDate))?.length || 0,
-        },
-
-        // 2. New Tasks
-        {
-          id: "new_tasks",
-          labelname: "New Tasks",
-          count: data?.filter((task) => task.isnew === 1)?.length || 0,
-        },
-
-        // 3. Due Tasks (based on DeadLineDate)
-        {
-          id: "due_tasks",
-          labelname: "Due Tasks",
-          count: data?.filter((task) => isPast(task.DeadLineDate))?.length || 0,
-        },
-
-        // 4. Category-wise Task Summary
-        ...taskCategory?.map((label) => {
-          const key = label?.labelname?.toLowerCase()?.replace(/\s+/g, "_");
-          return {
-            id: label.id,
-            labelname: label.labelname,
-            count: categoryTaskCount[key] || 0,
-          };
-        }),
-      ];
-
-      // === Module-wise Summary for parentid === 0 only ===
-      const topLevelTasks = data?.filter(task => task.parentid === 0);
-
-      const ModulewiseCategoryTaskSummary = [
-        {
-          id: "today_tasks",
-          labelname: "Today Tasks",
-          count: topLevelTasks?.filter((task) => isToday(task.StartDate))?.length || 0,
-        },
-        {
-          id: "new_tasks",
-          labelname: "New Tasks",
-          count: topLevelTasks?.filter((task) => task.isnew === 1)?.length || 0,
-        },
-        {
-          id: "due_tasks",
-          labelname: "Due Tasks",
-          count: topLevelTasks?.filter((task) => isPast(task.DeadLineDate))?.length || 0,
-        },
-        ...taskCategory?.map((label) => {
-          const key = label?.labelname?.toLowerCase()?.replace(/\s+/g, "_");
-          return {
-            id: label.id,
-            labelname: label.labelname,
-            count: topLevelTasks?.filter(
-              (task) => categoryMap[task.workcategoryid] === key
-            )?.length || 0,
-          };
-        }),
-      ];
+        // === Module Team Members ===
+        const memberMap = new Map();
+        moduleTasks.forEach((task) => {
+          task.assignee?.forEach((member) => {
+            if (member.id) memberMap.set(member.id, member);
+          });
+        });
+        ModuleTeamMembers[moduleId] = Array.from(memberMap.values());
+      });
 
       setTimeout(() => {
         setIsWhTLoading(false);
@@ -404,8 +364,11 @@ const useFullTaskFormatFile = () => {
         ProjectCategoryTasks: projectCategoryTasks,
         ModuleList,
         ProjectProgress,
-        CategoryTaskSummary,
-        ModulewiseCategoryTaskSummary
+        // module wise
+        ModuleCategoryTasks,
+        ModuleMilestoneData,
+        ModuleProgress,
+        ModuleTeamMembers
       };
     };
   }, [taskCategory, location.pathname]);

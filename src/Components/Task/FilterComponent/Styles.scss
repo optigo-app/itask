@@ -46,6 +46,29 @@
         }
     }
 
+    .view-mode-toggle {
+        .toggle-btn {
+            text-transform: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .toggle-btn.Mui-selected {
+            background: $button-Bgcolor;
+            color: #fff;
+        }
+
+        .toggle-btn.Mui-selected:hover {
+            background-color: $button-Bgcolor;
+        }
+
+        .toggle-icon {
+            margin-right: 4px;
+        }
+    }
+
     @media (max-width: 1550px) {
         .FirstMainBox {
             width: 75% !important;
@@ -56,6 +79,7 @@
             width: 25% !important;
             max-width: 100%;
         }
+
         .iconbtn {
             width: 18px !important;
             height: 18px !important;

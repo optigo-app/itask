@@ -24,6 +24,7 @@ import {
   filterDrawer,
   timerCompOpen,
   Advfilters,
+  viewMode,
 } from "../../../Recoil/atom";
 import { toast } from "react-toastify";
 import {
@@ -33,6 +34,8 @@ import {
   List,
   SearchIcon,
   TimerIcon,
+  User,
+  Users,
 } from "lucide-react";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -55,7 +58,6 @@ const HeaderButtons = ({
   taskAssigneeData,
   CategorySummary,
 }) => {
-  console.log('CategorySummary: ', CategorySummary);
   const { hasAccess } = useAccess();
   const navigate = useNavigate()
   const isLaptop = useMediaQuery("(max-width:1150px)");
@@ -74,9 +76,9 @@ const HeaderButtons = ({
   const [filterDrawerOpen, setFilterDrawerOpen] = useRecoilState(filterDrawer);
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
+  const [viewTaskMode, setViewTaskMode] = useRecoilState(viewMode);
   const encodedData = searchParams.get("data");
   const [categoryMaster, setCategoryMaster] = useState([]);
-  console.log('categoryMaster: ', categoryMaster);
 
   useEffect(() => {
     if (Array.isArray(CategorySummary)) {
@@ -124,6 +126,11 @@ const HeaderButtons = ({
     }
   };
 
+  const handleViewModeChange = (event, newView) => {
+    if (newView !== null) setViewTaskMode(newView);
+  };
+
+
   const handleViewChange = (event, newView) => {
     if (newView == "calendar") {
       navigate('/calendar')
@@ -167,13 +174,13 @@ const HeaderButtons = ({
         aria-label="view mode"
 
       >
-        <ToggleButton value="table" aria-label="table view">
+        <ToggleButton value="table" aria-label="table view" sx={{ borderRadius: '8px' }}>
           <List className="iconbtn" size={20} />
         </ToggleButton>
-        <ToggleButton value="kanban" aria-label="kanban view">
+        <ToggleButton value="kanban" aria-label="kanban view" sx={{ borderRadius: '8px' }}>
           <Kanban className="iconbtn" size={20} />
         </ToggleButton>
-        <ToggleButton value="calendar" aria-label="Calendar view">
+        <ToggleButton value="calendar" aria-label="Calendar view" sx={{ borderRadius: '8px' }}>
           <Calendar className="iconbtn" size={20} />
         </ToggleButton>
       </ToggleButtonGroup>
@@ -279,6 +286,21 @@ const HeaderButtons = ({
                   New
                 </Button>
               )}
+              <ToggleButtonGroup
+                value={viewTaskMode}
+                exclusive
+                size="small"
+                onChange={handleViewModeChange}
+                aria-label="View mode"
+                className="view-mode-toggle"
+              >
+                <ToggleButton value="me" className="toggle-btn" sx={{ borderRadius: '8px' }}>
+                  <User size={20} className="toggle-icon" />
+                </ToggleButton>
+                <ToggleButton value="team" className="toggle-btn" sx={{ borderRadius: '8px' }}>
+                  <Users size={20} className="toggle-icon" />
+                </ToggleButton>
+              </ToggleButtonGroup>
               <IconButton
                 className="buttonClassname"
                 onClick={handleTimerCompOpen}
