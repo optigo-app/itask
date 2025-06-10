@@ -20,6 +20,7 @@ import { commonTextFieldProps } from '../../../../Utils/globalfun';
 import DepartmentAssigneeAutocomplete from '../../../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 
 const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, handleFinalSave }) => {
+    console.log('selectedTeamMember: ', selectedTeamMember);
     const [employee, setEmployee] = useState(null);
     const [role, setRole] = useState('');
     const [teamList, setTeamList] = useState([]);
@@ -35,14 +36,6 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
         setEmployee(selectedTeamMember);
         setRole(selectedTeamMember?.rolename)
     }, [open]);
-
-    const resetForm = () => {
-        setEmployee(null);
-        setRole('');
-        setEditIndex(null);
-        setEmployeeError(false);
-        setRoleError(false);
-    };
 
     const validate = () => {
         let isValid = true;
@@ -72,6 +65,14 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
         setTeamList(updatedList);
         resetForm();
     }
+
+    const resetForm = () => {
+        setEmployee(null);
+        setRole('');
+        setEditIndex(null);
+        setEmployeeError(false);
+        setRoleError(false);
+    };
 
     const handleEdit = (index) => {
         const member = teamList[index];
@@ -106,7 +107,7 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
             <Box className="tMainBox" p={2} width={400}>
                 <Box className="drawerHeader" display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="h6" className="drawer-title">Team Members</Typography>
-                    <IconButton onClick={onClose}><CircleX /></IconButton>
+                    <IconButton onClick={() => { onClose(); resetForm(); }}><CircleX /></IconButton>
                 </Box>
 
                 <div style={{ margin: "10px 0", border: "1px dashed #7d7f85", opacity: 0.3 }} />

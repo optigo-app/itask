@@ -10,7 +10,7 @@ export const fetchTaskDataFullApi = async (parsedData) => {
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"treelist\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (tasklist)",
-            "p": parsedData ? combinedValue : "",
+            "p": combinedValue,
         };
         const response = await CommonAPI(body);
         if (response?.Data) {

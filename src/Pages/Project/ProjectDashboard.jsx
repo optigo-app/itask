@@ -136,6 +136,7 @@ const ProjectDashboard = () => {
                 <DasboardTab
                     tabData={tabs}
                     selectedTab={selectedTab}
+                    decodedData={decodedData}
                     handleChange={handleChange}
                 />
             </Suspense>

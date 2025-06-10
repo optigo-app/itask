@@ -4,12 +4,21 @@ import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import './Styles/dashboard.scss';
 import { useLocation } from 'react-router-dom';
 
-const DasboardTab = ({ tabData, selectedTab, handleChange }) => {
+const DasboardTab = ({ tabData, selectedTab, handleChange, decodedData }) => {
   const locction = useLocation();
   const scrollRef = useRef(null);
   const [showScrollButtons, setShowScrollButtons] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const hasTaskId = !!decodedData?.taskid;
+
+  const hiddenTabsWithoutTaskId = ['Team Member', 'Comments'];
+
+  const filteredTabData = tabData.filter(
+    (item) => hasTaskId || !hiddenTabsWithoutTaskId.includes(item.label)
+  );
+
 
   useEffect(() => {
     if (tabData.length > 7) {
@@ -78,7 +87,7 @@ const DasboardTab = ({ tabData, selectedTab, handleChange }) => {
           aria-label="dashboard tab selection"
           className="toggle-group"
         >
-          {tabData.map((item) => (
+          {filteredTabData?.map((item) => (
             <ToggleButton key={item.label} value={item.label} className="toggle-button" sx={{ minWidth: locction?.pathname?.includes('/projects/') ? "192px !important" : '110px !important' }}>
               {item.label}
             </ToggleButton>

@@ -29,6 +29,7 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
         setOpen(true);
     };
     const handleSidebarClose = () => {
+        setSelectedTeamMember([]);
         setOpen(false);
         setCnfDialogOpen(false);
     };
