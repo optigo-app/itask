@@ -53,8 +53,8 @@ const SidebarDrawer = ({
     dayjs.extend(timezone);
     const projectModuleData = useRecoilValue(projectDatasRState);
     const taskDataValue = useRecoilValue(TaskData);
-    const [checkedMultiTask, setCheckedMultiTask] = useState(false);
-    const [formDataValue, setFormDataValue] = useRecoilState(formData);
+    const formDataValue = useRecoilValue(formData);
+    console.log('formDataValue: ', formDataValue);
     const [rootSubrootflagval, setRootSubrootFlagVal] = useRecoilState(rootSubrootflag)
     const [taskType, setTaskType] = useState("single");
     const [tasksubType, setTaskSubType] = useState("multi2");
@@ -89,11 +89,23 @@ const SidebarDrawer = ({
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
+    useEffect(() => {
+        if (encodedData) {
+            try {
+                const decodedString = decodeURIComponent(encodedData);
+                const jsonString = atob(decodedString);
+                const parsedData = JSON.parse(jsonString);
+                setDecodedData(parsedData);
+            } catch (error) {
+                console.error("Error decoding data:", error);
+            }
+        }
+    }, [encodedData]);
 
     const handleGetTeamMembers = async () => {
-        let decodedData = formDataValue
-        console.log('formDataValue: ', formDataValue);
-        const apiRes = await GetPrTeamsApi(decodedData);
+        let flag = location?.pathname?.includes("/tasks/") ? "subroot" : "root"
+        let payload = location?.pathname?.includes("/tasks/") ? decodedData : formDataValue
+        const apiRes = await GetPrTeamsApi(payload, flag);
         if (apiRes?.rd) {
             const assigneeMaster =
                 JSON.parse(sessionStorage?.getItem("taskAssigneeData")) || [];
@@ -114,8 +126,10 @@ const SidebarDrawer = ({
     };
 
     useEffect(() => {
-        handleGetTeamMembers();
-    },[formDataValue])
+        if (decodedData || formDataValue) {
+            handleGetTeamMembers();
+        }
+    }, [formDataValue, decodedData])
 
     const handleTaskChange = (event, newTaskType) => {
         if (newTaskType !== null) setTaskType(newTaskType);
@@ -156,6 +170,7 @@ const SidebarDrawer = ({
             setFormValues({
                 ...formValues,
                 guests: matchedAssignees ?? [],
+                createdBy: [logedAssignee] ?? [],
             });
         }
     }, [open, formDataValue, rootSubrootflagval]);
@@ -308,7 +323,6 @@ const SidebarDrawer = ({
         onClose();
         handleResetState();
         setTaskType("single");
-        setCheckedMultiTask(prev => !prev);
         setFormValues({
             taskName: "",
             bulkTask: [],
@@ -358,18 +372,6 @@ const SidebarDrawer = ({
 
 
 
-    useEffect(() => {
-        if (encodedData) {
-            try {
-                const decodedString = decodeURIComponent(encodedData);
-                const jsonString = atob(decodedString);
-                const parsedData = JSON.parse(jsonString);
-                setDecodedData(parsedData);
-            } catch (error) {
-                console.error("Error decoding data:", error);
-            }
-        }
-    }, [encodedData]);
 
     return (
         <>

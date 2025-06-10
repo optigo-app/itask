@@ -239,17 +239,19 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
         sortedData?.slice((page - 1) * rowsPerPage, page * rowsPerPage) || [];
 
     const handleNavigate = (task) => {
+        console.log('task: ', task);
         let urlData = {
             module: task?.taskname,
             project: task.taskPr,
             taskid: task?.taskid,
             projectid: task?.projectid,
+            moduleid: task?.taskid,
         }
 
         const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
         const formattedPrName = task?.taskPr?.trim()?.replace(/\s+/g, '-') || '';
         const formattedTaskName = task?.taskname?.trim()?.replace(/\s+/g, '-') || '';
-        const url = `/tasks/${formattedPrName}/${formattedTaskName}?data=${encodedFormData}`;
+        const url = `/tasks/${formattedPrName}/?data=${encodedFormData}`;
         navigate(url);
         // window.open(url, '_blank');
     };
