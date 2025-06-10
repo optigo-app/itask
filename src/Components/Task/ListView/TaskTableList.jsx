@@ -124,11 +124,13 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
     };
 
     const handleAddTask = (task, additionalInfo) => {
+        console.log('task: ', task);
         let data = {
             taskid: task?.taskid,
             taskPr: task?.taskPr,
             projectid: task?.projectid,
             taskname: task?.taskname,
+            moduleid: task?.moduleid,
         }
         setRootSubroot(additionalInfo);
         setFormDataValue(data);
@@ -142,6 +144,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
             taskPr: subtask?.taskPr,
             projectid: subtask?.projectid,
             taskname: subtask?.taskname,
+            moduleid: subtask?.moduleid,
         }
         setRootSubroot(additionalInfo);
         setFormDataValue(data);
