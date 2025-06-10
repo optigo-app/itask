@@ -139,7 +139,7 @@ const SidebarDrawer = ({
     useEffect(() => {
         const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
-        const matchedAssignees = formDataValue?.assigneids ? taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id)) : "";
+        const matchedAssignees = formDataValue?.assigneids ? taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id)) : [];
         if (open && (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "root")) {
             setFormValues({
                 taskName: formDataValue?.taskname ?? "",
@@ -276,6 +276,7 @@ const SidebarDrawer = ({
     }
 
     const handleSubmit = (module) => {
+        debugger
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const idString = formValues?.guests?.map(user => user.id)?.join(",");
         const assignees = formValues?.guests && Object.values(

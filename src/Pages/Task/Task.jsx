@@ -4,7 +4,7 @@ import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, useMediaQuery } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { Advfilters, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength } from "../../Recoil/atom";
+import { Advfilters, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
 import { formatDate2, getCategoryTaskSummary, isTaskDue, isTaskToday } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
@@ -22,12 +22,12 @@ const CardView = React.lazy(() => import("../../Components/Task/CardView/CardVie
 const Task = () => {
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const location = useLocation();
+  const userProfile = JSON.parse(localStorage.getItem("UserProfileData"));
   const [order, setOrder] = useState("desc");
   const [orderBy, setOrderBy] = useState("entrydate");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(14);
   const searchParams = new URLSearchParams(location.search);
-  const [callFetchTaskApi, setCallFetchTaskApi] = useRecoilState(fetchlistApiCall);
   const [masterData, setMasterData] = useRecoilState(masterDataValue);
   const [activeButton, setActiveButton] = useState("table");
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
@@ -38,6 +38,7 @@ const Task = () => {
   const selectedRow = useRecoilValue(selectedRowData);
   const encodedData = searchParams.get("data");
   const [CategoryTSummary, setCategoryTSummary] = useState([]);
+  const meTeamView = useRecoilValue(viewMode);
   const {
     iswhMLoading,
     iswhTLoading,
@@ -55,9 +56,47 @@ const Task = () => {
     setTasks([]);
   }, [location.pathname]);
 
+  // const getFilteredTasks = (allTasks = [], mode = 'me') => {
+
+  //   const userId = userProfile?.id;
+  //   if (mode === 'me') {
+  //     return allTasks.filter((task) =>
+  //       task.assignee?.some((ass) => ass.id === userId)
+  //     );
+  //   }
+  //   if (mode === 'team') {
+  //     return allTasks.filter((task) =>
+  //       task.assignee?.some((ass) => ass.id !== userId)
+  //     );
+  //   }
+  //   return allTasks;
+  // };
+
+  const filterNestedTasksByView = (tasks = [], mode = 'me', userId) => {
+    return tasks
+      ?.map((task) => {
+        const isCreatedByMe = task?.createdbyid == userId;
+        const isAssignedToMe = task?.assignee?.some((ass) => ass.id == userId);
+        const isMyTask = isCreatedByMe || isAssignedToMe;
+        const filteredSubtasks = task?.subtasks
+          ? filterNestedTasksByView(task?.subtasks, mode, userId)
+          : [];
+        const isTeamTask = !isMyTask;
+        const shouldInclude =
+          (mode === "me" && isMyTask) || (mode === "team" && isTeamTask);
+        if (shouldInclude || filteredSubtasks?.length > 0) {
+          return {
+            ...task,
+            subtasks: filteredSubtasks,
+          };
+        }
+        return null;
+      })
+      ?.filter(Boolean);
+  };
+
   useEffect(() => {
     let parsedData = null;
-
     if (encodedData) {
       try {
         const decodedString = decodeURIComponent(encodedData);
@@ -68,26 +107,31 @@ const Task = () => {
       }
     }
 
+    const userId = userProfile?.id;
+
     if (parsedData && parsedData.taskid) {
       const matchedTask = taskFinalData?.TaskData?.find(
         (task) => task.taskid === parsedData.taskid
       );
 
       if (matchedTask && matchedTask.subtasks?.length > 0) {
-        const summary = getCategoryTaskSummary(matchedTask.subtasks, taskCategory);
+        const filteredSubtasks = filterNestedTasksByView(matchedTask.subtasks, meTeamView, userId);
+        const summary = getCategoryTaskSummary(filteredSubtasks, taskCategory);
         setCategoryTSummary(summary);
-        setTasks(matchedTask.subtasks);
+        setTasks(filteredSubtasks);
         return;
       }
     }
 
     if (!encodedData && taskFinalData?.TaskData) {
-      const summary = getCategoryTaskSummary(taskFinalData.TaskData, taskCategory);
+      const filtered = filterNestedTasksByView(taskFinalData.TaskData, meTeamView, userId);
+      const summary = getCategoryTaskSummary(filtered, taskCategory);
       setCategoryTSummary(summary);
-      setTasks(taskFinalData.TaskData);
+      setTasks(filtered);
     }
+  }, [encodedData, taskFinalData, selectedRow, meTeamView]);
 
-  }, [encodedData, taskFinalData, selectedRow]);
+
 
 
   useEffect(() => {
