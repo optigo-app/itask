@@ -23,11 +23,15 @@ const Header = ({ avatarSrc = "" }) => {
     const taskDataLength = useRecoilValue(taskLength);
     const [profileData, setProfileData] = useState();
     const [selectedTab, setSelectedTab] = useState("taskView");
+    const [selectedCalTab, setSelectedCalTab] = useState("calendarView");
 
     useEffect(() => {
         location.pathname.includes("/tasks/") ?
             setSelectedTab("taskView") :
             setSelectedTab("projectHome");
+            location?.pathname.includes("/calendar")?
+                setSelectedCalTab("calendarView") :
+                setSelectedCalTab("todayTasks");
     }, [location]);
 
     useEffect(() => {
@@ -103,6 +107,10 @@ const Header = ({ avatarSrc = "" }) => {
             title: "Notification",
             subtitle: "View All your notification here",
         },
+        "/taskView": {
+            title: "Today Tasks",
+            subtitle: "View All your Today Tasks here",
+        },
     };
 
     const decodedPathname = decodeURIComponent(location?.pathname);
@@ -167,11 +175,6 @@ const Header = ({ avatarSrc = "" }) => {
         { text: 'My Profile', icon: <User size={20} style={{ color: "#7d7f85" }} />, route: '/account-profile' },
     ];
 
-    const handleMenuClick = (route) => {
-        handleCloseProfileMenu();
-        navigate(route);
-    };
-
     const handleViewAllNoti = () => {
         handleCloseMenu();
         navigate('/notification');
@@ -220,17 +223,25 @@ const Header = ({ avatarSrc = "" }) => {
     };
 
     const handleRedirection = (value) => {
-        let urlData = {
-            project: decodedData?.project,
-            projectid: decodedData?.projectid,
-            module: decodedData?.module,
-            taskid: decodedData?.taskid,
-        }
-        const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
-        if (value === "projectHome") {
-            navigate(`/projects/dashboard/?data=${encodedFormData}`);
-        } else if (value === "taskView") {
-            navigate(`/tasks/?data=${encodedFormData}`);
+        if (location?.pathname.includes("calendar") || location?.pathname?.includes("/taskView")) {
+            if (value === "calendarView") {
+                navigate("/calendar");
+            } else {
+                navigate(`/taskView`);
+            }
+        } else {
+            let urlData = {
+                project: decodedData?.project,
+                projectid: decodedData?.projectid,
+                module: decodedData?.module,
+                taskid: decodedData?.taskid,
+            }
+            const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
+            if (value === "projectHome") {
+                navigate(`/projects/dashboard/?data=${encodedFormData}`);
+            } else if (value === "taskView") {
+                navigate(`/tasks/?data=${encodedFormData}`);
+            }
         }
     };
 
@@ -254,6 +265,19 @@ const Header = ({ avatarSrc = "" }) => {
             value: "taskView",
             icon: FileCheck
         },
+    ];
+
+    const toggleCalOptions = [
+        {
+            label: "Calendar",
+            value: "calendarView",
+            icon: FileCheck
+        },
+        {
+            label: "Today Task",
+            value: "todayTasks",
+            icon: House
+        }
     ];
 
 
@@ -309,7 +333,34 @@ const Header = ({ avatarSrc = "" }) => {
                             className="toggle-group"
                             size="small"
                         >
-                            {toggleOptions.map((option) => (
+                            {toggleOptions?.map((option) => (
+                                <ToggleButton
+                                    key={option.value}
+                                    value={option.value}
+                                    className="toggle-button"
+                                    onClick={() => handleRedirection(option.value)}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                        {option.icon && (
+                                            <option.icon size={20} />
+                                        )}
+                                        {option.label}
+                                    </Box>
+                                </ToggleButton>
+                            ))}
+                        </ToggleButtonGroup>
+                    </Box>
+                )}
+                {(location?.pathname?.includes("/calendar") || location?.pathname?.includes("/taskView")) && (
+                    <Box className="taskHeaderTDBox">
+                        <ToggleButtonGroup
+                            value={selectedCalTab}
+                            exclusive
+                            onChange={(e, value) => value && setSelectedCalTab(value)}
+                            className="toggle-group"
+                            size="small"
+                        >
+                            {toggleCalOptions?.map((option) => (
                                 <ToggleButton
                                     key={option.value}
                                     value={option.value}

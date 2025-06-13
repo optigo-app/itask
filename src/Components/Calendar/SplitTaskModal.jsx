@@ -1,10 +1,8 @@
 import React from 'react';
+import './SplitTaskDialog.scss';
 import {
+    Drawer,
     Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     TextField,
     Typography,
     Table,
@@ -15,14 +13,17 @@ import {
     TableRow,
     Paper,
     Box,
+    IconButton,
+    Chip,
 } from '@mui/material';
 import CustomDateTimePicker from '../../Utils/DateComponent/CustomDateTimePicker';
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { commonTextFieldProps } from '../../Utils/globalfun';
+import { CircleX } from 'lucide-react';
 
-const SplitTaskModal = ({
+const SplitTaskDrawer = ({
     open,
     onClose,
     selectedTask,
@@ -32,112 +33,164 @@ const SplitTaskModal = ({
     onSplitPartChange,
     onConfirmSplit,
     totalSplitHours,
-    originalTaskEstimate,
+    handleAutoSplit
 }) => {
     dayjs.extend(utc);
     dayjs.extend(timezone);
+    console.log('selectedTask: ', selectedTask);
 
-    const isTotalHoursExceeded = totalSplitHours > originalTaskEstimate;
+    const isTotalHoursExceeded = totalSplitHours > selectedTask?.estimate_hrs;
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-            <DialogTitle>Split Task: {selectedTask?.title}</DialogTitle>
-            <DialogContent dividers>
-                <TextField
-                    fullWidth
-                    label="Number of Days to Split"
-                    type="number"
-                    value={numberOfDaysToSplit === 0 ? '' : numberOfDaysToSplit}
-                    onChange={onNumberOfDaysToSplitChange}
-                    inputProps={{ min: 1 }}
-                    sx={{ mb: 3 }}
-                />
+        <Drawer anchor="right" open={open} onClose={onClose} className="muiDrawerRight">
+            <Box className="muiDrawerBox">
+                <Box className="muiheadBox">
+                    <Typography variant="h6">Split Task: {selectedTask?.taskname}</Typography>
+                    <IconButton
+                        onClick={onClose}
+                    >
+                        <CircleX />
+                    </IconButton>
+                </Box>
+                <Box className="drawerContentBox">
+                    <Box className="muispitDBox">
+                        <Box className="form-group">
+                            <Typography variant="subtitle1" className="form-label">
+                                Split Days
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                placeholder="Number of Days to Split"
+                                type="number"
+                                value={numberOfDaysToSplit === 0 ? '' : numberOfDaysToSplit}
+                                onChange={onNumberOfDaysToSplitChange}
+                                {...commonTextFieldProps}
+                            />
+                        </Box>
+                        <Chip
+                            label={`Estimate: ${selectedTask?.estimate_hrs} hr`}
+                            sx={{
+                                backgroundColor: '##685dd87a',
+                                color: '#fff',
+                                fontWeight: 'bold',
+                                padding: '8px',
+                            }}
+                            {...commonTextFieldProps}
+                        />
 
-                {numberOfDaysToSplit > 0 && (
-                    <>
-                        <Typography variant="subtitle1" gutterBottom>
-                            Original Task Estimate: <strong>{originalTaskEstimate} hr</strong>
-                        </Typography>
-                        <Typography variant="subtitle1" gutterBottom color={isTotalHoursExceeded ? 'error' : 'textPrimary'}>
-                            Total Split Hours: <strong>{totalSplitHours.toFixed(3)} hr</strong>
+                    </Box>
+                    <Box className="muiTimeEstimateBox">
+                        <Typography
+                            variant="body1"
+                            gutterBottom
+                            color={isTotalHoursExceeded ? 'error' : 'textPrimary'}
+                        >
+                            Total Split Hours: <strong>{totalSplitHours} hr</strong>
                             {isTotalHoursExceeded && (
                                 <span style={{ marginLeft: '8px', color: 'red' }}>
                                     (Exceeds original estimate!)
                                 </span>
                             )}
                         </Typography>
+                        <Button
+                            size='small'
+                            variant="outlined"
+                            color="secondary"
+                            onClick={handleAutoSplit}
+                            className="buttonClassname"
+                        >
+                            Auto Split
+                        </Button>
+                    </Box>
 
-                        <TableContainer component={Paper} sx={{ mt: 2 }}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell><strong>Start Date & Time</strong></TableCell>
-                                        <TableCell><strong>Hours</strong></TableCell>
-                                        <TableCell><strong>End Date & Time</strong></TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {splitParts.map((part, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell sx={{ minWidth: 250 }}>
-                                                <CustomDateTimePicker
-                                                    label={`Part ${index + 1} Start`}
-                                                    name={`part${index + 1}StartDate`}
-                                                    value={part.startDate ? dayjs(part.startDate).tz("Asia/Kolkata", true).local() : null}
-                                                    width="100%"
-                                                    styleprops={commonTextFieldProps}
-                                                    onChange={(newValue) => onSplitPartChange(index, 'startDate', newValue)}
-                                                />
-                                            </TableCell>
-                                            <TableCell sx={{ minWidth: 250 }}>
-                                                <CustomDateTimePicker
-                                                    label="End (Auto)"
-                                                    name={`part${index + 1}EndDate`}
-                                                    value={part.endDate ? dayjs(part.endDate).tz("Asia/Kolkata", true).local() : null}
-                                                    width="100%"
-                                                    styleprops={commonTextFieldProps}
-                                                />
-                                            </TableCell>
-                                            <TableCell sx={{ minWidth: 150 }}>
-                                                <Box className="form-group">
-                                                    <Typography
-                                                        variant="subtitle1"
-                                                        className="form-label"
-                                                        htmlFor="title"
-                                                    >
-                                                        Split Hour
-                                                    </Typography>
-                                                    <TextField
-                                                        name="splitHour"
-                                                        placeholder="Enter hrs"
-                                                        value={part.hours}
-                                                        onChange={(e) => onSplitPartChange(index, 'hours', e.target.value)}
-                                                        inputProps={{ inputMode: 'decimal', pattern: '^[0-9]{0,3}(\\.[0-9]{0,3})?$' }}
-                                                        {...commonTextFieldProps}
-                                                    />
-                                                </Box>
-                                            </TableCell>
+                    {numberOfDaysToSplit > 0 && (
+                        <Box className="tableCBox">
+                            <TableContainer component={Paper} sx={{ mt: 2 }} className="tableContainer">
+                                <Table className="muiTable">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell><strong>Start Date & Time</strong></TableCell>
+                                            <TableCell><strong>End Date & Time</strong></TableCell>
+                                            <TableCell><strong>Hours</strong></TableCell>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </>
-                )}
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} className='secondaryBtnClassname'>Cancel</Button>
-                <Button
-                    onClick={onConfirmSplit}
-                    variant="contained"
-                    className='buttonClassname'
-                    disabled={isTotalHoursExceeded || numberOfDaysToSplit === 0 || !selectedTask}
-                >
-                    Confirm Split
-                </Button>
-            </DialogActions>
-        </Dialog>
+                                    </TableHead>
+                                    <TableBody>
+                                        {splitParts?.map((part, index) => (
+                                            <TableRow key={index}>
+                                                <TableCell>
+                                                    <CustomDateTimePicker
+                                                        label={`Part ${index + 1} Start`}
+                                                        value={part.startDate ? dayjs(part.startDate).tz("Asia/Kolkata", true).local() : null}
+                                                        onChange={(newValue) => onSplitPartChange(index, 'startDate', newValue)}
+                                                        width="100%"
+                                                        styleprops={commonTextFieldProps}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <CustomDateTimePicker
+                                                        label="End (Auto)"
+                                                        value={part.endDate ? dayjs(part.endDate).tz("Asia/Kolkata", true).local() : null}
+                                                        width="100%"
+                                                        styleprops={commonTextFieldProps}
+                                                    />
+                                                </TableCell>
+                                                <TableCell width={100}>
+                                                    <Box className="form-group">
+                                                        <Typography variant="subtitle1" className="form-label">
+                                                            Split Hours
+                                                        </Typography>
+                                                        <TextField
+                                                            type="number"
+                                                            size="small"
+                                                            fullWidth
+                                                            value={part.hours}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                if (/^\d*\.?\d*$/.test(value)) {
+                                                                    onSplitPartChange(index, "hours", value);
+                                                                }
+                                                            }}
+                                                            className="textfieldsClass"
+                                                        />
+                                                        {/* <TextField
+                                                            placeholder="Enter hrs"
+                                                            value={part.hours}
+                                                            onChange={(e) => onSplitPartChange(index, 'hours', e.target.value)}
+                                                            type="number"
+                                                            inputProps={{
+                                                                step: ".1",
+                                                                min: "",
+                                                            }}
+                                                            fullWidth
+                                                            {...commonTextFieldProps}
+                                                        /> */}
+                                                    </Box>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Box>
+                    )}
+                </Box>
+
+                <Box className="drawerFooter">
+                    <Button onClick={onClose} className="secondaryBtnClassname">
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={onConfirmSplit}
+                        variant="contained"
+                        className="buttonClassname"
+                        disabled={isTotalHoursExceeded || numberOfDaysToSplit === 0 || !selectedTask}
+                    >
+                        Confirm Split
+                    </Button>
+                </Box>
+            </Box>
+        </Drawer>
     );
 };
 
-export default SplitTaskModal;
+export default SplitTaskDrawer;

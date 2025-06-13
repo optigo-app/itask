@@ -17,6 +17,7 @@ import {
     Avatar,
     Chip,
     Tooltip,
+    LinearProgress,
 } from "@mui/material";
 import { CirclePlus, Eye, Paperclip, Pencil, Timer } from "lucide-react";
 import "react-resizable/css/styles.css";
@@ -24,7 +25,7 @@ import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 import TaskTimeTracking from "../../ShortcutsComponent/TimerComponent/TaskTimeTracking";
@@ -54,11 +55,12 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
     const columns = [
         { id: "taskname", label: "Task Name", width: 350 },
         { id: "taskPr", label: "Project", width: 150 },
+        { id: "progress", label: "Progress", width: 180 },
         { id: "status", label: "Status", width: 180 },
         { id: "assignee", label: "Assignee", width: 150 },
-        { id: "DeadLineDate", label: "Deadline", width: 150 },
-        { id: "priority", label: "Priority", width: 150 },
-        { id: "estimate", label: "Estimate", width: 150 },
+        { id: "DeadLineDate", label: "Deadline", width: 120 },
+        { id: "priority", label: "Priority", width: 120 },
+        { id: "estimate", label: "Estimate", width: 100 },
         { id: "actions", label: "Actions", width: 120 },
     ];
 
@@ -484,6 +486,33 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                     </TableCell>
                     <TableCell>{subtask?.taskPr}</TableCell>
                     <TableCell>
+                        <Box display="flex" alignItems="center" gap={2} width="100%">
+                            {!subtask?.isNotShowProgress && (
+                                <>
+                                    <Box width="100%" position="relative">
+                                        <LinearProgress
+                                            aria-label="Task progress status"
+                                            variant="determinate"
+                                            value={subtask?.progress_per}
+                                            sx={{
+                                                height: 7,
+                                                borderRadius: 5,
+                                                backgroundColor: "#e0e0e0",
+                                                "& .MuiLinearProgress-bar": {
+                                                    backgroundColor: getStatusColor(subtask?.progress_per),
+                                                },
+                                            }}
+                                            className="progressBar"
+                                        />
+                                    </Box>
+                                    <Typography className="progressBarText" variant="body2" minWidth={100}>
+                                        {`${subtask?.progress_per}%`}
+                                    </Typography>
+                                </>
+                            )}
+                        </Box>
+                    </TableCell>
+                    <TableCell>
                         <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange} disable={false} />
                     </TableCell>
                     <TableCell
@@ -604,6 +633,33 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>{task?.taskPr}</TableCell>
+                                                <TableCell>
+                                                    <Box display="flex" alignItems="center" gap={2} width="100%">
+                                                        {!task?.isNotShowProgress && (
+                                                            <>
+                                                                <Box width="100%" position="relative">
+                                                                    <LinearProgress
+                                                                        aria-label="Task progress status"
+                                                                        variant="determinate"
+                                                                        value={task?.progress_per}
+                                                                        sx={{
+                                                                            height: 7,
+                                                                            borderRadius: 5,
+                                                                            backgroundColor: "#e0e0e0",
+                                                                            "& .MuiLinearProgress-bar": {
+                                                                                backgroundColor: getStatusColor(task?.progress_per),
+                                                                            },
+                                                                        }}
+                                                                        className="progressBar"
+                                                                    />
+                                                                </Box>
+                                                                <Typography className="progressBarText" variant="body2" minWidth={100}>
+                                                                    {`${task?.progress_per}%`}
+                                                                </Typography>
+                                                            </>
+                                                        )}
+                                                    </Box>
+                                                </TableCell>
                                                 <TableCell>
                                                     <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange} disable={false} />
                                                 </TableCell>

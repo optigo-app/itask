@@ -259,6 +259,7 @@ const AppWrapper = () => {
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
                                         <Route path="/reports/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><Reports /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
+                                        <Route path="/taskView" element={<CalendarGridView />} />
                                         <Route path="/test" element={<CalendarGridView />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>

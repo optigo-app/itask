@@ -252,7 +252,6 @@ const SidebarDrawer = ({
     const handleDateChange = (date, key) => {
         if (date) {
             const istDate = date.tz('Asia/Kolkata');
-
             setFormValues((prev) => ({
                 ...prev,
                 [key]: istDate.format('YYYY-MM-DDTHH:mm:ss.SSS'),
