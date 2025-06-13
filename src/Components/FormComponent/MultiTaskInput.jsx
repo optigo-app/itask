@@ -2,16 +2,25 @@ import React, { useState, useRef, useEffect } from "react";
 import {
     Box, Button, TextareaAutosize, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField, IconButton, Typography
 } from "@mui/material";
+import dayjs from 'dayjs';
+import utc from "dayjs/plugin/utc";
+import timezone from 'dayjs/plugin/timezone';
 import { Save, X as Close, Pencil, Trash, Plus, ArrowLeft } from "lucide-react";
 import './SidebarDrawer.scss';
+import { DatePicker } from "@mui/x-date-pickers";
+import { customDatePickerProps } from "../../Utils/globalfun";
 
 const MultiTaskInput = ({ onSave }) => {
+    dayjs.extend(utc);
+    dayjs.extend(timezone);
     const [tasks, setTasks] = useState([]);
+    console.log('tasks: ', tasks);
     const [editIndex, setEditIndex] = useState(null);
     const [showEdit, setShowEdit] = useState(true);
     const [text, setText] = useState("");
     const [newTask, setNewTask] = useState("");
     const [newEstimate, setNewEstimate] = useState("");
+    const [deadLineDate, setDeadLineDate] = useState(null);
     const [errorMessage, setErrorMessage] = useState("");
     const inputRef = useRef(null);
     const estimateRefs = useRef([]);
@@ -45,6 +54,7 @@ const MultiTaskInput = ({ onSave }) => {
         const newTasks = lines.map(line => ({
             taskName: line,
             estimate: "",
+            deadLineDate: null
         }));
 
         setTasks([...tasks, ...newTasks]);
@@ -61,7 +71,12 @@ const MultiTaskInput = ({ onSave }) => {
             return;
         }
         setErrorMessage("");
-        let newTasks = [...tasks, { taskName: newTask, estimate: newEstimate ?? '' }];
+
+        let newTasks = [...tasks, {
+            taskName: newTask,
+            estimate: newEstimate ?? '',
+            deadLineDate: deadLineDate || null
+        }];
 
         setTasks(newTasks);
         onSave(newTasks);
@@ -70,15 +85,20 @@ const MultiTaskInput = ({ onSave }) => {
         setNewEstimate("");
         inputRef.current?.focus();
     };
-
     const handleTaskChange = (index, key, value) => {
-        if (!isValidInput(value)) {
+        console.log('value: ', index, key, value);
+        if (key === 'taskName' && !isValidInput(value)) {
             setErrorMessage("Task name cannot contain ',' or '#'.");
             return;
         }
         setErrorMessage("");
         const updatedTasks = [...tasks];
-        updatedTasks[index][key] = value;
+        if (key == 'deadLineDate' && value) {
+            const istDate = dayjs(value).tz('Asia/Kolkata');
+            updatedTasks[index][key] = istDate.format('YYYY-MM-DDTHH:mm:ss.SSS');
+        } else {
+            updatedTasks[index][key] = value;
+        }
         setTasks(updatedTasks);
         updateTotalEstimate(updatedTasks);
         onSave(updatedTasks);
@@ -144,8 +164,10 @@ const MultiTaskInput = ({ onSave }) => {
     };
 
     const isValidInput = (value) => {
-        return !/[,#]/.test(value); // Disallow "," and "#"
+        if (typeof value !== 'string') return true;
+        return !/[,#]/.test(value);
     };
+
 
     const handleDelete = (index) => {
         const updatedTasks = tasks.filter((_, i) => i !== index);
@@ -307,8 +329,9 @@ const MultiTaskInput = ({ onSave }) => {
                                     <Table className="Mlt-denseTable">
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell sx={{ width: "60%" }}><b>Task Name</b></TableCell>
-                                                <TableCell sx={{ width: "20%" }}><b>Estimate</b></TableCell>
+                                                <TableCell sx={{ width: "40%" }}><b>Task Name</b></TableCell>
+                                                <TableCell sx={{ width: "15%" }}><b>Estimate</b></TableCell>
+                                                <TableCell sx={{ width: "25%" }}><b>Deadline</b></TableCell>
                                                 <TableCell sx={{ width: "20%", textAlign: "center" }}><b>Actions</b></TableCell>
                                             </TableRow>
                                         </TableHead>
@@ -316,7 +339,7 @@ const MultiTaskInput = ({ onSave }) => {
                                             {tasks.map((task, index) => (
                                                 <>
                                                     <TableRow key={index}>
-                                                        <TableCell sx={{ width: "60%" }}>
+                                                        <TableCell sx={{ width: "40%" }}>
                                                             {editIndex === index ? (
                                                                 <TextField
                                                                     size="small"
@@ -330,7 +353,7 @@ const MultiTaskInput = ({ onSave }) => {
                                                             )}
                                                         </TableCell>
 
-                                                        <TableCell sx={{ width: "20%" }}>
+                                                        <TableCell sx={{ width: "15%" }}>
                                                             <TextField
                                                                 type="number"
                                                                 size="small"
@@ -353,6 +376,25 @@ const MultiTaskInput = ({ onSave }) => {
                                                                 }}
                                                                 inputRef={(el) => estimateRefs.current[index] = el}
                                                                 className="textfieldsClass"
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell sx={{ width: '25%' }}>
+                                                            <DatePicker
+                                                                name="deadLineDate"
+                                                                value={task?.deadLineDate ? dayjs(task?.deadLineDate).tz("Asia/Kolkata", true).local() : null}
+                                                                className="textfieldsClass"
+                                                                onChange={(date) => handleTaskChange(index, "deadLineDate", date)}
+                                                                sx={{ width: "100%" }}
+                                                                format="DD/MM/YYYY"
+                                                                textField={(params) => (
+                                                                    <TextField
+                                                                        {...params}
+                                                                        size="small"
+                                                                        className="textfieldsClass"
+                                                                        sx={{ padding: "0" }}
+                                                                    />
+                                                                )}
+                                                                {...customDatePickerProps}
                                                             />
                                                         </TableCell>
                                                         <TableCell sx={{ width: "20%", textAlign: "center" }}>
@@ -431,6 +473,36 @@ const MultiTaskInput = ({ onSave }) => {
                                                     />
 
                                                 </TableCell>
+                                                <TableCell>
+                                                    <DatePicker
+                                                        name="deadLineDate"
+                                                        value={
+                                                            deadLineDate
+                                                                ? dayjs(deadLineDate).tz("Asia/Kolkata", true).local()
+                                                                : null
+                                                        }
+                                                        className="textfieldsClass"
+                                                        onChange={(date) => {
+                                                            if (date) {
+                                                                const formattedDate = dayjs(date).tz("Asia/Kolkata").format("YYYY-MM-DDTHH:mm:ss.SSS");
+                                                                setDeadLineDate(formattedDate);
+                                                            } else {
+                                                                setDeadLineDate(null);
+                                                            }
+                                                        }}
+                                                        sx={{ width: "100%" }}
+                                                        format="DD/MM/YYYY"
+                                                        textField={(params) => (
+                                                            <TextField
+                                                                {...params}
+                                                                size="small"
+                                                                className="textfieldsClass"
+                                                                sx={{ padding: "0" }}
+                                                            />
+                                                        )}
+                                                        {...customDatePickerProps}
+                                                    />
+                                                </TableCell>
                                                 <TableCell sx={{ textAlign: "center" }}>
                                                     <IconButton onClick={addNewTask}
                                                         sx={{
@@ -465,20 +537,3 @@ const MultiTaskInput = ({ onSave }) => {
 };
 
 export default MultiTaskInput;
-// {editIndex === index ? (
-//     <TextField
-//         type="text"
-//         size="small"
-//         fullWidth
-//         value={editIndex === index ? editingEstimate : task.estimate}
-//         onChange={(e) => {
-//             const value = e.target.value;
-//             if (isValidDecimalInput(value)) {
-//                 setEditingEstimate(value);
-//             }
-//         }}
-//         className="textfieldsClass"
-//     />
-// ) : (
-//     <Typography>{task.estimate}</Typography>
-// )}

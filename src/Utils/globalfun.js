@@ -791,3 +791,26 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
     ];
     return summary;
 };
+
+export const filterNestedTasksByView = (tasks = [], mode = 'me', userId) => {
+    return tasks
+        ?.map((task) => {
+            const isCreatedByMe = task?.createdbyid == userId;
+            const isAssignedToMe = task?.assignee?.some((ass) => ass.id == userId);
+            const isMyTask = isCreatedByMe && isAssignedToMe;
+            const filteredSubtasks = task?.subtasks
+                ? filterNestedTasksByView(task?.subtasks, mode, userId)
+                : [];
+            const isTeamTask = !isMyTask;
+            const shouldInclude =
+                (mode === "me" && isMyTask) || (mode === "team" && isTeamTask);
+            if (shouldInclude || filteredSubtasks?.length > 0) {
+                return {
+                    ...task,
+                    subtasks: filteredSubtasks,
+                };
+            }
+            return null;
+        })
+        ?.filter(Boolean);
+};

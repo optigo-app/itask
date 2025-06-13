@@ -12,6 +12,7 @@ import {
   TaskData,
 } from "../../Recoil/atom";
 import { useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const useFullTaskFormatFile = () => {
   const location = useLocation();
@@ -84,6 +85,11 @@ const useFullTaskFormatFile = () => {
     }
     try {
       const taskData = await fetchTaskDataFullApi(parsedData);
+      console.log('taskData: ', taskData);
+      if (taskData?.rd[0]?.stat == 0) {
+        setIsWhTLoading(false);
+        return toast.error(taskData?.rd[0]?.stat_msg);
+      }
       const labeledTasks = mapKeyValuePair(taskData);
       const enhanceTask = (task) => {
         const priority = priorityData?.find(
@@ -197,34 +203,47 @@ const useFullTaskFormatFile = () => {
         const categoryKey = categoryMap[task.workcategoryid];
         const projectId = task.projectid;
 
-        // Initialize totals
         let estimate_hrsT = 0;
         let estimate1_hrsT = 0;
         let estimate2_hrsT = 0;
 
-        // Recursively calculate totals from children
+        let completed = 0;
+        let total = 1; // Include self
+
+        if (task.status === "Completed") completed++;
+
+        // Recursively calculate for subtasks
         task.subtasks?.forEach((subtask) => {
           const childSums = collectCategoryTasks(subtask);
           estimate_hrsT += childSums.estimate_hrsT;
           estimate1_hrsT += childSums.estimate1_hrsT;
           estimate2_hrsT += childSums.estimate2_hrsT;
+
+          // Aggregate progress tracking
+          total += childSums.total;
+          completed += childSums.completed;
         });
 
-        // Add current task's estimates
+        // Add own estimates
         estimate_hrsT += task.estimate_hrs || 0;
         estimate1_hrsT += task.estimate1_hrs || 0;
         estimate2_hrsT += task.estimate2_hrs || 0;
 
-        // Store totals in the task object
+        // Calculate progress %
+        task.progress_per = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+        // Set isNotShowProgress flag
+        task.isNotShowProgress = !task.subtasks || task.subtasks.length === 0;
+
+        // Store estimates
         task.estimate_hrsT = estimate_hrsT;
         task.estimate1_hrsT = estimate1_hrsT;
         task.estimate2_hrsT = estimate2_hrsT;
 
-        // Global category grouping
+        // Global & project-wise category grouping
         if (categoryKey) {
           category[categoryKey].push(task);
 
-          // Project-wise category grouping
           if (!projectCategoryTasks[projectId]) {
             projectCategoryTasks[projectId] = {};
           }
@@ -234,11 +253,12 @@ const useFullTaskFormatFile = () => {
           projectCategoryTasks[projectId][categoryKey].push(task);
         }
 
-        // Return totals for parent's use
         return {
           estimate_hrsT,
           estimate1_hrsT,
           estimate2_hrsT,
+          total,
+          completed,
         };
       };
       let TaskData;

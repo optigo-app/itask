@@ -1,6 +1,7 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const deleteTaskDataApi = async (selectedRow) => {
+    debugger
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));

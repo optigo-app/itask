@@ -5,7 +5,7 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, useMediaQuery } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { Advfilters, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
-import { formatDate2, getCategoryTaskSummary, isTaskDue, isTaskToday } from "../../Utils/globalfun";
+import { filterNestedTasksByView, formatDate2, getCategoryTaskSummary, isTaskDue, isTaskToday } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
@@ -72,28 +72,7 @@ const Task = () => {
   //   return allTasks;
   // };
 
-  const filterNestedTasksByView = (tasks = [], mode = 'me', userId) => {
-    return tasks
-      ?.map((task) => {
-        const isCreatedByMe = task?.createdbyid == userId;
-        const isAssignedToMe = task?.assignee?.some((ass) => ass.id == userId);
-        const isMyTask = isCreatedByMe || isAssignedToMe;
-        const filteredSubtasks = task?.subtasks
-          ? filterNestedTasksByView(task?.subtasks, mode, userId)
-          : [];
-        const isTeamTask = !isMyTask;
-        const shouldInclude =
-          (mode === "me" && isMyTask) || (mode === "team" && isTeamTask);
-        if (shouldInclude || filteredSubtasks?.length > 0) {
-          return {
-            ...task,
-            subtasks: filteredSubtasks,
-          };
-        }
-        return null;
-      })
-      ?.filter(Boolean);
-  };
+
 
   useEffect(() => {
     let parsedData = null;
