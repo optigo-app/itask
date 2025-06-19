@@ -1,7 +1,6 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const getAttachmentApi = async (decodedData) => {
-    debugger
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
         const combinedValue = JSON.stringify({

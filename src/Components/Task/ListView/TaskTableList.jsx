@@ -18,8 +18,10 @@ import {
     Chip,
     Tooltip,
     LinearProgress,
+    Menu,
+    MenuItem,
 } from "@mui/material";
-import { CirclePlus, Eye, Paperclip, Pencil, Timer } from "lucide-react";
+import { CirclePlus, ClipboardPaste, Eye, Paperclip, Pencil, Scissors, Timer } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -34,10 +36,38 @@ import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 import StatusCircles from "../../ShortcutsComponent/EstimateComp";
 import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawerFile";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import useAccess from "../../Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
+import MenuDatePicker from "../../ShortcutsComponent/Date/DeadlineDate";
+import PriorityBadge from "../../ShortcutsComponent/PriorityBadge";
+import CopyPasetContextMenu from "../../ShortcutsComponent/CutPasteMenu";
+import CutPasetContextMenu from "../../ShortcutsComponent/CutPasteMenu";
 
-const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, totalPages, handleChangePage, handleRequestSort, handleTaskFavorite, handleStatusChange, handleAssigneeShortcutSubmit, isLoading }) => {
+const TableView = ({
+    data,
+    page,
+    order,
+    orderBy,
+    rowsPerPage,
+    currentData,
+    totalPages,
+    copiedData,
+    contextMenu,
+    handleCopy,
+    handlePaste,
+    handleContextMenu,
+    handleCloseContextMenu,
+    handleChangePage,
+    handleRequestSort,
+    handleTaskFavorite,
+    handleStatusChange,
+    handlePriorityChange,
+    handleAssigneeShortcutSubmit,
+    handleDeadlineDateChange,
+    isLoading }) => {
+    console.log('contextMenu: ', contextMenu);
     const { hasAccess } = useAccess();
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
@@ -69,6 +99,23 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
     const [timeTrackMOpen, setTimeTrackMOpen] = useState(false);
     const [taskTimeRunning, setTaskTimeRunning] = useState({});
     const [profileOpen, setProfileOpen] = useState(false);
+    const [anchorDeadlineEl, setAnchorDeadlineEl] = useState(null);
+
+    const handleDeadlineClick = (e, task) => {
+        setAnchorDeadlineEl(e.currentTarget)
+        setSelectedTask(task);
+        setSelectedItem(task);
+    };
+    const handlDeadlineeClose = () => setAnchorDeadlineEl(null);
+
+    const openDeadline = Boolean(anchorDeadlineEl);
+
+    const handleDeadlineChange = (event) => {
+        const newValue = event;
+        console.log('newValue: ', newValue);
+        handleDeadlineDateChange(newValue);
+        handlDeadlineeClose();
+    }
 
     useEffect(() => {
         if (!selectedItem || !data) return;
@@ -177,6 +224,10 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
 
     const onStatusChange = (task, newStatus) => {
         handleStatusChange(task, newStatus);
+    };
+
+    const onPriorityChange = (task, newPriority) => {
+        handlePriorityChange(task, newPriority);
     };
 
     const hanldePAvatarClick = (task, id) => {
@@ -336,31 +387,6 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
         </Box>
     );
 
-    const renderPriorityLabel = (priority, priorityColors) => {
-        const color = priority && priorityColors[priority]?.color || '#fff';
-        const backgroundColor = priority && priorityColors[priority]?.backgroundColor || '#7d7f85a1';
-
-        return (
-            <div style={{
-                color,
-                backgroundColor,
-                width: 'fit-content',
-                padding: '0.2rem 0.8rem',
-                borderRadius: '5px',
-                textAlign: 'center',
-                fontSize: '13.5px',
-                fontWeight: '500',
-                display: 'flex',
-                justifyContent: 'start',
-                alignItems: 'center',
-            }}
-                className="priority-label"
-            >
-                {priority ?? '-'}
-            </div>
-        );
-    };
-
     const renderTaskNameSection = (
         task,
         expandedTasks,
@@ -449,6 +475,7 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 }}
                     onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid, { Tbcell: 'TaskName' })}
                     onMouseLeave={handleSubtaskMouseLeave}
+                    onContextMenu={(e) => handleContextMenu(e, subtask)}
                 >
                     <TableCell >
                         <div style={{
@@ -520,11 +547,11 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                         onMouseLeave={handleTaskMouseLeave}>
                         {renderAssigneeAvatars(subtask?.assignee, subtask, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => handleDeadlineClick(e, subtask)}>
                         {cleanDate(subtask?.DeadLineDate) ? formatDate2(subtask.DeadLineDate) : '-'}
                     </TableCell>
                     <TableCell>
-                        {renderPriorityLabel(subtask?.priority, priorityColors)}
+                        <PriorityBadge task={subtask} priorityColors={priorityColors} onPriorityChange={onPriorityChange} disable={true} />
                     </TableCell>
                     <TableCell>
                         <StatusCircles task={subtask} />
@@ -598,12 +625,10 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                             <TableRow key={taskIndex}
                                                 sx={{
                                                     backgroundColor: hoveredTaskId === task?.taskid ? '#f5f5f5' : expandedTasks[task.taskid] ? '#80808030' : 'inherit',
-                                                    // opacity: task?.isnew == 0 ? 0.5 : 1,
-                                                    // pointerEvents: task?.isnew == 0 ? 'none' : 'auto',
-                                                    // cursor: task?.isnew == 0 ? 'not-allowed' : 'pointer',
                                                 }}
                                                 onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
                                                 onMouseLeave={handleTaskMouseLeave}
+                                                onContextMenu={(e) => handleContextMenu(e, task)}
                                             >
                                                 <TableCell
                                                     onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
@@ -668,11 +693,11 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                                                     onMouseLeave={handleTaskMouseLeave}>
                                                     {renderAssigneeAvatars(task?.assignee, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell onClick={(e) => handleDeadlineClick(e, task)}>
                                                     {cleanDate(task?.DeadLineDate) ? formatDate2(task.DeadLineDate) : '-'}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {renderPriorityLabel(task?.priority, priorityColors)}
+                                                    <PriorityBadge task={task} priorityColors={priorityColors} onPriorityChange={onPriorityChange} disable={true} />
                                                 </TableCell>
                                                 <TableCell>
                                                     <StatusCircles task={task} />
@@ -725,6 +750,14 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 </TableContainer >
             }
 
+            <CutPasetContextMenu
+                contextMenu={contextMenu}
+                onClose={handleCloseContextMenu}
+                onCopy={handleCopy}
+                onPaste={handlePaste}
+                copiedData={copiedData}
+            />
+
             <TaskDetail
                 open={taskDetailModalOpen}
                 onClose={handleTaskModalClose}
@@ -754,6 +787,14 @@ const TableView = ({ data, page, order, orderBy, rowsPerPage, currentData, total
                 open={openfileDrawerOpen}
                 onClose={() => setFileDrawerOpen(false)}
             />
+            <MenuDatePicker
+                label="Select Deadline"
+                anchorEl={anchorDeadlineEl}
+                open={openDeadline}
+                handleClose={handlDeadlineeClose}
+                value={selectedItem}
+                onChange={handleDeadlineChange} />
+
         </>
     );
 };

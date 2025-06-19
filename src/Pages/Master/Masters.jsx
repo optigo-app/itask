@@ -11,6 +11,7 @@ import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import { Add as AddIcon } from "@mui/icons-material";
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
 import { toast } from 'react-toastify';
+import MasterAdvFormDrawer from './MasterAdvFormDrawer';
 
 const MasterToggle = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -20,6 +21,7 @@ const MasterToggle = () => {
     const [formattedData, setFormattedData] = useState([]);
     const [tableTabData, setTableTabData] = useState([]);
     const [categoryStates, setCategoryStates] = useState({});
+    console.log('categoryStates: ', categoryStates);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [formData, setFormData] = useState({
         name: ''
@@ -55,12 +57,13 @@ const MasterToggle = () => {
         setIsLoading(true);
         try {
             const masterData = await fetchMaster();
-            setTableTabData(masterData?.rd)
+            const updatedTabData = [...(masterData?.rd || []), { id: 'advanced_master', title: 'Advanced Master', mode: 'advanced' }];
+            setTableTabData(updatedTabData);
             const storedValue = localStorage?.getItem('masterTab');
             if (storedValue) {
                 setValue(storedValue);
             } else {
-                setValue(masterData?.rd[0]?.title);
+                setValue(updatedTabData[0]?.title);
             }
         } catch (error) {
             console.error(error);
@@ -210,16 +213,10 @@ const MasterToggle = () => {
         }
     };
 
-    // const handleSyncMaster = () => {
-    //     const masterApiCall = localStorage?.setItem('masterApiFuncCall', true);
-    // }
-
     const filteredData = formattedData?.filter(item =>
         item?.labelname?.toLowerCase()?.includes(searchTerm?.toLowerCase())
     );
-
     const paginatedData = filteredData?.slice((page - 1) * rowsPerPage, page * rowsPerPage);
-
 
     return (
         <>
@@ -267,15 +264,6 @@ const MasterToggle = () => {
                                         endAdornment: <SearchIcon />,
                                     }}
                                 />
-
-                                {/* <Button
-                                    variant="contained"
-                                    className="buttonClassname"
-                                    onClick={handleSyncMaster}
-                                >
-                                   Sync
-                                </Button> */}
-
                                 <Button
                                     variant="contained"
                                     startIcon={<AddIcon />}
@@ -289,29 +277,48 @@ const MasterToggle = () => {
                         {isIndLoading ? (
                             <LoadingBackdrop isLoading={isIndLoading} />
                         ) :
-                            <Mastergrid
-                                data={paginatedData}
-                                handleEditRow={handleEditRow}
-                                handleDeleteRow={handleDeleteRow}
-                                handleRestoreRow={handleRestoreRow}
-                                paginationCount={Math.ceil(filteredData.length / rowsPerPage)}
-                                totalRows={filteredData.length}
-                                paginationPage={page}
-                                rowsPerPage={rowsPerPage}
-                                onPaginationChange={handlePageChange}
-                                handleFinalDelete={handleFinalDelete}
-                            />
+                            <>
+                                {categoryStates?.id != "advanced_master" ?
+                                    (
+                                        <Mastergrid
+                                            data={paginatedData}
+                                            handleEditRow={handleEditRow}
+                                            handleDeleteRow={handleDeleteRow}
+                                            handleRestoreRow={handleRestoreRow}
+                                            paginationCount={Math.ceil(filteredData.length / rowsPerPage)}
+                                            totalRows={filteredData.length}
+                                            paginationPage={page}
+                                            rowsPerPage={rowsPerPage}
+                                            onPaginationChange={handlePageChange}
+                                            handleFinalDelete={handleFinalDelete}
+                                        />
+                                    ) :
+                                    <div>fewfef</div>
+                                }
+                            </>
                         }
                     </Box>
-                    <MasterFormDrawer
-                        open={drawerOpen}
-                        activeTab={value}
-                        onClose={handleCloseDrawer}
-                        onSubmit={handleAddOrSaveRow}
-                        formData={formData}
-                        selectedRow={selectedRow}
-                        setFormData={setFormData}
-                    />
+                    {categoryStates?.id != "advanced_master" ? (
+                        <MasterFormDrawer
+                            open={drawerOpen}
+                            activeTab={value}
+                            onClose={handleCloseDrawer}
+                            onSubmit={handleAddOrSaveRow}
+                            formData={formData}
+                            selectedRow={selectedRow}
+                            setFormData={setFormData}
+                        />
+                    ) :
+                        <MasterAdvFormDrawer
+                            open={drawerOpen}
+                            activeTab={value}
+                            onClose={handleCloseDrawer}
+                            onSubmit={handleAddOrSaveRow}
+                            formData={formData}
+                            selectedRow={selectedRow}
+                            setFormData={setFormData}
+                        />
+                    }
                 </div>
             ) :
                 <LoadingBackdrop isLoading={isLoading} />

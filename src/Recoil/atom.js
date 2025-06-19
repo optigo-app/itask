@@ -95,6 +95,11 @@ export const selectedRowData = atom({
   default: {}
 })
 
+export const copyRowData = atom({
+  key: 'copyRowData',
+  default: {}
+})
+
 export const selectedCategoryAtom = atom({
   key: 'selectedCategoryAtom',
   default: []

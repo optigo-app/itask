@@ -1,7 +1,6 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const GetPrTeamsApi = async (decodedData, flag) => {
-    debugger
     console.log('decodedData: ', decodedData);
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
