@@ -275,7 +275,6 @@ const SidebarDrawer = ({
     }
 
     const handleSubmit = (module) => {
-        debugger
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const idString = formValues?.guests?.map(user => user.id)?.join(",");
         const assignees = formValues?.guests && Object.values(

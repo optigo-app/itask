@@ -131,23 +131,23 @@ export const ImageUrl = (data) => {
 
 // priority color
 export const priorityColors = {
-    Low: {
+    low: {
         color: "#4caf50",
         backgroundColor: "#e8f5e9",
     },
-    Medium: {
+    medium: {
         color: "#ff9800",
         backgroundColor: "#fff3e0",
     },
-    High: {
+    high: {
         color: "#f44336",
         backgroundColor: "#ffebee",
     },
-    Urgent: {
+    urgent: {
         color: "#d32f2f",
         backgroundColor: "#ffcccb",
     },
-    Critical: {
+    critical: {
         color: "#ffffff",
         backgroundColor: "#b71c1c",
     },
@@ -814,3 +814,24 @@ export const filterNestedTasksByView = (tasks = [], mode = 'me', userId) => {
         })
         ?.filter(Boolean);
 };
+
+
+export function mergeFilterGroups(attributesData, groupsData, mappingData) {
+    const attributeMap = new Map(attributesData.map(attr => [attr.id, attr]));
+
+    const groupMap = new Map(groupsData.map(group => [
+        group.id,
+        { id: group.id, filtergroup: group.filtergroup, attributes: [] }
+    ]));
+
+    mappingData.forEach(({ filtergroupid, filterattrid }) => {
+        const group = groupMap.get(filtergroupid);
+        const attr = attributeMap.get(filterattrid);
+
+        if (group && attr && !group.attributes.some(a => a.id === attr.id)) {
+            group.attributes.push(attr);
+        }
+    });
+
+    return Array.from(groupMap.values());
+}

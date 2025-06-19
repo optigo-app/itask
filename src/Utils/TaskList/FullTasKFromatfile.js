@@ -86,9 +86,9 @@ const useFullTaskFormatFile = () => {
     try {
       const taskData = await fetchTaskDataFullApi(parsedData);
       console.log('taskData: ', taskData);
-      if (taskData?.rd[0]?.stat == 0) {
+      if (taskData?.rd1[0]?.stat == 0) {
         setIsWhTLoading(false);
-        return toast.error(taskData?.rd[0]?.stat_msg);
+        return toast.error(taskData?.rd1[0]?.stat_msg);
       }
       const labeledTasks = mapKeyValuePair(taskData);
       const enhanceTask = (task) => {

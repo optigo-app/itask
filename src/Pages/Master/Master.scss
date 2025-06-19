@@ -67,7 +67,8 @@
                 color: $titleColor;
                 padding: 8px 16px;
             }
-            .actionCell{
+
+            .actionCell {
                 text-align: right;
             }
         }
@@ -77,7 +78,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: none!important;
+            border: none !important;
             gap: 16px;
             padding: 15px 0;
         }
@@ -90,6 +91,7 @@
 
         .pagination {
             margin-right: 10px;
+
             .MuiPaginationItem-root {
                 // margin-right: 10px;
                 font-family: $font-family;
@@ -119,4 +121,55 @@
             }
         }
     }
+}
+
+.masterSideBarTgBox {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    position: relative;
+    padding: 5px;
+
+    .toggle-group {
+        background-color: #f5f5f5;
+        border-radius: 8px;
+        padding: 4px;
+        min-width: 200px;
+        display: flex;
+        gap: 5px;
+
+        .toggle-button {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            font-size: 12px;
+            font-family: $font-family !important;
+            color: #666;
+            border: none;
+            line-height: .4rem;
+            padding: 4px;
+            text-transform: none;
+            transition: all 0.2s ease-in-out;
+
+            &.Mui-selected {
+                background-color: #fff !important;
+                color: #000 !important;
+                font-weight: 700;
+            }
+        }
+    }
+}
+
+.advMasterTC {
+    .MuiTableCell-root {
+        font-family: $font-family !important;
+        padding: 5px 10px !important;
+        margin: 0 !important;
+        color: $text2ndColor !important;
+
+        p {
+            font-size: 14px !important;
+        }
+    }
+
 }

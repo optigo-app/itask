@@ -112,7 +112,6 @@ const CalendarGridView = () => {
   }, []);
 
   const handleSplitPartChange = useCallback((index, type, value) => {
-    debugger
     const newSplitParts = [...splitParts];
     const regex = /^\d{0,3}(\.\d{0,3})?$/;
 

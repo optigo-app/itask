@@ -1,22 +1,23 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
-export const deleteTaskDataApi = async (selectedRow) => {
+export const MoveTaskApi = async (taskId, parentId) => {
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
-        const init = JSON.parse(sessionStorage.getItem('taskInit'));
-
-        const combinedValue = JSON.stringify({
-            taskid: `${selectedRow?.taskid ?? '0'}`,
+        let combinedValue = JSON.stringify({
+            "taskid": taskId ?? 0,
+            "toparentid": parentId ?? 0,
         });
-
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"task_trash\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
-            "f": "Task Management (task_trash)",
+            "con": `{\"id\":\"\",\"mode\":\"movetask\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
+            "f": "Task Management (tasklist)",
             "p": combinedValue,
         };
+        console.log('body: ', body);
+
         const response = await CommonAPI(body);
+
         if (response?.Data) {
-            return response?.Data;
+            return response.Data;
         } else {
             return [];
         }

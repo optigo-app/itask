@@ -2,9 +2,9 @@ import React, { Suspense, useEffect, useState } from "react";
 import "./Task.scss";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
-import { Box, useMediaQuery } from "@mui/material";
+import { Box, Chip, Typography, useMediaQuery } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { Advfilters, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
+import { Advfilters, copyRowData, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
 import { filterNestedTasksByView, formatDate2, getCategoryTaskSummary, isTaskDue, isTaskToday } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
@@ -13,6 +13,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AddTaskDataApi } from "../../Api/TaskApi/AddTaskApi";
 import { toast } from "react-toastify";
 import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
+import { MoveTaskApi } from "../../Api/TaskApi/MoveTaskApi";
+import CloseIcon from '@mui/icons-material/Close';
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
@@ -35,9 +37,12 @@ const Task = () => {
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
   const setTaskDataLength = useSetRecoilState(taskLength)
-  const selectedRow = useRecoilValue(selectedRowData);
+  const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
+  const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
+  const [copiedData, setCopiedData] = useRecoilState(copyRowData);
   const encodedData = searchParams.get("data");
   const [CategoryTSummary, setCategoryTSummary] = useState([]);
+  const [contextMenu, setContextMenu] = useState(null);
   const meTeamView = useRecoilValue(viewMode);
   const {
     iswhMLoading,
@@ -50,29 +55,12 @@ const Task = () => {
     statusData,
     taskAssigneeData } = useFullTaskFormatFile();
 
+  console.log('selectedRow: ', selectedRow, copiedData);
   console.log("taskFinalData", taskFinalData);
 
   useEffect(() => {
     setTasks([]);
   }, [location.pathname]);
-
-  // const getFilteredTasks = (allTasks = [], mode = 'me') => {
-
-  //   const userId = userProfile?.id;
-  //   if (mode === 'me') {
-  //     return allTasks.filter((task) =>
-  //       task.assignee?.some((ass) => ass.id === userId)
-  //     );
-  //   }
-  //   if (mode === 'team') {
-  //     return allTasks.filter((task) =>
-  //       task.assignee?.some((ass) => ass.id !== userId)
-  //     );
-  //   }
-  //   return allTasks;
-  // };
-
-
 
   useEffect(() => {
     let parsedData = null;
@@ -109,9 +97,6 @@ const Task = () => {
       setTasks(filtered);
     }
   }, [encodedData, taskFinalData, selectedRow, meTeamView]);
-
-
-
 
   useEffect(() => {
     const activeTab = localStorage?.getItem('activeTaskTab');
@@ -301,7 +286,7 @@ const Task = () => {
 
       return filterRecursive(task);
     })
-    .filter(Boolean);
+    ?.filter(Boolean);
 
   const handleTabBtnClick = (button) => {
     setActiveButton(button);
@@ -383,6 +368,58 @@ const Task = () => {
     });
   };
 
+  const handlePriorityChange = (taskId, priority) => {
+    setTasks((prevTasks) => {
+      const updateTasksRecursively = (tasks) => {
+        return tasks?.map((task) => {
+          if (task.taskid === taskId.taskid) {
+            const updatedTask = {
+              ...task,
+              priorityid: priority?.id,
+              priority: priority?.labelname
+            };
+            handleAddApicall(updatedTask);
+            return updatedTask;
+          }
+          if (task.subtasks?.length > 0) {
+            return {
+              ...task,
+              subtasks: updateTasksRecursively(task.subtasks),
+            };
+          }
+          return task;
+        });
+      };
+      return updateTasksRecursively(prevTasks);
+    });
+  };
+
+  const handleDeadlineDateChange = (DeadLineDate) => {
+    debugger
+    setTasks((prevTasks) => {
+      const updateTasksRecursively = (tasks) => {
+        return tasks?.map((task) => {
+          if (task.taskid === selectedRow.taskid) {
+            const updatedTask = {
+              ...task,
+              DeadLineDate: DeadLineDate,
+            };
+            handleAddApicall(updatedTask);
+            return updatedTask;
+          }
+          if (task.subtasks?.length > 0) {
+            return {
+              ...task,
+              subtasks: updateTasksRecursively(task.subtasks),
+            };
+          }
+          return task;
+        });
+      };
+      return updateTasksRecursively(prevTasks);
+    });
+  }
+
   const handleAssigneeShortcutSubmit = (updatedRowData) => {
     const assignees = Object.values(
       updatedRowData?.assignee?.reduce((acc, user) => {
@@ -437,6 +474,69 @@ const Task = () => {
     setPage(newPage);
   };
 
+  const handleOpenRightMenu = (event, task) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX - 2,
+      mouseY: event.clientY - 4,
+      task: task,
+    });
+    setSelectedRow(task);
+  };
+
+  const handleCloseRightClickMenu = () => {
+    setContextMenu(null);
+  };
+
+  const handleCopyTask = () => {
+    if (contextMenu?.task) {
+      const copiedTask = JSON.parse(JSON.stringify(contextMenu.task));
+      setCopiedData(copiedTask);
+      setTasks((prevTasks) => {
+        const removeTaskRecursively = (tasks) => {
+          return tasks
+            .map((task) => {
+              if (task.taskid === copiedTask.taskid) {
+                return null;
+              }
+              if (task.subtasks?.length > 0) {
+                return {
+                  ...task,
+                  subtasks: removeTaskRecursively(task.subtasks).filter(Boolean),
+                };
+              }
+              return task;
+            })
+            .filter(Boolean);
+        };
+        return removeTaskRecursively(prevTasks);
+      });
+
+      toast.success('Task cut successfully');
+    }
+    handleCloseRightClickMenu();
+  };
+
+  const handlePasteTask = async () => {
+    debugger
+    const taskId = copiedData?.taskid
+    const parentId = selectedRow?.taskid
+    if (taskId && parentId) {
+      const apiRes = await MoveTaskApi(taskId, parentId);
+      if (apiRes) {
+        setOpenChildTask(true);
+      }
+      console.log('apiRes: ', apiRes);
+    } else {
+      toast.error('Please select a task to paste');
+    }
+    handleCloseRightClickMenu();
+  };
+
+  const handleRemoveCopiedData = () => {
+    setCopiedData({});
+  }
+
   useEffect(() => {
     if (filteredData) {
       const maxPage = Math.ceil(filteredData.length / rowsPerPage);
@@ -454,6 +554,23 @@ const Task = () => {
     (page - 1) * rowsPerPage,
     page * rowsPerPage
   ) || [];
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (contextMenu) {
+        setContextMenu(null);
+      }
+    };
+    if (contextMenu) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [contextMenu]);
+
+  console.log('copiedData: ', copiedData);
+
 
   return (
     <Box className="task-container">
@@ -534,11 +651,30 @@ const Task = () => {
           opacity: 0.3,
         }}
       />
-      <FilterChips
-        filters={filters}
-        onClearFilter={handleClearFilter}
-        onClearAll={handleClearAllFilters}
-      />
+      <Box sx={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+        {copiedData && Object.keys(copiedData).length > 0 && (
+          <Box className="filterCheckedBox">
+            <Chip
+              size="small"
+              key={`category-`}
+              label={
+                <Typography>
+                  <span className="filterKey">Cut Task:</span>{' '}
+                  <span className="filterValue">{copiedData?.taskname}</span>
+                </Typography>
+              }
+              onDelete={handleRemoveCopiedData}
+              deleteIcon={<CloseIcon className="closeIcon" />}
+              className="filterChip"
+            />
+          </Box>
+        )}
+        <FilterChips
+          filters={filters}
+          onClearFilter={handleClearFilter}
+          onClearAll={handleClearAllFilters}
+        />
+      </Box>
 
       {/* View Components */}
       <AnimatePresence mode="wait">
@@ -562,12 +698,20 @@ const Task = () => {
                   totalPages={totalPages}
                   isLoading={iswhTLoading}
                   masterData={masterData}
+                  copiedData={copiedData}
+                  contextMenu={contextMenu}
+                  handleCopy={handleCopyTask}
+                  handlePaste={handlePasteTask}
+                  handleContextMenu={handleOpenRightMenu}
+                  handleCloseContextMenu={handleOpenRightMenu}
                   handleTaskFavorite={handleTaskFavorite}
                   handleFreezeTask={handleFreezeTask}
                   handleStatusChange={handleStatusChange}
+                  handlePriorityChange={handlePriorityChange}
                   handleAssigneeShortcutSubmit={handleAssigneeShortcutSubmit}
                   handleRequestSort={handleRequestSort}
                   handleChangePage={handleChangePage}
+                  handleDeadlineDateChange={handleDeadlineDateChange}
                 />
               )}
 
