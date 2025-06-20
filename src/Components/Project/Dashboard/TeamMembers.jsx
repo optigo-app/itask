@@ -79,8 +79,9 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
     }
 
     const handleSave = async (updatedList) => {
+        console.log('updatedList: ', updatedList);
         const formattedTeamList = updatedList
-            ?.map((member) => `${member.employee.id}#${member.role}`)
+            ?.map((member) => `${member.employee.id}#${member.role}#${member?.limitedAccess == true ? 1 : 0 ?? 0}`)
             .join(",");
         const apiRes = await AddPrTeamsApi(formattedTeamList, decodedData);
         if (apiRes?.rd[0]?.stat == 1) {

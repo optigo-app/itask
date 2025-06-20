@@ -10,15 +10,11 @@ const DasboardTab = ({ tabData, selectedTab, handleChange, decodedData }) => {
   const [showScrollButtons, setShowScrollButtons] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-
   const hasTaskId = !!decodedData?.taskid;
-
   const hiddenTabsWithoutTaskId = ['Team Member', 'Comments'];
-
   const filteredTabData = tabData.filter(
     (item) => hasTaskId || !hiddenTabsWithoutTaskId.includes(item.label)
   );
-
 
   useEffect(() => {
     if (tabData.length > 7) {

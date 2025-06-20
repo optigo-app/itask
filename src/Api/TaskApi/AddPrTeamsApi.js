@@ -1,6 +1,7 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const AddPrTeamsApi = async (formattedTeamList, decodedData) => {
+    console.log('formattedTeamList: ', formattedTeamList);
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
         const combinedValue = JSON.stringify({

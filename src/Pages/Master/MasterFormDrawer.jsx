@@ -121,7 +121,18 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, setFor
                                     {...commonTextFieldProps}
                                     sx={{ marginTop: .5 }}
                                 />
-                                <Typography variant="body2">Master Data</Typography>
+                                <Typography variant="body2">Master Name</Typography>
+                                <TextField
+                                    fullWidth
+                                    placeholder="Enter Data..."
+                                    name="name"
+                                    value={formData.name}   
+                                    onChange={handleChange}
+                                    margin="normal"
+                                    {...commonTextFieldProps}
+                                    sx={{ marginTop: .5 }}
+                                />
+                                <Typography variant="body2">Master Value</Typography>
                                 <TextField
                                     fullWidth
                                     placeholder="Enter Data..."
