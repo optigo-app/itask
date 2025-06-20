@@ -9,8 +9,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Pencil, Save, Trash, Plus } from "lucide-react";
 import { commonTextFieldProps } from "../../Utils/globalfun";
 import { Grid2x2, ListTodo } from "lucide-react";
+import DynamicMasterDrawer from "./DynamicMasterDrawer";
 
-const MasterAdvFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, setFormData, selectedRow }) => {
+const MasterAdvFormDrawer = ({ open, onClose, mode, activeTab, onSubmit, formData, setFormData, selectedRow }) => {
     console.log('formData: ', formData);
     const [masterType, setMasterType] = useState("single");
     const [text, setText] = useState("");
@@ -18,9 +19,6 @@ const MasterAdvFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, set
     const [masterName, setMasterName] = useState('');
     const [bulkList, setBulkList] = useState([]);
     console.log('bulkList: ', bulkList);
-    const [editIndex, setEditIndex] = useState(null);
-    const [editValue, setEditValue] = useState("");
-    const [editName, setEditName] = useState("");
 
     const master_OPTIONS = [
         { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -45,51 +43,6 @@ const MasterAdvFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, set
         }
     };
 
-    const isValidInput = (value) => {
-        if (typeof value !== 'string') return true;
-        return !/[,#]/.test(value);
-    };
-
-    const handleSaveTextArea = () => {
-        if (text.trim() === "") return;
-        const lines = text.split("\n").map(line => line.trim()).filter(line => line !== "");
-        if (lines.some(line => !isValidInput(line))) {
-            setErrorMessage("Values cannot contain ',' or '#'.");
-            return;
-        }
-        const newEntries = lines.map(line => ({
-            masterName: masterName,
-            masterValue: line,
-        }));
-        setBulkList(prev => [...prev, ...newEntries]);
-        setText("");
-        setErrorMessage("");
-    };
-
-    const handleDelete = (index) => {
-        setBulkList(prev => prev.filter((_, i) => i !== index));
-    };
-
-    const handleEdit = (index) => {
-        setEditIndex(index);
-        setEditName(bulkList[index].masterName);
-        setEditValue(bulkList[index].masterValue);
-    };
-
-    const handleSaveEdit = () => {
-        const updated = [...bulkList];
-        updated[editIndex] = { masterName: editName, masterValue: editValue };
-        setBulkList(updated);
-        setEditIndex(null);
-        setEditValue("");
-        setEditName("");
-    };
-
-    const handleCancelEdit = () => {
-        setEditIndex(null);
-        setEditValue("");
-        setEditName("");
-    };
 
     return (
         <Drawer anchor="right" open={open} onClose={onClose}>
@@ -98,21 +51,28 @@ const MasterAdvFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, set
                     <Typography variant="h6">Master Form</Typography>
                     <IconButton onClick={onClose}><CloseIcon /></IconButton>
                 </Box>
-                <Box className="masterSideBarTgBox">
-                    <ToggleButtonGroup
-                        value={masterType}
-                        exclusive
-                        onChange={handleMasterChange}
-                        size="small"
-                        className="toggle-group"
-                    >
-                        {master_OPTIONS.map(({ id, value, label, icon }) => (
-                            <ToggleButton key={id} value={value} className="toggle-button" sx={{ borderRadius: "8px" }}>
-                                {icon} {label}
-                            </ToggleButton>
-                        ))}
-                    </ToggleButtonGroup>
-                </Box>
+                <div style={{
+                    margin: "15px 0",
+                    border: "1px dashed #7d7f85",
+                    opacity: 0.3,
+                }} />
+                {mode !== 'edit' &&
+                    <Box className="masterSideBarTgBox">
+                        <ToggleButtonGroup
+                            value={masterType}
+                            exclusive
+                            onChange={handleMasterChange}
+                            size="small"
+                            className="toggle-group"
+                        >
+                            {master_OPTIONS.map(({ id, value, label, icon }) => (
+                                <ToggleButton key={id} value={value} className="toggle-button" sx={{ borderRadius: "8px" }}>
+                                    {icon} {label}
+                                </ToggleButton>
+                            ))}
+                        </ToggleButtonGroup>
+                    </Box>
+                }
 
                 {masterType === "single" ? (
                     <>
@@ -121,8 +81,19 @@ const MasterAdvFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, set
                             fullWidth
                             placeholder="Enter Master Group name..."
                             name="name"
-                            value={formData.name}
-                            onChange={handleChange}
+                            value={formData.masterName || ''}
+                            onChange={(e) => setFormData({ ...formData, masterName: e.target.value })}
+                            margin="normal"
+                            {...commonTextFieldProps}
+                            sx={{ marginTop: .5 }}
+                        />
+                        <Typography variant="body2">Master Name</Typography>
+                        <TextField
+                            fullWidth
+                            placeholder="Enter Data..."
+                            name="value"
+                            value={formData.subMasterName || ''}
+                            onChange={(e) => setFormData({ ...formData, subMasterName: e.target.value })}
                             margin="normal"
                             {...commonTextFieldProps}
                             sx={{ marginTop: .5 }}
@@ -132,8 +103,8 @@ const MasterAdvFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, set
                             fullWidth
                             placeholder="Enter Data..."
                             name="value"
-                            value={formData.value || ''}
-                            onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                            value={formData.masterValue || ''}
+                            onChange={(e) => setFormData({ ...formData, masterValue: e.target.value })}
                             margin="normal"
                             {...commonTextFieldProps}
                             sx={{ marginTop: .5 }}
@@ -142,88 +113,9 @@ const MasterAdvFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, set
                 ) : (
                     <>
                         {bulkList.length <= 0 &&
-                            <>
-                                <Typography variant="body2">Master Group</Typography>
-                                <TextField
-                                    fullWidth
-                                    placeholder="Enter Master Group name..."
-                                    name="name"
-                                    value={masterName}
-                                    onChange={handleChange}
-                                    margin="normal"
-                                    {...commonTextFieldProps}
-                                    sx={{ marginTop: .5 }}
-                                />
-                                <TextareaAutosize
-                                    minRows={5}
-                                    placeholder="Enter values (each line = one entry, ',' and '#' not allowed)..."
-                                    value={text}
-                                    onChange={(e) => setText(e.target.value)}
-                                    style={{
-                                        padding: 10,
-                                        fontSize: 14,
-                                        borderRadius: 8,
-                                        border: '1px solid #ccc',
-                                        outline: 'none',
-                                        resize: 'vertical',
-                                        color: "#6D6B77",
-                                        width: "-webkit-fill-available"
-                                    }}
-                                />
-                                {errorMessage && (
-                                    <Typography variant="body2" sx={{ color: '#d32f2f', marginTop: '4px' }}>{errorMessage}</Typography>
-                                )}
-                                <Box sx={{ display: "flex", justifyContent: "end", mt: 1 }}>
-                                    <Button size="small" variant="contained" className="buttonClassname" onClick={handleSaveTextArea}>Add Entries</Button>
-                                </Box>
-                            </>
+                            <DynamicMasterDrawer />
                         }
-                        {bulkList.length > 0 &&
-                            <TableContainer className="advMasterTC" component={Paper} sx={{ mt: 2, borderRadius: 2, boxShadow: 2 }}>
-                                <Table className="advMasterTable">
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell><b>Master Name</b></TableCell>
-                                            <TableCell><b>Master Value</b></TableCell>
-                                            <TableCell align="center"><b>Actions</b></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {bulkList.map((item, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell>
-                                                    {editIndex === index ? (
-                                                        <TextField size="small" fullWidth value={editName} {...commonTextFieldProps} onChange={(e) => setEditName(e.target.value)} />
-                                                    ) : (
-                                                        item.masterName
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {editIndex === index ? (
-                                                        <TextField size="small" fullWidth value={editValue} {...commonTextFieldProps} onChange={(e) => setEditValue(e.target.value)} />
-                                                    ) : (
-                                                        item.masterValue
-                                                    )}
-                                                </TableCell>
-                                                <TableCell align="center">
-                                                    {editIndex === index ? (
-                                                        <>
-                                                            <IconButton color="success" onClick={handleSaveEdit}><Save size={18} /></IconButton>
-                                                            <IconButton color="error" onClick={handleCancelEdit}><CloseIcon fontSize="small" /></IconButton>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <IconButton onClick={() => handleEdit(index)}><Pencil size={18} /></IconButton>
-                                                            <IconButton onClick={() => handleDelete(index)} color="error"><Trash size={18} /></IconButton>
-                                                        </>
-                                                    )}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        }
+
                     </>
                 )}
                 {(masterType === "single" || (masterType === "multi" && bulkList.length > 0)) && (

@@ -12,6 +12,8 @@ import { Add as AddIcon } from "@mui/icons-material";
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
 import { toast } from 'react-toastify';
 import MasterAdvFormDrawer from './MasterAdvFormDrawer';
+import DynamicMasterDrawer from './DynamicMasterDrawer';
+import AdvancedMasterTable from './AdvancedMasterTable';
 
 const MasterToggle = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -26,11 +28,55 @@ const MasterToggle = () => {
     const [formData, setFormData] = useState({
         name: ''
     });
+    const [formAdvData, setFormAdvData] = useState({
+        masterName: '',
+        subMasterName: '',
+        masterValue: ''
+    });
     const [selectedRow, setSelectedRow] = useState(null);
     const [mode, setMode] = useState('');
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
+
+    // Your advanced master data
+    const advancedMasterData = [
+        {
+            category: "Document",
+            subcategories: [
+                {
+                    name: "Status",
+                    items: [
+                        { label: "Running" },
+                        { label: "Pending" },
+                        { label: "Complete" }
+                    ]
+                },
+                {
+                    name: "Priority",
+                    items: [
+                        { label: "High" },
+                        { label: "Medium" },
+                        { label: "Low" }
+                    ]
+                }
+            ]
+        },
+        {
+            category: "Coder",
+            subcategories: [
+                {
+                    name: "Status",
+                    items: [
+                        { label: "Code Started" },
+                        { label: "Code Running" },
+                        { label: "Code Completed" }
+                    ]
+                }
+            ]
+        }
+    ];
+
 
     const handleCloseCnfDialog = () => {
         setCnfDelDialogOpen(false);
@@ -50,6 +96,12 @@ const MasterToggle = () => {
         setSelectedRow(null);
         setFormData({
             name: ''
+        });
+        setMode('');
+        setFormAdvData({
+            masterName: '',
+            subMasterName: '',
+            masterValue: ''
         });
     };
 
@@ -150,6 +202,23 @@ const MasterToggle = () => {
             name: row?.labelname,
         });
     };
+
+    const handleEditAdvRow = (master, sub, item) => {
+        setDrawerOpen(true);
+        setSelectedRow(item);
+        setMode('edit');
+        setFormAdvData({
+            masterName: master.category,
+            subMasterName: sub.name,
+            masterValue: item.label,
+        });
+    }
+
+    const handleAdvDeleteRow = (master, sub, item) => {
+        console.log("Deleting item:", item);
+        console.log("Under sub-master:", sub.name);
+        console.log("Under master:", master.category);
+    }
 
     const handleDeleteRow = async (row) => {
         try {
@@ -293,7 +362,13 @@ const MasterToggle = () => {
                                             handleFinalDelete={handleFinalDelete}
                                         />
                                     ) :
-                                    <div>fewfef</div>
+                                    <div>
+                                        <AdvancedMasterTable
+                                            data={advancedMasterData}
+                                            handleEditAdvRow={handleEditAdvRow}
+                                            handleAdvDeleteRow={handleAdvDeleteRow}
+                                        />
+                                    </div>
                                 }
                             </>
                         }
@@ -312,11 +387,12 @@ const MasterToggle = () => {
                         <MasterAdvFormDrawer
                             open={drawerOpen}
                             activeTab={value}
+                            mode={mode}
                             onClose={handleCloseDrawer}
                             onSubmit={handleAddOrSaveRow}
-                            formData={formData}
+                            formData={formAdvData}
                             selectedRow={selectedRow}
-                            setFormData={setFormData}
+                            setFormData={setFormAdvData}
                         />
                     }
                 </div>

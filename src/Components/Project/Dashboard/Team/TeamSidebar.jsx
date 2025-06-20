@@ -12,7 +12,8 @@ import {
     TableCell,
     TableBody,
     TableContainer,
-    Paper
+    Paper,
+    Checkbox
 } from '@mui/material';
 import { CircleX, Pencil, Trash2 } from 'lucide-react';
 import './TeamSidebar.scss';
@@ -20,13 +21,11 @@ import { commonTextFieldProps } from '../../../../Utils/globalfun';
 import DepartmentAssigneeAutocomplete from '../../../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 
 const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, handleFinalSave }) => {
-    console.log('selectedTeamMember: ', selectedTeamMember);
     const [employee, setEmployee] = useState(null);
     const [role, setRole] = useState('');
     const [teamList, setTeamList] = useState([]);
     console.log('teamList: ', teamList);
     const [editIndex, setEditIndex] = useState(null);
-    console.log('employee: ', employee, role);
 
     const [employeeError, setEmployeeError] = useState(false);
     const [roleError, setRoleError] = useState(false);
@@ -65,6 +64,12 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
         setTeamList(updatedList);
         resetForm();
     }
+
+    const handleAccessToggle = (index, checked) => {
+        const updated = [...teamList];
+        updated[index].limitedAccess = checked;
+        setTeamList(updated);
+    };
 
     const resetForm = () => {
         setEmployee(null);
@@ -151,27 +156,43 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
                     {teamList.length > 0 && (
                         <Box mt={4}>
                             <Typography variant="subtitle2" gutterBottom>Team List</Typography>
-                            <TableContainer component={Paper} sx={{
-                                mt: 2,
-                                boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
-                                borderRadius: "8px",
-                            }}>
+                            <TableContainer
+                                component={Paper}
+                                sx={{
+                                    mt: 2,
+                                    boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
+                                    borderRadius: "8px",
+                                }}
+                            >
                                 <Table size="small" className="AssigneeTable">
                                     <TableHead>
                                         <TableRow>
                                             <TableCell>Member</TableCell>
                                             <TableCell>Role</TableCell>
+                                            <TableCell>Limited Access</TableCell>
                                             <TableCell align="right">Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {teamList.map((item, index) => (
+                                        {teamList?.map((item, index) => (
                                             <TableRow key={index}>
-                                                <TableCell>{`${item.employee?.firstname || ''} ${item.employee?.lastname || ''}`.trim()}</TableCell>
+                                                <TableCell>
+                                                    {`${item.employee?.firstname || ""} ${item.employee?.lastname || ""}`.trim()}
+                                                </TableCell>
                                                 <TableCell>{item.role}</TableCell>
+                                                <TableCell>
+                                                    <Checkbox
+                                                        checked={item.limitedAccess || false}
+                                                        onChange={(e) => handleAccessToggle(index, e.target.checked)}
+                                                    />
+                                                </TableCell>
                                                 <TableCell align="right">
-                                                    <IconButton onClick={() => handleEdit(index)}><Pencil size={18} /></IconButton>
-                                                    <IconButton onClick={() => handleDelete(index)}><Trash2 size={18} /></IconButton>
+                                                    <IconButton onClick={() => handleEdit(index)}>
+                                                        <Pencil size={18} />
+                                                    </IconButton>
+                                                    <IconButton onClick={() => handleDelete(index)}>
+                                                        <Trash2 size={18} />
+                                                    </IconButton>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
