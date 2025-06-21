@@ -23,6 +23,7 @@ import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
 import TaskTreeGrid from './Backup/TaskTreeGrid';
 import CalendarGridView from './Pages/Calendar/CalendarGridView';
+import DragAccordionPage from './Backup/DragAccordionPage';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -261,6 +262,7 @@ const AppWrapper = () => {
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
                                         <Route path="/test" element={<CalendarGridView />} />
+                                        <Route path="/test1" element={<DragAccordionPage />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>

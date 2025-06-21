@@ -14,11 +14,7 @@ import DynamicMasterDrawer from "./DynamicMasterDrawer";
 const MasterAdvFormDrawer = ({ open, onClose, mode, activeTab, onSubmit, formData, setFormData, selectedRow }) => {
     console.log('formData: ', formData);
     const [masterType, setMasterType] = useState("single");
-    const [text, setText] = useState("");
-    const [errorMessage, setErrorMessage] = useState("");
-    const [masterName, setMasterName] = useState('');
-    const [bulkList, setBulkList] = useState([]);
-    console.log('bulkList: ', bulkList);
+    const [groups, setGroups] = useState([]);
 
     const master_OPTIONS = [
         { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -28,21 +24,9 @@ const MasterAdvFormDrawer = ({ open, onClose, mode, activeTab, onSubmit, formDat
     const handleMasterChange = (event, newType) => {
         if (newType !== null) {
             setMasterType(newType);
-            setBulkList([]);
-            setMasterName('');
             setFormData({ ...formData, name: '' });
         }
     };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        if (masterType === "single") {
-            setFormData({ ...formData, [name]: value });
-        } else {
-            setMasterName(value);
-        }
-    };
-
 
     return (
         <Drawer anchor="right" open={open} onClose={onClose}>
@@ -65,7 +49,7 @@ const MasterAdvFormDrawer = ({ open, onClose, mode, activeTab, onSubmit, formDat
                             size="small"
                             className="toggle-group"
                         >
-                            {master_OPTIONS.map(({ id, value, label, icon }) => (
+                            {master_OPTIONS?.map(({ id, value, label, icon }) => (
                                 <ToggleButton key={id} value={value} className="toggle-button" sx={{ borderRadius: "8px" }}>
                                     {icon} {label}
                                 </ToggleButton>
@@ -112,17 +96,19 @@ const MasterAdvFormDrawer = ({ open, onClose, mode, activeTab, onSubmit, formDat
                     </>
                 ) : (
                     <>
-                        {bulkList.length <= 0 &&
-                            <DynamicMasterDrawer />
-                        }
+                        <DynamicMasterDrawer
+                            groups={groups}
+                            setGroups={setGroups}
+                        />
 
                     </>
                 )}
-                {(masterType === "single" || (masterType === "multi" && bulkList.length > 0)) && (
+
+                {(masterType === "single" || (masterType == "multi_input" && groups.length > 0)) && (
                     <Box sx={{ display: "flex", justifyContent: "end", marginTop: 3, gap: 1 }}>
                         <Button size="small" className="secondaryBtnClassname" variant="outlined" onClick={onClose}>Cancel</Button>
-                        <Button size="small" className="buttonClassname" variant="contained" onClick={() => onSubmit(selectedRow)}>
-                            {formData.name ? "Save" : "Add"}
+                        <Button size="small" className="buttonClassname" variant="contained" onClick={() => onSubmit(groups)}>
+                            {formData.masterName ? "Save" : "Add"}
                         </Button>
                     </Box>
                 )}

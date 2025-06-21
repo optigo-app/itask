@@ -9,10 +9,8 @@ import {
 } from '@mui/material';
 import { commonTextFieldProps } from '../../Utils/globalfun';
 
-const DynamicMasterDrawer = ({ handleMasterSave }) => {
-    const [groups, setGroups] = useState([]);
+const DynamicMasterDrawer = ({ groups, setGroups, handleMasterSave }) => {
     const [hideAddGroupBtn, setHideAddGroupBtn] = useState(false);
-    console.log('groups: ', groups);
 
     const addGroup = () => {
         setGroups(prev => [
@@ -86,6 +84,7 @@ const DynamicMasterDrawer = ({ handleMasterSave }) => {
             )
         );
     };
+    
 
     return (
         <Box sx={{ mt: 2 }}>
@@ -201,20 +200,6 @@ const DynamicMasterDrawer = ({ handleMasterSave }) => {
                 <Button fullWidth variant="contained" color="primary" onClick={addGroup} className='buttonClassname'>
                     + Add Group
                 </Button>
-            }
-            {hideAddGroupBtn &&
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        color="primary"
-                        onClick={handleMasterSave}
-                        className="buttonClassname"
-                        sx={{ width: '100px' }}
-                    >
-                        Save
-                    </Button>
-                </Box>
             }
         </Box>
     );

@@ -179,7 +179,7 @@ const Task = () => {
       : (a, b) => descendingComparator(a, b, orderBy);
   }
 
-  // sorting
+  // sorting  
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
@@ -394,12 +394,11 @@ const Task = () => {
     });
   };
 
-  const handleDeadlineDateChange = (DeadLineDate) => {
-    debugger
+  const handleDeadlineDateChange = (taskId, DeadLineDate) => {
     setTasks((prevTasks) => {
       const updateTasksRecursively = (tasks) => {
         return tasks?.map((task) => {
-          if (task.taskid === selectedRow.taskid) {
+          if (task.taskid === taskId.taskid) {
             const updatedTask = {
               ...task,
               DeadLineDate: DeadLineDate,

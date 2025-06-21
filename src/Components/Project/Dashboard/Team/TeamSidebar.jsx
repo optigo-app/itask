@@ -24,7 +24,6 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
     const [employee, setEmployee] = useState(null);
     const [role, setRole] = useState('');
     const [teamList, setTeamList] = useState([]);
-    console.log('teamList: ', teamList);
     const [editIndex, setEditIndex] = useState(null);
 
     const [employeeError, setEmployeeError] = useState(false);
@@ -95,7 +94,7 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
     };
 
     const handleRoleChange = (e) => {
-        const value = e.target.value;
+        const value = e.target.value; 
         if (value.includes('#') || value.includes(',')) return;
         setRole(value);
         if (value.trim()) setRoleError(false);
@@ -112,7 +111,11 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
             <Box className="tMainBox" p={2} width={400}>
                 <Box className="drawerHeader" display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="h6" className="drawer-title">Team Members</Typography>
-                    <IconButton onClick={() => { onClose(); resetForm(); }}><CircleX /></IconButton>
+                    <IconButton onClick={() => { 
+                        onClose(); 
+                        resetForm();
+                        setTeamList([]);
+                         }}><CircleX /></IconButton>
                 </Box>
 
                 <div style={{ margin: "10px 0", border: "1px dashed #7d7f85", opacity: 0.3 }} />

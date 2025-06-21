@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ToggleButton, ToggleButtonGroup, Box, Typography, TextField, Button } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import './Master.scss';
-import { commonTextFieldProps } from '../../Utils/globalfun';
+import { AdvancedMasterApiFunc, commonTextFieldProps } from '../../Utils/globalfun';
 import Mastergrid from './masterGrid';
 import { addEditDelMaster, fetchMaster } from '../../Api/MasterApi/MasterApi';
 import MasterFormDrawer from './MasterFormDrawer';
@@ -14,6 +14,7 @@ import { toast } from 'react-toastify';
 import MasterAdvFormDrawer from './MasterAdvFormDrawer';
 import DynamicMasterDrawer from './DynamicMasterDrawer';
 import AdvancedMasterTable from './AdvancedMasterTable';
+import { AddAdvFilterGroupAttrApi } from '../../Api/MasterApi/AddAdvFilterGroupAttrApi';
 
 const MasterToggle = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -23,8 +24,8 @@ const MasterToggle = () => {
     const [formattedData, setFormattedData] = useState([]);
     const [tableTabData, setTableTabData] = useState([]);
     const [categoryStates, setCategoryStates] = useState({});
-    console.log('categoryStates: ', categoryStates);
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [structuredAdvMasterData, setStructuredAdvMasterData] = useState([]);
     const [formData, setFormData] = useState({
         name: ''
     });
@@ -39,44 +40,19 @@ const MasterToggle = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
 
-    // Your advanced master data
-    const advancedMasterData = [
-        {
-            category: "Document",
-            subcategories: [
-                {
-                    name: "Status",
-                    items: [
-                        { label: "Running" },
-                        { label: "Pending" },
-                        { label: "Complete" }
-                    ]
-                },
-                {
-                    name: "Priority",
-                    items: [
-                        { label: "High" },
-                        { label: "Medium" },
-                        { label: "Low" }
-                    ]
-                }
-            ]
-        },
-        {
-            category: "Coder",
-            subcategories: [
-                {
-                    name: "Status",
-                    items: [
-                        { label: "Code Started" },
-                        { label: "Code Running" },
-                        { label: "Code Completed" }
-                    ]
-                }
-            ]
-        }
-    ];
-
+    useEffect(() => {
+        const fetchAdvMasterData = async () => {
+            const advMasterData = sessionStorage.getItem('structuredAdvMasterData');
+            if (advMasterData) {
+                setStructuredAdvMasterData(JSON.parse(advMasterData));
+            } else {
+                const response = await AdvancedMasterApiFunc();
+                console.log('response: ', response);
+                setStructuredAdvMasterData(response);
+            }
+        };
+        fetchAdvMasterData();
+    }, []);
 
     const handleCloseCnfDialog = () => {
         setCnfDelDialogOpen(false);
@@ -194,6 +170,64 @@ const MasterToggle = () => {
         }
     };
 
+    const formatAdvPayload = (groups, formAdvData, mode = 'edit', defaultFilterMaster = 'DocTeam') => {
+        console.log('defaultFilterMaster: ', defaultFilterMaster);
+        const result = [];
+        if (mode === 'edit') {
+            result.push({
+                filtermaster: defaultFilterMaster,
+                filtergroup: formAdvData.subMasterName,
+                filterattr: formAdvData.masterValue
+            });
+        } else {
+            groups.forEach(group => {
+                const groupName = group.name;
+                group.masters.forEach(master => {
+                    const attrList = master.values
+                        .split('\n')
+                        .map(val => val.trim())
+                        .filter(Boolean)
+                        .join(',');
+                    result.push({
+                        filtermaster: groupName,
+                        filtergroup: master.name,
+                        filterattr: attrList
+                    });
+                });
+            });
+        }
+
+        return result;
+    };
+
+    const handleAddAdvRow = async (groups) => {
+        try {
+            if (mode != "edit") {
+                for (const master of groups[0]?.masters || []) {
+                    const singleGroup = {
+                        ...groups[0],
+                        masters: [master]
+                    };
+                    const payload = formatAdvPayload([singleGroup], formAdvData, mode, "DocTeam");
+                    const response = await AddAdvFilterGroupAttrApi(payload);
+                    if (response[0]?.stat == 1) {
+                        handleTaskApicall();
+                    }
+                }
+            } else {
+                const payload = formatAdvPayload(groups, formAdvData, mode, "DocTeam");
+                const response = await AddAdvFilterGroupAttrApi(payload);
+                if (response[0]?.stat == 1) {
+                    handleTaskApicall();
+                }
+            }
+        } catch (error) {
+            console.error("Error in handleAddAdvRow:", error);
+        } finally {
+            handleCloseDrawer();
+        }
+    };
+
     const handleEditRow = (row) => {
         setDrawerOpen(true);
         setSelectedRow(row);
@@ -208,9 +242,9 @@ const MasterToggle = () => {
         setSelectedRow(item);
         setMode('edit');
         setFormAdvData({
-            masterName: master.category,
+            masterName: master.name,
             subMasterName: sub.name,
-            masterValue: item.label,
+            masterValue: item.name,
         });
     }
 
@@ -282,10 +316,37 @@ const MasterToggle = () => {
         }
     };
 
-    const filteredData = formattedData?.filter(item =>
-        item?.labelname?.toLowerCase()?.includes(searchTerm?.toLowerCase())
-    );
-    const paginatedData = filteredData?.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+    const isAdvanced = categoryStates?.id === "advanced_master";
+    const filteredData = isAdvanced
+        ? (structuredAdvMasterData || [])
+            ?.map(mainGroup => {
+                const filteredGroups = (mainGroup.groups || [])
+                    ?.map(group => {
+                        const filteredAttributes = (group.attributes || []).filter(attr =>
+                            attr?.name?.toLowerCase().includes(searchTerm?.toLowerCase())
+                        );
+                        return {
+                            ...group,
+                            attributes: filteredAttributes
+                        };
+                    })
+                    .filter(group => group.attributes.length > 0);
+
+                return {
+                    ...mainGroup,
+                    groups: filteredGroups
+                };
+            })
+            .filter(mainGroup => mainGroup.groups.length > 0)
+        : (formattedData || []).filter(item =>
+            item?.labelname?.toLowerCase().includes(searchTerm?.toLowerCase())
+        );
+
+    const paginatedData = isAdvanced
+        ? filteredData // no pagination for structured/nested
+        : filteredData.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+
+
 
     return (
         <>
@@ -364,7 +425,7 @@ const MasterToggle = () => {
                                     ) :
                                     <div>
                                         <AdvancedMasterTable
-                                            data={advancedMasterData}
+                                            data={filteredData}
                                             handleEditAdvRow={handleEditAdvRow}
                                             handleAdvDeleteRow={handleAdvDeleteRow}
                                         />
@@ -389,7 +450,7 @@ const MasterToggle = () => {
                             activeTab={value}
                             mode={mode}
                             onClose={handleCloseDrawer}
-                            onSubmit={handleAddOrSaveRow}
+                            onSubmit={handleAddAdvRow}
                             formData={formAdvData}
                             selectedRow={selectedRow}
                             setFormData={setFormAdvData}

@@ -103,7 +103,6 @@ const TableView = ({
 
     const handleDeadlineClick = (e, task) => {
         setAnchorDeadlineEl(e.currentTarget)
-        setSelectedTask(task);
         setSelectedItem(task);
     };
     const handlDeadlineeClose = () => setAnchorDeadlineEl(null);
@@ -113,7 +112,7 @@ const TableView = ({
     const handleDeadlineChange = (event) => {
         const newValue = event;
         console.log('newValue: ', newValue);
-        handleDeadlineDateChange(newValue);
+        handleDeadlineDateChange(selectedItem, newValue);
         handlDeadlineeClose();
     }
 
@@ -395,7 +394,7 @@ const TableView = ({
         return (
             <>
                 <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: '5px' }}>
+                    <div style={{ display: "flex", alignItems: "center" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <IconButton
                                 id="toggle-task"
@@ -479,7 +478,7 @@ const TableView = ({
                 >
                     <TableCell >
                         <div style={{
-                            paddingLeft: `${12 * (depth + 1)}px`,
+                            paddingLeft: `${15 * (depth + 1)}px`,
                             display: "flex",
                             justifyContent: "space-between"
                         }}>
