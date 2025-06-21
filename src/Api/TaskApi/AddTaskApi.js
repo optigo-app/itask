@@ -2,6 +2,7 @@ import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => {
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
+    const userProfile = JSON.parse(localStorage.getItem('UserProfileData'));
     try {
         let taskid;
         let parentid;
@@ -26,11 +27,14 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "projectid": formValues?.projectid ?? 0,
                 "taskname": formattedString ?? "",
                 "parentid": formValues?.taskid ?? 0,
+                "createdbyid": userProfile?.id ?? 0,
+                "assigneids": userProfile?.id ?? "",
             });
         } else {
             combinedValue = JSON.stringify({
                 "ismodule": module?.module ? 1 : 0,
-                "taskid": taskid ?? 0,
+                "taskid": taskid ?? '',
+                "maintaskid": formValues?.maintaskid ?? 0,
                 "projectid": formValues?.projectid ?? 0,
                 "taskname": formValues?.taskname ?? "",
                 "StartDate": formValues?.StartDate ?? '',
@@ -59,7 +63,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
             "p": combinedValue,
         };
         console.log('body: ', body);
-        
+
         const response = await CommonAPI(body);
 
         if (response?.Data) {

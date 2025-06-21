@@ -48,6 +48,8 @@ const parseEstimateToNumber = (estimateString) => {
 const CalendarGridView = () => {
   const location = useLocation();
   const [tasks, setTasks] = useState([]);
+  console.log('tasks: ', tasks);
+
   const estimateTextFieldRefs = useRef({});
   const [openSplitModal, setOpenSplitModal] = useState(false);
   const [selectedTaskToSplit, setSelectedTaskToSplit] = useState(null);
@@ -280,7 +282,7 @@ const CalendarGridView = () => {
                         <TextField
                           variant="outlined"
                           size="small"
-                          value={task.finalEstimate}
+                          value={task.finalEstimate ?? task?.workinghr}
                           onChange={(e) => handleEstimateChange(task.taskid, e.target.value)}
                           onKeyDown={(e) => handleKeyDown(e, task.taskid, index)}
                           inputRef={(el) => (estimateTextFieldRefs.current[task.taskid] = el)}

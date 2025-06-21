@@ -1,3 +1,4 @@
+import { AttrGroupApi, AttrListApi, AttrMasterNameApi, BindAttrGroupApi } from "../Api/MasterApi/AddAdvFilterGroupAttrApi";
 import { AssigneeMaster } from "../Api/MasterApi/AssigneeMaster";
 import { fetchMaster } from "../Api/MasterApi/MasterApi";
 import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi"
@@ -276,9 +277,25 @@ export const getRandomAvatarColor = (name) => {
     return colors[charSum % colors.length];
 };
 
+export const AdvancedMasterApiFunc = async () => {
+    const filMasterRes = await AttrMasterNameApi();
+    const filGroupRes = await AttrGroupApi();
+    const filAttrRes = await AttrListApi();
+    const filBindRes = await BindAttrGroupApi();
+    if (filMasterRes?.rd?.length > 0 && filGroupRes?.rd?.length > 0 && filAttrRes?.rd?.length > 0 && filBindRes?.rd?.length > 0) {
+        const mergedData = mergeFilterData(filMasterRes, filGroupRes, filAttrRes, filBindRes);
+        return mergedData;
+    }
+}
+
 // make structure master data function
 export const fetchMasterGlFunc = async () => {
     try {
+        const advMasterData = sessionStorage.getItem('structuredAdvMasterData');
+        if (!advMasterData) {
+            const mergedData = await AdvancedMasterApiFunc();
+            sessionStorage.setItem('structuredAdvMasterData', JSON?.stringify(mergedData));
+        }
         const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
         const AuthUrlData = JSON?.parse(localStorage.getItem('AuthqueryParams'));
         const uniqueDepartments = new Set();
@@ -656,7 +673,6 @@ export const commonTextFieldProps = {
     className: "textfieldsClass",
 };
 
-
 // Optimized conversion functions
 const charMap = {
     "&": "ane",
@@ -677,7 +693,6 @@ export function convertSpecialCharsToWords(str) {
 export function convertWordsToSpecialChars(str) {
     return str?.replace(/\b(ane)\b/g, (match) => wordMap[match] || match);
 }
-
 
 export function showNotification({ title, body, icon, actions, url }) {
     if ('serviceWorker' in navigator && 'Notification' in window) {
@@ -701,7 +716,6 @@ export function showNotification({ title, body, icon, actions, url }) {
     }
 }
 
-
 export const isTaskDue = (dateStr) => {
     const now = new Date();
     if (!dateStr) return false;
@@ -718,8 +732,6 @@ export const isTaskToday = (dateStr) => {
         taskDate.getFullYear() === now.getFullYear()
     );
 };
-
-
 
 export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
     // Flatten recursive tasks and subtasks
@@ -835,3 +847,40 @@ export function mergeFilterGroups(attributesData, groupsData, mappingData) {
 
     return Array.from(groupMap.values());
 }
+
+function mergeFilterData(maingroups, groups, attributes, bindings) {
+    const mainGroupMap = new Map(maingroups?.rd.map(({ id, filtermaingroup }) => [id, filtermaingroup || ""]));
+    const groupMap = new Map(groups?.rd.map(({ id, filtergroup }) => [id, filtergroup || ""]));
+    const attrMap = new Map(attributes?.rd.map(({ id, filterattr }) => [id, filterattr || ""]));
+    const structure = new Map();
+    for (const { filtermaingroupid, filtergroupid, filterattrid } of bindings?.rd || []) {
+        if (!structure.has(filtermaingroupid)) {
+            structure.set(filtermaingroupid, {
+                id: filtermaingroupid,
+                name: mainGroupMap.get(filtermaingroupid) || "",
+                groups: new Map()
+            });
+        }
+        const mainGroup = structure.get(filtermaingroupid);
+        if (!mainGroup.groups.has(filtergroupid)) {
+            mainGroup.groups.set(filtergroupid, {
+                id: filtergroupid,
+                name: groupMap.get(filtergroupid) || "",
+                attributes: []
+            });
+        }
+        const group = mainGroup.groups.get(filtergroupid);
+        const rawAttrName = attrMap.get(filterattrid) || "";
+        const attrNames = rawAttrName.split(',').map(a => a.trim()).filter(a => a !== "");
+        for (const name of attrNames) {
+            if (!group.attributes.find(attr => attr.name === name)) {
+                group.attributes.push({ id: filterattrid, name });
+            }
+        }
+    }
+    return Array.from(structure.values()).map(mainGroup => ({
+        ...mainGroup,
+        groups: Array.from(mainGroup.groups.values())
+    }));
+}
+
