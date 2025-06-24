@@ -316,7 +316,7 @@ const SidebarDrawer = ({
         onSubmit(updatedFormDataValue, { mode: taskType }, module);
         handleClear();
     };
-
+    
     // for close and clear form
     const handleClear = () => {
         onClose();

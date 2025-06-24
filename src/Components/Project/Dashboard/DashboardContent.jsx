@@ -12,6 +12,7 @@ import { useSetRecoilState } from 'recoil';
 const ReferencePr = lazy(() => import('./ReferencePr'));
 const MilestoneTimeline = lazy(() => import('./MilestoneTimeline'));
 const TeamMembers = lazy(() => import('./TeamMembers'));
+const MasterBind = lazy(() => import('./MasterBind'));
 const Comments = lazy(() => import('./Commnets'));
 
 const DashboardContent = ({ tabData, isAttLoding, selectedTab, decodedData, handleDtopen, taskFinalData, taskAssigneeData, background, refferenceData }) => {
@@ -46,6 +47,13 @@ const DashboardContent = ({ tabData, isAttLoding, selectedTab, decodedData, hand
         teamMemberData: decodedData?.taskid ? taskFinalData?.ModuleTeamMembers : taskFinalData?.TeamMembers,
         decodedData,
         background
+      }
+    },
+    "Master Bind": {
+      component: MasterBind,
+      props: {
+        taskModuleList: taskFinalData?.ModuleList,
+        decodedData,
       }
     },
     Comments: {

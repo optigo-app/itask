@@ -90,6 +90,7 @@ const ProjectDashboard = () => {
         { label: 'Reference', content: 'ReferencePr' },
         { label: 'Milestone', content: 'MilestoneTimeline' },
         { label: 'Team Member', content: 'TeamMember' },
+        { label: 'Master Bind', content: 'MasterBind' },
         { label: 'Comments', content: 'Comments' },
     ];
     const [tabs, setTabs] = useState(tabData);

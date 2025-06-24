@@ -148,6 +148,7 @@ const Calendar = () => {
 
 
   const handleAssigneeChange = (newValue) => {
+    console.log('newValue: ', newValue);
     setSelectedAssignee(newValue);
   }
 
