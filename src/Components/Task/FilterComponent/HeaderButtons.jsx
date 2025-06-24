@@ -93,6 +93,7 @@ const HeaderButtons = ({
     setRootSubroot({ Task: "AddTask" });
     setOpenChildTask(false);
   };
+  console.log('rootSubrootflagval: ', rootSubrootflagval);
 
   const handleFormSubmit = async (formValues, mode, module) => {
     let parsedData;

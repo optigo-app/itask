@@ -27,7 +27,7 @@ export const fetchMettingListApi = async (selectedRow) => {
 export const fetchMettingListByLoginApi = async (selectedRow) => {
     try {
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"meetinglistbylogin\",\"appuserid\":\"${selectedRow?.uid ?? ''}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"meetinglistbylogin\",\"appuserid\":\"${(selectedRow?.uid || selectedRow?.userid) ?? ''}\"}`,
             "f": "Task Management (tasklist)",
             "p": "",
         };

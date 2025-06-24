@@ -18,6 +18,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
             taskid = formValues?.taskid ?? '0';
         }
         let combinedValue;
+        console.log('formValues?.moduleid: ', formValues?.moduleid);
         if (formValues?.bulkTask?.length > 0) {
             // const formattedString = formValues?.bulkTask?.map(task => `${task.taskName}#${task.estimate}`).join(", ");
             const formattedString = formValues?.bulkTask?.map(task => `${task.taskName}#${task.estimate}#${task.deadLineDate ?? ''}`).join(", ");
@@ -31,10 +32,10 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "assigneids": userProfile?.id ?? "",
             });
         } else {
-            combinedValue = JSON.stringify({
+            combinedValue = JSON.stringify({    
                 "ismodule": module?.module ? 1 : 0,
+                "maintaskid": formValues?.moduleid ?? formValues?.taskid ?? '',
                 "taskid": taskid ?? '',
-                "maintaskid": formValues?.maintaskid ?? 0,
                 "projectid": formValues?.projectid ?? 0,
                 "taskname": formValues?.taskname ?? "",
                 "StartDate": formValues?.StartDate ?? '',
@@ -54,6 +55,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "assigneids": formValues?.assigneids ?? "",
                 "createdbyid": (Array.isArray(formValues?.createdBy) && formValues?.createdBy.length > 0 ? formValues?.createdBy[0]?.id : formValues?.createdbyid) ?? 0,
                 "departmentAssigneelist": formValues?.departmentAssigneelist ?? "",
+                "maingroupids": module?.module ? formValues?.maingroupids : '',
             });
         }
 

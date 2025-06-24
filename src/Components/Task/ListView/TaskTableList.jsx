@@ -18,10 +18,8 @@ import {
     Chip,
     Tooltip,
     LinearProgress,
-    Menu,
-    MenuItem,
 } from "@mui/material";
-import { CirclePlus, ClipboardPaste, Eye, Paperclip, Pencil, Scissors, Timer } from "lucide-react";
+import { CirclePlus, Eye, Paperclip, Pencil, Timer } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -36,13 +34,9 @@ import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 import StatusCircles from "../../ShortcutsComponent/EstimateComp";
 import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawerFile";
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import useAccess from "../../Auth/Role/useAccess";
-import { PERMISSIONS } from "../../Auth/Role/permissions";
 import MenuDatePicker from "../../ShortcutsComponent/Date/DeadlineDate";
 import PriorityBadge from "../../ShortcutsComponent/PriorityBadge";
-import CopyPasetContextMenu from "../../ShortcutsComponent/CutPasteMenu";
 import CutPasetContextMenu from "../../ShortcutsComponent/CutPasteMenu";
 
 const TableView = ({
@@ -67,8 +61,6 @@ const TableView = ({
     handleAssigneeShortcutSubmit,
     handleDeadlineDateChange,
     isLoading }) => {
-    console.log('contextMenu: ', contextMenu);
-    const { hasAccess } = useAccess();
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const setFormDataValue = useSetRecoilState(formData);
@@ -111,7 +103,6 @@ const TableView = ({
 
     const handleDeadlineChange = (event) => {
         const newValue = event;
-        console.log('newValue: ', newValue);
         handleDeadlineDateChange(selectedItem, newValue);
         handlDeadlineeClose();
     }
@@ -172,7 +163,6 @@ const TableView = ({
     };
 
     const handleAddTask = (task, additionalInfo) => {
-        console.log('task: ', task);
         let data = {
             taskid: task?.taskid,
             taskPr: task?.taskPr,

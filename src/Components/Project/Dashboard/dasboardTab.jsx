@@ -11,7 +11,7 @@ const DasboardTab = ({ tabData, selectedTab, handleChange, decodedData }) => {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const hasTaskId = !!decodedData?.taskid;
-  const hiddenTabsWithoutTaskId = ['Team Member', 'Comments'];
+  const hiddenTabsWithoutTaskId = ['Team Member', 'Comments', 'Master Bind'];
   const filteredTabData = tabData.filter(
     (item) => hasTaskId || !hiddenTabsWithoutTaskId.includes(item.label)
   );
