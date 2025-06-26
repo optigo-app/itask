@@ -7,10 +7,8 @@ import { Grid2x2, ListTodo } from "lucide-react";
 const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, setFormData, selectedRow }) => {
     const [masterType, setMasterType] = useState("single");
     const [text, setText] = useState("");
-    console.log('text: ', text);
     const [errorMessage, setErrorMessage] = useState("");
     const [masterName, setMasterName] = useState('');
-    console.log('activeTab: ', activeTab);
 
     const master_OPTIONS = [
         { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -47,7 +45,6 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, setFor
             masterName: masterName ?? '',
             masterValue: line,
         }));
-        console.log('newTasks: ', newTasks);
 
         setText("");
     };

@@ -93,7 +93,6 @@ const HeaderButtons = ({
     setRootSubroot({ Task: "AddTask" });
     setOpenChildTask(false);
   };
-  console.log('rootSubrootflagval: ', rootSubrootflagval);
 
   const handleFormSubmit = async (formValues, mode, module) => {
     let parsedData;
@@ -287,21 +286,23 @@ const HeaderButtons = ({
                   New
                 </Button>
               )}
-              <ToggleButtonGroup
-                value={viewTaskMode}
-                exclusive
-                size="small"
-                onChange={handleViewModeChange}
-                aria-label="View mode"
-                className="view-mode-toggle"
-              >
-                <ToggleButton value="me" className="toggle-btn" sx={{ borderRadius: '8px' }}>
-                  <User size={20} className="toggle-icon" />
-                </ToggleButton>
-                <ToggleButton value="team" className="toggle-btn" sx={{ borderRadius: '8px' }}>
-                  <Users size={20} className="toggle-icon" />
-                </ToggleButton>
-              </ToggleButtonGroup>
+              {location?.pathname?.includes("/tasks/") && (
+                <ToggleButtonGroup
+                  value={viewTaskMode}
+                  exclusive
+                  size="small"
+                  onChange={handleViewModeChange}
+                  aria-label="View mode"
+                  className="view-mode-toggle"
+                >
+                  <ToggleButton value="me" className="toggle-btn" sx={{ borderRadius: '8px' }}>
+                    <User size={20} className="toggle-icon" />
+                  </ToggleButton>
+                  <ToggleButton value="team" className="toggle-btn" sx={{ borderRadius: '8px' }}>
+                    <Users size={20} className="toggle-icon" />
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              )}
               <IconButton
                 className="buttonClassname"
                 onClick={handleTimerCompOpen}

@@ -53,7 +53,6 @@ const DashboardContent = ({ tabData, isAttLoding, selectedTab, decodedData, hand
       component: MasterBind,
       props: {
         taskModuleList: taskFinalData?.ModuleList,
-        decodedData,
       }
     },
     Comments: {

@@ -44,18 +44,15 @@ const parseEstimateToNumber = (estimateString) => {
   return match ? parseFloat(match[1]) : 0;
 };
 
-
 const CalendarGridView = () => {
   const location = useLocation();
   const [tasks, setTasks] = useState([]);
-  console.log('tasks: ', tasks);
-
+  const debounceRef = useRef(null);
   const estimateTextFieldRefs = useRef({});
   const [openSplitModal, setOpenSplitModal] = useState(false);
   const [selectedTaskToSplit, setSelectedTaskToSplit] = useState(null);
   const [numberOfDaysToSplit, setNumberOfDaysToSplit] = useState(0);
   const [splitParts, setSplitParts] = useState([]);
-  console.log('splitParts: ', splitParts);
   const {
     iswhTLoading,
     taskFinalData,
@@ -182,7 +179,6 @@ const CalendarGridView = () => {
 
   const handleAutoSplit = useCallback(() => {
     if (!selectedTaskToSplit || numberOfDaysToSplit <= 0) return;
-    console.log('selectedTaskToSplit: ', selectedTaskToSplit);
 
     const totalEstimate = parseEstimateToNumber(selectedTaskToSplit.estimate_hrs);
     const perPart = parseFloat((totalEstimate / numberOfDaysToSplit).toFixed(3));
@@ -196,29 +192,43 @@ const CalendarGridView = () => {
     setSplitParts(autoSplitParts);
   }, [selectedTaskToSplit, numberOfDaysToSplit]);
 
-  const handleEstimateChange = async (taskId, newEstimate) => {
+  const handleEstimateChange = (taskId, newEstimate) => {
     const regex = /^\d{0,3}(\.\d{0,3})?$/;
     if (newEstimate === '' || regex.test(newEstimate)) {
       let updatedTask = null;
-      setTasks((prevTasks) =>
-        prevTasks.map((task) => {
+
+      setTasks((prevTasks) => {
+        const updatedTasks = prevTasks.map((task) => {
           if (task.taskid === taskId) {
             updatedTask = { ...task, finalEstimate: newEstimate };
             return updatedTask;
           }
           return task;
-        })
-      );
-      if (updatedTask) {
-        try {
-          let rootSubrootflagval = {
-            Task: "root"
-          };
-          await AddTaskDataApi(updatedTask, rootSubrootflagval ?? {});
-        } catch (error) {
-          console.error('Error updating task estimate:', error);
-        }
+        });
+        return updatedTasks;
+      });
+
+      // Clear any previous debounce timer
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
       }
+
+      // Set new debounce timer
+      debounceRef.current = setTimeout(async () => {
+        if (updatedTask) {
+          try {
+            const rootSubrootflagval = {
+              Task: 'root',
+            };
+            const apiRes = await AddTaskDataApi(updatedTask, rootSubrootflagval);
+            if (apiRes) {
+              toast.success('Task working hr added successfully!');
+            }
+          } catch (error) {
+            console.error('Error updating task estimate:', error);
+          }
+        }
+      }, 800);
     }
   };
 
@@ -306,6 +316,7 @@ const CalendarGridView = () => {
                           startIcon={<SeparatorHorizontal size={18} />}
                           onClick={() => handleSplit(task.taskid)}
                           className='buttonClassname'
+                          disabled={!dayjs(task.StartDate).isSame(dayjs(), 'day')}
                         >
                           Split
                         </Button>

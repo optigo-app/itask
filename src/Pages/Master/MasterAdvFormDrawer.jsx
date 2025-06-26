@@ -12,7 +12,6 @@ import { Grid2x2, ListTodo } from "lucide-react";
 import DynamicMasterDrawer from "./DynamicMasterDrawer";
 
 const MasterAdvFormDrawer = ({ open, onClose, mode, activeTab, onSubmit, formData, setFormData, selectedRow }) => {
-    console.log('formData: ', formData);
     const [masterType, setMasterType] = useState("single");
     const [groups, setGroups] = useState([]);
 

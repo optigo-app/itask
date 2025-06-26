@@ -75,7 +75,6 @@ const Task = () => {
         parsedData = null;
       }
     }
-    console.log('parsedData: ', parsedData);
     const matchedTask = taskFinalData?.TaskData?.find(
       (task) => task.taskid === parsedData?.taskid
     );

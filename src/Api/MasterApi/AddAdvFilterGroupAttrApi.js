@@ -9,7 +9,6 @@ export const AddAdvFilterGroupAttrApi = async (payload) => {
             f: "Task Management (AddAdvFilterGroupAttrApi)",
             p: JSON.stringify(payload ?? []),
         };
-        console.log("body-->>>: ", body);
         const response = await CommonAPI(body);
         if (response?.Data) {
             return response.Data;

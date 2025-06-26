@@ -85,7 +85,6 @@ const useFullTaskFormatFile = () => {
     }
     try {
       const taskData = await fetchTaskDataFullApi(parsedData);
-      console.log('taskData: ', taskData);
       if (taskData?.rd1[0]?.stat == 0) {
         setIsWhTLoading(false);
         return toast.error(taskData?.rd1[0]?.stat_msg);

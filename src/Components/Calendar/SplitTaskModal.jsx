@@ -37,7 +37,6 @@ const SplitTaskDrawer = ({
 }) => {
     dayjs.extend(utc);
     dayjs.extend(timezone);
-    console.log('selectedTask: ', selectedTask);
 
     const isTotalHoursExceeded = totalSplitHours > selectedTask?.estimate_hrs;
 

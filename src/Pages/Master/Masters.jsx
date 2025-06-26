@@ -47,7 +47,6 @@ const MasterToggle = () => {
                 setStructuredAdvMasterData(JSON.parse(advMasterData));
             } else {
                 const response = await AdvancedMasterApiFunc();
-                console.log('response: ', response);
                 setStructuredAdvMasterData(response);
             }
         };
@@ -171,7 +170,6 @@ const MasterToggle = () => {
     };
 
     const formatAdvPayload = (groups, formAdvData, mode = 'edit', defaultFilterMaster = 'DocTeam') => {
-        console.log('defaultFilterMaster: ', defaultFilterMaster);
         const result = [];
         if (mode === 'edit') {
             result.push({

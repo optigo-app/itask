@@ -30,7 +30,7 @@ const Task = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(14);
   const searchParams = new URLSearchParams(location.search);
-  const [masterData, setMasterData] = useRecoilState(masterDataValue);
+  const masterData = useRecoilValue(masterDataValue);
   const [activeButton, setActiveButton] = useState("table");
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [filters, setFilters] = useRecoilState(Advfilters);
@@ -54,9 +54,6 @@ const Task = () => {
     priorityData,
     statusData,
     taskAssigneeData } = useFullTaskFormatFile();
-
-  console.log('selectedRow: ', selectedRow, copiedData);
-  console.log("taskFinalData", taskFinalData);
 
   useEffect(() => {
     setTasks([]);
@@ -525,7 +522,6 @@ const Task = () => {
       if (apiRes) {
         setOpenChildTask(true);
       }
-      console.log('apiRes: ', apiRes);
     } else {
       toast.error('Please select a task to paste');
     }
@@ -567,9 +563,6 @@ const Task = () => {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [contextMenu]);
-
-  console.log('copiedData: ', copiedData);
-
 
   return (
     <Box className="task-container">

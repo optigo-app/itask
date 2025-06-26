@@ -21,9 +21,6 @@ import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
-import TaskTreeGrid from './Backup/TaskTreeGrid';
-import CalendarGridView from './Pages/Calendar/CalendarGridView';
-import DragAccordionPage from './Backup/DragAccordionPage';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -31,6 +28,7 @@ const Header = lazy(() => import('./Components/Header/Header'));
 const Home = lazy(() => import('./Pages/Home/Home'));
 const Inbox = lazy(() => import('./Pages/Inbox/Inbox'));
 const Calendar = lazy(() => import('./Pages/Calendar/CalendarPage'));
+const CalendarGridView = lazy(() => import('./Pages/Calendar/CalendarGridView'));
 const Meeting = lazy(() => import('./Pages/Meeting/Meeting'));
 const Task = lazy(() => import('./Pages/Task/Task'));
 const Project = lazy(() => import('./Pages/Project/Project'));
@@ -61,24 +59,26 @@ const Layout = ({ children, pageDataLoaded }) => {
                 {!pageDataLoaded && <Suspense fallback={<LoadingBackdrop />}><Header /></Suspense>}
                 <Suspense fallback={<LoadingBackdrop />}><MetaDataSet /></Suspense>
                 {children}
-                <Box
-                    sx={{
-                        position: "fixed",
-                        top: "25px",
-                        right: "35px",
-                        transform: "translateX(50%) rotate(45deg)",
-                        background: "linear-gradient(to right, #ff7e5f, #feb47b)",
-                        color: "white",
-                        padding: "6px 40px",
-                        fontWeight: "bold",
-                        fontSize: "10px",
-                        zIndex: 10,
-                        whiteSpace: "nowrap",
-                        boxShadow: "2px 2px 10px rgba(0,0,0,0.2)",
-                    }}
-                >
-                    In Development
-                </Box>
+                {["localhost", "nzen"]?.includes(window.location.hostname) &&
+                    <Box
+                        sx={{
+                            position: "fixed",
+                            top: "25px",
+                            right: "35px",
+                            transform: "translateX(50%) rotate(45deg)",
+                            background: "linear-gradient(to right, #ff7e5f, #feb47b)",
+                            color: "white",
+                            padding: "6px 40px",
+                            fontWeight: "bold",
+                            fontSize: "10px",
+                            zIndex: 10,
+                            whiteSpace: "nowrap",
+                            boxShadow: "2px 2px 10px rgba(0,0,0,0.2)",
+                        }}
+                    >
+                        In Development
+                    </Box>
+                }
             </Box>
         </Box>
     );
@@ -261,8 +261,6 @@ const AppWrapper = () => {
                                         <Route path="/reports/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><Reports /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
-                                        <Route path="/test" element={<CalendarGridView />} />
-                                        <Route path="/test1" element={<DragAccordionPage />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>

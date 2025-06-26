@@ -6,7 +6,6 @@ import { customDatePickerStyles } from '../../../Utils/globalfun';
 import dayjs from 'dayjs';
 
 const MenuDatePicker = ({ open, anchorEl, handleClose, value, onChange }) => {
-    console.log('value: ', value);
     return (
         <Menu
             anchorEl={anchorEl}
