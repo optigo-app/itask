@@ -18,7 +18,6 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
     const [selectedTeamMember, setSelectedTeamMember] = React.useState([]);
     const [teamMemberData, setTeamMemberData] = React.useState([]);
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
-    console.log("teamMemberData: ", teamMemberData);
 
     useEffect(() => {
         setIsLoading(true);
@@ -79,7 +78,6 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
     }
 
     const handleSave = async (updatedList) => {
-        console.log('updatedList: ', updatedList);
         const formattedTeamList = updatedList
             ?.map((member) => `${member.employee.id}#${member.role}#${member?.limitedAccess == true ? 1 : 0 ?? 0}`)
             .join(",");

@@ -169,6 +169,7 @@ const TableView = ({
             projectid: task?.projectid,
             taskname: task?.taskname,
             moduleid: task?.moduleid,
+            maingroupids: task?.maingroupids,
         }
         setRootSubroot(additionalInfo);
         setFormDataValue(data);
@@ -183,6 +184,7 @@ const TableView = ({
             projectid: subtask?.projectid,
             taskname: subtask?.taskname,
             moduleid: subtask?.moduleid,
+            maingroupids: subtask?.maingroupids,
         }
         setRootSubroot(additionalInfo);
         setFormDataValue(data);

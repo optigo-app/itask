@@ -12,7 +12,6 @@ export const MoveTaskApi = async (taskId, parentId) => {
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };
-        console.log('body: ', body);
 
         const response = await CommonAPI(body);
 

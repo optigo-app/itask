@@ -7,7 +7,6 @@ import {
     Collapse,
     TextField,
     InputAdornment,
-    Button,
     ToggleButtonGroup,
     ToggleButton,
 } from "@mui/material";
@@ -24,7 +23,7 @@ import { fetchlistApiCall, selectedRowData } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
 import { SearchIcon } from "lucide-react";
 
-export default function MasterBind({ taskModuleList, decodedData }) {
+export default function MasterBind({ taskModuleList }) {
     const [leftGroups, setLeftGroups] = useState([]);
     const [rightGroups, setRightGroups] = useState([]);
     const [openCards, setOpenCards] = useState({});
@@ -118,19 +117,17 @@ export default function MasterBind({ taskModuleList, decodedData }) {
             ...prev,
             [key]: value,
         }));
-
         if (key === "searchTerm") {
-            const searchTerm = value.toLowerCase();
+            const searchTerm = value?.toLowerCase();
             const masterData = JSON?.parse(sessionStorage.getItem('structuredAdvMasterData')) || [];
 
-            const filtered = masterData.filter(group =>
-                group.name.toLowerCase().includes(searchTerm) ||
-                group.groups.some(subGroup =>
-                    subGroup.name.toLowerCase().includes(searchTerm) ||
-                    subGroup.attributes.some(attr => attr.name.toLowerCase().includes(searchTerm))
+            const filtered = masterData?.filter(group =>
+                group?.name?.toLowerCase().includes(searchTerm) ||
+                group?.groups?.some(subGroup =>
+                    subGroup?.name?.toLowerCase().includes(searchTerm) ||
+                    subGroup?.attributes?.some(attr => attr?.name?.toLowerCase().includes(searchTerm))
                 )
             );
-
             if (searchTarget === 'both') {
                 setLeftGroups(filtered);
                 setRightGroups(filtered.filter(g => rightGroups.some(rg => rg.id === g.id)));
@@ -145,7 +142,6 @@ export default function MasterBind({ taskModuleList, decodedData }) {
     const handleSearchTarget = (event, newTarget) => {
         if (newTarget !== null) {
             setSearchTarget(newTarget);
-            // Optionally trigger filtering again on toggle change if needed
             if (searchParams.searchTerm) {
                 onFilterChange("searchTerm", searchParams.searchTerm);
             }

@@ -11,13 +11,11 @@ import { commonTextFieldProps } from "../../Utils/globalfun";
 import { Grid2x2, ListTodo } from "lucide-react";
 
 const MasterAdvFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, setFormData, selectedRow }) => {
-    console.log('formData: ', formData);
     const [masterType, setMasterType] = useState("single");
     const [text, setText] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const [masterName, setMasterName] = useState('');
     const [bulkList, setBulkList] = useState([]);
-    console.log('bulkList: ', bulkList);
     const [editIndex, setEditIndex] = useState(null);
     const [editValue, setEditValue] = useState("");
     const [editName, setEditName] = useState("");

@@ -10,25 +10,25 @@ import {
     useTheme,
     ToggleButtonGroup,
     ToggleButton,
-    FormControlLabel,
-    Checkbox,
+    Divider,
 } from "@mui/material";
 import { CircleX, Grid2x2, ListTodo } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import "./SidebarDrawer.scss";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilValue } from "recoil";
 import { formData, projectDatasRState, rootSubrootflag, TaskData } from "../../Recoil/atom";
 import dayjs from 'dayjs';
 import utc from "dayjs/plugin/utc";
 import { useLocation } from "react-router-dom";
-import EstimateInput from "../../Utils/Common/EstimateInput";
 import { cleanDate, commonTextFieldProps, customDatePickerProps, flattenTasks } from "../../Utils/globalfun";
-import MultiTaskInput from "./MultiTaskInput";
 import timezone from 'dayjs/plugin/timezone';
 import CustomAutocomplete from "../ShortcutsComponent/CustomAutocomplete";
-import DepartmentAssigneeAutocomplete from "../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete";
 import { GetPrTeamsApi } from "../../Api/TaskApi/prTeamListApi";
 import { toast } from "react-toastify";
+import TaskFormSection from "./TaskFormSection";
+import ModuleDrawerForm from "./ModuleDrawerForm";
+import DynamicDropdownSection from "./DynamicDropdownSection";
+import MultiTaskInput from "./MultiTaskInput";
 
 const TASK_OPTIONS = [
     { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -43,7 +43,6 @@ const SidebarDrawer = ({
     priorityData,
     projectData,
     taskCategory,
-    taskDepartment,
     statusData,
     taskAssigneeData
 }) => {
@@ -54,16 +53,15 @@ const SidebarDrawer = ({
     const projectModuleData = useRecoilValue(projectDatasRState);
     const taskDataValue = useRecoilValue(TaskData);
     const formDataValue = useRecoilValue(formData);
-    console.log('formDataValue: ', formDataValue);
-    const [rootSubrootflagval, setRootSubrootFlagVal] = useRecoilState(rootSubrootflag)
+    const rootSubrootflagval = useRecoilValue(rootSubrootflag)
     const [taskType, setTaskType] = useState("single");
-    const [tasksubType, setTaskSubType] = useState("multi2");
     const searchParams = new URLSearchParams(location?.search);
     const encodedData = searchParams.get("data");
     const [decodedData, setDecodedData] = useState(null);
     const [isDuplicateTask, setIsDuplicateTask] = useState(false);
     const [isTaskNameEmpty, setIsTaskNameEmpty] = useState(false);
     const [teams, setTeams] = useState([]);
+    const [advMasterData, setAdvMasterData] = useState([]);
     const [formValues, setFormValues] = React.useState({
         taskName: "",
         bulkTask: [],
@@ -89,6 +87,7 @@ const SidebarDrawer = ({
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
+
     useEffect(() => {
         if (encodedData) {
             try {
@@ -101,6 +100,18 @@ const SidebarDrawer = ({
             }
         }
     }, [encodedData]);
+
+    useEffect(() => {
+        const masterData = JSON?.parse(sessionStorage.getItem('structuredAdvMasterData'));
+        const selectedGroupIds = formDataValue?.maingroupids
+            ?.split(",")
+            ?.map((id) => parseInt(id, 10));
+
+        const filteredData = masterData?.filter(item =>
+            selectedGroupIds?.includes(item.id)
+        );
+        setAdvMasterData(filteredData);
+    }, [formDataValue])
 
     const handleGetTeamMembers = async () => {
         let flag = location?.pathname?.includes("/tasks/") ? "subroot" : "root"
@@ -249,6 +260,35 @@ const SidebarDrawer = ({
         }));
     }
 
+    // for advanced master
+    const handleDropdownChange = (dropdownItem, selectedId) => {
+        setFormValues((prev) => {
+            const updatedDropdowns = Array.isArray(prev.dynamicDropdowns)
+                ? [...prev.dynamicDropdowns]
+                : [];
+            const existingIndex = updatedDropdowns.findIndex(
+                (item) => item.label === dropdownItem.label
+            );
+            const newEntry = {
+                teamId: dropdownItem.teamId,
+                teamName: dropdownItem.teamName,
+                groupId: dropdownItem.groupId,
+                groupName: dropdownItem.groupName,
+                label: dropdownItem.label,
+                selectedId,
+            };
+            if (existingIndex !== -1) {
+                updatedDropdowns[existingIndex] = newEntry;
+            } else {
+                updatedDropdowns.push(newEntry);
+            }
+            return {
+                ...prev,
+                dynamicDropdowns: updatedDropdowns,
+            };
+        });
+    };
+
     const handleDateChange = (date, key) => {
         if (date) {
             const istDate = date.tz('Asia/Kolkata');
@@ -291,6 +331,11 @@ const SidebarDrawer = ({
                 return acc;
             }, {})
         );
+        const structured = {};
+        formValues?.dynamicDropdowns?.forEach((item, index) => {
+            const key = `group${item.teamId}_attr`;
+            structured[key] = item.selectedId;
+        });
         const updatedFormDataValue = {
             taskid: moduleData?.taskid ?? formDataValue.taskid ?? "",
             taskname: formValues.taskName ?? formDataValue.taskname,
@@ -312,11 +357,12 @@ const SidebarDrawer = ({
             estimate_hrs: formValues?.estimate_hrs ?? formDataValue.estimate_hrs,
             estimate1_hrs: formValues?.estimate1_hrs ?? formDataValue.estimate1_hrs,
             estimate2_hrs: formValues?.estimate2_hrs ?? formDataValue.estimate2_hrs,
+            dynamicDropdowns: structured ?? formDataValue.dynamicDropdowns,
         };
         onSubmit(updatedFormDataValue, { mode: taskType }, module);
         handleClear();
     };
-    
+
     // for close and clear form
     const handleClear = () => {
         onClose();
@@ -364,534 +410,270 @@ const SidebarDrawer = ({
         });
     }
 
-    // // departmentwise assignee
-    // const departmentId = formValues?.department;
-    // const departmentName = taskDepartment?.find(dept => dept.id == departmentId)?.labelname;
-    // const filterAssigneeData = departmentName ? taskAssigneeData?.filter((item) => item.department == departmentName) : taskAssigneeData;
+    const renderTextField = (label, name, value, placeholder, error, helperText, onChange) => (
+        <Box className="form-group">
+            <Typography variant="subtitle1" className="form-label">{label}</Typography>
+            <TextField
+                name={name}
+                value={value}
+                placeholder={placeholder}
+                onChange={onChange}
+                error={error}
+                helperText={helperText}
+                {...commonTextFieldProps}
+            />
+        </Box>
+    );
 
+    const renderAutocomplete = (label, name, value, placeholder, options, onChange) => (
+        <CustomAutocomplete
+            label={label}
+            name={name}
+            value={value}
+            onChange={onChange}
+            options={options}
+            placeholder={placeholder}
+        />
+    );
 
+    const renderDateField = (label, name, value, onChange) => (
+        <Box className="form-group">
+            <Typography className="form-label" variant="subtitle1">{label}</Typography>
+            <DatePicker
+                name={name}
+                value={value ? dayjs(value).tz("Asia/Kolkata", true).local() : null}
+                onChange={(date) => onChange(date, name)}
+                sx={{ width: '100%' }}
+                format="DD/MM/YYYY"
+                className="textfieldsClass"
+                textField={(params) => (
+                    <TextField {...params} size="small" className="textfieldsClass" sx={{ p: 0 }} />
+                )}
+                {...customDatePickerProps}
+            />
+        </Box>
+    );
 
+    const renderTaskActionButtons = () => {
+        const isDisabled =
+            formValues.bulkTask.length > 0
+                ? false
+                : isLoading || isTaskNameEmpty || isDuplicateTask;
+
+        return (
+            (taskType !== 'multi_input' || (taskType === 'multi_input' && formValues.bulkTask.length > 0)) && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        bottom: 0,
+                        right: 0,
+                        width: '800px',
+                        bgcolor: '#fff',
+                        py: 2,
+                        px: 3,
+                        zIndex: 1301,
+                        textAlign: 'right',
+                    }}
+                >
+                    <Button
+                        variant="outlined"
+                        onClick={handleClear}
+                        sx={{ marginRight: '10px' }}
+                        className="secondaryBtnClassname"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSubmit}
+                        disabled={isDisabled}
+                        className="primary-btn"
+                    >
+                        {isLoading ? 'Saving...' : 'Save Task'}
+                    </Button>
+                </Box>
+            )
+        );
+    };
+
+    const renderTaskHeader = () => (
+        <Box sx={{ display: 'flex', justifyContent: decodedData || rootSubrootflagval?.Task === "subroot" ? 'space-between' : "end", alignItems: 'start' }}>
+            {rootSubrootflagval?.Task === "subroot" ? (
+                <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>
+                    /{formDataValue?.taskname}
+                </Typography>
+            ) : (
+                <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>
+                    {decodedData && `${decodedData?.project}/${decodedData?.module}${rootSubrootflagval?.Task === "subroot" ? `/${formDataValue?.taskname}` : ''}`}
+                </Typography>
+            )}
+
+            {rootSubrootflagval?.Task !== "root" && (
+                <Box className="tSideBarTgBox">
+                    <ToggleButtonGroup
+                        value={taskType}
+                        exclusive
+                        onChange={handleTaskChange}
+                        aria-label="task type"
+                        size="small"
+                        className="toggle-group"
+                    >
+                        {TASK_OPTIONS?.map(({ id, value, label, icon }) => (
+                            <ToggleButton
+                                key={id}
+                                value={value}
+                                className="toggle-button"
+                                sx={{ borderRadius: "8px" }}
+                            >
+                                {icon}
+                                {label}
+                            </ToggleButton>
+                        ))}
+                    </ToggleButtonGroup>
+                </Box>
+            )}
+        </Box>
+    );
+
+    const TaskDrawerHeader = ({ taskType, rootSubrootflagval, handleClear }) => {
+        const getTitle = () => {
+            if (taskType === "multi_input") {
+                return rootSubrootflagval?.Task === "subroot" ? "Add Sub-Tasks" : "Add Tasks";
+            }
+            if (rootSubrootflagval?.Task === "AddTask") return "Add Task";
+            if (rootSubrootflagval?.Task === "subroot") return "Add Sub-Task";
+            return "Edit Task";
+        };
+        return (
+            <>
+                <Box className="drawer-header">
+                    <Typography variant="h6" className="drawer-title">
+                        {getTitle()}
+                    </Typography>
+                    <IconButton onClick={handleClear}>
+                        <CircleX />
+                    </IconButton>
+                </Box>
+                <div
+                    style={{
+                        margin: "10px 0",
+                        border: "1px dashed #7d7f85",
+                        opacity: 0.3,
+                    }}
+                />
+            </>
+        );
+    };
+
+    const dropdownConfigs = useMemo(() => {
+        return advMasterData?.flatMap((team) =>
+            team.groups.map((group) => ({
+                teamId: team.id,
+                teamName: team.name,
+                groupId: group.id,
+                groupName: group.name,
+                label: `${team.name}/${group.name}`,
+                options: group.attributes.map((attr) => ({
+                    id: attr.id,
+                    labelname: attr.name,
+                })),
+            }))
+        );
+    }, [advMasterData]);
 
     return (
         <>
             <Drawer
                 anchor="right"
                 open={open}
-                // onClose={handleClear}
                 className="MainDrawer"
                 sx={{ display: open == true ? 'block' : 'none', zIndex: theme.zIndex.drawer + 2, }}
             >
                 {location?.pathname?.includes('/tasks') &&
                     <Box className="drawer-container">
-                        <Box className="drawer-header">
-                            <Typography variant="h6" className="drawer-title">
-                                {taskType === 'multi_input'
-                                    ? (rootSubrootflagval?.Task === "subroot" ? "Add Sub-Tasks" : "Add Tasks")
-                                    : rootSubrootflagval?.Task === "AddTask"
-                                        ? "Add Task"
-                                        : rootSubrootflagval?.Task === "subroot"
-                                            ? "Add Sub-Task"
-                                            : "Edit Task"
-                                }
-                            </Typography>
-                            <IconButton onClick={handleClear}>
-                                <CircleX />
-                            </IconButton>
-                        </Box>
-                        <div style={{
-                            margin: "10px 0",
-                            border: "1px dashed #7d7f85",
-                            opacity: 0.3,
-                        }}
+                        <TaskDrawerHeader
+                            taskType={taskType}
+                            rootSubrootflagval={rootSubrootflagval}
+                            handleClear={handleClear}
                         />
-                        <Box sx={{ display: 'flex', justifyContent: decodedData || rootSubrootflagval?.Task === "subroot" ? 'space-between' : "end", alignItems: 'start' }}>
-                            {rootSubrootflagval?.Task === "subroot" ? <Typography variant="caption"
-                                sx={{ color: '#7D7f85 !important' }}
-                            >
-                                {rootSubrootflagval?.Task === "subroot" && `/${formDataValue?.taskname}`}
-                            </Typography>
-                                :
-                                <Typography variant="caption"
-                                    sx={{ color: '#7D7f85 !important' }}
-                                >
-                                    {decodedData && decodedData?.project + '/' + decodedData?.module + (rootSubrootflagval?.Task == "subroot" ? '/' + formDataValue?.taskname : '')}
-                                </Typography>
+                        {renderTaskHeader()}
+                        <Grid container spacing={2} alignItems="stretch">
+                            <Grid item xs={12} md={taskType == "single" && dropdownConfigs?.length > 0 ? 7.5 : 12}>
+                                <TaskFormSection
+                                    taskType={taskType}
+                                    formValues={formValues}
+                                    handleChange={handleChange}
+                                    handleDateChange={handleDateChange}
+                                    handleEstimateChange={handleEstimateChange}
+                                    handlebulkTaskSave={handlebulkTaskSave}
+                                    isTaskNameEmpty={isTaskNameEmpty}
+                                    isDuplicateTask={isDuplicateTask}
+                                    taskCategory={taskCategory}
+                                    statusData={statusData}
+                                    priorityData={priorityData}
+                                    teams={teams}
+                                    renderAutocomplete={renderAutocomplete}
+                                    renderDateField={renderDateField}
+                                    renderTextField={renderTextField}
+                                    commonTextFieldProps={commonTextFieldProps}
+                                />
+                            </Grid>
+                            {taskType == "single" && dropdownConfigs?.length > 0 &&
+                                <DynamicDropdownSection
+                                    dropdownConfigs={dropdownConfigs}
+                                    formValues={formValues}
+                                    handleDropdownChange={handleDropdownChange}
+                                    divider={true}
+                                    mdValue={12}
+                                    taskType="single"
+                                />
                             }
-                            {rootSubrootflagval?.Task !== "root" &&
-                                <Box className="tSideBarTgBox">
-                                    <ToggleButtonGroup
-                                        value={taskType}
-                                        exclusive
-                                        onChange={handleTaskChange}
-                                        aria-label="task type"
-                                        size="small"
-                                        className="toggle-group"
-                                    >
-                                        {TASK_OPTIONS?.map(({ id, value, label, icon }) => (
-                                            <ToggleButton
-                                                key={id}
-                                                value={value}
-                                                className="toggle-button"
-                                                sx={{
-                                                    borderRadius: "8px",
-                                                }}
-                                            >
-                                                {icon}
-                                                {label}
-                                            </ToggleButton>
-                                        ))}
-                                    </ToggleButtonGroup>
-                                </Box>
-                            }
-                        </Box>
-                        {taskType === 'single' &&
-                            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={Boolean(formValues?.milestoneChecked)}
-                                                onChange={(e) =>
-                                                    setFormValues((prev) => ({
-                                                        ...prev,
-                                                        milestoneChecked: e.target.checked ? 1 : 0,
-                                                    }))
-                                                }
-                                                color="primary"
-                                                className="textfieldsClass milestone-checkbox"
-                                            />
-                                        }
-                                        label="Milestone"
-                                        className="milestone-label"
-                                    />
-                                </Box>
-                            </Box>
-                        }
-                        {taskType === 'single' &&
-                            <>
-                                <Grid container spacing={1} className="form-row">
-                                    <Grid item xs={12} sm={12} md={6}>
-                                        <Box className="form-group">
-                                            <Typography
-                                                variant="subtitle1"
-                                                className="form-label"
-                                                htmlFor="taskName"
-                                            >
-                                                Task Name
-                                            </Typography>
-                                            <TextField
-                                                name="taskName"
-                                                placeholder="Enter task name"
-                                                value={formValues.taskName}
-                                                onChange={handleChange}
-                                                {...commonTextFieldProps}
-                                                error={isTaskNameEmpty || isDuplicateTask}
-                                                helperText={
-                                                    isTaskNameEmpty
-                                                        ? "Task name is required."
-                                                        : isDuplicateTask
-                                                            ? "This Task name already exists for the selected project."
-                                                            : ""
-                                                }
-                                            />
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} sm={12} md={6}>
-                                        <CustomAutocomplete
-                                            label="Category"
-                                            name="category"
-                                            value={formValues.category}
-                                            onChange={handleChange}
-                                            options={taskCategory}
-                                            placeholder="Select Category"
-                                        />
-                                    </Grid>
-                                    {/* created at assignee */}
-                                    <Grid item xs={12} sm={12} md={12}>
-                                        <DepartmentAssigneeAutocomplete
-                                            value={formValues?.createdBy}
-                                            options={teams}
-                                            label="Created By"
-                                            placeholder="Select assignees"
-                                            limitTags={2}
-                                            onChange={(newValue) => handleChange({ target: { name: 'createdBy', value: newValue } })}
-                                            disabled={true}
-                                        />
-                                    </Grid>
-                                    {/* Assignee master */}
-                                    <Grid item xs={12} sm={12} md={12}>
-                                        <DepartmentAssigneeAutocomplete
-                                            value={formValues?.guests}
-                                            options={teams}
-                                            label="Assign To"
-                                            placeholder="Select assignees"
-                                            limitTags={2}
-                                            onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={12} md={6}>
-                                        <CustomAutocomplete
-                                            label="Status"
-                                            name="status"
-                                            value={formValues.status}
-                                            onChange={handleChange}
-                                            options={statusData}
-                                            placeholder="Select Status"
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={12} md={6}>
-                                        <CustomAutocomplete
-                                            label="Priority"
-                                            name="priority"
-                                            value={formValues.priority}
-                                            onChange={handleChange}
-                                            options={priorityData}
-                                            placeholder="Select Priority"
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={12} md={6}>
-                                        <Box className="form-group">
-                                            <Typography className="form-label" variant="subtitle1">
-                                                Start Date
-                                            </Typography>
-                                            <DatePicker
-                                                name="startDate"
-                                                value={formValues.startDate ? dayjs(formValues.startDate).tz("Asia/Kolkata", true).local() : null}
-                                                className="textfieldsClass"
-                                                onChange={(date) => handleDateChange(date, 'startDate')}
-                                                sx={{ width: "100%" }}
-                                                format="DD/MM/YYYY"
-                                                textField={(params) => (
-                                                    <TextField
-                                                        {...params}
-                                                        size="small"
-                                                        className="textfieldsClass"
-                                                        sx={{ padding: "0" }}
-                                                    />
-                                                )}
-                                                {...customDatePickerProps}
-                                            />
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} sm={12} md={6}>
-                                        <Box className="form-group">
-                                            <Typography className="form-label" variant="subtitle1">
-                                                Deadline Date
-                                            </Typography>
-                                            <DatePicker
-                                                name="dueDate"
-                                                value={formValues.dueDate ? dayjs(formValues.dueDate).tz("Asia/Kolkata", true).local() : null}
-                                                className="textfieldsClass"
-                                                onChange={(date) => handleDateChange(date, 'dueDate')}
-                                                sx={{ width: "100%" }}
-                                                format="DD/MM/YYYY"
-                                                textField={(params) => (
-                                                    <TextField
-                                                        {...params}
-                                                        size="small"
-                                                        className="textfieldsClass"
-                                                        sx={{ padding: "0" }}
-                                                    />
-                                                )}
-                                                {...customDatePickerProps}
-                                            />
-                                        </Box>
-                                    </Grid>
-                                </Grid>
-                                <Grid container spacing={1} className="form-row" sx={{ mt: 0.5 }}>
-                                    <Grid item xs={12} sm={12} md={4}>
-                                        <Box className="form-group">
-                                            <Typography className="form-label" variant="subtitle1">
-                                                Estimate
-                                            </Typography>
-                                            <EstimateInput
-                                                value={formValues.estimate_hrs}
-                                                onChange={(value) => handleEstimateChange("estimate_hrs", value)}
-                                            />
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} sm={12} md={4}>
-                                        <Box className="form-group">
-                                            <Typography className="form-label" variant="subtitle1">
-                                                Actual Estimate
-                                            </Typography>
-                                            <EstimateInput
-                                                value={formValues.estimate1_hrs}
-                                                onChange={(value) => handleEstimateChange("estimate1_hrs", value)}
-                                            />
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} sm={12} md={4}>
-                                        <Box className="form-group">
-                                            <Typography className="form-label" variant="subtitle1">
-                                                Final Estimate
-                                            </Typography>
-                                            <EstimateInput
-                                                value={formValues.estimate2_hrs}
-                                                onChange={(value) => handleEstimateChange("estimate2_hrs", value)}
-                                            />
-                                        </Box>
-                                    </Grid>
-                                </Grid>
+                            {taskType === 'multi_input' && (
                                 <Grid item xs={12}>
                                     <Box className="form-group">
-                                        <Typography variant="subtitle1" className="form-label">
-                                            Description
-                                        </Typography>
-                                        <TextField
-                                            name="description"
-                                            value={formValues.description}
-                                            onChange={handleChange}
-                                            multiline
-                                            rows={2}
-                                            placeholder="Add a description..."
-                                            {...commonTextFieldProps}
-                                        />
-                                    </Box>
-                                </Grid>
-                            </>
-                        }
-                        {taskType === 'multi_input' &&
-                            <>
-                                <Grid item xs={6}>
-                                    <Box className="form-group">
-                                        {formValues.bulkTask.length === 0 &&
+                                        {formValues.bulkTask.length === 0 && (
                                             <Typography className="form-label" variant="subtitle1">
                                                 Task Name
                                             </Typography>
-                                        }
-                                        <MultiTaskInput multiType={tasksubType} onSave={handlebulkTaskSave} />
+                                        )}
+                                        <MultiTaskInput
+                                            onSave={handlebulkTaskSave}
+                                            dropdownConfigs={dropdownConfigs}
+                                            formValues={formValues}
+                                            taskType={taskType}
+                                            handleDropdownChange={handleDropdownChange}
+                                            divider={true}
+                                            mdValue={12}
+                                            mainMdValue={4}
+                                        />
                                     </Box>
                                 </Grid>
-                            </>
-                        }
-                        {(taskType !== 'multi_input' || (taskType === 'multi_input' && formValues.bulkTask.length > 0)) && (
-                            <Grid item xs={12} sx={{ mt: 3, textAlign: "right" }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
-                                    <Box>
-                                        <Button
-                                            variant="outlined"
-                                            onClick={handleClear}
-                                            sx={{ marginRight: "10px" }}
-                                            className="secondaryBtnClassname"
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={handleSubmit}
-                                            disabled={
-                                                formValues.bulkTask.length > 0
-                                                    ? false
-                                                    : isLoading || isTaskNameEmpty || isDuplicateTask
-                                            }
-
-                                            className="primary-btn"
-                                        >
-                                            {isLoading ? "Saving..." : "Save Task"}
-                                        </Button>
-                                    </Box>
-                                </Box>
-                            </Grid>
-                        )}
+                            )}
+                        </Grid>
+                        {renderTaskActionButtons()}
                     </Box>
                 }
                 {location?.pathname?.includes('/projects') &&
-                    <Box className="pr_drawer-container">
-                        <Box className="drawer-header">
-                            <Typography variant="h6" className="drawer-title">
-                                {rootSubrootflagval?.Task == "AddTask" ? "Add Project Module" : "Edit Project Module"}
-                            </Typography>
-                            <IconButton onClick={handleClear}>
-                                <CircleX />
-                            </IconButton>
-                        </Box>
-                        <div style={{
-                            margin: "10px 0",
-                            border: "1px dashed #7d7f85",
-                            opacity: 0.3,
-                        }}
-                        />
-                        <>
-                            <Grid container spacing={1} className="form-row">
-                                <Grid item xs={12} sm={12}>
-                                    <CustomAutocomplete
-                                        label="Project"
-                                        name="project"
-                                        value={formValues.project}
-                                        onChange={handleChange}
-                                        options={projectData}
-                                        placeholder="Select Project"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={12}>
-                                    <Box className="form-group">
-                                        <Typography
-                                            variant="subtitle1"
-                                            className="form-label"
-                                            htmlFor="taskName"
-                                        >
-                                            Module
-                                        </Typography>
-                                        <TextField
-                                            name="taskName"
-                                            placeholder="Enter task name"
-                                            value={formValues.taskName}
-                                            onChange={handleChange}
-                                            {...commonTextFieldProps}
-                                            error={isTaskNameEmpty || isDuplicateTask}
-                                            helperText={
-                                                isTaskNameEmpty
-                                                    ? "Module name is required."
-                                                    : isDuplicateTask
-                                                        ? "This module name already exists for the selected project."
-                                                        : ""
-                                            }
-                                        />
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={12} sm={12} md={12}>
-                                    <DepartmentAssigneeAutocomplete
-                                        value={formValues?.createdBy}
-                                        options={teams}
-                                        label="Created By"
-                                        placeholder="Select assignees"
-                                        limitTags={2}
-                                        onChange={(newValue) => handleChange({ target: { name: 'createdBy', value: newValue } })}
-                                        disabled={true}
-                                    />
-                                </Grid>
-                                {/* <Grid item xs={12} sm={12}>
-                                    <DepartmentAssigneeAutocomplete
-                                        value={formValues?.guests}
-                                        options={filterAssigneeData}
-                                        label="Assign To"
-                                        placeholder="Select assignee"
-                                        limitTags={2}
-                                        onChange={(newValue) => handleChange({ target: { name: 'guests', value: newValue } })}
-                                    />
-                                </Grid> */}
-                                <Grid item xs={12} sm={12}>
-                                    <CustomAutocomplete
-                                        label="Category"
-                                        name="category"
-                                        value={formValues.category}
-                                        onChange={handleChange}
-                                        options={taskCategory}
-                                        placeholder="Select Category"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={12}>
-                                    <CustomAutocomplete
-                                        label="Status"
-                                        name="status"
-                                        value={formValues.status}
-                                        onChange={handleChange}
-                                        options={statusData}
-                                        placeholder="Select Status"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={12}>
-                                    <CustomAutocomplete
-                                        label="Priority"
-                                        name="priority"
-                                        value={formValues.priority}
-                                        onChange={handleChange}
-                                        options={priorityData}
-                                        placeholder="Select Priority"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={12}>
-                                    <Box className="form-group">
-                                        <Typography className="form-label" variant="subtitle1">
-                                            Start Date
-                                        </Typography>
-                                        <DatePicker
-                                            name="startDate"
-                                            value={formValues.startDate ? dayjs(formValues.startDate).tz("Asia/Kolkata", true).local() : null}
-                                            className="textfieldsClass"
-                                            onChange={(date) => handleDateChange(date, 'startDate')}
-                                            sx={{ width: "100%" }}
-                                            format="DD/MM/YYYY"
-                                            textField={(params) => (
-                                                <TextField
-                                                    {...params}
-                                                    size="small"
-                                                    className="textfieldsClass"
-                                                    sx={{ padding: "0" }}
-                                                />
-                                            )}
-                                            {...customDatePickerProps}
-                                        />
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={12} sm={12}>
-                                    <Box className="form-group">
-                                        <Typography className="form-label" variant="subtitle1">
-                                            Due Date
-                                        </Typography>
-                                        <DatePicker
-                                            name="dueDate"
-                                            value={formValues.dueDate ? dayjs(formValues.dueDate).tz("Asia/Kolkata", true).local() : null}
-                                            className="textfieldsClass"
-                                            onChange={(date) => handleDateChange(date, 'dueDate')}
-                                            sx={{ width: "100%" }}
-                                            format="DD/MM/YYYY"
-                                            textField={(params) => (
-                                                <TextField
-                                                    {...params}
-                                                    size="small"
-                                                    className="textfieldsClass"
-                                                    sx={{ padding: "0" }}
-                                                />
-                                            )}
-                                            {...customDatePickerProps}
-                                        />
-                                    </Box>
-                                </Grid>
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Box className="form-group">
-                                    <Typography variant="subtitle1" className="form-label">
-                                        Description
-                                    </Typography>
-                                    <TextField
-                                        name="description"
-                                        value={formValues.description}
-                                        onChange={handleChange}
-                                        multiline
-                                        rows={2}
-                                        placeholder="Add a description"
-                                        {...commonTextFieldProps}
-                                    />
-                                </Box>
-                            </Grid>
-                            <Grid item xs={12} sx={{ mt: 3, textAlign: "right" }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
-                                    <Box>
-                                        <Button
-                                            variant="outlined"
-                                            onClick={handleClear}
-                                            sx={{ marginRight: "10px" }}
-                                            className="secondaryBtnClassname"
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            disabled={isLoading || isTaskNameEmpty || isDuplicateTask}
-                                            onClick={() => handleSubmit({ module: true })}
-                                            className="primary-btn"
-                                        >
-                                            {isLoading ? "Saving..." : "Save"}
-                                        </Button>
-                                    </Box>
-                                </Box>
-                            </Grid>
-                        </>
-                    </Box>
+                    <ModuleDrawerForm
+                        rootSubrootflagval={rootSubrootflagval}
+                        formValues={formValues}
+                        handleChange={handleChange}
+                        handleDateChange={handleDateChange}
+                        handleClear={handleClear}
+                        handleSubmit={handleSubmit}
+                        isLoading={isLoading}
+                        isTaskNameEmpty={isTaskNameEmpty}
+                        isDuplicateTask={isDuplicateTask}
+                        teams={teams}
+                        projectData={projectData}
+                        taskCategory={taskCategory}
+                        statusData={statusData}
+                        priorityData={priorityData}
+                        commonTextFieldProps={commonTextFieldProps}
+                        renderAutocomplete={renderAutocomplete}
+                        renderDateField={renderDateField}
+                    />
                 }
             </Drawer>
         </>

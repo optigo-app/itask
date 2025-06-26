@@ -3,9 +3,10 @@
 .MainDrawer {
     .drawer-container {
         height: 100vh;
-        width: 700px;
-        max-width:650px;
+        width: 850px;
+        max-width: 850px;
         padding: 5px 24px 24px 24px;
+        margin-bottom: 50px;
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
@@ -14,6 +15,7 @@
         overflow-x: hidden;
         z-index: 1500;
     }
+
     .pr_drawer-container {
         width: 450px;
         height: 100vh;
@@ -32,6 +34,7 @@
             max-width: 500px;
         }
     }
+
     @media(max-width: 675px) {
         .drawer-container {
             max-width: 500px;
@@ -45,7 +48,8 @@
             overflow: auto;
             padding: 15px;
         }
-        .pr_drawer-container{
+
+        .pr_drawer-container {
             width: 100%;
             max-width: 100%;
             overflow: auto;
@@ -61,7 +65,8 @@
             overflow-x: hidden;
             padding: 5px;
         }
-        .pr_drawer-container{
+
+        .pr_drawer-container {
             width: 320px;
             max-width: 100%;
             overflow: auto;
@@ -105,6 +110,20 @@
 
         }
 
+        .showAditionalMasterButton {
+            font-size: 14px;
+            font-weight: 500;
+            font-family: $font-family !important;
+            color: $titleColor;
+            text-decoration: underline;
+            text-transform: capitalize;
+            border-radius: 8px;
+            padding: 8px 6px;
+
+            &:hover {
+                background-color: transparent;
+            }
+        }
     }
 
     .tSideBarTgBox {
@@ -225,4 +244,5 @@
         font-weight: 500;
         color: $titleColor;
     }
+
 }

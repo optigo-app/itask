@@ -8,7 +8,6 @@ export const DelPrTeamsApi = async (selectedTeamMember, decodedData) => {
             "assigneeid": selectedTeamMember?.assigneeid ?? "",
         });
         
-        console.log('combinedValue: ', combinedValue);
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"taskteamroledel\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (tasklist)",

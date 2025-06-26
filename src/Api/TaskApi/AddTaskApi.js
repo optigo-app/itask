@@ -18,11 +18,12 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
             taskid = formValues?.taskid ?? '0';
         }
         let combinedValue;
-        console.log('formValues?.moduleid: ', formValues?.moduleid);
+        const dropdowns = {};
+        Object.entries(formValues?.dynamicDropdowns ?? {}).forEach(([key, val]) => {
+            dropdowns[key] = String(val);
+        });
         if (formValues?.bulkTask?.length > 0) {
-            // const formattedString = formValues?.bulkTask?.map(task => `${task.taskName}#${task.estimate}`).join(", ");
             const formattedString = formValues?.bulkTask?.map(task => `${task.taskName}#${task.estimate}#${task.deadLineDate ?? ''}`).join(", ");
-            console.log('formattedString: ', formattedString);
             combinedValue = JSON.stringify({
                 "ismodule": 2,
                 "projectid": formValues?.projectid ?? 0,
@@ -30,9 +31,10 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "parentid": formValues?.taskid ?? 0,
                 "createdbyid": userProfile?.id ?? 0,
                 "assigneids": userProfile?.id ?? "",
+                ...dropdowns,
             });
         } else {
-            combinedValue = JSON.stringify({    
+            combinedValue = JSON.stringify({
                 "ismodule": module?.module ? 1 : 0,
                 "maintaskid": formValues?.moduleid ?? formValues?.taskid ?? '',
                 "taskid": taskid ?? '',
@@ -56,6 +58,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "createdbyid": (Array.isArray(formValues?.createdBy) && formValues?.createdBy.length > 0 ? formValues?.createdBy[0]?.id : formValues?.createdbyid) ?? 0,
                 "departmentAssigneelist": formValues?.departmentAssigneelist ?? "",
                 "maingroupids": module?.module ? formValues?.maingroupids : '',
+                ...dropdowns,
             });
         }
 
@@ -64,7 +67,6 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };
-        console.log('body: ', body);
 
         const response = await CommonAPI(body);
 

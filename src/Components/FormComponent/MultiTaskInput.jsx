@@ -9,12 +9,13 @@ import { Save, X as Close, Pencil, Trash, Plus, ArrowLeft } from "lucide-react";
 import './SidebarDrawer.scss';
 import { DatePicker } from "@mui/x-date-pickers";
 import { customDatePickerProps } from "../../Utils/globalfun";
+import { isValidInput } from "../../Utils/globalfun";
+import DynamicDropdownSection from "./DynamicDropdownSection";
 
-const MultiTaskInput = ({ onSave }) => {
+const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, taskType, handleDropdownChange, divider, mdValue }) => {
     dayjs.extend(utc);
     dayjs.extend(timezone);
     const [tasks, setTasks] = useState([]);
-    console.log('tasks: ', tasks);
     const [editIndex, setEditIndex] = useState(null);
     const [showEdit, setShowEdit] = useState(true);
     const [text, setText] = useState("");
@@ -27,6 +28,7 @@ const MultiTaskInput = ({ onSave }) => {
     const [totalEstimate, setTotalEstimate] = useState('');
     const [editingName, setEditingName] = useState("");
     const [editingEstimate, setEditingEstimate] = useState("");
+    const [showAditionalMaster, setShowAditionalMaster] = useState(false);
 
     useEffect(() => {
         estimateRefs.current = estimateRefs.current.slice(0, tasks.length);
@@ -86,7 +88,6 @@ const MultiTaskInput = ({ onSave }) => {
         inputRef.current?.focus();
     };
     const handleTaskChange = (index, key, value) => {
-        console.log('value: ', index, key, value);
         if (key === 'taskName' && !isValidInput(value)) {
             setErrorMessage("Task name cannot contain ',' or '#'.");
             return;
@@ -241,6 +242,10 @@ const MultiTaskInput = ({ onSave }) => {
         }
     };
 
+    const handleShowMaster = () => {
+        setShowAditionalMaster(!showAditionalMaster);
+    }
+
 
     return (
         <Box className="mltMainBox">
@@ -336,7 +341,7 @@ const MultiTaskInput = ({ onSave }) => {
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {tasks.map((task, index) => (
+                                            {tasks?.map((task, index) => (
                                                 <>
                                                     <TableRow key={index}>
                                                         <TableCell sx={{ width: "40%" }}>
@@ -527,6 +532,22 @@ const MultiTaskInput = ({ onSave }) => {
                                     </Table>
                                     {errorMessage && <Typography sx={{ m: 1, fontSize: '12px', color: '#d32f2f !important' }}>{errorMessage}</Typography>}
                                 </TableContainer>
+                                <Box>
+                                    <Button className="showAditionalMasterButton" variant="text" onClick={handleShowMaster}>
+                                        {showAditionalMaster ? 'Hide Additional Master' : 'Show Additional Master'}
+                                    </Button>
+                                </Box>
+                                {showAditionalMaster &&
+                                    <DynamicDropdownSection
+                                        dropdownConfigs={dropdownConfigs}
+                                        formValues={formValues}
+                                        handleDropdownChange={handleDropdownChange}
+                                        divider={false}
+                                        mdValue={4}
+                                        mainMdValue={12}
+                                        taskType="bulk"
+                                    />
+                                }
                             </>
                         )}
                     </>
