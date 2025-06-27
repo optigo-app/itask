@@ -87,6 +87,7 @@ const SidebarDrawer = ({
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
+    console.log('formValues: ', formValues);
 
     useEffect(() => {
         if (encodedData) {
@@ -262,6 +263,7 @@ const SidebarDrawer = ({
 
     // for advanced master
     const handleDropdownChange = (dropdownItem, selectedId) => {
+        debugger
         setFormValues((prev) => {
             const updatedDropdowns = Array.isArray(prev.dynamicDropdowns)
                 ? [...prev.dynamicDropdowns]
@@ -333,7 +335,7 @@ const SidebarDrawer = ({
         );
         const structured = {};
         formValues?.dynamicDropdowns?.forEach((item, index) => {
-            const key = `group${item.teamId}_attr`;
+            const key = `group${index + 1}_attr`;
             structured[key] = item.selectedId;
         });
         const updatedFormDataValue = {

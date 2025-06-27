@@ -278,12 +278,14 @@ export const getRandomAvatarColor = (name) => {
 };
 
 export const AdvancedMasterApiFunc = async () => {
+    debugger
     const filMasterRes = await AttrMasterNameApi();
     const filGroupRes = await AttrGroupApi();
     const filAttrRes = await AttrListApi();
     const filBindRes = await BindAttrGroupApi();
     if (filMasterRes?.rd?.length > 0 && filGroupRes?.rd?.length > 0 && filAttrRes?.rd?.length > 0 && filBindRes?.rd?.length > 0) {
         const mergedData = mergeFilterData(filMasterRes, filGroupRes, filAttrRes, filBindRes);
+        sessionStorage.setItem('structuredAdvMasterData', JSON?.stringify(mergedData));
         return mergedData;
     }
 }
