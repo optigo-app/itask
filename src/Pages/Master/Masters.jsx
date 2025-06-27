@@ -40,6 +40,7 @@ const MasterToggle = () => {
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
+    const [masterType, setMasterType] = useState("single");
 
     useEffect(() => {
         const fetchAdvMasterData = async () => {
@@ -154,6 +155,13 @@ const MasterToggle = () => {
         setPage(newPage);
     };
 
+    const handleMasterChange = (event, newType) => {
+        if (newType !== null) {
+            setMasterType(newType);
+            setFormData({ ...formData, name: '' });
+        }
+    };
+
     const handleAddOrSaveRow = async (row) => {
         try {
             const payload = mode == 'edit'
@@ -173,15 +181,16 @@ const MasterToggle = () => {
 
     const formatAdvPayload = (groups, formAdvData, mode = 'edit', defaultFilterMaster = 'DocTeam') => {
         const result = [];
-        if (mode === 'edit') {
+
+        if (mode === 'edit' || masterType === "single") {
             result.push({
                 filtermaster: defaultFilterMaster,
-                filtergroup: formAdvData.subMasterName,
-                filterattr: formAdvData.masterValue
+                filtergroup: formAdvData.subMasterName?.trim(),
+                filterattr: formAdvData.masterValue?.trim()
             });
         } else {
             groups.forEach(group => {
-                const groupName = group.name;
+                const groupName = group.name?.trim();
                 group.masters.forEach(master => {
                     const attrList = master.values
                         .split('\n')
@@ -190,7 +199,7 @@ const MasterToggle = () => {
                         .join(',');
                     result.push({
                         filtermaster: groupName,
-                        filtergroup: master.name,
+                        filtergroup: master.name?.trim(),
                         filterattr: attrList
                     });
                 });
@@ -201,9 +210,18 @@ const MasterToggle = () => {
     };
 
     const handleAddAdvRow = async (groups) => {
-        debugger
         try {
-            if (mode != "edit") {
+            if (masterType === 'single') {
+                const payload = formatAdvPayload([], formAdvData, mode, formAdvData?.masterName);
+                const response = await AddAdvFilterGroupAttrApi(payload);
+                console.log('response (single): ', response);
+
+                if (response?.rd?.[0]?.stat == 1) {
+                    const data = await AdvancedMasterApiFunc();
+                    setStructuredAdvMasterData(data);
+                }
+            } else {
+                let hasSuccess = false;
                 for (const master of groups[0]?.masters || []) {
                     const singleGroup = {
                         ...groups[0],
@@ -211,19 +229,13 @@ const MasterToggle = () => {
                     };
                     const payload = formatAdvPayload([singleGroup], formAdvData, mode, "DocTeam");
                     const response = await AddAdvFilterGroupAttrApi(payload);
-                    console.log('response: ', response);
-                    if (response?.rd[0]?.stat == 1) {
-                        const data = await AdvancedMasterApiFunc();
-                        setStructuredAdvMasterData(data);
+                    if (response?.rd?.[0]?.stat == 1) {
+                        hasSuccess = true;
                     }
                 }
-            } else {
-                const payload = formatAdvPayload(groups, formAdvData, mode, "DocTeam");
-                const response = await AddAdvFilterGroupAttrApi(payload);
-                if (response?.rd[0]?.stat == 1) {
+                if (hasSuccess) {
                     const data = await AdvancedMasterApiFunc();
                     setStructuredAdvMasterData(data);
-
                 }
             }
         } catch (error) {
@@ -322,7 +334,6 @@ const MasterToggle = () => {
     };
 
     const isAdvanced = categoryStates?.id === "advanced_master";
-    console.log('isAdvanced: ', isAdvanced);
 
     const searchAllNestedNames = (data, searchTerm) => {
         const lowerSearch = (searchTerm || "").toLowerCase();
@@ -480,6 +491,8 @@ const MasterToggle = () => {
                             formData={formAdvData}
                             selectedRow={selectedRow}
                             setFormData={setFormAdvData}
+                            masterType={masterType}
+                            handleMasterChange={handleMasterChange}
                         />
                     }
                 </div>

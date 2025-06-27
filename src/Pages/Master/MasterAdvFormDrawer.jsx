@@ -11,20 +11,12 @@ import { commonTextFieldProps } from "../../Utils/globalfun";
 import { Grid2x2, ListTodo } from "lucide-react";
 import DynamicMasterDrawer from "./DynamicMasterDrawer";
 
-const MasterAdvFormDrawer = ({ open, onClose, mode, groups, setGroups, onSubmit, formData, setFormData }) => {
-    const [masterType, setMasterType] = useState("single");
+const MasterAdvFormDrawer = ({ open, onClose, mode, groups, setGroups, onSubmit, formData, masterType,  setFormData,handleMasterChange }) => {
 
     const master_OPTIONS = [
         { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
         { id: 2, value: "multi_input", label: "Bulk", icon: <Grid2x2 size={20} /> },
     ];
-
-    const handleMasterChange = (event, newType) => {
-        if (newType !== null) {
-            setMasterType(newType);
-            setFormData({ ...formData, name: '' });
-        }
-    };
 
     return (
         <Drawer anchor="right" open={open} onClose={onClose}>
