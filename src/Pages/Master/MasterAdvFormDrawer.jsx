@@ -11,9 +11,8 @@ import { commonTextFieldProps } from "../../Utils/globalfun";
 import { Grid2x2, ListTodo } from "lucide-react";
 import DynamicMasterDrawer from "./DynamicMasterDrawer";
 
-const MasterAdvFormDrawer = ({ open, onClose, mode, activeTab, onSubmit, formData, setFormData, selectedRow }) => {
+const MasterAdvFormDrawer = ({ open, onClose, mode, groups, setGroups, onSubmit, formData, setFormData }) => {
     const [masterType, setMasterType] = useState("single");
-    const [groups, setGroups] = useState([]);
 
     const master_OPTIONS = [
         { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },

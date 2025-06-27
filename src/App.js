@@ -127,7 +127,6 @@ const AppWrapper = () => {
         };
     }, []);
 
-
     const decodeBase64 = (str) => {
         if (!str) return null;
         try {
@@ -204,7 +203,6 @@ const AppWrapper = () => {
             checkAndInit();
         }
     }, [isReady]);
-
 
     const toastStyle = {
         borderRadius: "8px",

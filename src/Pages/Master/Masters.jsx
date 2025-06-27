@@ -34,6 +34,7 @@ const MasterToggle = () => {
         subMasterName: '',
         masterValue: ''
     });
+    const [groups, setGroups] = useState([]);
     const [selectedRow, setSelectedRow] = useState(null);
     const [mode, setMode] = useState('');
     const [page, setPage] = useState(1);
@@ -78,6 +79,7 @@ const MasterToggle = () => {
             subMasterName: '',
             masterValue: ''
         });
+        setGroups([]);
     };
 
     const fetchMasterData = async () => {
@@ -199,6 +201,7 @@ const MasterToggle = () => {
     };
 
     const handleAddAdvRow = async (groups) => {
+        debugger
         try {
             if (mode != "edit") {
                 for (const master of groups[0]?.masters || []) {
@@ -208,15 +211,19 @@ const MasterToggle = () => {
                     };
                     const payload = formatAdvPayload([singleGroup], formAdvData, mode, "DocTeam");
                     const response = await AddAdvFilterGroupAttrApi(payload);
-                    if (response[0]?.stat == 1) {
-                        handleTaskApicall();
+                    console.log('response: ', response);
+                    if (response?.rd[0]?.stat == 1) {
+                        const data = await AdvancedMasterApiFunc();
+                        setStructuredAdvMasterData(data);
                     }
                 }
             } else {
                 const payload = formatAdvPayload(groups, formAdvData, mode, "DocTeam");
                 const response = await AddAdvFilterGroupAttrApi(payload);
-                if (response[0]?.stat == 1) {
-                    handleTaskApicall();
+                if (response?.rd[0]?.stat == 1) {
+                    const data = await AdvancedMasterApiFunc();
+                    setStructuredAdvMasterData(data);
+
                 }
             }
         } catch (error) {
@@ -315,35 +322,54 @@ const MasterToggle = () => {
     };
 
     const isAdvanced = categoryStates?.id === "advanced_master";
-    const filteredData = isAdvanced
-        ? (structuredAdvMasterData || [])
-            ?.map(mainGroup => {
-                const filteredGroups = (mainGroup.groups || [])
-                    ?.map(group => {
-                        const filteredAttributes = (group.attributes || []).filter(attr =>
-                            attr?.name?.toLowerCase().includes(searchTerm?.toLowerCase())
-                        );
-                        return {
-                            ...group,
-                            attributes: filteredAttributes
-                        };
-                    })
-                    .filter(group => group.attributes.length > 0);
+    console.log('isAdvanced: ', isAdvanced);
 
-                return {
-                    ...mainGroup,
+    const searchAllNestedNames = (data, searchTerm) => {
+        const lowerSearch = (searchTerm || "").toLowerCase();
+
+        return (data || []).map(team => {
+            const teamMatch = team.name?.toLowerCase().includes(lowerSearch);
+
+            const filteredGroups = (team.groups || []).map(group => {
+                const groupMatch = group.name?.toLowerCase().includes(lowerSearch);
+
+                const filteredAttributes = (group.attributes || []).filter(attr =>
+                    attr.name?.toLowerCase().includes(lowerSearch)
+                );
+
+                const includeGroup = groupMatch || filteredAttributes.length > 0;
+
+                return includeGroup
+                    ? {
+                        ...group,
+                        attributes: filteredAttributes
+                    }
+                    : null;
+            }).filter(Boolean);
+
+            const includeTeam = teamMatch || filteredGroups.length > 0;
+
+            return includeTeam
+                ? {
+                    ...team,
                     groups: filteredGroups
-                };
-            })
-            .filter(mainGroup => mainGroup.groups.length > 0)
+                }
+                : null;
+        }).filter(Boolean);
+    };
+
+    const filteredData = isAdvanced
+        ? searchAllNestedNames(structuredAdvMasterData, searchTerm)
         : (formattedData || []).filter(item =>
             item?.labelname?.toLowerCase().includes(searchTerm?.toLowerCase())
         );
+    console.log('filteredData: ', filteredData);
 
     const paginatedData = isAdvanced
-        ? filteredData // no pagination for structured/nested
+        ? filteredData
         : filteredData.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
+    console.log('paginatedData: ', paginatedData);
 
 
     return (
@@ -447,6 +473,8 @@ const MasterToggle = () => {
                             open={drawerOpen}
                             activeTab={value}
                             mode={mode}
+                            groups={groups}
+                            setGroups={setGroups}
                             onClose={handleCloseDrawer}
                             onSubmit={handleAddAdvRow}
                             formData={formAdvData}

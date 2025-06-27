@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { commonTextFieldProps } from '../../Utils/globalfun';
 
-const DynamicMasterDrawer = ({ groups, setGroups, handleMasterSave }) => {
+const DynamicMasterDrawer = ({ groups, setGroups }) => {
     const [hideAddGroupBtn, setHideAddGroupBtn] = useState(false);
 
     const addGroup = () => {
