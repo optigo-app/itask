@@ -32,6 +32,7 @@ import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 import useAccess from "../../Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
+import { GetPrTeamsApi } from "../../../Api/TaskApi/prTeamListApi";
 
 const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit }) => {
     const { hasAccess } = useAccess();
@@ -238,7 +239,12 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
     const currentData =
         sortedData?.slice((page - 1) * rowsPerPage, page * rowsPerPage) || [];
 
-    const handleNavigate = (task) => {
+    const handleNavigate = async (task) => {
+        const userLoginData = JSON?.parse(localStorage?.getItem("UserProfileData"));
+        const decodedData = task
+        const teamApiRes = await GetPrTeamsApi(task, "root")
+        const isLimitedAccess = teamApiRes?.rd?.find((item) => item.assigneeid == userLoginData?.id)?.islimitedaccess;
+        console.log('isLimitedAccess: ', isLimitedAccess);
         let urlData = {
             module: task?.taskname,
             project: task.taskPr,
@@ -246,6 +252,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
             projectid: task?.projectid,
             moduleid: task?.taskid,
             maingroupids: task?.maingroupids,
+            isLimited: isLimitedAccess ?? 0,
         }
         const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
         const formattedPrName = task?.taskPr?.trim()?.replace(/\s+/g, '-') || '';

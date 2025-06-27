@@ -133,13 +133,13 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
                                 return (
                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                         <Typography>{row.rolename}</Typography>
-                                        {row.islimitedaccess === 1 && (
+                                        {row?.islimitedaccess === 1 && (
                                             <Typography
                                                 variant="caption"
                                                 sx={{
                                                     backgroundColor: "#ff9800",
                                                     color: "#fff",
-                                                    borderRadius: "4px",
+                                                    borderRadius: "8px",
                                                     padding: "2px 6px",
                                                     fontSize: "0.7rem",
                                                 }}

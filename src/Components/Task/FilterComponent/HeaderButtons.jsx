@@ -78,6 +78,7 @@ const HeaderButtons = ({
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
   const [viewTaskMode, setViewTaskMode] = useRecoilState(viewMode);
   const encodedData = searchParams.get("data");
+  const [parsedData, setParsedData] = useState();
   const [categoryMaster, setCategoryMaster] = useState([]);
 
   useEffect(() => {
@@ -85,6 +86,15 @@ const HeaderButtons = ({
       setCategoryMaster(CategorySummary);
     }
   }, [CategorySummary, location, isLoading]);
+
+  useEffect(() => {
+    if (encodedData) {
+      const decodedString = decodeURIComponent(encodedData);
+      const jsonString = atob(decodedString);
+      setParsedData(JSON?.parse(jsonString));
+    }
+  }, [])
+
 
 
   const handleDrawerToggle = () => {
@@ -95,12 +105,6 @@ const HeaderButtons = ({
   };
 
   const handleFormSubmit = async (formValues, mode, module) => {
-    let parsedData;
-    if (encodedData) {
-      const decodedString = decodeURIComponent(encodedData);
-      const jsonString = atob(decodedString);
-      parsedData = JSON.parse(jsonString);
-    }
     const rootflag =
       rootSubrootflagval?.Task == "AddTask"
         ? { Task: "subroot" }
@@ -298,9 +302,22 @@ const HeaderButtons = ({
                   <ToggleButton value="me" className="toggle-btn" sx={{ borderRadius: '8px' }}>
                     <User size={20} className="toggle-icon" />
                   </ToggleButton>
-                  <ToggleButton value="team" className="toggle-btn" sx={{ borderRadius: '8px' }}>
-                    <Users size={20} className="toggle-icon" />
-                  </ToggleButton>
+                  <Tooltip
+                    title={parsedData?.isLimited == 1 ? "Access limited: Team view disabled" : ""}
+                    arrow
+                    disableHoverListener={!parsedData?.isLimited == 1}
+                    placement="top"
+                    classes={{ tooltip: 'custom-tooltip' }}
+                  >
+                    <ToggleButton
+                      disabled={parsedData?.isLimited == 1}
+                      value="team"
+                      className="toggle-btn"
+                      sx={{ borderRadius: '8px' }}
+                    >
+                      <Users size={20} className="toggle-icon" />
+                    </ToggleButton>
+                  </Tooltip>
                 </ToggleButtonGroup>
               )}
               <IconButton

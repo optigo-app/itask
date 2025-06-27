@@ -29,9 +29,9 @@ const Header = ({ avatarSrc = "" }) => {
         location.pathname.includes("/tasks/") ?
             setSelectedTab("taskView") :
             setSelectedTab("projectHome");
-            location?.pathname.includes("/calendar")?
-                setSelectedCalTab("calendarView") :
-                setSelectedCalTab("todayTasks");
+        location?.pathname.includes("/calendar") ?
+            setSelectedCalTab("calendarView") :
+            setSelectedCalTab("todayTasks");
     }, [location]);
 
     useEffect(() => {
@@ -206,6 +206,7 @@ const Header = ({ avatarSrc = "" }) => {
     const handleCloseProfileMenu = () => {
         setProfileAnchorEl(null);
     };
+    console.log('decodedData: ', decodedData);
 
     const isDecodedTitle =
         location.pathname.includes("/tasks/") &&
@@ -315,13 +316,29 @@ const Header = ({ avatarSrc = "" }) => {
                         </>
                     }
                 </Box>
-                <Typography
-                    variant="subtitle1"
-                    component="div"
-                    className="headerSubtitle"
-                >
-                    {subtitle}
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography
+                        variant={decodedData?.isLimited == 1 ? "caption" : "subtitle1"}
+                        component="div"
+                        className="headerSubtitle"
+                    >
+                        {subtitle}
+                    </Typography>
+                    {decodedData?.isLimited === 1 && (
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                backgroundColor: "#ff9800",
+                                color: "#fff",
+                                borderRadius: "8px",
+                                padding: "2px 6px",
+                                fontSize: "0.7rem",
+                            }}
+                        >
+                            Limited Access
+                        </Typography>
+                    )}
+                </Box>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center" }}>
                 {(location?.pathname?.includes("/tasks/") || location?.pathname?.includes("/projects/")) && (

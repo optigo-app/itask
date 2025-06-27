@@ -87,7 +87,6 @@ const SidebarDrawer = ({
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
-    console.log('formValues: ', formValues);
 
     useEffect(() => {
         if (encodedData) {

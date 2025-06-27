@@ -65,7 +65,6 @@ const Project = () => {
     setTimeout(() => {
       if (taskFinalData) {
         const summary = getCategoryTaskSummary(taskFinalData?.ModuleList, taskCategory);
-        console.log('taskFinalData?.ModuleList: ', taskFinalData?.ModuleList);
         setCategoryTSummary(summary);
         setProject(taskFinalData?.ModuleList);
       }
