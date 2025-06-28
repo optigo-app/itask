@@ -2,7 +2,7 @@ import React from "react";
 import { Card, Grid, Typography, Box, IconButton, Avatar, Link } from "@mui/material";
 import { Download, MoreVertical } from "lucide-react";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { formatDate3, getRandomAvatarColor } from "../../../Utils/globalfun";
+import { formatDate3, getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
 import './style.scss';
 
 const AnnouncementCard = ({announcement}) => {
@@ -17,30 +17,30 @@ const AnnouncementCard = ({announcement}) => {
             <Grid container spacing={2} alignItems="start">
                 <Grid item>
                     <Avatar
-                        alt={announcement?.user?.name}
-                        src={announcement?.user?.avatar || null}
+                        alt={announcement?.user?.firstname}
+                        src={ImageUrl(announcement?.user)}
                         sx={{
                             width: 30,
                             height: 30,
-                            backgroundColor: background(announcement?.user?.name),
+                            backgroundColor: background(announcement?.user?.firstname + ' ' + announcement?.user?.lastname),
                         }}
                     >
-                        {!announcement?.user?.avatar && announcement?.user?.name?.charAt(0)}
+                        {!announcement?.user?.avatar && (announcement?.user?.firstname + ' ' + announcement?.user?.lastname)?.charAt(0)}
                     </Avatar>
                 </Grid>
                 <Grid item xs>
                     <Typography className="title">
-                        {announcement?.user?.name}
+                        {announcement?.user?.firstname + ' ' + announcement?.user?.lastname}
                     </Typography>
                     <Typography className="caption">
                         {formatDate3(announcement?.entrydate)}
                     </Typography>
                 </Grid>
-                <Grid item>
+                {/* <Grid item>
                     <IconButton>
                         <MoreVertical size={18} />
                     </IconButton>
-                </Grid>
+                </Grid> */}
             </Grid>
 
             {/* announcement Text */}

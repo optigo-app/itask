@@ -206,7 +206,6 @@ const Header = ({ avatarSrc = "" }) => {
     const handleCloseProfileMenu = () => {
         setProfileAnchorEl(null);
     };
-    console.log('decodedData: ', decodedData);
 
     const isDecodedTitle =
         location.pathname.includes("/tasks/") &&

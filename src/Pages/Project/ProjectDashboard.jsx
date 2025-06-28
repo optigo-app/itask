@@ -7,6 +7,7 @@ import { useRecoilValue } from 'recoil';
 import { selectedRowData } from '../../Recoil/atom';
 import useFullTaskFormatFile from '../../Utils/TaskList/FullTasKFromatfile';
 import { getAttachmentApi } from '../../Api/UploadApi/GetAttachmentApi';
+import { taskCommentGetApi } from '../../Api/TaskApi/TaskCommentGetApi';
 
 // Lazy-loaded components
 const DasboardTab = lazy(() => import('../../Components/Project/Dashboard/dasboardTab'));
@@ -21,6 +22,9 @@ const ProjectDashboard = () => {
     const { iswhLoading, taskFinalData, taskAssigneeData } = useFullTaskFormatFile();
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
     const [refferenceData, setReferenceData] = useState([]);
+    const [comments, setComments] = useState([]);
+    const [commentCount, setCommentCount] = useState(0);
+    const [isCommentLoading, setIsCommentLoading] = useState(false);
 
     const background = (assignee) => {
         const avatarBackgroundColor = assignee?.avatar
@@ -78,6 +82,44 @@ const ProjectDashboard = () => {
         }
     }, [location]);
 
+
+
+    const handleFetchComment = async () => {
+        setIsCommentLoading(true);
+        const selectedRow = decodedData;
+        try {
+            const assigneesMaster = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
+            const apiRes = await taskCommentGetApi(selectedRow);
+
+            if (apiRes?.rd1?.length > 0) {
+                const today = new Date();
+                const commentsToday = apiRes.rd1.filter(comment => {
+                    const commentDate = new Date(comment.entrydate);
+                    return commentDate.toDateString() === today.toDateString();
+                });
+                const commentsWithAttachments = commentsToday.map(comment => ({
+                    ...comment,
+                    user: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
+                }));
+                setComments(commentsWithAttachments);
+                setCommentCount(commentsWithAttachments.length);
+            } else {
+                setComments([]);
+                setCommentCount(0);
+            }
+        } catch (error) {
+            console.error("Failed to fetch comments", error);
+        } finally {
+            setIsCommentLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (decodedData?.taskid) {
+            handleFetchComment();
+        }
+    }, [decodedData]);
+
     const handleTaskModalOpen = () => {
         setTaskDetailModalOpen(true);
     };
@@ -87,12 +129,13 @@ const ProjectDashboard = () => {
     };
 
     const tabData = [
-        { label: 'Reference', content: 'ReferencePr' },
-        { label: 'Milestone', content: 'MilestoneTimeline' },
-        { label: 'Team Member', content: 'TeamMember' },
-        { label: 'Master Bind', content: 'MasterBind' },
-        { label: 'Comments', content: 'Comments' },
+        { label: 'Reference', content: 'ReferencePr', count: 0 },
+        { label: 'Milestone', content: 'MilestoneTimeline', count: 0 },
+        { label: 'Team Member', content: 'TeamMember', count: 0 },
+        { label: 'Master Bind', content: 'MasterBind', count: 0 },
+        { label: 'Comments', content: 'Comments', count: commentCount },
     ];
+    console.log('commentCount: ', commentCount);
     const [tabs, setTabs] = useState(tabData);
     const [selectedTab, setSelectedTab] = useState(tabs[0]?.label || '');
 
@@ -114,10 +157,13 @@ const ProjectDashboard = () => {
             });
 
             setTabs((prevTabs) => {
-                return [...prevTabs, ...dynamicTabs];
+                const updatedTabs = prevTabs.map(tab =>
+                    tab.label === 'Comments' ? { ...tab, count: commentCount } : tab
+                );
+                return [...updatedTabs, ...dynamicTabs];
             });
         }
-    }, [taskFinalData]);
+    }, [taskFinalData, commentCount]);
 
     const handleChange = (event, newValue) => {
         if (newValue !== null) {
@@ -156,6 +202,8 @@ const ProjectDashboard = () => {
                         taskAssigneeData={taskAssigneeData}
                         isAttLoding={isAttLoding}
                         refferenceData={refferenceData}
+                        isCommentLoading={isCommentLoading}
+                        comments={comments}
                     />
                 }
             </Suspense>

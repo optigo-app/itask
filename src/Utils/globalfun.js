@@ -1,7 +1,9 @@
+import { toast } from "react-toastify";
 import { AttrGroupApi, AttrListApi, AttrMasterNameApi, BindAttrGroupApi } from "../Api/MasterApi/AddAdvFilterGroupAttrApi";
 import { AssigneeMaster } from "../Api/MasterApi/AssigneeMaster";
 import { fetchMaster } from "../Api/MasterApi/MasterApi";
 import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi"
+import { AddTaskDataApi } from "../Api/TaskApi/AddTaskApi";
 
 
 // output like 01/01/2023
@@ -285,7 +287,7 @@ export const AdvancedMasterApiFunc = async () => {
     const filBindRes = await BindAttrGroupApi();
     if (filMasterRes?.rd?.length > 0 && filGroupRes?.rd?.length > 0 && filAttrRes?.rd?.length > 0 && filBindRes?.rd?.length > 0) {
         const mergedData = mergeFilterData(filMasterRes, filGroupRes, filAttrRes, filBindRes);
-        sessionStorage.setItem('structuredAdvMasterData', JSON?.stringify(mergedData));
+        sessionStorage.setItem('structuredAdvMasterData', JSON?.stringify(mergedData ?? []));
         return mergedData;
     }
 }
@@ -296,7 +298,7 @@ export const fetchMasterGlFunc = async () => {
         const advMasterData = sessionStorage.getItem('structuredAdvMasterData');
         if (!advMasterData) {
             const mergedData = await AdvancedMasterApiFunc();
-            sessionStorage.setItem('structuredAdvMasterData', JSON?.stringify(mergedData));
+            sessionStorage.setItem('structuredAdvMasterData', JSON?.stringify(mergedData ?? []));
         }
         const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
         const AuthUrlData = JSON?.parse(localStorage.getItem('AuthqueryParams'));
@@ -886,3 +888,11 @@ function mergeFilterData(maingroups, groups, attributes, bindings) {
     }));
 }
 
+// status change
+export const handleAddApicall = async (updatedTasks) => {
+    let rootSubrootflagval = { "Task": "root" }
+    const addTaskApi = await AddTaskDataApi(updatedTasks, rootSubrootflagval ?? {});
+    if (addTaskApi?.rd[0]?.stat == 1) {
+      toast.success(addTaskApi?.rd[0]?.stat_msg);
+    }
+  }

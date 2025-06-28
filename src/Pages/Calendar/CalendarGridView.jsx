@@ -13,7 +13,7 @@ import {
   Tooltip,
   IconButton,
 } from '@mui/material';
-import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate3, priorityColors, statusColors } from '../../Utils/globalfun';
+import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate3, handleAddApicall, priorityColors, statusColors } from '../../Utils/globalfun';
 import { v4 as uuidv4 } from 'uuid';
 
 // Import dayjs and plugins for date calculations
@@ -244,6 +244,24 @@ const CalendarGridView = () => {
     }
   };
 
+  const handleStatusChange = (taskId, newStatus) => {
+    setTasks((prevTasks) => {
+      const updatedTasks = prevTasks.map((task) => {
+        if (task.taskid === taskId.taskid) {
+          const updatedTask = {
+            ...task,
+            statusid: newStatus?.id,
+            status: newStatus?.labelname
+          };
+          handleAddApicall(updatedTask);
+          return updatedTask;
+        }
+        return task;
+      });
+      return updatedTasks;
+    });
+  };
+
   return (
     <>
       {(iswhTLoading === null || iswhTLoading === true) ? (
@@ -253,28 +271,28 @@ const CalendarGridView = () => {
           <Table aria-label="task table" className='muiTable'>
             <TableHead className='muiTableHead'>
               <TableRow>
-                <TableCell>
+                <TableCell sx={{ width: '22%' }}>
                   <strong>Task Title</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ width: '10%' }}>
                   <strong>Status</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ width: '10%' }}>
                   <strong>Priority</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ width: '8%' }}>
                   <strong>Estimate</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ width: '12%' }}>
                   <strong>Working Hour</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ width: '14%' }}>
                   <strong>Start Date</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ width: '14%' }}>
                   <strong>End Date</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ width: '8%' }}>
                   <strong>Action</strong>
                 </TableCell>
               </TableRow>
@@ -285,7 +303,7 @@ const CalendarGridView = () => {
                   {tasks?.map((task, index) => (
                     <TableRow key={task.taskid}>
                       <TableCell>{task.taskname}</TableCell>
-                      <TableCell><StatusBadge task={task} statusColors={statusColors} disable={true} /></TableCell>
+                      <TableCell><StatusBadge task={task} statusColors={statusColors} onStatusChange={handleStatusChange} disable={false} /></TableCell>
                       <TableCell>{TaskPriority(task?.priority, priorityColors)}</TableCell>
                       <TableCell>{task.estimate_hrs}</TableCell>
                       <TableCell>

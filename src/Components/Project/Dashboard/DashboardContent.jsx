@@ -15,7 +15,7 @@ const TeamMembers = lazy(() => import('./TeamMembers'));
 const MasterBind = lazy(() => import('./MasterBind'));
 const Comments = lazy(() => import('./Commnets'));
 
-const DashboardContent = ({ tabData, isAttLoding, selectedTab, decodedData, handleDtopen, taskFinalData, taskAssigneeData, background, refferenceData }) => {
+const DashboardContent = ({ isCommentLoading, isAttLoding, selectedTab, decodedData, handleDtopen, taskFinalData, taskAssigneeData, background, refferenceData, comments }) => {
   const categoryData = JSON.parse(sessionStorage.getItem('taskworkcategoryData')) || [];
   const selectedTabLower = selectedTab?.toLowerCase();
   const setSelectedTask = useSetRecoilState(selectedRowData);
@@ -57,7 +57,11 @@ const DashboardContent = ({ tabData, isAttLoding, selectedTab, decodedData, hand
     },
     Comments: {
       component: Comments,
-      props: { handleDtopen }
+      props: {
+        decodedData,
+        comments,
+        isCommentLoading,
+      }
     }
   };
   const renderContent = () => {

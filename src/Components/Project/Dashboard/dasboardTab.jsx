@@ -85,7 +85,7 @@ const DasboardTab = ({ tabData, selectedTab, handleChange, decodedData }) => {
         >
           {filteredTabData?.map((item) => (
             <ToggleButton key={item.label} value={item.label} className="toggle-button" sx={{ minWidth: locction?.pathname?.includes('/projects/') ? "192px !important" : '110px !important' }}>
-              {item.label}
+              {item.count > 0 ? `${item.label}(${item.count})` : item.label}
             </ToggleButton>
           ))}
         </ToggleButtonGroup>

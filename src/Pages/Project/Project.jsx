@@ -72,7 +72,6 @@ const Project = () => {
 
   }, [taskFinalData, callFetchTaskApi]);
 
-
   const handleFilterChange = (key, value) => {
     if (key === "clearFilter" && value == null) {
       setFilters({});
@@ -111,7 +110,6 @@ const Project = () => {
     }
   };
 
-
   const handleClearAllFilters = () => {
     setFilters({
       category: [],
@@ -127,7 +125,7 @@ const Project = () => {
   };
 
   const filteredData = Array.isArray(project)
-    ? project?.filter((task) => {
+    ? project.filter((task) => {
       const {
         status = "",
         priority = "",
@@ -140,6 +138,8 @@ const Project = () => {
         category = [],
       } = filters || {};
 
+      const now = new Date();
+
       const isValidFilter = (value) =>
         value &&
         ![
@@ -150,28 +150,60 @@ const Project = () => {
           "Select Department",
         ].includes(value);
 
-      const normalizedSearchTerm = searchTerm?.toLowerCase() || "";
+      const normalizedSearchTerm = searchTerm?.trim()?.toLowerCase() || "";
+      const isQuoted =
+        (normalizedSearchTerm.startsWith('"') && normalizedSearchTerm.endsWith('"')) ||
+        (normalizedSearchTerm.startsWith("'") && normalizedSearchTerm.endsWith("'"));
+      const cleanSearchTerm = isQuoted
+        ? normalizedSearchTerm.slice(1, -1)
+        : normalizedSearchTerm;
 
       const isTaskDue = (dateStr) => {
         if (!dateStr) return false;
         return new Date(dateStr) < now;
       };
+
+      const exactMatch = (text) =>
+        typeof text === "string"
+          ? new RegExp(`\\b${cleanSearchTerm}\\b`, "i").test(text)
+          : false;
+
+      const partialMatch = (text) =>
+        typeof text === "string"
+          ? text.toLowerCase().includes(cleanSearchTerm)
+          : false;
+
+      const matchText = (text) =>
+        isQuoted ? exactMatch(text) : partialMatch(text);
+
       const matchesFilters = (task) => {
         if (!task) return false;
+
         const matchesCategory =
-          !Array.isArray(category) || category.length === 0 ||
+          !Array.isArray(category) ||
+          category.length === 0 ||
           category.some((cat) => {
-            if (cat.toLowerCase()?.includes("due")) {
-              return isTaskDue(task?.DeadLineDate);
-            } else if (cat.toLowerCase()?.includes("today tasks")) {
-              return isTaskToday(task?.StartDate);
-            } else if (cat.toLowerCase()?.includes("new")) {
-              return task?.isnew == 1;
-            }
-            return (task?.category ?? "").toLowerCase() == cat.toLowerCase();
+            const catLower = cat.toLowerCase();
+            if (catLower.includes("due")) return isTaskDue(task?.DeadLineDate);
+            if (catLower.includes("today tasks")) return isTaskToday(task?.StartDate);
+            if (catLower.includes("new")) return task?.isnew == 1;
+            return (task?.category ?? "").toLowerCase() === catLower;
           });
 
-        const matches =
+        const matchesSearch =
+          !searchTerm ||
+          matchText(task?.taskname) ||
+          matchText(task?.status) ||
+          matchText(task?.priority) ||
+          (Array.isArray(task?.assignee)
+            ? task?.assignee?.some((a) => matchText(a?.name))
+            : matchText(task?.assignee)) ||
+          matchText(task?.description) ||
+          matchText(task?.taskPr) ||
+          matchText(task?.taskDpt) ||
+          (task?.DeadLineDate ? formatDate(task?.DeadLineDate).includes(cleanSearchTerm) : false);
+
+        return (
           matchesCategory &&
           (!isValidFilter(status) ||
             (task?.status ?? "").toLowerCase() === status.toLowerCase()) &&
@@ -180,8 +212,7 @@ const Project = () => {
           (!isValidFilter(department) ||
             (task?.taskDpt ?? "").toLowerCase() === department.toLowerCase()) &&
           (!isValidFilter(projectFilter) ||
-            (task?.taskPr ?? "").toLowerCase() ===
-            projectFilter.toLowerCase()) &&
+            (task?.taskPr ?? "").toLowerCase() === projectFilter.toLowerCase()) &&
           (!isValidFilter(dueDate) ||
             formatDate(task?.DeadLineDate) === formatDate(dueDate)) &&
           (!isValidFilter(startDate) ||
@@ -189,48 +220,11 @@ const Project = () => {
           (!isValidFilter(assignee) ||
             (Array.isArray(task?.assignee)
               ? task.assignee.some(
-                (a) =>
-                  (a?.name ?? "").toLowerCase() === assignee.toLowerCase()
+                (a) => (a?.name ?? "").toLowerCase() === assignee.toLowerCase()
               )
-              : (task?.assignee ?? "").toLowerCase() ===
-              assignee.toLowerCase())) &&
-          (!searchTerm ||
-            (task?.taskname ?? "")
-              .toLowerCase()
-              .includes(normalizedSearchTerm) ||
-            (task?.status ?? "")
-              .toLowerCase()
-              .includes(normalizedSearchTerm) ||
-            (task?.priority ?? "")
-              .toLowerCase()
-              .includes(normalizedSearchTerm) ||
-            (Array.isArray(task?.assignee)
-              ? task.assignee.some((a) =>
-                (a?.name ?? "").toLowerCase().includes(normalizedSearchTerm)
-              )
-              : (task?.assignee ?? "")
-                .toLowerCase()
-                .includes(normalizedSearchTerm)) ||
-            (task?.description ?? "")
-              .toLowerCase()
-              .includes(normalizedSearchTerm) ||
-            (task?.DeadLineDate
-              ? formatDate(task?.DeadLineDate)
-              : ""
-            ).includes(normalizedSearchTerm) ||
-            (task?.taskPr ?? "")
-              .toLowerCase()
-              .includes(normalizedSearchTerm) ||
-            (task?.taskDpt ?? "")
-              .toLowerCase()
-              .includes(normalizedSearchTerm));
-
-        if (matches) {
-          return true;
-        }
-        return Array.isArray(task)
-          ? task?.some(matchesFilters)
-          : false;
+              : (task?.assignee ?? "").toLowerCase() === assignee.toLowerCase())) &&
+          matchesSearch
+        );
       };
 
       return matchesFilters(task);
@@ -293,8 +287,6 @@ const Project = () => {
       }
     }
   }, [filteredData, page, rowsPerPage]);
-
-
 
   return (
     <Box className="project-moduleMain">
@@ -394,7 +386,7 @@ const Project = () => {
               <TaskTable
                 data={filteredData ?? null}
                 projectProgress={project?.projectProgress}
-                moduleProgress = {taskFinalData?.ModuleProgress}
+                moduleProgress={taskFinalData?.ModuleProgress}
                 page={page}
                 rowsPerPage={rowsPerPage}
                 isLoading={iswhTLoading}

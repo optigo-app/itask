@@ -26,6 +26,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
             const formattedString = formValues?.bulkTask?.map(task => `${task.taskName}#${task.estimate}#${task.deadLineDate ?? ''}`).join(", ");
             combinedValue = JSON.stringify({
                 "ismodule": 2,
+                "maintaskid": formValues?.moduleid ?? formValues?.taskid ?? '',
                 "projectid": formValues?.projectid ?? 0,
                 "taskname": formattedString ?? "",
                 "parentid": formValues?.taskid ?? 0,

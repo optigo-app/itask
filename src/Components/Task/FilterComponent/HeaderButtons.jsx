@@ -25,11 +25,13 @@ import {
   timerCompOpen,
   Advfilters,
   viewMode,
+  copyRowData,
 } from "../../../Recoil/atom";
 import { toast } from "react-toastify";
 import {
   Calendar,
   ChevronsDown,
+  ClipboardPaste,
   Kanban,
   List,
   SearchIcon,
@@ -57,6 +59,7 @@ const HeaderButtons = ({
   taskDepartment,
   taskAssigneeData,
   CategorySummary,
+  handlePasteTask
 }) => {
   const { hasAccess } = useAccess();
   const navigate = useNavigate()
@@ -64,12 +67,12 @@ const HeaderButtons = ({
   const isSmallScreen = useMediaQuery("(max-width:600px)");
   const isMediumScreen = useMediaQuery("(min-width:601px) and (max-width:960px)");
   const location = useLocation();
-  const [filters, setFilters] = useRecoilState(Advfilters);
+  const filters = useRecoilValue(Advfilters);
+  const copyData = useRecoilValue(copyRowData);
   const searchParams = new URLSearchParams(location.search);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const setFormDataValue = useSetRecoilState(formData);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
-  const setSelectedTask = useSetRecoilState(selectedRowData);
   const rootSubrootflagval = useRecoilValue(rootSubrootflag);
   const [view, setView] = useState('');
   const [selectedCategory, setSelectedCategory] = useRecoilState(selectedCategoryAtom);
@@ -223,60 +226,47 @@ const HeaderButtons = ({
               aria-label="Search tasks..."
             />
           </Box>
-          {!isLaptop ? (
-            <Tooltip
-              placement="top"
-              title="Filter tasks"
-              arrow
-              classes={{ tooltip: "custom-tooltip" }}
+          <Tooltip
+            placement="top"
+            title="Filter tasks"
+            arrow
+            classes={{ tooltip: "custom-tooltip" }}
+          >
+            <IconButton
+              aria-label="Filter tasks"
+              onClick={handleFilterDrOpen}
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: '7px',
+                backgroundColor: filterDrawerOpen ? "#ffd700" : "white",
+                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                "&:hover": {
+                  backgroundColor: "#f5f5f5",
+                  boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                },
+              }}
             >
-              <IconButton
-                aria-label="Filter tasks"
-                onClick={handleFilterDrOpen}
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: filterDrawerOpen ? "#ffd700" : "white",
-                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-                  "&:hover": {
-                    backgroundColor: "#f5f5f5",
-                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
-                  },
-                }}
-              >
-                <ChevronsDown size={20} />
-              </IconButton>
-            </Tooltip>
-          ) : (
-            <Tooltip
-              placement="top"
-              title="Filter tasks"
-              arrow
-              classes={{ tooltip: "custom-tooltip" }}
-            >
-              <IconButton
-                aria-label="Filter tasks"
-                onClick={handleFilterDrOpen}
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  padding: '7px',
-                  backgroundColor: filterDrawerOpen ? "#ffd700" : "white",
-                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-                  "&:hover": {
-                    backgroundColor: "#f5f5f5",
-                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
-                  },
-                }}
-              >
-                <FilterAltIcon className="iconbtn" color="#0000008a" />
-              </IconButton>
-            </Tooltip>
-          )}
+              <FilterAltIcon className="iconbtn" color="#0000008a" />
+            </IconButton>
+          </Tooltip>
         </Box>
         <Box className="secondMainBox">
+          {copyData && Object.keys(copyData).length > 0 && (
+            <Box>
+              <Button
+                variant="outlined"
+                color="primary"
+                startIcon={<ClipboardPaste size={20} />}
+                onClick={() => handlePasteTask(parsedData, "main")}
+                className="pasteButton"
+                size={isSmallScreen ? "small" : isMediumScreen ? "medium" : "medium"}
+              >
+                Paste
+              </Button>
+            </Box>
+          )}
           {location?.pathname?.includes("/tasks") && (
             <Box sx={{ display: "flex", gap: 2 }}>
               {location?.pathname?.includes("/tasks/") && (
