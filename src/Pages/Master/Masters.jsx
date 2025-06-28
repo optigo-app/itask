@@ -214,7 +214,6 @@ const MasterToggle = () => {
             if (masterType === 'single') {
                 const payload = formatAdvPayload([], formAdvData, mode, formAdvData?.masterName);
                 const response = await AddAdvFilterGroupAttrApi(payload);
-                console.log('response (single): ', response);
 
                 if (response?.rd?.[0]?.stat == 1) {
                     const data = await AdvancedMasterApiFunc();
@@ -374,13 +373,11 @@ const MasterToggle = () => {
         : (formattedData || []).filter(item =>
             item?.labelname?.toLowerCase().includes(searchTerm?.toLowerCase())
         );
-    console.log('filteredData: ', filteredData);
 
     const paginatedData = isAdvanced
         ? filteredData
         : filteredData.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
-    console.log('paginatedData: ', paginatedData);
 
 
     return (

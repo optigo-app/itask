@@ -244,7 +244,6 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
         const decodedData = task
         const teamApiRes = await GetPrTeamsApi(task, "root")
         const isLimitedAccess = teamApiRes?.rd?.find((item) => item.assigneeid == userLoginData?.id)?.islimitedaccess;
-        console.log('isLimitedAccess: ', isLimitedAccess);
         let urlData = {
             module: task?.taskname,
             project: task.taskPr,

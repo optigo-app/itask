@@ -23,6 +23,16 @@
         display: flex;
         justify-content: flex-end;
         align-items: center;
+
+        .pasteButton {
+            font-family: $font-family !important;
+            text-transform: capitalize;
+            margin-right: 15px;
+            border-radius: 8px;
+            color: $titleColor;
+            outline-color: $primary-main !important;
+            border-color: $primary-main !important;
+        }
     }
 
     .categoryFilBtn {

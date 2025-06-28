@@ -5,7 +5,7 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, Chip, Typography, useMediaQuery } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { Advfilters, copyRowData, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
-import { filterNestedTasksByView, formatDate2, getCategoryTaskSummary, isTaskDue, isTaskToday } from "../../Utils/globalfun";
+import { filterNestedTasksByView, formatDate2, getCategoryTaskSummary, handleAddApicall, isTaskDue, isTaskToday } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
@@ -34,8 +34,10 @@ const Task = () => {
   const [activeButton, setActiveButton] = useState("table");
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [filters, setFilters] = useRecoilState(Advfilters);
+  console.log('filters: ', filters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
+  console.log('tasks: ', tasks);
   const setTaskDataLength = useSetRecoilState(taskLength)
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
@@ -55,6 +57,7 @@ const Task = () => {
     statusData,
     taskAssigneeData } = useFullTaskFormatFile();
 
+  console.log('taskFinalData: ', taskFinalData);
   useEffect(() => {
     setTasks([]);
   }, [location.pathname]);
@@ -70,14 +73,11 @@ const Task = () => {
         console.error("Error decoding or parsing encodedData:", error);
       }
     }
-
     const userId = userProfile?.id;
-
     if (parsedData && parsedData.taskid) {
       const matchedTask = taskFinalData?.TaskData?.find(
         (task) => task.taskid === parsedData.taskid
       );
-
       if (matchedTask && matchedTask.subtasks?.length > 0) {
         const filteredSubtasks = filterNestedTasksByView(matchedTask.subtasks, meTeamView, userId);
         const summary = getCategoryTaskSummary(filteredSubtasks, taskCategory);
@@ -86,7 +86,6 @@ const Task = () => {
         return;
       }
     }
-
     if (!encodedData && taskFinalData?.TaskData) {
       const filtered = filterNestedTasksByView(taskFinalData.TaskData, meTeamView, userId);
       const summary = getCategoryTaskSummary(filtered, taskCategory);
@@ -200,7 +199,14 @@ const Task = () => {
         category,
       } = filters;
 
-      const normalizedSearchTerm = searchTerm?.toLowerCase();
+      const normalizedSearchTerm = searchTerm?.trim()?.toLowerCase();
+      const isQuoted =
+        (normalizedSearchTerm?.startsWith('"') && normalizedSearchTerm?.endsWith('"')) ||
+        (normalizedSearchTerm?.startsWith("'") && normalizedSearchTerm?.endsWith("'"));
+
+      const cleanSearchTerm = isQuoted
+        ? normalizedSearchTerm.slice(1, -1)
+        : normalizedSearchTerm;
 
       const resetInvalidFilters = () => {
         Object.keys(filters).forEach((key) => {
@@ -218,6 +224,7 @@ const Task = () => {
       };
 
       resetInvalidFilters();
+
       const matchesFilters = (item) => {
         const matchesCategory =
           !Array.isArray(category) ||
@@ -233,13 +240,41 @@ const Task = () => {
             return (item?.category ?? "").toLowerCase() === cat.toLowerCase();
           });
 
+        const fieldsToCheck = [
+          item?.taskname,
+          item?.status,
+          item?.priority,
+          item?.description,
+          item?.DeadLineDate,
+          item?.taskPr,
+          item?.taskDpt,
+        ];
+
+        const assignees = Array.isArray(item?.assignee)
+          ? item.assignee.map((a) => `${a?.firstname} ${a?.lastname}`)
+          : [item?.assignee];
+
+        const searchMatchFn = (value) => {
+          if (!value) return false;
+          const val = value.toLowerCase();
+
+          if (isQuoted) {
+            const exactWordRegex = new RegExp(`\\b${cleanSearchTerm}\\b`, "i");
+            return exactWordRegex.test(val);
+          } else {
+            return val.includes(cleanSearchTerm);
+          }
+        };
+
+        const matchesSearch =
+          !searchTerm || [...fieldsToCheck, ...assignees].some(searchMatchFn);
 
         return (
           matchesCategory &&
-          (status ? (item?.status)?.toLowerCase() === status?.toLowerCase() : true) &&
-          (priority ? (item?.priority)?.toLowerCase() === priority?.toLowerCase() : true) &&
-          (department ? (item?.taskDpt)?.toLowerCase() === department?.toLowerCase() : true) &&
-          (project ? (item?.taskPr)?.toLowerCase() === project?.toLowerCase() : true) &&
+          (status ? item?.status?.toLowerCase() === status?.toLowerCase() : true) &&
+          (priority ? item?.priority?.toLowerCase() === priority?.toLowerCase() : true) &&
+          (department ? item?.taskDpt?.toLowerCase() === department?.toLowerCase() : true) &&
+          (project ? item?.taskPr?.toLowerCase() === project?.toLowerCase() : true) &&
           (dueDate ? formatDate2(item?.DeadLineDate) === formatDate2(dueDate) : true) &&
           (startDate ? formatDate2(item?.StartDate) === formatDate2(startDate) : true) &&
           (assignee
@@ -248,21 +283,7 @@ const Task = () => {
               return fullName?.includes(assignee?.toLowerCase());
             })
             : true) &&
-          (!searchTerm ||
-            item?.taskname?.toLowerCase()?.includes(normalizedSearchTerm) ||
-            item?.status?.toLowerCase()?.includes(normalizedSearchTerm) ||
-            item?.priority?.toLowerCase()?.includes(normalizedSearchTerm) ||
-            (Array.isArray(item?.assignee)
-              ? item?.assignee?.some((a) =>
-                `${a?.firstname} ${a?.lastname}`
-                  ?.toLowerCase()
-                  ?.includes(normalizedSearchTerm)
-              )
-              : item?.assignee?.toLowerCase()?.includes(normalizedSearchTerm)) ||
-            item?.description?.toLowerCase()?.includes(normalizedSearchTerm) ||
-            item?.DeadLineDate?.toLowerCase()?.includes(normalizedSearchTerm) ||
-            item?.taskPr?.toLowerCase()?.includes(normalizedSearchTerm) ||
-            item?.taskDpt?.toLowerCase()?.includes(normalizedSearchTerm))
+          matchesSearch
         );
       };
 
@@ -284,6 +305,7 @@ const Task = () => {
       return filterRecursive(task);
     })
     ?.filter(Boolean);
+
 
   const handleTabBtnClick = (button) => {
     setActiveButton(button);
@@ -458,14 +480,6 @@ const Task = () => {
     });
   }
 
-  const handleAddApicall = async (updatedTasks) => {
-    let rootSubrootflagval = { "Task": "root" }
-    const addTaskApi = await AddTaskDataApi(updatedTasks, rootSubrootflagval ?? {});
-    if (addTaskApi?.rd[0]?.stat == 1) {
-      toast.success(addTaskApi?.rd[0]?.stat_msg);
-    }
-  }
-
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -486,41 +500,64 @@ const Task = () => {
 
   const handleCopyTask = () => {
     if (contextMenu?.task) {
-      const copiedTask = JSON.parse(JSON.stringify(contextMenu.task));
+      const copiedTask = {
+        ...JSON.parse(JSON.stringify(contextMenu.task)),
+        isCopyActive: true
+      };
       setCopiedData(copiedTask);
       setTasks((prevTasks) => {
-        const removeTaskRecursively = (tasks) => {
-          return tasks
-            .map((task) => {
-              if (task.taskid === copiedTask.taskid) {
-                return null;
-              }
-              if (task.subtasks?.length > 0) {
-                return {
-                  ...task,
-                  subtasks: removeTaskRecursively(task.subtasks).filter(Boolean),
-                };
-              }
-              return task;
-            })
-            .filter(Boolean);
-        };
-        return removeTaskRecursively(prevTasks);
-      });
+        const markTaskRecursively = (tasks) =>
+          tasks.map((task) => {
+            if (task.taskid === copiedTask.taskid) {
+              return { ...task, isCopyActive: true };
+            }
+            if (task.subtasks?.length > 0) {
+              return {
+                ...task,
+                subtasks: markTaskRecursively(task.subtasks),
+              };
+            }
+            return task;
+          });
 
-      toast.success('Task cut successfully');
+        return markTaskRecursively(prevTasks);
+      });
+      toast.success('Task copied successfully');
     }
     handleCloseRightClickMenu();
   };
 
-  const handlePasteTask = async () => {
+  const handlePasteTask = async (parsedData, flag) => {
     debugger
     const taskId = copiedData?.taskid
-    const parentId = selectedRow?.taskid
+    const parentId = flag == "main" ? parsedData?.taskid : selectedRow?.taskid
     if (taskId && parentId) {
       const apiRes = await MoveTaskApi(taskId, parentId);
       if (apiRes) {
         setOpenChildTask(true);
+        setTasks((prevTasks) => {
+          const updateTasksRecursively = (tasks) => {
+            return tasks?.map((task) => {
+              if (task.taskid === parentId) {
+                const updatedTask = {
+                  ...task,
+                  subtasks: [...task.subtasks, copiedData],
+                };
+                return updatedTask;
+              }
+              if (task.subtasks?.length > 0) {
+                return {
+                  ...task,
+                  subtasks: updateTasksRecursively(task.subtasks),
+                };
+              }
+              return task;
+            });
+          };
+          return updateTasksRecursively(prevTasks);
+        });
+        toast?.success("Task pasted successfully");
+        setCopiedData({});
       }
     } else {
       toast.error('Please select a task to paste');
@@ -580,6 +617,7 @@ const Task = () => {
         taskDepartment={taskDepartment}
         taskAssigneeData={taskAssigneeData}
         CategorySummary={CategoryTSummary}
+        handlePasteTask={handlePasteTask}
       />
 
       {/* Divider */}

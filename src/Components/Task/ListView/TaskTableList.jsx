@@ -61,6 +61,7 @@ const TableView = ({
     handleAssigneeShortcutSubmit,
     handleDeadlineDateChange,
     isLoading }) => {
+    console.log('data: ', data);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const setFormDataValue = useSetRecoilState(formData);
@@ -462,7 +463,16 @@ const TableView = ({
         return subtasks?.map((subtask) => (
             <React.Fragment key={subtask.taskid}>
                 <TableRow sx={{
-                    backgroundColor: hoveredSubtaskId === subtask?.taskid ? '#f5f5f5' : expandedTasks[subtask.taskid] ? '#80808030' : 'inherit',
+                    opacity: subtask?.isCopyActive ? '0.7 !important' : '1 !important',
+                    pointerEvents: subtask?.isCopyActive ? 'none' : 'auto',
+                    cursor: subtask?.isCopyActive ? 'not-allowed' : 'default',
+                    backgroundColor: subtask?.isCopyActive
+                        ? '#F1EDFE !important'
+                        : hoveredSubtaskId === subtask?.taskid
+                            ? '#f5f5f5'
+                            : expandedTasks[subtask.taskid]
+                                ? '#80808030'
+                                : 'inherit',
                 }}
                     onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid, { Tbcell: 'TaskName' })}
                     onMouseLeave={handleSubtaskMouseLeave}
@@ -615,7 +625,16 @@ const TableView = ({
                                         <React.Fragment key={taskIndex}>
                                             <TableRow key={taskIndex}
                                                 sx={{
-                                                    backgroundColor: hoveredTaskId === task?.taskid ? '#f5f5f5' : expandedTasks[task.taskid] ? '#80808030' : 'inherit',
+                                                    opacity: task?.isCopyActive == true ? "0.7 !important" : "1 !important",
+                                                    pointerEvents: task?.isCopyActive ? 'none' : 'auto',
+                                                    cursor: task?.isCopyActive ? 'not-allowed' : 'default',
+                                                    backgroundColor: task?.isCopyActive == true
+                                                        ? '#F1EDFE !important'
+                                                        : hoveredTaskId === task?.taskid
+                                                            ? '#f5f5f5'
+                                                            : expandedTasks[task.taskid]
+                                                                ? '#80808030'
+                                                                : 'inherit',
                                                 }}
                                                 onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
                                                 onMouseLeave={handleTaskMouseLeave}
