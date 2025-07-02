@@ -85,9 +85,9 @@ const useFullTaskFormatFile = () => {
     }
     try {
       const taskData = await fetchTaskDataFullApi(parsedData);
-      if (taskData?.rd1[0]?.stat == 0) {
+      if (taskData?.rd[0]?.stat == 0) {
         setIsWhTLoading(false);
-        return toast.error(taskData?.rd1[0]?.stat_msg);
+        return toast.error(taskData?.rd[0]?.stat_msg);
       }
       const labeledTasks = mapKeyValuePair(taskData);
       const enhanceTask = (task) => {
@@ -329,11 +329,13 @@ const useFullTaskFormatFile = () => {
 
       TaskData?.forEach((module) => {
         const moduleId = module.taskid;
+        const moduleName = module.taskname;
         const moduleTasks = [];
 
         // Helper to collect all tasks under this module
         const collectModuleTasks = (task) => {
           task.moduleid = moduleId;
+          task.moduleName = moduleName;
           moduleTasks.push(task);
           task.subtasks?.forEach(collectModuleTasks);
         };

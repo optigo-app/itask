@@ -61,7 +61,6 @@ const TableView = ({
     handleAssigneeShortcutSubmit,
     handleDeadlineDateChange,
     isLoading }) => {
-    console.log('data: ', data);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const setFormDataValue = useSetRecoilState(formData);

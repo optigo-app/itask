@@ -12,7 +12,7 @@ import { customDatePickerStyles } from '../../Utils/globalfun';
 import TasklistForCal from './TasklistForCal';
 import { AddMeetingApi } from '../../Api/MeetingApi/AddMeetingApi';
 
-const CalendarLeftSide = ({ calendarsColor, isLoding, handleCaleFormSubmit  }) => {
+const CalendarLeftSide = ({ calendarsColor, isLoding, handleCaleFormSubmit }) => {
     const [selectedCalendars, setSelectedCalendars] = useState([]);
     const setSelectedCaleFilters = useSetRecoilState(CalEventsFilter);
     const setSelectedMon = useSetRecoilState(calendarM);

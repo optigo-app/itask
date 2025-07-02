@@ -3,10 +3,8 @@ import { CommonAPI } from "../InitialApi/CommonApi";
 export const deleteMeetingApi = async (selectedRow) => {
     const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
     try {
-        const init = JSON.parse(sessionStorage.getItem('taskInit'));
-
         const combinedValue = JSON.stringify({
-            meetingid: `${selectedRow?.id ?? '0'}`,
+            meetingid: `${(selectedRow?.id || selectedRow?.meetingid) ?? '0'}`,
         });
 
         const body = {

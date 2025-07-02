@@ -123,7 +123,7 @@ const Header = ({ avatarSrc = "" }) => {
     }
 
     if (decodedData?.module && location?.pathname.includes("/tasks/")) {
-        dataMap[matchedKey].title = `${decodedData?.project}/${decodedData?.module}`;
+        dataMap[matchedKey].title = `${decodedData?.project}${decodedData?.taskid ? `/${decodedData?.module}` : ''}`;
     } else if (decodedData?.project && location?.pathname.includes("/projects/dashboard")) {
         dataMap[matchedKey].title = `${decodedData?.project}${(decodedData?.module ?? decodedData?.taskname) ? `/${decodedData?.module ?? decodedData?.taskname}` : ""}`;
     }
@@ -222,6 +222,8 @@ const Header = ({ avatarSrc = "" }) => {
         }
     };
 
+    console.log('isDecodedTitle: ', isDecodedTitle);
+    console.log('decodedData: ', decodedData);
     const handleRedirection = (value) => {
         if (location?.pathname.includes("calendar") || location?.pathname?.includes("/taskView")) {
             if (value === "calendarView") {
@@ -235,6 +237,7 @@ const Header = ({ avatarSrc = "" }) => {
                 projectid: decodedData?.projectid,
                 module: decodedData?.module,
                 taskid: decodedData?.taskid,
+                module: decodedData?.taskid ? decodedData?.taskname : decodedData?.project,
             }
             const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
             if (value === "projectHome") {

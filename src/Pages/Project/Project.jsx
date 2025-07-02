@@ -105,6 +105,8 @@ const Project = () => {
       setSelectedCategory(updatedCategory);
     } else if (filterKey === 'dueDate') {
       setFilters((prev) => ({ ...prev, dueDate: null }));
+    } else if (filterKey === 'startDate') {
+      setFilters((prev) => ({ ...prev, startDate: null }));
     } else {
       setFilters((prev) => ({ ...prev, [filterKey]: '' }));
     }

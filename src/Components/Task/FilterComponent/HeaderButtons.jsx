@@ -139,13 +139,15 @@ const HeaderButtons = ({
 
 
   const handleViewChange = (event, newView) => {
-    if (newView == "calendar") {
-      navigate('/calendar')
+    if (!newView || newView === view) return;
+    if (newView === "calendar") {
+      navigate('/calendar');
     } else {
       setView(newView);
       onButtonClick(newView);
     }
   };
+
 
   const handleFilterChange = (key, value) => {
     if (key === "category") {

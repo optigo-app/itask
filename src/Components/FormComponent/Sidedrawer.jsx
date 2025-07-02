@@ -151,6 +151,7 @@ const SidebarDrawer = ({
         const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = formDataValue?.assigneids ? taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id)) : [];
+        const createdById = taskAssigneeData?.filter(user => user.id == formDataValue?.createdbyid)
         if (open && (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "root")) {
             setFormValues({
                 taskName: formDataValue?.taskname ?? "",
@@ -159,7 +160,7 @@ const SidebarDrawer = ({
                 dueDate: cleanDate(formDataValue?.DeadLineDate) ?? null,
                 department: formDataValue?.department != 0 ? formDataValue?.department : "",
                 guests: matchedAssignees ?? [],
-                createdBy: [logedAssignee] ?? [],
+                createdBy: (createdById?.length > 0 ? createdById : [logedAssignee]) ?? [logedAssignee],
                 projectLead: formDataValue?.projectLead ?? "",
                 assignee: formDataValue?.assigneids ?? "",
                 status: formDataValue?.statusid ?? "",
