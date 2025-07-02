@@ -8,16 +8,23 @@ import Fuse from "fuse.js";
 
 import './TasklistForCal.scss';
 import { TaskData } from "../../Recoil/atom";
-import { commonTextFieldProps, flattenTasks } from "../../Utils/globalfun";
+import { commonTextFieldProps, filterNestedTasksByView, flattenTasks } from "../../Utils/globalfun";
 
 const TasklistForCal = ({ calendarsColor }) => {
     const task = useRecoilValue(TaskData);
+    console.log('task--->>>>: ', task);
     const [calTasksList, setCalTasksList] = useState([]);
+    console.log('calTasksList: ', calTasksList);
     const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
-        setCalTasksList(flattenTasks(task));
-    }, [task]);
+        const userProfileData = JSON?.parse(localStorage?.getItem("UserProfileData"));
+        if (userProfileData?.id && task?.length > 0) {
+          const myNestedTasks = filterNestedTasksByView(task, 'me', userProfileData.id);
+          const flatMyTasks = flattenTasks(myNestedTasks);
+          setCalTasksList(flatMyTasks);
+        }
+      }, [task]);
 
     // Drag only children (parentid !== 0)
     useEffect(() => {
@@ -58,10 +65,9 @@ const TasklistForCal = ({ calendarsColor }) => {
         }
     }, [calTasksList]);
 
-
     // Fuzzy match using Fuse.js
     const getFilteredHierarchy = () => {
-        const fuse = new Fuse(calTasksList, {
+        const fuse = new Fuse(calTasksList || [], {
             keys: [
                 "taskname",
                 "descr",
@@ -72,33 +78,34 @@ const TasklistForCal = ({ calendarsColor }) => {
             ],
             threshold: 0.4
         });
-
         const matched = searchQuery
-            ? fuse.search(searchQuery).map(res => res.item)
-            : calTasksList;
+            ? (fuse?.search(searchQuery) || []).map(res => res.item)
+            : calTasksList || [];
 
         const matchedIds = new Set(matched.map(t => t.taskid));
-
-        const parentMap = {};
-        calTasksList.forEach(task => {
-            if (task.parentid === 0) {
-                parentMap[task.taskid] = { ...task, children: [] };
+        const moduleMap = {};
+        (calTasksList || []).forEach(task => {
+            const modId = task.moduleid;
+            if (!moduleMap[modId]) {
+                moduleMap[modId] = {
+                    ...task,
+                    children: []
+                };
             }
         });
-
-        calTasksList.forEach(task => {
-            if (task.parentid !== 0 && parentMap[task.parentid]) {
-                parentMap[task.parentid].children.push(task);
+        (calTasksList || []).forEach(task => {
+            if (!moduleMap[task.moduleid].children.find(t => t.taskid === task.taskid)) {
+                moduleMap[task.moduleid].children.push({ ...task });
             }
         });
-
-        return Object.values(parentMap).filter(parent => {
-            const parentMatch = matchedIds.has(parent.taskid);
-            const filteredChildren = parent.children.filter(child => matchedIds.has(child.taskid));
-            parent.children = parentMatch ? parent.children : filteredChildren;
-            return parentMatch || filteredChildren.length > 0;
+        return Object.values(moduleMap).filter(module => {
+            const moduleMatch = matchedIds.has(module.taskid);
+            const filteredChildren = module.children.filter(child => matchedIds.has(child.taskid));
+            module.children = moduleMatch ? module.children : filteredChildren;
+            return moduleMatch || filteredChildren.length > 0;
         });
     };
+
 
     const groupedTasks = getFilteredHierarchy();
 

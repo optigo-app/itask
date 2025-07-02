@@ -10,11 +10,9 @@ import {
   Paper,
   Button,
   TextField,
-  Tooltip,
-  IconButton,
+  TableSortLabel,
 } from '@mui/material';
 import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate3, handleAddApicall, priorityColors, statusColors } from '../../Utils/globalfun';
-import { v4 as uuidv4 } from 'uuid';
 
 // Import dayjs and plugins for date calculations
 import dayjs from "dayjs";
@@ -44,9 +42,22 @@ const parseEstimateToNumber = (estimateString) => {
   return match ? parseFloat(match[1]) : 0;
 };
 
+const tableHeaders = [
+  { label: "Task Title", key: "taskname", width: "26%" },
+  { label: "Status", key: "status", width: "8%" },
+  { label: "Priority", key: "priority", width: "8%" },
+  { label: "Estimate", key: "estimate_hrs", width: "8%" },
+  { label: "Working Hour", key: "finalEstimate", width: "12%" },
+  { label: "Start Date", key: "StartDate", width: "14%" },
+  { label: "End Date", key: "DeadLineDate", width: "14%" },
+];
+
+
 const CalendarGridView = () => {
   const location = useLocation();
   const [tasks, setTasks] = useState([]);
+  console.log('tasks: ', tasks);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const debounceRef = useRef(null);
   const estimateTextFieldRefs = useRef({});
   const [openSplitModal, setOpenSplitModal] = useState(false);
@@ -143,6 +154,18 @@ const CalendarGridView = () => {
   }, [splitParts]);
 
   const handleConfirmSplit = async () => {
+    // ✅ Validate all split parts
+    for (let i = 0; i < splitParts.length; i++) {
+      const part = splitParts[i];
+      if (!part.startDate) {
+        toast.error(`Start Date is required for Part ${i + 1}`);
+        return;
+      }
+      if (!part.hours || isNaN(parseFloat(part.hours))) {
+        toast.error(`Valid Split Hours are required for Part ${i + 1}`);
+        return;
+      }
+    }
     if (!selectedTaskToSplit) return;
     if (totalSplitHours > selectedTaskToSplit?.estimate_hrs) {
       toast.error('Total hours for split tasks cannot exceed the original task estimate!');
@@ -196,7 +219,6 @@ const CalendarGridView = () => {
     const regex = /^\d{0,3}(\.\d{0,3})?$/;
     if (newEstimate === '' || regex.test(newEstimate)) {
       let updatedTask = null;
-
       setTasks((prevTasks) => {
         const updatedTasks = prevTasks.map((task) => {
           if (task.taskid === taskId) {
@@ -208,31 +230,35 @@ const CalendarGridView = () => {
         return updatedTasks;
       });
 
-      // Clear any previous debounce timer
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
-
-      // Set new debounce timer
       debounceRef.current = setTimeout(async () => {
         if (updatedTask) {
           try {
-            const rootSubrootflagval = {
-              Task: 'root',
-            };
+            const rootSubrootflagval = { Task: 'root' };
             const apiRes = await AddTaskDataApi(updatedTask, rootSubrootflagval);
             if (apiRes) {
               toast.success('Task working hr added successfully!');
+              const currentInput = estimateTextFieldRefs.current[taskId];
+              if (currentInput) currentInput.blur();
+              const index = tasks.findIndex((task) => task.taskid === taskId);
+              const nextTask = tasks[index + 1];
+              if (nextTask) {
+                const nextInput = estimateTextFieldRefs.current[nextTask.taskid];
+                if (nextInput) nextInput.focus();
+              }
             }
           } catch (error) {
             console.error('Error updating task estimate:', error);
           }
         }
-      }, 800);
+      }, 500);
     }
   };
 
   const handleKeyDown = (e, taskId, index) => {
+    
     if (e.key === 'Enter') {
       e.preventDefault();
 
@@ -262,6 +288,38 @@ const CalendarGridView = () => {
     });
   };
 
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedTasks = React.useMemo(() => {
+    if (!sortConfig.key) return tasks;
+
+    return [...tasks].sort((a, b) => {
+      const aVal = a[sortConfig.key];
+      const bVal = b[sortConfig.key];
+
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+
+      if (typeof aVal === 'string') {
+        return sortConfig.direction === 'asc'
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+
+      return sortConfig.direction === 'asc'
+        ? aVal - bVal
+        : bVal - aVal;
+    });
+  }, [tasks, sortConfig]);
+
+
+
   return (
     <>
       {(iswhTLoading === null || iswhTLoading === true) ? (
@@ -271,38 +329,36 @@ const CalendarGridView = () => {
           <Table aria-label="task table" className='muiTable'>
             <TableHead className='muiTableHead'>
               <TableRow>
-                <TableCell sx={{ width: '22%' }}>
-                  <strong>Task Title</strong>
-                </TableCell>
-                <TableCell sx={{ width: '10%' }}>
-                  <strong>Status</strong>
-                </TableCell>
-                <TableCell sx={{ width: '10%' }}>
-                  <strong>Priority</strong>
-                </TableCell>
-                <TableCell sx={{ width: '8%' }}>
-                  <strong>Estimate</strong>
-                </TableCell>
-                <TableCell sx={{ width: '12%' }}>
-                  <strong>Working Hour</strong>
-                </TableCell>
-                <TableCell sx={{ width: '14%' }}>
-                  <strong>Start Date</strong>
-                </TableCell>
-                <TableCell sx={{ width: '14%' }}>
-                  <strong>End Date</strong>
-                </TableCell>
+                {tableHeaders?.map(({ label, key, width }) => (
+                  <TableCell
+                    key={key}
+                    sortDirection={sortConfig.key === key ? sortConfig.direction : false}
+                    sx={{ width }}
+                  >
+                    <TableSortLabel
+                      active={sortConfig.key === key}
+                      direction={sortConfig.key === key ? sortConfig.direction : 'asc'}
+                      onClick={() => handleSort(key)}
+                    >
+                      {label}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
+
                 <TableCell sx={{ width: '8%' }}>
                   <strong>Action</strong>
                 </TableCell>
               </TableRow>
+
             </TableHead>
             <TableBody>
               {tasks?.length > 0 ?
                 <>
-                  {tasks?.map((task, index) => (
+                  {sortedTasks?.map((task, index) => (
                     <TableRow key={task.taskid}>
-                      <TableCell>{task.taskname}</TableCell>
+                      <TableCell>
+                        <strong>{task.moduleName}</strong>/{task.taskname}
+                      </TableCell>
                       <TableCell><StatusBadge task={task} statusColors={statusColors} onStatusChange={handleStatusChange} disable={false} /></TableCell>
                       <TableCell>{TaskPriority(task?.priority, priorityColors)}</TableCell>
                       <TableCell>{task.estimate_hrs}</TableCell>

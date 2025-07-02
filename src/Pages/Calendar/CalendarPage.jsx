@@ -6,7 +6,7 @@ import CalendarLeftSide from "../../Components/Calendar/CalendarLeftSide";
 import CalendarRightSide from "../../Components/Calendar/CalendarRightSide";
 import CalendarDrawer from "../../Components/Calendar/SideBar/CalendarDrawer";
 import { calendarData, calendarM, CalformData, TaskData } from "../../Recoil/atom";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import { fetchMettingListApi, fetchMettingListByLoginApi } from "../../Api/MeetingApi/MeetingListApi";
 import { AddMeetingApi } from "../../Api/MeetingApi/AddMeetingApi";
 import { deleteMeetingApi } from "../../Api/MeetingApi/DeleteMeetingApi";
@@ -33,7 +33,7 @@ const Calendar = () => {
   } = useFullTaskFormatFile();
 
   useEffect(() => {
-    if(!iswhTLoading){
+    if (!iswhTLoading) {
       setTasks(taskFinalData?.TaskData)
     }
   }, [iswhTLoading])
@@ -130,7 +130,11 @@ const Calendar = () => {
     setCalFormData(formValues);
     const apiRes = await AddMeetingApi(formValues);
     if (apiRes && apiRes?.rd[0]?.stat == 1) {
-      handleMeetingList()
+      if (hasAccess(PERMISSIONS.CALENDAR_VIEW_ALL)) {
+        handleMeetingList()
+      } else {
+        handleMeetingListByLogin()
+      }
       if (formValues?.id) {
         toast.success("Meeting updated successfully");
       } else {
@@ -200,6 +204,7 @@ const Calendar = () => {
           handleRemoveAMeeting={handleRemoveAMeeting}
           isLoding={isLoding}
           assigneeData={assigneeData}
+          selectedAssignee={selectedAssignee}
           handleAssigneeChange={handleAssigneeChange}
           hasAccess={hasAccess}
         />

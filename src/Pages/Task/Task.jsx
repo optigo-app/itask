@@ -34,10 +34,8 @@ const Task = () => {
   const [activeButton, setActiveButton] = useState("table");
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [filters, setFilters] = useRecoilState(Advfilters);
-  console.log('filters: ', filters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
-  console.log('tasks: ', tasks);
   const setTaskDataLength = useSetRecoilState(taskLength)
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
@@ -74,24 +72,33 @@ const Task = () => {
       }
     }
     const userId = userProfile?.id;
+    // Case 1: Parsed and has a valid taskid match
     if (parsedData && parsedData.taskid) {
       const matchedTask = taskFinalData?.TaskData?.find(
         (task) => task.taskid === parsedData.taskid
       );
-      if (matchedTask && matchedTask.subtasks?.length > 0) {
-        const filteredSubtasks = filterNestedTasksByView(matchedTask.subtasks, meTeamView, userId);
+      if (matchedTask) {
+        const filteredSubtasks = filterNestedTasksByView(
+          matchedTask.subtasks || [],
+          meTeamView,
+          userId
+        );
         const summary = getCategoryTaskSummary(filteredSubtasks, taskCategory);
         setCategoryTSummary(summary);
         setTasks(filteredSubtasks);
         return;
       }
     }
-    if (!encodedData && taskFinalData?.TaskData) {
-      const filtered = filterNestedTasksByView(taskFinalData.TaskData, meTeamView, userId);
-      const summary = getCategoryTaskSummary(filtered, taskCategory);
-      setCategoryTSummary(summary);
-      setTasks(filtered);
+    // Case 2: No encodedData or task not found -> fallback to projectid
+    let fallbackTasks = taskFinalData?.TaskData || [];
+    // If parsedData has projectid, filter tasks by projectid
+    if (parsedData?.projectid) {
+      fallbackTasks = fallbackTasks.filter(task => task.projectid === parsedData.projectid);
     }
+    const filtered = filterNestedTasksByView(fallbackTasks, meTeamView, userId);
+    const summary = getCategoryTaskSummary(filtered, taskCategory);
+    setCategoryTSummary(summary);
+    setTasks(filtered);
   }, [encodedData, taskFinalData, selectedRow, meTeamView]);
 
   useEffect(() => {
@@ -135,6 +142,8 @@ const Task = () => {
       setSelectedCategory(updatedCategory);
     } else if (filterKey === 'dueDate') {
       setFilters((prev) => ({ ...prev, dueDate: null }));
+    } else if (filterKey === 'startDate') {
+      setFilters((prev) => ({ ...prev, startDate: null }));
     } else {
       setFilters((prev) => ({ ...prev, [filterKey]: '' }));
     }
@@ -600,6 +609,7 @@ const Task = () => {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [contextMenu]);
+
 
   return (
     <Box className="task-container">

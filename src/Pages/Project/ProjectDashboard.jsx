@@ -135,7 +135,6 @@ const ProjectDashboard = () => {
         { label: 'Master Bind', content: 'MasterBind', count: 0 },
         { label: 'Comments', content: 'Comments', count: commentCount },
     ];
-    console.log('commentCount: ', commentCount);
     const [tabs, setTabs] = useState(tabData);
     const [selectedTab, setSelectedTab] = useState(tabs[0]?.label || '');
 

@@ -9,6 +9,8 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import DepartmentAssigneeAutocomplete from "./DepartmentAssigneeAutocomplete";
+import { GetPrTeamsApi } from "../../../Api/TaskApi/prTeamListApi";
+import { useLocation } from "react-router-dom";
 
 const modalStyle = (theme) => ({
     position: "absolute",
@@ -29,17 +31,10 @@ const modalStyle = (theme) => ({
 
 
 const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit }) => {
+    const location = useLocation();
     const [taskAssigneeData, setTaskAssigneeData] = useState([]);
-    const [taskDepartment, setTaskDepartment] = useState([]);
     const [formValues, setFormValues] = React.useState({});
 
-    useEffect(() => {
-        const assigneeMaster = JSON?.parse(sessionStorage.getItem("taskAssigneeData"));
-        const departmentMaster = JSON?.parse(sessionStorage.getItem("taskDepartments"));
-        setTaskAssigneeData(assigneeMaster);
-        setTaskDepartment(departmentMaster);
-    }, [])
-    
     useEffect(() => {
         const data = {
             guests: taskData?.assignee,
@@ -49,7 +44,27 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
 
     }, [taskData])
 
-
+    useEffect(() => {
+        async function fetchAssigneeData() {
+            let flag = location?.pathname?.includes("/tasks/") ? "subroot" : "root"
+            let payload = location?.pathname?.includes("/tasks/") ? taskData : taskData
+            const assigneeMaster = JSON.parse(sessionStorage.getItem("taskAssigneeData")) || [];
+            const apiRes = await GetPrTeamsApi(payload, flag);
+            if (apiRes?.rd) {
+                const enrichedTeamMembers = apiRes.rd.map((member) => {
+                    const empDetails = assigneeMaster.find(
+                        (emp) => emp.id === member.assigneeid
+                    );
+                    return {
+                        ...member,
+                        ...empDetails,
+                    };
+                });
+                setTaskAssigneeData(enrichedTeamMembers);
+            }
+        }
+        fetchAssigneeData();
+    }, [open]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;

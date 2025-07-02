@@ -16,8 +16,9 @@ import { Box, Button, Menu, TextField } from '@mui/material';
 import { AddMeetingApi } from '../../Api/MeetingApi/AddMeetingApi';
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 import { PERMISSIONS } from '../Auth/Role/permissions';
+import { toast } from 'react-toastify';
 
-const Calendar = ({ isLoding, assigneeData, hasAccess, calendarsColor, handleCaleFormSubmit, handleRemoveAMeeting, handleAssigneeChange }) => {
+const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calendarsColor, handleCaleFormSubmit, handleRemoveAMeeting, handleAssigneeChange }) => {
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
     const calendarRef = useRef();
     const [calendarApi, setCalendarApi] = useState(null);
@@ -69,32 +70,24 @@ const Calendar = ({ isLoding, assigneeData, hasAccess, calendarsColor, handleCal
         const days = parseInt(inputRef.current?.value);
         if (!days || days < 1) return alert("Enter valid number of days");
         if (!selectedEvent) return alert("No selected date");
-
         const originalEvent = calEvData?.find(ev => ev.meetingid == selectedEvent.id);
         if (!originalEvent) return alert("Original event not found");
-
         const originalStart = new Date(originalEvent.StartDate);
         const originalEnd = new Date(originalEvent.EndDate);
         const totalDurationMs = originalEnd.getTime() - originalStart.getTime();
         const dailyDurationMs = Math.floor(totalDurationMs / days);
-
         const startHour = originalStart.getHours();
         const startMin = originalStart.getMinutes();
         const startSec = originalStart.getSeconds();
-
         const newEvents = [];
-
         for (let i = 0; i < days; i++) {
             const baseDate = new Date(originalStart);
             baseDate.setDate(originalStart.getDate() + i);
             baseDate.setHours(startHour, startMin, startSec, 0);
-
             const splitStart = new Date(baseDate);
             const splitEnd = new Date(splitStart.getTime() + dailyDurationMs);
-
             const idString = (originalEvent?.guests ?? []).map(user => user.id)?.join(",");
-
-            newEvents.push({
+            const splitEvent = {
                 meetingid: uuidv4(),
                 meetingtitle: originalEvent.meetingtitle,
                 category: originalEvent?.category,
@@ -111,19 +104,27 @@ const Calendar = ({ isLoding, assigneeData, hasAccess, calendarsColor, handleCal
                 assigneids: idString ?? "",
                 type,
                 entrydate: new Date().toISOString(),
-            });
-            const apiRes = await AddMeetingApi(newEvents[i]);
+            };
+            const apiRes = await AddMeetingApi(splitEvent);
+            if (apiRes?.rd?.[0]?.stat === 1) {
+                newEvents.push(splitEvent);
+            } else {
+                toast.error(`Split failed at part ${i + 1}`);
+                return;
+            }
         }
+        let formData = originalEvent
+        handleRemoveAMeeting(formData);
+        toast.success("Meeting split successfully");
 
-        setCalEvData(prev => {
-            return [
-                ...prev.filter(ev => ev.meetingid != selectedEvent.id),
-                ...newEvents
-            ];
-        });
+        setCalEvData(prev => [
+            ...prev.filter(ev => ev.meetingid !== selectedEvent.id),
+            ...newEvents
+        ]);
 
         handleClose();
     };
+
 
     const filterEvents = (events, selectedCalendars) => {
         return events && events?.filter((event) => selectedCalendars?.includes(event?.category));
@@ -145,6 +146,7 @@ const Calendar = ({ isLoding, assigneeData, hasAccess, calendarsColor, handleCal
                     <Box className="meetingAssigneBox" sx={{ minWidth: 250 }}>
                         <DepartmentAssigneeAutocomplete
                             name="assignee"
+                            value={selectedAssignee}
                             options={assigneeData}
                             label="Assignee"
                             placeholder="Select assignees"
@@ -156,10 +158,10 @@ const Calendar = ({ isLoding, assigneeData, hasAccess, calendarsColor, handleCal
                 );
             }
         }
-    }, [assigneeData, handleAssigneeChange]);
+    }, []);
 
     const calendarOptions = {
-        events: filteredEvents.map(event => {
+        events: filteredEvents?.map(event => {
             return {
                 id: event?.meetingid?.toString(),
                 title: event.meetingtitle || '',
@@ -450,6 +452,15 @@ const Calendar = ({ isLoding, assigneeData, hasAccess, calendarsColor, handleCal
                         inputMode: "decimal",
                         pattern: "^\\d*\\.?\\d{0,2}$"
                     }}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Tab') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        } else if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleSplit("Split");
+                        }
+                    }}
                     sx={{ mb: 2 }}
                 />
                 <Box sx={{ display: "flex", justifyContent: 'end', gap: '10px' }}>
@@ -459,6 +470,7 @@ const Calendar = ({ isLoding, assigneeData, hasAccess, calendarsColor, handleCal
                     </Button>
                 </Box>
             </Menu>
+
         </>
     );
 };

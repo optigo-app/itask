@@ -813,14 +813,16 @@ export const filterNestedTasksByView = (tasks = [], mode = 'me', userId) => {
         ?.map((task) => {
             const isCreatedByMe = task?.createdbyid == userId;
             const isAssignedToMe = task?.assignee?.some((ass) => ass.id == userId);
-            const isMyTask = isCreatedByMe && isAssignedToMe;
+            const hasAssignees = !!task?.assigneids?.trim();
+            const isMyTask = isCreatedByMe && isAssignedToMe && hasAssignees;
             const filteredSubtasks = task?.subtasks
-                ? filterNestedTasksByView(task?.subtasks, mode, userId)
+                ? filterNestedTasksByView(task.subtasks, mode, userId)
                 : [];
             const isTeamTask = !isMyTask;
             const shouldInclude =
-                (mode === "me" && isMyTask) || (mode === "team" && isTeamTask);
-            if (shouldInclude || filteredSubtasks?.length > 0) {
+                (mode === "me" && isMyTask) ||
+                (mode === "team" && isTeamTask);
+            if (shouldInclude || filteredSubtasks.length > 0) {
                 return {
                     ...task,
                     subtasks: filteredSubtasks,
@@ -828,7 +830,7 @@ export const filterNestedTasksByView = (tasks = [], mode = 'me', userId) => {
             }
             return null;
         })
-        ?.filter(Boolean);
+        .filter(Boolean);
 };
 
 
@@ -893,6 +895,6 @@ export const handleAddApicall = async (updatedTasks) => {
     let rootSubrootflagval = { "Task": "root" }
     const addTaskApi = await AddTaskDataApi(updatedTasks, rootSubrootflagval ?? {});
     if (addTaskApi?.rd[0]?.stat == 1) {
-      toast.success(addTaskApi?.rd[0]?.stat_msg);
+        toast.success(addTaskApi?.rd[0]?.stat_msg);
     }
-  }
+}
