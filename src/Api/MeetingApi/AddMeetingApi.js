@@ -7,12 +7,13 @@ export const AddMeetingApi = async (formValues) => {
             "meetingid": formValues?.id ?? 0,
             "taskid": formValues?.prModule?.taskid ?? 0,
             "projectid": formValues?.prModule?.projectid ?? 0,
-            "meetingtitle": (formValues?.title || formValues?.meetingtitle)?? "",
-            "StartDate":( formValues?.start || formValues?.StartDate) ?? '',
+            "meetingtitle": (formValues?.title || formValues?.meetingtitle) ?? "",
+            "StartDate": (formValues?.start || formValues?.StartDate) ?? '',
             "EndDate": (formValues?.end || formValues?.EndDate) ?? '',
             "assigneids": formValues?.assigneids ?? "",
             "isAllDay": (formValues?.allDay || formValues?.isAllDay) ? 1 : 0 ?? 0,
             "descr": (formValues?.description || formValues?.Desc) ?? "",
+            // "isMeetingFlag": formValues?.isMeetingFlag ?? '0'
         });
 
         const body = {

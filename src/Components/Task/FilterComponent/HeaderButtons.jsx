@@ -98,8 +98,6 @@ const HeaderButtons = ({
     }
   }, [])
 
-
-
   const handleDrawerToggle = () => {
     setFormDrawerOpen(!formdrawerOpen);
     setFormDataValue({});
