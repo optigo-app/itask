@@ -101,7 +101,6 @@ const SidebarDrawer = ({
         }
     }, [encodedData]);
 
-
     useEffect(() => {
         const masterData = JSON?.parse(sessionStorage.getItem('structuredAdvMasterData'));
         const selectedGroupIds = formDataValue?.maingroupids
@@ -149,7 +148,6 @@ const SidebarDrawer = ({
     };
 
     useEffect(() => {
-        debugger
         const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = formDataValue?.assigneids ? taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id)) : [];
@@ -161,10 +159,10 @@ const SidebarDrawer = ({
                 bulkTask: formDataValue?.bulk ?? [],
                 dueDate: cleanDate(formDataValue?.DeadLineDate) ?? null,
                 department: formDataValue?.department != 0 ? formDataValue?.department : "",
-                guests: (matchedAssignees?.length > 0 ? matchedAssignees : [logedAssignee]) ?? [logedAssignee],
+                guests: matchedAssignees ?? [],
                 createdBy: (createdById?.length > 0 ? createdById : [logedAssignee]) ?? [logedAssignee],
                 projectLead: formDataValue?.projectLead ?? "",
-                assignee: formDataValue?.assigneids ?? logedAssignee?.id,
+                assignee: formDataValue?.assigneids ?? "",
                 status: formDataValue?.statusid ?? "",
                 priority: formDataValue?.priorityid ?? "",
                 project: formDataValue?.projectid ?? "",
@@ -183,14 +181,11 @@ const SidebarDrawer = ({
         } else if (rootSubrootflagval?.Task === "subroot") {
             setFormValues({
                 ...formValues,
-                guests: (matchedAssignees?.length > 0 ? matchedAssignees : [logedAssignee]) ?? [logedAssignee],
-                createdBy: (createdById?.length > 0 ? createdById : [logedAssignee]) ?? [logedAssignee],
+                guests: matchedAssignees ?? [],
+                createdBy: [logedAssignee] ?? [],
             });
         }
     }, [open, formDataValue, rootSubrootflagval]);
-
-    console.log('formValues: ', formValues);
-
 
     let data = flattenTasks(taskDataValue)
     const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);

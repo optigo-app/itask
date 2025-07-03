@@ -52,10 +52,13 @@ const CalendarForm = ({
         guests: [],
         description: "",
         bulkTask: [],
-        allDay: false,
-        isMeetingFlag: '0'
+        allDay: false
     });
-
+    
+    const filterRefs = {
+        category: useRef(),
+        guests: useRef(),
+    };
     console.log('formValues: ', formValues);
 
     const validateForm = () => {
@@ -152,7 +155,7 @@ const CalendarForm = ({
                 const idString = formValues?.guests?.map(user => user.id)?.join(",");
                 const updatedFormValues = {
                     ...formValues,
-                    isMeetingFlag: 1,
+                    isMeeting: true,
                     assigneids: idString ?? "",
                 }
                 onSubmit(updatedFormValues);

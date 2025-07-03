@@ -286,8 +286,7 @@ export const AdvancedMasterApiFunc = async () => {
     const filBindRes = await BindAttrGroupApi();
     if (filMasterRes?.rd?.length > 0 && filGroupRes?.rd?.length > 0 && filAttrRes?.rd?.length > 0 && filBindRes?.rd?.length > 0) {
         const mergedData = mergeFilterData(filMasterRes, filGroupRes, filAttrRes, filBindRes);
-        const safeData = Array.isArray(mergedData) ? mergedData : [];
-        sessionStorage.setItem('structuredAdvMasterData', JSON.stringify(safeData));
+        sessionStorage.setItem('structuredAdvMasterData', JSON?.stringify(mergedData ?? []));
         return mergedData;
     }
 }
@@ -298,8 +297,7 @@ export const fetchMasterGlFunc = async () => {
         const advMasterData = sessionStorage.getItem('structuredAdvMasterData');
         if (!advMasterData) {
             const mergedData = await AdvancedMasterApiFunc();
-            const safeData = Array.isArray(mergedData) ? mergedData : [];
-            sessionStorage.setItem('structuredAdvMasterData', JSON.stringify(safeData));
+            sessionStorage.setItem('structuredAdvMasterData', JSON?.stringify(mergedData ?? []));
         }
         const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
         const AuthUrlData = JSON?.parse(localStorage.getItem('AuthqueryParams'));
@@ -794,11 +792,6 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
             id: "due_tasks",
             labelname: "Due Tasks",
             count: flatData.filter((task) => isPast(task.DeadLineDate)).length,
-        },
-        {
-            id: "completed_tasks",
-            labelname: "Completed Tasks",
-            count: flatData.filter((task) => (task.status || "").toLowerCase() === "completed").length,
         },
         ...(Array.isArray(taskCategory)
             ? taskCategory.map((label) => {
