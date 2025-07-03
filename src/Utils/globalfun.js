@@ -280,7 +280,6 @@ export const getRandomAvatarColor = (name) => {
 };
 
 export const AdvancedMasterApiFunc = async () => {
-    debugger
     const filMasterRes = await AttrMasterNameApi();
     const filGroupRes = await AttrGroupApi();
     const filAttrRes = await AttrListApi();

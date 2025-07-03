@@ -143,12 +143,13 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
                 targetDiv.appendChild(container);
                 const root = ReactDOM.createRoot(container);
                 root.render(
-                    <Box className="meetingAssigneBox" sx={{ minWidth: 250 }}>
+                    <Box className="meetingAssigneBox" sx={{ minWidth: 280 }}>
                         <DepartmentAssigneeAutocomplete
                             name="assignee"
+                            minWidth={200}
                             value={selectedAssignee}
                             options={assigneeData}
-                            label="Assignee"
+                            label="Assignees"
                             placeholder="Select assignees"
                             limitTags={2}
                             onChange={handleAssigneeChange}

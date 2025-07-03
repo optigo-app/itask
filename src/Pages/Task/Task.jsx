@@ -537,7 +537,6 @@ const Task = () => {
   };
 
   const handlePasteTask = async (parsedData, flag) => {
-    debugger
     const taskId = copiedData?.taskid
     const parentId = flag == "main" ? parsedData?.taskid : selectedRow?.taskid
     if (taskId && parentId) {

@@ -88,7 +88,6 @@
 //   };
 
 //   const handleFileDrop = (acceptedFiles) => {
-//     debugger
 //     const folder = formValues.folderName || "Untitled";
 //     const validFiles = [];
 //     const errors = [];
@@ -183,7 +182,6 @@
 //   };
 
 //   const handleSave = async () => {
-//     debugger
 //     const allFolders = new Set([
 //       ...Object.keys(formValues?.attachment || {}),
 //       ...Object.keys(uploadedFile?.url || {}),
