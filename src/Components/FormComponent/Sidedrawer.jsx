@@ -263,7 +263,6 @@ const SidebarDrawer = ({
 
     // for advanced master
     const handleDropdownChange = (dropdownItem, selectedId) => {
-        debugger
         setFormValues((prev) => {
             const updatedDropdowns = Array.isArray(prev.dynamicDropdowns)
                 ? [...prev.dynamicDropdowns]
