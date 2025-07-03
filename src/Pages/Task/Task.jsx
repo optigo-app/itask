@@ -62,6 +62,7 @@ const Task = () => {
 
   useEffect(() => {
     let parsedData = null;
+    console.log('parsedData: ', parsedData);
     if (encodedData) {
       try {
         const decodedString = decodeURIComponent(encodedData);
@@ -71,34 +72,40 @@ const Task = () => {
         console.error("Error decoding or parsing encodedData:", error);
       }
     }
-    const userId = userProfile?.id;
-    // Case 1: Parsed and has a valid taskid match
-    if (parsedData && parsedData.taskid) {
-      const matchedTask = taskFinalData?.TaskData?.find(
-        (task) => task.taskid === parsedData.taskid
-      );
-      if (matchedTask) {
-        const filteredSubtasks = filterNestedTasksByView(
-          matchedTask.subtasks || [],
-          meTeamView,
-          userId
+    if (parsedData == null) {
+      const summary = getCategoryTaskSummary(taskFinalData?.TaskData, taskCategory);
+      setCategoryTSummary(summary);
+      setTasks(taskFinalData?.TaskData);
+    } else {
+      const userId = userProfile?.id;
+      // Case 1: Parsed and has a valid taskid match
+      if (parsedData && parsedData.taskid) {
+        const matchedTask = taskFinalData?.TaskData?.find(
+          (task) => task.taskid === parsedData.taskid
         );
-        const summary = getCategoryTaskSummary(filteredSubtasks, taskCategory);
-        setCategoryTSummary(summary);
-        setTasks(filteredSubtasks);
-        return;
+        if (matchedTask) {
+          const filteredSubtasks = filterNestedTasksByView(
+            matchedTask.subtasks || [],
+            meTeamView,
+            userId
+          );
+          const summary = getCategoryTaskSummary(filteredSubtasks, taskCategory);
+          setCategoryTSummary(summary);
+          setTasks(filteredSubtasks);
+          return;
+        }
       }
+      // Case 2: No encodedData or task not found -> fallback to projectid
+      let fallbackTasks = taskFinalData?.TaskData || [];
+      // If parsedData has projectid, filter tasks by projectid
+      if (parsedData?.projectid) {
+        fallbackTasks = fallbackTasks.filter(task => task.projectid === parsedData.projectid);
+      }
+      const filtered = filterNestedTasksByView(fallbackTasks, meTeamView, userId);
+      const summary = getCategoryTaskSummary(filtered, taskCategory);
+      setCategoryTSummary(summary);
+      setTasks(filtered);
     }
-    // Case 2: No encodedData or task not found -> fallback to projectid
-    let fallbackTasks = taskFinalData?.TaskData || [];
-    // If parsedData has projectid, filter tasks by projectid
-    if (parsedData?.projectid) {
-      fallbackTasks = fallbackTasks.filter(task => task.projectid === parsedData.projectid);
-    }
-    const filtered = filterNestedTasksByView(fallbackTasks, meTeamView, userId);
-    const summary = getCategoryTaskSummary(filtered, taskCategory);
-    setCategoryTSummary(summary);
-    setTasks(filtered);
   }, [encodedData, taskFinalData, selectedRow, meTeamView]);
 
   useEffect(() => {
@@ -207,6 +214,7 @@ const Task = () => {
         project,
         category,
       } = filters;
+      console.log('filters: ', filters);
 
       const normalizedSearchTerm = searchTerm?.trim()?.toLowerCase();
       const isQuoted =
@@ -239,14 +247,18 @@ const Task = () => {
           !Array.isArray(category) ||
           category.length === 0 ||
           category.some((cat) => {
-            if (cat.toLowerCase()?.includes("due")) {
+            const lowerCat = cat.toLowerCase();
+            if (lowerCat.includes("due")) {
               return isTaskDue(item?.DeadLineDate);
-            } else if (cat.toLowerCase()?.includes("today tasks")) {
+            } else if (lowerCat.includes("today tasks")) {
               return isTaskToday(item?.StartDate);
-            } else if (cat.toLowerCase()?.includes("new")) {
+            } else if (lowerCat.includes("new")) {
               return item?.isnew == 1;
+            } else if (lowerCat.includes("completed tasks")) {
+              return item?.status?.toLowerCase() === "completed";
             }
-            return (item?.category ?? "").toLowerCase() === cat.toLowerCase();
+
+            return (item?.category ?? "").toLowerCase() === lowerCat;
           });
 
         const fieldsToCheck = [

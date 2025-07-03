@@ -216,56 +216,49 @@ const CalendarGridView = () => {
   }, [selectedTaskToSplit, numberOfDaysToSplit]);
 
   const handleEstimateChange = (taskId, newEstimate) => {
-    const regex = /^\d{0,3}(\.\d{0,3})?$/;
-    if (newEstimate === '' || regex.test(newEstimate)) {
-      let updatedTask = null;
-      setTasks((prevTasks) => {
-        const updatedTasks = prevTasks.map((task) => {
-          if (task.taskid === taskId) {
-            updatedTask = { ...task, finalEstimate: newEstimate };
-            return updatedTask;
-          }
-          return task;
-        });
-        return updatedTasks;
-      });
-
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-      debounceRef.current = setTimeout(async () => {
-        if (updatedTask) {
-          try {
-            const rootSubrootflagval = { Task: 'root' };
-            const apiRes = await AddTaskDataApi(updatedTask, rootSubrootflagval);
-            if (apiRes) {
-              toast.success('Task working hr added successfully!');
-              const currentInput = estimateTextFieldRefs.current[taskId];
-              if (currentInput) currentInput.blur();
-              const index = tasks.findIndex((task) => task.taskid === taskId);
-              const nextTask = tasks[index + 1];
-              if (nextTask) {
-                const nextInput = estimateTextFieldRefs.current[nextTask.taskid];
-                if (nextInput) nextInput.focus();
-              }
-            }
-          } catch (error) {
-            console.error('Error updating task estimate:', error);
-          }
-        }
-      }, 500);
-    }
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.taskid === taskId
+          ? { ...task, finalEstimate: newEstimate }
+          : task
+      )
+    );
   };
 
-  const handleKeyDown = (e, taskId, index) => {
-    
+
+  const handleKeyDown = async (e, taskId, index) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-
-      const nextTaskIndex = index + 1;
-      if (nextTaskIndex < tasks.length) {
-        const nextTaskId = tasks[nextTaskIndex].taskid;
-        estimateTextFieldRefs.current[nextTaskId]?.focus();
+      const task = tasks.find(t => t.taskid === taskId);
+      if (!task) return;
+      const updatedTask = {
+        ...task,
+        finalEstimate: task.finalEstimate ?? task.workinghr,
+      };
+      try {
+        const rootSubrootflagval = { Task: 'root' };
+        const apiRes = await AddTaskDataApi(updatedTask, rootSubrootflagval);
+        if (apiRes) {
+          toast.success('Task working hr added successfully!');
+        }
+        const currentInput = estimateTextFieldRefs.current[taskId];
+        if (currentInput) currentInput.blur();
+        const nextTaskIndex = index + 1;
+        const nextTask = tasks[nextTaskIndex];
+        if (nextTask) {
+          const nextInput = estimateTextFieldRefs.current[nextTask.taskid];
+          if (nextInput) {
+            nextInput.focus();
+          }
+        } else {
+          Object.values(estimateTextFieldRefs.current).forEach((input) => {
+            input?.blur();
+          });
+          window.getSelection()?.removeAllRanges();
+        }
+      } catch (error) {
+        console.error('Error updating task estimate:', error);
+        toast.error('Error while saving estimate!');
       }
     }
   };
@@ -318,7 +311,7 @@ const CalendarGridView = () => {
     });
   }, [tasks, sortConfig]);
 
-
+  const isValidDecimalInput = (value) => /^(\d{0,2}|\d{0,2}\.\d{0,2}|\.\d{1,2})?$/.test(value);
 
   return (
     <>
@@ -366,14 +359,20 @@ const CalendarGridView = () => {
                         <TextField
                           variant="outlined"
                           size="small"
-                          value={task.finalEstimate ?? task?.workinghr}
-                          onChange={(e) => handleEstimateChange(task.taskid, e.target.value)}
-                          onKeyDown={(e) => handleKeyDown(e, task.taskid, index)}
-                          inputRef={(el) => (estimateTextFieldRefs.current[task.taskid] = el)}
+                          type="text"
+                          placeholder="Enter Working hrs"
                           sx={{ width: '100px' }}
-                          {...commonTextFieldProps}
-                          inputProps={{ inputMode: 'decimal', pattern: '^[0-9]{0,3}(\\.[0-9]{0,3})?$' }}
+                          value={task.finalEstimate ?? task?.workinghr}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (isValidDecimalInput(value)) {
+                              handleEstimateChange(task.taskid, e.target.value)
+                            }
+                          }}
+                          inputRef={(el) => (estimateTextFieldRefs.current[task.taskid] = el)}
+                          onKeyDown={(e) => handleKeyDown(e, task.taskid, index)}
                           disabled={!dayjs(task.StartDate).isSame(dayjs(), 'day')}
+                          {...commonTextFieldProps}
                         />
                       </TableCell>
                       <TableCell>
