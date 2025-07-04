@@ -213,7 +213,7 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
                                                                                     overflow: 'hidden',
                                                                                     backgroundColor: '#fff',
                                                                                 }}
-                                                                                onClick={() => handlePreviewClick(doc.url)}
+                                                                                onClick={() => handlePreviewClick(doc)}
                                                                             >
                                                                                 <Box
                                                                                     sx={{
@@ -338,7 +338,7 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
                 </>
             }
             <DocsViewerModal
-                url={fileUrl}
+                fileData={fileUrl}
                 modalOpen={viewerOpen}
                 closeModal={() => setViewerOpen(false)}
             />
