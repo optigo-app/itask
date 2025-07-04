@@ -42,7 +42,7 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
             left: '50%',
             transform: 'translateX(-50%)',
             width: fullWidth ? '100%' : '80%',
-            height: fullWidth ? '100%' : '85%',
+            height: fullWidth ? '100%' : '85vh',
             bgcolor: 'background.paper',
             borderRadius: 2,
             boxShadow: 24,
@@ -66,6 +66,7 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
                 startIcon={<DownloadIcon />}
                 onClick={handleDownload}
                 sx={{ mx: 1 }}
+                className='buttonClassname'
               >
                 Download
               </Button>
@@ -85,7 +86,7 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
           />
 
           {/* Preview Area */}
-          <Box flexGrow={1}>
+          <Box flexGrow={1} sx={{ overflow: 'hidden' }}>
             {isPdf && (
               <iframe
                 src={url}
@@ -98,12 +99,21 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
                 display="flex"
                 justifyContent="center"
                 alignItems="center"
-                height="100%"
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  overflow: 'hidden', // Ensures nothing overflows
+                }}
               >
                 <img
                   src={url}
                   alt="Preview"
-                  style={{ maxWidth: '100%', maxHeight: '100%' }}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain', // Keeps aspect ratio and fits inside box
+                    display: 'block',
+                  }}
                 />
               </Box>
             )}
@@ -113,13 +123,19 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
                 justifyContent="center"
                 alignItems="center"
                 height="100%"
+                overflow="auto"
               >
                 <video
                   src={url}
-                  style={{ maxWidth: '100%', maxHeight: '100%' }}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain',
+                  }}
                   autoPlay
                   muted
                   loop
+                  controls
                 >
                   Your browser does not support the video tag.
                 </video>
@@ -143,6 +159,7 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
                   variant="contained"
                   startIcon={<DownloadIcon />}
                   onClick={handleDownload}
+                  className='buttonClassname'
                 >
                   Download File
                 </Button>
