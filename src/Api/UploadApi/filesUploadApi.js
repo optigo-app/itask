@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 export const filesUploadApi = async ({ attachments, folderName, uniqueNo }) => {
+  debugger
   const isLocal = ["localhost", "nzen"]?.includes(
     window.location.hostname
   );
@@ -19,7 +20,7 @@ export const filesUploadApi = async ({ attachments, folderName, uniqueNo }) => {
   formData.append('uKey', ukey);
   formData.append('uniqueNo', uniqueNo);
 
-  let APIURL = isLocal ? 'http://nextjstest.web/api/upload' : 'https://livenx.optigoapps.com/api/upload';
+  let APIURL = isLocal ? 'http://newnextjs.web/api/upload' : 'https://livenx.optigoapps.com/api/upload';
 
   try {
     const response = await axios.post(APIURL, formData, {

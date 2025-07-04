@@ -239,7 +239,7 @@ const CalendarGridView = () => {
         const rootSubrootflagval = { Task: 'root' };
         const apiRes = await AddTaskDataApi(updatedTask, rootSubrootflagval);
         if (apiRes) {
-          toast.success('Task working hr added successfully!');
+          toast.success('Task working hrs added successfully!');
         }
         const currentInput = estimateTextFieldRefs.current[taskId];
         if (currentInput) currentInput.blur();
