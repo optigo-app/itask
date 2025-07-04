@@ -190,7 +190,8 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
         initialView: 'timeGridWeek',
         slotMinTime: "07:00:00",  // Start from 7 AM
         slotMaxTime: "22:00:00",
-        slotDuration: "00:30:00",
+        slotDuration: "00:15:00",
+        slotLabelInterval: "00:30:00",
         headerToolbar: {
             start: 'sidebarToggle, prev, next, title',
             center: '',

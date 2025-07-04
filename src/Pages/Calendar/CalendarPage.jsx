@@ -5,9 +5,17 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import CalendarLeftSide from "../../Components/Calendar/CalendarLeftSide";
 import CalendarRightSide from "../../Components/Calendar/CalendarRightSide";
 import CalendarDrawer from "../../Components/Calendar/SideBar/CalendarDrawer";
-import { calendarData, calendarM, CalformData, TaskData } from "../../Recoil/atom";
+import {
+  calendarData,
+  calendarM,
+  CalformData,
+  TaskData,
+} from "../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
-import { fetchMettingListApi, fetchMettingListByLoginApi } from "../../Api/MeetingApi/MeetingListApi";
+import {
+  fetchMettingListApi,
+  fetchMettingListByLoginApi,
+} from "../../Api/MeetingApi/MeetingListApi";
 import { AddMeetingApi } from "../../Api/MeetingApi/AddMeetingApi";
 import { deleteMeetingApi } from "../../Api/MeetingApi/DeleteMeetingApi";
 import { toast } from "react-toastify";
@@ -27,29 +35,41 @@ const Calendar = () => {
   const [selectedAssignee, setSelectedAssignee] = useState();
   const assigneeData = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"));
   const setTasks = useSetRecoilState(TaskData);
-  const {
-    iswhTLoading,
-    taskFinalData,
-  } = useFullTaskFormatFile();
+  const { iswhTLoading, taskFinalData } = useFullTaskFormatFile();
 
   useEffect(() => {
     if (!iswhTLoading) {
-      setTasks(taskFinalData?.TaskData)
+      setTasks(taskFinalData?.TaskData);
     }
-  }, [iswhTLoading])
+  }, [iswhTLoading]);
 
   useEffect(() => {
     setSelectedMon(new Date());
   }, []);
 
   useEffect(() => {
-    const taskCategories = JSON?.parse(sessionStorage.getItem("taskworkcategoryData")) || [];
-    const colorClasses = ["error", "primary", "warning", "success", "info", "secondary", "support", "dark", "light", "muted"];
-    const dynamicCalendarsColor = taskCategories.reduce((acc, category, index) => {
-      const categoryName = category.labelname;
-      acc[categoryName] = colorClasses[index % colorClasses.length];
-      return acc;
-    }, {});
+    const taskCategories =
+      JSON?.parse(sessionStorage.getItem("taskworkcategoryData")) || [];
+    const colorClasses = [
+      "error",
+      "primary",
+      "warning",
+      "success",
+      "info",
+      "secondary",
+      "support",
+      "dark",
+      "light",
+      "muted",
+    ];
+    const dynamicCalendarsColor = taskCategories.reduce(
+      (acc, category, index) => {
+        const categoryName = category.labelname;
+        acc[categoryName] = colorClasses[index % colorClasses.length];
+        return acc;
+      },
+      {}
+    );
 
     setCalendarsColor(dynamicCalendarsColor);
     setSelectedMon(new Date());
@@ -59,19 +79,28 @@ const Calendar = () => {
     setIsLoding(true);
     try {
       const meetingApiRes = await fetchMettingListByLoginApi(selectedAssignee);
-      const data = meetingApiRes && meetingApiRes?.rd || [];
+      const data = (meetingApiRes && meetingApiRes?.rd) || [];
       if (data) {
-        const taskAssigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
-        const taskCategory = JSON.parse(sessionStorage.getItem("taskworkcategoryData") || "[]");
+        const taskAssigneeData = JSON.parse(
+          sessionStorage.getItem("taskAssigneeData") || "[]"
+        );
+        const taskCategory = JSON.parse(
+          sessionStorage.getItem("taskworkcategoryData") || "[]"
+        );
         const enhancedMeetings = data.map((meeting) => ({
           ...meeting,
-          guests: taskAssigneeData.filter((user) => meeting?.assigneids?.split(",").map(Number).includes(user.id)) || [],
+          guests:
+            taskAssigneeData.filter((user) =>
+              meeting?.assigneids?.split(",").map(Number).includes(user.id)
+            ) || [],
           prModule: [],
-          category: taskCategory?.find(item => item?.id == meeting?.workcategoryid)?.labelname || '',
+          category:
+            taskCategory?.find((item) => item?.id == meeting?.workcategoryid)
+              ?.labelname || "",
           prModule: {
             projectid: meeting?.projectid,
             taskid: meeting?.taskid,
-          }
+          },
         }));
         setCalEvData(enhancedMeetings);
       } else {
@@ -88,19 +117,28 @@ const Calendar = () => {
     setIsLoding(true);
     try {
       const meetingApiRes = await fetchMettingListApi();
-      const data = meetingApiRes && meetingApiRes?.rd || [];
+      const data = (meetingApiRes && meetingApiRes?.rd) || [];
       if (data) {
-        const taskAssigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
-        const taskCategory = JSON.parse(sessionStorage.getItem("taskworkcategoryData") || "[]");
+        const taskAssigneeData = JSON.parse(
+          sessionStorage.getItem("taskAssigneeData") || "[]"
+        );
+        const taskCategory = JSON.parse(
+          sessionStorage.getItem("taskworkcategoryData") || "[]"
+        );
         const enhancedMeetings = data.map((meeting) => ({
           ...meeting,
-          guests: taskAssigneeData.filter((user) => meeting?.assigneids?.split(",").map(Number).includes(user.id)) || [],
+          guests:
+            taskAssigneeData.filter((user) =>
+              meeting?.assigneids?.split(",").map(Number).includes(user.id)
+            ) || [],
           prModule: [],
-          category: taskCategory?.find(item => item?.id == meeting?.workcategoryid)?.labelname || '',
+          category:
+            taskCategory?.find((item) => item?.id == meeting?.workcategoryid)
+              ?.labelname || "",
           prModule: {
             projectid: meeting?.projectid,
             taskid: meeting?.taskid,
-          }
+          },
         }));
         setCalEvData(enhancedMeetings);
       } else {
@@ -118,22 +156,21 @@ const Calendar = () => {
       handleMeetingListByLogin();
     } else {
       if (hasAccess(PERMISSIONS.CALENDAR_VIEW_ALL)) {
-        handleMeetingList()
+        handleMeetingList();
       } else {
-        handleMeetingListByLogin()
+        handleMeetingListByLogin();
       }
     }
-
-  }, [selectedAssignee])
+  }, [selectedAssignee]);
 
   const handleCaleFormSubmit = async (formValues) => {
     setCalFormData(formValues);
     const apiRes = await AddMeetingApi(formValues);
     if (apiRes && apiRes?.rd[0]?.stat == 1) {
       if (hasAccess(PERMISSIONS.CALENDAR_VIEW_ALL)) {
-        handleMeetingList()
+        handleMeetingList();
       } else {
-        handleMeetingListByLogin()
+        handleMeetingListByLogin();
       }
       if (formValues?.id) {
         toast.success("Meeting updated successfully");
@@ -146,14 +183,17 @@ const Calendar = () => {
   const handleRemoveAMeeting = async (formData) => {
     const apiRes = await deleteMeetingApi(formData);
     if (apiRes && apiRes?.rd[0]?.stat == 1) {
-      handleMeetingList()
+      if (hasAccess(PERMISSIONS.CALENDAR_VIEW_ALL)) {
+        handleMeetingList();
+      } else {
+        handleMeetingListByLogin();
+      }
     }
   };
 
-
   const handleAssigneeChange = (newValue) => {
     setSelectedAssignee(newValue);
-  }
+  };
 
   return (
     <Box
@@ -169,7 +209,12 @@ const Calendar = () => {
     >
       {/* Left Panel (Mobile View) */}
       {isLaptop ? (
-        <CalendarDrawer calendarsColor={calendarsColor} handleCaleFormSubmit={handleCaleFormSubmit} handleRemoveAMeeting={handleRemoveAMeeting} isLoding={isLoding} />
+        <CalendarDrawer
+          calendarsColor={calendarsColor}
+          handleCaleFormSubmit={handleCaleFormSubmit}
+          handleRemoveAMeeting={handleRemoveAMeeting}
+          isLoding={isLoding}
+        />
       ) : (
         // Left Panel (Desktop View)
         <Box
@@ -182,7 +227,12 @@ const Calendar = () => {
             position: "relative",
           }}
         >
-          <CalendarLeftSide calendarsColor={calendarsColor} handleCaleFormSubmit={handleCaleFormSubmit} handleRemoveAMeeting={handleRemoveAMeeting} isLoding={isLoding} />
+          <CalendarLeftSide
+            calendarsColor={calendarsColor}
+            handleCaleFormSubmit={handleCaleFormSubmit}
+            handleRemoveAMeeting={handleRemoveAMeeting}
+            isLoding={isLoding}
+          />
         </Box>
       )}
 
@@ -208,7 +258,6 @@ const Calendar = () => {
           handleAssigneeChange={handleAssigneeChange}
           hasAccess={hasAccess}
         />
-
       </Box>
     </Box>
   );
