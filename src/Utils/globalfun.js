@@ -795,11 +795,6 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
             labelname: "Due Tasks",
             count: flatData.filter((task) => isPast(task.DeadLineDate)).length,
         },
-        {
-            id: "completed_tasks",
-            labelname: "Completed Tasks",
-            count: flatData.filter((task) => (task.status || "").toLowerCase() === "completed").length,
-        },
         ...(Array.isArray(taskCategory)
             ? taskCategory.map((label) => {
                 const key = label.labelname.toLowerCase().replace(/\s+/g, "_");

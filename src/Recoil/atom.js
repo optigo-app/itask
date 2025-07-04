@@ -20,6 +20,11 @@ export const TaskData = atom({
   default: []
 })
 
+export const completedTask = atom({
+  key: 'completedTask',
+  default: false
+})
+
 export const projectDatasRState = atom({
   key: 'projectDatasRState',
   default: []

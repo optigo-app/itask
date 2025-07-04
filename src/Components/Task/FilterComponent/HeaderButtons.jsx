@@ -26,11 +26,13 @@ import {
   Advfilters,
   viewMode,
   copyRowData,
+  completedTask,
 } from "../../../Recoil/atom";
 import { toast } from "react-toastify";
 import {
   Calendar,
   ChevronsDown,
+  CircleCheck,
   ClipboardPaste,
   Kanban,
   List,
@@ -59,7 +61,8 @@ const HeaderButtons = ({
   taskDepartment,
   taskAssigneeData,
   CategorySummary,
-  handlePasteTask
+  handlePasteTask,
+  handleCompletedTaskFilter
 }) => {
   const { hasAccess } = useAccess();
   const navigate = useNavigate()
@@ -80,6 +83,7 @@ const HeaderButtons = ({
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
   const [viewTaskMode, setViewTaskMode] = useRecoilState(viewMode);
+  const [completedFlag, setCompletedFlag] = useRecoilState(completedTask);
   const encodedData = searchParams.get("data");
   const [parsedData, setParsedData] = useState();
   const [categoryMaster, setCategoryMaster] = useState([]);
@@ -251,6 +255,35 @@ const HeaderButtons = ({
               }}
             >
               <FilterAltIcon className="iconbtn" color="#0000008a" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip
+            placement="top"
+            title="Completed tasks"
+            arrow
+            classes={{ tooltip: "custom-tooltip" }}
+          >
+            <IconButton
+              aria-label="Completed tasks"
+              onClick={handleCompletedTaskFilter}
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: '7px',
+                backgroundColor:
+                  completedFlag ? "#dcedc8" : "white",
+                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                "&:hover": {
+                  backgroundColor: "#f5f5f5",
+                  boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                },
+              }}
+            >
+              <CircleCheck className="iconbtn"
+                color={
+                  completedFlag ? "#388e3c" : "#0000008a"
+                } />
             </IconButton>
           </Tooltip>
         </Box>
