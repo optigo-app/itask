@@ -860,7 +860,7 @@ function mergeFilterData(maingroups, groups, attributes, bindings) {
     const groupMap = new Map(groups?.rd.map(({ id, filtergroup }) => [id, filtergroup || ""]));
     const attrMap = new Map(attributes?.rd.map(({ id, filterattr }) => [id, filterattr || ""]));
     const structure = new Map();
-    for (const { filtermaingroupid, filtergroupid, filterattrid } of bindings?.rd || []) {
+    for (const { id: bindid, filtermaingroupid, filtergroupid, filterattrid } of bindings?.rd || []) {
         if (!structure.has(filtermaingroupid)) {
             structure.set(filtermaingroupid, {
                 id: filtermaingroupid,
@@ -878,18 +878,28 @@ function mergeFilterData(maingroups, groups, attributes, bindings) {
         }
         const group = mainGroup.groups.get(filtergroupid);
         const rawAttrName = attrMap.get(filterattrid) || "";
-        const attrNames = rawAttrName.split(',').map(a => a.trim()).filter(a => a !== "");
+        const attrNames = rawAttrName
+            .split(',')
+            .map(a => a.trim())
+            .filter(a => a !== "");
         for (const name of attrNames) {
-            if (!group.attributes.find(attr => attr.name === name)) {
-                group.attributes.push({ id: filterattrid, name });
+            const alreadyExists = group.attributes.some(attr => attr.name === name && attr.id === filterattrid);
+            if (!alreadyExists) {
+                group.attributes.push({
+                    id: filterattrid,
+                    name,
+                    bindid 
+                });
             }
         }
     }
+
     return Array.from(structure.values()).map(mainGroup => ({
         ...mainGroup,
         groups: Array.from(mainGroup.groups.values())
     }));
 }
+
 
 // status change
 export const handleAddApicall = async (updatedTasks) => {

@@ -14,9 +14,11 @@ import { toast } from 'react-toastify';
 import MasterAdvFormDrawer from './MasterAdvFormDrawer';
 import DynamicMasterDrawer from './DynamicMasterDrawer';
 import AdvancedMasterTable from './AdvancedMasterTable';
-import { AddAdvFilterGroupAttrApi } from '../../Api/MasterApi/AddAdvFilterGroupAttrApi';
+import { AddAdvFilterGroupAttrApi, deleteAdvancedMasterApi } from '../../Api/MasterApi/AddAdvFilterGroupAttrApi';
+import { useLocation } from 'react-router-dom';
 
 const MasterToggle = () => {
+    const location = useLocation();
     const [isLoading, setIsLoading] = useState(false);
     const [isIndLoading, setIsIndLoading] = useState(false);
     const [value, setValue] = useState();
@@ -42,17 +44,25 @@ const MasterToggle = () => {
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
     const [masterType, setMasterType] = useState("single");
 
-    useEffect(() => {
-        const fetchAdvMasterData = async () => {
-            const advMasterData = sessionStorage.getItem('structuredAdvMasterData');
-            if (advMasterData) {
-                setStructuredAdvMasterData(JSON.parse(advMasterData));
-            } else {
-                const response = await AdvancedMasterApiFunc();
-                setStructuredAdvMasterData(response);
+    const fetchAdvMasterData = async (forceRefresh = false) => {
+        if (!forceRefresh) {
+            const cached = sessionStorage.getItem('structuredAdvMasterData');
+            if (cached) {
+                setStructuredAdvMasterData(JSON.parse(cached));
+                return;
             }
-        };
+        }
+        const response = await AdvancedMasterApiFunc();
+        const safeData = Array.isArray(response) ? response : [];
+        setStructuredAdvMasterData(safeData);
+        sessionStorage.setItem('structuredAdvMasterData', JSON.stringify(safeData));
+    };
+    
+    useEffect(() => {
         fetchAdvMasterData();
+        if (location?.pathname?.includes('/master')) {
+            fetchAdvMasterData(true);
+        }
     }, []);
 
     const handleCloseCnfDialog = () => {
@@ -261,13 +271,25 @@ const MasterToggle = () => {
             masterName: master.name,
             subMasterName: sub.name,
             masterValue: item.name,
+            id: master.id,
+            bindid: item.bindid,
+            filtermaingroupid: master.id,
+            filtergroupid: sub.id,
+            filterattrid: item.id,
         });
     }
 
     const handleAdvDeleteRow = (master, sub, item) => {
-        console.log("Deleting item:", item);
-        console.log("Under sub-master:", sub.name);
-        console.log("Under master:", master.category);
+        setFormAdvData({
+            masterName: master.name,
+            subMasterName: sub.name,
+            masterValue: item.name,
+            id: master.id,
+            subid: sub.id,
+            itemid: item.id,
+            bindid: item.bindid,
+        });
+        setCnfDelDialogOpen(true);
     }
 
     const handleDeleteRow = async (row) => {
@@ -312,23 +334,48 @@ const MasterToggle = () => {
     }
 
     const handleRemoveMasterData = async () => {
-        try {
-            const payload = {
-                ...selectedRow,
-                ...formData,
-                mode: 'trash',
-            };
-            const response = await addEditDelMaster(payload);
-            setCnfDelDialogOpen(false);
-            if (response[0]?.stat === 1) {
-                setFormattedData(prevData => prevData.filter(item => item.id !== selectedRow.id));
-                toast.success('Data Removed Successfully');
-            } else {
-                toast.error('Failed to remove data');
+        if (categoryStates?.id === "advanced_master") {
+            const apiRes = await deleteAdvancedMasterApi(formAdvData);
+            console.log("apiRes: ", apiRes);
+            if (apiRes?.rd?.[0]?.stat == 1) {
+                toast.success("Data Removed Successfully");
+                setStructuredAdvMasterData(prev =>
+                    prev.map(master => {
+                        if (master.id !== formAdvData.id) return master;
+                        return {
+                            ...master,
+                            groups: master.groups.map(group => {
+                                if (group.id !== formAdvData.subid) return group;
+
+                                return {
+                                    ...group,
+                                    attributes: group.attributes.filter(attr => attr.bindid !== formAdvData.bindid)
+                                };
+                            }).filter(group => group.attributes.length > 0)
+                        };
+                    }).filter(master => master.groups.length > 0)
+                );
+                handleCloseCnfDialog();
             }
-        } catch (error) {
-            console.error('Error in handleRemoveMasterData:', error);
-            toast.error('An error occurred while removing the data');
+        } else {
+            try {
+                const payload = {
+                    ...selectedRow,
+                    ...formData,
+                    mode: 'trash',
+                };
+                const response = await addEditDelMaster(payload);
+                setCnfDelDialogOpen(false);
+                if (response[0]?.stat === 1) {
+                    setFormattedData(prevData => prevData.filter(item => item.id !== selectedRow.id));
+                    toast.success('Data Removed Successfully');
+                } else {
+                    toast.error('Failed to remove data');
+                }
+            } catch (error) {
+                console.error('Error in handleRemoveMasterData:', error);
+                toast.error('An error occurred while removing the data');
+            }
         }
     };
 
@@ -377,8 +424,6 @@ const MasterToggle = () => {
     const paginatedData = isAdvanced
         ? filteredData
         : filteredData.slice((page - 1) * rowsPerPage, page * rowsPerPage);
-
-
 
     return (
         <>
@@ -481,6 +526,7 @@ const MasterToggle = () => {
                             open={drawerOpen}
                             activeTab={value}
                             mode={mode}
+                            filteredData={filteredData}
                             groups={groups}
                             setGroups={setGroups}
                             onClose={handleCloseDrawer}
