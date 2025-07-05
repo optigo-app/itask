@@ -1,10 +1,10 @@
-import { useRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
 import { TaskData } from "../../Recoil/atom";
 import { fetchMasterGlFunc } from "../globalfun";
 
 const TaskAPiCallWithFormat = () => {
-    const [tasks, setTasks] = useRecoilState(TaskData);
+    const setTasks = useSetRecoilState(TaskData);
 
     const fetchMasterData = async () => {
         try {

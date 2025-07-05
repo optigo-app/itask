@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fetchTaskDataFullApi } from "../../Api/TaskApi/TaskDataFullApi";
 import {
   fetchMasterGlFunc,
   mapKeyValuePair,
-  mapTaskLabels,
 } from "../globalfun";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilValue } from "recoil";
 import {
   fetchlistApiCall,
   projectDatasRState,
@@ -25,8 +24,7 @@ const useFullTaskFormatFile = () => {
   const [taskProject, setTaskProject] = useState();
   const [taskCategory, setTaskCategory] = useState();
   const [taskAssigneeData, setTaskAssigneeData] = useState();
-  const [callFetchTaskApi, setCallFetchTaskApi] =
-    useRecoilState(fetchlistApiCall);
+  const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
   const tasks = useRecoilValue(TaskData);
   const project = useRecoilValue(projectDatasRState);
   const searchParams = new URLSearchParams(location.search);
