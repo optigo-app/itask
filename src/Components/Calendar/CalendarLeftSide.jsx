@@ -43,7 +43,7 @@ const CalendarLeftSide = ({ calendarsColor, isLoding, handleCaleFormSubmit }) =>
                 prev.filter(item => item !== calendar)
                 : [...prev, calendar])
     };
-
+ 
     const handleViewAllToggle = () => {
         if (selectedCalendars.length === Object.keys(calendarsColor).length) {
             setSelectedCalendars([]);

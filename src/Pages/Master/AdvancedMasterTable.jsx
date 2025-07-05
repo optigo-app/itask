@@ -96,10 +96,10 @@ const AdvancedMasterTable = ({ data, handleEditAdvRow, handleAdvDeleteRow }) => 
                                         <TableCell>{attrIndex === 0 ? groupName : null}</TableCell>
                                         <TableCell>{attr.name}</TableCell>
                                         <TableCell align="right">
-                                            <IconButton disabled onClick={() => handleEditAdvRow(mainGroup, group, attr)}>
+                                            <IconButton onClick={() => handleEditAdvRow(mainGroup, group, attr)}>
                                                 <Pencil size={18} />
                                             </IconButton>
-                                            <IconButton disabled onClick={() => handleAdvDeleteRow(mainGroup, group, attr)}>
+                                            <IconButton onClick={() => handleAdvDeleteRow(mainGroup, group, attr)}>
                                                 <Trash size={18} style={{ color: "#ab003c" }} />
                                             </IconButton>
                                         </TableCell>

@@ -1,22 +1,55 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./Master.scss"
 import {
-    Drawer, Box, Typography, TextField, Button, IconButton,
-    ToggleButtonGroup, ToggleButton, TextareaAutosize, TableContainer,
-    Table, TableHead, TableRow, TableCell, TableBody, Paper
+    Drawer, Box, Typography, Button, IconButton,
+    ToggleButtonGroup, ToggleButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { Pencil, Save, Trash, Plus } from "lucide-react";
-import { commonTextFieldProps } from "../../Utils/globalfun";
 import { Grid2x2, ListTodo } from "lucide-react";
 import DynamicMasterDrawer from "./DynamicMasterDrawer";
+import SmartDropdown from "../../Components/MastersComp/SmartDropdown";
 
-const MasterAdvFormDrawer = ({ open, onClose, mode, groups, setGroups, onSubmit, formData, masterType,  setFormData,handleMasterChange }) => {
+const MasterAdvFormDrawer = ({ open, onClose, mode, filteredData, groups, setGroups, onSubmit, formData, masterType, setFormData, handleMasterChange }) => {
+    console.log('formData: ', formData);
+    const [masterOptions, setMasterOptions] = useState([]);
+    const [subMasterOptions, setSubMasterOptions] = useState([]);
+    const [valueOptions, setValueOptions] = useState([]);
 
     const master_OPTIONS = [
         { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
         { id: 2, value: "multi_input", label: "Bulk", icon: <Grid2x2 size={20} /> },
     ];
+
+    useEffect(() => {
+        if (filteredData && Array.isArray(filteredData)) {
+            setMasterOptions(filteredData.map((item) => item.name));
+        }
+    }, [filteredData]);
+
+    useEffect(() => {
+        const selectedGroup = filteredData?.find(item => item.name === formData.masterName);
+        if (selectedGroup) {
+            const subGroups = selectedGroup.groups.map(group => group.name);
+            setSubMasterOptions(subGroups);
+
+            if (!subGroups.includes(formData.subMasterName)) {
+                setFormData(prev => ({ ...prev, subMasterName: '', masterValue: '' }));
+            }
+        }
+    }, [formData.masterName]);
+
+    useEffect(() => {
+        const selectedGroup = filteredData?.find(item => item.name === formData.masterName);
+        const selectedSubGroup = selectedGroup?.groups?.find(group => group.name === formData.subMasterName);
+        if (selectedSubGroup) {
+            const values = selectedSubGroup.attributes.map(attr => attr.name);
+            setValueOptions(values);
+
+            if (!values.includes(formData.masterValue)) {
+                setFormData(prev => ({ ...prev, masterValue: '' }));
+            }
+        }
+    }, [formData.subMasterName]);
 
     return (
         <Drawer anchor="right" open={open} onClose={onClose}>
@@ -50,38 +83,28 @@ const MasterAdvFormDrawer = ({ open, onClose, mode, groups, setGroups, onSubmit,
 
                 {masterType === "single" ? (
                     <>
-                        <Typography variant="body2">Master Group</Typography>
-                        <TextField
-                            fullWidth
-                            placeholder="Enter Master Group name..."
-                            name="name"
-                            value={formData.masterName || ''}
-                            onChange={(e) => setFormData({ ...formData, masterName: e.target.value })}
-                            margin="normal"
-                            {...commonTextFieldProps}
-                            sx={{ marginTop: .5 }}
+                        <SmartDropdown
+                            label="Master Group"
+                            value={formData.masterName}
+                            setValue={(val) => setFormData({ ...formData, masterName: val })}
+                            options={masterOptions}
+                            setOptions={setMasterOptions}
                         />
-                        <Typography variant="body2">Master Name</Typography>
-                        <TextField
-                            fullWidth
-                            placeholder="Enter Data..."
-                            name="value"
-                            value={formData.subMasterName || ''}
-                            onChange={(e) => setFormData({ ...formData, subMasterName: e.target.value })}
-                            margin="normal"
-                            {...commonTextFieldProps}
-                            sx={{ marginTop: .5 }}
+
+                        <SmartDropdown
+                            label="Master Name"
+                            value={formData.subMasterName}
+                            setValue={(val) => setFormData({ ...formData, subMasterName: val })}
+                            options={subMasterOptions}
+                            setOptions={setSubMasterOptions}
                         />
-                        <Typography variant="body2">Master Data</Typography>
-                        <TextField
-                            fullWidth
-                            placeholder="Enter Data..."
-                            name="value"
-                            value={formData.masterValue || ''}
-                            onChange={(e) => setFormData({ ...formData, masterValue: e.target.value })}
-                            margin="normal"
-                            {...commonTextFieldProps}
-                            sx={{ marginTop: .5 }}
+
+                        <SmartDropdown
+                            label="Master Data"
+                            value={formData.masterValue}
+                            setValue={(val) => setFormData({ ...formData, masterValue: val })}
+                            options={valueOptions}
+                            setOptions={setValueOptions}
                         />
                     </>
                 ) : (
