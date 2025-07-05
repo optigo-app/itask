@@ -336,7 +336,7 @@ export const fetchMasterGlFunc = async () => {
         if (masterData?.rd && Array?.isArray(masterData?.rd)) {
             const structuredData = [];
             for (const item of masterData?.rd) {
-                const { id, mode } = item;
+                const {mode } = item;
                 if (mode) {
                     const apiResponse = await fetchIndidualApiMaster({ mode });
                     let filteredData = apiResponse?.rd?.filter(row => row?.isdelete != 1) || [];
