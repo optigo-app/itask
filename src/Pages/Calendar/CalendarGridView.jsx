@@ -11,6 +11,7 @@ import {
   Button,
   TextField,
   TableSortLabel,
+  Box,
 } from '@mui/material';
 import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate3, handleAddApicall, priorityColors, statusColors } from '../../Utils/globalfun';
 
@@ -23,12 +24,13 @@ import SplitTaskModal from '../../Components/Calendar/SplitTaskModal';
 import StatusBadge from '../../Components/ShortcutsComponent/StatusBadge';
 import TaskPriority from '../../Components/ShortcutsComponent/TaskPriority';
 import useFullTaskFormatFile from '../../Utils/TaskList/FullTasKFromatfile';
-import { SeparatorHorizontal, Split } from 'lucide-react';
+import { SeparatorHorizontal } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import { AddTaskDataApi } from '../../Api/TaskApi/AddTaskApi';
 import { toast } from 'react-toastify';
 import { deleteTaskDataApi } from '../../Api/TaskApi/DeleteTaskApi';
+import CalendarFilter from './CalendarFilter';
 
 // Extend dayjs with plugins
 dayjs.extend(duration);
@@ -56,7 +58,8 @@ const tableHeaders = [
 const CalendarGridView = () => {
   const location = useLocation();
   const [tasks, setTasks] = useState([]);
-  console.log('tasks: ', tasks);
+  const [selectedFilter, setSelectedFilter] = useState('Today');
+  const [currentDate, setCurrentDate] = useState(dayjs());
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const debounceRef = useRef(null);
   const estimateTextFieldRefs = useRef({});
@@ -69,20 +72,35 @@ const CalendarGridView = () => {
     taskFinalData,
   } = useFullTaskFormatFile();
 
-  useEffect(() => {
-    const userProfile = JSON?.parse(localStorage.getItem('UserProfileData'));
-    if (!iswhTLoading && taskFinalData?.TaskData) {
-      const today = dayjs().startOf('day');
-      const userId = userProfile?.id;
-      const myTasks = filterNestedTasksByView(taskFinalData.TaskData, 'me', userId);
-      const allTasks = flattenTasks(myTasks);
-      const nonRootTasks = allTasks.filter(task => task.parentid !== 0);
-      const filteredTasks = nonRootTasks.filter(task =>
-        dayjs(task.StartDate).isSame(today, 'day')
+  const filteredTasks = React.useMemo(() => {
+    if (!taskFinalData?.TaskData) return [];
+
+    const today = currentDate.startOf('day');
+    const tomorrow = today.add(1, 'day');
+    const weekEnd = today.endOf('week');
+
+    const userId = JSON?.parse(localStorage.getItem('UserProfileData'))?.id;
+    const myTasks = filterNestedTasksByView(taskFinalData.TaskData, 'me', userId);
+    const allTasks = flattenTasks(myTasks);
+    const nonRootTasks = allTasks.filter(task => task.parentid !== 0);
+
+    if (selectedFilter === 'Today') {
+      return nonRootTasks.filter(task => dayjs(task.StartDate).isSame(today, 'day'));
+    } else if (selectedFilter === 'Tomorrow') {
+      return nonRootTasks.filter(task => dayjs(task.StartDate).isSame(tomorrow, 'day'));
+    } else if (selectedFilter === 'Week') {
+      return nonRootTasks.filter(task =>
+        dayjs(task.StartDate).isAfter(today.subtract(1, 'day')) &&
+        dayjs(task.StartDate).isBefore(weekEnd.add(1, 'day'))
       );
-      setTasks(filteredTasks);
     }
-  }, [iswhTLoading, location.pathname, taskFinalData]);
+
+    return [];
+  }, [taskFinalData, selectedFilter, currentDate]);
+
+  useEffect(() => {
+    setTasks(filteredTasks);
+  }, [filteredTasks]);
 
   const totalSplitHours = splitParts?.reduce((sum, part) => {
     let value = part.hours;
@@ -225,7 +243,6 @@ const CalendarGridView = () => {
     );
   };
 
-
   const handleKeyDown = async (e, taskId, index) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -289,6 +306,18 @@ const CalendarGridView = () => {
     setSortConfig({ key, direction });
   };
 
+  const handleNavigate = (direction) => {
+    const newDate = direction === 'prev'
+      ? currentDate.subtract(1, 'day')
+      : currentDate.add(1, 'day');
+    setCurrentDate(newDate);
+  };
+
+  const handleFilterChange = (filter) => {
+    setSelectedFilter(filter);
+    setCurrentDate(dayjs());
+  };
+
   const sortedTasks = React.useMemo(() => {
     if (!sortConfig.key) return tasks;
 
@@ -314,99 +343,107 @@ const CalendarGridView = () => {
   const isValidDecimalInput = (value) => /^(\d{0,2}|\d{0,2}\.\d{0,2}|\.\d{1,2})?$/.test(value);
 
   return (
-    <>
+    <Box className="cal-Container">
       {(iswhTLoading === null || iswhTLoading === true) ? (
         <LoadingBackdrop isLoading={true} />
       ) :
-        <TableContainer component={Paper} className='muiTableTaContainer'>
-          <Table aria-label="task table" className='muiTable'>
-            <TableHead className='muiTableHead'>
-              <TableRow>
-                {tableHeaders?.map(({ label, key, width }) => (
-                  <TableCell
-                    key={key}
-                    sortDirection={sortConfig.key === key ? sortConfig.direction : false}
-                    sx={{ width }}
-                  >
-                    <TableSortLabel
-                      active={sortConfig.key === key}
-                      direction={sortConfig.key === key ? sortConfig.direction : 'asc'}
-                      onClick={() => handleSort(key)}
-                    >
-                      {label}
-                    </TableSortLabel>
-                  </TableCell>
-                ))}
-
-                <TableCell sx={{ width: '8%' }}>
-                  <strong>Action</strong>
-                </TableCell>
-              </TableRow>
-
-            </TableHead>
-            <TableBody>
-              {tasks?.length > 0 ?
-                <>
-                  {sortedTasks?.map((task, index) => (
-                    <TableRow key={task.taskid}>
-                      <TableCell>
-                        <strong>{task.moduleName}</strong>/{task.taskname}
-                      </TableCell>
-                      <TableCell><StatusBadge task={task} statusColors={statusColors} onStatusChange={handleStatusChange} disable={false} /></TableCell>
-                      <TableCell>{TaskPriority(task?.priority, priorityColors)}</TableCell>
-                      <TableCell>{task.estimate_hrs}</TableCell>
-                      <TableCell>
-                        <TextField
-                          variant="outlined"
-                          size="small"
-                          type="text"
-                          placeholder="Enter Working hrs"
-                          sx={{ width: '100px' }}
-                          value={task.finalEstimate ?? task?.workinghr}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (isValidDecimalInput(value)) {
-                              handleEstimateChange(task.taskid, e.target.value)
-                            }
-                          }}
-                          inputRef={(el) => (estimateTextFieldRefs.current[task.taskid] = el)}
-                          onKeyDown={(e) => handleKeyDown(e, task.taskid, index)}
-                          disabled={!dayjs(task.StartDate).isSame(dayjs(), 'day')}
-                          {...commonTextFieldProps}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {task.StartDate ? formatDate3(task.StartDate) : 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        {task.DeadLineDate ? cleanDate(formatDate3(task.DeadLineDate)) : 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outlined"
-                          color="primary"
-                          size='small'
-                          startIcon={<SeparatorHorizontal size={18} />}
-                          onClick={() => handleSplit(task.taskid)}
-                          className='buttonClassname'
-                          disabled={!dayjs(task.StartDate).isSame(dayjs(), 'day')}
-                        >
-                          Split
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </>
-                :
+        <>
+          <CalendarFilter
+            selectedFilter={selectedFilter}
+            onFilterChange={handleFilterChange}
+            currentDate={currentDate}
+            onNavigate={handleNavigate}
+          />
+          <TableContainer component={Paper} className='muiTableTaContainer'>
+            <Table aria-label="task table" className='muiTable'>
+              <TableHead className='muiTableHead'>
                 <TableRow>
-                  <TableCell colSpan={8} style={{ textAlign: 'center' }}>
-                    No tasks found for today.
+                  {tableHeaders?.map(({ label, key, width }) => (
+                    <TableCell
+                      key={key}
+                      sortDirection={sortConfig.key === key ? sortConfig.direction : false}
+                      sx={{ width }}
+                    >
+                      <TableSortLabel
+                        active={sortConfig.key === key}
+                        direction={sortConfig.key === key ? sortConfig.direction : 'asc'}
+                        onClick={() => handleSort(key)}
+                      >
+                        {label}
+                      </TableSortLabel>
+                    </TableCell>
+                  ))}
+
+                  <TableCell sx={{ width: '8%' }}>
+                    <strong>Action</strong>
                   </TableCell>
                 </TableRow>
-              }
-            </TableBody>
-          </Table>
-        </TableContainer>
+
+              </TableHead>
+              <TableBody>
+                {tasks?.length > 0 ?
+                  <>
+                    {sortedTasks?.map((task, index) => (
+                      <TableRow key={task.taskid}>
+                        <TableCell>
+                          <strong>{task.moduleName}</strong>/{task.taskname}
+                        </TableCell>
+                        <TableCell><StatusBadge task={task} statusColors={statusColors} onStatusChange={handleStatusChange} disable={false} /></TableCell>
+                        <TableCell>{TaskPriority(task?.priority, priorityColors)}</TableCell>
+                        <TableCell>{task.estimate_hrs}</TableCell>
+                        <TableCell>
+                          <TextField
+                            variant="outlined"
+                            size="small"
+                            type="text"
+                            placeholder="Enter Working hrs"
+                            sx={{ width: '100px' }}
+                            value={task.finalEstimate ?? task?.workinghr}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (isValidDecimalInput(value)) {
+                                handleEstimateChange(task.taskid, e.target.value)
+                              }
+                            }}
+                            inputRef={(el) => (estimateTextFieldRefs.current[task.taskid] = el)}
+                            onKeyDown={(e) => handleKeyDown(e, task.taskid, index)}
+                            disabled={!dayjs(task.StartDate).isSame(dayjs(), 'day')}
+                            {...commonTextFieldProps}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {task.StartDate ? formatDate3(task.StartDate) : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          {task.DeadLineDate ? cleanDate(formatDate3(task.DeadLineDate)) : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outlined"
+                            color="primary"
+                            size='small'
+                            startIcon={<SeparatorHorizontal size={18} />}
+                            onClick={() => handleSplit(task.taskid)}
+                            className='buttonClassname'
+                            disabled={!dayjs(task.StartDate).isSame(dayjs(), 'day')}
+                          >
+                            Split
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </>
+                  :
+                  <TableRow>
+                    <TableCell colSpan={8} style={{ textAlign: 'center' }}>
+                      No tasks found for today.
+                    </TableCell>
+                  </TableRow>
+                }
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
       }
       <SplitTaskModal
         open={openSplitModal}
@@ -420,7 +457,7 @@ const CalendarGridView = () => {
         totalSplitHours={totalSplitHours}
         handleAutoSplit={handleAutoSplit}
       />
-    </>
+    </Box>
   );
 };
 

@@ -54,6 +54,7 @@ const MeetingPage = () => {
   const { hasAccess } = useAccess();
   const [viewType, setViewType] = useState("list");
   const [meetings, setMeetings] = useState([]);
+  console.log('meetings: ', meetings);
   const [isLoding, setIsLoding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [caledrawerOpen, setCaledrawerOpen] = useState(false);

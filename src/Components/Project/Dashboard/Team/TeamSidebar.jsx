@@ -38,12 +38,13 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
     const validate = () => {
         let isValid = true;
         setEmployeeError(false);
+        console.log('employee: ', employee);
         setRoleError(false);
         if (!employee) {
             setEmployeeError(true);
             isValid = false;
         }
-        if (!role.trim()) {
+        if (!role?.trim()) {
             setRoleError(true);
             isValid = false;
         }
@@ -52,7 +53,7 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
 
     function handleSave() {
         if (!validate()) return;
-        const newMember = { employee, role: role.trim() };
+        const newMember = { employee, role: role?.trim() };
         let updatedList;
         if (editIndex !== null) {
             updatedList = [...teamList];
@@ -97,7 +98,7 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
         const value = e.target.value; 
         if (value.includes('#') || value.includes(',')) return;
         setRole(value);
-        if (value.trim()) setRoleError(false);
+        if (value?.trim()) setRoleError(false);
     };
 
     const handleEmployeeChange = (newValue) => {

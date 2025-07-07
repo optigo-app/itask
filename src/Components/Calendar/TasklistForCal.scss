@@ -61,8 +61,6 @@
     position: relative;
     padding: 5px;
 
-
-
     .toggle-group {
         background-color: #f5f5f5;
         border-radius: 8px;
@@ -73,36 +71,20 @@
         position: relative;
         z-index: 1;
 
-
-
         .toggle-button {
             flex: 1;
-            font-size: 18px;
+            font-size: 16px;
             color: #666;
             border: none;
             line-height: 1.4rem;
             text-transform: none;
             transition: all 0.2s ease-in-out;
+            font-family: $font-family;
 
             &.Mui-selected {
                 background-color: #fff !important;
                 color: #000 !important;
                 font-weight: 700;
-
-                // &::before {
-                //     content: "";
-                //     position: absolute;
-                //     inset: 0;
-                //     padding: 2px;
-                //     border-radius: 4px;
-                //     background: linear-gradient(45deg, #ff416c, #ff4b2b, #ff7300, #38ef7d, #56ccf2);
-                //     background-size: 300% 300%;
-                //     animation: borderAnimation 4s linear infinite;
-                //     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-                //     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-                //     -webkit-mask-composite: exclude;
-                //     mask-composite: exclude;
-                // }
             }
         }
     }
