@@ -468,7 +468,6 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   const [uploading, setUploading] = useState(false);
   const [formValues, setFormValues] = useState({ folderName: '', url: '', attachment: {} });
   const [uploadedFile, setUploadedFile] = useState({ attachment: {}, url: {} });
-  console.log('uploadedFile: ', uploadedFile);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -939,7 +938,7 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                           sx={{ maxWidth: '150px', cursor: 'pointer' }}
                           onClick={() => window.open(link, '_blank')}
                         >
-                          {link.replace(/^https?:\/\//, '').split('?')[0].slice(0, 30)}...
+                          {link.replace(/^https?:\/\//, '')?.split('?')[0].slice(0, 30)}...
                         </Typography>
                       </Tooltip>
                       <IconButton className="delete-icon" onClick={() => handleDeleteUrl(folder, idx)}>
@@ -954,7 +953,6 @@ const SidebarDrawerFile = ({ open, onClose }) => {
             ))}
           </Box>
         )}
-
 
         <Box className="bottom-buttons" sx={{ position: 'absolute', bottom: 16, right: 16, display: 'flex' }}>
           <Button variant="outlined" className="secondaryBtnClassname" onClick={handleCancel} sx={{ marginRight: 1 }}>

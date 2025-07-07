@@ -127,8 +127,11 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
 
 
     const filterEvents = (events, selectedCalendars) => {
-        return events && events?.filter((event) => selectedCalendars?.includes(event?.category));
-    };
+        return events?.filter(event =>
+          !event?.category || selectedCalendars?.includes(event.category)
+        ) || [];
+      };
+      
 
     const filteredEvents = filterEvents(calEvData, selectedEventfilter);
     // const filteredEvents = calEvData
