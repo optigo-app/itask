@@ -15,7 +15,7 @@ import { DelPrTeamsApi } from "../../../Api/TaskApi/DelPrTeamsApi";
 const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
     const [open, setOpen] = React.useState(false);
     const [isLoading, setIsLoading] = React.useState(null);
-    const [selectedTeamMember, setSelectedTeamMember] = React.useState([]);
+    const [selectedTeamMember, setSelectedTeamMember] = React.useState({});
     const [teamMemberData, setTeamMemberData] = React.useState([]);
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
 
@@ -109,14 +109,14 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
                         className="reusable-table-container"
                         columns={[
                             { id: "id", label: "ID" },
-                            { id: "name", label: "Team Member" },
+                            { id: "firstname", label: "Team Member" },
                             { id: "designation", label: "Designation" },
                             { id: "rolename", label: "Role" },
                             { id: "action", label: "Action" },
                         ]}
                         data={teamMemberData}
                         renderCell={(columnId, row) => {
-                            if (columnId === "name") {
+                            if (columnId === "firstname") {
                                 return (
                                     <div className="reusa_uploadedBy">
                                         <Avatar

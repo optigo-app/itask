@@ -10,7 +10,6 @@ import {
     useTheme,
     ToggleButtonGroup,
     ToggleButton,
-    Divider,
 } from "@mui/material";
 import { CircleX, Grid2x2, ListTodo } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -101,7 +100,6 @@ const SidebarDrawer = ({
         }
     }, [encodedData]);
 
-
     useEffect(() => {
         const masterData = JSON?.parse(sessionStorage.getItem('structuredAdvMasterData'));
         const selectedGroupIds = formDataValue?.maingroupids
@@ -188,9 +186,6 @@ const SidebarDrawer = ({
             });
         }
     }, [open, formDataValue, rootSubrootflagval]);
-
-    console.log('formValues: ', formValues);
-
 
     let data = flattenTasks(taskDataValue)
     const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);
