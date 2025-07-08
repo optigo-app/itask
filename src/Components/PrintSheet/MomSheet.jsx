@@ -2,13 +2,17 @@ import * as React from "react";
 
 import './MomSheet.css'
 
-const MomSheet = React.forwardRef((props, ref) => {
+const MomSheet = React.forwardRef((selectedData, ref) => {
+    console.log('props: ', selectedData);
     return (
         <div ref={ref} className='container_main'>
 
             <div className='discolumn'>
                 <div className='container1'>
-                    <div className='con1_header1' style={{ fontSize: '13px' }}>Project/Topic</div>
+                    <div className='con1_header1' style={{ fontSize: '13px' }}>
+                        Project/Topic
+                        <p className="con1_header1Title ellipsis-2">{selectedData?.selectedData?.taskname}</p>
+                    </div>
                     <div className='con1_header2'>Promise Date</div>
                 </div>
                 <div className='container1'>
