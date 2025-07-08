@@ -222,8 +222,6 @@ const Header = ({ avatarSrc = "" }) => {
         }
     };
 
-    console.log('isDecodedTitle: ', isDecodedTitle);
-    console.log('decodedData: ', decodedData);
     const handleRedirection = (value) => {
         if (location?.pathname.includes("calendar") || location?.pathname?.includes("/taskView")) {
             if (value === "calendarView") {

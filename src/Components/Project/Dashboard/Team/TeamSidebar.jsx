@@ -20,33 +20,64 @@ import './TeamSidebar.scss';
 import { commonTextFieldProps } from '../../../../Utils/globalfun';
 import DepartmentAssigneeAutocomplete from '../../../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 
-const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, handleFinalSave }) => {
+const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, teamMemberData, handleFinalSave }) => {
+    console.log('selectedTeamMember: ', selectedTeamMember);
+    console.log('teamMemberData: ', teamMemberData);
     const [employee, setEmployee] = useState(null);
     const [role, setRole] = useState('');
     const [teamList, setTeamList] = useState([]);
     const [editIndex, setEditIndex] = useState(null);
-
+    const [duplicateError, setDuplicateError] = useState(false);
     const [employeeError, setEmployeeError] = useState(false);
     const [roleError, setRoleError] = useState(false);
 
     useEffect(() => {
-        if (!open) resetForm();
-        setEmployee(selectedTeamMember);
-        setRole(selectedTeamMember?.rolename)
+        if (!open) return;
+        if (selectedTeamMember) {
+            setEmployee(selectedTeamMember);
+            setRole(selectedTeamMember?.rolename || '');
+        } else {
+            resetForm();
+        }
     }, [open]);
 
     const validate = () => {
+        debugger
         let isValid = true;
         setEmployeeError(false);
-        console.log('employee: ', employee);
         setRoleError(false);
-        if (!employee) {
+        setDuplicateError(false);
+        if (!employee || Object.keys(employee).length === 0) {
             setEmployeeError(true);
             isValid = false;
         }
         if (!role?.trim()) {
             setRoleError(true);
             isValid = false;
+        }
+        const isEditingSelectedMain = selectedTeamMember?.id === employee?.id;
+        if (!isEditingSelectedMain) {
+            const isDuplicate = teamMemberData?.some(item =>
+                item?.id === employee?.id && editIndex == null
+            );
+            const isDuplicatelocal = teamList?.some((item, idx) =>
+                item?.employee?.id === employee?.id && idx !== editIndex
+            );
+            if (isDuplicate || isDuplicatelocal) {
+                setDuplicateError(true);
+                isValid = false;
+            }
+        } else if (teamList?.length > 0) {
+            const isDuplicate = teamMemberData?.some(item =>
+                item?.id === employee?.id && editIndex === null
+            );
+            const isDuplicatelocal = teamList?.some((item, idx) =>
+                item?.employee?.id === employee?.id && idx !== editIndex
+            );
+            if (isDuplicate || isDuplicatelocal) {
+                setDuplicateError(true);
+                isValid = false;
+            }
         }
         return isValid;
     };
@@ -77,6 +108,7 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
         setEditIndex(null);
         setEmployeeError(false);
         setRoleError(false);
+        setDuplicateError(false);
     };
 
     const handleEdit = (index) => {
@@ -95,28 +127,31 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
     };
 
     const handleRoleChange = (e) => {
-        const value = e.target.value; 
+        const value = e.target.value;
         if (value.includes('#') || value.includes(',')) return;
         setRole(value);
         if (value?.trim()) setRoleError(false);
     };
 
     const handleEmployeeChange = (newValue) => {
+        console.log('newValue: ', newValue);
         setEmployee(newValue);
-        if (newValue) setEmployeeError(false);
+        setEmployeeError(false);
+        setDuplicateError(false);
     };
 
+    const handleClose = () => {
+        onClose();
+        resetForm();
+        setTeamList([]);
+    }
 
     return (
-        <Drawer anchor="right" open={open} onClose={onClose} className="TMainDrawer">
+        <Drawer anchor="right" open={open} onClose={handleClose} className="TMainDrawer">
             <Box className="tMainBox" p={2} width={400}>
                 <Box className="drawerHeader" display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="h6" className="drawer-title">Team Members</Typography>
-                    <IconButton onClick={() => { 
-                        onClose(); 
-                        resetForm();
-                        setTeamList([]);
-                         }}><CircleX /></IconButton>
+                    <IconButton onClick={() => handleClose()}><CircleX /></IconButton>
                 </Box>
 
                 <div style={{ margin: "10px 0", border: "1px dashed #7d7f85", opacity: 0.3 }} />
@@ -130,8 +165,14 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, hand
                             placeholder="Select assignee"
                             multiple={false}
                             onChange={handleEmployeeChange}
-                            error={employeeError}
-                            helperText={employeeError ? 'Please select a team member' : ''}
+                            error={employeeError || duplicateError}
+                            helperText={
+                                employeeError
+                                    ? 'Please select a team member'
+                                    : duplicateError
+                                        ? 'This team member is already added'
+                                        : ''
+                            }
                         />
                     </Box>
 

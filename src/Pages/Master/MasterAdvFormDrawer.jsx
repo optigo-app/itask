@@ -10,7 +10,6 @@ import DynamicMasterDrawer from "./DynamicMasterDrawer";
 import SmartDropdown from "../../Components/MastersComp/SmartDropdown";
 
 const MasterAdvFormDrawer = ({ open, onClose, mode, filteredData, groups, setGroups, onSubmit, formData, masterType, setFormData, handleMasterChange }) => {
-    console.log('formData: ', formData);
     const [masterOptions, setMasterOptions] = useState([]);
     const [subMasterOptions, setSubMasterOptions] = useState([]);
     const [valueOptions, setValueOptions] = useState([]);

@@ -40,7 +40,6 @@ const Task = () => {
   const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
   const [copiedData, setCopiedData] = useRecoilState(copyRowData);
   const [completedFlag, setCompletedFlag] = useRecoilState(completedTask);
-  console.log('completedFlag: ', completedFlag);
   const encodedData = searchParams.get("data");
   const [CategoryTSummary, setCategoryTSummary] = useState([]);
   const [contextMenu, setContextMenu] = useState(null);
@@ -56,13 +55,12 @@ const Task = () => {
     statusData,
     taskAssigneeData } = useFullTaskFormatFile();
 
-  console.log('taskFinalData: ', taskFinalData);
   useEffect(() => {
-    setTasks([]); console.log();
+    setTasks([]);
   }, [location.pathname]);
 
   useEffect(() => {
-    let parsedData = null; console.log();
+    let parsedData = null;
     if (encodedData) {
       try {
         const decodedString = decodeURIComponent(encodedData);
@@ -223,7 +221,6 @@ const Task = () => {
         project,
         category,
       } = filters;
-      console.log('filters: ', filters);
 
       const normalizedSearchTerm = searchTerm?.trim()?.toLowerCase();
       const isQuoted =

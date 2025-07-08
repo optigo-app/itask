@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Drawer,
     Box,
@@ -54,12 +54,6 @@ const CalendarForm = ({
         bulkTask: [],
         allDay: false
     });
-    
-    const filterRefs = {
-        category: useRef(),
-        guests: useRef(),
-    };
-    console.log('formValues: ', formValues);
 
     const validateForm = () => {
         const newErrors = {};

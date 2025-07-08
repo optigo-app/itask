@@ -27,6 +27,7 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
     const handleSidebarOpen = () => {
         setOpen(true);
     };
+
     const handleSidebarClose = () => {
         setSelectedTeamMember([]);
         setOpen(false);
@@ -174,6 +175,7 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
                 onClose={handleSidebarClose}
                 taskAssigneeData={taskAssigneeData}
                 selectedTeamMember={selectedTeamMember}
+                teamMemberData={teamMemberData}
                 onSave={handleSave}
                 handleFinalSave={handleSave}
                 handleDeleteDialog={handleDeleteDialog}
