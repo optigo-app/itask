@@ -54,8 +54,6 @@ const SidebarDrawer = ({
     const formDataValue = useRecoilValue(formData);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
     const [taskType, setTaskType] = useState("single");
-    const searchParams = new URLSearchParams(location?.search);
-    const encodedData = searchParams.get("data");
     const [decodedData, setDecodedData] = useState(null);
     const [isDuplicateTask, setIsDuplicateTask] = useState(false);
     const [isTaskNameEmpty, setIsTaskNameEmpty] = useState(false);
@@ -88,6 +86,8 @@ const SidebarDrawer = ({
     });
 
     useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const encodedData = searchParams.get("data");
         if (encodedData) {
             try {
                 const decodedString = decodeURIComponent(encodedData);
@@ -97,12 +97,15 @@ const SidebarDrawer = ({
             } catch (error) {
                 console.error("Error decoding data:", error);
             }
+        } else {
+            setDecodedData(null);
         }
-    }, [encodedData]);
+    }, [location.pathname, location.search]);
 
     useEffect(() => {
         const masterData = JSON?.parse(sessionStorage.getItem('structuredAdvMasterData'));
-        const selectedGroupIds = formDataValue?.maingroupids
+        console.log('decodedData: ', decodedData);
+        const selectedGroupIds = decodedData ? decodedData?.maingroupids : formDataValue?.maingroupids
             ?.split(",")
             ?.map((id) => parseInt(id, 10));
 
@@ -147,6 +150,7 @@ const SidebarDrawer = ({
     };
 
     useEffect(() => {
+        debugger
         const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = formDataValue?.assigneids ? taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id)) : [];
