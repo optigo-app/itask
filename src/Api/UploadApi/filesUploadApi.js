@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 export const filesUploadApi = async ({ attachments, folderName, uniqueNo }) => {
-  debugger
   const isLocal = ["localhost", "nzen"]?.includes(
     window.location.hostname
   );
