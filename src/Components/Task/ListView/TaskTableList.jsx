@@ -36,7 +36,6 @@ import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 import StatusCircles from "../../ShortcutsComponent/EstimateComp";
 import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawerFile";
-import useAccess from "../../Auth/Role/useAccess";
 import MenuDatePicker from "../../ShortcutsComponent/Date/DeadlineDate";
 import PriorityBadge from "../../ShortcutsComponent/PriorityBadge";
 import CutPasetContextMenu from "../../ShortcutsComponent/CutPasteMenu";
@@ -66,7 +65,6 @@ const TableView = ({
     handleAssigneeShortcutSubmit,
     handleDeadlineDateChange,
     isLoading }) => {
-        console.log('data: ', data);
     const [anchorPrintEl, setAnchorPrintEl] = useState(null);
     const printRef1 = React.useRef(null);
     const printRef2 = React.useRef(null);
@@ -518,7 +516,7 @@ const TableView = ({
                         : hoveredSubtaskId === subtask?.taskid
                             ? '#f5f5f5'
                             : expandedTasks[subtask.taskid]
-                                ? '#80808030'
+                                ? '#f5f5f5'
                                 : 'inherit',
                 }}
                     onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid, { Tbcell: 'TaskName' })}
@@ -680,7 +678,7 @@ const TableView = ({
                                                         : hoveredTaskId === task?.taskid
                                                             ? '#f5f5f5'
                                                             : expandedTasks[task.taskid]
-                                                                ? '#80808030'
+                                                                ? '#f5f5f5'
                                                                 : 'inherit',
                                                 }}
                                                 onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}

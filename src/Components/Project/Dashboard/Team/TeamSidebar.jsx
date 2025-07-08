@@ -21,8 +21,6 @@ import { commonTextFieldProps } from '../../../../Utils/globalfun';
 import DepartmentAssigneeAutocomplete from '../../../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 
 const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, teamMemberData, handleFinalSave }) => {
-    console.log('selectedTeamMember: ', selectedTeamMember);
-    console.log('teamMemberData: ', teamMemberData);
     const [employee, setEmployee] = useState(null);
     const [role, setRole] = useState('');
     const [teamList, setTeamList] = useState([]);
@@ -42,7 +40,6 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, team
     }, [open]);
 
     const validate = () => {
-        debugger
         let isValid = true;
         setEmployeeError(false);
         setRoleError(false);
@@ -134,7 +131,6 @@ const TeamSidebar = ({ open, onClose, taskAssigneeData, selectedTeamMember, team
     };
 
     const handleEmployeeChange = (newValue) => {
-        console.log('newValue: ', newValue);
         setEmployee(newValue);
         setEmployeeError(false);
         setDuplicateError(false);
