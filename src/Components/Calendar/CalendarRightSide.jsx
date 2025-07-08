@@ -125,13 +125,11 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
         handleClose();
     };
 
-
     const filterEvents = (events, selectedCalendars) => {
         return events?.filter(event =>
           !event?.category || selectedCalendars?.includes(event.category)
         ) || [];
       };
-      
 
     const filteredEvents = filterEvents(calEvData, selectedEventfilter);
     // const filteredEvents = calEvData
@@ -165,6 +163,7 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
     }, []);
 
     const calendarOptions = {
+        firstDay: 1,
         events: filteredEvents?.map(event => {
             return {
                 id: event?.meetingid?.toString(),

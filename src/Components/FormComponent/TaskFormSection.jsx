@@ -68,7 +68,7 @@ const TaskFormSection = ({
                 isTaskNameEmpty
                   ? 'Task name is required.'
                   : isDuplicateTask
-                  ? 'This Task name already exists for the selected project.'
+                  ? 'This taskname already exists for the selected module.'
                   : '',
                 handleChange
               )}

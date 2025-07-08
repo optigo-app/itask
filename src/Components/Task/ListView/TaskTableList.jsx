@@ -66,6 +66,7 @@ const TableView = ({
     handleAssigneeShortcutSubmit,
     handleDeadlineDateChange,
     isLoading }) => {
+        console.log('data: ', data);
     const [anchorPrintEl, setAnchorPrintEl] = useState(null);
     const printRef1 = React.useRef(null);
     const printRef2 = React.useRef(null);

@@ -193,40 +193,57 @@ const SidebarDrawer = ({
     let data = flattenTasks(taskDataValue)
     const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);
 
-    const projectId = useMemo(() => {
+    const selectedId = useMemo(() => {
+        const isProjectPath = location?.pathname?.includes("/projects");
+    
         if (rootSubrootflagval?.Task === "AddTask") {
-            return formValues?.project || decodedData?.projectid || formDataValue?.projectid;
+            return isProjectPath
+                ? formValues?.project || decodedData?.projectid || formDataValue?.projectid
+                : formValues?.moduleid || decodedData?.moduleid || formDataValue?.moduleid;
         } else {
-            return formValues?.project || formDataValue?.projectid;
+            return isProjectPath
+                ? formValues?.project || formDataValue?.projectid
+                : formValues?.moduleid || formDataValue?.moduleid;
         }
-    }, [formValues?.project, decodedData?.projectid, formDataValue?.projectid, rootSubrootflagval?.Task]);
-
+    }, [
+        formValues?.project,
+        formValues?.moduleid,
+        decodedData?.projectid,
+        decodedData?.moduleid,
+        formDataValue?.projectid,
+        formDataValue?.moduleid,
+        rootSubrootflagval?.Task,
+        location?.pathname
+    ]);
+    
     const flattenedTasks = useMemo(() => {
         if (location?.pathname?.includes("/projects")) {
             return projectModuleData ? flattenTasks(taskDataValue) : [];
         }
         return flattenTasks(taskDataValue);
     }, [location?.pathname, projectModuleData, taskDataValue]);
-
+    
     useEffect(() => {
         if (!rootSubrootflagval?.Task) return;
-
+    
+        const isProjectPath = location?.pathname?.includes("/projects");
+        const dynamicKey = isProjectPath ? "projectid" : "moduleid";
         const isRoot = rootSubrootflagval?.Task === "root";
         const isAddOrSub = rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "subroot";
-
-        if (projectId) {
+    
+        if (selectedId) {
             setIsTaskNameEmpty(taskName === "");
         }
-
-        if (!projectId || !taskName) {
+    
+        if (!selectedId || !taskName) {
             setIsDuplicateTask(false);
             return;
         }
-
+    
         if (isAddOrSub) {
             const match = flattenedTasks.find(
                 task =>
-                    task?.projectid === projectId &&
+                    task?.[dynamicKey] === selectedId &&
                     task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
             );
             setIsDuplicateTask(!!match);
@@ -236,7 +253,7 @@ const SidebarDrawer = ({
             } else {
                 const match = data.find(
                     task =>
-                        task?.projectid === projectId &&
+                        task?.[dynamicKey] === selectedId &&
                         task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
                 );
                 setIsDuplicateTask(!!match);
@@ -248,13 +265,14 @@ const SidebarDrawer = ({
     }, [
         open,
         taskName,
-        projectId,
+        selectedId,
         flattenedTasks,
         data,
         rootSubrootflagval?.Task,
-        formDataValue?.taskname
+        formDataValue?.taskname,
+        location?.pathname
     ]);
-
+    
     // Handle form value changes
     const handleChange = (e) => {
         const { name, value } = e.target;
