@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./TaskTable.scss";
 import {
     Table,
@@ -18,8 +18,10 @@ import {
     Chip,
     Tooltip,
     LinearProgress,
+    Menu,
+    MenuItem,
 } from "@mui/material";
-import { CirclePlus, Eye, Paperclip, Pencil, Timer } from "lucide-react";
+import { CirclePlus, Eye, Paperclip, Pencil, PrinterCheck, Timer } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -38,6 +40,9 @@ import useAccess from "../../Auth/Role/useAccess";
 import MenuDatePicker from "../../ShortcutsComponent/Date/DeadlineDate";
 import PriorityBadge from "../../ShortcutsComponent/PriorityBadge";
 import CutPasetContextMenu from "../../ShortcutsComponent/CutPasteMenu";
+import MomSheet from "../../PrintSheet/MomSheet";
+import MaintenanceSheet from "../../PrintSheet/MaintenanceSheet";
+import { useReactToPrint } from "react-to-print";
 
 const TableView = ({
     data,
@@ -61,6 +66,9 @@ const TableView = ({
     handleAssigneeShortcutSubmit,
     handleDeadlineDateChange,
     isLoading }) => {
+    const [anchorPrintEl, setAnchorPrintEl] = useState(null);
+    const printRef1 = React.useRef(null);
+    const printRef2 = React.useRef(null);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const setFormDataValue = useSetRecoilState(formData);
@@ -207,6 +215,35 @@ const TableView = ({
         setSelectedItem(task);
     };
 
+    const handleOpenPrintMenu = (event) => {
+        setAnchorPrintEl(event.currentTarget);
+    };
+
+    const handleClosePrintMenu = () => {
+        setAnchorPrintEl(null);
+    };
+
+    const handlePrintA = useReactToPrint({
+        contentRef: printRef1,
+        documentTitle: "AwesomeFileName",
+    });
+
+    const handlePrintB = useReactToPrint({
+        contentRef: printRef2,
+        documentTitle: "AwesomeFileName",
+    });
+
+    const printOptions = [
+        {
+            label: "MOM Sheet",
+            onClick: handlePrintA,
+        },
+        {
+            label: "Maintenance Sheet",
+            onClick: handlePrintB,
+        },
+    ];
+
     const handleOpenFileDrawer = (task, additionalInfo) => {
         setRootSubroot(additionalInfo);
         setFileDrawerOpen(true);
@@ -333,6 +370,17 @@ const TableView = ({
                 <Timer size={20} className="iconbtn" />
             </IconButton>
             <IconButton
+                aria-label="print mom and maintenance Sheet button"
+                onClick={handleOpenPrintMenu}
+                sx={{
+                    '&.Mui-disabled': {
+                        color: 'rgba(0, 0, 0, 0.26)',
+                    },
+                }}
+            >
+                <PrinterCheck size={20} className="iconbtn" />
+            </IconButton>
+            <IconButton
                 aria-label="View Module button"
                 onClick={() => handleOpenFileDrawer(task, { Task: "root" })}
                 sx={{
@@ -347,7 +395,6 @@ const TableView = ({
                     className="iconbtn"
                 />
             </IconButton>
-            {/* {hasAccess(PERMISSIONS.canEdit) && */}
             <IconButton
                 disabled={task?.isFreezed == 1}
                 onClick={() => handleEditTask(task, { Task: "root" })}
@@ -364,7 +411,6 @@ const TableView = ({
                     className="iconbtn"
                 />
             </IconButton>
-            {/* } */}
             <IconButton
                 aria-label="view Task button"
                 onClick={() => handleViewTask(task, { Task: "root" })}
@@ -750,7 +796,6 @@ const TableView = ({
                                                 )}
                                             </Box>
                                         )}
-
                                     </TableCell>
                                 </TableRow>
                             }
@@ -758,7 +803,6 @@ const TableView = ({
                     </Table>
                 </TableContainer >
             }
-
             <CutPasetContextMenu
                 contextMenu={contextMenu}
                 onClose={handleCloseContextMenu}
@@ -803,6 +847,52 @@ const TableView = ({
                 handleClose={handlDeadlineeClose}
                 value={selectedItem}
                 onChange={handleDeadlineChange} />
+
+            <Menu
+                anchorEl={anchorPrintEl}
+                open={Boolean(anchorPrintEl)}
+                onClose={handleClosePrintMenu}
+                slotProps={{
+                    paper: {
+                        sx: {
+                            borderRadius: "8px !important",
+                            boxShadow:
+                                "rgba(0, 0, 0, 0.24) 0px 3px 8px;",
+                            '& "MuiList-root': {
+                                paddingTop: "0 !important",
+                                paddingBottom: "0 !important",
+                            },
+                        },
+                    },
+                }}
+            >
+                {printOptions?.map((option, index) => (
+                    <MenuItem
+                        key={index}
+                        onClick={() => {
+                            option.onClick();
+                            handleClosePrintMenu();
+                        }}
+                        sx={{
+                            margin: "5px 10px !important",
+                            borderRadius: "8px !important",
+                            "&:hover": {
+                                backgroundColor: "#f0f0f0 !important",
+                                borderRadius: "8px !important",
+                            },
+                        }}
+                    >
+                        <Typography fontSize={14} variant="body1">
+                            {option.label}
+                        </Typography>
+                    </MenuItem>
+                ))}
+            </Menu>
+
+            <div style={{ display: 'none' }}>
+                <MomSheet ref={printRef1} />
+                <MaintenanceSheet ref={printRef2} />
+            </div>
 
         </>
     );

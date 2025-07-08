@@ -558,7 +558,6 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   };
 
   const handleDeleteFile = async (folder, index) => {
-    debugger
     const isLocal = (formValues?.attachment?.[folder] || []).some((f, i) => i === index);
     if (isLocal) {
       const updatedFormFiles = [...formValues.attachment[folder]];
