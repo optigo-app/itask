@@ -12,9 +12,7 @@ import { commonTextFieldProps, filterNestedTasksByView, flattenTasks } from "../
 
 const TasklistForCal = ({ calendarsColor }) => {
     const task = useRecoilValue(TaskData);
-    console.log('task--->>>>: ', task);
     const [calTasksList, setCalTasksList] = useState([]);
-    console.log('calTasksList: ', calTasksList);
     const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {

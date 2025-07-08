@@ -3,7 +3,6 @@ import * as React from "react";
 import './MomSheet.css'
 
 const MomSheet = React.forwardRef((props, ref) => {
-    console.log('ref----->>>>>>: ', ref);
     return (
         <div ref={ref} className='container_main'>
 

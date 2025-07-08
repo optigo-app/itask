@@ -336,7 +336,6 @@ const MasterToggle = () => {
     const handleRemoveMasterData = async () => {
         if (categoryStates?.id === "advanced_master") {
             const apiRes = await deleteAdvancedMasterApi(formAdvData);
-            console.log("apiRes: ", apiRes);
             if (apiRes?.rd?.[0]?.stat == 1) {
                 toast.success("Data Removed Successfully");
                 setStructuredAdvMasterData(prev =>

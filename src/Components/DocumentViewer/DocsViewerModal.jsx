@@ -12,7 +12,6 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 
 const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
-  console.log('fileData: ', fileData);
   const { url, filename, extension } = fileData || {};
 
   const lowerExt = extension?.toLowerCase();
