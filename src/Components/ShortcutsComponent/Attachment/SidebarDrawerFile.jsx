@@ -32,6 +32,8 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   const [uploading, setUploading] = useState(false);
   const [formValues, setFormValues] = useState({ folderName: '', url: '', attachment: {} });
   const [uploadedFile, setUploadedFile] = useState({ attachment: {}, url: {} });
+  const [showError, setShowError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -55,6 +57,14 @@ const SidebarDrawerFile = ({ open, onClose }) => {
     }
   }, [open, selectedRow]);
 
+  useEffect(() => {
+    if (showError) {
+      setTimeout(() => {
+        setShowError(false);
+      }, 1500);
+    }
+  }, [showError])
+
   const handleTabChange = (event, newValue) => {
     if (newValue !== null) {
       setSelectedTab(newValue);
@@ -67,6 +77,7 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   };
 
   const handleFileDrop = async (acceptedFiles) => {
+    setErrorMsg('');
     const folder = formValues.folderName || "Untitled";
     const formFiles = formValues?.attachment?.[folder] || [];
     const uploadedFiles = uploadedFile?.attachment?.[folder] || [];
@@ -89,10 +100,12 @@ const SidebarDrawerFile = ({ open, onClose }) => {
       }
     }
     if (duplicateFiles.length > 0) {
-      toast.warning(`Skipped duplicate file(s): ${duplicateFiles.join(', ')}`);
+      setErrorMsg(`Skipped duplicate file(s): ${duplicateFiles.join(', ')}`);
+      setShowError(true);
     }
     if (oversizedFiles.length > 0) {
-      toast.error(`Skipped file(s) exceeding 25MB: ${oversizedFiles.join(', ')}`);
+      setErrorMsg(`Skipped file(s) exceeding 25MB: ${oversizedFiles.join(', ')}`);
+      setShowError(true);
     }
     if (newFiles.length === 0) return;
     setFormValues((prev) => ({
@@ -410,6 +423,11 @@ const SidebarDrawerFile = ({ open, onClose }) => {
         {uploading && (
           <Box sx={{ padding: '10px 0' }}>
             <Typography variant="body2" gutterBottom>Uploading...</Typography>
+          </Box>
+        )}
+        {showError && (
+          <Box sx={{ padding: '10px 0' }}>
+            <Typography sx={{ color: '#D32F2F !important' }} variant="body2" gutterBottom>{errorMsg}</Typography>
           </Box>
         )}
 
