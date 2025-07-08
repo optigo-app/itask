@@ -18,11 +18,11 @@ const TasklistForCal = ({ calendarsColor }) => {
     useEffect(() => {
         const userProfileData = JSON?.parse(localStorage?.getItem("UserProfileData"));
         if (userProfileData?.id && task?.length > 0) {
-          const myNestedTasks = filterNestedTasksByView(task, 'me', userProfileData.id);
-          const flatMyTasks = flattenTasks(myNestedTasks);
-          setCalTasksList(flatMyTasks);
+            const myNestedTasks = filterNestedTasksByView(task, 'me', userProfileData.id);
+            const flatMyTasks = flattenTasks(myNestedTasks);
+            setCalTasksList(flatMyTasks);
         }
-      }, [task]);
+    }, [task]);
 
     // Drag only children (parentid !== 0)
     useEffect(() => {
@@ -79,7 +79,6 @@ const TasklistForCal = ({ calendarsColor }) => {
         const matched = searchQuery
             ? (fuse?.search(searchQuery) || []).map(res => res.item)
             : calTasksList || [];
-
         const matchedIds = new Set(matched.map(t => t.taskid));
         const moduleMap = {};
         (calTasksList || []).forEach(task => {
@@ -87,23 +86,23 @@ const TasklistForCal = ({ calendarsColor }) => {
             if (!moduleMap[modId]) {
                 moduleMap[modId] = {
                     ...task,
-                    children: []
+                    subtasks: []
                 };
             }
         });
         (calTasksList || []).forEach(task => {
-            if (!moduleMap[task.moduleid].children.find(t => t.taskid === task.taskid)) {
-                moduleMap[task.moduleid].children.push({ ...task });
+            const modId = task.moduleid;
+            if (task.parentid !== 0 && !moduleMap[modId].subtasks.find(t => t.taskid === task.taskid)) {
+                moduleMap[modId].subtasks.push({ ...task });
             }
         });
         return Object.values(moduleMap).filter(module => {
             const moduleMatch = matchedIds.has(module.taskid);
-            const filteredChildren = module.children.filter(child => matchedIds.has(child.taskid));
-            module.children = moduleMatch ? module.children : filteredChildren;
-            return moduleMatch || filteredChildren.length > 0;
+            const filteredSubtasks = module.subtasks.filter(child => matchedIds.has(child.taskid));
+            module.subtasks = moduleMatch ? module.subtasks : filteredSubtasks;
+            return moduleMatch || filteredSubtasks.length > 0;
         });
     };
-
 
     const groupedTasks = getFilteredHierarchy();
 
@@ -133,7 +132,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                             {parent.taskname}
                         </Typography>
 
-                        {parent?.children?.map(child => {
+                        {parent?.subtasks?.map(child => {
                             const colorClass = calendarsColor[child.category] || "default";
                             return (
                                 <Card
