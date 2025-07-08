@@ -215,8 +215,9 @@ const TableView = ({
         setSelectedItem(task);
     };
 
-    const handleOpenPrintMenu = (event) => {
+    const handleOpenPrintMenu = (event, task) => {
         setAnchorPrintEl(event.currentTarget);
+        setSelectedItem(task);
     };
 
     const handleClosePrintMenu = () => {
@@ -371,7 +372,7 @@ const TableView = ({
             </IconButton>
             <IconButton
                 aria-label="print mom and maintenance Sheet button"
-                onClick={handleOpenPrintMenu}
+                onClick={(event) => handleOpenPrintMenu(event, task)}
                 sx={{
                     '&.Mui-disabled': {
                         color: 'rgba(0, 0, 0, 0.26)',
@@ -890,8 +891,8 @@ const TableView = ({
             </Menu>
 
             <div style={{ display: 'none' }}>
-                <MomSheet ref={printRef1} />
-                <MaintenanceSheet ref={printRef2} />
+                <MomSheet selectedData={selectedItem} ref={printRef1} />
+                <MaintenanceSheet selectedData={selectedItem} ref={printRef2} />
             </div>
 
         </>
