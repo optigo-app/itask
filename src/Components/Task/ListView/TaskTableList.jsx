@@ -177,6 +177,7 @@ const TableView = ({
             taskname: task?.taskname,
             moduleid: task?.moduleid,
             maingroupids: task?.maingroupids,
+            breadcrumbTitles:task?.breadcrumbTitles
         }
         setRootSubroot(additionalInfo);
         setFormDataValue(data);
@@ -192,6 +193,7 @@ const TableView = ({
             taskname: subtask?.taskname,
             moduleid: subtask?.moduleid,
             maingroupids: subtask?.maingroupids,
+            breadcrumbTitles:subtask?.breadcrumbTitles
         }
         setRootSubroot(additionalInfo);
         setFormDataValue(data);

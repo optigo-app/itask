@@ -20,6 +20,7 @@ import { getAttachmentApi } from '../../../Api/UploadApi/GetAttachmentApi';
 import ImageSkeleton from './ImageSkeleton';
 import { toast } from 'react-toastify';
 import { removeFileApi } from '../../../Api/UploadApi/filesRemoveApi';
+import Breadcrumb from '../../BreadCrumbs/Breadcrumb';
 
 const tabData = [
   { id: 1, value: "file", label: "File", icon: <File size={18} /> },
@@ -361,7 +362,9 @@ const SidebarDrawerFile = ({ open, onClose }) => {
         </Box>
 
         <div style={{ margin: "10px 0", border: "1px dashed #7d7f85", opacity: 0.3 }} />
-
+        <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>
+          <Breadcrumb breadcrumbTitles={selectedRow?.breadcrumbTitles} />
+        </Typography>
         <Box className="fileSideBarTgBox">
           <ToggleButtonGroup
             value={selectedTab}

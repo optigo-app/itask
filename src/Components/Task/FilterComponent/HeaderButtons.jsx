@@ -31,7 +31,6 @@ import {
 import { toast } from "react-toastify";
 import {
   Calendar,
-  ChevronsDown,
   CircleCheck,
   ClipboardPaste,
   Kanban,
@@ -83,7 +82,7 @@ const HeaderButtons = ({
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
   const [viewTaskMode, setViewTaskMode] = useRecoilState(viewMode);
-  const [completedFlag, setCompletedFlag] = useRecoilState(completedTask);
+  const completedFlag = useRecoilValue(completedTask);
   const encodedData = searchParams.get("data");
   const [parsedData, setParsedData] = useState();
   const [categoryMaster, setCategoryMaster] = useState([]);
@@ -100,9 +99,10 @@ const HeaderButtons = ({
       const jsonString = atob(decodedString);
       setParsedData(JSON?.parse(jsonString));
     }
+    if (sessionStorage?.getItem('viewTaskMode')) {
+      setViewTaskMode(sessionStorage?.getItem('viewTaskMode'));
+    }
   }, [])
-
-
 
   const handleDrawerToggle = () => {
     setFormDrawerOpen(!formdrawerOpen);
@@ -138,9 +138,11 @@ const HeaderButtons = ({
   };
 
   const handleViewModeChange = (event, newView) => {
-    if (newView !== null) setViewTaskMode(newView);
+    if (newView !== null) {
+      setViewTaskMode(newView);
+      sessionStorage?.setItem('viewTaskMode', newView);
+    }
   };
-
 
   const handleViewChange = (event, newView) => {
     if (!newView || newView === view) return;
@@ -151,7 +153,6 @@ const HeaderButtons = ({
       onButtonClick(newView);
     }
   };
-
 
   const handleFilterChange = (key, value) => {
     if (key === "category") {

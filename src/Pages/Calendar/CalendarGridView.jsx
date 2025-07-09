@@ -415,7 +415,7 @@ const CalendarGridView = () => {
                           {task.StartDate ? formatDate3(task.StartDate) : 'N/A'}
                         </TableCell>
                         <TableCell>
-                          {task.DeadLineDate ? cleanDate(formatDate3(task.DeadLineDate)) : 'N/A'}
+                          {task.DeadLineDate ? (formatDate3(cleanDate(task.DeadLineDate)) || '-') : 'N/A'}
                         </TableCell>
                         <TableCell>
                           <Button

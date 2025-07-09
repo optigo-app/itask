@@ -15,7 +15,6 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
     dayjs.extend(utc);
     dayjs.extend(timezone);
     const [tasks, setTasks] = useState([]);
-    console.log('tasks: ', tasks);
     const [editIndex, setEditIndex] = useState(null);
     const [showEdit, setShowEdit] = useState(true);
     const [text, setText] = useState("");
@@ -27,7 +26,6 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
     const estimateRefs = useRef([]);
     const [totalEstimate, setTotalEstimate] = useState('');
     const [autoDeadline, setAutoDeadline] = useState('');
-    console.log('autoDeadline: ', autoDeadline);
     const [editingName, setEditingName] = useState("");
     const [showAditionalMaster, setShowAditionalMaster] = useState(false);
 
