@@ -84,7 +84,8 @@ const SidebarDrawer = ({
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
-
+    console.log('formValues: ', formValues);
+    
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const encodedData = searchParams.get("data");
@@ -663,6 +664,7 @@ const SidebarDrawer = ({
                                             formValues={formValues}
                                             taskType={taskType}
                                             handleDropdownChange={handleDropdownChange}
+                                            renderDateField={renderDateField}
                                             divider={true}
                                             mdValue={12}
                                             mainMdValue={4}

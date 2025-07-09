@@ -9,13 +9,13 @@ import { Save, X as Close, Pencil, Trash, Plus, ArrowLeft } from "lucide-react";
 import './SidebarDrawer.scss';
 import { DatePicker } from "@mui/x-date-pickers";
 import { customDatePickerProps } from "../../Utils/globalfun";
-import { isValidInput } from "../../Utils/globalfun";
 import DynamicDropdownSection from "./DynamicDropdownSection";
 
-const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, taskType, handleDropdownChange, divider, mdValue }) => {
+const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownChange, renderDateField }) => {
     dayjs.extend(utc);
     dayjs.extend(timezone);
     const [tasks, setTasks] = useState([]);
+    console.log('tasks: ', tasks);
     const [editIndex, setEditIndex] = useState(null);
     const [showEdit, setShowEdit] = useState(true);
     const [text, setText] = useState("");
@@ -26,8 +26,9 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, taskType, handleD
     const inputRef = useRef(null);
     const estimateRefs = useRef([]);
     const [totalEstimate, setTotalEstimate] = useState('');
+    const [autoDeadline, setAutoDeadline] = useState('');
+    console.log('autoDeadline: ', autoDeadline);
     const [editingName, setEditingName] = useState("");
-    const [editingEstimate, setEditingEstimate] = useState("");
     const [showAditionalMaster, setShowAditionalMaster] = useState(false);
 
     useEffect(() => {
@@ -87,6 +88,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, taskType, handleD
         setNewEstimate("");
         inputRef.current?.focus();
     };
+
     const handleTaskChange = (index, key, value) => {
         if (key === 'taskName' && !isValidInput(value)) {
             setErrorMessage("Task name cannot contain ',' or '#'.");
@@ -134,15 +136,14 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, taskType, handleD
     const handleEdit = (index) => {
         setEditIndex(index);
         setEditingName(tasks[index].taskName);
-        setEditingEstimate(tasks[index].estimate);
     };
 
     const handleCancelEdit = () => {
         setEditIndex(null);
         setEditingName("");
-        setEditingEstimate("");
         setErrorMessage("");
     };
+
     const handleSaveEdit = () => {
         if (editingName?.trim() === "") {
             setErrorMessage("Task name is required.");
@@ -160,7 +161,6 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, taskType, handleD
         updateTotalEstimate(updatedTasks);
         setEditIndex(null);
         setEditingName("");
-        setEditingEstimate("");
         setErrorMessage("");
     };
 
@@ -168,7 +168,6 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, taskType, handleD
         if (typeof value !== 'string') return true;
         return !/[,#]/.test(value);
     };
-
 
     const handleDelete = (index) => {
         const updatedTasks = tasks.filter((_, i) => i !== index);
@@ -246,6 +245,21 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, taskType, handleD
         setShowAditionalMaster(!showAditionalMaster);
     }
 
+    const handleDateChange = (date, key) => {
+        if (date) {
+            const istDate = date.tz('Asia/Kolkata');
+            setAutoDeadline((prev) => ({
+                ...prev,
+                [key]: istDate.format('YYYY-MM-DDTHH:mm:ss.SSS'),
+            }));
+            const updatedTasks = tasks.map(task => ({
+                ...task,
+                deadLineDate: istDate.format('YYYY-MM-DDTHH:mm:ss.SSS') ?? '',
+            }));
+            setTasks(updatedTasks);
+            onSave(updatedTasks);
+        }
+    };
 
     return (
         <Box className="mltMainBox">
@@ -322,6 +336,11 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, taskType, handleD
                                                     handleEstimateKeyPress(e);
                                                 }}
                                             />
+                                        </Box>
+                                        <Box sx={{
+                                            marginBottom: '-6px'
+                                        }}>
+                                            {renderDateField('Auto Deadline', 'deadlineDate', autoDeadline['deadlineDate'], handleDateChange)}
                                         </Box>
                                     </Box>
                                     <BackButton onClick={handleBack} />
