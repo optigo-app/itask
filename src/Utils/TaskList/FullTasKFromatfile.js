@@ -196,9 +196,12 @@ const useFullTaskFormatFile = () => {
       };
 
       // Step 4: Recursively group tasks by project and category, and calculate estimate totals
-      const collectCategoryTasks = (task) => {
+      const collectCategoryTasks = (task, path = []) => {
         const categoryKey = categoryMap[task.workcategoryid];
         const projectId = task.projectid;
+
+        const currentPath = [...path, task.taskname];
+        task.breadcrumbTitles = currentPath;
 
         let estimate_hrsT = 0;
         let estimate1_hrsT = 0;
@@ -211,7 +214,7 @@ const useFullTaskFormatFile = () => {
 
         // Recursively calculate for subtasks
         task.subtasks?.forEach((subtask) => {
-          const childSums = collectCategoryTasks(subtask);
+          const childSums = collectCategoryTasks(subtask, currentPath);
           estimate_hrsT += childSums.estimate_hrsT;
           estimate1_hrsT += childSums.estimate1_hrsT;
           estimate2_hrsT += childSums.estimate2_hrsT;

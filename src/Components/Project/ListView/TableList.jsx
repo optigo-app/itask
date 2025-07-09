@@ -252,6 +252,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
             moduleid: task?.taskid,
             maingroupids: task?.maingroupids,
             isLimited: isLimitedAccess ?? 0,
+            breadcrumbTitles:task?.breadcrumbTitles
         }
         const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
         const formattedPrName = task?.taskPr?.trim()?.replace(/\s+/g, '-') || '';

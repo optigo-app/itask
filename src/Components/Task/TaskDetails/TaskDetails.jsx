@@ -27,6 +27,7 @@ import SubtaskCard from './SubTaskcard';
 import { TaskDescription } from '../../ShortcutsComponent/TaskDescription';
 import { getAttachmentApi } from '../../../Api/UploadApi/GetAttachmentApi';
 import AttachmentSidebar from './AttachmentSidebar';
+import Breadcrumb from '../../BreadCrumbs/Breadcrumb';
 
 const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const theme = useTheme();
@@ -39,6 +40,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const setCallTaskApi = useSetRecoilState(fetchlistApiCall);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [uploadedFile, setUploadedFile] = useState([]);
+    console.log('uploadedFile: ', uploadedFile);
     const [taskDesc, setTaskDesc] = useState('');
     const [taskDescEdit, setTaskDescEdit] = useState(false);
     const [comments, setComments] = useState([]);
@@ -50,12 +52,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
 
-    // Dummy attachment data
-    const dummyAttachments = [
-        { filename: 'document.pdf', url: 'https://example.com/document.pdf', size: '2.5 MB' },
-        { filename: 'image.jpg', url: 'https://example.com/image.jpg', size: '1.8 MB' },
-        { filename: 'spreadsheet.xlsx', url: 'https://example.com/spreadsheet.xlsx', size: '3.2 MB' },
-    ];
 
     useEffect(() => {
         setIsLoading({ isAtttLoading: true });
@@ -246,6 +242,14 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
         setSelectedTask(task);
     }
 
+    const attachmentCount = Object.values(uploadedFile?.attachment || {})
+        .reduce((sum, arr) => sum + (arr?.length || 0), 0);
+
+    const urlCount = Object.values(uploadedFile?.url || {})
+        .reduce((sum, arr) => sum + (arr?.length || 0), 0);
+
+    const totalCount = attachmentCount + urlCount;
+
     const TagLabel = ({ value, colorMap }) => {
         const colors = colorMap?.[value] || {};
 
@@ -283,11 +287,35 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                     <div className='modal-container2'>
                         <Box className="modal-header">
                             <div className="header-left">
-                                {/* <IconButton onClick={toggleFullScreen}>
-                                    {isFullScreen && isFullScreen ? <Shrink /> : <Expand />}
+                                <IconButton
+                                    onClick={() => handleTaskFavorite(taskData)}
+                                    size="small"
+                                    aria-label="add-favorite"
+                                    aria-labelledby="add-favorite"
+                                    sx={{
+                                        width: '30px',
+                                        height: '30px',
+                                        padding: '4px',
+                                        boxShadow: taskData?.isfavourite
+                                            ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
+                                            : '0px 2px 8px rgba(99, 99, 99, 0.2)',
+                                        transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
+                                        background: taskData?.isfavourite ? '#FFD700' : '#fff',
+                                        '&:hover': {
+                                            boxShadow: taskData?.isfavourite
+                                                ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
+                                                : '0px 4px 12px rgba(99, 99, 99, 0.3)',
+                                            background: taskData?.isfavourite ? '#FFC107' : '#f5f5f5',
+                                        },
+                                    }}
+                                >
+                                    {taskData?.isfavourite ? (
+                                        <StarIcon sx={{ fontSize: '20px', color: '#fff' }} />
+                                    ) : (
+                                        <StarBorderIcon sx={{ fontSize: '20px', color: '#7d7f85' }} />
+                                    )}
                                 </IconButton>
-                                <Divider orientation="vertical" variant="middle" flexItem /> */}
-                                <Typography variant="h6">{taskData?.taskPr} / {taskData?.taskname}</Typography>
+                                <Typography variant="h6">{taskData?.taskname}</Typography>
                             </div>
                             <IconButton onClick={handleClose}>
                                 <CircleX />
@@ -302,37 +330,9 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                         />
                         <Box className="modal-body">
                             <Box className="titlebox">
-                                <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <IconButton
-                                        onClick={() => handleTaskFavorite(taskData)}
-                                        size="small"
-                                        aria-label="add-favorite"
-                                        aria-labelledby="add-favorite"
-                                        sx={{
-                                            width: '30px',
-                                            height: '30px',
-                                            padding: '4px',
-                                            boxShadow: taskData?.isfavourite
-                                                ? '0px 0px 8px rgba(255, 215, 0, 0.6)'
-                                                : '0px 2px 8px rgba(99, 99, 99, 0.2)',
-                                            transition: 'box-shadow 0.3s ease-in-out, background 0.3s ease-in-out',
-                                            background: taskData?.isfavourite ? '#FFD700' : '#fff',
-                                            '&:hover': {
-                                                boxShadow: taskData?.isfavourite
-                                                    ? '0px 0px 12px rgba(255, 215, 0, 0.9)'
-                                                    : '0px 4px 12px rgba(99, 99, 99, 0.3)',
-                                                background: taskData?.isfavourite ? '#FFC107' : '#f5f5f5',
-                                            },
-                                        }}
-                                    >
-                                        {taskData?.isfavourite ? (
-                                            <StarIcon sx={{ fontSize: '20px', color: '#fff' }} />
-                                        ) : (
-                                            <StarBorderIcon sx={{ fontSize: '20px', color: '#7d7f85' }} />
-                                        )}
-                                    </IconButton>
-                                    <Typography variant="h4" className="task-title">{taskData?.taskname}</Typography>
-                                </Box>
+                                <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>
+                                    <Breadcrumb breadcrumbTitles={taskData?.breadcrumbTitles} />
+                                </Typography>
                                 <Button
                                     size='small'
                                     variant="contained"
@@ -367,45 +367,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         <Typography className="tasklable">Assignees</Typography>
                                     </Grid>
                                     <Grid item xs={9}>
-                                        {/* <AvatarGroup max={10}
-                                            spacing={2}
-                                            sx={{
-                                                flexDirection: 'row',
-                                                '& .MuiAvatar-root': {
-                                                    width: 30,
-                                                    height: 30,
-                                                    fontSize: '0.8rem',
-                                                    cursor: 'pointer',
-                                                    border: 'none',
-                                                    transition: 'transform 0.3s ease-in-out',
-                                                    '&:hover': {
-                                                        transform: 'scale(1.2)',
-                                                        zIndex: 10
-                                                    }
-                                                }
-                                            }}
-                                        >
-                                            {taskData?.assignee?.map((assignee, teamIdx) => (
-                                                <Tooltip
-                                                    placement="top"
-                                                    key={assignee?.id}
-                                                    title={assignee?.firstname + " " + assignee?.lastname}
-                                                    arrow
-                                                    classes={{ tooltip: 'custom-tooltip' }}
-                                                >
-                                                    <Avatar
-                                                        key={teamIdx}
-                                                        alt={assignee?.firstname + " " + assignee?.lastname}
-                                                        src={ImageUrl(assignee) || null}
-                                                        sx={{
-                                                            backgroundColor: background(assignee),
-                                                        }}
-                                                    >
-                                                        {!assignee.avatar && assignee?.firstname?.charAt(0)}
-                                                    </Avatar>
-                                                </Tooltip>
-                                            ))}
-                                        </AvatarGroup> */}
                                         <AvatarGroup
                                             max={10}
                                             spacing={2}
@@ -440,7 +401,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                         sx={{
                                                             backgroundColor: background(`${assignee?.firstname + " " + assignee?.lastname}`),
                                                         }}
-                                                    // onClick={() => hanldePAvatarClick(assignees, assignee?.id)}
                                                     >
                                                         {!assignee.avatar && assignee?.firstname?.charAt(0)}
                                                     </Avatar>
@@ -469,7 +429,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                 <Grid item xs={12} className='tabDataMain'>
                                     <Tabs value={activeTab} onChange={handleTabChange} className='muiTaskTabs'>
                                         <Tab label={`Subtasks`} />
-                                        <Tab label="Attachment" />
+                                        <Tab label={`Attachment (${totalCount})`} />
                                         <Tab label={`Comments (${comments?.length})`} />
                                     </Tabs>
                                     <Box

@@ -28,6 +28,7 @@ import TaskFormSection from "./TaskFormSection";
 import ModuleDrawerForm from "./ModuleDrawerForm";
 import DynamicDropdownSection from "./DynamicDropdownSection";
 import MultiTaskInput from "./MultiTaskInput";
+import Breadcrumb from "../BreadCrumbs/Breadcrumb";
 
 const TASK_OPTIONS = [
     { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -52,6 +53,7 @@ const SidebarDrawer = ({
     const projectModuleData = useRecoilValue(projectDatasRState);
     const taskDataValue = useRecoilValue(TaskData);
     const formDataValue = useRecoilValue(formData);
+    console.log('formDataValue: ', formDataValue);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
     const [taskType, setTaskType] = useState("single");
     const [decodedData, setDecodedData] = useState(null);
@@ -84,7 +86,6 @@ const SidebarDrawer = ({
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
-    console.log('formValues: ', formValues);
     
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
@@ -519,16 +520,11 @@ const SidebarDrawer = ({
     };
 
     const renderTaskHeader = () => (
-        <Box sx={{ display: 'flex', justifyContent: decodedData || rootSubrootflagval?.Task === "subroot" ? 'space-between' : "end", alignItems: 'start' }}>
-            {rootSubrootflagval?.Task === "subroot" ? (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+           
                 <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>
-                    /{formDataValue?.taskname}
+                    <Breadcrumb breadcrumbTitles={formDataValue?.breadcrumbTitles || decodedData?.breadcrumbTitles} />
                 </Typography>
-            ) : (
-                <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>
-                    {decodedData && `${decodedData?.project}/${decodedData?.module}${rootSubrootflagval?.Task === "subroot" ? `/${formDataValue?.taskname}` : ''}`}
-                </Typography>
-            )}
 
             {rootSubrootflagval?.Task !== "root" && (
                 <Box className="tSideBarTgBox">

@@ -117,7 +117,7 @@ export function toISTDateTime(isoDate) {
 export function cleanDate(dateStr) {
     const defaultDates = [
         "1900-01-01T00:00:00",
-        "1900-01-01T00:00:00.000Z"
+        "1900-01-01T00:00:00.000Z",
     ];
 
     return defaultDates.includes(dateStr) ? "" : dateStr;

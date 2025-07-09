@@ -1,0 +1,37 @@
+@import "../../theme/variable.scss";
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: start;
+  align-items: center;
+  font-size: 12px;
+  font-family: $font-family;
+  white-space: normal;
+  row-gap: 4px;
+  overflow-x: visible;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.breadcrumb-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  font-weight: 500;
+  color: $secondaryColor;
+
+  &.active {
+    font-weight: 600;
+  }
+}
+
+.separator {
+  margin: 0 4px;
+  color: #aaa;
+  user-select: none;
+}
