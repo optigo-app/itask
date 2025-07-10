@@ -53,7 +53,6 @@ const SidebarDrawer = ({
     const projectModuleData = useRecoilValue(projectDatasRState);
     const taskDataValue = useRecoilValue(TaskData);
     const formDataValue = useRecoilValue(formData);
-    console.log('formDataValue: ', formDataValue);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
     const [taskType, setTaskType] = useState("single");
     const [decodedData, setDecodedData] = useState(null);

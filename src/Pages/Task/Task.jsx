@@ -27,7 +27,7 @@ const Task = () => {
   const [order, setOrder] = useState("desc");
   const [orderBy, setOrderBy] = useState("entrydate");
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(14);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const searchParams = new URLSearchParams(location.search);
   const masterData = useRecoilValue(masterDataValue);
   const [activeButton, setActiveButton] = useState("table");
@@ -54,7 +54,6 @@ const Task = () => {
     priorityData,
     statusData,
     taskAssigneeData } = useFullTaskFormatFile();
-  console.log('taskFinalData: ', taskFinalData);
 
   useEffect(() => {
     setTasks([]);
@@ -510,7 +509,12 @@ const Task = () => {
   }
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+    setPage(event);
+  };
+
+  const handlePageSizeChnage = (event) => {
+    setRowsPerPage(event ?? rowsPerPage);
+    setPage(1);
   };
 
   const handleOpenRightMenu = (event, task) => {
@@ -772,6 +776,7 @@ const Task = () => {
                   handleRequestSort={handleRequestSort}
                   handleChangePage={handleChangePage}
                   handleDeadlineDateChange={handleDeadlineDateChange}
+                  handlePageSizeChnage={handlePageSizeChnage}
                 />
               )}
 

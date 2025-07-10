@@ -503,7 +503,6 @@ export const commonSelectProps = {
     fullWidth: true,
     size: "small",
     sx: {
-        minWidth: 180,
         "& .MuiOutlinedInput-root": {
             borderRadius: "8px",
             "& fieldset": {

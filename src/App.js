@@ -22,6 +22,7 @@ import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
 import MasterForm from './Backup/MasterForm';
+import ResizableTable from './Backup/ResizableTable';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -260,7 +261,7 @@ const AppWrapper = () => {
                                         <Route path="/reports/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><Reports /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
-                                        <Route path="/test" element={<MasterForm />} />
+                                        <Route path="/test" element={<ResizableTable />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>

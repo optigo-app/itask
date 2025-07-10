@@ -33,8 +33,9 @@ import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeSho
 import useAccess from "../../Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
 import { GetPrTeamsApi } from "../../../Api/TaskApi/prTeamListApi";
+import TablePaginationFooter from "../../ShortcutsComponent/Pagination/TablePaginationFooter";
 
-const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit }) => {
+const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit, handlePageSizeChnage }) => {
     const { hasAccess } = useAccess();
     const navigate = useNavigate();
     const [order, setOrder] = useState("asc");
@@ -657,30 +658,19 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
 
                             {!isLoading && data?.length !== 0 &&
                                 <TableRow>
-                                    <TableCell colSpan={7}>
-                                        {currentData?.length !== 0 && (
-                                            <Box className="TablePaginationBox">
-                                                <Typography className="paginationText">
-                                                    Showing {(page - 1) * rowsPerPage + 1} to{' '}
-                                                    {Math.min(page * rowsPerPage, sortedData?.length)} of {sortedData?.length} entries
-                                                </Typography>
-                                                {totalPages > 0 && (
-                                                    <Pagination
-                                                        count={totalPages}
-                                                        page={page}
-                                                        onChange={handleChangePage}
-                                                        color="primary"
-                                                        variant="outlined"
-                                                        shape="rounded"
-                                                        siblingCount={1}
-                                                        boundaryCount={1}
-                                                        className="pagination"
-                                                    />
-                                                )}
-                                            </Box>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
+                                <TableCell colSpan={columns.length}>
+                                    {currentData?.length !== 0 && (
+                                        <TablePaginationFooter
+                                            page={page}
+                                            rowsPerPage={rowsPerPage}
+                                            totalCount={data?.length}
+                                            totalPages={totalPages}
+                                            onPageChange={handleChangePage}
+                                            onPageSizeChange={handlePageSizeChnage}
+                                        />
+                                    )}
+                                </TableCell>
+                            </TableRow>
                             }
                         </TableBody>
                     </Table>
