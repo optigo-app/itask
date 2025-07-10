@@ -70,6 +70,8 @@ const MeetingPage = () => {
   });
   const [meetingDetailModalOpen, setMeetingDetailModalOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [page, setPage] = useState(1);
 
   const handleOpenStatusModal = (meeting) => {
     setOpenStatusModal(true);
@@ -454,7 +456,6 @@ const MeetingPage = () => {
     setMeetingDetailModalOpen(true);
   };
 
-
   const handleMeetingEdit = (meeting) => {
     setFormData(meeting);
     handleTaskModalClose();
@@ -543,6 +544,33 @@ const MeetingPage = () => {
     setCalFormData(task);
   };
 
+  const handleChangePage = (event, newPage) => {
+    setPage(event);
+  };
+
+  const handlePageSizeChnage = (event) => {
+    setRowsPerPage(event ?? rowsPerPage);
+    setPage(1);
+  };
+  console.log('page: ', page);
+
+  useEffect(() => {
+    if (filteredMeetings) {
+      const maxPage = Math.ceil(filteredMeetings.length / rowsPerPage);
+      if (page > maxPage && maxPage > 0) {
+        setPage(maxPage);
+      }
+    }
+  }, [filteredMeetings, page, rowsPerPage]);
+
+  const totalPages = Math?.ceil(filteredMeetings && filteredMeetings?.length / rowsPerPage);
+
+  const currentData = filteredMeetings?.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  ) || [];
+  
+  console.log('currentData: ', currentData);
   return (
     <Box
       sx={{
@@ -608,7 +636,12 @@ const MeetingPage = () => {
                   </Grid>
                 ) : (
                   <MeetingTable
-                    meeting={filteredMeetings}
+                    meeting={currentData}
+                    page = {page}
+                    rowsPerPage = {rowsPerPage}
+                    totalPages = {totalPages}
+                    handleChangePage = {handleChangePage}
+                    handlePageSizeChnage = {handlePageSizeChnage}
                     selectedTab={selectedTab}
                     handleDrawerToggle={handleDrawerToggle}
                     setCalFormData={setCalFormData}

@@ -38,9 +38,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     );
     const [taskArr, setTaskArr] = useRecoilState(TaskData);
     const setCallTaskApi = useSetRecoilState(fetchlistApiCall);
-    const [isFullScreen, setIsFullScreen] = useState(false);
     const [uploadedFile, setUploadedFile] = useState([]);
-    console.log('uploadedFile: ', uploadedFile);
     const [taskDesc, setTaskDesc] = useState('');
     const [taskDescEdit, setTaskDescEdit] = useState(false);
     const [comments, setComments] = useState([]);

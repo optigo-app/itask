@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./TaskTable.scss";
 import {
     Table,
@@ -20,6 +20,7 @@ import {
     LinearProgress,
     Menu,
     MenuItem,
+    Select,
 } from "@mui/material";
 import { CirclePlus, Eye, Paperclip, Pencil, PrinterCheck, Timer } from "lucide-react";
 import "react-resizable/css/styles.css";
@@ -42,12 +43,25 @@ import CutPasetContextMenu from "../../ShortcutsComponent/CutPasteMenu";
 import MomSheet from "../../PrintSheet/MomSheet";
 import MaintenanceSheet from "../../PrintSheet/MaintenanceSheet";
 import { useReactToPrint } from "react-to-print";
+import { ResizableBox } from "react-resizable";
+import { debounce } from "lodash";
+import TablePaginationFooter from "../../ShortcutsComponent/Pagination/TablePaginationFooter";
+
+const initialColumns = [
+    { id: "taskname", label: "Task Name", width: 210 },
+    { id: "taskPr", label: "Project", width: 120 },
+    { id: "progress", label: "Progress", width: 60 },
+    { id: "status", label: "Status", width: 90 },
+    { id: "assignee", label: "Assignee", width: 100 },
+    { id: "DeadLineDate", label: "Deadline", width: 90 },
+    { id: "priority", label: "Priority", width: 80 },
+    { id: "estimate", label: "Estimate", width: 80 },
+    { id: "actions", label: "Actions", width: 120 },
+];
 
 const TableView = ({
     data,
     page,
-    order,
-    orderBy,
     rowsPerPage,
     currentData,
     totalPages,
@@ -58,12 +72,12 @@ const TableView = ({
     handleContextMenu,
     handleCloseContextMenu,
     handleChangePage,
-    handleRequestSort,
     handleTaskFavorite,
     handleStatusChange,
     handlePriorityChange,
     handleAssigneeShortcutSubmit,
     handleDeadlineDateChange,
+    handlePageSizeChnage,
     isLoading }) => {
     const [anchorPrintEl, setAnchorPrintEl] = useState(null);
     const printRef1 = React.useRef(null);
@@ -81,24 +95,15 @@ const TableView = ({
     const setAssigneeId = useSetRecoilState(assigneeId);
     const [selectedItem, setSelectedItem] = useState(null);
     const [openfileDrawerOpen, setFileDrawerOpen] = useState(false);
-    const columns = [
-        { id: "taskname", label: "Task Name", width: 350 },
-        { id: "taskPr", label: "Project", width: 150 },
-        { id: "progress", label: "Progress", width: 180 },
-        { id: "status", label: "Status", width: 180 },
-        { id: "assignee", label: "Assignee", width: 150 },
-        { id: "DeadLineDate", label: "Deadline", width: 120 },
-        { id: "priority", label: "Priority", width: 120 },
-        { id: "estimate", label: "Estimate", width: 100 },
-        { id: "actions", label: "Actions", width: 120 },
-    ];
-
+    const [columns, setColumns] = useState(initialColumns);
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
     const [openAssigneeModal, setOpenAssigneeModal] = useState(false);
     const [timeTrackMOpen, setTimeTrackMOpen] = useState(false);
     const [taskTimeRunning, setTaskTimeRunning] = useState({});
     const [profileOpen, setProfileOpen] = useState(false);
     const [anchorDeadlineEl, setAnchorDeadlineEl] = useState(null);
+    const [isHoveredResizable, setIsHoveredResizable] = useState(false);
+    const [resizingColumnId, setResizingColumnId] = useState(null);
 
     const handleDeadlineClick = (e, task) => {
         setAnchorDeadlineEl(e.currentTarget)
@@ -177,7 +182,7 @@ const TableView = ({
             taskname: task?.taskname,
             moduleid: task?.moduleid,
             maingroupids: task?.maingroupids,
-            breadcrumbTitles:task?.breadcrumbTitles
+            breadcrumbTitles: task?.breadcrumbTitles
         }
         setRootSubroot(additionalInfo);
         setFormDataValue(data);
@@ -193,7 +198,7 @@ const TableView = ({
             taskname: subtask?.taskname,
             moduleid: subtask?.moduleid,
             maingroupids: subtask?.maingroupids,
-            breadcrumbTitles:subtask?.breadcrumbTitles
+            breadcrumbTitles: subtask?.breadcrumbTitles
         }
         setRootSubroot(additionalInfo);
         setFormDataValue(data);
@@ -430,81 +435,136 @@ const TableView = ({
         task,
         expandedTasks,
         toggleSubtasks,
+        handleAddTask,
+        hoveredTaskId,
+        hoveredColumnname,
+        isResizing = false,
+        paddingLeft
     ) => {
         return (
-            <>
-                <div>
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <IconButton
-                                id="toggle-task"
-                                aria-label="toggle-task"
-                                aria-labelledby="toggle-task"
-                                size="small"
-                                onClick={() => toggleSubtasks(task.taskid, task)}
+            <div>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <IconButton
+                            id="toggle-task"
+                            aria-label="toggle-task"
+                            size="small"
+                            onClick={() => toggleSubtasks(task.taskid, task)}
+                        >
+                            <PlayArrowIcon
+                                style={{
+                                    color: expandedTasks[task.taskid] ? "#444050" : "#c7c7c7",
+                                    fontSize: "1rem",
+                                    transform: expandedTasks[task.taskid] ? "rotate(90deg)" : "rotate(0deg)",
+                                    transition: "transform 0.2s ease-in-out",
+                                }}
+                            />
+                        </IconButton>
+                    </div>
+
+                    <div>
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    gap: '5px',
+                                    alignItems: 'center',
+                                    width: `${columns[0]?.width - (parseInt(paddingLeft) || 0)}px`,
+                                    maxWidth: `${columns[0]?.width - (parseInt(paddingLeft) || 0)}px`,
+                                    minWidth: `100%`,
+                                    overflow: 'hidden',
+                                    whiteSpace: 'nowrap',
+                                    textOverflow: 'ellipsis',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    flexGrow: 1,
+                                }}
+                                title={task?.taskname}
                             >
-                                <PlayArrowIcon
+                                <span
                                     style={{
-                                        color: expandedTasks[task.taskid] ? "#444050" : "#c7c7c7",
-                                        fontSize: "1rem",
-                                        transform: expandedTasks[task.taskid] ? "rotate(90deg)" : "rotate(0deg)",
-                                        transition: "transform 0.2s ease-in-out",
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
                                     }}
-                                />
+                                >
+                                    {task?.taskname}
+                                </span>
+
+                                {task?.subtasks?.length > 0 && (
+                                    <span
+                                        className="task-sub_count"
+                                    >
+                                        {task?.subtasks?.length}
+                                    </span>
+                                )}
+                            </div>
+                            <IconButton
+                                id="add-task"
+                                aria-label="add-task"
+                                size="small"
+                                onClick={() => handleAddTask(task, { Task: 'subroot' })}
+                                style={{
+                                    visibility:
+                                        hoveredTaskId === task?.taskid && hoveredColumnname === 'TaskName'
+                                            ? 'visible'
+                                            : 'hidden',
+                                    marginRight: isResizing ? 0 : 30,
+                                    marginLeft: isResizing ? 0 : 10,
+                                }}
+                            >
+                                <CirclePlus size={20} color="#7367f0" />
                             </IconButton>
                         </div>
-                        <div>
-                            <div style={{ display: 'flex', gap: '10px', alignItems: 'start', cursor: 'pointer' }} onClick={() => toggleSubtasks(task.taskid, task)}>
-                                <span style={{ flex: 1 }}>
-                                    {task?.taskname?.length > 35
-                                        ? `${task?.taskname?.slice(0, 35)}...`
-                                        : task?.taskname}
-                                </span>
-                                {task?.subtasks?.length > 0 && (
-                                    <div className="task-sub_count">
-                                        {task?.subtasks?.length}
-                                    </div>
-                                )}
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
-                                {task?.isburning === 1 && (
-                                    <img
-                                        src={BurningImage}
-                                        alt="burningTask"
-                                        style={{ width: '15px', height: '15px', borderRadius: '50%' }}
-                                    />
-                                )}
-                                {task?.ticketno !== "" && (
-                                    <Chip
-                                        label={task?.ticketno || ''}
-                                        variant="outlined"
-                                        size="small"
-                                        sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB' }}
-                                    />
-                                )}
-                                {task?.isnew === 1 && (
-                                    <Chip
-                                        label={'New'}
-                                        variant="filled"
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: '#E3F2FD',
-                                            color: '#2196F3',
-                                            fontSize: '10px',
-                                            height: '16px',
-                                            '& .MuiChip-label': {
-                                                padding: '0 6px',
-                                            },
-                                        }}
-                                    />
-                                )}
-                            </div>
+
+                        {/* Optional badges */}
+                        <div style={{ display: 'flex', alignItems: 'end', gap: '8px' }}>
+                            {task?.isburning === 1 && (
+                                <img
+                                    src={BurningImage}
+                                    alt="burningTask"
+                                    style={{ width: '15px', height: '15px', borderRadius: '50%' }}
+                                />
+                            )}
+                            {task?.ticketno !== "" && (
+                                <Chip
+                                    label={task?.ticketno || ''}
+                                    variant="outlined"
+                                    size="small"
+                                    sx={{ background: '#d8d8d8', fontSize: '10px', height: '16px', color: '#8863FB' }}
+                                />
+                            )}
+                            {task?.isnew === 1 && (
+                                <Chip
+                                    label={'New'}
+                                    variant="filled"
+                                    size="small"
+                                    sx={{
+                                        backgroundColor: '#E3F2FD',
+                                        color: '#2196F3',
+                                        fontSize: '10px',
+                                        height: '16px',
+                                        '& .MuiChip-label': {
+                                            padding: '0 6px',
+                                        },
+                                    }}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
-            </>
+            </div>
         );
     };
+
+
 
     const renderSubtasks = (subtasks, parentTaskId, depth = 0) => {
         return subtasks?.map((subtask) => (
@@ -538,6 +598,8 @@ const TableView = ({
                                 handleAddTask,
                                 hoveredTaskId,
                                 hoveredColumnname,
+                                false,
+                                `${15 * (depth + 1)}`
                             )}
                             <IconButton
                                 id="add-task"
@@ -613,6 +675,15 @@ const TableView = ({
         ));
     };
 
+    const debouncedHandleResize = useCallback(
+        debounce((id, width) => {
+            setColumns((prev) =>
+                prev.map((col) => (col.id === id ? { ...col, width } : col))
+            );
+        }, 16),
+        []
+    );
+
     return (
         <>
             {(isLoading == null || isLoading == true || (!data && isLoading !== false)) ? (
@@ -626,45 +697,81 @@ const TableView = ({
                     }}
                     className="TaskTVMain"
                 >
-                    <Table size="small" aria-label="task details">
+                    <Table size="small" aria-label="task details" sx={{ tableLayout: "fixed", width: "100%" }}>
                         <TableHead>
                             <TableRow>
-                                {columns?.map((column) => (
+                                {columns?.map((column, index) => (
                                     <TableCell
                                         key={column.id}
-                                        sx={{
-                                            width: column.width,
-                                            maxWidth: column.width,
+                                        style={{
+                                            width: `${column.width}px`,
+                                            minWidth: `${column.width}px`,
+                                            maxWidth: `${column.width}px`,
                                             overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
                                         }}
-                                        className={column.id === "actions" ? "sticky-last-col" : ""}
                                     >
-                                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                                            <TableSortLabel
-                                                active={
-                                                    column.id !== "estimate" &&
-                                                    column.id !== "actions" &&
-                                                    column.id !== "assignee" &&
-                                                    orderBy === column.id
-                                                }
-                                                direction={order}
-                                                onClick={() => {
-                                                    if (column.id !== "estimate" && column.id !== "actions") {
-                                                        handleRequestSort(column.id);
-                                                    }
+                                        <ResizableBox
+                                            width={column.width}
+                                            height={20}
+                                            axis="x"
+                                            resizeHandles={index !== columns.length - 1 ? ["e"] : []}
+                                            minConstraints={[80, 20]}
+                                            maxConstraints={[500, 20]}
+                                            onResizeStart={() => setResizingColumnId(column.id)}
+                                            onResize={(e, data) => {
+                                                debouncedHandleResize(column.id, data.size.width);
+                                            }}
+                                            style={{
+                                                minWidth: '100%'
+                                            }}
+                                            handle={
+                                                index !== columns.length - 1 && (
+                                                    <span
+                                                        className="resize-handle"
+                                                        style={{
+                                                            position: "absolute",
+                                                            right: 0,
+                                                            top: 0,
+                                                            bottom: 0,
+                                                            width:
+                                                                isHoveredResizable === column.id || resizingColumnId === column.id
+                                                                    ? "4px"
+                                                                    : "2px",
+                                                            background:
+                                                                isHoveredResizable === column.id || resizingColumnId === column.id
+                                                                    ? "#7367f0"
+                                                                    : "#e0e0e0",
+                                                            cursor: "col-resize",
+                                                            zIndex: 2,
+                                                        }}
+                                                        onMouseEnter={() => setIsHoveredResizable(column.id)}
+                                                        onMouseLeave={() => setIsHoveredResizable(null)}
+                                                    />
+                                                )
+                                            }
+                                        >
+                                            <div
+                                                style={{
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    padding: "0px 0px 0px 10px",
+                                                    boxSizing: "border-box",
+                                                    whiteSpace: "nowrap",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    fontWeight: 600,
+                                                    display: "flex",
+                                                    alignItems: "center",
                                                 }}
-                                                hideSortIcon={column.id === "estimate" || column.id === "actions" || column.id === "assignee"}
                                             >
                                                 {column.label}
-                                            </TableSortLabel>
-                                        </Box>
+                                            </div>
+                                        </ResizableBox>
                                     </TableCell>
+
                                 ))}
                             </TableRow>
                         </TableHead>
-
                         <TableBody>
                             {data && data?.length !== 0 ? (
                                 <>
@@ -691,35 +798,22 @@ const TableView = ({
                                                     onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
                                                     onMouseLeave={handleTaskMouseLeave}
                                                 >
-                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                                        {renderTaskNameSection(
-                                                            task,
-                                                            expandedTasks,
-                                                            toggleSubtasks,
-                                                            handleAddTask,
-                                                            hoveredTaskId,
-                                                            hoveredColumnname,
-                                                        )}
-                                                        <IconButton
-                                                            id="add-task"
-                                                            aria-label="add-task"
-                                                            aria-labelledby="add-task"
-                                                            size="small"
-                                                            onClick={() => handleAddTask(task, { Task: 'subroot' })}
-                                                            style={{
-                                                                visibility: hoveredTaskId === task?.taskid && hoveredColumnname == 'TaskName' ? "visible" : "hidden",
-                                                            }}
-                                                        >
-                                                            <CirclePlus size={20} color="#7367f0" />
-                                                        </IconButton>
-                                                    </div>
+                                                    {renderTaskNameSection(
+                                                        task,
+                                                        expandedTasks,
+                                                        toggleSubtasks,
+                                                        handleAddTask,
+                                                        hoveredTaskId,
+                                                        hoveredColumnname,
+                                                        resizingColumnId === 'task'
+                                                    )}
                                                 </TableCell>
-                                                <TableCell>{task?.taskPr}</TableCell>
+                                                <TableCell className="taskPriorityCell">{task?.taskPr}</TableCell>
                                                 <TableCell>
                                                     <Box display="flex" alignItems="center" gap={2} width="100%">
                                                         {!task?.isNotShowProgress && (
                                                             <>
-                                                                <Box width="100%" position="relative">
+                                                                <Box flex={8} position="relative">
                                                                     <LinearProgress
                                                                         aria-label="Task progress status"
                                                                         variant="determinate"
@@ -735,9 +829,6 @@ const TableView = ({
                                                                         className="progressBar"
                                                                     />
                                                                 </Box>
-                                                                <Typography className="progressBarText" variant="body2" minWidth={100}>
-                                                                    {`${task?.progress_per}%`}
-                                                                </Typography>
                                                             </>
                                                         )}
                                                     </Box>
@@ -774,33 +865,23 @@ const TableView = ({
                                     </TableCell>
                                 </TableRow>
                             }
-                            {!isLoading && data?.length !== 0 &&
+                            {!isLoading && data?.length !== 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={Object?.keys(columns)?.length} >
+                                    <TableCell colSpan={columns.length}>
                                         {currentData?.length !== 0 && (
-                                            <Box className="TablePaginationBox">
-                                                <Typography className="paginationText">
-                                                    Showing {(page - 1) * rowsPerPage + 1} to{' '}
-                                                    {Math.min(page * rowsPerPage, data?.length)} of {data?.length} entries
-                                                </Typography>
-                                                {totalPages > 0 && (
-                                                    <Pagination
-                                                        count={totalPages}
-                                                        page={page}
-                                                        onChange={handleChangePage}
-                                                        color="primary"
-                                                        variant="outlined"
-                                                        shape="rounded"
-                                                        siblingCount={1}
-                                                        boundaryCount={1}
-                                                        className="pagination"
-                                                    />
-                                                )}
-                                            </Box>
+                                            <TablePaginationFooter
+                                                page={page}
+                                                rowsPerPage={rowsPerPage}
+                                                totalCount={data?.length}
+                                                totalPages={totalPages}
+                                                onPageChange={handleChangePage}
+                                                onPageSizeChange={handlePageSizeChnage}
+                                            />
                                         )}
                                     </TableCell>
                                 </TableRow>
-                            }
+                            )}
+
                         </TableBody>
                     </Table>
                 </TableContainer >

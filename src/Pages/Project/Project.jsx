@@ -32,16 +32,15 @@ const KanbanView = React.lazy(() =>
 
 const Project = () => {
   const location = useLocation();
-  const now = new Date();
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(14);
-  const [masterData, setMasterData] = useRecoilState(masterDataValue);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const masterData = useRecoilValue(masterDataValue);
   const [activeButton, setActiveButton] = useState("table");
   const [project, setProject] = useRecoilState(projectDatasRState);
   const [filters, setFilters] = useRecoilState(Advfilters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
-  const [callFetchTaskApi, setCallFetchTaskApi] = useRecoilState(fetchlistApiCall);
+  const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [CategoryTSummary, setCategoryTSummary] = useState([]);
   const {
@@ -278,7 +277,12 @@ const Project = () => {
   };
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+    setPage(event);
+  };
+
+  const handlePageSizeChnage = (event) => {
+    setRowsPerPage(event ?? rowsPerPage);
+    setPage(1);
   };
 
   useEffect(() => {
@@ -396,6 +400,7 @@ const Project = () => {
                 handleLockProject={handleLockProject}
                 handleDeleteModule={handleDeleteModule}
                 handleChangePage={handleChangePage}
+                handlePageSizeChnage={handlePageSizeChnage}
               />
               {/* )} */}
 

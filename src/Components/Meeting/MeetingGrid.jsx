@@ -18,14 +18,28 @@ import {
 import "./Styles/MeetingGrid.scss";
 import { formatDate2, formatDate3, getTimeLeft, ImageUrl, toISTDateTime } from "../../Utils/globalfun";
 import { Eye, Pencil } from "lucide-react";
+import TablePaginationFooter from "../ShortcutsComponent/Pagination/TablePaginationFooter";
 
-const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusCircles, handleAcceptMeeting, handleReject, handleAttendMeeting, handleDrawerToggle, setCalFormData, setFormData, background, hanldePAvatarClick, handleOpenStatusModal }) => {
+const MeetingTable = ({
+    meeting,
+    page,
+    rowsPerPage,
+    totalPages,
+    handleChangePage,
+    handlePageSizeChnage,
+    selectedTab,
+    setMeetingDetailModalOpen,
+    handleAcceptMeeting,
+    handleReject,
+    handleAttendMeeting,
+    handleDrawerToggle,
+    setCalFormData,
+    setFormData,
+    background,
+    hanldePAvatarClick,
+    handleOpenStatusModal
+}) => {
     const [sortConfig, setSortConfig] = useState({ key: "entrydate", direction: "desc" });
-    const handleFormatDate = (startDate) => {
-        const date = toISTDateTime(startDate);
-        const finalDate = getTimeLeft(date);
-        return finalDate;
-    };
 
     const handleSort = (key) => {
         setSortConfig(prev => ({
@@ -123,7 +137,7 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                             </TableCell> */}
                             <TableCell>
                                 <a href="#"
-                                     onClick={() => handleOpenStatusModal(row)} className="status-link">
+                                    onClick={() => handleOpenStatusModal(row)} className="status-link">
                                     Check Status
                                 </a>
                             </TableCell>
@@ -183,6 +197,22 @@ const MeetingTable = ({ meeting, selectedTab, setMeetingDetailModalOpen, StatusC
                             </TableCell>
                         </TableRow>
                     ))}
+                    {sortedMeetings?.length !== 0 && (
+                        <TableRow>
+                            <TableCell colSpan={6}>
+                                {sortedMeetings?.length !== 0 && (
+                                    <TablePaginationFooter
+                                        page={page}
+                                        rowsPerPage={rowsPerPage}
+                                        totalCount={sortedMeetings?.length}
+                                        totalPages={totalPages}
+                                        onPageChange={handleChangePage}
+                                        onPageSizeChange={handlePageSizeChnage}
+                                    />
+                                )}
+                            </TableCell>
+                        </TableRow>
+                    )}
                 </TableBody>
             </Table>
         </TableContainer>

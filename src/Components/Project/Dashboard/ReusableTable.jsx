@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import "./Styles/ReusableTable.scss";
 import { useState, useMemo } from "react";
+import TablePaginationFooter from "../../ShortcutsComponent/Pagination/TablePaginationFooter";
 
 const ReusableTable = ({
     columns,
@@ -22,6 +23,7 @@ const ReusableTable = ({
     rowsPerPage = 10,
 }) => {
     const [page, setPage] = useState(1);
+    const [rowsPerPages, setRowsPerPages] = useState(rowsPerPage);
     const [sortConfig, setSortConfig] = useState({ key: "entrydate", direction: "desc" });
 
     const filteredColumns = columns?.filter((column) => column.id !== "id");
@@ -57,12 +59,17 @@ const ReusableTable = ({
         });
     }, [data, sortConfig]);
 
-    const totalPages = Math.ceil(sortedData?.length / rowsPerPage);
-    const currentData = sortedData?.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+    const totalPages = Math.ceil(sortedData?.length / rowsPerPages);
+    const currentData = sortedData?.slice((page - 1) * rowsPerPages, page * rowsPerPages);
 
     const handleChangePage = (event, newPage) => {
-        setPage(newPage);
+        setPage(event);
     };
+
+    const handlePageSizeChnage = (event) => {
+        setRowsPerPages(event ?? rowsPerPages);
+        setPage(1);
+      };
 
     return (
         <TableContainer component={Paper} className={className}>
@@ -106,28 +113,16 @@ const ReusableTable = ({
                     )}
 
                     <TableRow>
-                        <TableCell colSpan={filteredColumns?.length}>
+                        <TableCell colSpan={6}>
                             {currentData?.length !== 0 && (
-                                <Box className="TablePaginationBox">
-                                    <Typography className="paginationText">
-                                        Showing {(page - 1) * rowsPerPage + 1} to{" "}
-                                        {Math.min(page * rowsPerPage, sortedData?.length)} of{" "}
-                                        {sortedData?.length} entries
-                                    </Typography>
-                                    {totalPages > 0 && (
-                                        <Pagination
-                                            count={totalPages}
-                                            page={page}
-                                            onChange={handleChangePage}
-                                            color="primary"
-                                            variant="outlined"
-                                            shape="rounded"
-                                            siblingCount={1}
-                                            boundaryCount={1}
-                                            className="pagination"
-                                        />
-                                    )}
-                                </Box>
+                                <TablePaginationFooter
+                                    page={page}
+                                    rowsPerPage={rowsPerPages}
+                                    totalCount={currentData?.length}
+                                    totalPages={totalPages}
+                                    onPageChange={handleChangePage}
+                                    onPageSizeChange={handlePageSizeChnage}
+                                />
                             )}
                         </TableCell>
                     </TableRow>

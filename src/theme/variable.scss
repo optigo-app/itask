@@ -415,3 +415,29 @@ $divider-color: #e0e0e0;
         }
     }
 }
+
+.custom-select {
+    font-family: 'Public Sans', sans-serif !important;
+    color: $text2ndColor;
+    font-size: 14px;
+}
+
+.custom-select .MuiOutlinedInput-notchedOutline {
+    border-color: $titleColor !important;
+}
+
+.custom-select.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: $primary-main !important;
+}
+
+.custom-select .MuiSelect-select {
+    font-family: $font-family !important;
+    padding: 5px 30px 5px 10px;
+  }
+  
+  .custom-menu-item {
+    font-family: $font-family !important;
+    color: $text2ndColor;
+    font-size: 14px;
+  }
+  
