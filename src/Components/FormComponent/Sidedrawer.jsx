@@ -19,7 +19,7 @@ import { formData, projectDatasRState, rootSubrootflag, TaskData } from "../../R
 import dayjs from 'dayjs';
 import utc from "dayjs/plugin/utc";
 import { useLocation } from "react-router-dom";
-import { cleanDate, commonTextFieldProps, customDatePickerProps, flattenTasks } from "../../Utils/globalfun";
+import { cleanDate, commonTextFieldProps, customDatePickerProps, flattenTasks, mapTaskLabels } from "../../Utils/globalfun";
 import timezone from 'dayjs/plugin/timezone';
 import CustomAutocomplete from "../ShortcutsComponent/CustomAutocomplete";
 import { GetPrTeamsApi } from "../../Api/TaskApi/prTeamListApi";
@@ -29,6 +29,8 @@ import ModuleDrawerForm from "./ModuleDrawerForm";
 import DynamicDropdownSection from "./DynamicDropdownSection";
 import MultiTaskInput from "./MultiTaskInput";
 import Breadcrumb from "../BreadCrumbs/Breadcrumb";
+import CustomDateTimePicker from "../../Utils/DateComponent/CustomDateTimePicker";
+import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
 
 const TASK_OPTIONS = [
     { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -39,6 +41,8 @@ const SidebarDrawer = ({
     open,
     onClose,
     onSubmit,
+    prModule = false,
+    categoryDisabled = false,
     isLoading,
     priorityData,
     projectData,
@@ -53,6 +57,7 @@ const SidebarDrawer = ({
     const projectModuleData = useRecoilValue(projectDatasRState);
     const taskDataValue = useRecoilValue(TaskData);
     const formDataValue = useRecoilValue(formData);
+    console.log('formDataValue: ', formDataValue);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
     const [taskType, setTaskType] = useState("single");
     const [decodedData, setDecodedData] = useState(null);
@@ -60,6 +65,7 @@ const SidebarDrawer = ({
     const [isTaskNameEmpty, setIsTaskNameEmpty] = useState(false);
     const [teams, setTeams] = useState([]);
     const [advMasterData, setAdvMasterData] = useState([]);
+    const [prModuleMaster, setPrModuleMaster] = useState([]);
     const [formValues, setFormValues] = React.useState({
         taskName: "",
         bulkTask: [],
@@ -85,7 +91,7 @@ const SidebarDrawer = ({
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
-    
+
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const encodedData = searchParams.get("data");
@@ -131,7 +137,8 @@ const SidebarDrawer = ({
                     ...empDetails,
                 };
             });
-            setTeams(enrichedTeamMembers);
+            const data = location?.pathname?.includes("/meetings") ? taskAssigneeData : enrichedTeamMembers;
+            setTeams(data);
         } else {
             toast.error("Something went wrong");
             setTeams([]);
@@ -150,16 +157,23 @@ const SidebarDrawer = ({
     };
 
     useEffect(() => {
+        debugger
         const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
         const matchedAssignees = formDataValue?.assigneids ? taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id)) : [];
         const createdById = taskAssigneeData?.filter(user => user.id == formDataValue?.createdbyid)
-        if (open && (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "root")) {
+        const category = taskCategory?.filter(user =>
+            user.labelname?.toLowerCase() === "meeting"
+        );
+        const categoryflag = location?.pathname?.includes("meeting")
+        console.log('category: ', category);
+        if (open && (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "root" || rootSubrootflagval?.Task === "meeting")) {
             setFormValues({
-                taskName: formDataValue?.taskname ?? "",
+                taskName: (formDataValue?.taskname || formDataValue?.title) ?? "",
                 multiTaskName: formDataValue?.actual ?? [""],
                 bulkTask: formDataValue?.bulk ?? [],
                 dueDate: cleanDate(formDataValue?.DeadLineDate) ?? null,
+                endDate: (cleanDate(formDataValue?.EndDate) || cleanDate(formDataValue?.end)) ?? null,
                 department: formDataValue?.department != 0 ? formDataValue?.department : "",
                 guests: (matchedAssignees?.length > 0 ? matchedAssignees : [logedAssignee]) ?? [logedAssignee],
                 createdBy: (createdById?.length > 0 ? createdById : [logedAssignee]) ?? [logedAssignee],
@@ -168,15 +182,16 @@ const SidebarDrawer = ({
                 status: formDataValue?.statusid ?? "",
                 priority: formDataValue?.priorityid ?? "",
                 project: formDataValue?.projectid ?? "",
+                prModule: formDataValue?.prModule ?? "",
                 description: formDataValue?.descr ?? "",
                 attachment: formDataValue?.attachment ?? null,
                 progress: formDataValue?.progress ?? "",
-                startDate: cleanDate(formDataValue?.StartDate) ?? null,
-                category: formDataValue?.workcategoryid ?? "",
+                startDate: (cleanDate(formDataValue?.StartDate) || cleanDate(formDataValue?.start))  ?? null,
+                category: categoryflag ? category[0]?.id : (formDataValue?.workcategoryid || formDataValue?.category) ?? "",
                 estimate: formDataValue?.estimate ?? [""],
                 actual: formDataValue?.actual ?? [""],
                 milestoneChecked: formDataValue?.ismilestone ? 1 : 0 ?? 0,
-                estimate_hrs: formDataValue.estimate_hrs ?? 0,
+                estimate_hrs: (formDataValue.estimate_hrs || formDataValue?.estimate) ?? 0,
                 estimate1_hrs: formDataValue.estimate1_hrs ?? 0,
                 estimate2_hrs: formDataValue.estimate2_hrs ?? 0,
             });
@@ -194,7 +209,7 @@ const SidebarDrawer = ({
 
     const selectedId = useMemo(() => {
         const isProjectPath = location?.pathname?.includes("/projects");
-    
+
         if (rootSubrootflagval?.Task === "AddTask") {
             return isProjectPath
                 ? formValues?.project || decodedData?.projectid || formDataValue?.projectid
@@ -214,31 +229,31 @@ const SidebarDrawer = ({
         rootSubrootflagval?.Task,
         location?.pathname
     ]);
-    
+
     const flattenedTasks = useMemo(() => {
         if (location?.pathname?.includes("/projects")) {
             return projectModuleData ? flattenTasks(taskDataValue) : [];
         }
         return flattenTasks(taskDataValue);
     }, [location?.pathname, projectModuleData, taskDataValue]);
-    
+
     useEffect(() => {
         if (!rootSubrootflagval?.Task) return;
-    
+
         const isProjectPath = location?.pathname?.includes("/projects");
         const dynamicKey = isProjectPath ? "projectid" : "moduleid";
         const isRoot = rootSubrootflagval?.Task === "root";
         const isAddOrSub = rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "subroot";
-    
+
         if (selectedId) {
             setIsTaskNameEmpty(taskName === "");
         }
-    
+
         if (!selectedId || !taskName) {
             setIsDuplicateTask(false);
             return;
         }
-    
+
         if (isAddOrSub) {
             const match = flattenedTasks.find(
                 task =>
@@ -271,7 +286,7 @@ const SidebarDrawer = ({
         formDataValue?.taskname,
         location?.pathname
     ]);
-    
+
     // Handle form value changes
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -312,10 +327,9 @@ const SidebarDrawer = ({
 
     const handleDateChange = (date, key) => {
         if (date) {
-            const istDate = date.tz('Asia/Kolkata');
             setFormValues((prev) => ({
                 ...prev,
-                [key]: istDate.format('YYYY-MM-DDTHH:mm:ss.SSS'),
+                [key]: date
             }));
         }
     };
@@ -335,6 +349,7 @@ const SidebarDrawer = ({
         }));
     }
 
+    console.log('formValues: ', formValues);
     const handleSubmit = (module) => {
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const idString = formValues?.guests?.map(user => user.id)?.join(",");
@@ -380,8 +395,8 @@ const SidebarDrawer = ({
             estimate2_hrs: formValues?.estimate2_hrs ?? formDataValue.estimate2_hrs,
             dynamicDropdowns: structured ?? formDataValue.dynamicDropdowns,
         };
-        onSubmit(updatedFormDataValue, { mode: taskType }, module);
-        handleClear();
+        // onSubmit(updatedFormDataValue, { mode: taskType }, module);
+        // handleClear();
     };
 
     // for close and clear form
@@ -446,7 +461,7 @@ const SidebarDrawer = ({
         </Box>
     );
 
-    const renderAutocomplete = (label, name, value, placeholder, options, onChange) => (
+    const renderAutocomplete = (label, name, value, placeholder, options, onChange, disabled) => (
         <CustomAutocomplete
             label={label}
             name={name}
@@ -454,6 +469,7 @@ const SidebarDrawer = ({
             onChange={onChange}
             options={options}
             placeholder={placeholder}
+            disabled={disabled || categoryDisabled}
         />
     );
 
@@ -471,6 +487,21 @@ const SidebarDrawer = ({
                     <TextField {...params} size="small" className="textfieldsClass" sx={{ p: 0 }} />
                 )}
                 {...customDatePickerProps}
+            />
+        </Box>
+    );
+
+    const renderDateTimeField = (label, name, value, onChange) => (
+        <Box className="form-group">
+            <CustomDateTimePicker
+                label={label}
+                name={name}
+                value={value ? dayjs(value).tz("Asia/Kolkata", true).local() : null}
+                width='100%'
+                styleprops={commonTextFieldProps}
+                onChange={(date) => onChange(date, name)}
+            // error={Boolean(errors.start)}
+            // helperText={errors.start}
             />
         </Box>
     );
@@ -520,10 +551,10 @@ const SidebarDrawer = ({
 
     const renderTaskHeader = () => (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-           
-                <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>
-                    <Breadcrumb breadcrumbTitles={formDataValue?.breadcrumbTitles || decodedData?.breadcrumbTitles} />
-                </Typography>
+
+            <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>
+                <Breadcrumb breadcrumbTitles={formDataValue?.breadcrumbTitles || decodedData?.breadcrumbTitles} />
+            </Typography>
 
             {rootSubrootflagval?.Task !== "root" && (
                 <Box className="tSideBarTgBox">
@@ -598,6 +629,33 @@ const SidebarDrawer = ({
         );
     }, [advMasterData]);
 
+    const handleProjectModuleData = async () => {
+        const taskProject = JSON?.parse(sessionStorage?.getItem('taskprojectData'));
+        const taskDepartment = JSON?.parse(sessionStorage?.getItem('taskdepartmentData'));
+        const taskCategory = JSON?.parse(sessionStorage?.getItem('taskworkcategoryData'));
+        const taskData = await fetchModuleDataApi();
+        const labeledTasks = mapTaskLabels(taskData);
+        const enhanceTask = (task) => {
+            const project = taskProject?.find(item => item?.id == task?.projectid);
+            const department = taskDepartment?.find(item => item?.id == task?.departmentid);
+            const category = taskCategory?.find(item => item?.id == task?.workcategoryid);
+
+            return {
+                ...task,
+                taskPr: project ? project?.labelname : '',
+                taskDpt: department ? department?.labelname : '',
+                category: category?.labelname,
+            };
+        };
+        const enhancedTasks = labeledTasks?.map(task => enhanceTask(task));
+        setPrModuleMaster(enhancedTasks);
+        return enhancedTasks;
+    }
+
+    useEffect(() => {
+        handleProjectModuleData();
+    }, [open])
+
     return (
         <>
             <Drawer
@@ -606,18 +664,23 @@ const SidebarDrawer = ({
                 className="MainDrawer"
                 sx={{ display: open == true ? 'block' : 'none', zIndex: theme.zIndex.drawer + 2, }}
             >
-                {location?.pathname?.includes('/tasks') &&
+                {['/tasks', '/meetings', '/calendar']?.some(path => location?.pathname?.includes(path)) &&
                     <Box className="drawer-container">
                         <TaskDrawerHeader
                             taskType={taskType}
                             rootSubrootflagval={rootSubrootflagval}
                             handleClear={handleClear}
                         />
-                        {renderTaskHeader()}
+                        {location?.pathname?.includes('/tasks') &&
+                            <>
+                                {renderTaskHeader()}
+                            </>
+                        }
                         <Grid container spacing={2} alignItems="stretch">
                             <Grid item xs={12} md={taskType == "single" && dropdownConfigs?.length > 0 ? 7.5 : 12}>
                                 <TaskFormSection
                                     taskType={taskType}
+                                    prModule={prModule}
                                     formValues={formValues}
                                     handleChange={handleChange}
                                     handleDateChange={handleDateChange}
@@ -629,8 +692,9 @@ const SidebarDrawer = ({
                                     statusData={statusData}
                                     priorityData={priorityData}
                                     teams={teams}
+                                    prModuleMaster={prModuleMaster}
                                     renderAutocomplete={renderAutocomplete}
-                                    renderDateField={renderDateField}
+                                    renderDateField={renderDateTimeField}
                                     renderTextField={renderTextField}
                                     commonTextFieldProps={commonTextFieldProps}
                                 />
@@ -689,7 +753,7 @@ const SidebarDrawer = ({
                         priorityData={priorityData}
                         commonTextFieldProps={commonTextFieldProps}
                         renderAutocomplete={renderAutocomplete}
-                        renderDateField={renderDateField}
+                        renderDateField={renderDateTimeField}
                     />
                 }
             </Drawer>

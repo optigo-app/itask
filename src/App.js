@@ -269,7 +269,7 @@ const AppWrapper = () => {
                         />
                     </Routes>
                 </Suspense>
-            </LocalizationProvider>
+            </LocalizationProvider> 
         </>
     );
 };

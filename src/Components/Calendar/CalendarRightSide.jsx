@@ -18,7 +18,7 @@ import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/Depar
 import { PERMISSIONS } from '../Auth/Role/permissions';
 import { toast } from 'react-toastify';
 
-const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calendarsColor, handleCaleFormSubmit, handleRemoveAMeeting, handleAssigneeChange }) => {
+const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calendarsColor, handleCaleFormSubmit, handleRemoveAMeeting, handleAssigneeChange, setFormDrawerOpen, setFormDataValue, setRootSubroot }) => {
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
     const calendarRef = useRef();
     const [calendarApi, setCalendarApi] = useState(null);
@@ -44,7 +44,8 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
     };
 
     const handleDrawerToggle = () => {
-        setCaledrawerOpen(!caledrawerOpen);
+        // setCaledrawerOpen(!caledrawerOpen);
+        setFormDrawerOpen(false);
     };
 
     useEffect(() => {
@@ -127,9 +128,9 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
 
     const filterEvents = (events, selectedCalendars) => {
         return events?.filter(event =>
-          !event?.category || selectedCalendars?.includes(event.category)
+            !event?.category || selectedCalendars?.includes(event.category)
         ) || [];
-      };
+    };
 
     const filteredEvents = filterEvents(calEvData, selectedEventfilter);
     // const filteredEvents = calEvData
@@ -165,6 +166,7 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
     const calendarOptions = {
         firstDay: 1,
         events: filteredEvents?.map(event => {
+            debugger
             return {
                 id: event?.meetingid?.toString(),
                 title: event.meetingtitle || '',
@@ -173,6 +175,7 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
                 allDay: event.isAllDay ? 1 : 0,
                 description: event.Desc,
                 category: event?.category || 'primary',
+                workcategoryid: event?.workcategoryid,
                 extendedProps: {
                     guests: event?.guests,
                     estimate: 1,
@@ -242,12 +245,17 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
                 description: clickedEvent?.extendedProps?.description,
                 prModule: clickedEvent?.extendedProps?.prModule,
                 guests: clickedEvent?.extendedProps?.guests,
-                category: clickedEvent?.extendedProps?.category,
+                category: clickedEvent?.extendedProps?.workcategoryid,
                 estimate: clickedEvent?.extendedProps?.estimate || 1,
                 allDay: clickedEvent?.allDay ? 1 : 0,
             };
             setCalFormData(eventDetails);
-            setCaledrawerOpen(true);
+            setFormDataValue(eventDetails)
+            // setCaledrawerOpen(true);
+            setFormDrawerOpen(true);
+            setRootSubroot({
+                Task: "meeting"
+            })
         },
         customButtons: {
             sidebarToggle: {
@@ -262,7 +270,9 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
                 start: new Date(info.dateStr).toISOString(),
             };
             setCalFormData(eventDetails);
-            setCaledrawerOpen(true);
+            setFormDataValue(eventDetails)
+            // setFormDrawerOpen(true);
+            setFormDrawerOpen(true);
         },
         eventDrop({ event: droppedEvent }) {
             if (droppedEvent.extendedProps?.isMeeting) return;
@@ -298,6 +308,7 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
             });
             setCalEvData(data);
             setCalFormData(updatedEvent);
+            setFormDataValue(updatedEvent)
             handleCaleFormSubmit(updatedEvent);
         },
         eventReceive({ event: receivedEvent }) {
@@ -336,15 +347,20 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
             });
             setCalEvData(data);
             setCalFormData(newEvent);
+            setFormDataValue(newEvent)
             handleCaleFormSubmit(newEvent);
         },
         eventResize({ event: resizedEvent }) {
             if (resizedEvent.extendedProps?.isMeeting) return;
+            const start = resizedEvent.start;
+            const end = resizedEvent.end;
+            const diffInMs = end.getTime() - start.getTime();
+            const diffInHours = diffInMs / (1000 * 60 * 60);
             const updatedEvent = {
                 id: resizedEvent.id,
                 title: resizedEvent.title,
-                start: resizedEvent.start?.toISOString(),
-                end: resizedEvent.end?.toISOString(),
+                start: start?.toISOString(),
+                end: end?.toISOString(),
                 taskid: resizedEvent.extendedProps?.taskid,
                 projectid: resizedEvent.extendedProps?.projectid,
                 prModule: resizedEvent.extendedProps?.prModule,
@@ -352,10 +368,10 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
                 assigneids: resizedEvent.extendedProps?.guests?.map(user => user.id)?.join(","),
                 description: resizedEvent.extendedProps?.description,
                 category: resizedEvent.extendedProps?.category,
-                guests: resizedEvent.extendedProps?.guests,
-                estimate: resizedEvent.extendedProps?.estimate || 1,
+                estimate: diffInHours || 1,
                 allDay: resizedEvent.allDay ? 1 : 0,
             };
+
             const data = calEvData?.map(event => {
                 if (event?.meetingid == updatedEvent?.id) {
                     return {
@@ -367,10 +383,12 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
                     return event;
                 }
             });
+
             setCalEvData(data);
             setCalFormData(updatedEvent);
+            setFormDataValue(updatedEvent);
             handleCaleFormSubmit(updatedEvent);
-        },
+        }
     };
 
     const handleRemove = (formValue) => {
@@ -384,6 +402,7 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
         handleRemoveAMeeting(formData);
         setCnfDialogOpen(false);
         setCaledrawerOpen(false);
+        setFormDrawerOpen(false);
     };
 
     const handleCloseDialog = () => {
@@ -400,6 +419,7 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
         setFormData(meeting);
         handleTaskModalClose();
         setCaledrawerOpen(true);
+        setFormDrawerOpen(true);
     }
 
     return (

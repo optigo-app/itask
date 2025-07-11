@@ -292,6 +292,17 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
     const renderTaskButtons = (task) => {
         return (
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <IconButton
+                    aria-label="View Module button"
+                    onClick={() => handleViewPrDashboard(task, "md")}
+                    sx={{
+                        '&.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                        },
+                    }}
+                >
+                    <Eye size={20} color="#808080" className="iconbtn" />
+                </IconButton>
                 {hasAccess(PERMISSIONS.canLockPrModule) &&
                     <LockButton
                         isLocked={task?.isFreez === 1}
@@ -309,17 +320,6 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                     }}
                 >
                     <Paperclip size={20} color="#808080" className="iconbtn" />
-                </IconButton>
-                <IconButton
-                    aria-label="View Module button"
-                    onClick={() => handleViewPrDashboard(task, "md")}
-                    sx={{
-                        '&.Mui-disabled': {
-                            color: 'rgba(0, 0, 0, 0.26)',
-                        },
-                    }}
-                >
-                    <Eye size={20} color="#808080" className="iconbtn" />
                 </IconButton>
                 <IconButton
                     aria-label="Edit-Task button"

@@ -10,6 +10,7 @@ export const AddMeetingApi = async (formValues) => {
             "meetingtitle": (formValues?.title || formValues?.meetingtitle)?? "",
             "StartDate":( formValues?.start || formValues?.StartDate) ?? '',
             "EndDate": (formValues?.end || formValues?.EndDate) ?? '',
+            "estimate": formValues?.estimate ?? 0,
             "assigneids": formValues?.assigneids ?? "",
             "isAllDay": (formValues?.allDay || formValues?.isAllDay) ? 1 : 0 ?? 0,
             "descr": (formValues?.description || formValues?.Desc) ?? "",
