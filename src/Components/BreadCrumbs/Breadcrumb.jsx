@@ -6,8 +6,9 @@ import Box from "@mui/material/Box";
 const Breadcrumb = ({ breadcrumbTitles = [] }) => {
   return (
     <Box className="breadcrumb">
-      {/* ✅ Start with a slash always */}
-      <Box component="span" className="separator">/</Box>
+      {breadcrumbTitles.length > 0 && (
+        <Box component="span" className="separator">/</Box>
+      )}
 
       {breadcrumbTitles.map((title, index) => {
         const isLast = index === breadcrumbTitles.length - 1;
@@ -23,7 +24,14 @@ const Breadcrumb = ({ breadcrumbTitles = [] }) => {
               <Box
                 component="span"
                 className={`breadcrumb-item ${isLast ? "active" : ""}`}
-                sx={{ width: breadcrumbTitles.length > 3 ? 80 : breadcrumbTitles.length > 2 ? 100 : 'auto' }}
+                sx={{
+                  width:
+                    breadcrumbTitles.length > 3
+                      ? 80
+                      : breadcrumbTitles.length > 2
+                        ? 100
+                        : 'auto'
+                }}
               >
                 {title}
               </Box>

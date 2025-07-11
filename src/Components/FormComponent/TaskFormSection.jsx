@@ -5,25 +5,29 @@ import {
   Grid,
   TextField,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  Autocomplete,
+  Stack
 } from '@mui/material';
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 import EstimateInput from '../../Utils/Common/EstimateInput';
-import MultiTaskInput from './MultiTaskInput';
+import CustomSwitch from '../../Utils/Common/CustomSwitch';
 
 const TaskFormSection = ({
   taskType,
   formValues,
+  prModule,
+  categoryDisabled,
   handleChange,
   handleDateChange,
   handleEstimateChange,
-  handlebulkTaskSave,
   isTaskNameEmpty,
   isDuplicateTask,
   taskCategory,
   statusData,
   priorityData,
   teams,
+  prModuleMaster,
   renderAutocomplete,
   renderDateField,
   renderTextField,
@@ -34,7 +38,7 @@ const TaskFormSection = ({
       {taskType === 'single' && (
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '10px' }}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -54,11 +58,37 @@ const TaskFormSection = ({
                 label="Milestone"
                 className="milestone-label"
               />
+              <Box className="form-group">
+                <Typography
+                  variant="subtitle1"
+                  className="form-label"
+                  htmlFor="title"
+                >
+                </Typography>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{ alignItems: 'center' }}
+                >
+                  <CustomSwitch
+                    checked={formValues.allDay === 1}
+                    onChange={(e) =>
+                      handleChange({
+                        target: {
+                          name: 'allDay',
+                          value: e.target.checked ? 1 : 0
+                        }
+                      })
+                    }
+                  />
+                  <Typography>All Day</Typography>
+                </Stack>
+              </Box>
             </Box>
           </Box>
 
           <Grid container spacing={1} className="form-row">
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={12}>
               {renderTextField(
                 'Task Name',
                 'taskName',
@@ -68,28 +98,49 @@ const TaskFormSection = ({
                 isTaskNameEmpty
                   ? 'Task name is required.'
                   : isDuplicateTask
-                  ? 'This taskname already exists for the selected module.'
-                  : '',
+                    ? 'This taskname already exists for the selected module.'
+                    : '',
                 handleChange
               )}
             </Grid>
 
-            <Grid item xs={12} md={6}>
-              {renderAutocomplete('Category', 'category', formValues.category, 'Select Category', taskCategory, handleChange)}
+            <Grid item xs={6}>
+              <Box className="form-group">
+                <Typography
+                  variant="subtitle1"
+                  className="form-label"
+                  htmlFor="category"
+                >
+                  Project/Module
+                </Typography>
+                <Autocomplete
+                  key={formValues?.prModule?.taskid ?? 'autocomplete'}
+                  value={formValues?.prModule ?? null}
+                  options={prModuleMaster}
+                  getOptionLabel={(option) => `${option?.taskPr}/${option?.taskname}`}
+                  {...commonTextFieldProps}
+                  disabled={prModule !== true}
+                  onChange={(_, newValue) =>
+                    handleChange({
+                      target: {
+                        name: 'prModule',
+                        value: newValue
+                      }
+                    })
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      variant="outlined"
+                      placeholder="Select Project/Module"
+                    />
+                  )}
+                />
+              </Box>
             </Grid>
 
-            <Grid item xs={12}>
-              <DepartmentAssigneeAutocomplete
-                value={formValues?.createdBy}
-                options={teams}
-                label="Created By"
-                placeholder="Select assignees"
-                limitTags={2}
-                onChange={(newValue) =>
-                  handleChange({ target: { name: 'createdBy', value: newValue } })
-                }
-                disabled
-              />
+            <Grid item xs={12} md={6}>
+              {renderAutocomplete('Category', 'category', formValues.category, 'Select Category', taskCategory, handleChange)}
             </Grid>
 
             <Grid item xs={12}>
@@ -105,15 +156,30 @@ const TaskFormSection = ({
               />
             </Grid>
 
+            <Grid item xs={6}>
+              <DepartmentAssigneeAutocomplete
+                value={formValues?.createdBy}
+                options={teams}
+                label="Created By"
+                placeholder="Select assignees"
+                limitTags={2}
+                onChange={(newValue) =>
+                  handleChange({ target: { name: 'createdBy', value: newValue } })
+                }
+                disabled
+              />
+            </Grid>
+
             <Grid item xs={12} md={6}>
               {renderAutocomplete('Status', 'status', formValues.status, 'Select Status', statusData, handleChange)}
             </Grid>
+
 
             <Grid item xs={12} md={6}>
               {renderAutocomplete('Priority', 'priority', formValues.priority, 'Select Priority', priorityData, handleChange)}
             </Grid>
 
-            {[{ label: 'Start Date', name: 'startDate' }, { label: 'Deadline Date', name: 'dueDate' }].map(({ label, name }) => (
+            {[{ label: 'Start Date', name: 'startDate' }, { label: 'End Date', name: 'endDate' }, { label: 'Deadline Date', name: 'dueDate' }].map(({ label, name }) => (
               <Grid item xs={12} md={6} key={name}>
                 {renderDateField(label, name, formValues[name], handleDateChange)}
               </Grid>

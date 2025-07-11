@@ -4,8 +4,8 @@ import { Box, Typography, Button, Grid } from "@mui/material";
 import { Calendar, Plus } from "lucide-react";
 import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
 import CalendarForm from "../../Components/Calendar/SideBar/CalendarForm";
-import { assigneeId, CalformData } from "../../Recoil/atom";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { assigneeId, CalformData, filterDrawer, formData, masterDataValue, openFormDrawer, rootSubrootflag } from "../../Recoil/atom";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import StatusModal from "./MeetingStatusModal";
 import {
   fetchMettingFullDetailsListApi,
@@ -24,6 +24,7 @@ import { MeetingAttendAPI } from "../../Api/MeetingApi/MeetingAttendApi.js";
 import ProfileCardModal from "../../Components/ShortcutsComponent/ProfileCard.jsx";
 import useAccess from "../../Components/Auth/Role/useAccess.js";
 import { PERMISSIONS } from "../../Components/Auth/Role/permissions.js";
+import SidebarDrawer from "../../Components/FormComponent/Sidedrawer.jsx";
 
 const MeetingTable = lazy(() =>
   import("../../Components/Meeting/MeetingGrid.jsx")
@@ -58,8 +59,11 @@ const MeetingPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [caledrawerOpen, setCaledrawerOpen] = useState(false);
   const [calFormData, setCalFormData] = useRecoilState(CalformData);
+  const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
+  const setFormDataValue = useSetRecoilState(formData);
+  const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const setAssigneeId = useSetRecoilState(assigneeId);
-  const [formData, setFormData] = useState();
+  const [formDatas, setFormDatas] = useState();
   const [opencnfDialogOpen, setCnfDialogOpen] = useState(false);
   const [openStatusModal, setOpenStatusModal] = useState(false);
   const [openRejectModal, setOpenRejectModal] = useState(false);
@@ -69,13 +73,34 @@ const MeetingPage = () => {
     filterTab: tabData[0].label,
   });
   const [meetingDetailModalOpen, setMeetingDetailModalOpen] = useState(false);
+  const [statusData, setStatusData] = useState([]);
+  const [priorityData, setPriorityData] = useState([]);
+  const [projectData, setProjectData] = useState([]);
+  const [taskCategory, setTaskCategory] = useState([]);
+  const [taskDepartment, setTaskDepartment] = useState([]);
+  const [taskAssigneeData, setTaskAssigneeData] = useState([]);
   const [profileOpen, setProfileOpen] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [page, setPage] = useState(1);
 
+  useEffect(() => {
+    const status = JSON?.parse(sessionStorage?.getItem("taskstatusData"));
+    const priority = JSON?.parse(sessionStorage?.getItem("taskpriorityData"));
+    const project = JSON?.parse(sessionStorage?.getItem("taskprojectData"));
+    const category = JSON?.parse(sessionStorage?.getItem("taskworkcategoryData"));
+    const department = JSON?.parse(sessionStorage?.getItem("taskdepartmentData"));
+    const assignee = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"));
+    setStatusData(status);
+    setPriorityData(priority);
+    setProjectData(project);
+    setTaskCategory(category);
+    setTaskDepartment(department);
+    setTaskAssigneeData(assignee);
+  }, [])
+
   const handleOpenStatusModal = (meeting) => {
     setOpenStatusModal(true);
-    setFormData(meeting);
+    setFormDatas(meeting);
   };
 
   const handleTaskModalClose = () => {
@@ -95,7 +120,7 @@ const MeetingPage = () => {
 
   const handleReject = (meeting) => {
     setOpenRejectModal(true);
-    setFormData(meeting);
+    setFormDatas(meeting);
   };
 
   const handleAcceptMeeting = async (meeting) => {
@@ -104,7 +129,7 @@ const MeetingPage = () => {
       isAccept: 1,
       comment: "Approved",
     };
-    setFormData(formValues);
+    setFormDatas(formValues);
     handleMeetingStatusSave(formValues);
   };
 
@@ -140,7 +165,7 @@ const MeetingPage = () => {
 
   const handleConfirmReject = () => {
     const formValues = {
-      id: formData?.meetingid,
+      id: formDatas?.meetingid,
       isAccept: 2,
       comment: rejectReason,
     };
@@ -402,17 +427,18 @@ const MeetingPage = () => {
     ?.sort((a, b) => new Date(a.time) - new Date(b.time));
 
   const handleDrawerToggle = () => {
-    setCaledrawerOpen(!caledrawerOpen);
+    setFormDrawerOpen(!formdrawerOpen);
   };
 
   const handleCaleFormSubmit = async (formValues) => {
+    console.log('formValues: ', formValues);
     setCalFormData(formValues);
-    const apiRes = await AddMeetingApi(formValues);
-    if (apiRes?.rd[0]?.stat == 1) {
-      handleMeetingApiCall();
-    } else {
-      toast.error(apiRes?.rd[0]?.stat_msg);
-    }
+    // const apiRes = await AddMeetingApi(formValues);
+    // if (apiRes?.rd[0]?.stat == 1) {
+    //   handleMeetingApiCall();
+    // } else {
+    //   toast.error(apiRes?.rd[0]?.stat_msg);
+    // }
   };
 
   const handleMeetingStatusSave = async (formValues) => {
@@ -423,7 +449,7 @@ const MeetingPage = () => {
   };
 
   const handleFetchMeetingDetails = async () => {
-    const apiRes = await fetchMettingDetailApi(formData);
+    const apiRes = await fetchMettingDetailApi(formDatas);
     if (apiRes?.rd1[0]?.stat == 1) {
       return apiRes?.rd;
     }
@@ -431,7 +457,7 @@ const MeetingPage = () => {
 
   const handleRemove = (formValue) => {
     setCnfDialogOpen(true);
-    setFormData(formValue);
+    setFormDatas(formValue);
   };
 
   const handleCloseCnfDialog = () => {
@@ -439,7 +465,7 @@ const MeetingPage = () => {
   };
 
   const handleConfirmRemoveAMeeting = async () => {
-    const apiRes = await deleteMeetingApi(formData);
+    const apiRes = await deleteMeetingApi(formDatas);
     if (apiRes?.rd[0]?.stat == 1) {
       handleMeetingApiCall();
     }
@@ -447,17 +473,20 @@ const MeetingPage = () => {
   };
 
   const handleAddMeetings = () => {
-    setCaledrawerOpen(true);
+    setFormDrawerOpen(!formdrawerOpen);
+    setRootSubroot({
+      Task: "meeting",
+    })
   };
 
   const handleMeetingDt = (meeting) => {
-    setFormData(meeting);
+    setFormDatas(meeting);
     handleDrawerToggle();
     setMeetingDetailModalOpen(true);
   };
 
   const handleMeetingEdit = (meeting) => {
-    setFormData(meeting);
+    setFormDatas(meeting);
     handleTaskModalClose();
     setCaledrawerOpen(true);
   }
@@ -569,7 +598,7 @@ const MeetingPage = () => {
     (page - 1) * rowsPerPage,
     page * rowsPerPage
   ) || [];
-  
+
   console.log('currentData: ', currentData);
   return (
     <Box
@@ -637,15 +666,17 @@ const MeetingPage = () => {
                 ) : (
                   <MeetingTable
                     meeting={currentData}
-                    page = {page}
-                    rowsPerPage = {rowsPerPage}
-                    totalPages = {totalPages}
-                    handleChangePage = {handleChangePage}
-                    handlePageSizeChnage = {handlePageSizeChnage}
+                    page={page}
+                    rowsPerPage={rowsPerPage}
+                    totalPages={totalPages}
+                    handleChangePage={handleChangePage}
+                    handlePageSizeChnage={handlePageSizeChnage}
                     selectedTab={selectedTab}
                     handleDrawerToggle={handleDrawerToggle}
                     setCalFormData={setCalFormData}
-                    setFormData={setFormData}
+                    setFormData={setFormDatas}
+                    setFormDataValue={setFormDataValue}
+                    setRootSubroot={setRootSubroot}
                     setMeetingDetailModalOpen={setMeetingDetailModalOpen}
                     StatusCircles={StatusCircles}
                     background={background}
@@ -694,7 +725,7 @@ const MeetingPage = () => {
         )}
         <StatusModal
           open={openStatusModal}
-          mettingData={formData}
+          mettingData={formDatas}
           handleFetchMeetingDetails={handleFetchMeetingDetails}
           handleClose={() => setOpenStatusModal(false)}
         />
@@ -730,6 +761,19 @@ const MeetingPage = () => {
           onClose={() => setProfileOpen(false)}
           profileData={calFormData}
           background={background}
+        />
+        <SidebarDrawer
+          open={formdrawerOpen}
+          onClose={handleDrawerToggle}
+          onSubmit={handleCaleFormSubmit}
+          isLoading={isLoding}
+          priorityData={priorityData}
+          projectData={projectData}
+          statusData={statusData}
+          taskCategory={taskCategory}
+          taskAssigneeData={taskAssigneeData}
+          prModule = {true}
+          categoryDisabled = {true}
         />
       </Suspense>
     </Box>

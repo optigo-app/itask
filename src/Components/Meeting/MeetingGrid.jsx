@@ -35,6 +35,8 @@ const MeetingTable = ({
     handleDrawerToggle,
     setCalFormData,
     setFormData,
+    setFormDataValue,
+    setRootSubroot,
     background,
     hanldePAvatarClick,
     handleOpenStatusModal
@@ -161,12 +163,16 @@ const MeetingTable = ({
                                             Attend
                                         </Button>
                                     }
-                                    {selectedTab == "Upcoming" &&
+                                    {selectedTab?.filterTab == "Upcoming" &&
                                         <IconButton
                                             aria-label="edit-meeting"
                                             onClick={() => {
                                                 handleDrawerToggle();
                                                 setCalFormData(row);
+                                                setFormDataValue(row);
+                                                setRootSubroot({
+                                                    Task:'root'
+                                                });
                                             }}
                                             sx={{
                                                 '&.Mui-disabled': {
@@ -186,6 +192,10 @@ const MeetingTable = ({
                                         onClick={() => {
                                             setMeetingDetailModalOpen(true)
                                             setFormData(row);
+                                            setFormDataValue(row);
+                                            setRootSubroot({
+                                                Task:'root'
+                                            });
                                         }}>
                                         <Eye
                                             size={20}

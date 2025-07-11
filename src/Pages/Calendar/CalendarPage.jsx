@@ -9,9 +9,12 @@ import {
   calendarData,
   calendarM,
   CalformData,
+  formData,
+  openFormDrawer,
+  rootSubrootflag,
   TaskData,
 } from "../../Recoil/atom";
-import { useSetRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import {
   fetchMettingListApi,
   fetchMettingListByLoginApi,
@@ -22,6 +25,7 @@ import { toast } from "react-toastify";
 import useAccess from "../../Components/Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Components/Auth/Role/permissions";
 import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
+import SidebarDrawer from "../../Components/FormComponent/Sidedrawer";
 
 const Calendar = () => {
   const { hasAccess } = useAccess();
@@ -31,11 +35,33 @@ const Calendar = () => {
   const [calendarsColor, setCalendarsColor] = useState({});
   const setCalEvData = useSetRecoilState(calendarData);
   const setCalFormData = useSetRecoilState(CalformData);
+  const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
+  const setFormDataValue = useSetRecoilState(formData);
+  const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const [isLoding, setIsLoding] = useState(false);
   const [selectedAssignee, setSelectedAssignee] = useState();
-  const assigneeData = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"));
+  const assigneeData = JSON?.parse(sessionStorage?.getItem("taskAssigneeData")) || [];
   const setTasks = useSetRecoilState(TaskData);
+  const [statusData, setStatusData] = useState([]);
+  const [priorityData, setPriorityData] = useState([]);
+  const [projectData, setProjectData] = useState([]);
+  const [taskCategory, setTaskCategory] = useState([]);
+  const [taskAssigneeData, setTaskAssigneeData] = useState([]);
   const { iswhTLoading, taskFinalData } = useFullTaskFormatFile();
+
+  useEffect(() => {
+    const status = JSON?.parse(sessionStorage?.getItem("taskstatusData"));
+    const priority = JSON?.parse(sessionStorage?.getItem("taskpriorityData"));
+    const project = JSON?.parse(sessionStorage?.getItem("taskprojectData"));
+    const category = JSON?.parse(sessionStorage?.getItem("taskworkcategoryData"));
+    const assignee = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"));
+    setStatusData(status);
+    setPriorityData(priority);
+    setProjectData(project);
+    setTaskCategory(category);
+    setTaskAssigneeData(assignee);
+  }, [])
+
 
   useEffect(() => {
     if (!iswhTLoading) {
@@ -74,6 +100,10 @@ const Calendar = () => {
     setCalendarsColor(dynamicCalendarsColor);
     setSelectedMon(new Date());
   }, []);
+
+  const handleDrawerToggle = () => {
+    setFormDrawerOpen(!formdrawerOpen);
+  };
 
   const handleMeetingListByLogin = async () => {
     setIsLoding(true);
@@ -217,7 +247,7 @@ const Calendar = () => {
         />
       ) : (
         // Left Panel (Desktop View)
-        <Box
+        <Box  
           sx={{
             width: isLaptop1 ? "29%" : "24%",
             height: "100%",
@@ -232,6 +262,7 @@ const Calendar = () => {
             handleCaleFormSubmit={handleCaleFormSubmit}
             handleRemoveAMeeting={handleRemoveAMeeting}
             isLoding={isLoding}
+            setFormDrawerOpen={setFormDrawerOpen}
           />
         </Box>
       )}
@@ -257,8 +288,24 @@ const Calendar = () => {
           selectedAssignee={selectedAssignee}
           handleAssigneeChange={handleAssigneeChange}
           hasAccess={hasAccess}
+          setFormDrawerOpen={setFormDrawerOpen}
+          setFormDataValue={setFormDataValue}
+          setRootSubroot={setRootSubroot}
         />
       </Box>
+      <SidebarDrawer
+        open={formdrawerOpen}
+        onClose={handleDrawerToggle}
+        onSubmit={handleCaleFormSubmit}
+        isLoading={isLoding}
+        priorityData={priorityData}
+        projectData={projectData}
+        statusData={statusData}
+        taskCategory={taskCategory}
+        taskAssigneeData={taskAssigneeData}
+        prModule={true}
+        categoryDisabled={true}
+      />
     </Box>
   );
 };
