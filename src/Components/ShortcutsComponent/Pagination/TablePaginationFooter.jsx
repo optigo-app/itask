@@ -26,7 +26,7 @@ const TablePaginationFooter = ({
 
             <Box display="flex" alignItems="center" gap={2}>
                 <Box display="flex" alignItems="center" gap={1}>
-                    <Typography variant="body2">Rows per page:</Typography>
+                    <Typography variant="body2" className="paginatedText">Rows per page:</Typography>
                     <Select
                         size="small"
                         value={rowsPerPage}
