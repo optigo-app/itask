@@ -225,10 +225,10 @@ $divider-color: #e0e0e0;
         }
     }
 
-    .MuiFormHelperText-root{
-        font-family: $font-family!important;
+    .MuiFormHelperText-root {
+        font-family: $font-family !important;
         margin-top: 4px;
-        margin-inline: 5px!important;
+        margin-inline: 5px !important;
     }
 }
 
@@ -416,6 +416,10 @@ $divider-color: #e0e0e0;
     }
 }
 
+.paginatedText {
+    color: $text2ndColor !important;
+}
+
 .custom-select {
     font-family: 'Public Sans', sans-serif !important;
     color: $text2ndColor;
@@ -423,21 +427,22 @@ $divider-color: #e0e0e0;
 }
 
 .custom-select .MuiOutlinedInput-notchedOutline {
-    border-color: $titleColor !important;
+    border-color: $secondaryColor !important;
+    opacity: .5;
 }
 
 .custom-select.Mui-focused .MuiOutlinedInput-notchedOutline {
     border-color: $primary-main !important;
+    opacity: 1;
 }
 
 .custom-select .MuiSelect-select {
     font-family: $font-family !important;
     padding: 5px 30px 5px 10px;
-  }
-  
-  .custom-menu-item {
+}
+
+.custom-menu-item {
     font-family: $font-family !important;
     color: $text2ndColor;
     font-size: 14px;
-  }
-  
+}
