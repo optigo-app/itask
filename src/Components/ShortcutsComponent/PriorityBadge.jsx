@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@mui/material";
 import CustomMenu from "./CustomMenuFun";
 
-const PriorityBadge = ({ task, priorityColors, onPriorityChange, disable }) => {
+const PriorityBadge = ({ task, priorityColors, onPriorityChange, fontSize, padding, minWidth, disable }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const priorityMaster = JSON.parse(sessionStorage.getItem("taskpriorityData")) || {};
 
@@ -26,10 +26,11 @@ const PriorityBadge = ({ task, priorityColors, onPriorityChange, disable }) => {
                     backgroundColor: (priorityColors[(task?.priority)?.toLowerCase()]?.backgroundColor) ?? "#7d7f8559",
                     fontFamily: '"Public Sans", sans-serif',
                     width: "fit-content",
-                    padding: "0.2rem 0.8rem",
+                    minWidth: minWidth ?? "inherit",
+                    padding: padding ?? "0.2rem 0.8rem",
                     borderRadius: "5px",
                     textAlign: "center",
-                    fontSize: "13.5px",
+                    fontSize: fontSize ?? "13.5px",
                     fontWeight: "500",
                     display: "flex",
                     justifyContent: "start",

@@ -8,7 +8,9 @@ import Fuse from "fuse.js";
 
 import './TasklistForCal.scss';
 import { TaskData } from "../../Recoil/atom";
-import { commonTextFieldProps, filterNestedTasksByView, flattenTasks } from "../../Utils/globalfun";
+import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate2, priorityColors, statusColors } from "../../Utils/globalfun";
+import PriorityBadge from "../ShortcutsComponent/PriorityBadge";
+import StatusBadge from "../ShortcutsComponent/StatusBadge";
 
 const TasklistForCal = ({ calendarsColor }) => {
     const task = useRecoilValue(TaskData);
@@ -65,17 +67,60 @@ const TasklistForCal = ({ calendarsColor }) => {
 
     // Fuzzy match using Fuse.js
     const getFilteredHierarchy = () => {
-        const fuse = new Fuse(calTasksList || [], {
-            keys: [
-                "taskname",
-                "descr",
-                "status",
-                "taskPr",
-                "assignee.firstname",
-                "assignee.lastname"
-            ],
-            threshold: 0.4
-        });
+        const fuse = new Fuse(
+            (calTasksList || []).map(task => {
+                const startDate = cleanDate(task?.StartDate);
+                const deadline = cleanDate(task?.DeadLineDate);
+
+                const formatForSearch = (date) => {
+                    if (!date) return {};
+                    const d = new Date(date);
+                    return {
+                        day: d.getDate().toString().padStart(2, '0'),         // "11"
+                        month: d.toLocaleString('default', { month: 'short' }), // "Jun"
+                        year: d.getFullYear().toString(),                     // "2025"
+                        full: `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`
+                    };
+                };
+                const start = formatForSearch(startDate);
+                const end = formatForSearch(deadline);
+                return {
+                    ...task,
+                    searchable_startDate: start.full || '',
+                    searchable_dueDate: end.full || '',
+                    searchable_startDay: start.day || '',
+                    searchable_startMonth: start.month || '',
+                    searchable_startYear: start.year || '',
+                    searchable_dueDay: end.day || '',
+                    searchable_dueMonth: end.month || '',
+                    searchable_dueYear: end.year || '',
+                    searchable_priority: task?.priority ?? '',
+                    searchable_status: task?.status ?? '',
+                };
+            }),
+            {
+                keys: [
+                    "taskname",
+                    "descr",
+                    "status",
+                    "priority",
+                    "taskPr",
+                    "assignee.firstname",
+                    "assignee.lastname",
+                    "searchable_startDate",
+                    "searchable_dueDate",
+                    "searchable_startDay",
+                    "searchable_startMonth",
+                    "searchable_startYear",
+                    "searchable_dueDay",
+                    "searchable_dueMonth",
+                    "searchable_dueYear",
+                    "searchable_priority",
+                    "searchable_status"
+                ],
+                threshold: 0.3,
+            }
+        );
         const matched = searchQuery
             ? (fuse?.search(searchQuery) || []).map(res => res.item)
             : calTasksList || [];
@@ -105,6 +150,7 @@ const TasklistForCal = ({ calendarsColor }) => {
     };
 
     const groupedTasks = getFilteredHierarchy();
+    console.log('groupedTasks: ', groupedTasks);
 
     return (
         <>
@@ -127,7 +173,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                             variant="body1"
                             fontWeight="bold"
                             color="text.primary"
-                            sx={{ ml: 1, mb: 0.5 }}
+                            sx={{ ml: 1, mb: 0.5, textTransform:'capitalize' }}
                         >
                             {parent.taskname}
                         </Typography>
@@ -137,7 +183,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                             return (
                                 <Card
                                     key={child.taskid}
-                                    className={`draggable-task bg-${colorClass} text-white`}
+                                    className={`draggable-task bg-${colorClass} text-default`}
                                     data-id={child.taskid}
                                     sx={{
                                         cursor: "grab",
@@ -148,8 +194,43 @@ const TasklistForCal = ({ calendarsColor }) => {
                                     }}
                                 >
                                     <CardContent className={`bg-${colorClass} text-${colorClass}`} sx={{ p: '10px !important', m: 0 }}>
-                                        <Typography variant="body2">{child.taskname}</Typography>
+                                        <Box display="flex" alignItems="center" gap={1} mb={0.5}>
+                                            <Typography variant="body2" fontWeight={500}>
+                                                {child.taskname}
+                                            </Typography>
+                                        </Box>
+                                        <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap">
+                                            <Typography variant="caption" color="text.secondary" mb={0.5} display="block">
+                                                Est. {child.estimate_hrs || '-'}
+                                            </Typography>
+                                            {child?.StartDate &&
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Start: {child?.StartDate && cleanDate(child?.StartDate)
+                                                        ? formatDate2(cleanDate(child?.StartDate))
+                                                        : '-'}
+                                                </Typography>
+                                            }
+                                        </Box>
+
+                                        <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap">
+                                            <Box display="flex" alignItems="center" gap={0.5}>
+                                                {child?.priority && (
+                                                    <PriorityBadge task={child} priorityColors={priorityColors} disable={true} fontSize={10} padding={5} minWidth={50} />
+                                                )}
+                                                {child?.status && (
+                                                    <StatusBadge task={child} statusColors={statusColors} disable={true} fontSize={10} padding={5} minWidth={50} />
+                                                )}
+                                            </Box>
+                                            {child?.DeadLineDate &&
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Due:  {child?.DeadLineDate && cleanDate(child?.DeadLineDate)
+                                                        ? formatDate2(cleanDate(child?.DeadLineDate))
+                                                        : '-'}
+                                                </Typography>
+                                            }
+                                        </Box>
                                     </CardContent>
+
                                 </Card>
                             );
                         })}
