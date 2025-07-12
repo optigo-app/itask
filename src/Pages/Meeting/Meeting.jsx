@@ -774,6 +774,7 @@ const MeetingPage = () => {
           taskAssigneeData={taskAssigneeData}
           prModule = {true}
           categoryDisabled = {true}
+          allDayShow = {true}
         />
       </Suspense>
     </Box>

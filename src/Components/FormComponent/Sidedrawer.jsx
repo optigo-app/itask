@@ -43,6 +43,7 @@ const SidebarDrawer = ({
     onSubmit,
     prModule = false,
     categoryDisabled = false,
+    allDayShow = false,
     isLoading,
     priorityData,
     projectData,
@@ -166,6 +167,13 @@ const SidebarDrawer = ({
             user.labelname?.toLowerCase() === "meeting"
         );
         const categoryflag = location?.pathname?.includes("meeting")
+        const falbackPrModule = {
+            projectid: formDataValue?.projectid,
+            projectname: formDataValue?.taskPr,
+            taskPr: formDataValue?.taskPr,
+            taskid: formDataValue?.taskid,
+            taskname: formDataValue?.taskname
+        };
         console.log('category: ', category);
         if (open && (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "root" || rootSubrootflagval?.Task === "meeting")) {
             setFormValues({
@@ -182,11 +190,11 @@ const SidebarDrawer = ({
                 status: formDataValue?.statusid ?? "",
                 priority: formDataValue?.priorityid ?? "",
                 project: formDataValue?.projectid ?? "",
-                prModule: formDataValue?.prModule ?? "",
+                prModule: (formDataValue?.prModule || formDataValue?.projectid && falbackPrModule) ?? null,
                 description: formDataValue?.descr ?? "",
                 attachment: formDataValue?.attachment ?? null,
                 progress: formDataValue?.progress ?? "",
-                startDate: (cleanDate(formDataValue?.StartDate) || cleanDate(formDataValue?.start))  ?? null,
+                startDate: (cleanDate(formDataValue?.StartDate) || cleanDate(formDataValue?.start)) ?? null,
                 category: categoryflag ? category[0]?.id : (formDataValue?.workcategoryid || formDataValue?.category) ?? "",
                 estimate: formDataValue?.estimate ?? [""],
                 actual: formDataValue?.actual ?? [""],
@@ -395,8 +403,8 @@ const SidebarDrawer = ({
             estimate2_hrs: formValues?.estimate2_hrs ?? formDataValue.estimate2_hrs,
             dynamicDropdowns: structured ?? formDataValue.dynamicDropdowns,
         };
-        // onSubmit(updatedFormDataValue, { mode: taskType }, module);
-        // handleClear();
+        onSubmit(updatedFormDataValue, { mode: taskType }, module);
+        handleClear();
     };
 
     // for close and clear form
@@ -461,6 +469,8 @@ const SidebarDrawer = ({
         </Box>
     );
 
+    console.log("cks", categoryDisabled)
+
     const renderAutocomplete = (label, name, value, placeholder, options, onChange, disabled) => (
         <CustomAutocomplete
             label={label}
@@ -469,7 +479,7 @@ const SidebarDrawer = ({
             onChange={onChange}
             options={options}
             placeholder={placeholder}
-            disabled={disabled || categoryDisabled}
+            disabled={disabled || name === "category" ? categoryDisabled : false}
         />
     );
 
@@ -682,6 +692,7 @@ const SidebarDrawer = ({
                                     taskType={taskType}
                                     prModule={prModule}
                                     formValues={formValues}
+                                    allDayShow={allDayShow}
                                     handleChange={handleChange}
                                     handleDateChange={handleDateChange}
                                     handleEstimateChange={handleEstimateChange}

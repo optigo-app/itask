@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -10,19 +10,27 @@ import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import ExcelPreview from './ExcelPreview'; // Import the Excel preview component
+import WordPreview from './WordPreview'; // Import the Word preview component
 
 const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
-  const { url, filename, extension } = fileData || {};
+  const { url, filename, extension, fileObject } = fileData || {};
 
   const lowerExt = extension?.toLowerCase();
   const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
   const videoExts = ['mp4', 'webm', 'ogg'];
   const pdfExts = ['pdf'];
+  const excelExts = ['xlsx', 'xls', 'csv']; // Excel and CSV support
+  const wordExts = ['docx', 'doc']; // Word document support
+  const textExts = ['txt'];
 
   const isImage = imageExts.includes(lowerExt);
   const isVideo = videoExts.includes(lowerExt);
   const isPdf = pdfExts.includes(lowerExt);
-  const isBrowserPreviewable = isImage || isVideo || isPdf;
+  const isExcel = excelExts.includes(lowerExt);
+  const isWord = wordExts.includes(lowerExt);
+  const isText = textExts.includes(lowerExt);
+  const isBrowserPreviewable = isImage || isVideo || isPdf || isExcel || isWord || isText;
 
   const [fullWidth, setFullWidth] = useState(false);
 
@@ -43,7 +51,7 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
             width: fullWidth ? '100%' : '80%',
             height: fullWidth ? '100%' : '85vh',
             bgcolor: 'background.paper',
-            borderRadius: 2,
+            borderRadius: fullWidth ? 0 : 2,
             boxShadow: 24,
             p: 2,
             outline: 'none',
@@ -54,7 +62,9 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
         >
           {/* Header */}
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-            <Typography variant="h6" noWrap>{filename || 'Document Preview'}</Typography>
+            <Typography variant="h6" noWrap sx={{
+              padding: fullWidth && '0px 10px 0 10px',
+            }}>{filename || 'Document Preview'}</Typography>
             <Box display="flex" alignItems="center">
               <IconButton onClick={() => setFullWidth(!fullWidth)} title="Toggle Fullscreen">
                 {fullWidth ? <FullscreenExitIcon /> : <FullscreenIcon />}
@@ -101,7 +111,7 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
                 sx={{
                   width: '100%',
                   height: '100%',
-                  overflow: 'hidden', // Ensures nothing overflows
+                  overflow: 'hidden',
                 }}
               >
                 <img
@@ -110,7 +120,7 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
                   style={{
                     maxWidth: '100%',
                     maxHeight: '100%',
-                    objectFit: 'contain', // Keeps aspect ratio and fits inside box
+                    objectFit: 'contain',
                     display: 'block',
                   }}
                 />
@@ -139,6 +149,19 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
                   Your browser does not support the video tag.
                 </video>
               </Box>
+            )}
+            {isExcel && (
+              <ExcelPreview url={url} filename={filename} fileObject={fileObject} />
+            )}
+            {isWord && (
+              <WordPreview url={url} filename={filename} fileObject={fileObject} />
+            )}
+            {isText && (
+              <iframe
+                src={url}
+                title="Text Preview"
+                style={{ width: '100%', height: '100%', border: 'none' }}
+              />
             )}
             {!isBrowserPreviewable && (
               <Box
