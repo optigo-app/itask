@@ -54,6 +54,7 @@ const Task = () => {
     priorityData,
     statusData,
     taskAssigneeData } = useFullTaskFormatFile();
+  console.log('taskFinalData: ', taskFinalData);
 
   useEffect(() => {
     setTasks([]);

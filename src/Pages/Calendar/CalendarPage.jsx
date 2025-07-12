@@ -62,7 +62,6 @@ const Calendar = () => {
     setTaskAssigneeData(assignee);
   }, [])
 
-
   useEffect(() => {
     if (!iswhTLoading) {
       setTasks(taskFinalData?.TaskData);
@@ -247,7 +246,7 @@ const Calendar = () => {
         />
       ) : (
         // Left Panel (Desktop View)
-        <Box  
+        <Box
           sx={{
             width: isLaptop1 ? "29%" : "24%",
             height: "100%",
@@ -263,6 +262,8 @@ const Calendar = () => {
             handleRemoveAMeeting={handleRemoveAMeeting}
             isLoding={isLoding}
             setFormDrawerOpen={setFormDrawerOpen}
+            setFormDataValue={setFormDataValue}
+            setRootSubroot={setRootSubroot}
           />
         </Box>
       )}
@@ -305,6 +306,7 @@ const Calendar = () => {
         taskAssigneeData={taskAssigneeData}
         prModule={true}
         categoryDisabled={true}
+        allDayShow={true}
       />
     </Box>
   );

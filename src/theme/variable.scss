@@ -446,3 +446,13 @@ $divider-color: #e0e0e0;
     color: $text2ndColor;
     font-size: 14px;
 }
+
+.wordPreviewContent {
+    font-family: $font-family;
+    line-height: 1.8;
+    color: $text2ndColor;
+    max-width: 100%;
+    word-wrap: break-word;
+    padding: 16px;
+    margin-bottom: 20px;
+  }

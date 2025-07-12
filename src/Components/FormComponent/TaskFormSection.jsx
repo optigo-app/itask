@@ -17,7 +17,7 @@ const TaskFormSection = ({
   taskType,
   formValues,
   prModule,
-  categoryDisabled,
+  allDayShow = false,
   handleChange,
   handleDateChange,
   handleEstimateChange,
@@ -58,32 +58,34 @@ const TaskFormSection = ({
                 label="Milestone"
                 className="milestone-label"
               />
-              <Box className="form-group">
-                <Typography
-                  variant="subtitle1"
-                  className="form-label"
-                  htmlFor="title"
-                >
-                </Typography>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  sx={{ alignItems: 'center' }}
-                >
-                  <CustomSwitch
-                    checked={formValues.allDay === 1}
-                    onChange={(e) =>
-                      handleChange({
-                        target: {
-                          name: 'allDay',
-                          value: e.target.checked ? 1 : 0
-                        }
-                      })
-                    }
-                  />
-                  <Typography>All Day</Typography>
-                </Stack>
-              </Box>
+              {allDayShow &&
+                <Box className="form-group">
+                  <Typography
+                    variant="subtitle1"
+                    className="form-label"
+                    htmlFor="title"
+                  >
+                  </Typography>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{ alignItems: 'center' }}
+                  >
+                    <CustomSwitch
+                      checked={formValues.allDay === 1}
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: 'allDay',
+                            value: e.target.checked ? 1 : 0
+                          }
+                        })
+                      }
+                    />
+                    <Typography>All Day</Typography>
+                  </Stack>
+                </Box>
+              }
             </Box>
           </Box>
 
@@ -109,7 +111,7 @@ const TaskFormSection = ({
                 <Typography
                   variant="subtitle1"
                   className="form-label"
-                  htmlFor="category"
+                  htmlFor=" Project/Module"
                 >
                   Project/Module
                 </Typography>

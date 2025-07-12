@@ -166,7 +166,6 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
     const calendarOptions = {
         firstDay: 1,
         events: filteredEvents?.map(event => {
-            debugger
             return {
                 id: event?.meetingid?.toString(),
                 title: event.meetingtitle || '',
