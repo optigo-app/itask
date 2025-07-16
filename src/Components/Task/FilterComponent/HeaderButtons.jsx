@@ -91,6 +91,8 @@ const HeaderButtons = ({
     if (Array.isArray(CategorySummary)) {
       setCategoryMaster(CategorySummary);
     }
+    const viewMode = localStorage?.getItem('activeTaskTab') ?? 'table';
+    setView(viewMode);
   }, [CategorySummary, location, isLoading]);
 
   useEffect(() => {
@@ -179,6 +181,7 @@ const HeaderButtons = ({
   };
 
   const ViewToggleButtons = ({ view, onViewChange }) => {
+    console.log('view: ', view);
     return (
       <ToggleButtonGroup
         size='small'

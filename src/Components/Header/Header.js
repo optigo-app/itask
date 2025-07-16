@@ -324,7 +324,7 @@ const Header = ({ avatarSrc = "" }) => {
                     >
                         {subtitle}
                     </Typography>
-                    {decodedData?.isLimited === 1 && (
+                    {decodedData?.isLimited === 1 && typeof location?.pathname === "string" && location.pathname.includes("/tasks/") && (
                         <Typography
                             variant="caption"
                             sx={{

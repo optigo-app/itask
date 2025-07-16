@@ -173,7 +173,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                             variant="body1"
                             fontWeight="bold"
                             color="text.primary"
-                            sx={{ ml: 1, mb: 0.5, textTransform:'capitalize' }}
+                            sx={{ ml: 1, mb: 0.5, textTransform: 'capitalize' }}
                         >
                             {parent.taskname}
                         </Typography>

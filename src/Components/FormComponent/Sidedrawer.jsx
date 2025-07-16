@@ -49,7 +49,9 @@ const SidebarDrawer = ({
     projectData,
     taskCategory,
     statusData,
-    taskAssigneeData
+    taskAssigneeData,
+    handleMeetingDt,
+    handleRemoveMetting
 }) => {
     const location = useLocation();
     const theme = useTheme();
@@ -86,6 +88,7 @@ const SidebarDrawer = ({
         department: "",
         guests: [],
         projectLead: [],
+        prModule: {},
         workcategoryid: "",
         milestoneChecked: 0,
         estimate_hrs: "",
@@ -93,6 +96,7 @@ const SidebarDrawer = ({
         estimate2_hrs: "",
     });
 
+    console.log('formValues: ', formValues);
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const encodedData = searchParams.get("data");
@@ -158,59 +162,60 @@ const SidebarDrawer = ({
     };
 
     useEffect(() => {
-        debugger
-        const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
-        const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(id => Number(id));
-        const matchedAssignees = formDataValue?.assigneids ? taskAssigneeData?.filter(user => assigneeIdArray?.includes(user.id)) : [];
-        const createdById = taskAssigneeData?.filter(user => user.id == formDataValue?.createdbyid)
-        const category = taskCategory?.filter(user =>
-            user.labelname?.toLowerCase() === "meeting"
-        );
-        const categoryflag = location?.pathname?.includes("meeting")
-        const falbackPrModule = {
+        const loggedAssignee = JSON.parse(localStorage?.getItem("UserProfileData"));
+        const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(Number) || [];
+        const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray.includes(user.id)) || [];
+        const createdByUsers = taskAssigneeData?.filter(user => user.id === loggedAssignee?.id) || [];
+        const categoryflag = location?.pathname?.includes("meeting");
+        const category = taskCategory?.find(cat => cat.labelname?.toLowerCase() === "meeting");
+        const fallbackPrModule = {
             projectid: formDataValue?.projectid,
             projectname: formDataValue?.taskPr,
             taskPr: formDataValue?.taskPr,
             taskid: formDataValue?.taskid,
             taskname: formDataValue?.taskname
         };
-        console.log('category: ', category);
-        if (open && (rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "root" || rootSubrootflagval?.Task === "meeting")) {
-            setFormValues({
-                taskName: (formDataValue?.taskname || formDataValue?.title) ?? "",
+        debugger;
+        const isAddMode = ["AddTask", "root", "meeting"].includes(rootSubrootflagval?.Task);
+        if (open && isAddMode) {
+            setFormValues(prev => ({
+                ...prev,
+                taskName: formDataValue?.taskname || formDataValue?.title || formDataValue?.meetingtitle || "",
                 multiTaskName: formDataValue?.actual ?? [""],
                 bulkTask: formDataValue?.bulk ?? [],
                 dueDate: cleanDate(formDataValue?.DeadLineDate) ?? null,
-                endDate: (cleanDate(formDataValue?.EndDate) || cleanDate(formDataValue?.end)) ?? null,
-                department: formDataValue?.department != 0 ? formDataValue?.department : "",
-                guests: (matchedAssignees?.length > 0 ? matchedAssignees : [logedAssignee]) ?? [logedAssignee],
-                createdBy: (createdById?.length > 0 ? createdById : [logedAssignee]) ?? [logedAssignee],
+                endDate: cleanDate(formDataValue?.EndDate || formDataValue?.end) ?? null,
+                department: formDataValue?.department || "",
+                guests: matchedAssignees.length ? matchedAssignees : [loggedAssignee],
+                createdBy: createdByUsers.length ? createdByUsers : [loggedAssignee],
                 projectLead: formDataValue?.projectLead ?? "",
-                assignee: formDataValue?.assigneids ?? logedAssignee?.id,
+                assignee: formDataValue?.assigneids ?? loggedAssignee?.id,
                 status: formDataValue?.statusid ?? "",
                 priority: formDataValue?.priorityid ?? "",
-                project: formDataValue?.projectid ?? "",
-                prModule: (formDataValue?.prModule || formDataValue?.projectid && falbackPrModule) ?? null,
+                project: (formDataValue?.projectid || formValues?.prModule?.priorityid) ?? "",
+                prModule: formDataValue?.prModule || (formDataValue?.projectid && fallbackPrModule) || null,
                 description: formDataValue?.descr ?? "",
                 attachment: formDataValue?.attachment ?? null,
                 progress: formDataValue?.progress ?? "",
-                startDate: (cleanDate(formDataValue?.StartDate) || cleanDate(formDataValue?.start)) ?? null,
-                category: categoryflag ? category[0]?.id : (formDataValue?.workcategoryid || formDataValue?.category) ?? "",
+                startDate: cleanDate(formDataValue?.StartDate || formDataValue?.start) ?? null,
+                category: categoryflag ? category?.id : (formDataValue?.workcategoryid || formDataValue?.category) ?? "",
                 estimate: formDataValue?.estimate ?? [""],
                 actual: formDataValue?.actual ?? [""],
-                milestoneChecked: formDataValue?.ismilestone ? 1 : 0 ?? 0,
-                estimate_hrs: (formDataValue.estimate_hrs || formDataValue?.estimate) ?? 0,
-                estimate1_hrs: formDataValue.estimate1_hrs ?? 0,
-                estimate2_hrs: formDataValue.estimate2_hrs ?? 0,
-            });
+                milestoneChecked: formDataValue?.ismilestone ? 1 : 0,
+                estimate_hrs: formDataValue?.estimate_hrs ?? 0,
+                estimate1_hrs: formDataValue?.estimate1_hrs ?? 0,
+                estimate2_hrs: formDataValue?.estimate2_hrs ?? 0,
+                isAllDay: formDataValue?.isAllDay ?? 0,
+            }));
         } else if (rootSubrootflagval?.Task === "subroot") {
-            setFormValues({
-                ...formValues,
-                guests: (matchedAssignees?.length > 0 ? matchedAssignees : [logedAssignee]) ?? [logedAssignee],
-                createdBy: (createdById?.length > 0 ? createdById : [logedAssignee]) ?? [logedAssignee],
-            });
+            setFormValues(prev => ({
+                ...prev,
+                guests: matchedAssignees.length ? matchedAssignees : [loggedAssignee],
+                createdBy: createdByUsers.length ? createdByUsers : [loggedAssignee],
+            }));
         }
     }, [open, formDataValue, rootSubrootflagval]);
+
 
     let data = flattenTasks(taskDataValue)
     const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);
@@ -357,52 +362,56 @@ const SidebarDrawer = ({
         }));
     }
 
-    console.log('formValues: ', formValues);
     const handleSubmit = (module) => {
+        if (!formValues?.taskName?.trim()) {
+            setIsTaskNameEmpty(true);
+            return;
+        }
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
-        const idString = formValues?.guests?.map(user => user.id)?.join(",");
-        const assignees = formValues?.guests && Object.values(
-            formValues?.guests?.reduce((acc, user) => {
+        const assigneeIds = formValues.guests?.map(user => user.id)?.join(",") ?? "";
+        const departmentAssigneeList = Object.values(
+            formValues.guests?.reduce((acc, user) => {
                 const dept = user.department;
                 if (!acc[dept]) {
-                    acc[dept] = {
-                        department: dept,
-                        assignee: user.id.toString()
-                    };
+                    acc[dept] = { department: dept, assignee: user.id.toString() };
                 } else {
                     acc[dept].assignee += `,${user.id}`;
                 }
                 return acc;
-            }, {})
+            }, {}) || {}
         );
-        const structured = {};
-        formValues?.dynamicDropdowns?.forEach((item, index) => {
-            const key = `group${index + 1}_attr`;
-            structured[key] = item.selectedId;
-        });
+        const dynamicDropdowns = formValues?.dynamicDropdowns?.reduce((acc, item, idx) => {
+            acc[`group${idx + 1}_attr`] = item.selectedId;
+            return acc;
+        }, {}) || {};
+
         const updatedFormDataValue = {
-            taskid: moduleData?.taskid ?? formDataValue.taskid ?? "",
-            taskname: formValues.taskName ?? formDataValue.taskname,
-            bulkTask: formValues?.bulkTask ?? formDataValue?.bulkTask,
-            statusid: formValues.status ?? formDataValue.statusid,
-            priorityid: formValues.priority ?? formDataValue.priorityid,
-            projectid: moduleData?.projectid ?? formValues.project ?? formDataValue.projectid,
-            projectLead: formValues?.projectLead ?? formDataValue?.projectLead,
-            DeadLineDate: formValues.dueDate ?? formDataValue.DeadLineDate,
-            workcategoryid: formValues.category ?? formDataValue.workcategoryid,
-            StartDate: formValues.startDate ?? formDataValue.entrydate,
-            remark: formValues.remark ?? formDataValue.remark,
-            departmentid: formValues.department ?? formDataValue.departmentid,
-            assigneids: idString ?? formDataValue.assigneids,
-            createdBy: formValues.createdBy ?? formDataValue.createdBy,
-            departmentAssigneelist: assignees ?? formDataValue.assigneids,
-            descr: formValues.description ?? formDataValue.descr,
-            ismilestone: formValues.milestoneChecked ? 1 : 0 ?? formDataValue.ismilestone,
-            estimate_hrs: formValues?.estimate_hrs ?? formDataValue.estimate_hrs,
-            estimate1_hrs: formValues?.estimate1_hrs ?? formDataValue.estimate1_hrs,
-            estimate2_hrs: formValues?.estimate2_hrs ?? formDataValue.estimate2_hrs,
-            dynamicDropdowns: structured ?? formDataValue.dynamicDropdowns,
+            taskid: moduleData?.taskid || formDataValue?.taskid || formValues?.prModule?.taskid || "",
+            meetingid: formDataValue?.meetingid ?? "",
+            taskname: formValues.taskName ?? formDataValue?.taskname,
+            bulkTask: formValues.bulkTask ?? formDataValue?.bulkTask,
+            statusid: formValues.status ?? formDataValue?.statusid,
+            priorityid: formValues.priority ?? formDataValue?.priorityid,
+            projectid: moduleData?.projectid || formValues?.prModule?.projectid || formValues.project || formDataValue?.projectid,
+            projectLead: formValues.projectLead ?? formDataValue?.projectLead,
+            DeadLineDate: formValues.dueDate ?? formDataValue?.DeadLineDate,
+            workcategoryid: formValues.category ?? formDataValue?.workcategoryid,
+            StartDate: formValues.startDate ?? formDataValue?.entrydate,
+            EndDate: formValues.endDate ?? formDataValue?.EndDate,
+            remark: formValues.remark ?? formDataValue?.remark,
+            departmentid: formValues.department ?? formDataValue?.departmentid,
+            assigneids: assigneeIds ?? formDataValue?.assigneids,
+            createdBy: formValues.createdBy ?? formDataValue?.createdBy,
+            departmentAssigneelist: departmentAssigneeList ?? formDataValue?.assigneids,
+            descr: formValues.description ?? formDataValue?.descr,
+            ismilestone: formValues.milestoneChecked ? 1 : 0,
+            isAllDay: formValues?.isAllDay ?? formDataValue?.isAllDay,
+            estimate_hrs: formValues.estimate_hrs ?? formDataValue?.estimate_hrs,
+            estimate1_hrs: formValues.estimate1_hrs ?? formDataValue?.estimate1_hrs,
+            estimate2_hrs: formValues.estimate2_hrs ?? formDataValue?.estimate2_hrs,
+            dynamicDropdowns: dynamicDropdowns ?? formDataValue?.dynamicDropdowns,
         };
+
         onSubmit(updatedFormDataValue, { mode: taskType }, module);
         handleClear();
     };
@@ -430,6 +439,7 @@ const SidebarDrawer = ({
             estimate2_hrs: "",
             milestoneChecked: false,
         });
+        setIsTaskNameEmpty(false);
     };
 
     const handleResetState = () => {
@@ -452,6 +462,7 @@ const SidebarDrawer = ({
             estimate2_hrs: "",
             milestoneChecked: false,
         });
+        setIsTaskNameEmpty(false);
     }
 
     const renderTextField = (label, name, value, placeholder, error, helperText, onChange) => (
@@ -468,8 +479,6 @@ const SidebarDrawer = ({
             />
         </Box>
     );
-
-    console.log("cks", categoryDisabled)
 
     const renderAutocomplete = (label, name, value, placeholder, options, onChange, disabled) => (
         <CustomAutocomplete
@@ -524,36 +533,50 @@ const SidebarDrawer = ({
 
         return (
             (taskType !== 'multi_input' || (taskType === 'multi_input' && formValues.bulkTask.length > 0)) && (
-                <Box
-                    sx={{
-                        position: 'fixed',
-                        bottom: 0,
-                        right: 0,
-                        width: '800px',
-                        bgcolor: '#fff',
-                        py: 2,
-                        px: 3,
-                        zIndex: 1301,
-                        textAlign: 'right',
-                    }}
-                >
-                    <Button
-                        variant="outlined"
-                        onClick={handleClear}
-                        sx={{ marginRight: '10px' }}
-                        className="secondaryBtnClassname"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleSubmit}
-                        disabled={isDisabled}
-                        className="primary-btn"
-                    >
-                        {isLoading ? 'Saving...' : 'Save Task'}
-                    </Button>
+                <Box sx={{
+                    position: 'fixed',
+                    bottom: 0,
+                    right: 0,
+                    width: '800px',
+                    bgcolor: '#fff',
+                    py: 2,
+                    px: 3,
+                    zIndex: 1301,
+                    display: 'flex',
+                    justifyContent: formValues?.taskName && location?.pathname?.includes('/calendar') ? 'space-between' : 'flex-end'
+                }}>
+                    {formValues?.taskName && location?.pathname?.includes('/calendar') &&
+                        <Box>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={() => handleRemoveMetting(formDataValue)}
+                                disabled={isLoading}
+                                className="dangerbtnClassname"
+                            >
+                                Delete
+                            </Button>
+                        </Box>
+                    }
+                    <Box>
+                        <Button
+                            variant="outlined"
+                            onClick={handleClear}
+                            sx={{ marginRight: '10px' }}
+                            className="secondaryBtnClassname"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleSubmit}
+                            disabled={isDisabled}
+                            className="primary-btn"
+                        >
+                            {isLoading ? 'Saving...' : 'Save Task'}
+                        </Button>
+                    </Box>
                 </Box>
             )
         );
@@ -702,12 +725,13 @@ const SidebarDrawer = ({
                                     taskCategory={taskCategory}
                                     statusData={statusData}
                                     priorityData={priorityData}
-                                    teams={teams}
+                                    teams={location?.pathname?.includes('/tasks') ? teams : taskAssigneeData}
                                     prModuleMaster={prModuleMaster}
                                     renderAutocomplete={renderAutocomplete}
                                     renderDateField={renderDateTimeField}
                                     renderTextField={renderTextField}
                                     commonTextFieldProps={commonTextFieldProps}
+                                    handleMeetingDt={handleMeetingDt}
                                 />
                             </Grid>
                             {taskType == "single" && dropdownConfigs?.length > 0 &&

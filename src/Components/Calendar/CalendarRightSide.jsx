@@ -7,7 +7,7 @@ import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData } from '../../Recoil/atom';
+import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData, rootSubrootflag } from '../../Recoil/atom';
 import CalendarForm from './SideBar/CalendarForm';
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
 import MeetingDetail from '../Meeting/MeetingDetails';
@@ -18,34 +18,33 @@ import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/Depar
 import { PERMISSIONS } from '../Auth/Role/permissions';
 import { toast } from 'react-toastify';
 
-const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calendarsColor, handleCaleFormSubmit, handleRemoveAMeeting, handleAssigneeChange, setFormDrawerOpen, setFormDataValue, setRootSubroot }) => {
+const Calendar = ({
+    isLoding,
+    assigneeData,
+    selectedAssignee,
+    hasAccess,
+    calendarsColor,
+    handleCaleFormSubmit,
+    handleRemoveAMeeting,
+    handleAssigneeChange,
+    setFormDrawerOpen,
+    setFormDataValue,
+}) => {
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
     const calendarRef = useRef();
     const [calendarApi, setCalendarApi] = useState(null);
     const date = useRecoilValue(calendarM);
     const setCalFormData = useSetRecoilState(CalformData);
     const selectedEventfilter = useRecoilValue(CalEventsFilter)
-    const [caledrawerOpen, setCaledrawerOpen] = useState(false);
-    const [opencnfDialogOpen, setCnfDialogOpen] = useState(false);
-    const [formData, setFormData] = useState();
     const [calEvData, setCalEvData] = useRecoilState(calendarData);
-    const [meetingDetailModalOpen, setMeetingDetailModalOpen] = useState(false);
     const [contextMenu, setContextMenu] = useState(null);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const inputRef = useRef(null);
+    const setRootSubroot = useSetRecoilState(rootSubrootflag);
 
     const handleClose = () => {
         setContextMenu(null);
         setSelectedEvent(null);
-    };
-
-    const handleTaskModalClose = () => {
-        setMeetingDetailModalOpen(false);
-    };
-
-    const handleDrawerToggle = () => {
-        // setCaledrawerOpen(!caledrawerOpen);
-        setFormDrawerOpen(false);
     };
 
     useEffect(() => {
@@ -163,36 +162,93 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
         }
     }, []);
 
+    const mapEventDetails = (event) => {
+        const start = event?.start ?? event?.StartDate;
+        const end = event?.end ?? event?.EndDate ?? start;
+
+        return {
+            meetingid: event?.id ?? event?.meetingid,
+            title: event?.title ?? event?.meetingtitle ?? '',
+            start: new Date(start).toISOString(),
+            end: new Date(end).toISOString(),
+            isAllDay: event?.allDay ? 1 : (event?.isAllDay ? 1 : 0),
+            ismilestone: event?.ismilestone,
+            descr: event?.extendedProps?.descr ?? event?.Desc ?? '',
+            category: event?.extendedProps?.category ?? event?.category ?? '',
+            workcategoryid: event?.extendedProps?.workcategoryid ?? event?.workcategoryid,
+            statusid: event?.extendedProps?.statusid ?? event?.statusid,
+            status: event?.extendedProps?.status ?? event?.status,
+            priorityid: event?.extendedProps?.priorityid ?? event?.priorityid,
+            priority: event?.extendedProps?.priority ?? event?.priority,
+            estimate_hrs: event?.extendedProps?.estimate_hrs ?? event?.estimate_hrs ?? 0,
+            estimate1_hrs: event?.extendedProps?.estimate1_hrs ?? event?.estimate1_hrs ?? 0,
+            estimate2_hrs: event?.extendedProps?.estimate2_hrs ?? event?.estimate2_hrs ?? 0,
+            DeadLineDate: event?.extendedProps?.DeadLineDate ?? event?.DeadLineDate,
+            taskid: event?.extendedProps?.taskid ?? event?.taskid,
+            projectid: event?.extendedProps?.projectid ?? event?.projectid,
+            prModule: event?.extendedProps?.prModule ?? {
+                taskid: event?.taskid,
+                projectid: event?.projectid,
+                taskname: event?.taskname,
+                projectname: event?.ProjectName,
+                taskPr: event?.ProjectName
+            },
+            guests: event?.extendedProps?.guests ?? event?.guests ?? [],
+            assigneids: event?.extendedProps?.guests?.map(u => u.id)?.join(',') ?? '',
+            estimate: event?.extendedProps?.estimate ?? 1,
+            description: event?.extendedProps?.description ?? event?.Desc ?? '',
+        };
+    };
+
     const calendarOptions = {
         firstDay: 1,
-        events: filteredEvents?.map(event => {
-            return {
-                id: event?.meetingid?.toString(),
-                title: event.meetingtitle || '',
-                start: event.StartDate,
-                end: event.EndDate,
-                allDay: event.isAllDay ? 1 : 0,
-                description: event.Desc,
-                category: event?.category || 'primary',
-                workcategoryid: event?.workcategoryid,
-                extendedProps: {
-                    guests: event?.guests,
-                    estimate: 1,
-                    prModule: {
-                        taskid: event?.taskid,
-                        projectid: event?.projectid,
-                        taskname: event?.taskname,
-                        projectname: event?.ProjectName,
-                        taskPr: event?.ProjectName
-                    },
+        events: filteredEvents?.map(event => ({
+            id: event?.meetingid?.toString(),
+            title: event?.meetingtitle || '',
+            start: event?.StartDate,
+            end: event?.EndDate,
+            isAllDay: event?.isAllDay ? 1 : 0,
+            ismilestone: event?.ismilestone,
+            descr: event?.Desc,
+            category: event?.category || '',
+            workcategoryid: event?.workcategoryid,
+            statusid: event?.statusid,
+            status: event?.status,
+            priorityid: event?.priorityid,
+            priority: event?.priority,
+            estimate_hrs: event?.estimate_hrs || 0,
+            estimate1_hrs: event?.estimate1_hrs || 0,
+            estimate2_hrs: event?.estimate2_hrs || 0,
+            DeadLineDate: event?.DeadLineDate,
+            extendedProps: {
+                guests: event?.guests,
+                estimate: 1,
+                prModule: {
                     taskid: event?.taskid,
                     projectid: event?.projectid,
+                    taskname: event?.taskname,
+                    projectname: event?.ProjectName,
+                    taskPr: event?.ProjectName,
                 },
-            };
-        }),
+                taskid: event?.taskid,
+                projectid: event?.projectid,
+                workcategoryid: event?.workcategoryid,
+                category: event?.category || '',
+                statusid: event?.statusid,
+                status: event?.status,
+                priorityid: event?.priorityid,
+                priority: event?.priority,
+                estimate_hrs: event?.estimate_hrs || 0,
+                estimate1_hrs: event?.estimate1_hrs || 0,
+                estimate2_hrs: event?.estimate2_hrs || 0,
+                DeadLineDate: event?.DeadLineDate,
+                descr: event?.Desc,
+                ismilestone: event?.ismilestone,
+            },
+        })),
         plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
         initialView: 'timeGridWeek',
-        slotMinTime: "07:00:00",  // Start from 7 AM
+        slotMinTime: "07:00:00",
         slotMaxTime: "22:00:00",
         slotDuration: "00:15:00",
         slotLabelInterval: "00:30:00",
@@ -213,7 +269,27 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
         dragScroll: true,
         dayMaxEvents: false,
         navLinks: true,
-        eventDidMount: function (info) {
+
+        customButtons: {
+            sidebarToggle: {
+                icon: 'bi bi-list',
+                click() {
+                    setSidebarToggle(prev => !prev);
+                }
+            }
+        },
+
+        eventClassNames({ event }) {
+            const category = event.extendedProps.category || 'ETC';
+            const colorClass = calendarsColor[category] || 'primary';
+            return [`bg-${colorClass}`];
+        },
+
+        eventAllow(dropInfo, draggedEvent) {
+            return !draggedEvent.extendedProps?.isMeeting;
+        },
+
+        eventDidMount(info) {
             info.el.addEventListener('contextmenu', function (e) {
                 e.preventDefault();
                 setSelectedEvent(info.event);
@@ -223,227 +299,91 @@ const Calendar = ({ isLoding, assigneeData, selectedAssignee, hasAccess, calenda
                 });
             });
         },
-        eventClassNames({ event }) {
-            const category = event.extendedProps.category || 'ETC';
-            const colorClass = calendarsColor[category] || 'primary';
-            return [`bg-${colorClass}`];
-        },
-        eventAllow: function (dropInfo, draggedEvent) {
-            return !draggedEvent.extendedProps?.isMeeting;
-        },
-        eventClick({ event: clickedEvent }) {
-            const startDate = clickedEvent?.start;
-            const endDate = clickedEvent?.end ?? startDate;
-            const eventDetails = {
-                id: clickedEvent?.id,
-                title: clickedEvent?.title,
-                start: startDate?.toISOString(),
-                end: endDate?.toISOString(),
-                taskid: clickedEvent?.extendedProps?.taskid,
-                projectid: clickedEvent?.extendedProps?.projectid,
-                description: clickedEvent?.extendedProps?.description,
-                prModule: clickedEvent?.extendedProps?.prModule,
-                guests: clickedEvent?.extendedProps?.guests,
-                category: clickedEvent?.extendedProps?.workcategoryid,
-                estimate: clickedEvent?.extendedProps?.estimate || 1,
-                allDay: clickedEvent?.allDay ? 1 : 0,
-            };
-            setCalFormData(eventDetails);
-            setFormDataValue(eventDetails)
-            // setCaledrawerOpen(true);
-            setFormDrawerOpen(true);
-            setRootSubroot({
-                Task: "meeting"
-            })
-        },
-        customButtons: {
-            sidebarToggle: {
-                icon: 'bi bi-list',
-                click() {
-                    setSidebarToggle(prevState => !prevState);
-                },
-            },
-        },
+
         dateClick(info) {
             const eventDetails = {
                 start: new Date(info.dateStr).toISOString(),
             };
             setCalFormData(eventDetails);
-            setFormDataValue(eventDetails)
-            // setFormDrawerOpen(true);
+            setFormDataValue(eventDetails);
+            setRootSubroot({ Task: "meeting" });
             setFormDrawerOpen(true);
         },
-        eventDrop({ event: droppedEvent }) {
-            if (droppedEvent.extendedProps?.isMeeting) return;
-            const startDate = droppedEvent?.start;
-            const endDate = droppedEvent?.end ?? startDate;
-            const updatedEvent = {
-                id: droppedEvent.id,
-                title: droppedEvent.title,
-                start: startDate?.toISOString(),
-                end: endDate?.toISOString(),
-                taskid: droppedEvent.extendedProps?.taskid,
-                projectid: droppedEvent.extendedProps?.projectid,
-                prModule: droppedEvent.extendedProps?.prModule,
-                guests: droppedEvent.extendedProps?.guests,
-                assigneids: droppedEvent.extendedProps?.guests?.map(user => user.id)?.join(","),
-                description: droppedEvent.extendedProps.description,
-                category: droppedEvent.extendedProps.category,
-                guests: droppedEvent.extendedProps.guests,
-                estimate: droppedEvent.extendedProps.estimate || 1,
-                allDay: droppedEvent.allDay ? 1 : 0,
-            };
 
-            const data = calEvData?.map(event => {
-                if (event?.meetingid == updatedEvent?.id) {
-                    return {
-                        ...event,
-                        StartDate: updatedEvent?.start,
-                        EndDate: updatedEvent?.end,
-                    };
-                } else {
-                    return event;
-                }
-            });
-            setCalEvData(data);
-            setCalFormData(updatedEvent);
-            setFormDataValue(updatedEvent)
-            handleCaleFormSubmit(updatedEvent);
+        eventClick({ event }) {
+            const eventDetails = mapEventDetails(event);
+            setCalFormData(eventDetails);
+            setFormDataValue(eventDetails);
+            setRootSubroot({ Task: "meeting" });
+            setFormDrawerOpen(true);
         },
-        eventReceive({ event: receivedEvent }) {
-            if (receivedEvent?.title == "") return;
-            const estimate = receivedEvent?.extendedProps?.estimate || 1;
-            const startDate = receivedEvent?.start ? new Date(receivedEvent.start) : new Date();
-            const endDate = new Date(startDate.getTime() + estimate * 60 * 60 * 1000);
 
-            const newEvent = {
-                id: receivedEvent?.id,
-                title: receivedEvent?.title || "",
-                start: startDate.toISOString(),
-                end: endDate.toISOString(),
-                taskid: receivedEvent?.extendedProps?.taskid || 0,
-                projectid: receivedEvent?.extendedProps?.projectid || 0,
-                prModule: receivedEvent?.extendedProps?.prModule || {},
-                guests: receivedEvent?.extendedProps?.guests || [],
-                assigneids: receivedEvent?.extendedProps?.guests?.map(user => user.id)?.join(","),
-                description: receivedEvent?.extendedProps?.description || "",
-                category: receivedEvent?.extendedProps?.category || "",
-                estimate: estimate,
-                allDay: receivedEvent?.allDay ? 1 : 0,
-            };
+        eventDrop({ event }) {
+            if (event.extendedProps?.isMeeting) return;
 
-            const data = calEvData?.map(event => {
-                if (event?.meetingid == newEvent?.id) {
-                    return {
-                        ...event,
-                        StartDate: newEvent?.start,
-                        EndDate: newEvent?.end,
-                    };
-                }
-                else {
-                    return event;
-                }
-            });
-            setCalEvData(data);
-            setCalFormData(newEvent);
-            setFormDataValue(newEvent)
-            handleCaleFormSubmit(newEvent);
+            const eventDetails = mapEventDetails(event);
+            const updatedData = calEvData?.map(ev =>
+                ev?.meetingid == eventDetails?.meetingid
+                    ? { ...ev, StartDate: eventDetails?.start, EndDate: eventDetails?.end }
+                    : ev
+            );
+
+            setCalEvData(updatedData);
+            setCalFormData(eventDetails);
+            setFormDataValue(eventDetails);
+            handleCaleFormSubmit(eventDetails);
         },
-        eventResize({ event: resizedEvent }) {
-            if (resizedEvent.extendedProps?.isMeeting) return;
-            const start = resizedEvent.start;
-            const end = resizedEvent.end;
+
+        eventResize({ event }) {
+            if (event.extendedProps?.isMeeting) return;
+            const start = event.start;
+            const end = event.end ?? start;
             const diffInMs = end.getTime() - start.getTime();
             const diffInHours = diffInMs / (1000 * 60 * 60);
-            const updatedEvent = {
-                id: resizedEvent.id,
-                title: resizedEvent.title,
-                start: start?.toISOString(),
-                end: end?.toISOString(),
-                taskid: resizedEvent.extendedProps?.taskid,
-                projectid: resizedEvent.extendedProps?.projectid,
-                prModule: resizedEvent.extendedProps?.prModule,
-                guests: resizedEvent.extendedProps?.guests,
-                assigneids: resizedEvent.extendedProps?.guests?.map(user => user.id)?.join(","),
-                description: resizedEvent.extendedProps?.description,
-                category: resizedEvent.extendedProps?.category,
-                estimate: diffInHours || 1,
-                allDay: resizedEvent.allDay ? 1 : 0,
+            const eventDetails = {
+                ...mapEventDetails(event),
+                estimate_hrs: diffInHours || 1,
             };
+            const updatedData = calEvData?.map(ev =>
+                ev?.meetingid == eventDetails?.meetingid
+                    ? {
+                        ...ev,
+                        StartDate: eventDetails.start,
+                        EndDate: eventDetails.end,
+                        estimate_hrs: eventDetails.estimate_hrs,
+                    }
+                    : ev
+            );
+            setCalEvData(updatedData);
+            setCalFormData(eventDetails);
+            setFormDataValue(eventDetails);
+            handleCaleFormSubmit(eventDetails);
+        },
+        eventReceive({ event }) {
+            if (!event?.title) return;
 
-            const data = calEvData?.map(event => {
-                if (event?.meetingid == updatedEvent?.id) {
-                    return {
-                        ...event,
-                        StartDate: updatedEvent?.start,
-                        EndDate: updatedEvent?.end,
-                    };
-                } else {
-                    return event;
-                }
-            });
+            const eventDetails = mapEventDetails(event);
+            const startDate = new Date(eventDetails.start);
+            const endDate = new Date(startDate.getTime() + eventDetails.estimate * 60 * 60 * 1000);
 
-            setCalEvData(data);
-            setCalFormData(updatedEvent);
-            setFormDataValue(updatedEvent);
-            handleCaleFormSubmit(updatedEvent);
-        }
+            eventDetails.end = endDate.toISOString();
+
+            const updatedData = calEvData?.map(ev =>
+                ev?.meetingid == eventDetails?.meetingid
+                    ? { ...ev, StartDate: eventDetails.start, EndDate: eventDetails.end }
+                    : ev
+            );
+
+            setCalEvData(updatedData);
+            setCalFormData(eventDetails);
+            setFormDataValue(eventDetails);
+            handleCaleFormSubmit(eventDetails);
+        },
     };
-
-    const handleRemove = (formValue) => {
-        setFormData(formValue)
-        setCnfDialogOpen(true);
-    };
-
-    const handleConfirmRemoveAll = () => {
-        const updatedData = filteredEvents?.filter(event => event?.id !== formData?.id);
-        setCalEvData(updatedData);
-        handleRemoveAMeeting(formData);
-        setCnfDialogOpen(false);
-        setCaledrawerOpen(false);
-        setFormDrawerOpen(false);
-    };
-
-    const handleCloseDialog = () => {
-        setCnfDialogOpen(false);
-    };
-
-    const handleMeetingDt = (meeting) => {
-        setFormData(meeting);
-        handleDrawerToggle();
-        setMeetingDetailModalOpen(true);
-    }
-
-    const handleMeetingEdit = (meeting) => {
-        setFormData(meeting);
-        handleTaskModalClose();
-        setCaledrawerOpen(true);
-        setFormDrawerOpen(true);
-    }
 
     return (
         <>
             <FullCalendar {...calendarOptions} />
-            <CalendarForm
-                open={caledrawerOpen}
-                onClose={handleDrawerToggle}
-                onSubmit={handleCaleFormSubmit}
-                onRemove={handleRemove}
-                handleMeetingDt={handleMeetingDt}
-            />
-            <ConfirmationDialog
-                open={opencnfDialogOpen}
-                onClose={handleCloseDialog}
-                onConfirm={handleConfirmRemoveAll}
-                title="Confirm"
-                content="Are you sure you want to remove this Event?"
-            />
-            < MeetingDetail
-                open={meetingDetailModalOpen}
-                onClose={handleTaskModalClose}
-                taskData={formData}
-                handleMeetingEdit={handleMeetingEdit}
-            />
             <Menu
                 open={contextMenu !== null}
                 onClose={handleClose}

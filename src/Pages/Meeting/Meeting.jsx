@@ -259,7 +259,8 @@ const MeetingPage = () => {
         };
       });
 
-      setMeetings(enhancedMeetings);
+      const finalData = enhancedMeetings?.filter((m) => m?.category?.labelname?.toLowerCase() === "meeting");
+      setMeetings(finalData);
     } catch (error) {
       console.error("Error fetching meeting list:", error);
     } finally {
@@ -352,8 +353,8 @@ const MeetingPage = () => {
           meetingDt,
         };
       });
-
-      setMeetings(enhancedMeetings);
+      const finalData = enhancedMeetings?.filter((m) => m?.category?.labelname?.toLowerCase() === "meeting");
+      setMeetings(finalData);
     } catch (error) {
       console.error("Error fetching meeting list:", error);
     } finally {
@@ -433,12 +434,12 @@ const MeetingPage = () => {
   const handleCaleFormSubmit = async (formValues) => {
     console.log('formValues: ', formValues);
     setCalFormData(formValues);
-    // const apiRes = await AddMeetingApi(formValues);
-    // if (apiRes?.rd[0]?.stat == 1) {
-    //   handleMeetingApiCall();
-    // } else {
-    //   toast.error(apiRes?.rd[0]?.stat_msg);
-    // }
+    const apiRes = await AddMeetingApi(formValues);
+    if (apiRes?.rd[0]?.stat == 1) {
+      handleMeetingApiCall();
+    } else {
+      toast.error(apiRes?.rd[0]?.stat_msg);
+    }
   };
 
   const handleMeetingStatusSave = async (formValues) => {
@@ -685,6 +686,7 @@ const MeetingPage = () => {
                     handleReject={handleReject}
                     handleAttendMeeting={handleAttendMeeting}
                     hanldePAvatarClick={hanldePAvatarClick}
+                    handleRemove={handleRemove}
                   />
                 )}
               </>
@@ -772,9 +774,9 @@ const MeetingPage = () => {
           statusData={statusData}
           taskCategory={taskCategory}
           taskAssigneeData={taskAssigneeData}
-          prModule = {true}
-          categoryDisabled = {true}
-          allDayShow = {true}
+          prModule={true}
+          categoryDisabled={true}
+          allDayShow={true}
         />
       </Suspense>
     </Box>

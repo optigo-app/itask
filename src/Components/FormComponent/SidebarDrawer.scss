@@ -29,6 +29,26 @@
         z-index: 1500;
     }
 
+    .meetingDtBtn {
+        min-width: 120px;
+        width: 100%;
+        line-height: .5;
+        display: flex;
+        justify-content: end;
+        align-items: end;
+        font-family: $font-family !important;
+        text-transform: capitalize;
+        font-weight: bold;
+        color: $primary-main;
+        text-decoration: underline;
+        cursor: pointer;
+
+        &:hover {
+            background: transparent;
+            text-decoration: underline;
+        }
+    }
+
     @media(max-width: 712px) {
         .drawer-container {
             max-width: 500px;
