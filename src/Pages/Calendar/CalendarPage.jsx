@@ -26,6 +26,8 @@ import useAccess from "../../Components/Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Components/Auth/Role/permissions";
 import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
 import SidebarDrawer from "../../Components/FormComponent/Sidedrawer";
+import MeetingDetail from "../../Components/Meeting/MeetingDetails";
+import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
 
 const Calendar = () => {
   const { hasAccess } = useAccess();
@@ -33,10 +35,11 @@ const Calendar = () => {
   const isLaptop1 = useMediaQuery("(max-width:1600px) and (min-width:1421px)");
   const setSelectedMon = useSetRecoilState(calendarM);
   const [calendarsColor, setCalendarsColor] = useState({});
-  const setCalEvData = useSetRecoilState(calendarData);
+  const [calEvData, setCalEvData] = useRecoilState(calendarData);
   const setCalFormData = useSetRecoilState(CalformData);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
-  const setFormDataValue = useSetRecoilState(formData);
+  const [formDataValue, setFormDataValue] = useRecoilState(formData);
+  console.log('formDataValue: ', formDataValue);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const [isLoding, setIsLoding] = useState(false);
   const [selectedAssignee, setSelectedAssignee] = useState();
@@ -48,6 +51,9 @@ const Calendar = () => {
   const [taskCategory, setTaskCategory] = useState([]);
   const [taskAssigneeData, setTaskAssigneeData] = useState([]);
   const { iswhTLoading, taskFinalData } = useFullTaskFormatFile();
+  const [meetingDetailModalOpen, setMeetingDetailModalOpen] = useState(false);
+  const [opencnfDialogOpen, setCnfDialogOpen] = useState(false);
+
 
   useEffect(() => {
     const status = JSON?.parse(sessionStorage?.getItem("taskstatusData"));
@@ -99,6 +105,10 @@ const Calendar = () => {
     setCalendarsColor(dynamicCalendarsColor);
     setSelectedMon(new Date());
   }, []);
+
+  const handleTaskModalClose = () => {
+    setMeetingDetailModalOpen(false);
+  };
 
   const handleDrawerToggle = () => {
     setFormDrawerOpen(!formdrawerOpen);
@@ -224,6 +234,33 @@ const Calendar = () => {
     setSelectedAssignee(newValue);
   };
 
+  const handleMeetingEdit = (meeting) => {
+    setFormDrawerOpen(true);
+    setFormDataValue(meeting);
+  };
+
+  const handleMeetingDt = () => {
+    setMeetingDetailModalOpen(true);
+  };
+
+  const handleRemove = (formValue) => {
+    console.log('formValuessssss: ', formValue);
+    setFormDataValue(formValue)
+    setCnfDialogOpen(true);
+  };
+
+  const handleConfirmRemoveAll = () => {
+    const updatedData = calEvData?.filter(event => event?.id !== formDataValue?.id);
+    setCalEvData(updatedData);
+    handleRemoveAMeeting(formDataValue);
+    setCnfDialogOpen(false);
+    setFormDrawerOpen(false);
+  };
+
+  const handleCloseDialog = () => {
+    setCnfDialogOpen(false);
+  };
+
   return (
     <Box
       className="calendarMain"
@@ -291,7 +328,7 @@ const Calendar = () => {
           hasAccess={hasAccess}
           setFormDrawerOpen={setFormDrawerOpen}
           setFormDataValue={setFormDataValue}
-          setRootSubroot={setRootSubroot}
+          handleMeetingEdit={handleMeetingEdit}
         />
       </Box>
       <SidebarDrawer
@@ -305,8 +342,23 @@ const Calendar = () => {
         taskCategory={taskCategory}
         taskAssigneeData={taskAssigneeData}
         prModule={true}
-        categoryDisabled={true}
+        categoryDisabled={false}
         allDayShow={true}
+        handleMeetingDt={handleMeetingDt}
+        handleRemoveMetting={handleRemove}
+      />
+      < MeetingDetail
+        open={meetingDetailModalOpen}
+        onClose={handleTaskModalClose}
+        taskData={formDataValue}
+        handleMeetingEdit={handleMeetingEdit}
+      />
+      <ConfirmationDialog
+        open={opencnfDialogOpen}
+        onClose={handleCloseDialog}
+        onConfirm={handleConfirmRemoveAll}
+        title="Confirm"
+        content="Are you sure you want to remove this Event?"
       />
     </Box>
   );

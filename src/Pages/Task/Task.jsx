@@ -390,16 +390,26 @@ const Task = () => {
     setCompletedFlag(!completedFlag);
   };
 
-  const handleStatusChange = (taskId, status) => {
+  const handleStatusChange = (taskId, status, flag) => {
+    debugger
     setTasks((prevTasks) => {
       const updateTasksRecursively = (tasks) => {
         return tasks?.map((task) => {
           if (task.taskid === taskId.taskid) {
-            const updatedTask = {
-              ...task,
-              statusid: status?.id,
-              status: status?.labelname
-            };
+            let updatedTask;
+            if (flag == "secondaryStatus") {
+              updatedTask = {
+                ...task,
+                secstatusid: status?.id,
+                secStatus: status?.labelname
+              };
+            } else {
+              updatedTask = {
+                ...task,
+                statusid: status?.id,
+                status: status?.labelname
+              };
+            }
             handleAddApicall(updatedTask);
             return updatedTask;
           }

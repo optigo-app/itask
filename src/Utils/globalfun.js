@@ -336,7 +336,7 @@ export const fetchMasterGlFunc = async () => {
         if (masterData?.rd && Array?.isArray(masterData?.rd)) {
             const structuredData = [];
             for (const item of masterData?.rd) {
-                const {mode } = item;
+                const { mode } = item;
                 if (mode) {
                     const apiResponse = await fetchIndidualApiMaster({ mode });
                     let filteredData = apiResponse?.rd?.filter(row => row?.isdelete != 1) || [];
@@ -778,6 +778,7 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
         }
         return acc;
     }, {});
+
     const summary = [
         {
             id: "today_tasks",
@@ -796,7 +797,8 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
         },
         ...(Array.isArray(taskCategory)
             ? taskCategory.map((label) => {
-                const key = label.labelname.toLowerCase().replace(/\s+/g, "_");
+                const key = label?.labelname?.toLowerCase()?.replace(/\s+/g, "_");
+
                 return {
                     id: label.id,
                     labelname: label.labelname,
@@ -887,7 +889,7 @@ function mergeFilterData(maingroups, groups, attributes, bindings) {
                 group.attributes.push({
                     id: filterattrid,
                     name,
-                    bindid 
+                    bindid
                 });
             }
         }

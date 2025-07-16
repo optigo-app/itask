@@ -18,12 +18,13 @@ const useFullTaskFormatFile = () => {
   const [iswhTLoading, setIsWhTLoading] = useState(null);
   const [iswhMLoading, setIsWhMLoading] = useState(null);
   const [taskFinalData, setTaskFinalData] = useState([]);
-  const [priorityData, setPriorityData] = useState();
-  const [statusData, setStatusData] = useState();
-  const [taskDepartment, setTaskDepartment] = useState();
-  const [taskProject, setTaskProject] = useState();
-  const [taskCategory, setTaskCategory] = useState();
-  const [taskAssigneeData, setTaskAssigneeData] = useState();
+  const [priorityData, setPriorityData] = useState([]);
+  const [statusData, setStatusData] = useState([]);
+  const [secStatusData, setSecStatusData] = useState([]);
+  const [taskDepartment, setTaskDepartment] = useState([]);
+  const [taskProject, setTaskProject] = useState([]);
+  const [taskCategory, setTaskCategory] = useState([]);
+  const [taskAssigneeData, setTaskAssigneeData] = useState([]);
   const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
   const tasks = useRecoilValue(TaskData);
   const project = useRecoilValue(projectDatasRState);
@@ -53,6 +54,7 @@ const useFullTaskFormatFile = () => {
       }
       if (structuredData) {
         retrieveAndSetData("taskstatusData", setStatusData);
+        retrieveAndSetData("tasksecstatusData", setSecStatusData);
         retrieveAndSetData("taskpriorityData", setPriorityData);
         retrieveAndSetData("taskdepartmentData", setTaskDepartment);
         retrieveAndSetData("taskprojectData", setTaskProject);
@@ -93,6 +95,8 @@ const useFullTaskFormatFile = () => {
           (item) => item?.id == task?.priorityid
         );
         const status = statusData?.find((item) => item?.id == task?.statusid);
+        const secstatus = secStatusData?.find((item) => item?.id == task?.secstatusid);
+
         const project = taskProject?.find(
           (item) => item?.id == task?.projectid
         );
@@ -112,6 +116,7 @@ const useFullTaskFormatFile = () => {
           ...task,
           priority: priority ? priority?.labelname : "",
           status: status ? status?.labelname : "",
+          secStatus: secstatus ? secstatus?.labelname : "",
           taskPr: project ? project?.labelname : "",
           taskDpt: department ? department?.labelname : "",
           assignee: matchedAssignees ?? [],

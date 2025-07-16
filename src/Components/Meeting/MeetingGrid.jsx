@@ -16,8 +16,8 @@ import {
     TableSortLabel,
 } from "@mui/material";
 import "./Styles/MeetingGrid.scss";
-import { formatDate2, formatDate3, getTimeLeft, ImageUrl, toISTDateTime } from "../../Utils/globalfun";
-import { Eye, Pencil } from "lucide-react";
+import { formatDate3, ImageUrl, } from "../../Utils/globalfun";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import TablePaginationFooter from "../ShortcutsComponent/Pagination/TablePaginationFooter";
 
 const MeetingTable = ({
@@ -39,7 +39,8 @@ const MeetingTable = ({
     setRootSubroot,
     background,
     hanldePAvatarClick,
-    handleOpenStatusModal
+    handleOpenStatusModal,
+    handleRemove
 }) => {
     const [sortConfig, setSortConfig] = useState({ key: "entrydate", direction: "desc" });
 
@@ -134,9 +135,6 @@ const MeetingTable = ({
                             <TableCell>{row.prModule?.taskPr + "/" + row.prModule?.taskname}</TableCell>
                             <TableCell>{formatDate3(row.StartDate)}</TableCell>
                             <TableCell>{renderAssigneeAvatars(row.guests, row)}</TableCell>
-                            {/* <TableCell>
-                                {StatusCircles(row, { redCount: 5, yellowCount: 10, greenCount: 50 })}
-                            </TableCell> */}
                             <TableCell>
                                 <a href="#"
                                     onClick={() => handleOpenStatusModal(row)} className="status-link">
@@ -171,7 +169,7 @@ const MeetingTable = ({
                                                 setCalFormData(row);
                                                 setFormDataValue(row);
                                                 setRootSubroot({
-                                                    Task:'root'
+                                                    Task: 'root'
                                                 });
                                             }}
                                             sx={{
@@ -186,7 +184,22 @@ const MeetingTable = ({
                                             />
                                         </IconButton>
                                     }
-
+                                    {selectedTab?.filterTab == "Upcoming" &&
+                                        <IconButton
+                                            aria-label="edit-meeting"
+                                            onClick={() => handleRemove(row)}
+                                            sx={{
+                                                '&.Mui-disabled': {
+                                                    color: 'rgba(0, 0, 0, 0.26)',
+                                                },
+                                            }}
+                                        >
+                                            <Trash2
+                                                size={20}
+                                                color={"#808080"}
+                                            />
+                                        </IconButton>
+                                    }
                                     <IconButton
                                         aria-label="view-meeting"
                                         onClick={() => {
@@ -194,7 +207,7 @@ const MeetingTable = ({
                                             setFormData(row);
                                             setFormDataValue(row);
                                             setRootSubroot({
-                                                Task:'root'
+                                                Task: 'root'
                                             });
                                         }}>
                                         <Eye

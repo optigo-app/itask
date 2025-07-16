@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Button } from "@mui/material";
 import CustomMenu from "./CustomMenuFun";
 
-const StatusBadge = ({ task, statusColors, onStatusChange, fontSize, padding, minWidth, disable }) => {
+const StatusBadge = ({ task, statusColors, onStatusChange, fontSize, padding, minWidth, disable, flag }) => {
     const [anchorEl, setAnchorEl] = useState(null);
-    const statusMaster = JSON.parse(sessionStorage.getItem("taskstatusData")) || {};
+    const statusMaster = flag === "secondaryStatus" ? JSON.parse(sessionStorage.getItem("tasksecstatusData")) || {} : JSON.parse(sessionStorage.getItem("taskstatusData")) || {};
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -13,20 +13,25 @@ const StatusBadge = ({ task, statusColors, onStatusChange, fontSize, padding, mi
     const handleClose = (status) => {
         setAnchorEl(null);
         if (status) {
-            onStatusChange(task, status);
+            onStatusChange(task, status, flag);
         }
     };
+
+    const statusKey = flag === "secondaryStatus" ? task?.secStatus : task?.status;
+    const normalizedKey = (statusKey || "").toLowerCase();
+    const colorConfig = statusColors[normalizedKey] || {};
+    const displayStatus = statusKey?.trim() ? statusKey : "-";
 
     return (
         <>
             <Button
                 onClick={handleClick}
                 style={{
-                    color: (statusColors[(task?.status)?.toLowerCase()]?.color) ?? "#7d7f85",
-                    backgroundColor: (statusColors[(task?.status)?.toLowerCase()]?.backgroundColor) ?? "#7d7f8559",
+                    color: colorConfig.color ?? "#7d7f85",
+                    backgroundColor: colorConfig.backgroundColor ?? "#7d7f8559",
                     fontFamily: '"Public Sans", sans-serif',
-                    width: "fit-content",
                     minWidth: minWidth ?? "inherit",
+                    maxWidth: "120px",
                     padding: padding ?? "0.2rem 0.8rem",
                     borderRadius: "5px",
                     textAlign: "center",
@@ -40,9 +45,21 @@ const StatusBadge = ({ task, statusColors, onStatusChange, fontSize, padding, mi
                     pointerEvents: disable ? "none" : "auto",
                 }}
                 className="status-badge"
+                title={displayStatus}
             >
-                {task?.status != "" ? task?.status : '-'}
+                <span
+                    style={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        display: "inline-block",
+                        maxWidth: "100%",
+                    }}
+                >
+                    {displayStatus}
+                </span>
             </Button>
+
             <CustomMenu
                 anchorEl={anchorEl}
                 handleClose={handleClose}

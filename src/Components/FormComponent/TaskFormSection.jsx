@@ -7,11 +7,13 @@ import {
   FormControlLabel,
   Checkbox,
   Autocomplete,
-  Stack
+  Stack,
+  Button
 } from '@mui/material';
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 import EstimateInput from '../../Utils/Common/EstimateInput';
 import CustomSwitch from '../../Utils/Common/CustomSwitch';
+import { useLocation } from 'react-router-dom';
 
 const TaskFormSection = ({
   taskType,
@@ -31,8 +33,10 @@ const TaskFormSection = ({
   renderAutocomplete,
   renderDateField,
   renderTextField,
-  commonTextFieldProps
+  commonTextFieldProps,
+  handleMeetingDt,
 }) => {
+  const location = useLocation();
   return (
     <Box>
       {taskType === 'single' && (
@@ -72,11 +76,11 @@ const TaskFormSection = ({
                     sx={{ alignItems: 'center' }}
                   >
                     <CustomSwitch
-                      checked={formValues.allDay === 1}
+                      checked={formValues.isAllDay === 1}
                       onChange={(e) =>
                         handleChange({
                           target: {
-                            name: 'allDay',
+                            name: 'isAllDay',
                             value: e.target.checked ? 1 : 0
                           }
                         })
@@ -87,6 +91,17 @@ const TaskFormSection = ({
                 </Box>
               }
             </Box>
+            {location?.pathname?.includes("/calendar") &&
+              <Box>
+                {formValues.title != "" &&
+                  <Grid item xs={12}>
+                    <Button size='small' className="meetingDtBtn" variant="text" onClick={() => handleMeetingDt(formValues)}>
+                      Meeting Detail
+                    </Button>
+                  </Grid>
+                }
+              </Box>
+            }
           </Box>
 
           <Grid container spacing={1} className="form-row">
@@ -151,7 +166,7 @@ const TaskFormSection = ({
                 options={teams}
                 label="Assign To"
                 placeholder="Select assignees"
-                limitTags={2}
+                limitTags={5}
                 onChange={(newValue) =>
                   handleChange({ target: { name: 'guests', value: newValue } })
                 }

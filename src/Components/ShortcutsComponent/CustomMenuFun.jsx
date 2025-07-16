@@ -22,7 +22,7 @@ const CustomMenu = ({ anchorEl, handleClose, statusMaster }) => {
                 },
             }}
         >
-            {statusMaster?.map((status) => (
+            {statusMaster?.length > 0 && statusMaster?.map((status) => (
                 <MenuItem
                     key={status?.id}
                     onClick={() => handleClose(status)}
