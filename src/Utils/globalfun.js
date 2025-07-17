@@ -154,6 +154,10 @@ export const priorityColors = {
         color: "#ffffff",
         backgroundColor: "#b71c1c",
     },
+    normal: {
+        color: "#212529",
+        bgcolor: "#e2e6ea"
+    },
 };
 
 // progress color
@@ -172,97 +176,71 @@ export const getStatusColor = (value) => {
 };
 
 export const statusColors = {
-    "approved": {
-        color: "#2e7d32", // Green - success
-        backgroundColor: "#c8e6c9",
-    },
-    "closed": {
-        color: "#d32f2f", // Red - closed/final
-        backgroundColor: "#ffcdd2",
+    "initialized": {
+        color: "#1e88e5", // Blue - just added
+        backgroundColor: "#bbdefb",
     },
     "completed": {
         color: "#388e3c", // Green - task done
         backgroundColor: "#dcedc8",
     },
-    "feedback pending": {
-        color: "#ef6c00", // Orange - waiting
-        backgroundColor: "#ffe0b2",
-    },
-    "feedback received": {
-        color: "#3949ab", // Indigo - info received
-        backgroundColor: "#c5cae9",
-    },
-    "in development": {
-        color: "#1976d2", // Blue - active
-        backgroundColor: "#bbdefb",
-    },
-    "in observation": {
-        color: "#00796b", // Teal - under watch
-        backgroundColor: "#b2dfdb",
-    },
-    "in planning": {
-        color: "#6a1b9a", // Purple - strategy
-        backgroundColor: "#e1bee7",
-    },
-    "in testing": {
-        color: "#f57c00", // Orange - QA phase
-        backgroundColor: "#ffe0b2",
-    },
-    "in-progress": {
-        color: "#0288d1", // Blue - ongoing
+    "running": {
+        color: "#0277bd", // Blue - active
         backgroundColor: "#b3e5fc",
     },
-    "in-review": {
-        color: "#8e24aa", // Purple - being checked
+    "meetings-srd": {
+        color: "#3949ab", // Indigo - meeting-related
+        backgroundColor: "#c5cae9",
+    },
+    "started": {
+        color: "#6a1b9a", // Purple - process started
+        backgroundColor: "#e1bee7",
+    },
+    "prototype": {
+        color: "#00796b", // Teal - design phase
+        backgroundColor: "#b2dfdb",
+    },
+    "selected": {
+        color: "#8e24aa", // Purple - shortlisted
         backgroundColor: "#f3e5f5",
     },
-    "new": {
-        color: "#1e88e5", // Blue - just added
-        backgroundColor: "#bbdefb",
+    "srs": {
+        color: "#5d4037", // Brown - documentation
+        backgroundColor: "#d7ccc8",
     },
     "pending": {
         color: "#ffa000", // Amber - waiting
         backgroundColor: "#ffecb3",
     },
-    "pending close": {
-        color: "#ff7043", // Coral - about to close
+    "dev": {
+        color: "#1976d2", // Blue - development
+        backgroundColor: "#bbdefb",
+    },
+    "hold": {
+        color: "#ef6c00", // Orange - paused
         backgroundColor: "#ffe0b2",
     },
-    "pending customer input": {
-        color: "#ef6c00", // Orange - needs action
-        backgroundColor: "#ffe0b2",
-    },
-    "pending maintenance": {
-        color: "#6d4c41", // Brown - backend
-        backgroundColor: "#d7ccc8",
-    },
-    "running": {
-        color: "#0277bd", // Blue - active
+    "beta-run uat": {
+        color: "#0288d1", // Light Blue - testing
         backgroundColor: "#b3e5fc",
     },
-    "solved": {
-        color: "#43a047", // Green - resolved
+    "hold-on-challenge": {
+        color: "#f57c00", // Deep orange - challenge
+        backgroundColor: "#ffe0b2",
+    },
+    "delivery": {
+        color: "#43a047", // Green - deliverable
         backgroundColor: "#c8e6c9",
     },
-    "solved-upcoming": {
-        color: "#8bc34a", // Lime - will be solved
-        backgroundColor: "#dcedc8",
-    },
-    "training pending": {
-        color: "#fbc02d", // Yellow - needs attention
-        backgroundColor: "#fff9c4",
-    },
-    "upcoming release": {
-        color: "#009688", // Teal - info
-        backgroundColor: "#b2dfdb",
-    },
-    "upload pending": {
-        color: "#e53935", // Red - blocking task
+    "cancelled": {
+        color: "#d32f2f", // Red - removed
         backgroundColor: "#ffcdd2",
     },
+    "feedback": {
+        color: "#3949ab", // Indigo - awaiting response
+        backgroundColor: "#c5cae9",
+    },
 };
-
-
 
 // colors.js (Global colors)
 export const colors = [

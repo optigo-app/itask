@@ -1,7 +1,6 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const AddMeetingApi = async (formValues) => {
-    console.log('formValuesdsdsdsdsd: ', formValues);
     const AuthData = JSON.parse(localStorage.getItem('UserProfileData'));
     try {
         const combinedValue = JSON.stringify({
@@ -28,7 +27,6 @@ export const AddMeetingApi = async (formValues) => {
             "descr": (formValues?.description || formValues?.descr) ?? "",
         });
 
-        console.log('combinedValue: ', combinedValue);
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"taskmeetingsave\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
             "f": "Task Management (tasklist)",

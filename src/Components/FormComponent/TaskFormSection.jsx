@@ -27,6 +27,7 @@ const TaskFormSection = ({
   isDuplicateTask,
   taskCategory,
   statusData,
+  secStatusData,
   priorityData,
   teams,
   prModuleMaster,
@@ -36,6 +37,7 @@ const TaskFormSection = ({
   commonTextFieldProps,
   handleMeetingDt,
 }) => {
+  console.log('formValues: ', formValues);
   const location = useLocation();
   return (
     <Box>
@@ -91,7 +93,7 @@ const TaskFormSection = ({
                 </Box>
               }
             </Box>
-            {location?.pathname?.includes("/calendar") &&
+            {formValues?.taskName && location?.pathname?.includes("/calendar") &&
               <Box>
                 {formValues.title != "" &&
                   <Grid item xs={12}>
@@ -121,7 +123,7 @@ const TaskFormSection = ({
               )}
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={12}>
               <Box className="form-group">
                 <Typography
                   variant="subtitle1"
@@ -145,6 +147,11 @@ const TaskFormSection = ({
                       }
                     })
                   }
+                  renderOption={(props, option) => (
+                    <li {...props}>
+                      <strong>{option?.taskPr}</strong>/{option?.taskname}
+                    </li>
+                  )}
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -153,7 +160,22 @@ const TaskFormSection = ({
                     />
                   )}
                 />
+
               </Box>
+            </Grid>
+
+            <Grid item xs={6}>
+              <DepartmentAssigneeAutocomplete
+                value={formValues?.createdBy}
+                options={teams}
+                label="Created By"
+                placeholder="Select assignees"
+                limitTags={2}
+                onChange={(newValue) =>
+                  handleChange({ target: { name: 'createdBy', value: newValue } })
+                }
+                disabled
+              />
             </Grid>
 
             <Grid item xs={12} md={6}>
@@ -173,24 +195,13 @@ const TaskFormSection = ({
               />
             </Grid>
 
-            <Grid item xs={6}>
-              <DepartmentAssigneeAutocomplete
-                value={formValues?.createdBy}
-                options={teams}
-                label="Created By"
-                placeholder="Select assignees"
-                limitTags={2}
-                onChange={(newValue) =>
-                  handleChange({ target: { name: 'createdBy', value: newValue } })
-                }
-                disabled
-              />
-            </Grid>
-
             <Grid item xs={12} md={6}>
               {renderAutocomplete('Status', 'status', formValues.status, 'Select Status', statusData, handleChange)}
             </Grid>
 
+            <Grid item xs={12} md={6}>
+              {renderAutocomplete('What Next', 'secStatus', formValues.secStatus, 'Select Secondary Status', secStatusData, handleChange)}
+            </Grid>
 
             <Grid item xs={12} md={6}>
               {renderAutocomplete('Priority', 'priority', formValues.priority, 'Select Priority', priorityData, handleChange)}

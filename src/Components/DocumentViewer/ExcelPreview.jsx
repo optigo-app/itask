@@ -224,7 +224,6 @@ const ExcelPreview = ({ url, filename, fileObject }) => {
         }
         return paddedRow.slice(0, displayCols);
     });
-    console.log('displayData: ', displayData);
 
     return (
         <Box className="data-table-container-excel">

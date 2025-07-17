@@ -56,6 +56,7 @@ const HeaderButtons = ({
   priorityData,
   projectData,
   statusData,
+  secStatusData,
   taskCategory,
   taskDepartment,
   taskAssigneeData,
@@ -181,7 +182,6 @@ const HeaderButtons = ({
   };
 
   const ViewToggleButtons = ({ view, onViewChange }) => {
-    console.log('view: ', view);
     return (
       <ToggleButtonGroup
         size='small'
@@ -386,6 +386,7 @@ const HeaderButtons = ({
           priorityData={priorityData}
           projectData={projectData}
           statusData={statusData}
+          secStatusData={secStatusData}
           taskCategory={taskCategory}
           taskDepartment={taskDepartment}
           taskAssigneeData={taskAssigneeData}

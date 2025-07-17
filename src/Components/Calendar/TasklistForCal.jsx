@@ -35,35 +35,71 @@ const TasklistForCal = ({ calendarsColor }) => {
                 eventData: (eventEl) => {
                     const dragtaskTaskId = eventEl.getAttribute("data-id");
                     const dragtask = calTasksList.find(t => t.taskid == dragtaskTaskId);
-
+    
                     if (dragtask) {
                         const start = dragtask?.StartDate;
-                        const end = dragtask?.DeadLineDate;
+                        const end = dragtask?.DeadLineDate ?? start;
+                        const estimate = dragtask?.estimate_hrs ?? 1;
+                        const guests = dragtask?.assignee ?? [];
+    
                         return {
+                            id: dragtask?.taskid?.toString(),
                             title: dragtask?.taskname ?? "",
                             start,
                             end,
                             taskid: dragtask?.taskid,
                             projectid: dragtask?.projectid ?? 0,
-                            allDay: dragtask?.allDay ?? 0,
+                            allDay: dragtask?.allDay ? 1 : 0,
                             category: dragtask?.category ?? "",
                             description: dragtask?.descr ?? "",
-                            guests: dragtask?.assignee ?? [],
-                            estimate: dragtask?.estimate_hrs ?? "",
-                            prModule: {
-                                taskid: dragtask?.taskid ?? 0,
+                            guests: guests,
+                            assigneids: guests.map(u => u.id)?.join(","),
+                            estimate: estimate,
+                            estimate_hrs: dragtask?.estimate_hrs ?? 0,
+                            estimate1_hrs: dragtask?.estimate1_hrs ?? 0,
+                            estimate2_hrs: dragtask?.estimate2_hrs ?? 0,
+                            priorityid: dragtask?.priorityid ?? 0,
+                            priority: dragtask?.priority ?? "",
+                            statusid: dragtask?.statusid ?? 0,
+                            status: dragtask?.status ?? "",
+                            DeadLineDate: dragtask?.DeadLineDate,
+                            ismilestone: dragtask?.ismilestone ?? 0,
+                            workcategoryid: dragtask?.workcategoryid ?? 0,
+                            extendedProps: {
+                                taskid: dragtask?.taskid,
                                 projectid: dragtask?.projectid ?? 0,
-                                taskname: dragtask?.taskname ?? "",
-                                projectname: dragtask?.taskPr ?? "",
-                                taskPr: dragtask?.taskPr ?? ""
+                                guests: guests,
+                                assigneids: guests.map(u => u.id)?.join(","),
+                                estimate: estimate,
+                                estimate_hrs: dragtask?.estimate_hrs ?? 0,
+                                estimate1_hrs: dragtask?.estimate1_hrs ?? 0,
+                                estimate2_hrs: dragtask?.estimate2_hrs ?? 0,
+                                description: dragtask?.descr ?? "",
+                                category: dragtask?.category ?? "",
+                                priorityid: dragtask?.priorityid ?? 0,
+                                priority: dragtask?.priority ?? "",
+                                statusid: dragtask?.statusid ?? 0,
+                                status: dragtask?.status ?? "",
+                                workcategoryid: dragtask?.workcategoryid ?? 0,
+                                DeadLineDate: dragtask?.DeadLineDate,
+                                ismilestone: dragtask?.ismilestone ?? 0,
+                                prModule: {
+                                    taskid: dragtask?.taskid ?? 0,
+                                    projectid: dragtask?.projectid ?? 0,
+                                    taskname: dragtask?.taskname ?? "",
+                                    projectname: dragtask?.taskPr ?? "",
+                                    taskPr: dragtask?.taskPr ?? ""
+                                }
                             }
                         };
                     }
+    
                     return {};
                 }
             });
         }
     }, [calTasksList]);
+    
 
     // Fuzzy match using Fuse.js
     const getFilteredHierarchy = () => {
@@ -150,7 +186,6 @@ const TasklistForCal = ({ calendarsColor }) => {
     };
 
     const groupedTasks = getFilteredHierarchy();
-    console.log('groupedTasks: ', groupedTasks);
 
     return (
         <>

@@ -6,17 +6,18 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
 import { useSetRecoilState } from 'recoil';
-import { calendarM, CalEventsFilter, CalformData } from '../../Recoil/atom';
-import CalendarForm from './SideBar/CalendarForm';
+import { calendarM, CalEventsFilter, CalformData, formData, openFormDrawer, rootSubrootflag } from '../../Recoil/atom';
 import { customDatePickerStyles } from '../../Utils/globalfun';
 import TasklistForCal from './TasklistForCal';
-import { AddMeetingApi } from '../../Api/MeetingApi/AddMeetingApi';
 
-const CalendarLeftSide = ({ calendarsColor, isLoding, handleCaleFormSubmit, setFormDrawerOpen, setFormDataValue, setRootSubroot}) => {
+const CalendarLeftSide = ({ calendarsColor }) => {
     const [selectedCalendars, setSelectedCalendars] = useState([]);
     const setSelectedCaleFilters = useSetRecoilState(CalEventsFilter);
     const setSelectedMon = useSetRecoilState(calendarM);
     const setCalFormData = useSetRecoilState(CalformData)
+    const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
+    const setFormDataValue = useSetRecoilState(formData);
+    const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const [caledrawerOpen, setCaledrawerOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState(dayjs());
     const [view, setView] = useState("filter");
@@ -93,7 +94,7 @@ const CalendarLeftSide = ({ calendarsColor, isLoding, handleCaleFormSubmit, setF
         setCalFormData(updatedFormValues);
         setFormDataValue(updatedFormValues);
         setRootSubroot({
-            Task:'meeting'
+            Task: 'meeting'
         });
     };
 
@@ -143,7 +144,6 @@ const CalendarLeftSide = ({ calendarsColor, isLoding, handleCaleFormSubmit, setF
                             className="buttonClassname"
                             sx={{
                                 width: '230px',
-                                // background: '#7D7f85 !important'
                             }}
                             onClick={handleAddEvent}
                         >
@@ -192,11 +192,11 @@ const CalendarLeftSide = ({ calendarsColor, isLoding, handleCaleFormSubmit, setF
                         />
                         {renderFilters}
                     </Box>
-                    <CalendarForm
+                    {/* <CalendarForm
                         open={caledrawerOpen}
                         onClose={handleDrawerToggle}
                         onSubmit={handleCaleFormSubmit}
-                    />
+                    /> */}
                 </>
             ) :
                 <TasklistForCal calendarsColor={calendarsColor} />
