@@ -432,7 +432,6 @@ const MeetingPage = () => {
   };
 
   const handleCaleFormSubmit = async (formValues) => {
-    console.log('formValues: ', formValues);
     setCalFormData(formValues);
     const apiRes = await AddMeetingApi(formValues);
     if (apiRes?.rd[0]?.stat == 1) {
@@ -582,7 +581,6 @@ const MeetingPage = () => {
     setRowsPerPage(event ?? rowsPerPage);
     setPage(1);
   };
-  console.log('page: ', page);
 
   useEffect(() => {
     if (filteredMeetings) {
@@ -600,7 +598,6 @@ const MeetingPage = () => {
     page * rowsPerPage
   ) || [];
 
-  console.log('currentData: ', currentData);
   return (
     <Box
       sx={{
@@ -731,13 +728,13 @@ const MeetingPage = () => {
           handleFetchMeetingDetails={handleFetchMeetingDetails}
           handleClose={() => setOpenStatusModal(false)}
         />
-        <CalendarForm
+        {/* <CalendarForm
           open={caledrawerOpen}
           onClose={handleDrawerToggle}
           onSubmit={handleCaleFormSubmit}
           onRemove={handleRemove}
           handleMeetingDt={handleMeetingDt}
-        />
+        /> */}
         <RejectReasonModal
           open={openRejectModal}
           onClose={handleCloseRejectModal}

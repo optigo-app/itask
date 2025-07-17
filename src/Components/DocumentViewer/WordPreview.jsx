@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Alert } from '@mui/material';
 import * as mammoth from 'mammoth';
-import { toast } from 'react-toastify';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 
 const WordPreview = ({ url, filename, fileObject }) => {
@@ -18,10 +17,8 @@ const WordPreview = ({ url, filename, fileObject }) => {
         let arrayBuffer;
 
         if (fileObject) {
-          // If we have the file object directly
           arrayBuffer = await fileObject.arrayBuffer();
         } else if (url) {
-          // If we have a URL, fetch the file
           const response = await fetch(url);
           if (!response.ok) {
             throw new Error(`Failed to fetch document: ${response.statusText}`);
@@ -30,12 +27,8 @@ const WordPreview = ({ url, filename, fileObject }) => {
         } else {
           throw new Error('No file source provided');
         }
-
-        // Convert Word document to HTML using mammoth
         const result = await mammoth.convertToHtml({ arrayBuffer });
         setHtmlContent(result.value);
-
-        // Log any messages from mammoth (warnings, etc.)
         if (result.messages.length > 0) {
           console.log('Mammoth conversion messages:', result.messages);
         }

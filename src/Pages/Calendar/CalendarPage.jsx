@@ -39,7 +39,6 @@ const Calendar = () => {
   const setCalFormData = useSetRecoilState(CalformData);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
   const [formDataValue, setFormDataValue] = useRecoilState(formData);
-  console.log('formDataValue: ', formDataValue);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const [isLoding, setIsLoding] = useState(false);
   const [selectedAssignee, setSelectedAssignee] = useState();
@@ -219,17 +218,6 @@ const Calendar = () => {
     }
   };
 
-  const handleRemoveAMeeting = async (formData) => {
-    const apiRes = await deleteMeetingApi(formData);
-    if (apiRes && apiRes?.rd[0]?.stat == 1) {
-      if (hasAccess(PERMISSIONS.CALENDAR_VIEW_ALL)) {
-        handleMeetingList();
-      } else {
-        handleMeetingListByLogin();
-      }
-    }
-  };
-
   const handleAssigneeChange = (newValue) => {
     setSelectedAssignee(newValue);
   };
@@ -244,18 +232,22 @@ const Calendar = () => {
   };
 
   const handleRemove = (formValue) => {
-    console.log('formValuessssss: ', formValue);
     setFormDataValue(formValue)
     setCnfDialogOpen(true);
   };
 
-  const handleConfirmRemoveAll = () => {
-    const updatedData = calEvData?.filter(event => event?.id !== formDataValue?.id);
+  const handleConfirmRemoveAll = async () => {
+    const updatedData = calEvData?.filter(cal => cal?.meetingid != formDataValue?.meetingid);
     setCalEvData(updatedData);
-    handleRemoveAMeeting(formDataValue);
+    try {
+      await deleteMeetingApi(formDataValue);
+    } catch (error) {
+      console.error("Failed to delete meeting:", error);
+    }
     setCnfDialogOpen(false);
     setFormDrawerOpen(false);
   };
+
 
   const handleCloseDialog = () => {
     setCnfDialogOpen(false);
@@ -278,7 +270,6 @@ const Calendar = () => {
         <CalendarDrawer
           calendarsColor={calendarsColor}
           handleCaleFormSubmit={handleCaleFormSubmit}
-          handleRemoveAMeeting={handleRemoveAMeeting}
           isLoding={isLoding}
         />
       ) : (
@@ -296,7 +287,6 @@ const Calendar = () => {
           <CalendarLeftSide
             calendarsColor={calendarsColor}
             handleCaleFormSubmit={handleCaleFormSubmit}
-            handleRemoveAMeeting={handleRemoveAMeeting}
             isLoding={isLoding}
             setFormDrawerOpen={setFormDrawerOpen}
             setFormDataValue={setFormDataValue}
@@ -320,7 +310,6 @@ const Calendar = () => {
         <CalendarRightSide
           calendarsColor={calendarsColor}
           handleCaleFormSubmit={handleCaleFormSubmit}
-          handleRemoveAMeeting={handleRemoveAMeeting}
           isLoding={isLoding}
           assigneeData={assigneeData}
           selectedAssignee={selectedAssignee}

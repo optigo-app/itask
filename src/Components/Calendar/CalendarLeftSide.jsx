@@ -143,7 +143,6 @@ const CalendarLeftSide = ({ calendarsColor, isLoding, handleCaleFormSubmit, setF
                             className="buttonClassname"
                             sx={{
                                 width: '230px',
-                                // background: '#7D7f85 !important'
                             }}
                             onClick={handleAddEvent}
                         >
@@ -192,11 +191,11 @@ const CalendarLeftSide = ({ calendarsColor, isLoding, handleCaleFormSubmit, setF
                         />
                         {renderFilters}
                     </Box>
-                    <CalendarForm
+                    {/* <CalendarForm
                         open={caledrawerOpen}
                         onClose={handleDrawerToggle}
                         onSubmit={handleCaleFormSubmit}
-                    />
+                    /> */}
                 </>
             ) :
                 <TasklistForCal calendarsColor={calendarsColor} />

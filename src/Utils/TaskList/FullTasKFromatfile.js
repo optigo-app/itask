@@ -412,7 +412,7 @@ const useFullTaskFormatFile = () => {
       taskDepartment &&
       taskProject &&
       taskCategory &&
-      taskAssigneeData
+      taskAssigneeData?.length > 0
     ) {
       fetchTaskData();
     }

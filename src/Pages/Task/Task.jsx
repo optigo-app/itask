@@ -54,7 +54,6 @@ const Task = () => {
     priorityData,
     statusData,
     taskAssigneeData } = useFullTaskFormatFile();
-  console.log('taskFinalData: ', taskFinalData);
 
   useEffect(() => {
     setTasks([]);
@@ -391,7 +390,6 @@ const Task = () => {
   };
 
   const handleStatusChange = (taskId, status, flag) => {
-    debugger
     setTasks((prevTasks) => {
       const updateTasksRecursively = (tasks) => {
         return tasks?.map((task) => {

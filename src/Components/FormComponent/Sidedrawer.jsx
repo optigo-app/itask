@@ -60,7 +60,6 @@ const SidebarDrawer = ({
     const projectModuleData = useRecoilValue(projectDatasRState);
     const taskDataValue = useRecoilValue(TaskData);
     const formDataValue = useRecoilValue(formData);
-    console.log('formDataValue: ', formDataValue);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
     const [taskType, setTaskType] = useState("single");
     const [decodedData, setDecodedData] = useState(null);
@@ -96,7 +95,6 @@ const SidebarDrawer = ({
         estimate2_hrs: "",
     });
 
-    console.log('formValues: ', formValues);
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const encodedData = searchParams.get("data");
@@ -175,7 +173,6 @@ const SidebarDrawer = ({
             taskid: formDataValue?.taskid,
             taskname: formDataValue?.taskname
         };
-        debugger;
         const isAddMode = ["AddTask", "root", "meeting"].includes(rootSubrootflagval?.Task);
         if (open && isAddMode) {
             setFormValues(prev => ({

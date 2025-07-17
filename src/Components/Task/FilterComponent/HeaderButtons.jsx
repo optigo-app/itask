@@ -181,7 +181,6 @@ const HeaderButtons = ({
   };
 
   const ViewToggleButtons = ({ view, onViewChange }) => {
-    console.log('view: ', view);
     return (
       <ToggleButtonGroup
         size='small'
