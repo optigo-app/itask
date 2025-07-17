@@ -49,6 +49,7 @@ const SidebarDrawer = ({
     projectData,
     taskCategory,
     statusData,
+    secStatusData,
     taskAssigneeData,
     handleMeetingDt,
     handleRemoveMetting
@@ -63,6 +64,7 @@ const SidebarDrawer = ({
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
     const [taskType, setTaskType] = useState("single");
     const [decodedData, setDecodedData] = useState(null);
+    console.log('decodedData: ', decodedData);
     const [isDuplicateTask, setIsDuplicateTask] = useState(false);
     const [isTaskNameEmpty, setIsTaskNameEmpty] = useState(false);
     const [teams, setTeams] = useState([]);
@@ -78,6 +80,7 @@ const SidebarDrawer = ({
         createdBy: [],
         projectLead: "",
         status: "",
+        secstatus: "",
         priority: "",
         description: "",
         attachment: null,
@@ -95,6 +98,7 @@ const SidebarDrawer = ({
         estimate2_hrs: "",
     });
 
+    console.log('formValues: ', formValues);
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const encodedData = searchParams.get("data");
@@ -149,7 +153,7 @@ const SidebarDrawer = ({
     };
 
     useEffect(() => {
-        if (decodedData || formDataValue) {
+        if (open) {
             handleGetTeamMembers();
         }
     }, [formDataValue, decodedData])
@@ -160,6 +164,7 @@ const SidebarDrawer = ({
     };
 
     useEffect(() => {
+        debugger
         const loggedAssignee = JSON.parse(localStorage?.getItem("UserProfileData"));
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(Number) || [];
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray.includes(user.id)) || [];
@@ -167,11 +172,11 @@ const SidebarDrawer = ({
         const categoryflag = location?.pathname?.includes("meeting");
         const category = taskCategory?.find(cat => cat.labelname?.toLowerCase() === "meeting");
         const fallbackPrModule = {
-            projectid: formDataValue?.projectid,
-            projectname: formDataValue?.taskPr,
-            taskPr: formDataValue?.taskPr,
-            taskid: formDataValue?.taskid,
-            taskname: formDataValue?.taskname
+            projectid: formDataValue?.projectid ?? decodedData?.projectid,
+            projectname: formDataValue?.taskPr ?? decodedData?.project,
+            taskPr: formDataValue?.taskPr ?? decodedData?.project,
+            taskid: formDataValue?.taskid ?? decodedData?.taskid,
+            taskname: formDataValue?.taskname ?? decodedData?.module,
         };
         const isAddMode = ["AddTask", "root", "meeting"].includes(rootSubrootflagval?.Task);
         if (open && isAddMode) {
@@ -188,9 +193,10 @@ const SidebarDrawer = ({
                 projectLead: formDataValue?.projectLead ?? "",
                 assignee: formDataValue?.assigneids ?? loggedAssignee?.id,
                 status: formDataValue?.statusid ?? "",
+                secStatus: formDataValue?.secstatusid ?? "",
                 priority: formDataValue?.priorityid ?? "",
                 project: (formDataValue?.projectid || formValues?.prModule?.priorityid) ?? "",
-                prModule: formDataValue?.prModule || (formDataValue?.projectid && fallbackPrModule) || null,
+                prModule: formDataValue?.prModule || (fallbackPrModule?.projectid && fallbackPrModule) || null,
                 description: formDataValue?.descr ?? "",
                 attachment: formDataValue?.attachment ?? null,
                 progress: formDataValue?.progress ?? "",
@@ -209,10 +215,10 @@ const SidebarDrawer = ({
                 ...prev,
                 guests: matchedAssignees.length ? matchedAssignees : [loggedAssignee],
                 createdBy: createdByUsers.length ? createdByUsers : [loggedAssignee],
+                prModule: formDataValue?.prModule || (fallbackPrModule?.projectid && fallbackPrModule) || null,
             }));
         }
     }, [open, formDataValue, rootSubrootflagval]);
-
 
     let data = flattenTasks(taskDataValue)
     const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);
@@ -388,6 +394,7 @@ const SidebarDrawer = ({
             taskname: formValues.taskName ?? formDataValue?.taskname,
             bulkTask: formValues.bulkTask ?? formDataValue?.bulkTask,
             statusid: formValues.status ?? formDataValue?.statusid,
+            secstatusid: formValues.secStatus ?? formDataValue?.secstatusid,
             priorityid: formValues.priority ?? formDataValue?.priorityid,
             projectid: moduleData?.projectid || formValues?.prModule?.projectid || formValues.project || formDataValue?.projectid,
             projectLead: formValues.projectLead ?? formDataValue?.projectLead,
@@ -721,6 +728,7 @@ const SidebarDrawer = ({
                                     isDuplicateTask={isDuplicateTask}
                                     taskCategory={taskCategory}
                                     statusData={statusData}
+                                    secStatusData={secStatusData}
                                     priorityData={priorityData}
                                     teams={location?.pathname?.includes('/tasks') ? teams : taskAssigneeData}
                                     prModuleMaster={prModuleMaster}

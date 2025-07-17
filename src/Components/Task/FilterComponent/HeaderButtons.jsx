@@ -56,6 +56,7 @@ const HeaderButtons = ({
   priorityData,
   projectData,
   statusData,
+  secStatusData,
   taskCategory,
   taskDepartment,
   taskAssigneeData,
@@ -385,6 +386,7 @@ const HeaderButtons = ({
           priorityData={priorityData}
           projectData={projectData}
           statusData={statusData}
+          secStatusData={secStatusData}
           taskCategory={taskCategory}
           taskDepartment={taskDepartment}
           taskAssigneeData={taskAssigneeData}

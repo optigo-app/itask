@@ -436,6 +436,7 @@ const useFullTaskFormatFile = () => {
     taskCategory,
     priorityData,
     statusData,
+    secStatusData,
     taskAssigneeData,
   };
 };

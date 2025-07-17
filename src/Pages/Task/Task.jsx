@@ -53,6 +53,7 @@ const Task = () => {
     taskCategory,
     priorityData,
     statusData,
+    secStatusData,
     taskAssigneeData } = useFullTaskFormatFile();
 
   useEffect(() => {
@@ -655,6 +656,7 @@ const Task = () => {
         priorityData={priorityData}
         projectData={taskProject}
         statusData={statusData}
+        secStatusData={secStatusData}
         taskCategory={taskCategory}
         taskDepartment={taskDepartment}
         taskAssigneeData={taskAssigneeData}
