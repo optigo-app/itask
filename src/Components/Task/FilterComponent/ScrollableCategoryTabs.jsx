@@ -4,7 +4,8 @@ import "./ScrollableCategoryTabs.scss";
 
 const ScrollableCategoryTabs = ({ taskCategory = [], selectedCategory, handleFilterChange }) => {
   const filteredCategories = taskCategory.filter((category) => category.count > 0);
-  const shouldScroll = filteredCategories.length > 6;
+  console.log('filteredCategories: ', filteredCategories);
+  const shouldScroll = filteredCategories.length > 4;
 
   return (
     <Box className="scrollable-tabs-container">

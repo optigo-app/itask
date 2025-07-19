@@ -20,7 +20,7 @@ import { deleteTaskDataApi } from "../../Api/TaskApi/DeleteTaskApi";
 import { toast } from "react-toastify";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const TaskTable = React.lazy(() =>
   import("../../Components/Project/ListView/TableList")
@@ -32,6 +32,7 @@ const KanbanView = React.lazy(() =>
 
 const Project = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -43,6 +44,7 @@ const Project = () => {
   const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [CategoryTSummary, setCategoryTSummary] = useState([]);
+  const searchParams = new URLSearchParams(location.search);
   const {
     iswhMLoading,
     iswhTLoading,
@@ -58,6 +60,11 @@ const Project = () => {
     if (!location?.pathname?.includes("/projects")) {
       setProject([])
     }
+    const paramValue = searchParams.get('filter');
+    console.log('paramValue: ', paramValue);
+    setFilters({
+      searchTerm: paramValue,
+    })
   }, [location])
 
   useEffect(() => {
@@ -106,6 +113,8 @@ const Project = () => {
       setFilters((prev) => ({ ...prev, dueDate: null }));
     } else if (filterKey === 'startDate') {
       setFilters((prev) => ({ ...prev, startDate: null }));
+    } else if (searchParams.get('filter')) {
+      navigate('/projects')
     } else {
       setFilters((prev) => ({ ...prev, [filterKey]: '' }));
     }
@@ -123,6 +132,9 @@ const Project = () => {
       dueDate: null,
     });
     setSelectedCategory([])
+    if (searchParams.get('filter')) {
+      navigate('/projects')
+    }
   };
 
   const filteredData = Array.isArray(project)
@@ -177,19 +189,33 @@ const Project = () => {
       const matchText = (text) =>
         isQuoted ? exactMatch(text) : partialMatch(text);
 
+      const isUnsetDeadline = (dateStr) => {
+        const date = new Date(dateStr);
+        return !dateStr || date.toISOString().slice(0, 10) === "1900-01-01";
+      };
+
       const matchesFilters = (task) => {
         if (!task) return false;
-
         const matchesCategory =
           !Array.isArray(category) ||
           category.length === 0 ||
           category.some((cat) => {
             const catLower = cat.toLowerCase();
-            if (catLower.includes("due")) return isTaskDue(task?.DeadLineDate);
-            if (catLower.includes("today tasks")) return isTaskToday(task?.StartDate);
-            if (catLower.includes("new")) return task?.isnew == 1;
+            if (catLower.includes("due")) {
+              return isTaskDue(task?.DeadLineDate) && !isUnsetDeadline(task?.DeadLineDate);
+            }
+            if (catLower.includes("unset deadline")) {
+              return isUnsetDeadline(task?.DeadLineDate);
+            }
+            if (catLower.includes("today")) {
+              return isTaskToday(task?.StartDate);
+            }
+            if (catLower.includes("new")) {
+              return task?.isnew == 1;
+            }
             return (task?.category ?? "").toLowerCase() === catLower;
           });
+
 
         const matchesSearch =
           !searchTerm ||

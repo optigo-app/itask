@@ -20,6 +20,7 @@ const Header = ({ avatarSrc = "" }) => {
     const profileOpen = Boolean(profileAnchorEl);
     const encodedData = searchParams.get("data");
     const [decodedData, setDecodedData] = useState(null);
+    console.log('decodedData: ', decodedData);
     const taskDataLength = useRecoilValue(taskLength);
     const [profileData, setProfileData] = useState();
     const [selectedTab, setSelectedTab] = useState("taskView");
@@ -32,6 +33,7 @@ const Header = ({ avatarSrc = "" }) => {
         location?.pathname.includes("/calendar") ?
             setSelectedCalTab("calendarView") :
             setSelectedCalTab("todayTasks");
+        setDecodedData(null)
     }, [location]);
 
     useEffect(() => {
@@ -60,7 +62,7 @@ const Header = ({ avatarSrc = "" }) => {
                 console.error("Error decoding data:", error);
             }
         }
-    }, [encodedData]);
+    }, [encodedData, location]);
 
     const dataMap = {
         "/": {
@@ -101,6 +103,10 @@ const Header = ({ avatarSrc = "" }) => {
         },
         "/reports": {
             title: "Reports",
+            subtitle: "View All your Reports here",
+        },
+        "/reports/pms": {
+            title: "PMS iTask Report",
             subtitle: "View All your Reports here",
         },
         "/notification": {
@@ -282,6 +288,123 @@ const Header = ({ avatarSrc = "" }) => {
     ];
 
 
+    const pathname = location.pathname;
+
+    const isTasks = pathname === "/tasks" || pathname.startsWith("/tasks?");
+    const isTaskDetails = pathname.startsWith("/tasks/");
+    const isProjects = pathname === "/projects" || pathname.startsWith("/projects?");
+    const isProjectDashboard = pathname.startsWith("/projects/dashboard");
+
+    const BreadcrumbItem = ({ label, onClick }) => (
+        <>
+            <Typography variant="h6" component="span">/</Typography>
+            <Typography
+                variant="h6"
+                component="span"
+                onClick={onClick}
+                sx={{
+                    cursor: onClick ? 'pointer' : 'default',
+                    '&:hover': onClick ? { textDecoration: 'underline', color: '#7367f0 !important' } : {},
+                }}
+            >
+                {label}
+            </Typography>
+        </>
+    );
+
+
+    const renderBreadcrumbs = () => {
+        if (isTasks) {
+            return <Typography variant="h6">My Task</Typography>;
+        }
+
+        if (isTaskDetails) {
+            return (
+                <>
+                    <Typography
+                        variant="h6"
+                        component="span"
+                        onClick={() => navigate("/projects")}
+                        sx={{
+                            cursor: 'pointer',
+                            '&:hover': { textDecoration: 'underline', color: '#7367f0 !important' },
+                        }}
+                    >
+                        All
+                    </Typography>
+
+                    {decodedData?.project && (
+                        <BreadcrumbItem
+                            label={decodedData.project}
+                            onClick={() =>
+                                navigate(`/projects?filter=${encodeURIComponent(decodedData.project)}`)
+                            }
+                        />
+                    )}
+
+                    {decodedData?.module && (
+                        <BreadcrumbItem
+                            label={decodedData.module}
+                            onClick={() =>
+                                navigate(`/projects?filter=${encodeURIComponent(decodedData.module)}`)
+                            }
+                        />
+                    )}
+                </>
+            );
+        }
+
+        if (isProjects) {
+            return <Typography variant="h6">Projects</Typography>;
+        }
+
+        if (isProjectDashboard) {
+            return (
+                <>
+                    <Typography
+                        variant="h6"
+                        component="span"
+                        onClick={() => navigate("/projects")}
+                        sx={{
+                            cursor: 'pointer',
+                            color: '#7367f0',
+                            '&:hover': { textDecoration: 'underline' },
+                        }}
+                    >
+                        Projects
+                    </Typography>
+
+                    {decodedData?.project && (
+                        <BreadcrumbItem
+                            label={decodedData.project}
+                            onClick={() =>
+                                navigate(`/projects?filter=${encodeURIComponent(decodedData.project)}`)
+                            }
+                        />
+                    )}
+
+                    {(decodedData?.module || decodedData?.taskname) && (
+                        <BreadcrumbItem
+                            label={decodedData.module ?? decodedData.taskname}
+                            onClick={() =>
+                                navigate(`/projects?filter=${encodeURIComponent(decodedData.module ?? decodedData.taskname)}`)
+                            }
+                        />
+                    )}
+                </>
+            );
+        }
+
+        // Fallback: use title from dataMap
+        if (matchedKey && dataMap[matchedKey]?.title) {
+            return <Typography variant="h6">{dataMap[matchedKey].title}</Typography>;
+        }
+
+        return null;
+    };
+
+
+
     return (
         <Box
             sx={{
@@ -294,18 +417,7 @@ const Header = ({ avatarSrc = "" }) => {
         >
             <Box>
                 <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Typography variant="h6" component="div" className="headerTitle"
-                        sx={{
-                            cursor: isDecodedTitle || isDecodedProjectTitle ? 'pointer' : 'default',
-                            '&:hover': isDecodedTitle || isDecodedProjectTitle
-                                ? {
-                                    color: '#7367f0;',
-                                }
-                                : {},
-                        }}
-                        onClick={(() => handleback(title))}>
-                        {title}
-                    </Typography>
+                    {renderBreadcrumbs()}
                     {taskDataLength > 0 &&
                         <>
                             {location.pathname.includes("/tasks/") && (

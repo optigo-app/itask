@@ -60,7 +60,7 @@ const MeetingPage = () => {
   const [caledrawerOpen, setCaledrawerOpen] = useState(false);
   const [calFormData, setCalFormData] = useRecoilState(CalformData);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
-  const setFormDataValue = useSetRecoilState(formData);
+  const [fomrDataValue, setFormDataValue] = useRecoilState(formData);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const setAssigneeId = useSetRecoilState(assigneeId);
   const [formDatas, setFormDatas] = useState();
@@ -752,7 +752,7 @@ const MeetingPage = () => {
         <MeetingDetail
           open={meetingDetailModalOpen}
           onClose={handleTaskModalClose}
-          taskData={formData}
+          taskData={fomrDataValue}
           handleMeetingEdit={handleMeetingEdit}
         />
         <ProfileCardModal

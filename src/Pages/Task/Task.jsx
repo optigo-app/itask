@@ -33,8 +33,10 @@ const Task = () => {
   const [activeButton, setActiveButton] = useState("table");
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [filters, setFilters] = useRecoilState(Advfilters);
+  console.log('filters: ', filters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
+  console.log('tasfsdfsdfsdks: ', tasks);
   const setTaskDataLength = useSetRecoilState(taskLength)
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
@@ -44,6 +46,7 @@ const Task = () => {
   const [CategoryTSummary, setCategoryTSummary] = useState([]);
   const [contextMenu, setContextMenu] = useState(null);
   const meTeamView = useRecoilValue(viewMode);
+  console.log('meTeamView: ', meTeamView);
   const {
     iswhMLoading,
     iswhTLoading,
@@ -56,11 +59,13 @@ const Task = () => {
     secStatusData,
     taskAssigneeData } = useFullTaskFormatFile();
 
+  console.log('taskFinalData: ', taskFinalData);
   useEffect(() => {
     setTasks([]);
   }, [location.pathname]);
 
   useEffect(() => {
+    debugger
     let parsedData = null;
     if (encodedData) {
       try {
@@ -71,10 +76,7 @@ const Task = () => {
         console.error("Error decoding or parsing encodedData:", error);
       }
     }
-
     const userId = userProfile?.id;
-
-    // ✅ Helper: filter tasks by status (case-insensitive)
     const filterByStatus = (tasks) => {
       return tasks?.filter((task) => {
         const status = task?.status?.toLowerCase?.() || '';
@@ -102,7 +104,6 @@ const Task = () => {
           return;
         }
       }
-
       let fallbackTasks = taskFinalData?.TaskData || [];
       if (parsedData?.projectid) {
         fallbackTasks = fallbackTasks.filter(task => task.projectid === parsedData.projectid);
@@ -115,13 +116,20 @@ const Task = () => {
     }
   }, [encodedData, taskFinalData, selectedRow, meTeamView, completedFlag]);
 
-
   useEffect(() => {
     const activeTab = localStorage?.getItem('activeTaskTab');
     if (activeTab) {
       setActiveButton(activeTab);
     }
   }, []);
+
+  useEffect(() => {
+    if (tasks) {
+      setFilters({
+        category: ['Today']
+      });
+    }
+  }, [])
 
   // Filter change handler
   const handleFilterChange = (key, value) => {
@@ -209,6 +217,7 @@ const Task = () => {
   const sortedData = [...(tasks || [])]?.sort(getComparator(order, orderBy));
 
   // all level of filtering
+  debugger
   const filteredData = sortedData
     ?.map((task) => {
       const {
@@ -222,6 +231,7 @@ const Task = () => {
         project,
         category,
       } = filters;
+      console.log('filters: ', filters);
 
       const normalizedSearchTerm = searchTerm?.trim()?.toLowerCase();
       const isQuoted =
@@ -247,6 +257,11 @@ const Task = () => {
         });
       };
 
+      const isUnsetDeadline = (dateStr) => {
+        const date = new Date(dateStr);
+        return !dateStr || date.toISOString().slice(0, 10) === "1900-01-01";
+      };
+
       resetInvalidFilters();
 
       const matchesFilters = (item) => {
@@ -256,8 +271,10 @@ const Task = () => {
           category.some((cat) => {
             const lowerCat = cat.toLowerCase();
             if (lowerCat.includes("due")) {
-              return isTaskDue(item?.DeadLineDate);
-            } else if (lowerCat.includes("today tasks")) {
+              return isTaskDue(item?.DeadLineDate) && !isUnsetDeadline(item?.DeadLineDate);
+            } else if (lowerCat.includes("unset deadline")) {
+              return isUnsetDeadline(item?.DeadLineDate);
+            } else if (lowerCat.includes("today")) {
               return isTaskToday(item?.StartDate);
             } else if (lowerCat.includes("new")) {
               return item?.isnew == 1;

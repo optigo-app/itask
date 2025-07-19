@@ -98,7 +98,6 @@ const SidebarDrawer = ({
         estimate2_hrs: "",
     });
 
-    console.log('formValues: ', formValues);
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const encodedData = searchParams.get("data");
@@ -164,7 +163,6 @@ const SidebarDrawer = ({
     };
 
     useEffect(() => {
-        debugger
         const loggedAssignee = JSON.parse(localStorage?.getItem("UserProfileData"));
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(Number) || [];
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray.includes(user.id)) || [];
@@ -366,9 +364,11 @@ const SidebarDrawer = ({
     }
 
     const handleSubmit = (module) => {
-        if (!formValues?.taskName?.trim()) {
-            setIsTaskNameEmpty(true);
-            return;
+        if (taskType !== "multi_input") {
+            if (!formValues?.taskName?.trim()) {
+                setIsTaskNameEmpty(true);
+                return;
+            }
         }
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const assigneeIds = formValues.guests?.map(user => user.id)?.join(",") ?? "";
