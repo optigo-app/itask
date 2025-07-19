@@ -553,20 +553,23 @@ const TableView = ({
         return (
             <Box display="flex" alignItems="center" gap={2} width="100%">
                 <Box mx={1} flex={8} position="relative">
-                    <LinearProgress
-                        aria-label="Task progress status"
-                        variant="determinate"
-                        value={progress}
-                        sx={{
-                            height: 7,
-                            borderRadius: 5,
-                            backgroundColor: "#e0e0e0",
-                            "& .MuiLinearProgress-bar": {
-                                backgroundColor: getStatusColor(progress),
-                            },
-                        }}
-                        className="progressBar"
-                    />
+                    <Tooltip title={`${progress}%`} arrow placement="top" classes={{ tooltip: "custom-tooltip" }}>
+                        <LinearProgress
+                            aria-label="Task progress status"
+                            variant="determinate"
+                            value={progress}
+                            sx={{
+                                height: 7,
+                                borderRadius: 5,
+                                backgroundColor: "#e0e0e0",
+                                cursor: 'pointer',
+                                "& .MuiLinearProgress-bar": {
+                                    backgroundColor: getStatusColor(progress),
+                                },
+                            }}
+                            className="progressBar"
+                        />
+                    </Tooltip>
                 </Box>
             </Box>
         );

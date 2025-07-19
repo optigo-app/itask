@@ -23,7 +23,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
             dropdowns[key] = String(val);
         });
         if (formValues?.bulkTask?.length > 0) {
-            const formattedString = formValues?.bulkTask?.map(task => `${task.taskName}#${task.estimate}#${formValues.deadLineDate ?? ''}`).join(", ");
+            const formattedString = formValues?.bulkTask?.map(task => `${task.taskName}#${task.estimate}#${task.deadLineDate ?? ''}`).join(", ");
             combinedValue = JSON.stringify({
                 "ismodule": 2,
                 "maintaskid": formValues?.moduleid ?? formValues?.taskid ?? '',

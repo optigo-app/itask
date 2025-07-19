@@ -175,6 +175,27 @@ export const getStatusColor = (value) => {
     }
 };
 
+export function getPerformanceStatus(value) {
+    const performance = typeof value === "string" ? parseFloat(value.replace("%", "")) : value;
+
+    if (performance === 0) {
+        return { meaning: "Not Started", color: "#616161", bgColor: "#eeeeee" }; // grey
+    } else if (performance > 0 && performance < 50) {
+        return { meaning: "In Progress (Slow)", color: "#ff9800", bgColor: "#fff3e0" }; // orange
+    } else if (performance >= 50 && performance < 100) {
+        return { meaning: "In Progress", color: "#2196f3", bgColor: "#e3f2fd" }; // blue
+    } else if (performance === 100) {
+        return { meaning: "On Track", color: "#4caf50", bgColor: "#e8f5e9" }; // green
+    } else if (performance > 100 && performance <= 120) {
+        return { meaning: "Slight Overrun", color: "#f44336", bgColor: "#ffebee" }; // light red
+    } else if (performance > 120) {
+        return { meaning: "Overrun - Needs Attention", color: "#b71c1c", bgColor: "#ffcdd2" }; // dark red
+    }
+
+    return { meaning: "Unknown", color: "#9e9e9e", bgColor: "#f5f5f5" };
+}
+
+
 export const statusColors = {
     "initialized": {
         color: "#1e88e5", // Blue - just added
@@ -743,12 +764,14 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
             date.getDate() === today.getDate()
         );
     };
+    const hasNoDeadline = (dateStr) => !isValidDate(dateStr);
     const isPast = (dateStr) => {
         if (!isValidDate(dateStr)) return false;
         const date = new Date(dateStr);
         const now = new Date();
         return date < now && !isToday(dateStr);
     };
+
     const categoryTaskCount = flatData.reduce((acc, task) => {
         const categoryKey = task?.category?.toLowerCase()?.replace(/\s+/g, "_");
         if (categoryKey) {
@@ -760,18 +783,23 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
     const summary = [
         {
             id: "today_tasks",
-            labelname: "Today Tasks",
+            labelname: "Today",
             count: flatData.filter((task) => isToday(task.StartDate)).length,
         },
         {
             id: "new_tasks",
-            labelname: "New Tasks",
+            labelname: "New",
             count: flatData.filter((task) => task.isnew === 1).length,
         },
         {
             id: "due_tasks",
-            labelname: "Due Tasks",
+            labelname: "Due",
             count: flatData.filter((task) => isPast(task.DeadLineDate)).length,
+        },
+        {
+            id: "UnsetDeadline_tasks",
+            labelname: "Unset Deadline",
+            count: flatData.filter((task) => hasNoDeadline(task.DeadLineDate)).length,
         },
         ...(Array.isArray(taskCategory)
             ? taskCategory.map((label) => {
@@ -795,24 +823,33 @@ export const filterNestedTasksByView = (tasks = [], mode = 'me', userId) => {
             const isAssignedToMe = task?.assignee?.some((ass) => ass.id == userId);
             const hasAssignees = !!task?.assigneids?.trim();
             const isMyTask = isCreatedByMe && isAssignedToMe && hasAssignees;
+            const isTeamTask = !isMyTask;
+
             const filteredSubtasks = task?.subtasks
                 ? filterNestedTasksByView(task.subtasks, mode, userId)
                 : [];
-            const isTeamTask = !isMyTask;
-            const shouldInclude =
-                (mode === "me" && isMyTask) ||
-                (mode === "team" && isTeamTask);
+
+            let shouldInclude = false;
+
+            if (mode === 'me') {
+                shouldInclude = isMyTask;
+            } else if (mode === 'team') {
+                shouldInclude = isTeamTask;
+            } else if (mode === 'createdby') {
+                shouldInclude = isCreatedByMe;
+            }
+
             if (shouldInclude || filteredSubtasks.length > 0) {
                 return {
                     ...task,
                     subtasks: filteredSubtasks,
                 };
             }
+
             return null;
         })
         .filter(Boolean);
 };
-
 
 export function mergeFilterGroups(attributesData, groupsData, mappingData) {
     const attributeMap = new Map(attributesData.map(attr => [attr.id, attr]));
@@ -889,4 +926,9 @@ export const handleAddApicall = async (updatedTasks) => {
     }
 }
 
-
+export const background = (assignee) => {
+    const avatarBackgroundColor = assignee?.avatar
+        ? "transparent"
+        : getRandomAvatarColor(assignee);
+    return avatarBackgroundColor;
+};

@@ -16,13 +16,10 @@ import { taskInit } from './Api/InitialApi/TaskInitApi';
 import { fetchMasterGlFunc } from './Utils/globalfun';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
-import Reports from './Pages/Reports/Reports';
 import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
-import MasterForm from './Backup/MasterForm';
-import ResizableTable from './Backup/ResizableTable';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -42,6 +39,9 @@ const Profile = lazy(() => import('./Pages/ProfilePage/Profile'));
 const UnassignedTaskList = lazy(() => import('./Pages/Task/UnAssignedTask/UnassignedTaskList'));
 const ProjectDashboard = lazy(() => import('./Pages/Project/ProjectDashboard'));
 const Error401Page = lazy(() => import('./Pages/ErrorPages/Error401Page'));
+
+// report
+const PmsReport = lazy(() => import('./Pages/Reports/pmsReport'));
 
 const Layout = ({ children, pageDataLoaded }) => {
     const isMobile = useMediaQuery('(max-width:712px)');
@@ -258,10 +258,9 @@ const AppWrapper = () => {
                                         <Route path="/inbox" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1004"><Inbox /></ProtectedRoute>} />
                                         <Route path="/masters" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1007"><Masters /></ProtectedRoute>} />
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
-                                        <Route path="/reports/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><Reports /></ProtectedRoute>} />
+                                        <Route path="/reports/pms" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
-                                        <Route path="/test" element={<ResizableTable />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>
@@ -269,7 +268,7 @@ const AppWrapper = () => {
                         />
                     </Routes>
                 </Suspense>
-            </LocalizationProvider> 
+            </LocalizationProvider>
         </>
     );
 };

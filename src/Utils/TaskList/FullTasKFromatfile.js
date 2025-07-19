@@ -382,6 +382,138 @@ const useFullTaskFormatFile = () => {
         ModuleTeamMembers[moduleId] = Array.from(memberMap.values());
       });
 
+      // === EmployeeWiseData ===
+      const EmployeeWiseDataMap = new Map();
+
+      data?.forEach((task) => {
+        const estimate = task.estimate_hrs || 0;
+        const actual = task.workinghr || 0;
+        const status = task.status;
+
+        if (Array.isArray(task.assignee)) {
+          task.assignee.forEach((assignee) => {
+            const empKey = assignee.userid || assignee.customercode || assignee.firstname;
+
+            if (!EmployeeWiseDataMap.has(empKey)) {
+              // Copy top-level employee fields
+              EmployeeWiseDataMap.set(empKey, {
+                ...assignee, // flatten employee fields here
+                TotalTasks: 0,
+                Completed: 0,
+                TotalEstimate: 0,
+                TotalActual: 0,
+                Tasks: [],
+                CategorySummaryMap: new Map(),
+              });
+            }
+
+            const emp = EmployeeWiseDataMap.get(empKey);
+            emp.TotalTasks += 1;
+            if (status === "Completed") emp.Completed += 1;
+            emp.TotalEstimate += estimate;
+            emp.TotalActual += actual;
+            emp.Tasks.push(task);
+
+            const labelObj = taskCategory?.find((c) => c.id === task.workcategoryid);
+            const labelName = labelObj?.labelname || "Unknown";
+
+            const currentCount = emp.CategorySummaryMap.get(labelName) || 0;
+            emp.CategorySummaryMap.set(labelName, currentCount + 1);
+          });
+        }
+      });
+
+      // Convert Map to final array and clean up
+      const EmployeeWiseData = Array.from(EmployeeWiseDataMap.values()).map((emp) => {
+        const progress = emp.TotalTasks > 0 ? Math.round((emp.Completed / emp.TotalTasks) * 100) : 0;
+        const diff = emp.TotalActual - emp.TotalEstimate;
+        const performance = emp.TotalEstimate > 0
+          ? Math.round((emp.TotalActual / emp.TotalEstimate) * 100)
+          : 100;
+
+        const CategorySummary = Array.from(emp.CategorySummaryMap.entries()).map(
+          ([categoryname, count]) => ({ categoryname, count })
+        );
+
+        // Return flattened object without CategorySummaryMap
+        const {
+          CategorySummaryMap,
+          ...empData
+        } = emp;
+
+        return {
+          ...empData,
+          Progress: `${progress}%`,
+          TotalDiff: diff,
+          Performance: `${performance}%`,
+          CategorySummary
+        };
+      });
+
+
+      // === ModuleWiseData ===
+      const ModuleWiseDataMap = new Map();
+      data?.forEach((task) => {
+        const moduleId = task.moduleid;
+        if (!moduleId) return;
+
+        if (!ModuleWiseDataMap.has(moduleId)) {
+          ModuleWiseDataMap.set(moduleId, {
+            moduleid: moduleId,
+            modulename: ModuleList?.find((m) => m.taskid === moduleId)?.taskname || "Unknown",
+            TotalTasks: 0,
+            Completed: 0,
+            TotalEstimate: 0,
+            TotalActual: 0,
+            Tasks: [],
+            __CategorySummaryTemp__: new Map(),
+          });
+        }
+
+        const mod = ModuleWiseDataMap.get(moduleId);
+
+        mod.TotalTasks += 1;
+        if (task.status === "Completed") mod.Completed += 1;
+        mod.TotalEstimate += task.estimate_hrs || 0;
+        mod.TotalActual += task.workinghr || 0;
+        mod.Tasks.push(task);
+
+        const labelObj = taskCategory?.find((c) => c.id === task.workcategoryid);
+        const labelName = labelObj?.labelname || "Unknown";
+
+        const currentCount = mod.__CategorySummaryTemp__.get(labelName) || 0;
+        mod.__CategorySummaryTemp__.set(labelName, currentCount + 1);
+
+      });
+
+      // Convert map to array and finalize formatting
+      const ModuleWiseData = Array.from(ModuleWiseDataMap.values()).map((mod) => {
+        const progress = mod.TotalTasks > 0 ? Math.round((mod.Completed / mod.TotalTasks) * 100) : 0;
+        const diff = mod.TotalActual - mod.TotalEstimate;
+        const performance = mod.TotalEstimate > 0
+          ? Math.round((mod.TotalActual / mod.TotalEstimate) * 100)
+          : 100;
+
+        const CategorySummary = Array.from(mod.__CategorySummaryTemp__.entries()).map(([categoryname, count]) => ({
+          categoryname,
+          count
+        }));
+
+        const {
+          __CategorySummaryTemp__,
+          ...modData
+        } = mod;
+
+        return {
+          ...modData,
+          Progress: `${progress}%`,
+          TotalDiff: diff,
+          Performance: `${performance}%`,
+          CategorySummary
+        };
+      });
+
+
       setTimeout(() => {
         setIsWhTLoading(false);
       }, 50);
@@ -396,7 +528,11 @@ const useFullTaskFormatFile = () => {
         ModuleCategoryTasks,
         ModuleMilestoneData,
         ModuleProgress,
-        ModuleTeamMembers
+        ModuleTeamMembers,
+        // employee wise
+        EmployeeWiseData,
+        // ModuleWiseData wise
+        ModuleWiseData,
       };
     };
   }, [taskCategory, location.pathname]);

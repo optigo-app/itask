@@ -38,6 +38,7 @@ import {
   SearchIcon,
   TimerIcon,
   User,
+  UserPlus,
   Users,
 } from "lucide-react";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
@@ -349,6 +350,14 @@ const HeaderButtons = ({
                       <Users size={20} className="toggle-icon" />
                     </ToggleButton>
                   </Tooltip>
+                  <ToggleButton
+                    disabled={parsedData?.isLimited == 1}
+                    value="createdby"
+                    className="toggle-btn"
+                    sx={{ borderRadius: '8px' }}
+                  >
+                    <UserPlus size={20} className="toggle-icon" />
+                  </ToggleButton>
                 </ToggleButtonGroup>
               )}
               <IconButton
