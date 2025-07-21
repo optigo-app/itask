@@ -162,18 +162,21 @@ export const priorityColors = {
 
 // progress color
 export const getStatusColor = (value) => {
-    if (value >= 0 && value < 10) {
-        return "#e0e0e0"; // Grey for not started
+    if (value === 0) {
+        return "#f0f0f0"; // Soft violet for not started
+    } else if (value > 0 && value < 10) {
+        return "#a0c4ff"; // Light sky blue for very early progress
     } else if (value >= 10 && value < 50) {
-        return "#ff9800"; // Orange for in-progress
+        return "#ffb703"; // Orange for in-progress
     } else if (value >= 50 && value < 70) {
         return "#2196f3"; // Blue for almost complete
     } else if (value >= 70 && value <= 100) {
         return "#4caf50"; // Green for completed
     } else {
-        return "#9e9e9e"; // Default grey for out-of-range values
+        return "#eeeeee"; // Default fallback color (light)
     }
 };
+
 
 export function getPerformanceStatus(value) {
     const performance = typeof value === "string" ? parseFloat(value.replace("%", "")) : value;

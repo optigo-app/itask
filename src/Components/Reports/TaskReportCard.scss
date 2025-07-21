@@ -5,10 +5,6 @@ $primary-green: #4CAF50;
 $secondary-green: #E8F5E9;
 $secondary-blue: #E3F2FD;
 $light-gray: #F5F5F5;
-$text-dark: #333;
-$text-medium: #666;
-$text-light: #999;
-$error-red: #F44336;
 
 .project-overview-card {
     min-width: 380px;
@@ -18,8 +14,12 @@ $error-red: #F44336;
     font-family: $font-family;
     font-size: 14px;
 
+    &:hover {
+        cursor: pointer;
+    }
+
     .MuiTypography-root {
-        font-size: 14px !important;
+        font-size: 14px;
     }
 
     .card-header {
@@ -29,22 +29,22 @@ $error-red: #F44336;
 
         .header-icon-wrapper {
             background-color: lighten($primary-green, 40%);
-            padding: 12px;
+            padding: 5px;
             border-radius: 8px;
-            margin-right: 16px;
+            margin-right: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
 
             .header-icon {
                 color: $primary-green;
-                font-size: 28px;
+                font-size: 25px;
             }
         }
 
         .project-title {
             font-weight: 600;
-            color: $text-dark;
+            color: $text2ndColor;
             margin-bottom: 4px;
         }
 
@@ -87,13 +87,13 @@ $error-red: #F44336;
 
             .stat-number {
                 font-weight: 700;
-                color: $text-dark;
+                color: $text2ndColor;
                 margin-bottom: 4px;
                 line-height: 1;
             }
 
             .stat-label {
-                color: $text-medium;
+                color: $text2ndColor;
                 font-size: 0.85rem;
             }
         }
@@ -102,7 +102,7 @@ $error-red: #F44336;
 
     .section-title {
         font-weight: 500;
-        color: $text-medium;
+        color: $text2ndColor;
         margin-bottom: 16px;
         text-transform: uppercase;
         font-size: 0.8rem;
@@ -111,9 +111,11 @@ $error-red: #F44336;
 
     .task-categories {
         margin-bottom: 24px;
+
         .MuiGrid-item {
             display: flex;
         }
+
         .category-item {
             display: flex;
             align-items: center;
@@ -123,9 +125,11 @@ $error-red: #F44336;
             width: 100%;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             transition: box-shadow 0.2s ease;
+
             &:hover {
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             }
+
             .category-icon {
                 font-size: 20px;
                 margin-right: 12px;
@@ -147,18 +151,18 @@ $error-red: #F44336;
                 }
 
                 &.onhold-icon {
-                    color: $text-medium;
+                    color: $text2ndColor;
                 }
             }
 
             .MuiTypography-root:nth-of-type(1) {
                 flex-grow: 1;
-                color: $text-dark;
+                color: $text2ndColor;
             }
 
             .category-count {
                 font-weight: 600;
-                color: $text-medium;
+                color: $text2ndColor;
             }
         }
     }
@@ -170,12 +174,12 @@ $error-red: #F44336;
             margin-bottom: 8px;
 
             .MuiTypography-root:first-of-type {
-                color: $text-dark;
+                color: $text2ndColor;
             }
 
             .MuiTypography-root:last-of-type {
                 font-weight: 500;
-                color: $text-dark;
+                color: $text2ndColor;
             }
 
             &.difference {
@@ -187,7 +191,7 @@ $error-red: #F44336;
                     font-weight: 600;
 
                     &.negative {
-                        color: $error-red;
+                        color: $error-main;
                     }
 
                     &.positive {
