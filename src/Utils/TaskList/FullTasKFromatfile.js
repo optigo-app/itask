@@ -409,7 +409,8 @@ const useFullTaskFormatFile = () => {
 
             const emp = EmployeeWiseDataMap.get(empKey);
             emp.TotalTasks += 1;
-            if (status === "Completed") emp.Completed += 1;
+            if ((task.status || "").toLowerCase() === "completed") emp.Completed += 1;
+            if ((task.status || "").toLowerCase() === "running") emp.InProgress = (emp.InProgress || 0) + 1;
             emp.TotalEstimate += estimate;
             emp.TotalActual += actual;
             emp.Tasks.push(task);
@@ -446,6 +447,7 @@ const useFullTaskFormatFile = () => {
           Progress: `${progress}%`,
           TotalDiff: diff,
           Performance: `${performance}%`,
+          InProgress: emp.InProgress, 
           CategorySummary
         };
       });
@@ -473,7 +475,8 @@ const useFullTaskFormatFile = () => {
         const mod = ModuleWiseDataMap.get(moduleId);
 
         mod.TotalTasks += 1;
-        if (task.status === "Completed") mod.Completed += 1;
+        if ((task.status|| "").toLowerCase() === "completed") mod.Completed += 1;
+        if ((task.status || "").toLowerCase() === "running") mod.InProgress = (mod.InProgress || 0) + 1;
         mod.TotalEstimate += task.estimate_hrs || 0;
         mod.TotalActual += task.workinghr || 0;
         mod.Tasks.push(task);
@@ -509,6 +512,7 @@ const useFullTaskFormatFile = () => {
           Progress: `${progress}%`,
           TotalDiff: diff,
           Performance: `${performance}%`,
+          InProgress: mod.InProgress, 
           CategorySummary
         };
       });

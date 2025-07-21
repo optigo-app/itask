@@ -10,7 +10,7 @@ import {
     Autocomplete,
 } from '@mui/material';
 import ReportsGrid from '../../Components/Reports/ReportsGrid';
-import { Grid2x2, List, SquareChartGantt, User } from 'lucide-react';
+import { Grid2x2, List, Square, SquareChartGantt, User } from 'lucide-react';
 import TaskReportCard from '../../Components/Reports/TaskReportCard';
 import useFullTaskFormatFile from '../../Utils/TaskList/FullTasKFromatfile';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
@@ -23,7 +23,7 @@ const TASK_OPTIONS = [
 
 const PmsReport = () => {
     const [viewMode, setViewMode] = useState('EmployeeWiseData');
-    const [viewType, setViewType] = useState('card');
+    const [viewType, setViewType] = useState('table');
     const [searchText, setSearchText] = useState('');
     const [selectedProject, setSelectedProject] = useState('');
     const [selectedAssignee, setSelectedAssignee] = useState('');
@@ -32,7 +32,7 @@ const PmsReport = () => {
 
     useEffect(() => {
         const viemodeValue = localStorage.getItem('rpviewMode') ?? 'EmployeeWiseData';
-        const viewTypeValue = localStorage.getItem('rpviewType') ?? 'card';
+        const viewTypeValue = localStorage.getItem('rpviewType') ?? 'table';
         setViewMode(viemodeValue);
         setViewType(viewTypeValue);
     }, [])
@@ -111,7 +111,7 @@ const PmsReport = () => {
 
         // Filter by selected project
         if (viewMode === 'ModuleWiseData' && selectedProject) {
-            data = data.filter(d => d.projectname === selectedProject);
+            data = data.filter(d => d.modulename == selectedProject);
         }
 
         return data.map(row => ({
@@ -128,6 +128,26 @@ const PmsReport = () => {
         return <LoadingBackdrop isLoading={iswhTLoading} />;
     }
 
+    const ViewToggleButtons = ({ view, onViewChange }) => {
+        return (
+          <ToggleButtonGroup
+            size='small'
+            value={view}
+            exclusive
+            onChange={onViewChange}
+            aria-label="view mode"
+    
+          >
+            <ToggleButton value="table" aria-label="table view" sx={{ borderRadius: '8px' }}>
+              <List className="iconbtn" size={20} />
+            </ToggleButton>
+            <ToggleButton value="card" aria-label="card view" sx={{ borderRadius: '8px' }}>
+              <Square  className="iconbtn" size={20} />
+            </ToggleButton>
+          </ToggleButtonGroup>
+        );
+      };
+
     return (
         <Box className="report-container">
             <Box className="pmsSideBarTgBox">
@@ -140,7 +160,7 @@ const PmsReport = () => {
                             size="small"
                             value={searchText}
                             onChange={(e) => setSearchText(e.target.value)}
-                            sx={{ minWidth: 220 }}
+                            sx={{ minWidth: 280 }}
                             {...commonTextFieldProps}
                         />
                     </Box>
@@ -153,7 +173,7 @@ const PmsReport = () => {
                                 renderInput={(params) => (
                                     <TextField {...params} placeholder='Assignee' size="small" {...commonTextFieldProps} />
                                 )}
-                                sx={{ minWidth: 220 }}
+                                sx={{ minWidth: 280 }}
                                 clearOnEscape
                                 isOptionEqualToValue={(option, value) => option === value}
                             />
@@ -168,7 +188,7 @@ const PmsReport = () => {
                                     <TextField {...params} placeholder='Project' size="small" {...commonTextFieldProps} />
 
                                 )}
-                                sx={{ minWidth: 220 }}
+                                sx={{ minWidth: 280 }}
                                 clearOnEscape
                                 isOptionEqualToValue={(option, value) => option === value}
                             />
@@ -195,12 +215,9 @@ const PmsReport = () => {
                         </ToggleButton>
                     ))}
                 </ToggleButtonGroup>
-                {/* Optional view type switcher:
-                <ViewToggleButtons view={viewType} onViewChange={handleViewChange} /> */}
+                {/* Optional view type switcher: */}
+                <ViewToggleButtons view={viewType} onViewChange={handleViewChange} />
             </Box>
-
-
-
             <div
                 style={{
                     margin: "20px 0",

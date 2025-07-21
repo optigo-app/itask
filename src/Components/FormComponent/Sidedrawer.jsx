@@ -56,6 +56,7 @@ const SidebarDrawer = ({
 }) => {
     const location = useLocation();
     const theme = useTheme();
+    const date = new Date();
     dayjs.extend(utc);
     dayjs.extend(timezone);
     const projectModuleData = useRecoilValue(projectDatasRState);
@@ -64,7 +65,6 @@ const SidebarDrawer = ({
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
     const [taskType, setTaskType] = useState("single");
     const [decodedData, setDecodedData] = useState(null);
-    console.log('decodedData: ', decodedData);
     const [isDuplicateTask, setIsDuplicateTask] = useState(false);
     const [isTaskNameEmpty, setIsTaskNameEmpty] = useState(false);
     const [teams, setTeams] = useState([]);
@@ -304,10 +304,18 @@ const SidebarDrawer = ({
     // Handle form value changes
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormValues((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        setFormValues((prev) => {
+            const updatedValues = {
+                ...prev,
+                [name]: value,
+            };
+            const statusValue = statusData?.find((st) => st.id == value)?.labelname
+            if (name === "status" && statusValue.toLowerCase() === "completed") {
+                updatedValues.endDate = date.toISOString();
+            }
+
+            return updatedValues;
+        });
     }
 
     // for advanced master
@@ -388,6 +396,7 @@ const SidebarDrawer = ({
             return acc;
         }, {}) || {};
 
+        const statusValue = statusData?.find(d => d.id == formValues.status);
         const updatedFormDataValue = {
             taskid: moduleData?.taskid || formDataValue?.taskid || formValues?.prModule?.taskid || "",
             meetingid: formDataValue?.meetingid ?? "",
@@ -395,6 +404,7 @@ const SidebarDrawer = ({
             bulkTask: formValues.bulkTask ?? formDataValue?.bulkTask,
             statusid: formValues.status ?? formDataValue?.statusid,
             secstatusid: formValues.secStatus ?? formDataValue?.secstatusid,
+            completion_timestamp: statusValue?.labelname?.toLowerCase() === "completed" ? date.toISOString() : "",
             priorityid: formValues.priority ?? formDataValue?.priorityid,
             projectid: moduleData?.projectid || formValues?.prModule?.projectid || formValues.project || formDataValue?.projectid,
             projectLead: formValues.projectLead ?? formDataValue?.projectLead,

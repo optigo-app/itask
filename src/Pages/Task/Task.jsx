@@ -21,6 +21,7 @@ const KanbanView = React.lazy(() => import("../../Components/Task/KanbanView/Kan
 const CardView = React.lazy(() => import("../../Components/Task/CardView/CardView"));
 
 const Task = () => {
+  const date = new Date();
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const location = useLocation();
   const userProfile = JSON.parse(localStorage.getItem("UserProfileData"));
@@ -33,10 +34,8 @@ const Task = () => {
   const [activeButton, setActiveButton] = useState("table");
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [filters, setFilters] = useRecoilState(Advfilters);
-  console.log('filters: ', filters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
-  console.log('tasfsdfsdfsdks: ', tasks);
   const setTaskDataLength = useSetRecoilState(taskLength)
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
@@ -46,7 +45,6 @@ const Task = () => {
   const [CategoryTSummary, setCategoryTSummary] = useState([]);
   const [contextMenu, setContextMenu] = useState(null);
   const meTeamView = useRecoilValue(viewMode);
-  console.log('meTeamView: ', meTeamView);
   const {
     iswhMLoading,
     iswhTLoading,
@@ -59,13 +57,11 @@ const Task = () => {
     secStatusData,
     taskAssigneeData } = useFullTaskFormatFile();
 
-  console.log('taskFinalData: ', taskFinalData);
   useEffect(() => {
     setTasks([]);
   }, [location.pathname]);
 
   useEffect(() => {
-    debugger
     let parsedData = null;
     if (encodedData) {
       try {
@@ -78,9 +74,28 @@ const Task = () => {
     }
     const userId = userProfile?.id;
     const filterByStatus = (tasks) => {
+      const isSameLocalDay = (utcDateString) => {
+        if (!utcDateString) return false;
+        const localDate = new Date(utcDateString);
+        return (
+          localDate.getFullYear() === date.getFullYear() &&
+          localDate.getMonth() === date.getMonth() &&
+          localDate.getDate() === date.getDate()
+        );
+      };
       return tasks?.filter((task) => {
         const status = task?.status?.toLowerCase?.() || '';
-        return completedFlag ? status === 'completed' : status !== 'completed';
+        if (completedFlag) {
+          return (
+            status === 'completed' &&
+            !isSameLocalDay(task?.Completion_timestamp)
+          );
+        } else {
+          return (
+            status !== 'completed' ||
+            isSameLocalDay(task?.Completion_timestamp)
+          );
+        }
       });
     };
 
@@ -217,7 +232,6 @@ const Task = () => {
   const sortedData = [...(tasks || [])]?.sort(getComparator(order, orderBy));
 
   // all level of filtering
-  debugger
   const filteredData = sortedData
     ?.map((task) => {
       const {
@@ -231,7 +245,6 @@ const Task = () => {
         project,
         category,
       } = filters;
-      console.log('filters: ', filters);
 
       const normalizedSearchTerm = searchTerm?.trim()?.toLowerCase();
       const isQuoted =
@@ -348,7 +361,6 @@ const Task = () => {
     })
     ?.filter(Boolean);
 
-
   const handleTabBtnClick = (button) => {
     setActiveButton(button);
     localStorage?.setItem('activeTaskTab', button);
@@ -423,7 +435,8 @@ const Task = () => {
               updatedTask = {
                 ...task,
                 statusid: status?.id,
-                status: status?.labelname
+                status: status?.labelname,
+                EndDate: status?.labelname?.toLowerCase() === "completed" ? date.toISOString() : ""
               };
             }
             handleAddApicall(updatedTask);

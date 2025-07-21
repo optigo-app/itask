@@ -20,7 +20,6 @@ const Header = ({ avatarSrc = "" }) => {
     const profileOpen = Boolean(profileAnchorEl);
     const encodedData = searchParams.get("data");
     const [decodedData, setDecodedData] = useState(null);
-    console.log('decodedData: ', decodedData);
     const taskDataLength = useRecoilValue(taskLength);
     const [profileData, setProfileData] = useState();
     const [selectedTab, setSelectedTab] = useState("taskView");

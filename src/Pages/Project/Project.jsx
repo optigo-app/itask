@@ -61,7 +61,6 @@ const Project = () => {
       setProject([])
     }
     const paramValue = searchParams.get('filter');
-    console.log('paramValue: ', paramValue);
     setFilters({
       searchTerm: paramValue,
     })
