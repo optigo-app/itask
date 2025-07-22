@@ -81,43 +81,54 @@ const LoginPage = () => {
                         <Typography variant="body2" color="gray" mb={2}>
                             How to get started task
                         </Typography>
-                            <Box className="form-group" width="100%" maxWidth={350}>
-                                <Typography variant="subtitle1">Username</Typography>
-                                <TextField
-                                    fullWidth
-                                    placeholder="Enter username"
-                                    value={credentials.username} 
-                                    {...commonTextFieldProps}
-                                    onChange={handleChange}
-                                    sx={{ mb: 2 }}
-                                />
-                            </Box>
-                            <Box className="form-group" width="100%" maxWidth={350}>
-                                <Typography variant="subtitle1">Password</Typography>
-                                <TextField
-                                    fullWidth
-                                    placeholder="Enter password"
-                                    value={credentials.password} 
-                                    type={showPassword ? "text" : "password"}
-                                    {...commonTextFieldProps}
-                                    onChange={handleChange}
-                                    sx={{ mb: 2 }}
-                                    InputProps={{
-                                        endAdornment: (
-                                            <InputAdornment position="end">
-                                                <IconButton sx={{ color: '#8080808f' }} onClick={() => setShowPassword(!showPassword)}>
-                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                                                </IconButton>
-                                            </InputAdornment>
-                                        )
-                                    }}
-                                />
-                            </Box>
-                            <Box sx={{ mt: 2 }}>
-                                <Button variant="contained" className="buttonClassname" onClick={handleSubmit}>
-                                    Login Now
-                                </Button>
-                            </Box>
+                        <Box className="form-group" width="100%" maxWidth={350}>
+                            <Typography variant="subtitle1">Project Code</Typography>
+                            <TextField
+                                fullWidth
+                                placeholder="Enter project code"
+                                value={credentials.username}
+                                {...commonTextFieldProps}
+                                onChange={handleChange}
+                                sx={{ mb: 2 }}
+                            />
+                        </Box>
+                        <Box className="form-group" width="100%" maxWidth={350}>
+                            <Typography variant="subtitle1">User Id</Typography>
+                            <TextField
+                                fullWidth
+                                placeholder="Enter username"
+                                value={credentials.username}
+                                {...commonTextFieldProps}
+                                onChange={handleChange}
+                                sx={{ mb: 2 }}
+                            />
+                        </Box>
+                        <Box className="form-group" width="100%" maxWidth={350}>
+                            <Typography variant="subtitle1">Password</Typography>
+                            <TextField
+                                fullWidth
+                                placeholder="Enter password"
+                                value={credentials.password}
+                                type={showPassword ? "text" : "password"}
+                                {...commonTextFieldProps}
+                                onChange={handleChange}
+                                sx={{ mb: 2 }}
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton sx={{ color: '#8080808f' }} onClick={() => setShowPassword(!showPassword)}>
+                                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    )
+                                }}
+                            />
+                        </Box>
+                        <Box sx={{ mt: 2 }}>
+                            <Button variant="contained" className="buttonClassname" onClick={handleSubmit}>
+                                Login Now
+                            </Button>
+                        </Box>
                     </Box>
 
                     {/* Right Side: Image Section (Hidden on Mobile) */}

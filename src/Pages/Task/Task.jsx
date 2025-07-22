@@ -28,7 +28,7 @@ const Task = () => {
   const [order, setOrder] = useState("desc");
   const [orderBy, setOrderBy] = useState("entrydate");
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(15);
   const searchParams = new URLSearchParams(location.search);
   const masterData = useRecoilValue(masterDataValue);
   const [activeButton, setActiveButton] = useState("table");
@@ -88,12 +88,12 @@ const Task = () => {
         if (completedFlag) {
           return (
             status === 'completed' &&
-            !isSameLocalDay(task?.Completion_timestamp)
+            !isSameLocalDay(task?.EndDate)
           );
         } else {
           return (
             status !== 'completed' ||
-            isSameLocalDay(task?.Completion_timestamp)
+            isSameLocalDay(task?.EndDate)
           );
         }
       });

@@ -87,6 +87,7 @@ const Mastergrid = ({
                     <TableHead>
                         <TableRow>
                             <TableCell width={80}>Sr#</TableCell>
+                            <TableCell width={120}>Display Order</TableCell>
                             <TableCell>{renderSortCell("Name", "labelname")}</TableCell>
                             <TableCell className='actionCell'>Actions</TableCell>
                         </TableRow>
@@ -95,6 +96,7 @@ const Mastergrid = ({
                         {sortedMaster?.map((row, index) => (
                             <TableRow key={row.id}>
                                 <TableCell>{row?.srno}</TableCell>
+                                <TableCell>{row?.displayorder}</TableCell>
                                 <TableCell style={{
                                     textDecoration: row.isdelete !== 0 ? 'line-through' : 'none',
                                     color: row.isdelete !== 0 ? '#ab003c' : '#444050',

@@ -33,7 +33,7 @@ const TablePaginationFooter = ({
                         onChange={(e) => onPageSizeChange(e.target.value)}
                         className="custom-select"
                     >
-                        {[10, 20, 50, 100].map((size) => (
+                        {[10, 15, 20, 50, 100].map((size) => (
                             <MenuItem key={size} value={size} className="custom-menu-item">
                                 {size}
                             </MenuItem>

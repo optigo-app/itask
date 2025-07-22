@@ -455,4 +455,9 @@ $divider-color: #e0e0e0;
     word-wrap: break-word;
     padding: 16px;
     margin-bottom: 20px;
-  }
+}
+
+.filter-toggle {
+    font-family: $font-family !important;
+    border-color: $divider-color;
+}
