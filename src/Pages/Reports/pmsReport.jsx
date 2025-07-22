@@ -14,7 +14,7 @@ import { commonTextFieldProps } from '../../Utils/globalfun';
 import PmFilters from '../../Components/Reports/PmFilters';
 import { calculateProgress } from '../../Utils/TaskList/reusable';
 import { actualTaskData } from '../../Recoil/atom';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import {useRecoilValue } from 'recoil';
 
 const TASK_OPTIONS = [
     { id: 1, value: "EmployeeWiseData", label: "Team", icon: <User size={18} /> },
