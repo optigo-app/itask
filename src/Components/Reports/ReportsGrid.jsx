@@ -26,6 +26,7 @@ import {
 import TaskDetailsModal from "./TaskDetailsModal"; // Import modal component
 
 const ReportsGrid = ({ columns, data, rowsPerPage = 10, viewMode }) => {
+  console.log('columns: ', columns?.length);
   const [openModal, setOpenModal] = useState(false);
   const [selectedTaskRow, setSelectedTaskRow] = useState(null);
 
@@ -133,7 +134,7 @@ const ReportsGrid = ({ columns, data, rowsPerPage = 10, viewMode }) => {
         </Box>
       );
     }
-    
+
     if (lowerKey.includes("running")) {
       const count = getCategoryCount(row?.CategorySummary, "Running");
       return (
@@ -200,40 +201,50 @@ const ReportsGrid = ({ columns, data, rowsPerPage = 10, viewMode }) => {
           </TableHead>
 
           <TableBody>
-            {paginatedData?.map((row, rowIndex) => (
-              <TableRow
-                key={rowIndex}
-                hover
-                onClick={() => handleRowClick(row)}
-                style={{ cursor: "pointer" }}
-              >
-                {columns?.map(({ key }) => {
-                  const lowerKey = key.toLowerCase();
-                  const value = row[key];
-                  const isStatusColumn = lowerKey.includes("taskstatus");
-                  const statusStyles = isStatusColumn
-                    ? {
-                      color: statusColors[value]?.color || "#000",
-                      backgroundColor: statusColors[value]?.backgroundColor || "#ddd",
-                      padding: "0.2rem 0.8rem",
-                      borderRadius: "5px",
-                      fontSize: "13.5px",
-                      fontWeight: "500",
-                    }
-                    : null;
+            {paginatedData?.length > 0 ? (
+              <>
+                {paginatedData?.map((row, rowIndex) => (
+                  <TableRow
+                    key={rowIndex}
+                    hover
+                    onClick={() => handleRowClick(row)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {columns?.map(({ key }) => {
+                      const lowerKey = key.toLowerCase();
+                      const value = row[key];
+                      const isStatusColumn = lowerKey.includes("taskstatus");
+                      const statusStyles = isStatusColumn
+                        ? {
+                          color: statusColors[value]?.color || "#000",
+                          backgroundColor: statusColors[value]?.backgroundColor || "#ddd",
+                          padding: "0.2rem 0.8rem",
+                          borderRadius: "5px",
+                          fontSize: "13.5px",
+                          fontWeight: "500",
+                        }
+                        : null;
 
-                  return (
-                    <TableCell key={key}>
-                      {isStatusColumn ? (
-                        <span style={statusStyles}>{value}</span>
-                      ) : (
-                        getFormattedValue(key, value, row)
-                      )}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
+                      return (
+                        <TableCell key={key}>
+                          {isStatusColumn ? (
+                            <span style={statusStyles}>{value}</span>
+                          ) : (
+                            getFormattedValue(key, value, row)
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </>
+            ) : (
+              <TableRow>
+              <TableCell colSpan={columns.length} style={{textAlign: 'center'}}>
+                No data available
+              </TableCell>
+            </TableRow>
+            )}
           </TableBody>
         </Table>
         {/* <Box className="TablePaginationBox">
