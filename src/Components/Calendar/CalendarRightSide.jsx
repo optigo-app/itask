@@ -250,7 +250,7 @@ const Calendar = ({
         initialView: 'timeGridWeek',
         slotMinTime: "07:00:00",
         slotMaxTime: "22:00:00",
-        slotDuration: "00:15:00",
+        slotDuration: "00:30:00",
         slotLabelInterval: "00:30:00",
         headerToolbar: {
             start: 'sidebarToggle, prev, next, title',

@@ -20,6 +20,8 @@ import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
+import LoginPage from './Components/Auth/LoginForm';
+import SampleTaskTable from './Backup/SampleTaskTable';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -146,7 +148,7 @@ const AppWrapper = () => {
             sessionStorage.clear();
             setIsReady(true);
             setPageDataLoaded(true);
-            return navigate('/error401', { replace: true });
+            return navigate('/login', { replace: true });
         }
 
         const decoded = jwtDecode(token);
@@ -242,6 +244,7 @@ const AppWrapper = () => {
                 <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
                     <Routes>
                         <Route path="/error401" element={<Error401Page />} />
+                        <Route path="/login" element={<LoginPage />} />
                         <Route
                             path="*"
                             element={
@@ -261,6 +264,7 @@ const AppWrapper = () => {
                                         <Route path="/reports/pms" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
+                                        <Route path="/test" element={<SampleTaskTable />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>

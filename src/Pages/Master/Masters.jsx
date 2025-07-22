@@ -29,7 +29,8 @@ const MasterToggle = () => {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [structuredAdvMasterData, setStructuredAdvMasterData] = useState([]);
     const [formData, setFormData] = useState({
-        name: ''
+        name: '',
+        displayorder: ''
     });
     const [formAdvData, setFormAdvData] = useState({
         masterName: '',
@@ -57,7 +58,7 @@ const MasterToggle = () => {
         setStructuredAdvMasterData(safeData);
         sessionStorage.setItem('structuredAdvMasterData', JSON.stringify(safeData));
     };
-    
+
     useEffect(() => {
         fetchAdvMasterData();
         if (location?.pathname?.includes('/master')) {
@@ -514,6 +515,7 @@ const MasterToggle = () => {
                         <MasterFormDrawer
                             open={drawerOpen}
                             activeTab={value}
+                            formattedData={formattedData}
                             onClose={handleCloseDrawer}
                             onSubmit={handleAddOrSaveRow}
                             formData={formData}

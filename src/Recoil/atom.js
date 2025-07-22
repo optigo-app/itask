@@ -15,6 +15,11 @@ export const viewMode = atom({
   default: "me"
 })
 
+export const actualTaskData = atom({
+  key: 'actualTaskData',
+  default: []
+})
+
 export const TaskData = atom({
   key: 'TaskData',
   default: []

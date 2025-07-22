@@ -10,41 +10,53 @@
         padding: 10px;
     }
 
-    .pmsSideBarTgBox {
+    .pmsFilterBox {
         display: flex;
-        justify-content: end;
+        justify-content: space-between;
         align-items: center;
-        position: relative;
-        padding: 5px;
-        gap: 10px;
 
-        .toggle-group {
-            background-color: #f5f5f5;
-            border-radius: 8px;
-            padding: 5px;
-            min-width: 200px;
+        .pmsSideBarTgBox {
             display: flex;
-            gap: 5px;
+            justify-content: end;
+            align-items: center;
+            position: relative;
+            padding: 5px;
+            gap: 10px;
 
-            .toggle-button {
+            .toggle-group {
+                background-color: #f5f5f5;
+                border-radius: 8px;
+                padding: 5px;
+                min-width: 200px;
                 display: flex;
-                gap: 8px;
-                flex: 1;
-                font-size: 14px;
-                font-family: $font-family !important;
-                color: #666;
-                border: none;
-                line-height: .4rem;
-                padding: 4px;
-                text-transform: none;
-                transition: all 0.2s ease-in-out;
+                gap: 5px;
 
-                &.Mui-selected {
-                    background-color: #fff !important;
-                    color: #000 !important;
-                    font-weight: 700;
+                .toggle-button {
+                    display: flex;
+                    gap: 8px;
+                    flex: 1;
+                    font-size: 14px;
+                    font-family: $font-family !important;
+                    color: #666;
+                    border: none;
+                    line-height: .4rem;
+                    padding: 4px;
+                    text-transform: none;
+                    transition: all 0.2s ease-in-out;
+
+                    &.Mui-selected {
+                        background-color: #fff !important;
+                        color: #000 !important;
+                        font-weight: 700;
+                    }
                 }
             }
+        }
+        .pmsDateFilterBox{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
     }
 }

@@ -4,10 +4,11 @@ import CloseIcon from "@mui/icons-material/Close";
 import { commonTextFieldProps } from "../../Utils/globalfun";
 import { Grid2x2, ListTodo } from "lucide-react";
 
-const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, setFormData, selectedRow }) => {
+const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, formattedData, setFormData, selectedRow }) => {
     const [masterType, setMasterType] = useState("single");
     const [text, setText] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
+    const [displayOrderError, setDisplayOrderError] = useState("");
     const [masterName, setMasterName] = useState('');
 
     const master_OPTIONS = [
@@ -20,9 +21,8 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, setFor
     };
 
     const handleChange = (e) => {
-        if(activeTab == "Advanced Master"){
-
-        }else{
+        if (activeTab == "Advanced Master") {
+        } else {
             const { name, value } = e.target;
             setFormData((prev) => ({ ...prev, [name]: value }));
         }
@@ -102,6 +102,26 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, setFor
                             {...commonTextFieldProps}
                             sx={{ marginTop: .5 }}
                         />
+                        <Typography variant="body2">Display Order</Typography>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            placeholder="Enter Display Order..."
+                            name="displayorder"
+                            value={formData.displayorder}
+                            onChange={handleChange}
+                            margin="normal"
+                            {...commonTextFieldProps}
+                            sx={{ marginTop: .5 }}
+                        />
+                        {displayOrderError && (
+                            <Typography
+                                variant="body2"
+                                sx={{ color: "#d32f2f !important", fontSize: "0.75rem", marginTop: "4px" }}
+                            >
+                                {displayOrderError}
+                            </Typography>
+                        )}
                     </>
                 ) :
                     <Box>
@@ -123,7 +143,7 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, setFor
                                     fullWidth
                                     placeholder="Enter Data..."
                                     name="name"
-                                    value={formData.name}   
+                                    value={formData.name}
                                     onChange={handleChange}
                                     margin="normal"
                                     {...commonTextFieldProps}
@@ -196,7 +216,21 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, setFor
                     <Button
                         variant="contained"
                         className="buttonClassname"
-                        onClick={() => onSubmit(selectedRow)}
+                        onClick={() => {
+                            const isDuplicate = formattedData.some(
+                                (item) =>
+                                    item.displayorder == formData.displayorder &&
+                                    (selectedRow ? item.id !== selectedRow.id : true)
+                            );
+
+                            if (isDuplicate) {
+                                setDisplayOrderError("Display order already exists.");
+                                return;
+                            }
+
+                            setDisplayOrderError("");
+                            onSubmit(selectedRow);
+                        }}
                     >
                         {formData.name ? "Save" : "Add"}
                     </Button>

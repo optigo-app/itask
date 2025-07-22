@@ -35,7 +35,7 @@ const Project = () => {
   const navigate = useNavigate();
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(15);
   const masterData = useRecoilValue(masterDataValue);
   const [activeButton, setActiveButton] = useState("table");
   const [project, setProject] = useRecoilState(projectDatasRState);

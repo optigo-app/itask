@@ -2,10 +2,14 @@ import React from 'react';
 import { Box, IconButton, Typography, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import dayjs from 'dayjs';
+import DepartmentAssigneeAutocomplete from '../../Components/ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
+import { PERMISSIONS } from '../../Components/Auth/Role/permissions';
+import useAccess from '../../Components/Auth/Role/useAccess';
 
 const filterOptions = ['Today', 'Tomorrow', 'Week'];
 
-const CalendarFilter = ({ selectedFilter, onFilterChange, currentDate, onNavigate }) => {
+const CalendarFilter = ({ selectedFilter, selectedAssigneeId, onFilterChange, handleAssigneeChange, currentDate, onNavigate, taskAssigneeData }) => {
+  const { hasAccess } = useAccess();
   const handleToggleChange = (event, newFilter) => {
     if (newFilter !== null) {
       onFilterChange(newFilter);
@@ -14,6 +18,21 @@ const CalendarFilter = ({ selectedFilter, onFilterChange, currentDate, onNavigat
 
   return (
     <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2} className="calendar-filter">
+      {hasAccess(PERMISSIONS.CALENDAR_A_DROPDOWN) &&
+        <Box className="meetingAssigneBox" sx={{ minWidth: 280 }}>
+          <DepartmentAssigneeAutocomplete
+            name="assignee"
+            minWidth={200}
+            value={selectedAssigneeId}
+            options={taskAssigneeData}
+            label="Assignees"
+            placeholder="Select assignees"
+            limitTags={2}
+            onChange={handleAssigneeChange}
+            multiple={false}
+          />
+        </Box>
+      }
       <Box display="flex" alignItems="center" gap={1}>
         <IconButton onClick={() => onNavigate('prev')} size="small">
           <ChevronLeft />
