@@ -33,7 +33,7 @@ const PriorityBadge = ({ task, priorityColors, onPriorityChange, fontSize, paddi
                     fontSize: fontSize ?? "13.5px",
                     fontWeight: "500",
                     display: "flex",
-                    justifyContent: "start",
+                    justifyContent: "center",
                     alignItems: "center",
                     textTransform: "capitalize",
                     border: anchorEl ? "1px solid #444050" : "none",
