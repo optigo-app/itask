@@ -65,6 +65,7 @@ const CalendarGridView = () => {
   const [numberOfDaysToSplit, setNumberOfDaysToSplit] = useState(0);
   const [splitParts, setSplitParts] = useState([]);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState(null);
+  const [totalHours, setTotalHours] = useState({ estimate: 0, working: 0 });
   const {
     iswhTLoading,
     taskFinalData,
@@ -109,9 +110,18 @@ const CalendarGridView = () => {
     return [];
   }, [taskFinalData, selectedFilter, currentDate, selectedAssigneeId]);
 
-
   useEffect(() => {
     setTasks(filteredTasks);
+    const total = filteredTasks.reduce(
+      (acc, task) => {
+        acc.estimate += parseFloat(task.estimate_hrs) || 0;
+        acc.working += parseFloat(task.workinghr) || 0;
+        return acc;
+      },
+      { estimate: 0, working: 0 }
+    );
+
+    setTotalHours(total);
   }, [filteredTasks]);
 
   const totalSplitHours = splitParts?.reduce((sum, part) => {
@@ -336,30 +346,30 @@ const CalendarGridView = () => {
 
   const sortedTasks = React.useMemo(() => {
     if (!tasks || tasks.length === 0) return null;
-    
+
     if (!sortConfig.key) return tasks;
-    
+
     return [...tasks].sort((a, b) => {
       const aVal = a[sortConfig.key];
       const bVal = b[sortConfig.key];
-      
+
       if (aVal == null) return 1;
       if (bVal == null) return -1;
-      
+
       if (typeof aVal === 'string') {
         return sortConfig.direction === 'asc'
-        ? aVal.localeCompare(bVal)
-        : bVal.localeCompare(aVal);
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
       }
-      
+
       return sortConfig.direction === 'asc'
-      ? aVal - bVal
-      : bVal - aVal;
+        ? aVal - bVal
+        : bVal - aVal;
     });
-    }, [tasks, sortConfig]);
-    
-    const isValidDecimalInput = (value) => /^(\d{0,2}|\d{0,2}\.\d{0,2}|\.\d{1,2})?$/.test(value);
-    console.log('sortedTasks: ', sortedTasks);
+  }, [tasks, sortConfig]);
+
+  const isValidDecimalInput = (value) => /^(\d{0,2}|\d{0,2}\.\d{0,2}|\.\d{1,2})?$/.test(value);
+  console.log('sortedTasks: ', sortedTasks);
 
   return (
     <Box className="cal-Container">
@@ -368,6 +378,7 @@ const CalendarGridView = () => {
       ) :
         <>
           <CalendarFilter
+            totalHours={totalHours}
             selectedFilter={selectedFilter}
             selectedAssigneeId={selectedAssigneeId}
             onFilterChange={handleFilterChange}

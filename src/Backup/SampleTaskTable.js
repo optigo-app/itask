@@ -1,71 +1,16 @@
-import React from "react";
-import TaskTable from "./TaskTable";
-
-const sampleTasks = [
-  {
-    "1": 41,
-    "2": 291,
-    "3": 9,
-    "4": "2025-07-22T10:46:16.307Z",
-    "5": "Step 2",
-    "6": null,
-    "7": 2,
-    "8": "2025-07-22T00:00:00.000Z",
-    "9": 1,
-    "10": 1,
-    "11": 1,
-    "12": 1,
-    "13": 0,
-    "14": 0,
-    "15": 0,
-    "16": 0,
-    "17": 0,
-    "18": 0,
-    "19": 0,
-    "20": 0,
-    "21": "",
-    "22": "18538",
-    "23": "",
-    "24": 18538,
-    "25": "",
-    "26": 0,
-    "27": 0,
-    "28": null
-  },
-  {
-    "1": 42,
-    "2": 300,
-    "3": 10,
-    "4": "2025-06-10T08:00:00.000Z",
-    "5": "Step 1",
-    "6": null,
-    "7": 3,
-    "8": "2025-06-11T00:00:00.000Z",
-    "9": 2,
-    "10": 1,
-    "11": 1,
-    "12": 1,
-    "13": 0,
-    "14": 10,
-    "15": 0,
-    "16": 0,
-    "17": 0,
-    "18": 1,
-    "19": 1,
-    "20": 0,
-    "21": "T001",
-    "22": "18539",
-    "23": "Initial setup",
-    "24": 18539,
-    "25": "",
-    "26": 2,
-    "27": 1,
-    "28": "2025-06-12T00:00:00.000Z"
-  }
-];
+import React, { useState } from 'react'
+import PendingAcceptanceDrawer from '../Components/ShortcutsComponent/Notification/PendingAcceptanceDrawer'
+import { Button } from '@mui/material';
 
 const SampleTaskTable = () => {
-  return <TaskTable tasks={sampleTasks} />;
-};
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <h1>SampleTaskTable</h1>
+      <Button variant='contained' onClick={() => setOpen(true)}>Open Drawer</Button>
+      <PendingAcceptanceDrawer open={open} onClose={() => setOpen(false)} />
+    </div>
+  )
+}
 
-export default SampleTaskTable;
+export default SampleTaskTable

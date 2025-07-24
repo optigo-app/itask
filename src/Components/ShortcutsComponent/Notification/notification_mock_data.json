@@ -1,0 +1,45 @@
+[
+    {
+      "id": 1,
+      "type": "task",
+      "title": "Update the company blog",
+      "description": "Add Q3 SEO report to the blog",
+      "createdAt": "2025-07-24T10:00:00Z",
+      "priority": "High",
+      "status": "pending",
+      "assignedBy": {
+        "id": "u101",
+        "name": "John Doe",
+        "avatar": "https://i.pravatar.cc/150?img=1"
+      },
+      "meta": {
+        "department": "Marketing",
+        "dueDate": "2025-07-28"
+      }
+    },
+    {
+      "id": 2,
+      "type": "meeting",
+      "title": "Sprint Planning",
+      "description": "Plan sprint for next 2 weeks",
+      "createdAt": "2025-07-23T14:30:00Z",
+      "status": "pending",
+      "scheduledAt": "2025-07-25T09:00:00Z",
+      "location": "Zoom",
+      "host": {
+        "id": "u102",
+        "name": "Jane Smith",
+        "avatar": "https://i.pravatar.cc/150?img=2"
+      },
+      "participants": [
+        {
+          "id": "u103",
+          "name": "Alice"
+        },
+        {
+          "id": "u104",
+          "name": "Bob"
+        }
+      ]
+    }
+  ]
