@@ -342,7 +342,7 @@ export const fetchMasterGlFunc = async () => {
                 if (mode) {
                     const apiResponse = await fetchIndidualApiMaster({ mode });
                     let filteredData = apiResponse?.rd?.filter(row => row?.isdelete != 1) || [];
-                    filteredData.sort((a, b) => a?.labelname.localeCompare(b?.labelname));
+                    // filteredData.sort((a, b) => a?.labelname.localeCompare(b?.labelname));
                     structuredData.push({
                         ...item,
                         rowdata: filteredData || []
