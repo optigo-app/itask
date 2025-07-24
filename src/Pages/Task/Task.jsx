@@ -25,7 +25,7 @@ const Task = () => {
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const location = useLocation();
   const userProfile = JSON.parse(localStorage.getItem("UserProfileData"));
-  const [order, setOrder] = useState("desc");
+  const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("entrydate");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(15);
@@ -216,6 +216,17 @@ const Task = () => {
     return 0;
   }
 
+  function recursiveSort(tasks = [], comparator) {
+    return [...tasks]
+      .sort(comparator)
+      .map(task => ({
+        ...task,
+        subtasks: task.subtasks
+          ? recursiveSort(task.subtasks, comparator)
+          : []
+      }));
+  }
+
   function getComparator(order, orderBy) {
     return order === "asc"
       ? (a, b) => -descendingComparator(a, b, orderBy)
@@ -229,7 +240,7 @@ const Task = () => {
     setOrderBy(property);
   };
 
-  const sortedData = [...(tasks || [])]?.sort(getComparator(order, orderBy));
+  const sortedData = recursiveSort(tasks, getComparator(order, orderBy));
 
   // all level of filtering
   const filteredData = sortedData
