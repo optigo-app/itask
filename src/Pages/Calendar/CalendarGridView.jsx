@@ -349,20 +349,21 @@ const CalendarGridView = () => {
       if (typeof aVal === 'string') {
         return sortConfig.direction === 'asc'
         ? aVal.localeCompare(bVal)
-          : bVal.localeCompare(aVal);
+        : bVal.localeCompare(aVal);
       }
-
+      
       return sortConfig.direction === 'asc'
-        ? aVal - bVal
-        : bVal - aVal;
-      });
+      ? aVal - bVal
+      : bVal - aVal;
+    });
     }, [tasks, sortConfig]);
     
-  const isValidDecimalInput = (value) => /^(\d{0,2}|\d{0,2}\.\d{0,2}|\.\d{1,2})?$/.test(value);
+    const isValidDecimalInput = (value) => /^(\d{0,2}|\d{0,2}\.\d{0,2}|\.\d{1,2})?$/.test(value);
+    console.log('sortedTasks: ', sortedTasks);
 
   return (
     <Box className="cal-Container">
-      {(iswhTLoading == null || iswhTLoading == true || sortedTasks == null) ? (
+      {(iswhTLoading == null || iswhTLoading == true) ? (
         <LoadingBackdrop isLoading={true} />
       ) :
         <>
