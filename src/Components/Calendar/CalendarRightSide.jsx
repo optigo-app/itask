@@ -8,9 +8,6 @@ import interactionPlugin from '@fullcalendar/interaction';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData, rootSubrootflag } from '../../Recoil/atom';
-import CalendarForm from './SideBar/CalendarForm';
-import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
-import MeetingDetail from '../Meeting/MeetingDetails';
 import { v4 as uuidv4 } from 'uuid';
 import { Box, Button, Menu, TextField } from '@mui/material';
 import { AddMeetingApi } from '../../Api/MeetingApi/AddMeetingApi';
@@ -250,8 +247,8 @@ const Calendar = ({
         initialView: 'timeGridWeek',
         slotMinTime: "07:00:00",
         slotMaxTime: "22:00:00",
-        slotDuration: "00:30:00",
-        slotLabelInterval: "00:30:00",
+        slotDuration: "00:15:00",
+        slotLabelInterval: "00:15:00",
         headerToolbar: {
             start: 'sidebarToggle, prev, next, title',
             center: '',

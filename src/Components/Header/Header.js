@@ -85,7 +85,7 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
                 </Box>
             </Box>
 
-            {menuItems.map((item, index) => (
+            {menuItems?.map((item, index) => (
                 <MenuItem key={index} sx={{ margin: "10px 10px !important", borderRadius: "8px !important", "&:hover": { backgroundColor: "#f0f0f0 !important", borderRadius: "8px !important" } }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         {item.icon}
@@ -192,7 +192,7 @@ const NotificationMenu = ({ anchorEl, open, onClose, notifications }) => {
                 </div>
             </Box>
 
-            {notifications.map((notification) => (
+            {notifications?.map((notification) => (
                 <MenuItem key={notification.id} sx={{ display: "block", margin: "0", padding: "0" }}>
                     <NotificationCard notification={notification} />
                 </MenuItem>
@@ -380,7 +380,7 @@ const useToggleNavigation = (location, decodedData) => {
 const ToggleGroup = ({ options, selectedValue, onRedirection, className }) => (
     <Box className={className}>
         <ToggleButtonGroup value={selectedValue} exclusive className="toggle-group" size="small">
-            {options.map((option) => (
+            {options?.map((option) => (
                 <ToggleButton key={option.value} value={option.value} className="toggle-button" onClick={() => onRedirection(option.value)}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
                         {option.icon && <option.icon size={18} />}
