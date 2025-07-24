@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { Card, CardHeader, CardContent, TextField, List, ListItem, Typography } from "@mui/material";
-import "./ProjectModuleList.scss"; // SCSS file for styling
+import "./ProjectModuleList.scss"; 
 import { commonTextFieldProps } from "../../Utils/globalfun";
 
 const ProjectModuleList = ({ selectedModule, handleModuleClick }) => {
-    // Sample Data - Realistic Project Modules
     const allModules = [
         "OptigoApps",
         "Simplification",
