@@ -46,7 +46,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "estimate_hrs": (formValues?.estimate_hrs != "" ? formValues?.estimate_hrs : 0) ?? 0,
                 "estimate1_hrs": (formValues?.estimate1_hrs != "" ? formValues?.estimate1_hrs : 0) ?? 0,
                 "estimate2_hrs": (formValues?.estimate2_hrs != "" ? formValues?.estimate2_hrs : 0) ?? 0,
-                "workinghr": formValues?.finalEstimate ?? 0,
+                "workinghr": formValues?.workinghr ?? 0,
                 "DeadLineDate": formValues?.DeadLineDate ?? '',
                 "priorityid": formValues?.priorityid ?? 0,
                 "statusid": formValues?.statusid ?? 0,

@@ -244,7 +244,12 @@ const AppWrapper = () => {
                 <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
                     <Routes>
                         <Route path="/error401" element={<Error401Page />} />
-                        <Route path="/login" element={<LoginPage />} />
+                        <Route
+                            path="/login"
+                            element={
+                                cookieData ? <Navigate to="/" replace /> : <LoginPage />
+                            }
+                        />
                         <Route
                             path="*"
                             element={

@@ -41,6 +41,30 @@
     font-size: 15px !important;
 }
 
+.pendingAcceptanceBtn {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #f0f0f0;
+    }
+
+    .pendingIcon {
+        color: #5e5f62;
+    }
+
+    .pendingText {
+        color: $primary-main;
+        text-decoration: underline;
+        font-weight: 600;
+        font-size: 14px;
+    }
+}
+
 .taskHeaderTDBox {
     display: flex;
     justify-content: end;

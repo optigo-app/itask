@@ -61,7 +61,7 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
                     const parts = trimmedUrl.split('/');
                     const filename = parts[parts.length - 1] || '';
                     const extension = filename.split('.').pop()?.toLowerCase();
-                    const filetype = extension?.match(/jpg|jpeg|png|gif/i) ? 'image' : 'other';
+                    const filetype = extension?.match(/jpg|jpeg|png|gif|svg/i) ? 'image' : 'other';
 
                     return {
                         url: trimmedUrl,
@@ -82,9 +82,6 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
         setReffData(transformedData);
     }, [Loading, refferenceData]);
 
-
-
-
     const uniqueFolders = useMemo(() => {
         const seen = new Set();
         return reffData?.filter(item => {
@@ -99,8 +96,6 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
             setSelectedFolder(uniqueFolders[0]?.foldername);
         }
     }, [uniqueFolders]);
-
-
 
     const handleRowExpand = (index) => {
         setExpanded(expanded === index ? null : index);

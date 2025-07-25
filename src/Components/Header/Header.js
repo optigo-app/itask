@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Typography, Avatar, Menu, MenuItem, Divider, Button, Chip, Tooltip, IconButton, Badge, ToggleButtonGroup, ToggleButton } from "@mui/material";
-import { Bell, MailOpen, User, LogOut, House, FileCheck } from "lucide-react";
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import { Bell, MailOpen, User, LogOut, House, FileCheck, FileClock } from "lucide-react";
 import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
 import "./header.scss";
 import NotificationCard from "../Notification/NotificationCard";
 import { taskLength, webReload } from "../../Recoil/atom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
+import PendingAcceptanceDrawer from "../ShortcutsComponent/Notification/PendingAcceptanceDrawer";
 
 // Profile Hook
 const useProfileData = () => {
@@ -396,7 +398,7 @@ const ToggleGroup = ({ options, selectedValue, onRedirection, className }) => (
 const Header = ({ avatarSrc = "" }) => {
     const location = useLocation();
     const taskDataLength = useRecoilValue(taskLength);
-
+    const [pendingAcceptanceOpen, setPendingAcceptanceOpen] = useState(false);
     // Custom hooks
     const { decodedData } = useUrlData(location);
     const { profileData, handleReload, handleLogout } = useProfileData();
@@ -415,6 +417,10 @@ const Header = ({ avatarSrc = "" }) => {
 
     const { title, subtitle } = dataMap[matchedKey];
     const avatarBackgroundColor = avatarSrc ? "transparent" : getRandomAvatarColor(`${profileData?.firstname} ${profileData?.lastname}`);
+
+    const handlePendingAcceptance = () => {
+        setPendingAcceptanceOpen(true);
+    };
 
     return (
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px" }} className="headerContainer">
@@ -449,6 +455,11 @@ const Header = ({ avatarSrc = "" }) => {
                     <ToggleGroup options={toggleCalOptions} selectedValue={selectedCalTab} onRedirection={handleRedirection} className="taskHeaderTDBox" />
                 )}
 
+                {/* pending acceptance */}
+                <Box className="pendingAcceptanceBtn" onClick={handlePendingAcceptance}>
+                    <Typography className="pendingText">Pending Acceptance</Typography>
+                </Box>
+
                 {/* Notification Bell */}
                 <Box sx={{ marginRight: "10px", cursor: "pointer" }} onClick={handleBellClick}>
                     {notifications?.length > 0 ? (
@@ -459,6 +470,7 @@ const Header = ({ avatarSrc = "" }) => {
                         <Bell className="iconbtn" size={24} style={{ color: "#7d7f85" }} />
                     )}
                 </Box>
+
 
                 {/* Profile Avatar */}
                 <Avatar
@@ -475,6 +487,7 @@ const Header = ({ avatarSrc = "" }) => {
             {/* Menus */}
             <NotificationMenu anchorEl={notificationAnchorEl} open={notificationOpen} onClose={handleCloseNotificationMenu} notifications={notifications} />
             <ProfileMenu anchorEl={profileAnchorEl} open={profileOpen} onClose={handleCloseProfileMenu} profileData={profileData} avatarSrc={avatarSrc} onReload={handleReload} onLogout={handleLogout} />
+            <PendingAcceptanceDrawer open={pendingAcceptanceOpen} onClose={() => setPendingAcceptanceOpen(false)} />
         </Box>
     );
 };

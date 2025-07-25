@@ -49,7 +49,7 @@ const tableHeaders = [
   { label: "Status", key: "status", width: "8%" },
   { label: "Priority", key: "priority", width: "8%" },
   { label: "Estimate", key: "estimate_hrs", width: "8%" },
-  { label: "Working Hour", key: "finalEstimate", width: "12%" },
+  { label: "Working Hour", key: "workinghr", width: "12%" },
   { label: "Start Date", key: "StartDate", width: "14%" },
   { label: "End Date", key: "DeadLineDate", width: "14%" },
 ];
@@ -112,7 +112,11 @@ const CalendarGridView = () => {
 
   useEffect(() => {
     setTasks(filteredTasks);
-    const total = filteredTasks.reduce(
+    handleTotalHourCalculate(filteredTasks);
+  }, [filteredTasks]);
+
+  const handleTotalHourCalculate = (tasks) => {
+    const total = tasks?.reduce(
       (acc, task) => {
         acc.estimate += parseFloat(task.estimate_hrs) || 0;
         acc.working += parseFloat(task.workinghr) || 0;
@@ -122,7 +126,7 @@ const CalendarGridView = () => {
     );
 
     setTotalHours(total);
-  }, [filteredTasks]);
+  }
 
   const totalSplitHours = splitParts?.reduce((sum, part) => {
     let value = part.hours;
@@ -225,7 +229,7 @@ const CalendarGridView = () => {
           ...selectedTaskToSplit,
           taskname: `${selectedTaskToSplit.taskname} (Part ${index + 1})`,
           estimate_hrs: part.hours,
-          finalEstimate: part.hours,
+          workinghr: part.hours,
           StartDate: formattedStartDate,
           DeadLineDate: formattedEndDate,
         };
@@ -259,7 +263,7 @@ const CalendarGridView = () => {
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
         task.taskid === taskId
-          ? { ...task, finalEstimate: newEstimate }
+          ? { ...task, workinghr: newEstimate }
           : task
       )
     );
@@ -272,13 +276,16 @@ const CalendarGridView = () => {
       if (!task) return;
       const updatedTask = {
         ...task,
-        finalEstimate: task.finalEstimate ?? task.workinghr,
+        workinghr: task.workinghr,
       };
+      console.log('updatedTask: ', updatedTask);
       try {
         const rootSubrootflagval = { Task: 'root' };
         const apiRes = await AddTaskDataApi(updatedTask, rootSubrootflagval);
         if (apiRes) {
           toast.success('Task working hrs added successfully!');
+          handleTotalHourCalculate(tasks);
+          console.log('tasks: ', tasks);
         }
         const currentInput = estimateTextFieldRefs.current[taskId];
         if (currentInput) currentInput.blur();
@@ -431,7 +438,7 @@ const CalendarGridView = () => {
                             type="text"
                             placeholder="Enter Working hrs"
                             sx={{ width: '100px' }}
-                            value={task.finalEstimate ?? task?.workinghr}
+                            value={task?.workinghr}
                             onChange={(e) => {
                               const value = e.target.value;
                               if (isValidDecimalInput(value)) {

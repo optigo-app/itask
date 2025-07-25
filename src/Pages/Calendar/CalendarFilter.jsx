@@ -19,22 +19,22 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, onFilt
   return (
     <Box className="calendar-filter">
       <Box className="summaryCard">
-        <Typography variant="subtitle2" className='label'>
-          Total Estimate:
-        </Typography>
-        <Typography variant="subtitle1" className='value'>
-          {totalHours.estimate} hrs
-        </Typography>
-
-        <Typography variant="subtitle2" className='label' sx={{ ml: 4 }}>
-          Total Working Hrs:
-        </Typography>
-        <Typography variant="subtitle1" className='value'>
-          {totalHours.working} hrs
-        </Typography>
-      </Box>
-
-      <Box className="filter-box">
+        <Box className="summaryBox">
+          <Typography variant="subtitle2" className='label'>
+            Total Estimate:
+          </Typography>
+          <Typography variant="subtitle1" className='value'>
+            {totalHours.estimate} hrs
+          </Typography>
+        </Box>
+        <Box className="summaryBox">
+          <Typography variant="subtitle2" className='label' sx={{ ml: 4 }}>
+            Total Working Hrs:
+          </Typography>
+          <Typography variant="subtitle1" className='value'>
+            {totalHours.working} hrs
+          </Typography>
+        </Box>
         {hasAccess(PERMISSIONS.CALENDAR_A_DROPDOWN) &&
           <Box className="meetingAssigneBox" sx={{ minWidth: 280 }}>
             <DepartmentAssigneeAutocomplete
@@ -42,7 +42,7 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, onFilt
               minWidth={200}
               value={selectedAssigneeId}
               options={taskAssigneeData}
-              label="Assignees"
+              // label="Assignees"
               placeholder="Select assignees"
               limitTags={2}
               onChange={handleAssigneeChange}
@@ -50,6 +50,8 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, onFilt
             />
           </Box>
         }
+      </Box>
+      <Box className="filter-box">
         <Box display="flex" alignItems="center" gap={1}>
           <IconButton onClick={() => onNavigate('prev')} size="small">
             <ChevronLeft />
