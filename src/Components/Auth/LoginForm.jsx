@@ -1,179 +1,178 @@
 import React, { useState } from "react";
-import { Box, TextField, Button, Typography, Paper, useMediaQuery, InputAdornment, IconButton } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+    TextField,
+    Button,
+    Typography,
+    Paper,
+    useMediaQuery,
+    InputAdornment,
+    IconButton
+} from "@mui/material";
 import loginImage from "../../Assests/loginImage.webp";
 import { commonTextFieldProps } from "../../Utils/globalfun";
 import { useNavigate } from "react-router-dom";
+import Cookies from 'js-cookie';
+import { fetchLoginApi } from "../../Api/AuthApi/loginApi";
+import { z } from "zod";
+import "./LoginPage.scss";
+import { Eye, EyeOff } from "lucide-react";
+
+const loginSchema = z.object({
+    prCode: z.string().min(1, "Project Code is required"),
+    userId: z.string().min(1, "User ID is required"),
+    password: z.string().min(1, "Password is required"),
+});
 
 const LoginPage = () => {
-    const navigate = useNavigate();
     const isMobile = useMediaQuery("(max-width:600px)");
     const [showPassword, setShowPassword] = useState(false);
-    const [credentials, setCredentials] = useState({ username: "itask", password: "itask" });
+    const [credentials, setCredentials] = useState({ prCode: "", userId: "", password: "" });
+    const [errors, setErrors] = useState({});
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setCredentials({ ...credentials, [name]: value });
+        setErrors(prev => ({ ...prev, [name]: "" }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        navigate('/')
-        localStorage?.setItem('isLoggedIn', 'true');
+
+        const result = loginSchema.safeParse(credentials);
+
+        if (!result.success) {
+            const newErrors = {};
+            result.error.errors.forEach((err) => {
+                newErrors[err.path[0]] = err.message;
+            });
+            setErrors(newErrors);
+            return;
+        }
+
+        try {
+            const data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpdGFzayIsImF1ZCI6ImFtVnVhWE5BWldjdVkyOXQiLCJleHAiOjE3NDc2MzMwODcsInVpZCI6ImFtVnVhWE5BWldjdVkyOXQiLCJ5YyI6ImUzdHVlbVZ1ZlgxN2V6SXdmWDE3ZTI5eVlXbHNNalY5Zlh0N2IzSmhhV3d5TlgxOSIsInN2IjoiMCJ9.KKB72Gvy1l7-MOX4Nt9VwxpkCRHUDWi_KW73K3LlUyc";
+            // const loginData = await fetchLoginApi(credentials);
+
+            // if (loginData?.length > 0) {
+                localStorage.setItem("isLoggedIn", "true");
+                Cookies.set("skey", data, { path: "/", expires: 15 });
+                window.location.href = "/";
+            // } else {
+            //     alert("Invalid credentials");
+            // }
+        } catch (err) {
+            console.error("Login error:", err);
+            alert("Login failed. Please try again.");
+        }
     };
 
     return (
-        <Box
-            sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100vh",
-                px: { xs: 1, sm: 2, md: 2 },
-            }}
-        >
-            <Box sx={{
-                width: { xs: "100%", sm: "600px", md: "900px", lg: "1000px" },
-                borderRadius: "20px",
-                background: "#EDE7F6",
-                p: { xs: 0, sm: 2, md: 8 },
-                position: "relative",
-            }}>
-                <Box
-                    sx={{
-                        position: "absolute",
-                        top: "35px",
-                        left: "35px",
-                        width: "80px",
-                        height: "80px",
-                        backgroundColor: "#7367f0",
-                        borderRadius: "50%",
-                    }}
-                />
-                <Paper
-                    sx={{
-                        display: "flex",
-                        flexDirection: { xs: "column", sm: "row" },
-                        width: "100%",
-                        minHeight: "600px",
-                        boxShadow: "rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px",
-                        borderRadius: "20px",
-                        overflow: "hidden",
-                        position: "relative",
-                        zIndex: 1,
-                    }}
-                >
-                    {/* Left Side: Login Form */}
-                    <Box
-                        sx={{
-                            flex: 1,
-                            background: "#fff",
-                            padding: { xs: "30px", sm: "40px" },
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "start",
-                            alignItems: "center",
-                        }}
-                    >
-                        <Typography variant="h5" fontWeight="bold">
-                            LOGIN
-                        </Typography>
-                        <Typography variant="body2" color="gray" mb={2}>
-                            How to get started task
-                        </Typography>
-                        <Box className="form-group" width="100%" maxWidth={350}>
-                            <Typography variant="subtitle1">Project Code</Typography>
-                            <TextField
-                                fullWidth
-                                placeholder="Enter project code"
-                                value={credentials.username}
-                                {...commonTextFieldProps}
-                                onChange={handleChange}
-                                sx={{ mb: 2 }}
-                            />
-                        </Box>
-                        <Box className="form-group" width="100%" maxWidth={350}>
-                            <Typography variant="subtitle1">User Id</Typography>
-                            <TextField
-                                fullWidth
-                                placeholder="Enter username"
-                                value={credentials.username}
-                                {...commonTextFieldProps}
-                                onChange={handleChange}
-                                sx={{ mb: 2 }}
-                            />
-                        </Box>
-                        <Box className="form-group" width="100%" maxWidth={350}>
-                            <Typography variant="subtitle1">Password</Typography>
-                            <TextField
-                                fullWidth
-                                placeholder="Enter password"
-                                value={credentials.password}
-                                type={showPassword ? "text" : "password"}
-                                {...commonTextFieldProps}
-                                onChange={handleChange}
-                                sx={{ mb: 2 }}
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton sx={{ color: '#8080808f' }} onClick={() => setShowPassword(!showPassword)}>
-                                                {showPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    )
-                                }}
-                            />
-                        </Box>
-                        <Box sx={{ mt: 2 }}>
-                            <Button variant="contained" className="buttonClassname" onClick={handleSubmit}>
-                                Login Now
-                            </Button>
-                        </Box>
-                    </Box>
+        <div className="login-container">
+            <div className="login-wrapper">
+                <div className="decorative-circle decorative-circle--top-left"></div>
 
-                    {/* Right Side: Image Section (Hidden on Mobile) */}
+                <Paper className="login-paper">
+                    {/* Left Side: Login Form */}
+                    <div className="login-form-section">
+                        <div className="login-form-content">
+                            <Typography variant="h5" className="login-title">LOGIN</Typography>
+                            <Typography variant="body2" className="login-subtitle">
+                                How to get started task
+                            </Typography>
+
+                            {/* Project Code */}
+                            <div className="form-group">
+                                <Typography variant="subtitle1" className="field-label">
+                                    Project Code
+                                </Typography>
+                                <TextField
+                                    name="prCode"
+                                    fullWidth
+                                    placeholder="Enter project code"
+                                    value={credentials.prCode}
+                                    onChange={handleChange}
+                                    error={!!errors.prCode}
+                                    helperText={errors.prCode}
+                                    {...commonTextFieldProps}
+                                />
+                            </div>
+
+                            {/* User ID */}
+                            <div className="form-group">
+                                <Typography variant="subtitle1" className="field-label">
+                                    User Id
+                                </Typography>
+                                <TextField
+                                    name="userId"
+                                    fullWidth
+                                    placeholder="Enter username"
+                                    value={credentials.userId}
+                                    onChange={handleChange}
+                                    error={!!errors.userId}
+                                    helperText={errors.userId}
+                                    {...commonTextFieldProps}
+                                />
+                            </div>
+
+                            {/* Password */}
+                            <div className="form-group">
+                                <Typography variant="subtitle1" className="field-label">
+                                    Password
+                                </Typography>
+                                <TextField
+                                    name="password"
+                                    fullWidth
+                                    placeholder="Enter password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={credentials.password}
+                                    onChange={handleChange}
+                                    error={!!errors.password}
+                                    helperText={errors.password}
+                                    {...commonTextFieldProps}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="password-toggle"
+                                                >
+                                                    {showPassword ? <EyeOff width={20} height={20} /> : <Eye width={20} height={20} />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    }}
+                                />
+                            </div>
+
+                            <div className="login-button-container">
+                                <Button
+                                    variant="contained"
+                                    className="buttonClassname login-button"
+                                    onClick={handleSubmit}
+                                >
+                                    Login Now
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Side: Image */}
                     {!isMobile && (
-                        <Box
-                            sx={{
-                                flex: 1,
-                                background: "linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%)",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    width: "80%",
-                                    height: "80%",
-                                    borderRadius: "20px",
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                }}
-                            >
+                        <div className="login-image-section">
+                            <div className="image-container">
                                 <img
                                     src={loginImage}
                                     alt="Login Visual"
-                                    style={{ width: "100%", borderRadius: "15px" }}
+                                    className="login-image"
                                 />
-                            </Box>
-                        </Box>
+                            </div>
+                        </div>
                     )}
                 </Paper>
-                <Box
-                    sx={{
-                        position: "absolute",
-                        bottom: "35px",
-                        right: "35px",
-                        width: "80px",
-                        height: "80px",
-                        backgroundColor: "#ffffff",
-                        borderRadius: "50%",
-                    }}
-                />
-            </Box>
-        </Box>
+
+                <div className="decorative-circle decorative-circle--bottom-right"></div>
+            </div>
+        </div>
     );
 };
 

@@ -1,0 +1,190 @@
+@import "../../theme/variable.scss";
+
+$background-light: #ececec99;
+$white: #ffffff;
+$gray: gray;
+$text-muted: #8080808f;
+
+// Mixins
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin circle($size: 80px, $color: $primary-main) {
+    width: $size;
+    height: $size;
+    background-color: $color;
+    border-radius: 50%;
+}
+
+// Main container
+.login-container {
+    @include flex-center;
+    height: 100vh;
+    padding: 0 8px;
+
+    @media (min-width: 600px) {
+        padding: 0 16px;
+    }
+
+    @media (min-width: 900px) {
+        padding: 0 16px;
+    }
+}
+
+// Login wrapper
+.login-wrapper {
+    width: 100%;
+    max-width: 600px;
+    border-radius: 20px;
+    background: $background-light;
+    padding: 0;
+    position: relative;
+
+    @media (min-width: 600px) {
+        max-width: 600px;
+        padding: 16px;
+    }
+
+    @media (min-width: 900px) {
+        max-width: 900px;
+        padding: 64px;
+    }
+
+    @media (min-width: 1200px) {
+        max-width: 1000px;
+    }
+}
+
+// Decorative circles
+.decorative-circle {
+    position: absolute;
+    @include circle();
+    z-index: 0;
+
+    &--top-left {
+        top: 35px;
+        left: 35px;
+        background: $button-Bgcolor;
+    }
+
+    &--bottom-right {
+        bottom: 35px;
+        right: 35px;
+        background-color: $white;
+    }
+}
+
+// Main paper container
+.login-paper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 600px;
+    border-radius: 20px !important;
+    box-shadow: none !important;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+
+    @media (min-width: 600px) {
+        flex-direction: row;
+    }
+}
+
+// Login form section
+.login-form-section {
+    flex: 1;
+    background: $white;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+
+    @media (min-width: 600px) {
+        padding: 40px;
+    }
+}
+
+.login-form-content {
+    width: 100%;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+// Typography styles
+.login-title {
+    font-weight: bold !important;
+    margin-bottom: 8px;
+}
+
+.login-subtitle {
+    color: $gray;
+    margin-bottom: 26px !important;
+}
+
+// Form styles
+.form-group {
+    width: 100%;
+    margin-bottom: 10px;
+
+    .field-label {
+        margin-bottom: 4px;
+        display: block;
+    }
+}
+
+// Password toggle button
+.password-toggle {
+    color: $text-muted;
+}
+
+// Login button
+.login-button-container {
+    margin-top: 16px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+// Image section
+.login-image-section {
+    flex: 1;
+    background: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, $primary-main 100%);
+    @include flex-center;
+
+    .image-container {
+        width: 80%;
+        height: 80%;
+        border-radius: 20px;
+        @include flex-center;
+
+        .login-image {
+            width: 100%;
+            border-radius: 15px;
+        }
+    }
+}
+
+// tab specific adjustments
+@media (max-width: 768px) {
+    .login-wrapper {
+        max-width: 700px;
+    }
+}
+
+// Mobile specific adjustments
+@media (max-width: 599px) {
+    .login-image-section {
+        display: none;
+    }
+
+    .login-form-section {
+        justify-content: center;
+    }
+}

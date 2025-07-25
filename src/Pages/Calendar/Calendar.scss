@@ -682,41 +682,64 @@
         margin-bottom: 1rem;
         display: flex;
         justify-content: space-between;
-        align-items: end;
+        align-items: center;
 
-        .filter-box{
+        .filter-box {
             display: flex;
-            align-items: end;
+            align-items: center;
             gap: 1rem;
         }
+
+        .form-group {
+            margin-bottom: 0px !important;
+        }
+
         .summaryCard {
             display: flex;
             align-items: center;
             gap: 16px;
-            padding: 10px 20px;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-            min-width: 300px;
             flex-wrap: wrap;
-          
-            .label {
-              color: #6b7280;
-              font-size: 14px;
-              font-weight: 500;
+
+            .summaryBox {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                padding: 6px 10px;
+                background-color: #f9fafb;
+                border-radius: 6px;
+                border: 1px solid #e5e7eb;
+                line-height: 1;
+
+                .label {
+                    color: #6b7280;
+                    font-size: 13px;
+                    font-weight: 500;
+                    white-space: nowrap;
+                    margin-left: 0px;
+                }
+
+                .value {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: $titleColor;
+                    white-space: nowrap;
+                }
             }
-          
-            .value {
-              font-size: 16px;
-              font-weight: 600;
-              color: $titleColor;
+
+        }
+
+        .meetingAssigneBox {
+            input {
+                height: 25px;
             }
-          }
-          
+        }
+
         button {
             text-transform: none;
         }
 
     }
-    
+
 }

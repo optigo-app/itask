@@ -15,17 +15,18 @@ import {
   TableRow,
   TableContainer,
   Paper,
+  Chip
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import styles from './PendingAcceptanceDrawer.module.scss';
 import { background, ImageUrl, priorityColors } from '../../../Utils/globalfun';
 import PriorityBadge from '../PriorityBadge';
 import RejectReasonModal from '../../../Utils/Common/RejectReasonModal';
-import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
 
 const initialMockData = [
   {
     id: 1,
+    type: 'task',
     task: 'Use tools like Google Analytics to track content performance',
     assignedTo: {
       customercode: 'jenis1',
@@ -45,7 +46,8 @@ const initialMockData = [
   },
   {
     id: 2,
-    task: 'Audit and update old blog posts, landing pages',
+    type: 'meeting',
+    task: 'Monthly SEO team sync-up meeting',
     assignedTo: {
       customercode: 'john2',
       department: 'SEO',
@@ -64,6 +66,7 @@ const initialMockData = [
   },
   {
     id: 3,
+    type: 'task',
     task: 'Develop an engaging ebook or whitepaper',
     assignedTo: {
       customercode: 'emma3',
@@ -83,7 +86,8 @@ const initialMockData = [
   },
   {
     id: 4,
-    task: 'Identify high-impact keywords for content strategy',
+    type: 'meeting',
+    task: 'Identify high-impact keywords for content strategy - Strategy Meeting',
     assignedTo: {
       customercode: 'david4',
       department: 'Marketing',
@@ -102,6 +106,7 @@ const initialMockData = [
   },
   {
     id: 5,
+    type: 'task',
     task: 'Plan and schedule blog posts, social media',
     assignedTo: {
       customercode: 'sarah5',
@@ -124,13 +129,10 @@ const initialMockData = [
 const PendingAcceptanceDrawer = ({ open, onClose }) => {
   const [tasks, setTasks] = useState(initialMockData);
   const [selected, setSelected] = useState([]);
-  const [openRejectModal, setOpenRejectModal] = useState(false);
-  const [cnfDialogOpen, setCnfDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
-  const [rejectContext, setRejectContext] = useState({
-    ids: [],
-    mode: '',
-  });
+  const [reasonModalOpen, setReasonModalOpen] = useState(false);
+  const [actionType, setActionType] = useState('');
+  const [reasonContext, setReasonContext] = useState({ ids: [], mode: '' });
 
   const toggleSelect = (id) => {
     setSelected((prev) =>
@@ -139,26 +141,29 @@ const PendingAcceptanceDrawer = ({ open, onClose }) => {
   };
 
   const handleAcceptAll = () => {
-    console.log('Accepted tasks:', selected);
-    // implement API logic here
+    if (selected.length === 0) return;
+    setReasonContext({ ids: selected, mode: 'multiple' });
+    setActionType('accept');
+    setReasonModalOpen(true);
   };
 
   const handleRejectAll = () => {
     if (selected.length === 0) return;
-    setRejectContext({ ids: selected, mode: 'multiple' });
-    setOpenRejectModal(true);
+    setReasonContext({ ids: selected, mode: 'multiple' });
+    setActionType('reject');
+    setReasonModalOpen(true);
   };
 
-
   const handleRowAccept = (id) => {
-    console.log(`Accepted task ${id}`);
-    setSelected((prev) => [...prev, id]);
-    setCnfDialogOpen(true);
+    setReasonContext({ ids: [id], mode: 'single' });
+    setActionType('accept');
+    setReasonModalOpen(true);
   };
 
   const handleRowReject = (id) => {
-    setRejectContext({ ids: [id], mode: 'single' });
-    setOpenRejectModal(true);
+    setReasonContext({ ids: [id], mode: 'single' });
+    setActionType('reject');
+    setReasonModalOpen(true);
   };
 
   const handleSelectAllToggle = () => {
@@ -167,40 +172,35 @@ const PendingAcceptanceDrawer = ({ open, onClose }) => {
     );
   };
 
-  const handleCloseRejectModal = () => {
-    setOpenRejectModal(false);
+  const handleCloseReasonModal = () => {
+    setReasonModalOpen(false);
     setRejectReason('');
-    setRejectContext({ ids: [], mode: '' });
+    setReasonContext({ ids: [], mode: '' });
+    setActionType('');
   };
 
-  const handleConfirmReject = () => {
-    const { ids, mode } = rejectContext;
-    console.log(`Rejected ${mode === 'multiple' ? 'tasks' : 'task'}: ${ids.join(', ')} with reason: ${rejectReason}`);
-    setTasks((prev) => prev.filter((task) => !ids.includes(task.id)));
+  const handleReasonConfirm = () => {
+    const { ids, mode } = reasonContext;
+    if (actionType === 'reject') {
+      console.log(`Rejected ${mode} tasks: ${ids.join(', ')} with reason: ${rejectReason}`);
+      setTasks((prev) => prev.filter((task) => !ids.includes(task.id)));
+    } else if (actionType === 'accept') {
+      console.log(`Accepted ${mode} tasks: ${ids.join(', ')} with reason: ${rejectReason}`);
+      setTasks((prev) =>
+        prev.map((task) =>
+          ids.includes(task.id) ? { ...task, accepted: true } : task
+        )
+      );
+    }
     setSelected((prev) => prev.filter((id) => !ids.includes(id)));
-    handleCloseRejectModal();
-  };
-
-  const handleConfirmAccept = () => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        selected.includes(task.id) ? { ...task, accepted: true } : task
-      )
-    );
-    handleCloseDialog();
-    // implement API logic here
-  };
-  console.log('dsjhjds', tasks, selected)
-
-  const handleCloseDialog = () => {
-    setCnfDialogOpen(false);
+    handleCloseReasonModal();
   };
 
   return (
     <Drawer anchor="right" open={open} onClose={onClose}>
       <Box className={styles.PendingAcceptanceDrawer}>
         <Box className={styles.header}>
-          <Typography variant="h6">Pending Tasks Acceptance</Typography>
+          <Typography variant="h6">Pending Tasks & Meetings Acceptance</Typography>
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
@@ -243,7 +243,7 @@ const PendingAcceptanceDrawer = ({ open, onClose }) => {
                 <TableCell>Tasks</TableCell>
                 <TableCell>Assigned</TableCell>
                 <TableCell>Priority</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell width={140}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -261,7 +261,14 @@ const PendingAcceptanceDrawer = ({ open, onClose }) => {
                         <Typography variant="caption" color="text.secondary">
                           {task.categoryPath}
                         </Typography>
-                        <Typography variant="body2">{task.task}</Typography>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Typography variant="body2">{task.task}</Typography>
+                        </Box>
+                        <Chip
+                          label={task.type === 'meeting' ? 'Meeting' : 'Task'}
+                          size="small"
+                          sx={{ fontSize: 10, height: 20, mt: 0.5 }}
+                        />
                       </Box>
                     </Box>
                   </TableCell>
@@ -319,20 +326,16 @@ const PendingAcceptanceDrawer = ({ open, onClose }) => {
           </Table>
         </TableContainer>
       </Box>
-      <ConfirmationDialog
-        open={cnfDialogOpen}
-        onClose={handleCloseDialog}
-        onConfirm={handleConfirmAccept}
-        confirmLabel="Accept"
-        title="Confirm"
-        content="Are you sure you want to Accept this task?"
-      />
+
       <RejectReasonModal
-        open={openRejectModal}
-        onClose={handleCloseRejectModal}
-        onConfirm={handleConfirmReject}
+        open={reasonModalOpen}
+        onClose={handleCloseReasonModal}
+        onConfirm={handleReasonConfirm}
         rejectReason={rejectReason}
         setRejectReason={setRejectReason}
+        title={actionType === 'reject' ? 'Reject Reason' : 'Acceptance Reason'}
+        confirmLabel={actionType === 'reject' ? 'Reject' : 'Accept'}
+        confirmText={actionType === 'reject' ? 'Reject' : 'Accept'}
       />
     </Drawer>
   );

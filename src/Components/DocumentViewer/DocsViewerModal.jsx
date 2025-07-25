@@ -5,6 +5,7 @@ import {
   Modal,
   IconButton,
   Button,
+  ButtonGroup,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -12,12 +13,13 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import ExcelPreview from './ExcelPreview'; // Import the Excel preview component
 import WordPreview from './WordPreview'; // Import the Word preview component
+import { ZoomIn, ZoomOut } from 'lucide-react';
 
 const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
   const { url, filename, extension, fileObject } = fileData || {};
-
+  const [zoom, setZoom] = useState(1);
   const lowerExt = extension?.toLowerCase();
-  const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
+  const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'];
   const videoExts = ['mp4', 'webm', 'ogg'];
   const pdfExts = ['pdf'];
   const excelExts = ['xlsx', 'xls', 'csv']; // Excel and CSV support
@@ -38,6 +40,10 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
     if (!url) return;
     window.open(url, '_blank');
   };
+
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 3));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.25));
+
 
   return (
     <Box>
@@ -65,21 +71,29 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
             <Typography variant="h6" noWrap sx={{
               padding: fullWidth && '0px 10px 0 10px',
             }}>{filename || 'Document Preview'}</Typography>
-            <Box display="flex" alignItems="center">
-              <IconButton onClick={() => setFullWidth(!fullWidth)} title="Toggle Fullscreen">
+            <Box className="docs-toolbar">
+              <IconButton onClick={() => setFullWidth(!fullWidth)} title="Toggle Fullscreen" className="docs-icon secondaryBtnClassname">
                 {fullWidth ? <FullscreenExitIcon /> : <FullscreenIcon />}
               </IconButton>
+
+                <Button onClick={handleZoomIn} title="Zoom In" className='secondaryBtnClassname'>
+                  <ZoomIn size={18} />
+                </Button>
+                <Button onClick={handleZoomOut} title="Zoom Out" className='secondaryBtnClassname'>
+                  <ZoomOut size={18} />
+                </Button>
+
               <Button
                 size="small"
                 variant="outlined"
                 startIcon={<DownloadIcon />}
                 onClick={handleDownload}
-                sx={{ mx: 1 }}
-                className='buttonClassname'
+                className="download-btn buttonClassname"
               >
                 Download
               </Button>
-              <IconButton onClick={closeModal}>
+
+              <IconButton onClick={closeModal} className="docs-close-icon" title="Close">
                 <CloseIcon />
               </IconButton>
             </Box>
@@ -118,9 +132,12 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
                   src={url}
                   alt="Preview"
                   style={{
+                    transform: `scale(${zoom})`,
+                    transformOrigin: 'center',
+                    transition: 'transform 0.2s ease-in-out',
+                    objectFit: 'contain',
                     maxWidth: '100%',
                     maxHeight: '100%',
-                    objectFit: 'contain',
                     display: 'block',
                   }}
                 />

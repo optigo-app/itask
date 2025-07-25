@@ -69,3 +69,43 @@
      color: $text2ndColor;
   }
 }
+
+.docs-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .docs-icon {
+    padding: 2px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #f0f0f0;
+    }
+  }
+  
+  .docs-close-icon{
+    margin-top: -30px;
+    margin-right: -10px;
+  }
+
+  .zoom-group {
+    .MuiButton-root {
+      color: #444050;
+      border-color: #444050;
+      min-width: 40px;
+      padding: 6px 12px;
+
+      &:hover {
+        background-color: #f0f0f0;
+        border-color: #444050;
+      }
+    }
+  }
+
+  .download-btn {
+    .MuiButton-startIcon {
+      margin-right: 6px;
+    }
+  }
+}
