@@ -218,7 +218,6 @@ const SidebarDrawer = ({
         }
     }, [open, formDataValue, rootSubrootflagval]);
 
-    let data = flattenTasks(taskDataValue)
     const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);
 
     const selectedId = useMemo(() => {
@@ -244,60 +243,21 @@ const SidebarDrawer = ({
         location?.pathname
     ]);
 
-    const flattenedTasks = useMemo(() => {
-        if (location?.pathname?.includes("/projects")) {
-            return projectModuleData ? flattenTasks(taskDataValue) : [];
-        }
-        return flattenTasks(taskDataValue);
-    }, [location?.pathname, projectModuleData, taskDataValue]);
-
     useEffect(() => {
         if (!rootSubrootflagval?.Task) return;
-
-        const isProjectPath = location?.pathname?.includes("/projects");
-        const dynamicKey = isProjectPath ? "projectid" : "moduleid";
-        const isRoot = rootSubrootflagval?.Task === "root";
-        const isAddOrSub = rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "subroot";
-
         if (selectedId) {
             setIsTaskNameEmpty(taskName === "");
         }
-
         if (!selectedId || !taskName) {
-            setIsDuplicateTask(false);
             return;
         }
-
-        if (isAddOrSub) {
-            const match = flattenedTasks.find(
-                task =>
-                    task?.[dynamicKey] === selectedId &&
-                    task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
-            );
-            setIsDuplicateTask(!!match);
-        } else if (isRoot) {
-            if (formDataValue?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()) {
-                setIsDuplicateTask(false);
-            } else {
-                const match = data.find(
-                    task =>
-                        task?.[dynamicKey] === selectedId &&
-                        task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
-                );
-                setIsDuplicateTask(!!match);
-            }
-        } else {
-            setIsDuplicateTask(false);
-            setIsTaskNameEmpty(false);
-        }
+        setIsTaskNameEmpty(taskName.trim() === "");
+        setIsDuplicateTask(false);
     }, [
         open,
         taskName,
         selectedId,
-        flattenedTasks,
-        data,
         rootSubrootflagval?.Task,
-        formDataValue?.taskname,
         location?.pathname
     ]);
 
@@ -370,6 +330,7 @@ const SidebarDrawer = ({
             bulkTask: updatedTasks,
         }));
     }
+
 
     const handleSubmit = (module) => {
         if (taskType !== "multi_input") {
