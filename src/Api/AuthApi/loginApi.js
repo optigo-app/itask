@@ -4,7 +4,7 @@ export const fetchLoginApi = async (data) => {
     try {
         const combinedValue = JSON.stringify({
             companycode: data?.companycode ?? '',
-            psw: data?.psw ?? '',
+            psw: data?.password ?? '',
         });
 
         const body = {

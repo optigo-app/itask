@@ -102,6 +102,7 @@ const AppWrapper = () => {
     const [pageDataLoaded, setPageDataLoaded] = useState(false);
     const [isReady, setIsReady] = useState(false);
     const [cookieData, setCookieData] = useState(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const navigate = useNavigate();
     const setRole = useSetRecoilState(userRoleAtom);
 
@@ -143,12 +144,25 @@ const AppWrapper = () => {
 
     const getQueryParams = () => {
         const token = Cookies.get('skey');
+        const isLoggedIn = Cookies.get('isLoggedIn');
         if (!token) {
-            localStorage.clear();
-            sessionStorage.clear();
-            setIsReady(true);
-            setPageDataLoaded(true);
-            return navigate('/login', { replace: true });
+            const authQueryParams = localStorage.getItem("AuthqueryParams");
+            if (authQueryParams && isLoggedIn) {
+                const decodedPayload = JSON.parse(authQueryParams);
+                setCookieData(decodedPayload);
+                setIsReady(true);
+                setPageDataLoaded(true);
+                setIsLoggedIn(true);
+                return decodedPayload;
+            } else {
+                if (!isLoggedIn) {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                }
+                setIsReady(true);
+                setPageDataLoaded(true);
+                return navigate('/login', { replace: true });
+            }
         }
 
         const decoded = jwtDecode(token);
@@ -158,9 +172,10 @@ const AppWrapper = () => {
         };
 
         if (decodedPayload) {
-            setCookieData(decodedPayload);
             localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
+            setCookieData(decodedPayload);
             setIsReady(true);
+            setPageDataLoaded(true);
         }
 
         return decodedPayload;
@@ -247,7 +262,7 @@ const AppWrapper = () => {
                         <Route
                             path="/login"
                             element={
-                                cookieData ? <Navigate to="/" replace /> : <LoginPage />
+                                isLoggedIn ? <Navigate to="/" replace /> : <LoginPage />
                             }
                         />
                         <Route
@@ -285,7 +300,7 @@ const AppWrapper = () => {
 const App = () => (
     <RecoilRoot>
         {/* <Router basename="/itaskweb"> */}
-        <Router>
+            <Router>
             <AppWrapper />
         </Router>
     </RecoilRoot>

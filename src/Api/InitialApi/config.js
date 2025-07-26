@@ -13,7 +13,7 @@ export const getHeaders = (init = {}) => {
     Authorization: `Bearer ${token}`,
     Yearcode: AuthData?.yc ?? "",
     Version: version,
-    sv: AuthData?.sv ?? "",
+    sv: AuthData?.sv ?? "1",
     sp: "6",
   };
 };
