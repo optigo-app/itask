@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
+import Cookies from "js-cookie";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Typography, Avatar, Menu, MenuItem, Divider, Button, Chip, Tooltip, IconButton, Badge, ToggleButtonGroup, ToggleButton } from "@mui/material";
-import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import { Bell, MailOpen, User, LogOut, House, FileCheck, FileClock } from "lucide-react";
 import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
 import "./header.scss";
@@ -34,9 +34,7 @@ const useProfileData = () => {
 };
 
 // Profile Menu Component
-const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload, onLogout }) => {
-    const navigate = useNavigate();
-
+const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload }) => {
     const avatarBackgroundColor = avatarSrc
         ? "transparent"
         : getRandomAvatarColor(`${profileData?.firstname} ${profileData?.lastname}`);
@@ -46,8 +44,11 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
     ];
 
     const handleLogoutClick = () => {
-        onLogout();
-        navigate("/login");
+        localStorage.clear();
+        sessionStorage.clear();
+        Cookies.remove("isLoggedIn");
+        Cookies.remove("skey");
+        window.location.href = "/login";
     };
 
     return (
@@ -102,7 +103,7 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
                 <Button size="small" className="buttonClassname" onClick={onReload} variant="contained" fullWidth sx={{ marginBottom: "10px" }}>
                     Reload
                 </Button>
-                <Button size="small" className="dangerbtnClassname" onClick={handleLogoutClick} variant="contained" fullWidth endIcon={<LogOut size={20} />} disabled>
+                <Button size="small" className="dangerbtnClassname" onClick={handleLogoutClick} variant="contained" fullWidth endIcon={<LogOut size={20} />}>
                     Logout
                 </Button>
             </Box>

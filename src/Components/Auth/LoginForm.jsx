@@ -16,9 +16,10 @@ import { fetchLoginApi } from "../../Api/AuthApi/loginApi";
 import { z } from "zod";
 import "./LoginPage.scss";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "react-toastify";
 
 const loginSchema = z.object({
-    prCode: z.string().min(1, "Project Code is required"),
+    companycode: z.string().min(1, "Project Code is required"),
     userId: z.string().min(1, "User ID is required"),
     password: z.string().min(1, "Password is required"),
 });
@@ -26,7 +27,8 @@ const loginSchema = z.object({
 const LoginPage = () => {
     const isMobile = useMediaQuery("(max-width:600px)");
     const [showPassword, setShowPassword] = useState(false);
-    const [credentials, setCredentials] = useState({ prCode: "", userId: "", password: "" });
+    const [credentials, setCredentials] = useState({ companycode: "", userId: "", password: "" });
+    console.log('credentials: ', credentials);
     const [errors, setErrors] = useState({});
 
     const handleChange = (e) => {
@@ -37,9 +39,7 @@ const LoginPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         const result = loginSchema.safeParse(credentials);
-
         if (!result.success) {
             const newErrors = {};
             result.error.errors.forEach((err) => {
@@ -48,21 +48,27 @@ const LoginPage = () => {
             setErrors(newErrors);
             return;
         }
-
         try {
-            const data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpdGFzayIsImF1ZCI6ImFtVnVhWE5BWldjdVkyOXQiLCJleHAiOjE3NDc2MzMwODcsInVpZCI6ImFtVnVhWE5BWldjdVkyOXQiLCJ5YyI6ImUzdHVlbVZ1ZlgxN2V6SXdmWDE3ZTI5eVlXbHNNalY5Zlh0N2IzSmhhV3d5TlgxOSIsInN2IjoiMCJ9.KKB72Gvy1l7-MOX4Nt9VwxpkCRHUDWi_KW73K3LlUyc";
-            // const loginData = await fetchLoginApi(credentials);
-
-            // if (loginData?.length > 0) {
-                localStorage.setItem("isLoggedIn", "true");
-                Cookies.set("skey", data, { path: "/", expires: 15 });
+            const loginData = await fetchLoginApi(credentials);
+            const formatData = {
+                aud: btoa(loginData?.rd[0]?.userid),
+                exp: Math.floor(Date.now() / 1000) + 10 * 24 * 60 * 60, // current time + 10 days in seconds
+                iss: "itask",
+                sv: loginData?.rd[0]?.svid,
+                uid: loginData?.rd[0]?.userid,
+                yc: loginData?.rd[0]?.yearcode
+            }
+            if (loginData?.rd[0]?.stat == 1) {
+                localStorage.setItem("AuthqueryParams", JSON.stringify(formatData));
+                Cookies.set('isLoggedIn', 'true', { expires: 10 });
                 window.location.href = "/";
-            // } else {
-            //     alert("Invalid credentials");
-            // }
+                toast.success("Login successful");
+            } else {
+                toast.error("Invalid credentials");
+            }
         } catch (err) {
             console.error("Login error:", err);
-            alert("Login failed. Please try again.");
+            toast.error("Login failed. Please try again.");
         }
     };
 
@@ -86,13 +92,13 @@ const LoginPage = () => {
                                     Project Code
                                 </Typography>
                                 <TextField
-                                    name="prCode"
+                                    name="companycode"
                                     fullWidth
                                     placeholder="Enter project code"
-                                    value={credentials.prCode}
+                                    value={credentials.companycode}
                                     onChange={handleChange}
-                                    error={!!errors.prCode}
-                                    helperText={errors.prCode}
+                                    error={!!errors.companycode}
+                                    helperText={errors.companycode}
                                     {...commonTextFieldProps}
                                 />
                             </div>
@@ -126,6 +132,11 @@ const LoginPage = () => {
                                     type={showPassword ? "text" : "password"}
                                     value={credentials.password}
                                     onChange={handleChange}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            handleSubmit(e);
+                                        }
+                                    }}
                                     error={!!errors.password}
                                     helperText={errors.password}
                                     {...commonTextFieldProps}
@@ -134,6 +145,14 @@ const LoginPage = () => {
                                             <InputAdornment position="end">
                                                 <IconButton
                                                     onClick={() => setShowPassword(!showPassword)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter" || e.key === " ") {
+                                                            e.preventDefault();
+                                                            setShowPassword((prev) => !prev);
+                                                        }
+                                                    }}
+                                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                                    tabIndex={0}
                                                     className="password-toggle"
                                                 >
                                                     {showPassword ? <EyeOff width={20} height={20} /> : <Eye width={20} height={20} />}
@@ -142,6 +161,7 @@ const LoginPage = () => {
                                         )
                                     }}
                                 />
+
                             </div>
 
                             <div className="login-button-container">

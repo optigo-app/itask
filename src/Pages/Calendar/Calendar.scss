@@ -706,9 +706,10 @@
                 align-items: center;
                 justify-content: center;
                 gap: 6px;
+                min-width: 150px;
                 padding: 6px 10px;
                 background-color: #f9fafb;
-                border-radius: 6px;
+                border-radius: 8px;
                 border: 1px solid #e5e7eb;
                 line-height: 1;
 
@@ -732,7 +733,7 @@
 
         .meetingAssigneBox {
             input {
-                height: 25px;
+                height: 22px;
             }
         }
 

@@ -39,7 +39,7 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, onFilt
           <Box className="meetingAssigneBox" sx={{ minWidth: 280 }}>
             <DepartmentAssigneeAutocomplete
               name="assignee"
-              minWidth={200}
+              minWidth={250}
               value={selectedAssigneeId}
               options={taskAssigneeData}
               // label="Assignees"
