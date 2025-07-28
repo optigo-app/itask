@@ -14,7 +14,6 @@ const PmFilters = ({
   setSelectedProject,
   selectedFilter,
   currentDate,
-  customRange,
   filterOptions,
   assigneeOptions,
   projectOptions,
@@ -110,7 +109,7 @@ const PmFilters = ({
         {/* <ViewToggleButtons view={viewType} onViewChange={handleViewChange} /> */}
       </Box>
       <Box className="pmsDateFilterBox">
-        <CustomDateRangePicker value={customRange} onChange={handleDateChange} />
+        <CustomDateRangePicker value={selectedFilter?.dateRangeFilter} onChange={handleDateChange} />
         {/* <Box display="flex" alignItems="center" gap={1}>
           <IconButton onClick={() => onNavigate('prev')} size="small">
             <ChevronLeft />
@@ -126,7 +125,7 @@ const PmFilters = ({
         </Box> */}
 
         <ToggleButtonGroup
-          value={selectedFilter}
+          value={selectedFilter?.timeFilter}
           exclusive
           onChange={handleToggleChange}
           size="small"
@@ -145,10 +144,10 @@ const PmFilters = ({
                 textTransform: 'none',
                 fontWeight: 500,
                 borderRadius: '8px',
-                color: selectedFilter === label ? '#fff !important' : '#6D6B77 !important',
-                background: selectedFilter === label ? '#7367f0 !important' : 'transparent !important',
+                color: selectedFilter?.timeFilter === label ? '#fff !important' : '#6D6B77 !important',
+                background: selectedFilter?.timeFilter === label ? '#7367f0 !important' : 'transparent !important',
                 '&:hover': {
-                  background: selectedFilter === label ? '#5e50ee !important' : '#e0e0e0 !important',
+                  background: selectedFilter?.timeFilter === label ? '#5e50ee !important' : '#e0e0e0 !important',
                 },
               }}
             >
