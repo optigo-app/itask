@@ -319,7 +319,6 @@ $divider-color: #e0e0e0;
     }
 }
 
-
 .filterCheckedBox {
     display: flex;
     flex-wrap: wrap;
@@ -329,26 +328,26 @@ $divider-color: #e0e0e0;
     margin-top: -8px;
 
     .filterChip {
-        background-color: #f5f5f5;
+        background: $button-Bgcolor;
         font-size: 12px !important;
-        color: $titleColor;
+        color: #fff !important;
         border-radius: 8px;
 
         .filterKey {
-            color: $placeholderColor;
+            color: #fff !important;
             font-size: 12px !important;
             text-transform: capitalize;
         }
 
         .filterValue {
-            color: $titleColor;
+            color: #fff !important;
             font-size: 12px !important;
             text-transform: capitalize;
         }
 
         .closeIcon {
             font-size: 14px !important;
-            color: $placeholderColor;
+            color: #fff !important;
             cursor: pointer;
 
             &:hover {
@@ -371,7 +370,6 @@ $divider-color: #e0e0e0;
         }
     }
 }
-
 
 .TablePaginationBox {
     width: 100%;

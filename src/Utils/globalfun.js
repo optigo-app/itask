@@ -998,14 +998,14 @@ export const Datetheme = createTheme({
                 containedPrimary: {
                     background: "linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%)", // Button color
                     "&:hover": {
-                        backgroundColor: "#0070e0",
+                        background: "linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%)",
                     },
                     color: "white",
                 },
                 textSecondary: {
                     background: "#ebebed", // Button color
                     "&:hover": {
-                        backgroundColor: "#0070e0",
+                        backgroundColor: "#ebebed",
                     },
                     color: "#7D7f85",
                 }

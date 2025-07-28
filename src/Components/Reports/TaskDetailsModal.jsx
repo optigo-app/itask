@@ -24,7 +24,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 
-import { background, commonTextFieldProps, ImageUrl } from "../../Utils/globalfun";
+import { background, cleanDate, commonTextFieldProps, formatDate2, ImageUrl } from "../../Utils/globalfun";
 
 const TaskDetailsModal = ({ open, onClose, employee }) => {
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -168,6 +168,7 @@ const TaskDetailsModal = ({ open, onClose, employee }) => {
                                     <TableCell width={100} sx={{ fontWeight: 600 }}>Assignee</TableCell>
                                     <TableCell width={100} sx={{ fontWeight: 600 }}>Status</TableCell>
                                     <TableCell width={100} sx={{ fontWeight: 600 }}>Priority</TableCell>
+                                    <TableCell width={100} sx={{ fontWeight: 600 }}>Deadline</TableCell>
                                     <TableCell width={100} sx={{ fontWeight: 600 }}>Category</TableCell>
                                     <TableCell width={80} sx={{ fontWeight: 600 }}>Estimate (hrs)</TableCell>
                                     <TableCell width={80} sx={{ fontWeight: 600 }}>Working (hrs)</TableCell>
@@ -183,6 +184,9 @@ const TaskDetailsModal = ({ open, onClose, employee }) => {
                                             <TableCell>{renderAssignees(task.assignee)}</TableCell>
                                             <TableCell><Typography variant="body2">{task.status}</Typography></TableCell>
                                             <TableCell><Typography variant="body2">{task.priority}</Typography></TableCell>
+                                            <TableCell><Typography variant="body2">{task?.DeadLineDate && cleanDate(task?.DeadLineDate)
+                                                        ? formatDate2(cleanDate(task?.DeadLineDate))
+                                                        : '-'}</Typography></TableCell>
                                             <TableCell><Typography variant="body2">{task.category}</Typography></TableCell>
                                             <TableCell>{task.estimate_hrs}</TableCell>
                                             <TableCell>{task.estimate1_hrsT}</TableCell>

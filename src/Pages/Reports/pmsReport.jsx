@@ -15,6 +15,7 @@ import PmFilters from '../../Components/Reports/PmFilters';
 import { calculateProgress } from '../../Utils/TaskList/reusable';
 import { actualTaskData } from '../../Recoil/atom';
 import { useRecoilValue } from 'recoil';
+import FilterChips from '../../Components/Task/FilterComponent/FilterChip';
 
 const TASK_OPTIONS = [
     { id: 1, value: "EmployeeWiseData", label: "Team", icon: <User size={18} /> },
@@ -28,20 +29,23 @@ const PmsReport = () => {
     const [searchText, setSearchText] = useState('');
     const [selectedProject, setSelectedProject] = useState('');
     const [selectedAssignee, setSelectedAssignee] = useState('');
-    const [selectedFilter, setSelectedFilter] = useState('Today');
     const filterOptions = ['Today', 'Tomorrow', 'Week'];
     const [currentDate, setCurrentDate] = useState(dayjs());
-    const [customRange, setCustomRange] = useState({
-        startDate: '',
-        endDate: ''
+    const [filters, setFilters] = useState({
+        timeFilter: 'All',
+        dateRangeFilter: {
+            startDate: '',
+            endDate: ''
+        },
     });
+    console.log('filters: ', filters);
     const actualData = useRecoilValue(actualTaskData);
     const { iswhTLoading, taskCategory, taskFinalData } = useFullTaskFormatFile();
     const [isLoading, setIsLoading] = useState(iswhTLoading);
 
     // helper function for date wise data get
-    const isWithinDateRange = (task, filterType, customRange = {}, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
-        if (filterType === 'All') return true;
+    const isWithinDateRange = (task, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
+        if (filters.timeFilter === 'All') return true;
 
         const dateRaw = task?.[taskDateField];
         if (!dateRaw || dateRaw === '1900-01-01T00:00:00.000Z') return false;
@@ -61,16 +65,16 @@ const PmsReport = () => {
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-        switch (filterType) {
+        switch (filters.timeFilter) {
             case 'Today':
                 return date.toDateString() === baseDate.toDateString();
             case 'Tomorrow':
                 return date.toDateString() === tomorrow.toDateString();
             case 'Week':
                 return date >= startOfWeek && date <= endOfWeek;
-            case 'Custom': {
-                const from = new Date(customRange.startDate);
-                const to = new Date(customRange.endDate);
+            case 'Date-Range': {
+                const from = new Date(filters.dateRangeFilter.startDate);
+                const to = new Date(filters.dateRangeFilter.endDate);
                 if (isNaN(from) || isNaN(to)) return false;
                 const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
                 const fromOnly = new Date(from.getFullYear(), from.getMonth(), from.getDate());
@@ -84,11 +88,11 @@ const PmsReport = () => {
     };
 
     // Employee Data Processing
-    const processEmployeeData = (data, taskCategory, filterType, customRange, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
+    const processEmployeeData = (data, taskCategory, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
         const EmployeeWiseDataMap = new Map();
 
         data?.forEach((task) => {
-            if (!isWithinDateRange(task, filterType, customRange, taskDateField, currentDate)) return;
+            if (!isWithinDateRange(task, taskDateField, currentDate)) return;
 
             const estimate = task.estimate_hrs || 0;
             const actual = task.workinghr || 0;
@@ -152,12 +156,12 @@ const PmsReport = () => {
     };
 
     // Module-wise Data Processing
-    const processModuleWiseData = (data, ModuleList, taskCategory, filterType, customRange, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
+    const processModuleWiseData = (data, ModuleList, taskCategory, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
         const ModuleWiseDataMap = new Map();
         setIsLoading(true);
 
         data?.forEach((task) => {
-            if (!isWithinDateRange(task, filterType, customRange, taskDateField, currentDate)) return;
+            if (!isWithinDateRange(task, taskDateField, currentDate)) return;
             const moduleId = task.moduleid;
             if (!moduleId) return;
 
@@ -218,14 +222,15 @@ const PmsReport = () => {
     // for calling functions
     useEffect(() => {
         if (viewMode === "EmployeeWiseData") {
-            const empData = processEmployeeData(actualData, taskCategory, selectedFilter, customRange, 'DeadLineDate', currentDate);
+            const empData = processEmployeeData(actualData, taskCategory, 'DeadLineDate', currentDate);
             setPmsReportData(empData);
+            setIsLoading(false);
         } else if (taskFinalData?.ModuleList?.length > 0) {
-            const modData = processModuleWiseData(actualData, taskFinalData?.ModuleList, taskCategory, selectedFilter, customRange, 'DeadLineDate', currentDate);
+            const modData = processModuleWiseData(actualData, taskFinalData?.ModuleList, taskCategory, 'DeadLineDate', currentDate);
             setPmsReportData(modData);
             setIsLoading(false);
         }
-    }, [currentDate, actualData, selectedFilter, viewMode, taskCategory, customRange, taskFinalData]);
+    }, [currentDate, actualData, viewMode, taskCategory, taskFinalData, filters]);
 
     useEffect(() => {
         const viemodeValue = localStorage.getItem('rpviewMode') ?? 'EmployeeWiseData';
@@ -293,13 +298,53 @@ const PmsReport = () => {
 
     const handleToggleChange = (event, newFilter) => {
         if (newFilter !== null) {
-            setSelectedFilter(newFilter);
+            setFilters({
+                timeFilter: newFilter,
+                dateRangeFilter: {
+                    startDate: '',
+                    endDate: ''
+                },
+            });
         }
     };
 
     const handleDateChange = (range) => {
-        setCustomRange(range);
-        setSelectedFilter('Custom');
+        if (!range.startDate || !range.endDate) {
+            setFilters({
+                timeFilter: 'All',
+                dateRangeFilter: {
+                    startDate: '',
+                    endDate: ''
+                },
+            });
+        } else {
+            setFilters({
+                timeFilter: 'Date-Range',
+                dateRangeFilter: range,
+            });
+        }
+    };
+
+    const handleClearFilter = (filter) => {
+        if (filter === 'Date-Range') {
+            setFilters({
+                timeFilter: 'All',
+                dateRangeFilter: {
+                    startDate: '',
+                    endDate: ''
+                },
+            });
+        }
+    };
+
+    const handleClearAllFilters = () => {
+        setFilters({
+            timeFilter: 'All',
+            dateRangeFilter: {
+                startDate: '',
+                endDate: ''
+            },
+        });
     };
 
     const formattedData = useMemo(() => {
@@ -352,10 +397,9 @@ const PmsReport = () => {
                 setSelectedAssignee={setSelectedAssignee}
                 selectedProject={selectedProject}
                 setSelectedProject={setSelectedProject}
-                selectedFilter={selectedFilter}
+                selectedFilter={filters}
                 filterOptions={filterOptions}
                 currentDate={currentDate}
-                customRange={customRange}
                 assigneeOptions={assigneeOptions}
                 projectOptions={projectOptions}
                 viewMode={viewMode}
@@ -375,7 +419,12 @@ const PmsReport = () => {
                     opacity: 0.3,
                 }}
             />
-
+            <FilterChips
+                filters={filters}
+                onClearFilter={handleClearFilter}
+                onClearAll={handleClearAllFilters}
+                hideClearBtn={true}
+            />
             {viewType === 'card' ? (
                 <Grid container spacing={2}>
                     {formattedData?.map((item, idx) => (
