@@ -54,7 +54,7 @@ const Filters = ({
     setFilters((prev) => ({ ...prev, [key]: newValue }));
     onFilterChange(key, newValue);
   };
-  
+
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -86,7 +86,7 @@ const Filters = ({
           { label: "Priority", key: "priority", data: priorityData },
         ]?.map((filter) =>
           filterVisibility[filter.key] ? (
-            <Box key={filter.key} className="form-group" sx={{ minWidth: 180 }}>
+            <Box key={filter.key} className="form-group" sx={{ minWidth: 180, maxWidth: 180 }}>
               <Typography variant="subtitle1" className="filterLabletxt">
                 {filter.label}
               </Typography>
@@ -116,7 +116,7 @@ const Filters = ({
         )}
 
         {assigneeVisible && (
-          <Box className="form-group">
+          <Box sx={{ maxWidth: 250 }}>
             <DepartmentAssigneeAutocomplete
               name="assignee"
               value={guest?.assignee}
@@ -133,14 +133,14 @@ const Filters = ({
 
         {/* start Date Filter */}
         {startDateVisible && (
-          <Box className="form-group">
+          <Box className="form-group" sx={{ maxWidth: 180 }}>
             <Typography variant="subtitle1" className="filterLabletxt">Start Date</Typography>
             <DatePicker
               name="startDate"
               value={filters.startDate}
               onChange={(newDate) => handleFilterChange("startDate", newDate)}
               className="textfieldsClass"
-              sx={{ padding: "0", minWidth: 200 }}
+              sx={{ padding: "0", minWidth: 180 }}
               {...customDatePickerProps}
               format="DD/MM/YYYY"
               textField={(params) => (
@@ -152,14 +152,14 @@ const Filters = ({
 
         {/* Due Date Filter */}
         {dueDateVisible && (
-          <Box className="form-group">
+          <Box className="form-group" sx={{ maxWidth: 180 }}>
             <Typography variant="subtitle1" className="filterLabletxt">Due Date</Typography>
             <DatePicker
               name="dueDate"
               value={filters.dueDate}
               onChange={(newDate) => handleFilterChange("dueDate", newDate)}
               className="textfieldsClass"
-              sx={{ padding: "0", minWidth: 200 }}
+              sx={{ padding: "0", minWidth: 180 }}
               {...customDatePickerProps}
               format="DD/MM/YYYY"
               textField={(params) => (

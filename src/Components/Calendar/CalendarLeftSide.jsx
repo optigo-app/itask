@@ -11,6 +11,7 @@ import { customDatePickerStyles } from '../../Utils/globalfun';
 import TasklistForCal from './TasklistForCal';
 
 const CalendarLeftSide = ({ calendarsColor }) => {
+   
     const [selectedCalendars, setSelectedCalendars] = useState([]);
     const setSelectedCaleFilters = useSetRecoilState(CalEventsFilter);
     const setSelectedMon = useSetRecoilState(calendarM);
@@ -143,7 +144,7 @@ const CalendarLeftSide = ({ calendarsColor }) => {
                             fullWidth
                             className="buttonClassname"
                             sx={{
-                                width: '230px',
+                                width: '220px',
                             }}
                             onClick={handleAddEvent}
                         >

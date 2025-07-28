@@ -4,6 +4,7 @@ import { AssigneeMaster } from "../Api/MasterApi/AssigneeMaster";
 import { fetchMaster } from "../Api/MasterApi/MasterApi";
 import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi"
 import { AddTaskDataApi } from "../Api/TaskApi/AddTaskApi";
+import { createTheme } from "@mui/material";
 
 
 // output like 01/01/2023
@@ -342,8 +343,12 @@ export const fetchMasterGlFunc = async () => {
                 if (mode) {
                     const apiResponse = await fetchIndidualApiMaster({ mode });
                     let filteredData = apiResponse?.rd?.filter(row => row?.isdelete != 1) || [];
-                    // filteredData.sort((a, b) => a?.labelname.localeCompare(b?.labelname));
-                    filteredData.sort((a, b) => a.displayorder - b.displayorder);
+                    filteredData.sort((a, b) => {
+                        if (a.displayorder !== b.displayorder) {
+                            return a.displayorder - b.displayorder;
+                        }
+                        return a.labelname.localeCompare(b.labelname);
+                    });
                     structuredData.push({
                         ...item,
                         rowdata: filteredData || []
@@ -632,6 +637,7 @@ export const customDatePickerStyles = {
         borderRadius: '8px',
         fontFamily: '"Public Sans", sans-serif',
         color: '#444050',
+        margin: '0',
     },
     '& .MuiPickersYear-root': {
         '& .MuiPickersYear-yearButton': {
@@ -936,3 +942,119 @@ export const background = (assignee) => {
         : getRandomAvatarColor(assignee);
     return avatarBackgroundColor;
 };
+
+export const Datetheme = createTheme({
+    palette: {
+        primary: {
+            main: "#7367f0",
+        },
+        secondary: {
+            main: "#f50057",
+        },
+        background: {
+            default: "#f5f5f5",
+        },
+    },
+    typography: {
+        color: "#fff !important",
+        fontFamily: '"Public Sans", sans-serif',
+        h4: {
+            fontWeight: 600,
+        },
+    },
+    components: {
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 12,
+                    boxShadow: "rgba(90, 90, 90, 0.1) 0px 4px 12px",
+                    border: "1px solid rgba(90, 90, 90, 0.1)",
+                    "&::-webkit-scrollbar": {
+                        width: "6px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                        background: "transparent", // Almost invisible track
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                        backgroundColor: "rgba(0, 0, 0, 0.1)", // Very light thumb
+                        borderRadius: "4px",
+                    },
+                    "&::-webkit-scrollbar-thumb:hover": {
+                        backgroundColor: "rgba(0, 0, 0, 0.15)", // Slightly visible on hover
+                    },
+                    "&::-webkit-scrollbar-thumb:active": {
+                        backgroundColor: "rgba(0, 0, 0, 0.2)", // Slightly darker when dragging
+                        color: "#fff",
+                    },
+                },
+            },
+        },
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 8,
+                    textTransform: "capitalize",
+                },
+                containedPrimary: {
+                    background: "linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%)", // Button color
+                    "&:hover": {
+                        backgroundColor: "#0070e0",
+                    },
+                    color: "white",
+                },
+                textSecondary: {
+                    background: "#ebebed", // Button color
+                    "&:hover": {
+                        backgroundColor: "#0070e0",
+                    },
+                    color: "#7D7f85",
+                }
+            },
+        },
+        MuiTextField: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 8, // Applies border radius to the entire TextField
+                    "& .MuiOutlinedInput-root": {
+                        "& fieldset": {
+                            borderColor: "gray", // Default border color (gray)
+                        },
+                        "&:hover fieldset": {
+                            borderColor: "black", // Darker border on hover
+                        },
+                        "&.Mui-focused fieldset": {
+                            borderColor: "#1976d2", // Default MUI blue when focused
+                        },
+                        "&.Mui-disabled fieldset": {
+                            borderColor: "#d1d1d1", // Light gray when disabled
+                        },
+                        "&.Mui-error fieldset": {
+                            borderColor: "#d32f2f", // Red border when there's an error
+                        },
+                    },
+                    "& .MuiInputBase-input": {
+                        padding: "10px 14px", // Padding inside the input field
+                    },
+                    "& .MuiInputLabel-root": {
+                        color: "gray", // Default label color
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#1976d2", // Label color when focused
+                    },
+                    "& .MuiInputLabel-root.Mui-error": {
+                        color: "#d32f2f", // Label color when there's an error
+                    },
+                },
+            },
+        },
+        MuiMenu: {
+            styleOverrides: {
+                paper: {
+                    maxHeight: "200px", // Fixed height for the dropdown list
+                    overflowY: "auto", // Enable vertical scrolling if content exceeds height
+                    zIndex: 1300, // Ensure proper z-index for overlay elements
+                },
+            },
+        },
+    },
+});

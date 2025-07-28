@@ -1,5 +1,10 @@
 import { atom } from "recoil";
 
+export const FullSidebar = atom({
+  key: 'FullSidebar',
+  default: true
+})
+
 export const userRoleAtom = atom({
   key: "userRole",
   default: null, // e.g., 'admin', 'team_lead', 'user'
@@ -149,6 +154,8 @@ export const timerCompOpen = atom({
   key: 'timerCompOpen',
   default: false
 })
+
+
 
 
 

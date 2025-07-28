@@ -14,18 +14,24 @@ import {
     Paper,
     Box,
     TextField,
-    Stack
+    Stack,
+    AvatarGroup,
+    Tooltip,
+    Avatar
 } from "@mui/material";
+
 import CloseIcon from "@mui/icons-material/Close";
-import { commonTextFieldProps } from "../../Utils/globalfun";
+import FullscreenIcon from "@mui/icons-material/Fullscreen";
+import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
+
+import { background, commonTextFieldProps, ImageUrl } from "../../Utils/globalfun";
 
 const TaskDetailsModal = ({ open, onClose, employee }) => {
+    const [isFullScreen, setIsFullScreen] = useState(false);
     const [searchText, setSearchText] = useState('');
 
-    // 🔍 Filtered Tasks based on searchText
     const filteredTasks = useMemo(() => {
         if (!employee?.Tasks) return [];
-
         if (!searchText.trim()) return employee.Tasks;
 
         const lowerSearch = searchText.toLowerCase();
@@ -36,13 +42,71 @@ const TaskDetailsModal = ({ open, onClose, employee }) => {
         );
     }, [employee, searchText]);
 
+    const renderAssignees = (assignees) => (
+        <AvatarGroup
+            max={6}
+            spacing={2}
+            sx={{
+                flexDirection: 'row',
+                '& .MuiAvatar-root': {
+                    width: 25,
+                    height: 25,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    border: 'none',
+                    transition: 'transform 0.3s ease-in-out',
+                    '&:hover': {
+                        transform: 'scale(1.2)',
+                        zIndex: 10,
+                    },
+                },
+            }}
+        >
+            {assignees?.map((assignee, idx) => (
+                <Tooltip
+                    key={assignee?.id || idx}
+                    title={`${assignee?.firstname} ${assignee?.lastname}`}
+                    arrow
+                    classes={{ tooltip: 'custom-tooltip' }}
+                >
+                    <Avatar
+                        alt={`${assignee?.firstname} ${assignee?.lastname}`}
+                        src={ImageUrl(assignee) || undefined}
+                        sx={{
+                            backgroundColor: background(`${assignee?.firstname} ${assignee?.lastname}`),
+                        }}
+                    >
+                        {!assignee.avatar && assignee?.firstname?.charAt(0)}
+                    </Avatar>
+                </Tooltip>
+            ))}
+        </AvatarGroup>
+    );
+
     return (
         <Dialog
             open={open}
             onClose={onClose}
-            maxWidth="lg"
-            fullWidth
+            maxWidth="xl"
+            fullScreen={isFullScreen}
+            PaperProps={{
+                sx: {
+                    position: 'absolute',
+                    top: isFullScreen ? '0%' : '5%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: isFullScreen ? '98.5%' : '80%',
+                    height: isFullScreen ? '97%' : '85vh',
+                    borderRadius: isFullScreen ? '0' : '8px',
+                    p: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'all 0.3s ease',
+                },
+            }}
+            className="taskDetailsModal"
         >
+            {/* Title bar */}
             <DialogTitle
                 sx={{
                     display: "flex",
@@ -53,17 +117,11 @@ const TaskDetailsModal = ({ open, onClose, employee }) => {
                     pr: 2
                 }}
             >
-                <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    sx={{ width: '100%' }}
-                    spacing={2}
-                >
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: '100%' }} spacing={2}>
                     <Typography variant="h6" fontWeight={600}>
                         Task Details
                     </Typography>
-                    
+
                     <Box>
                         <TextField
                             size="small"
@@ -76,58 +134,63 @@ const TaskDetailsModal = ({ open, onClose, employee }) => {
                         />
                     </Box>
 
-                    <IconButton onClick={onClose} size="small">
-                        <CloseIcon />
-                    </IconButton>
+                    <Box>
+                        <IconButton
+                            onClick={() => setIsFullScreen(!isFullScreen)}
+                            title="Toggle Fullscreen"
+                            className="docs-icon secondaryBtnClassname"
+                            sx={{ mr: 1 }}
+                        >
+                            {isFullScreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+                        </IconButton>
+                        <IconButton onClick={onClose} size="small">
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
                 </Stack>
             </DialogTitle>
 
+            {/* Content */}
             <DialogContent
-                dividers
                 sx={{
                     p: 0,
-                    minHeight: 500,
-                    maxHeight: 500,
                     overflowY: 'auto',
                 }}
-
             >
                 {employee ? (
-                    <TableContainer component={Paper} className='muiTableTaContainer'>
-                        <Table aria-label="task table" className='muiTable'>
-                            <TableHead className='muiTableHead'>
+                    <TableContainer component={Paper} className="muiTableTaContainer">
+                        <Table className="muiTable" aria-label="task table">
+                            <TableHead className="muiTableHead">
                                 <TableRow sx={{ backgroundColor: "#fafafa" }}>
                                     <TableCell width={20} sx={{ fontWeight: 600 }}>Sr#</TableCell>
                                     <TableCell width={250} sx={{ fontWeight: 600 }}>Task Name</TableCell>
-                                    <TableCell width={150} sx={{ fontWeight: 600 }}>Status</TableCell>
-                                    <TableCell width={150} sx={{ fontWeight: 600 }}>Priority</TableCell>
-                                    <TableCell width={150} sx={{ fontWeight: 600 }}>Category</TableCell>
-                                    <TableCell width={60} sx={{ fontWeight: 600 }}>Estimate (hrs)</TableCell>
-                                    <TableCell width={60} sx={{ fontWeight: 600 }}>Working (hrs)</TableCell>
+                                    <TableCell width={250} sx={{ fontWeight: 600 }}>Project/Module</TableCell>
+                                    <TableCell width={100} sx={{ fontWeight: 600 }}>Assignee</TableCell>
+                                    <TableCell width={100} sx={{ fontWeight: 600 }}>Status</TableCell>
+                                    <TableCell width={100} sx={{ fontWeight: 600 }}>Priority</TableCell>
+                                    <TableCell width={100} sx={{ fontWeight: 600 }}>Category</TableCell>
+                                    <TableCell width={80} sx={{ fontWeight: 600 }}>Estimate (hrs)</TableCell>
+                                    <TableCell width={80} sx={{ fontWeight: 600 }}>Working (hrs)</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {filteredTasks?.length > 0 ? (
                                     filteredTasks.map((task, index) => (
-                                        <TableRow key={index} hover>
+                                        <TableRow key={task.id || index} hover>
                                             <TableCell>{index + 1}</TableCell>
                                             <TableCell>{task.taskname}</TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2">{task.status}</Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2">{task.priority}</Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2">{task.category}</Typography>
-                                            </TableCell>
+                                            <TableCell>{task.taskPr}/{task.moduleName}</TableCell>
+                                            <TableCell>{renderAssignees(task.assignee)}</TableCell>
+                                            <TableCell><Typography variant="body2">{task.status}</Typography></TableCell>
+                                            <TableCell><Typography variant="body2">{task.priority}</Typography></TableCell>
+                                            <TableCell><Typography variant="body2">{task.category}</Typography></TableCell>
                                             <TableCell>{task.estimate_hrs}</TableCell>
                                             <TableCell>{task.estimate1_hrsT}</TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={7} align="center">
+                                        <TableCell colSpan={9} align="center">
                                             No matching tasks found.
                                         </TableCell>
                                     </TableRow>

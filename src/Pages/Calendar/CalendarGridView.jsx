@@ -58,6 +58,10 @@ const CalendarGridView = () => {
   const [tasks, setTasks] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('Today');
   const [currentDate, setCurrentDate] = useState(dayjs());
+  const [customRange, setCustomRange] = useState({
+    startDate: "",
+    endDate: "",
+  });
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const estimateTextFieldRefs = useRef({});
   const [openSplitModal, setOpenSplitModal] = useState(false);
@@ -105,10 +109,17 @@ const CalendarGridView = () => {
         dayjs(task.StartDate).isAfter(today.subtract(1, 'day')) &&
         dayjs(task.StartDate).isBefore(weekEnd.add(1, 'day'))
       );
+    } else if (selectedFilter === 'Custom') {
+      return nonRootTasks.filter(task => {
+        const taskDate = dayjs(task.StartDate).startOf('day');
+        const startDate = dayjs(customRange.startDate).startOf('day');
+        const endDate = dayjs(customRange.endDate).startOf('day');
+        return taskDate.isSame(startDate) || taskDate.isSame(endDate) || (taskDate.isAfter(startDate) && taskDate.isBefore(endDate));
+      });
     }
 
     return [];
-  }, [taskFinalData, selectedFilter, currentDate, selectedAssigneeId]);
+  }, [taskFinalData, selectedFilter, currentDate, selectedAssigneeId, customRange]);
 
   useEffect(() => {
     setTasks(filteredTasks);
@@ -351,6 +362,11 @@ const CalendarGridView = () => {
     setCurrentDate(dayjs());
   };
 
+  const handleDateChange = (range) => {
+    setCustomRange(range);
+    setSelectedFilter('Custom');
+  };
+
   const sortedTasks = React.useMemo(() => {
     if (!tasks || tasks.length === 0) return null;
 
@@ -388,10 +404,12 @@ const CalendarGridView = () => {
             totalHours={totalHours}
             selectedFilter={selectedFilter}
             selectedAssigneeId={selectedAssigneeId}
-            onFilterChange={handleFilterChange}
+            customRange={customRange}
             currentDate={currentDate}
+            onFilterChange={handleFilterChange}
             onNavigate={handleNavigate}
             taskAssigneeData={taskAssigneeData}
+            handleDateChange={handleDateChange}
             handleAssigneeChange={handleAssigneeChange}
           />
           <TableContainer component={Paper} className='muiTableTaContainer'>

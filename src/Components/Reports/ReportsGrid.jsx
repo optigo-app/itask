@@ -26,6 +26,7 @@ import {
 import TaskDetailsModal from "./TaskDetailsModal"; // Import modal component
 
 const ReportsGrid = ({ columns, data, rowsPerPage = 10, viewMode }) => {
+  console.log('data: ', data);
   console.log('columns: ', columns?.length);
   const [openModal, setOpenModal] = useState(false);
   const [selectedTaskRow, setSelectedTaskRow] = useState(null);

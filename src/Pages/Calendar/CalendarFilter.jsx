@@ -5,10 +5,11 @@ import dayjs from 'dayjs';
 import DepartmentAssigneeAutocomplete from '../../Components/ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 import { PERMISSIONS } from '../../Components/Auth/Role/permissions';
 import useAccess from '../../Components/Auth/Role/useAccess';
+import CustomDateRangePicker from '../../Components/ShortcutsComponent/DateRangePicker';
 
 const filterOptions = ['Today', 'Tomorrow', 'Week'];
 
-const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, onFilterChange, handleAssigneeChange, currentDate, onNavigate, taskAssigneeData }) => {
+const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, currentDate, customRange, onNavigate, onFilterChange, handleAssigneeChange, handleDateChange, taskAssigneeData }) => {
   const { hasAccess } = useAccess();
   const handleToggleChange = (event, newFilter) => {
     if (newFilter !== null) {
@@ -52,7 +53,8 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, onFilt
         }
       </Box>
       <Box className="filter-box">
-        <Box display="flex" alignItems="center" gap={1}>
+        <CustomDateRangePicker value={customRange} onChange={handleDateChange} />
+        {/* <Box display="flex" alignItems="center" gap={1}>
           <IconButton onClick={() => onNavigate('prev')} size="small">
             <ChevronLeft />
           </IconButton>
@@ -64,7 +66,7 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, onFilt
           <IconButton onClick={() => onNavigate('next')} size="small">
             <ChevronRight />
           </IconButton>
-        </Box>
+        </Box> */}
 
         <ToggleButtonGroup
           value={selectedFilter}
@@ -72,7 +74,7 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, onFilt
           onChange={handleToggleChange}
           size="small"
           sx={{
-            borderRadius: 3,
+            borderRadius: '8px',
             p: '2px',
           }}
         >
@@ -84,6 +86,7 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, onFilt
               sx={{
                 px: 2,
                 textTransform: 'none',
+                borderRadius: '8px',
                 fontWeight: 500,
                 color: selectedFilter === label ? '#fff !important' : '#6D6B77 !important',
                 background: selectedFilter === label ? '#7367f0 !important' : 'transparent !important',
