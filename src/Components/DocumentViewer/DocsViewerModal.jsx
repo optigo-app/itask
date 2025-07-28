@@ -11,8 +11,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
-import ExcelPreview from './ExcelPreview'; // Import the Excel preview component
-import WordPreview from './WordPreview'; // Import the Word preview component
+import ExcelPreview from './ExcelPreview';
+import WordPreview from './WordPreview';
 import { ZoomIn, ZoomOut } from 'lucide-react';
 
 const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
@@ -22,8 +22,8 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData }) => {
   const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'];
   const videoExts = ['mp4', 'webm', 'ogg'];
   const pdfExts = ['pdf'];
-  const excelExts = ['xlsx', 'xls', 'csv']; // Excel and CSV support
-  const wordExts = ['docx', 'doc']; // Word document support
+  const excelExts = ['xlsx', 'xls', 'csv'];
+  const wordExts = ['docx', 'doc'];
   const textExts = ['txt'];
 
   const isImage = imageExts.includes(lowerExt);

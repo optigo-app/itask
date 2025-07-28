@@ -14,7 +14,7 @@ import { commonTextFieldProps } from '../../Utils/globalfun';
 import PmFilters from '../../Components/Reports/PmFilters';
 import { calculateProgress } from '../../Utils/TaskList/reusable';
 import { actualTaskData } from '../../Recoil/atom';
-import {useRecoilValue } from 'recoil';
+import { useRecoilValue } from 'recoil';
 
 const TASK_OPTIONS = [
     { id: 1, value: "EmployeeWiseData", label: "Team", icon: <User size={18} /> },
@@ -31,8 +31,13 @@ const PmsReport = () => {
     const [selectedFilter, setSelectedFilter] = useState('Today');
     const filterOptions = ['Today', 'Tomorrow', 'Week'];
     const [currentDate, setCurrentDate] = useState(dayjs());
+    const [customRange, setCustomRange] = useState({
+        startDate: '',
+        endDate: ''
+    });
     const actualData = useRecoilValue(actualTaskData);
     const { iswhTLoading, taskCategory, taskFinalData } = useFullTaskFormatFile();
+    const [isLoading, setIsLoading] = useState(iswhTLoading);
 
     // helper function for date wise data get
     const isWithinDateRange = (task, filterType, customRange = {}, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
@@ -56,12 +61,6 @@ const PmsReport = () => {
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-        const startOfMonth = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
-        const endOfMonth = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0);
-
-        const startOfYear = new Date(baseDate.getFullYear(), 0, 1);
-        const endOfYear = new Date(baseDate.getFullYear(), 11, 31);
-
         switch (filterType) {
             case 'Today':
                 return date.toDateString() === baseDate.toDateString();
@@ -69,15 +68,15 @@ const PmsReport = () => {
                 return date.toDateString() === tomorrow.toDateString();
             case 'Week':
                 return date >= startOfWeek && date <= endOfWeek;
-            case 'ThisMonth':
-                return date >= startOfMonth && date <= endOfMonth;
-            case 'ThisYear':
-                return date >= startOfYear && date <= endOfYear;
             case 'Custom': {
-                const from = new Date(customRange.from);
-                const to = new Date(customRange.to);
+                const from = new Date(customRange.startDate);
+                const to = new Date(customRange.endDate);
                 if (isNaN(from) || isNaN(to)) return false;
-                return date >= from && date <= to;
+                const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                const fromOnly = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+                const toOnly = new Date(to.getFullYear(), to.getMonth(), to.getDate());
+
+                return dateOnly >= fromOnly && dateOnly <= toOnly;
             }
             default:
                 return true;
@@ -155,17 +154,17 @@ const PmsReport = () => {
     // Module-wise Data Processing
     const processModuleWiseData = (data, ModuleList, taskCategory, filterType, customRange, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
         const ModuleWiseDataMap = new Map();
+        setIsLoading(true);
 
         data?.forEach((task) => {
             if (!isWithinDateRange(task, filterType, customRange, taskDateField, currentDate)) return;
-
             const moduleId = task.moduleid;
             if (!moduleId) return;
 
             if (!ModuleWiseDataMap.has(moduleId)) {
                 ModuleWiseDataMap.set(moduleId, {
                     moduleid: moduleId,
-                    modulename: ModuleList?.find(m => m.taskid === moduleId)?.taskname || "Unknown",
+                    modulename: ModuleList?.find(m => m.taskid == moduleId)?.taskname || "",
                     TotalTasks: 0,
                     Completed: 0,
                     InProgress: 0,
@@ -218,16 +217,15 @@ const PmsReport = () => {
 
     // for calling functions
     useEffect(() => {
-        const customRange = {};
-
         if (viewMode === "EmployeeWiseData") {
             const empData = processEmployeeData(actualData, taskCategory, selectedFilter, customRange, 'DeadLineDate', currentDate);
             setPmsReportData(empData);
-        } else {
+        } else if (taskFinalData?.ModuleList?.length > 0) {
             const modData = processModuleWiseData(actualData, taskFinalData?.ModuleList, taskCategory, selectedFilter, customRange, 'DeadLineDate', currentDate);
             setPmsReportData(modData);
+            setIsLoading(false);
         }
-    }, [currentDate, actualData, selectedFilter, viewMode]);
+    }, [currentDate, actualData, selectedFilter, viewMode, taskCategory, customRange, taskFinalData]);
 
     useEffect(() => {
         const viemodeValue = localStorage.getItem('rpviewMode') ?? 'EmployeeWiseData';
@@ -299,6 +297,11 @@ const PmsReport = () => {
         }
     };
 
+    const handleDateChange = (range) => {
+        setCustomRange(range);
+        setSelectedFilter('Custom');
+    };
+
     const formattedData = useMemo(() => {
         let data = pmsReportData || [];
 
@@ -336,8 +339,8 @@ const PmsReport = () => {
         }));
     }, [taskFinalData, pmsReportData, viewMode, searchText, selectedProject, selectedAssignee]);
 
-    if (iswhTLoading) {
-        return <LoadingBackdrop isLoading={iswhTLoading} />;
+    if (isLoading !== false) {
+        return <LoadingBackdrop isLoading={true} />;
     }
 
     return (
@@ -352,6 +355,7 @@ const PmsReport = () => {
                 selectedFilter={selectedFilter}
                 filterOptions={filterOptions}
                 currentDate={currentDate}
+                customRange={customRange}
                 assigneeOptions={assigneeOptions}
                 projectOptions={projectOptions}
                 viewMode={viewMode}
@@ -359,6 +363,7 @@ const PmsReport = () => {
                 TASK_OPTIONS={TASK_OPTIONS}
                 viewType={viewType}
                 handleViewChange={handleViewChange}
+                handleDateChange={handleDateChange}
                 onNavigate={handleNavigate}
                 handleToggleChange={handleToggleChange}
                 commonTextFieldProps={commonTextFieldProps}

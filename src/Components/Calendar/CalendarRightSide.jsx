@@ -7,7 +7,7 @@ import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData, rootSubrootflag } from '../../Recoil/atom';
+import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData, FullSidebar, rootSubrootflag } from '../../Recoil/atom';
 import { v4 as uuidv4 } from 'uuid';
 import { Box, Button, Menu, TextField } from '@mui/material';
 import { AddMeetingApi } from '../../Api/MeetingApi/AddMeetingApi';
@@ -27,6 +27,7 @@ const Calendar = ({
     setFormDrawerOpen,
     setFormDataValue,
 }) => {
+    const isFullSidebar = useRecoilValue(FullSidebar);
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
     const calendarRef = useRef();
     const [calendarApi, setCalendarApi] = useState(null);
@@ -378,9 +379,22 @@ const Calendar = ({
         },
     };
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+          if (calendarRef.current) {
+            calendarRef.current.getApi().updateSize();
+          }
+        }, 300); // match sidebar transition duration (0.3s)
+      
+        return () => clearTimeout(timer);
+      }, [isFullSidebar]);
+      
+    
+    
+
     return (
         <>
-            <FullCalendar {...calendarOptions} />
+            <FullCalendar ref={calendarRef} {...calendarOptions} />
             <Menu
                 open={contextMenu !== null}
                 onClose={handleClose}

@@ -125,7 +125,12 @@ const MasterToggle = () => {
                 if (modeValue) {
                     const masterIndApi = await fetchIndidualApiMaster({ mode: modeValue });
                     const finalMasterData = masterIndApi?.rd || [];
-                    const sortedMasterData = finalMasterData.sort((a, b) => a.displayorder - b.displayorder);
+                    const sortedMasterData = finalMasterData.sort((a, b) => {
+                        if (a.displayorder !== b.displayorder) {
+                          return a.displayorder - b.displayorder;
+                        }
+                        return a.labelname.localeCompare(b.labelname);
+                      });
                     const mergedData = sortedMasterData.map((item, index) => ({
                         srno: index + 1,
                         ...item,

@@ -16,12 +16,10 @@ const useProfileData = () => {
     const setReload = useSetRecoilState(webReload);
 
     useEffect(() => {
-        const fetchProfileData = () => {
+        setTimeout(() => {
             const userData = JSON.parse(localStorage.getItem("UserProfileData"));
             setProfileData(userData);
-        };
-        const timeoutId = setTimeout(fetchProfileData, 100);
-        return () => clearTimeout(timeoutId);
+        }, 500);
     }, []);
 
     const handleReload = () => setReload(true);

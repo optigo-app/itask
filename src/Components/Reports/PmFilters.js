@@ -3,6 +3,7 @@ import { Box, TextField, Autocomplete, ToggleButtonGroup, ToggleButton, IconButt
 import { List, Square } from 'lucide-react';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import dayjs from 'dayjs';
+import CustomDateRangePicker from '../ShortcutsComponent/DateRangePicker';
 
 const PmFilters = ({
   searchText,
@@ -13,6 +14,7 @@ const PmFilters = ({
   setSelectedProject,
   selectedFilter,
   currentDate,
+  customRange,
   filterOptions,
   assigneeOptions,
   projectOptions,
@@ -21,6 +23,7 @@ const PmFilters = ({
   TASK_OPTIONS,
   viewType,
   handleViewChange,
+  handleDateChange,
   onNavigate,
   handleToggleChange,
   commonTextFieldProps = {}
@@ -107,7 +110,8 @@ const PmFilters = ({
         {/* <ViewToggleButtons view={viewType} onViewChange={handleViewChange} /> */}
       </Box>
       <Box className="pmsDateFilterBox">
-        <Box display="flex" alignItems="center" gap={1}>
+        <CustomDateRangePicker value={customRange} onChange={handleDateChange} />
+        {/* <Box display="flex" alignItems="center" gap={1}>
           <IconButton onClick={() => onNavigate('prev')} size="small">
             <ChevronLeft />
           </IconButton>
@@ -119,7 +123,7 @@ const PmFilters = ({
           <IconButton onClick={() => onNavigate('next')} size="small">
             <ChevronRight />
           </IconButton>
-        </Box>
+        </Box> */}
 
         <ToggleButtonGroup
           value={selectedFilter}
@@ -127,7 +131,7 @@ const PmFilters = ({
           onChange={handleToggleChange}
           size="small"
           sx={{
-            borderRadius: 3,
+            borderRadius: '8px',
             p: '2px',
           }}
         >
@@ -140,6 +144,7 @@ const PmFilters = ({
                 px: 2,
                 textTransform: 'none',
                 fontWeight: 500,
+                borderRadius: '8px',
                 color: selectedFilter === label ? '#fff !important' : '#6D6B77 !important',
                 background: selectedFilter === label ? '#7367f0 !important' : 'transparent !important',
                 '&:hover': {

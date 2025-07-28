@@ -29,8 +29,8 @@ import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import './sidebar.scss';
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useSetRecoilState } from "recoil";
-import { Advfilters } from "../../Recoil/atom";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { Advfilters, FullSidebar } from "../../Recoil/atom";
 
 const Sidebar = () => {
     const navigate = useNavigate();
@@ -40,10 +40,11 @@ const Sidebar = () => {
     const isMobile = useMediaQuery('(max-width:712px)');
     const isMiniDrawer = useMediaQuery('(max-width:1000px)');
     const [isDrawerOpen, setDrawerOpen] = useState(true);
-    const [isFullSidebar, setFullSidebar] = useState(true);
+    const [isFullSidebar, setFullSidebar] = useRecoilState(FullSidebar);
+    console.log('isFullSidebar: ', isFullSidebar);
     const [activeItem, setActiveItem] = useState('Home');
     const [openReports, setOpenReports] = useState(false);
-    const drawerWidth = isFullSidebar || isDrawerOpen ? 260 : 80;
+    const drawerWidth = isFullSidebar || isDrawerOpen ? 240 : 80;
     const [reportsAnchorEl, setReportsAnchorEl] = React.useState(null);
     const setFilters = useSetRecoilState(Advfilters);
     const taskInit = JSON?.parse(sessionStorage?.getItem('taskInit'));
@@ -144,7 +145,7 @@ const Sidebar = () => {
     return (
         <motion.div
             layout
-            initial={{ width: isMobile ? 0 : 260 }}
+            initial={{ width: isMobile ? 0 : 240 }}
             animate={{ width: isMobile ? 0 : drawerWidth }}
             transition={{ type: "spring", stiffness: 200, damping: 25 }}
             className="itask_sidebarDrawer"

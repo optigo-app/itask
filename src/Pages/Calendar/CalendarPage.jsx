@@ -10,11 +10,12 @@ import {
   calendarM,
   CalformData,
   formData,
+  FullSidebar,
   openFormDrawer,
   rootSubrootflag,
   TaskData,
 } from "../../Recoil/atom";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   fetchMettingListApi,
   fetchMettingListByLoginApi,
@@ -31,6 +32,7 @@ import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialo
 
 const Calendar = () => {
   const { hasAccess } = useAccess();
+  const isFullSidebar = useRecoilValue(FullSidebar);
   const isLaptop = useMediaQuery("(max-width:1420px)");
   const isLaptop1 = useMediaQuery("(max-width:1600px) and (min-width:1421px)");
   const setSelectedMon = useSetRecoilState(calendarM);
@@ -276,7 +278,7 @@ const Calendar = () => {
         // Left Panel (Desktop View)
         <Box
           sx={{
-            width: isLaptop1 ? "29%" : "24%",
+            width: isLaptop1 ? (isFullSidebar ? "29%" : "25%") : "20%",
             height: "100%",
             padding: "10px 0px",
             borderRight: "1px solid #e0e0e0",
