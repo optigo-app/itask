@@ -146,7 +146,7 @@ const Calendar = ({
                         <DepartmentAssigneeAutocomplete
                             name="assignee"
                             minWidth={200}
-                            value={selectedAssignee}
+                            value={selectedAssignee}    
                             options={assigneeData}
                             label="Assignees"
                             placeholder="Select assignees"
@@ -267,7 +267,7 @@ const Calendar = ({
         dragScroll: true,
         dayMaxEvents: false,
         navLinks: true,
-
+        weekNumbers:true,
         customButtons: {
             sidebarToggle: {
                 icon: 'bi bi-list',
