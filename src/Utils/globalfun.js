@@ -124,6 +124,32 @@ export function cleanDate(dateStr) {
     return defaultDates.includes(dateStr) ? "" : dateStr;
 }
 
+// Week 32 of 2025
+// Starts on: Mon Aug 04 2025
+// Ends on: Sun Aug 10 2025
+export function getISOWeekInfo(inputDate) {
+    const date = new Date(inputDate);
+    if (isNaN(date)) {
+      throw new Error("Invalid date input");
+    }
+    const current = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const day = current.getUTCDay() || 7;
+    current.setUTCDate(current.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(current.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((current - yearStart) / 86400000) + 1) / 7);
+    const weekStart = new Date(current);
+    weekStart.setUTCDate(current.getUTCDate() - (current.getUTCDay() || 7) + 1);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setUTCDate(weekStart.getUTCDate() + 6);
+  
+    return {
+      week: weekNo,
+      year: current.getUTCFullYear(),
+      startOfWeek: new Date(weekStart.toISOString().split('T')[0]),
+      endOfWeek: new Date(weekEnd.toISOString().split('T')[0])
+    };
+  }
+
 export const ImageUrl = (data) => {
     const init = JSON.parse(sessionStorage.getItem('taskInit'));
     if (data && init) {
