@@ -146,7 +146,7 @@ const Calendar = ({
                         <DepartmentAssigneeAutocomplete
                             name="assignee"
                             minWidth={200}
-                            value={selectedAssignee}    
+                            value={selectedAssignee}
                             options={assigneeData}
                             label="Assignees"
                             placeholder="Select assignees"
@@ -181,6 +181,7 @@ const Calendar = ({
             estimate_hrs: event?.extendedProps?.estimate_hrs ?? event?.estimate_hrs ?? 0,
             estimate1_hrs: event?.extendedProps?.estimate1_hrs ?? event?.estimate1_hrs ?? 0,
             estimate2_hrs: event?.extendedProps?.estimate2_hrs ?? event?.estimate2_hrs ?? 0,
+            workinghr: event?.extendedProps?.workinghr ?? event?.workinghr ?? 0,
             DeadLineDate: event?.extendedProps?.DeadLineDate ?? event?.DeadLineDate,
             taskid: event?.extendedProps?.taskid ?? event?.taskid,
             projectid: event?.extendedProps?.projectid ?? event?.projectid,
@@ -217,6 +218,7 @@ const Calendar = ({
             estimate_hrs: event?.estimate_hrs || 0,
             estimate1_hrs: event?.estimate1_hrs || 0,
             estimate2_hrs: event?.estimate2_hrs || 0,
+            workinghr: event?.workinghr || 0,
             DeadLineDate: event?.DeadLineDate,
             extendedProps: {
                 guests: event?.guests,
@@ -267,7 +269,7 @@ const Calendar = ({
         dragScroll: true,
         dayMaxEvents: false,
         navLinks: true,
-        weekNumbers:true,
+        weekNumbers: true,
         customButtons: {
             sidebarToggle: {
                 icon: 'bi bi-list',
@@ -381,16 +383,13 @@ const Calendar = ({
 
     useEffect(() => {
         const timer = setTimeout(() => {
-          if (calendarRef.current) {
-            calendarRef.current.getApi().updateSize();
-          }
-        }, 300); // match sidebar transition duration (0.3s)
-      
+            if (calendarRef.current) {
+                calendarRef.current.getApi().updateSize();
+            }
+        }, 500); // match sidebar transition duration (0.3s)
+
         return () => clearTimeout(timer);
-      }, [isFullSidebar]);
-      
-    
-    
+    }, [isFullSidebar]);
 
     return (
         <>

@@ -63,7 +63,9 @@ const AssigneeShortcutModal = ({ taskData, open, onClose, handleAssigneSubmit })
                 setTaskAssigneeData(enrichedTeamMembers);
             }
         }
-        fetchAssigneeData();
+        if(open){
+            fetchAssigneeData();
+        }
     }, [open]);
 
     const handleChange = (e) => {

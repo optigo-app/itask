@@ -60,4 +60,20 @@
         border-radius: 15px;
         margin-bottom: 10px;
     }
+
+    .prNameUrl {
+        color: $primary-main;
+        font-weight: 600;
+    }
+
+    .seeMoreBtn {
+        color: $titleColor;
+        font-weight: 600;
+        text-decoration: underline;
+        text-transform: capitalize;
+
+        &:hover {
+            color: $primary-main;
+        }
+    }
 }

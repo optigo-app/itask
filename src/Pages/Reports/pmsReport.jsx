@@ -38,10 +38,12 @@ const PmsReport = () => {
             endDate: ''
         },
     });
-    console.log('filters: ', filters);
     const actualData = useRecoilValue(actualTaskData);
     const { iswhTLoading, taskCategory, taskFinalData } = useFullTaskFormatFile();
     const [isLoading, setIsLoading] = useState(iswhTLoading);
+    const [page, setPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
 
     // helper function for date wise data get
     const isWithinDateRange = (task, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
@@ -135,9 +137,9 @@ const PmsReport = () => {
         return Array.from(EmployeeWiseDataMap.values()).map((emp) => {
             const progress = calculateProgress(emp.Completed, emp.TotalTasks);
             const diff = emp.TotalActual - emp.TotalEstimate;
-            const performance = emp.TotalEstimate > 0
+            const performance = emp.TotalEstimate > 0 && emp.TotalActual > 0
                 ? Math.round((emp.TotalActual / emp.TotalEstimate) * 100)
-                : 100;
+                : 0;
 
             const CategorySummary = Array.from(emp.CategorySummaryMap.entries()).map(
                 ([categoryname, count]) => ({ categoryname, count })
@@ -199,9 +201,9 @@ const PmsReport = () => {
         return Array.from(ModuleWiseDataMap.values()).map((mod) => {
             const progress = calculateProgress(mod.Completed, mod.TotalTasks);
             const diff = mod.TotalActual - mod.TotalEstimate;
-            const performance = mod.TotalEstimate > 0
+            const performance = mod.TotalEstimate > 0 && mod.TotalActual > 0
                 ? Math.round((mod.TotalActual / mod.TotalEstimate) * 100)
-                : 100;
+                : 0;
 
             const CategorySummary = Array.from(mod.CategorySummaryTemp.entries()).map(
                 ([categoryname, count]) => ({ categoryname, count })
@@ -253,22 +255,22 @@ const PmsReport = () => {
 
     const columns = useMemo(() => {
         const nameColumn = {
-            key: viewMode === 'EmployeeWiseData' ? 'Name' : 'modulename',
+            key: viewMode === 'EmployeeWiseData' ? 'firstname' : 'modulename',
             label: 'Name',
-            width: '300px',
+            width: '270px',
         };
         return [
             nameColumn,
             { key: 'TotalTasks', label: 'Total Tasks', width: '100px' },
-            { key: 'Completed', label: 'Completed', width: '100px' },
+            { key: 'Completed', label: 'Completed', width: '80px' },
             { key: 'Progress', label: 'Progress', width: '100px' },
             { key: 'Performance', label: 'Performance', width: '120px' },
             { key: 'running', label: 'Running', width: '100px' },
             { key: 'onhold', label: 'OnHold', width: '100px' },
             { key: 'challenges', label: 'Challenges', width: '100px' },
-            { key: 'TotalEstimate', label: 'Estimate (hrs)', width: '100px' },
-            { key: 'TotalActual', label: 'Working (hrs)', width: '100px' },
-            { key: 'TotalDiff', label: 'Diff (hrs)', width: '100px' },
+            { key: 'TotalEstimate', label: 'Estimate (hrs)', width: '118px' },
+            { key: 'TotalActual', label: 'Working (hrs)', width: '118px' },
+            { key: 'TotalDiff', label: 'Diff (hrs)', width: '90px' },
         ];
     }, [viewMode]);
 
@@ -347,42 +349,67 @@ const PmsReport = () => {
         });
     };
 
+    const handleChangePage = (event) => {
+        setPage(event);
+    };
+
+    const handlePageSizeChange = (event) => {
+        setRowsPerPage(event);
+        setPage(1);
+    };
+
+    const handleSortChange = (key) => {
+        setSortConfig(prev => {
+            const isAsc = prev.key === key && prev.direction === 'asc';
+            return {
+                key,
+                direction: isAsc ? 'desc' : 'asc',
+            };
+        });
+    };
+
     const formattedData = useMemo(() => {
         let data = pmsReportData || [];
-
-        // Apply search filter across all fields
         if (searchText.trim()) {
             const search = searchText.toLowerCase();
             data = data.filter(row =>
                 Object.values(row).some(
-                    val =>
-                        val &&
-                        val.toString().toLowerCase().includes(search)
+                    val => val && val.toString().toLowerCase().includes(search)
                 )
             );
         }
-
-        // Filter by selected assignee
         if (viewMode === 'EmployeeWiseData' && selectedAssignee) {
-            data = data.filter(
-                d => `${d.firstname} ${d.lastname}`.trim() === selectedAssignee
-            );
+            data = data.filter(d => `${d.firstname} ${d.lastname}`.trim() === selectedAssignee);
         }
 
-        // Filter by selected project
         if (viewMode === 'ModuleWiseData' && selectedProject) {
             data = data.filter(d => d.modulename == selectedProject);
         }
+        if (sortConfig.key) {
+            data = [...data].sort((a, b) => {
+                const valA = a[sortConfig.key];
+                const valB = b[sortConfig.key];
 
-        return data.map(row => ({
-            ...row,
-            Diff: (
-                <span style={{ color: row.Diff <= 0 ? 'green' : 'red', fontWeight: 500 }}>
-                    {row.Diff > 0 ? `+${row.Diff}` : row.Diff}
-                </span>
-            )
-        }));
-    }, [taskFinalData, pmsReportData, viewMode, searchText, selectedProject, selectedAssignee]);
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+                }
+
+                return sortConfig.direction === 'asc'
+                    ? String(valA || '').localeCompare(String(valB || ''))
+                    : String(valB || '').localeCompare(String(valA || ''));
+            });
+        }
+        return data;
+    }, [pmsReportData, viewMode, searchText, selectedProject, selectedAssignee, sortConfig]);
+
+
+    const totalPages = Math?.ceil(formattedData && formattedData?.length / rowsPerPage);
+
+    const paginatedData = useMemo(() => {
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        return formattedData.slice(start, end);
+    }, [formattedData, page, rowsPerPage]);
 
     if (isLoading !== false) {
         return <LoadingBackdrop isLoading={true} />;
@@ -434,7 +461,19 @@ const PmsReport = () => {
                     ))}
                 </Grid>
             ) : (
-                <ReportsGrid columns={columns} data={formattedData} viewMode={viewMode} />
+                <ReportsGrid
+                    columns={columns}
+                    data={paginatedData}
+                    page={page}
+                    totalPages={totalPages}
+                    rowsPerPage={rowsPerPage}
+                    onPageChange={handleChangePage}
+                    onPageSizeChange={handlePageSizeChange}
+                    sortConfig={sortConfig}
+                    onSortChange={handleSortChange}
+                    viewMode={viewMode}
+                />
+
             )}
         </Box>
     );

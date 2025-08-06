@@ -43,7 +43,7 @@ const Calendar = () => {
   const [formDataValue, setFormDataValue] = useRecoilState(formData);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const [isLoding, setIsLoding] = useState(false);
-  const [selectedAssignee, setSelectedAssignee] = useState();
+  const [selectedAssignee, setSelectedAssignee] = useState({});
   const assigneeData = JSON?.parse(sessionStorage?.getItem("taskAssigneeData")) || [];
   const setTasks = useSetRecoilState(TaskData);
   const [statusData, setStatusData] = useState([]);
@@ -192,7 +192,7 @@ const Calendar = () => {
   };
 
   useEffect(() => {
-    if (selectedAssignee) {
+    if (selectedAssignee?.id) {
       handleMeetingListByLogin();
     } else {
       if (hasAccess(PERMISSIONS.CALENDAR_VIEW_ALL)) {
@@ -212,8 +212,8 @@ const Calendar = () => {
       } else {
         handleMeetingListByLogin();
       }
-      if (formValues?.id) {
-        toast.success("Meeting updated successfully");
+      if (formValues?.taskid) {
+        toast.success("Metting or Task updated successfully");
       } else {
         toast.success("Meeting added successfully");
       }
@@ -241,15 +241,18 @@ const Calendar = () => {
   const handleConfirmRemoveAll = async () => {
     const updatedData = calEvData?.filter(cal => cal?.meetingid != formDataValue?.meetingid);
     setCalEvData(updatedData);
-    try {
-      await deleteMeetingApi(formDataValue);
-    } catch (error) {
-      console.error("Failed to delete meeting:", error);
-    }
     setCnfDialogOpen(false);
     setFormDrawerOpen(false);
+    try {
+      const res = await deleteMeetingApi(formDataValue);
+      if (res && res?.rd[0]?.stat == 1) {
+        toast.success("Meeting or Task deleted successfully");
+      }
+    } catch (error) {
+      console.error("Failed to delete meeting:", error);
+      toast.error("Failed to delete meeting or task");
+    }
   };
-
 
   const handleCloseDialog = () => {
     setCnfDialogOpen(false);

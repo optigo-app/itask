@@ -4,7 +4,7 @@ import { AssigneeMaster } from "../Api/MasterApi/AssigneeMaster";
 import { fetchMaster } from "../Api/MasterApi/MasterApi";
 import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi"
 import { AddTaskDataApi } from "../Api/TaskApi/AddTaskApi";
-import { createTheme } from "@mui/material";
+import { Avatar, AvatarGroup, Box, createTheme, Tooltip } from "@mui/material";
 
 
 // output like 01/01/2023
@@ -130,7 +130,7 @@ export function cleanDate(dateStr) {
 export function getISOWeekInfo(inputDate) {
     const date = new Date(inputDate);
     if (isNaN(date)) {
-      throw new Error("Invalid date input");
+        throw new Error("Invalid date input");
     }
     const current = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     const day = current.getUTCDay() || 7;
@@ -141,14 +141,14 @@ export function getISOWeekInfo(inputDate) {
     weekStart.setUTCDate(current.getUTCDate() - (current.getUTCDay() || 7) + 1);
     const weekEnd = new Date(weekStart);
     weekEnd.setUTCDate(weekStart.getUTCDate() + 6);
-  
+
     return {
-      week: weekNo,
-      year: current.getUTCFullYear(),
-      startOfWeek: new Date(weekStart.toISOString().split('T')[0]),
-      endOfWeek: new Date(weekEnd.toISOString().split('T')[0])
+        week: weekNo,
+        year: current.getUTCFullYear(),
+        startOfWeek: new Date(weekStart.toISOString().split('T')[0]),
+        endOfWeek: new Date(weekEnd.toISOString().split('T')[0])
     };
-  }
+}
 
 export const ImageUrl = (data) => {
     const init = JSON.parse(sessionStorage.getItem('taskInit'));
@@ -224,7 +224,6 @@ export function getPerformanceStatus(value) {
 
     return { meaning: "Unknown", color: "#9e9e9e", bgColor: "#f5f5f5" };
 }
-
 
 export const statusColors = {
     "initialized": {
@@ -733,20 +732,47 @@ export function convertWordsToSpecialChars(str) {
     return str?.replace(/\b(ane)\b/g, (match) => wordMap[match] || match);
 }
 
-export function showNotification({ title, body, icon, actions, url }) {
+export function showNotification({
+    title = 'Itask',
+    body = 'This is a default notification message!',
+    icon = '/logo.webp',
+    actions = [
+        { action: 'open', title: 'Open Page' },
+        { action: 'dismiss', title: 'Dismiss' }
+    ],
+    url = 'https://your-link-here.com',
+    status,
+    onAction
+}) {
+    if (status?.toLowerCase() === 'completed') return;
+
     if ('serviceWorker' in navigator && 'Notification' in window) {
-        Notification.requestPermission().then(permission => {
+        Notification.requestPermission().then((permission) => {
             if (permission === 'granted') {
-                navigator.serviceWorker.getRegistration().then(registration => {
+                navigator.serviceWorker.getRegistration().then((registration) => {
                     if (registration) {
-                        registration.showNotification(title || 'Itask', {
-                            body: body || 'This is a default notification message!',
-                            icon: icon || '/logo.webp',
-                            actions: actions || [
-                                { action: 'open', title: 'Open Page' },
-                                { action: 'dismiss', title: 'Dismiss' }
-                            ],
-                            data: { url: url || 'https://your-link-here.com' }
+                        registration.showNotification(title, {
+                            body,
+                            icon,
+                            actions,
+                            data: { url },
+                            requireInteraction: true
+                        });
+
+                        // Optional: Listen to action events
+                        navigator.serviceWorker.addEventListener('notificationclick', (event) => {
+                            if (!event.action || !event.notification?.data) return;
+
+                            if (event.action === 'open') {
+                                event.notification.close();
+                                window.open(event.notification.data.url, '_blank');
+                                onAction?.('open');
+                            }
+
+                            if (event.action === 'dismiss') {
+                                event.notification.close();
+                                onAction?.('dismiss');
+                            }
                         });
                     }
                 });
@@ -1084,3 +1110,49 @@ export const Datetheme = createTheme({
         },
     },
 });
+
+
+export const renderAssigneeAvatars = (assignees, hanldePAvatarClick) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <AvatarGroup
+            max={6}
+            spacing={2}
+            sx={{
+                '& .MuiAvatar-root': {
+                    width: 25,
+                    height: 25,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    border: 'none',
+                    transition: 'transform 0.3s ease-in-out',
+                    '&:hover': {
+                        transform: 'scale(1.2)',
+                        zIndex: 10,
+                    },
+                },
+            }}
+        >
+            {assignees?.map((assignee, teamIdx) => (
+                <Tooltip
+                    placement="top"
+                    key={assignee?.id}
+                    title={`${assignee?.firstname} ${assignee?.lastname}`}
+                    arrow
+                    classes={{ tooltip: 'custom-tooltip' }}
+                >
+                    <Avatar
+                        key={teamIdx}
+                        alt={`${assignee?.firstname} ${assignee?.lastname}`}
+                        src={ImageUrl(assignee) || null}
+                        sx={{
+                            backgroundColor: background(`${assignee?.firstname + " " + assignee?.lastname}`)
+                        }}
+                        onClick={() => hanldePAvatarClick(assignees, assignee?.id)}
+                    >
+                        {!assignee.avatar && assignee?.firstname?.charAt(0)}
+                    </Avatar>
+                </Tooltip>
+            ))}
+        </AvatarGroup>
+    </Box>
+);

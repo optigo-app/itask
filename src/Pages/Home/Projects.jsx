@@ -1,18 +1,32 @@
-import React from 'react';
-import { Card, CardContent, Typography, Table, TableBody, TableCell, TableRow, Avatar, AvatarGroup, Tooltip, Button, Box } from '@mui/material';
-import { getRandomAvatarColor } from '../../Utils/globalfun';
+import React, { useState } from 'react';
+import {
+    Card, CardContent, Typography, Table, TableBody,
+    TableCell, TableRow, Button, Box
+} from '@mui/material';
 import { Plus, SquareChartGantt } from 'lucide-react';
+import { useSetRecoilState } from 'recoil';
+import { assigneeId } from '../../Recoil/atom';
+import { Link } from 'react-router-dom';
+import { renderAssigneeAvatars } from '../../Utils/globalfun';
 
-const Projects = ({ projects, navigate }) => {
+const Projects = ({ projects, navigate, isLoding }) => {
+    console.log('projects: ', projects);
+    console.log('isLoding: ', isLoding);
+    const setAssigneeId = useSetRecoilState(assigneeId);
+    const [showAll, setShowAll] = useState(false);
 
-    const background = (teamName) => {
-        const avatarBackgroundColor = projects?.avatar
-            ? "transparent"
-            : getRandomAvatarColor(teamName?.name);
-        return avatarBackgroundColor;
-    };
-    const handleAddProject = () => {
-        navigate('/projects')
+    const handleAddProject = () => navigate('/projects');
+
+    const handleAvatarClick = (id) => setAssigneeId(id);
+
+    const filteredProjects = projects?.filter(item => item.parentid == 0) || [];
+
+    const visibleProjects = showAll ? filteredProjects : filteredProjects.slice(0, 5);
+
+    if (isLoding && projects == null) {
+        return <Box>
+            <Typography>Loading...</Typography>
+        </Box>
     }
 
     return (
@@ -21,65 +35,46 @@ const Projects = ({ projects, navigate }) => {
                 <Typography className='cardTitle' component="div" variant="h5">
                     Projects
                 </Typography>
-                {projects?.length > 0 ? (
-                    <Table>
-                        <TableBody>
-                            {projects?.map((project, idx) => (
-                                <TableRow key={idx}>
-                                    <TableCell>
-                                        {project.projectName}
-                                    </TableCell>
 
-                                    <TableCell>
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '0px'
-                                        }}>
-                                            <AvatarGroup max={5}
-                                                sx={{
-                                                    '& .MuiAvatar-root': {
-                                                        width: 30,
-                                                        height: 30,
-                                                        cursor: 'pointer',
-                                                        border: 'none',
-                                                        transition: 'transform 0.3s ease-in-out',
-                                                        '&:hover': {
-                                                            transform: 'scale(1.2)',
-                                                            zIndex: 10
-                                                        }
-                                                    }
-                                                }}
-                                            >
-                                                {project?.team?.map((teamMember, teamIdx) => (
-                                                    <Tooltip
-                                                        placement="top"
-                                                        key={teamMember.name}
-                                                        title={teamMember.name}
-                                                        arrow
-                                                        classes={{ tooltip: 'custom-tooltip' }}
-                                                    >
-                                                        <Avatar
-                                                            key={teamIdx}
-                                                            alt={teamMember.name}
-                                                            src={teamMember.avatar}
-                                                            sx={{
-                                                                backgroundColor: background(teamMember),
-                                                            }}
-                                                        >
-                                                            {!teamMember.avatar && teamMember.name.charAt(0)}
-                                                        </Avatar>
-                                                    </Tooltip>
-                                                ))}
-                                            </AvatarGroup>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                ) :
+                {filteredProjects.length > 0 ? (
+                    <>
+                        <Table>
+                            <TableBody>
+                                {visibleProjects.map((project, idx) => (
+                                    <TableRow key={idx}>
+                                        <TableCell>
+                                            <Link className='prNameUrl' to={`/projects?filter=${project?.taskname}`}>
+                                                {project?.taskname}
+                                            </Link>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0px'
+                                            }}>
+                                                {renderAssigneeAvatars(project?.assignee, handleAvatarClick)}
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+
+                        {filteredProjects.length > 5 && (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1, mb: 2 }}>
+                                <Button
+                                    onClick={() => setShowAll(!showAll)}
+                                    variant="text"
+                                    className="seeMoreBtn"
+                                    size="small"
+                                >
+                                    {showAll ? 'See Less' : 'See More'}
+                                </Button>
+                            </Box>
+                        )}
+                    </>
+                ) : (
                     <Box
                         sx={{
                             display: 'flex',
@@ -107,8 +102,7 @@ const Projects = ({ projects, navigate }) => {
                             Add Project
                         </Button>
                     </Box>
-
-                }
+                )}
             </CardContent>
         </Card>
     );
