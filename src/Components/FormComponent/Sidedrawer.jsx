@@ -155,7 +155,7 @@ const SidebarDrawer = ({
         if (open) {
             handleGetTeamMembers();
         }
-    }, [formDataValue, decodedData])
+    }, [open])
 
     const handleTaskChange = (event, newTaskType) => {
         if (newTaskType !== null) setTaskType(newTaskType);
@@ -661,7 +661,9 @@ const SidebarDrawer = ({
     }
 
     useEffect(() => {
-        handleProjectModuleData();
+        if(open){
+            handleProjectModuleData();
+        }
     }, [open])
 
     return (

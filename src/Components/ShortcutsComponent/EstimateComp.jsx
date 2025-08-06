@@ -2,11 +2,13 @@ import React from "react";
 import { Box, Typography } from "@mui/material";
 
 const StatusCircles = ({ task }) => {
-    const taskEstimate = [task.estimate_hrsT, task.estimate1_hrsT, task.estimate2_hrsT];
+    const taskEstimate = [task.estimate_hrsT];
     const circleStyle = {
-        minWidth: 28,
-        minHeight: 28,
-        borderRadius: "50%",
+        minWidth: 38,
+        width: 'fit-content',
+        minHeight: 24,
+        borderRadius: "8px",
+        padding: '2px 6px',
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -23,8 +25,9 @@ const StatusCircles = ({ task }) => {
                 const colors = ["#D3D3D3", "#808080bf", "#404040b8"];
                 return (
                     <Box className="estimate-Box" key={index} sx={{ ...circleStyle, backgroundColor: colors[index] }}>
-                        <Typography variant="caption" sx={{ fontSize: "11px", color: index == 0 ? "#333 !important" : "#fff !important" }}>
-                        {estimate ? (parseFloat(estimate) % 1 === 0 ? estimate : estimate.toFixed(2)) : "0"}
+                        <Typography variant="caption" sx={{ fontSize: "12px", color: index == 0 ? "#333 !important" : "#fff !important" }}>
+                            {estimate ? (parseFloat(estimate) % 1 === 0 ? estimate : estimate.toFixed(2)) : "0"} hrs
+
                         </Typography>
                     </Box>
                 );

@@ -25,10 +25,17 @@ import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 
 import { background, cleanDate, commonTextFieldProps, formatDate2, ImageUrl } from "../../Utils/globalfun";
+import TablePaginationFooter from "../ShortcutsComponent/Pagination/TablePaginationFooter";
 
-const TaskDetailsModal = ({ open, onClose, employee }) => {
+const TaskDetailsModal = ({
+    open,
+    onClose,
+    employee,
+}) => {
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [searchText, setSearchText] = useState('');
+    const [page, setPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     const filteredTasks = useMemo(() => {
         if (!employee?.Tasks) return [];
@@ -41,6 +48,24 @@ const TaskDetailsModal = ({ open, onClose, employee }) => {
             )
         );
     }, [employee, searchText]);
+
+    const handleChangePage = (newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event, 10));
+        setPage(1);
+    };
+
+    const totalPages = Math?.ceil(filteredTasks && filteredTasks?.length / rowsPerPage);
+    console.log('totalPages: ', totalPages);
+
+    const paginatedTasks = useMemo(() => {
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        return filteredTasks.slice(start, end);
+    }, [filteredTasks, page, rowsPerPage]);
 
     const renderAssignees = (assignees) => (
         <AvatarGroup
@@ -83,6 +108,8 @@ const TaskDetailsModal = ({ open, onClose, employee }) => {
         </AvatarGroup>
     );
 
+    console.log("paginatedTasks?.length", paginatedTasks?.length)
+
     return (
         <Dialog
             open={open}
@@ -96,7 +123,7 @@ const TaskDetailsModal = ({ open, onClose, employee }) => {
                     left: '50%',
                     transform: 'translateX(-50%)',
                     width: isFullScreen ? '98.5%' : '80%',
-                    height: isFullScreen ? '97%' : '85vh',
+                    height: isFullScreen ? '97%' : '78vh',
                     borderRadius: isFullScreen ? '0' : '8px',
                     p: 2,
                     display: 'flex',
@@ -175,8 +202,8 @@ const TaskDetailsModal = ({ open, onClose, employee }) => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {filteredTasks?.length > 0 ? (
-                                    filteredTasks.map((task, index) => (
+                                {paginatedTasks?.length > 0 ? (
+                                    paginatedTasks?.map((task, index) => (
                                         <TableRow key={task.id || index} hover>
                                             <TableCell>{index + 1}</TableCell>
                                             <TableCell>{task.taskname}</TableCell>
@@ -185,8 +212,8 @@ const TaskDetailsModal = ({ open, onClose, employee }) => {
                                             <TableCell><Typography variant="body2">{task.status}</Typography></TableCell>
                                             <TableCell><Typography variant="body2">{task.priority}</Typography></TableCell>
                                             <TableCell><Typography variant="body2">{task?.DeadLineDate && cleanDate(task?.DeadLineDate)
-                                                        ? formatDate2(cleanDate(task?.DeadLineDate))
-                                                        : '-'}</Typography></TableCell>
+                                                ? formatDate2(cleanDate(task?.DeadLineDate))
+                                                : '-'}</Typography></TableCell>
                                             <TableCell><Typography variant="body2">{task.category}</Typography></TableCell>
                                             <TableCell>{task.estimate_hrs}</TableCell>
                                             <TableCell>{task.estimate1_hrsT}</TableCell>
@@ -201,6 +228,18 @@ const TaskDetailsModal = ({ open, onClose, employee }) => {
                                 )}
                             </TableBody>
                         </Table>
+                        <Box sx={{ padding: '0px 10px' }}>
+                            {filteredTasks?.length !== 0 && (
+                                <TablePaginationFooter
+                                    page={page}
+                                    rowsPerPage={rowsPerPage}
+                                    totalCount={filteredTasks?.length}
+                                    totalPages={totalPages}
+                                    onPageChange={handleChangePage}
+                                    onPageSizeChange={handleChangeRowsPerPage}
+                                />
+                            )}
+                        </Box>
                     </TableContainer>
                 ) : null}
             </DialogContent>

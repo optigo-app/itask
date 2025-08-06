@@ -14,6 +14,7 @@ import {
   LinearProgress,
   Chip,
   Avatar,
+  TableSortLabel,
 } from "@mui/material";
 import {
   formatDate2,
@@ -24,14 +25,24 @@ import {
   getPerformanceStatus,
 } from "../../Utils/globalfun";
 import TaskDetailsModal from "./TaskDetailsModal"; // Import modal component
+import TablePaginationFooter from "../ShortcutsComponent/Pagination/TablePaginationFooter";
 
-const ReportsGrid = ({ columns, data, rowsPerPage = 10, viewMode }) => {
-  console.log('data: ', data);
-  console.log('columns: ', columns?.length);
+const ReportsGrid = ({
+  columns,
+  data,
+  totalPages,
+  rowsPerPage = 10,
+  page = 1,
+  onPageChange,
+  onPageSizeChange,
+  sortConfig,
+  onSortChange,
+  viewMode
+}) => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedTaskRow, setSelectedTaskRow] = useState(null);
 
-  const paginatedData = data;
+  const paginatedData = data || [];
 
 
   const handleRowClick = (row) => {
@@ -50,7 +61,7 @@ const ReportsGrid = ({ columns, data, rowsPerPage = 10, viewMode }) => {
   const getFormattedValue = (colKey, value, row) => {
     const lowerKey = colKey.toLowerCase();
 
-    if (lowerKey === "name" && viewMode === "EmployeeWiseData") {
+    if (lowerKey === "firstname" && viewMode === "EmployeeWiseData") {
       if (row && typeof row === "object") {
         return (
           <Box display="flex" alignItems="center" gap={1}>
@@ -193,14 +204,28 @@ const ReportsGrid = ({ columns, data, rowsPerPage = 10, viewMode }) => {
         <Table className="reports_table">
           <TableHead>
             <TableRow>
-              {columns.map(({ key, label, width }) => (
-                <TableCell key={key} style={{ width }}>
-                  <strong>{label}</strong>
-                </TableCell>
-              ))}
+              {columns.map(({ key, label, width }) => {
+                const isSorted = sortConfig?.key === key;
+                const isAsc = sortConfig?.direction === 'asc';
+
+                return (
+                  <TableCell
+                    key={key}
+                    style={{ width }}
+                    sortDirection={isSorted ? sortConfig.direction : false}
+                  >
+                    <TableSortLabel
+                      active={isSorted}
+                      direction={isAsc ? 'asc' : 'desc'}
+                      onClick={() => onSortChange(key)}
+                    >
+                      <strong>{label}</strong>
+                    </TableSortLabel>
+                  </TableCell>
+                );
+              })}
             </TableRow>
           </TableHead>
-
           <TableBody>
             {paginatedData?.length > 0 ? (
               <>
@@ -241,32 +266,26 @@ const ReportsGrid = ({ columns, data, rowsPerPage = 10, viewMode }) => {
               </>
             ) : (
               <TableRow>
-              <TableCell colSpan={columns.length} style={{textAlign: 'center'}}>
-                No data available
-              </TableCell>
-            </TableRow>
+                <TableCell colSpan={columns.length} style={{ textAlign: 'center' }}>
+                  No data available
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>
-        {/* <Box className="TablePaginationBox">
-          <Typography className="paginationText" sx={{ pl: 1 }}>
-            Showing {(page - 1) * rowsPerPage + 1} to {Math.min(page * rowsPerPage, data.length)} of {data.length} entries
-          </Typography>
-          {totalPages > 1 && (
-            <Pagination
-              count={totalPages}
+        <Box sx={{ padding: '0px 10px' }}>
+          {paginatedData?.length !== 0 && (
+            <TablePaginationFooter
               page={page}
-              onChange={handleChangePage}
-              color="primary"
-              variant="outlined"
-              shape="rounded"
-              siblingCount={1}
-              boundaryCount={1}
-              className="pagination"
-              sx={{ pr: 1 }}
+              rowsPerPage={rowsPerPage}
+              totalCount={data?.length}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+              onPageSizeChange={onPageSizeChange}
             />
           )}
-        </Box> */}
+        </Box>
+
       </TableContainer>
 
       {/* Modal Component */}

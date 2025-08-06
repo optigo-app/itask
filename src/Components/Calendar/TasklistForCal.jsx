@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import {
-    Box, Card, CardContent, Typography, TextField
+    Box, Card, CardContent, Typography, TextField,
+    ButtonGroup,
+    Button
 } from "@mui/material";
 import { Draggable } from "@fullcalendar/interaction";
 import { useRecoilValue } from "recoil";
@@ -16,6 +18,12 @@ const TasklistForCal = ({ calendarsColor }) => {
     const task = useRecoilValue(TaskData);
     const [calTasksList, setCalTasksList] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
+    // const [selected, setSelected] = useState("Today");
+
+    // const handleClick = (value) => {
+    //     setSelected(value);
+    //     console.log("Selected:", value);
+    // };
 
     useEffect(() => {
         const userProfileData = JSON?.parse(localStorage?.getItem("UserProfileData"));
@@ -35,13 +43,13 @@ const TasklistForCal = ({ calendarsColor }) => {
                 eventData: (eventEl) => {
                     const dragtaskTaskId = eventEl.getAttribute("data-id");
                     const dragtask = calTasksList.find(t => t.taskid == dragtaskTaskId);
-    
+
                     if (dragtask) {
                         const start = dragtask?.StartDate;
                         const end = dragtask?.DeadLineDate ?? start;
                         const estimate = dragtask?.estimate_hrs ?? 1;
                         const guests = dragtask?.assignee ?? [];
-    
+
                         return {
                             id: dragtask?.taskid?.toString(),
                             title: dragtask?.taskname ?? "",
@@ -74,6 +82,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                                 estimate_hrs: dragtask?.estimate_hrs ?? 0,
                                 estimate1_hrs: dragtask?.estimate1_hrs ?? 0,
                                 estimate2_hrs: dragtask?.estimate2_hrs ?? 0,
+                                workinghr: dragtask?.workinghr ?? 0,
                                 description: dragtask?.descr ?? "",
                                 category: dragtask?.category ?? "",
                                 priorityid: dragtask?.priorityid ?? 0,
@@ -93,18 +102,22 @@ const TasklistForCal = ({ calendarsColor }) => {
                             }
                         };
                     }
-    
+
                     return {};
                 }
             });
         }
     }, [calTasksList]);
-    
+
 
     // Fuzzy match using Fuse.js
     const getFilteredHierarchy = () => {
+        const filteredList = (calTasksList || []).filter(
+            task => task.status?.toLowerCase() !== "completed"
+        );
+
         const fuse = new Fuse(
-            (calTasksList || []).map(task => {
+            filteredList.map(task => {
                 const startDate = cleanDate(task?.StartDate);
                 const deadline = cleanDate(task?.DeadLineDate);
 
@@ -112,14 +125,16 @@ const TasklistForCal = ({ calendarsColor }) => {
                     if (!date) return {};
                     const d = new Date(date);
                     return {
-                        day: d.getDate().toString().padStart(2, '0'),         // "11"
-                        month: d.toLocaleString('default', { month: 'short' }), // "Jun"
-                        year: d.getFullYear().toString(),                     // "2025"
+                        day: d.getDate().toString().padStart(2, '0'),
+                        month: d.toLocaleString('default', { month: 'short' }),
+                        year: d.getFullYear().toString(),
                         full: `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`
                     };
                 };
+
                 const start = formatForSearch(startDate);
                 const end = formatForSearch(deadline);
+
                 return {
                     ...task,
                     searchable_startDate: start.full || '',
@@ -157,12 +172,15 @@ const TasklistForCal = ({ calendarsColor }) => {
                 threshold: 0.3,
             }
         );
+
         const matched = searchQuery
             ? (fuse?.search(searchQuery) || []).map(res => res.item)
-            : calTasksList || [];
+            : filteredList;
+
         const matchedIds = new Set(matched.map(t => t.taskid));
         const moduleMap = {};
-        (calTasksList || []).forEach(task => {
+
+        filteredList.forEach(task => {
             const modId = task.moduleid;
             if (!moduleMap[modId]) {
                 moduleMap[modId] = {
@@ -171,12 +189,14 @@ const TasklistForCal = ({ calendarsColor }) => {
                 };
             }
         });
-        (calTasksList || []).forEach(task => {
+
+        filteredList.forEach(task => {
             const modId = task.moduleid;
             if (task.parentid !== 0 && !moduleMap[modId].subtasks.find(t => t.taskid === task.taskid)) {
                 moduleMap[modId].subtasks.push({ ...task });
             }
         });
+
         return Object.values(moduleMap).filter(module => {
             const moduleMatch = matchedIds.has(module.taskid);
             const filteredSubtasks = module.subtasks.filter(child => matchedIds.has(child.taskid));
@@ -185,10 +205,43 @@ const TasklistForCal = ({ calendarsColor }) => {
         });
     };
 
+
     const groupedTasks = getFilteredHierarchy();
+
+    if (task === undefined) {
+        return (
+            <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                minHeight="100px"
+                role="status"
+                aria-live="polite"
+            >
+                <Typography variant="body2" color="text.secondary">
+                    Loading tasks...
+                </Typography>
+            </Box>
+        );
+    }
+
 
     return (
         <>
+            {/* <Box className="calendar-btn-group">
+            <ButtonGroup variant="outlined" aria-label="outlined button group">
+                {["Today", "Tomorrow", "Week"].map((label) => (
+                    <Button
+                        key={label}
+                        onClick={() => handleClick(label)}
+                        variant={selected === label ? "contained" : "outlined"}
+                        size="small"
+                    >
+                        {label}
+                    </Button>
+                ))}
+            </ButtonGroup>
+            </Box> */}
             <Box sx={{ px: 1.25, my: 1 }}>
                 <TextField
                     fullWidth
@@ -200,7 +253,6 @@ const TasklistForCal = ({ calendarsColor }) => {
                     {...commonTextFieldProps}
                 />
             </Box>
-
             <Box id="external-tasks" sx={{ padding: 1.25, maxHeight: '88vh', overflow: 'auto' }}>
                 {groupedTasks?.map(parent => (
                     <Box key={parent.taskid} sx={{ mb: 2 }}>

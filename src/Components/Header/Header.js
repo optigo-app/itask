@@ -208,7 +208,6 @@ const NotificationMenu = ({ anchorEl, open, onClose, notifications }) => {
     );
 };
 
-
 // Data Map Hook
 const useDataMap = (location, decodedData) => {
     const dataMap = {

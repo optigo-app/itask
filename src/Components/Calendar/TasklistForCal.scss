@@ -114,3 +114,34 @@
 .text-default {
     background: rgba(115, 103, 240, 0.16) !important;
 }
+
+.calendar-btn-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    position: relative;
+    padding: 5px;
+    margin-top: 7px;
+
+    .MuiButtonGroup-root {
+        .MuiButton-root {
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.4rem;
+            text-transform: none;
+            font-family: $font-family;
+            outline: none;
+            color: $text2ndColor;
+            border: 1px solid #ddd;
+            box-shadow: none;
+        }
+
+        .MuiButton-contained {
+            background: $button-Bgcolor;
+            color: #fff;
+        }
+
+    }
+
+}
