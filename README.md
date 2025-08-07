@@ -24,11 +24,4 @@ Follow these steps to set up and run iTask locally:
 
 - [Node.js](https://nodejs.org/) (v14.x or higher)
 - [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
-- MongoDB (for database)
-
-### Steps
-
-1. **Clone the Repository**  
-   ```bash
-   git clone https://github.com/your-username/itask.git
-   cd itask
+- Sql (for database)
