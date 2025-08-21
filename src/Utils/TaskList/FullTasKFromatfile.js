@@ -373,187 +373,6 @@ const useFullTaskFormatFile = () => {
     return { ModuleCategoryTasks, ModuleMilestoneData, ModuleProgress, ModuleTeamMembers };
   };
 
-  // // helper function for date wise data get
-  // const isWithinDateRange = (task, filterType, customRange = {}, taskDateField = 'DeadLineDate') => {
-  //   if (filterType === 'All') return true;
-
-  //   const dateRaw = task?.[taskDateField];
-  //   if (!dateRaw || dateRaw === '1900-01-01T00:00:00.000Z') return false;
-
-  //   const date = new Date(dateRaw);
-  //   if (isNaN(date.getTime())) return false;
-
-  //   const today = new Date();
-  //   today.setHours(0, 0, 0, 0);
-
-  //   const tomorrow = new Date(today);
-  //   tomorrow.setDate(today.getDate() + 1);
-
-  //   const startOfWeek = new Date(today);
-  //   startOfWeek.setDate(today.getDate() - today.getDay());
-
-  //   const endOfWeek = new Date(startOfWeek);
-  //   endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-  //   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  //   const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-  //   const startOfYear = new Date(today.getFullYear(), 0, 1);
-  //   const endOfYear = new Date(today.getFullYear(), 11, 31);
-
-  //   switch (filterType) {
-  //     case 'Today':
-  //       return date.toDateString() === today.toDateString();
-  //     case 'Tomorrow':
-  //       return date.toDateString() === tomorrow.toDateString();
-  //     case 'ThisWeek':
-  //       return date >= startOfWeek && date <= endOfWeek;
-  //     case 'ThisMonth':
-  //       return date >= startOfMonth && date <= endOfMonth;
-  //     case 'ThisYear':
-  //       return date >= startOfYear && date <= endOfYear;
-  //     case 'Custom': {
-  //       const from = new Date(customRange.from);
-  //       const to = new Date(customRange.to);
-  //       if (isNaN(from) || isNaN(to)) return false;
-  //       return date >= from && date <= to;
-  //     }
-  //     default:
-  //       return true;
-  //   }
-  // };
-
-  // // Chunk 10: Employee Data Processing
-  // const processEmployeeData = (data, taskCategory, filterType, customRange, taskDateField = 'DeadLineDate') => {
-  //   const EmployeeWiseDataMap = new Map();
-  //   data?.forEach((task) => {
-  //     if (!isWithinDateRange(task, filterType, customRange, taskDateField)) return;
-
-  //     const estimate = task.estimate_hrs || 0;
-  //     const actual = task.workinghr || 0;
-  //     const status = (task.status || "").toLowerCase();
-
-  //     if (Array.isArray(task.assignee)) {
-  //       task.assignee.forEach((assignee) => {
-  //         const empKey = assignee.userid || assignee.customercode || assignee.firstname;
-
-  //         if (!EmployeeWiseDataMap.has(empKey)) {
-  //           EmployeeWiseDataMap.set(empKey, {
-  //             ...assignee,
-  //             TotalTasks: 0,
-  //             Completed: 0,
-  //             InProgress: 0,
-  //             TotalEstimate: 0,
-  //             TotalActual: 0,
-  //             Tasks: [],
-  //             CategorySummaryMap: new Map(),
-  //           });
-  //         }
-
-  //         const emp = EmployeeWiseDataMap.get(empKey);
-  //         emp.TotalTasks += 1;
-  //         emp.TotalEstimate += estimate;
-  //         emp.TotalActual += actual;
-  //         emp.Tasks.push(task);
-
-  //         if (status === "completed") emp.Completed += 1;
-  //         if (status === "running") emp.InProgress += 1;
-
-  //         const labelObj = taskCategory?.find(c => c.id === task.workcategoryid);
-  //         const labelName = labelObj?.labelname || "Unknown";
-  //         const currentCount = emp.CategorySummaryMap.get(labelName) || 0;
-  //         emp.CategorySummaryMap.set(labelName, currentCount + 1);
-  //       });
-  //     }
-  //   });
-
-  //   return Array.from(EmployeeWiseDataMap.values()).map((emp) => {
-  //     const progress = calculateProgress(emp.Completed, emp.TotalTasks);
-  //     const diff = emp.TotalActual - emp.TotalEstimate;
-  //     const performance = emp.TotalEstimate > 0
-  //       ? Math.round((emp.TotalActual / emp.TotalEstimate) * 100)
-  //       : 100;
-
-  //     const CategorySummary = Array.from(emp.CategorySummaryMap.entries()).map(
-  //       ([categoryname, count]) => ({ categoryname, count })
-  //     );
-
-  //     const { CategorySummaryMap, ...empData } = emp;
-
-  //     return {
-  //       ...empData,
-  //       Progress: `${progress}%`,
-  //       TotalDiff: diff,
-  //       Performance: `${performance}%`,
-  //       CategorySummary
-  //     };
-  //   });
-  // };
-
-  // // Chunk 11: Module-wise Data Processing
-  // const processModuleWiseData = (data, ModuleList, taskCategory, filterType, customRange, taskDateField = 'DeadLineDate') => {
-  //   const ModuleWiseDataMap = new Map();
-
-  //   data?.forEach((task) => {
-  //     if (!isWithinDateRange(task, filterType, customRange, taskDateField)) return;
-
-  //     const moduleId = task.moduleid;
-  //     if (!moduleId) return;
-
-  //     if (!ModuleWiseDataMap.has(moduleId)) {
-  //       ModuleWiseDataMap.set(moduleId, {
-  //         moduleid: moduleId,
-  //         modulename: ModuleList?.find(m => m.taskid === moduleId)?.taskname || "Unknown",
-  //         TotalTasks: 0,
-  //         Completed: 0,
-  //         InProgress: 0,
-  //         TotalEstimate: 0,
-  //         TotalActual: 0,
-  //         Tasks: [],
-  //         CategorySummaryTemp: new Map(),
-  //       });
-  //     }
-
-  //     const mod = ModuleWiseDataMap.get(moduleId);
-  //     const status = (task.status || "").toLowerCase();
-
-  //     mod.TotalTasks += 1;
-  //     mod.TotalEstimate += task.estimate_hrs || 0;
-  //     mod.TotalActual += task.workinghr || 0;
-  //     mod.Tasks.push(task);
-
-  //     if (status === "completed") mod.Completed += 1;
-  //     if (status === "running") mod.InProgress += 1;
-
-  //     const labelObj = taskCategory?.find(c => c.id === task.workcategoryid);
-  //     const labelName = labelObj?.labelname || "Unknown";
-  //     const currentCount = mod.CategorySummaryTemp.get(labelName) || 0;
-  //     mod.CategorySummaryTemp.set(labelName, currentCount + 1);
-  //   });
-
-  //   return Array.from(ModuleWiseDataMap.values()).map((mod) => {
-  //     const progress = calculateProgress(mod.Completed, mod.TotalTasks);
-  //     const diff = mod.TotalActual - mod.TotalEstimate;
-  //     const performance = mod.TotalEstimate > 0
-  //       ? Math.round((mod.TotalActual / mod.TotalEstimate) * 100)
-  //       : 100;
-
-  //     const CategorySummary = Array.from(mod.CategorySummaryTemp.entries()).map(
-  //       ([categoryname, count]) => ({ categoryname, count })
-  //     );
-
-  //     const { CategorySummaryTemp, ...modData } = mod;
-
-  //     return {
-  //       ...modData,
-  //       Progress: `${progress}%`,
-  //       TotalDiff: diff,
-  //       Performance: `${performance}%`,
-  //       CategorySummary
-  //     };
-  //   });
-  // };
-
   // Main optimized function
   const formatDataToTree = useMemo(() => {
     return (data, parsedData, dateFilter = 'All', customRange = {}) => {
@@ -612,14 +431,7 @@ const useFullTaskFormatFile = () => {
         ModuleProgress,
         ModuleTeamMembers
       } = processModuleData(TaskData, categoryMap, taskCategory);
-
-      // let EmployeeWiseData = [];
-      // let ModuleWiseData = [];
-      // if (location?.pathname?.includes("/reports")) {
-      //   EmployeeWiseData = processEmployeeData(data, taskCategory, dateFilter, customRange);
-      //   ModuleWiseData = processModuleWiseData(data, ModuleList, taskCategory, dateFilter, customRange);
-      // }
-
+      
       // Set loading state
       setTimeout(() => setIsWhTLoading(false), 50);
 
@@ -634,8 +446,6 @@ const useFullTaskFormatFile = () => {
         ModuleMilestoneData,
         ModuleProgress,
         ModuleTeamMembers,
-        // EmployeeWiseData,
-        // ModuleWiseData,
       };
     };
   }, [taskCategory, location.pathname]);

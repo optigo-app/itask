@@ -10,8 +10,6 @@ import { Link } from 'react-router-dom';
 import { renderAssigneeAvatars } from '../../Utils/globalfun';
 
 const Projects = ({ projects, navigate, isLoding }) => {
-    console.log('projects: ', projects);
-    console.log('isLoding: ', isLoding);
     const setAssigneeId = useSetRecoilState(assigneeId);
     const [showAll, setShowAll] = useState(false);
 

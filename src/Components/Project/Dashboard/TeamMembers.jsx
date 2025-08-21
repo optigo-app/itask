@@ -79,18 +79,31 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
     }
 
     const handleSave = async (updatedList) => {
-        const formattedTeamList = updatedList
-            ?.map((member) => `${member.employee.id}#${member.role}#${member?.limitedAccess == true ? 1 : 0 ?? 0}`)
-            .join(",");
-        const apiRes = await AddPrTeamsApi(formattedTeamList, decodedData);
-        if (apiRes?.rd[0]?.stat == 1) {
-            toast.success("Team added successfully");
-            setOpen(false);
-            handleGetTeamMembers();
-        } else {
-            toast.error("Something went wrong");
+        setIsLoading(true);
+        setOpen(false);
+        try {
+            const formattedTeamList = updatedList
+                ?.map(
+                    (member) =>
+                        `${member.employee.id}#${member.role}#${member?.limitedAccess === true ? 1 : 0 ?? 0}`
+                )
+                .join(",");
+            const apiRes = await AddPrTeamsApi(formattedTeamList, decodedData);
+            if (apiRes?.rd[0]?.stat === 1) {
+                toast.success("Team added successfully");
+                handleGetTeamMembers();
+            } else {
+                toast.error("Something went wrong");
+            }
+        } catch (error) {
+            console.error("Error saving team:", error);
+            toast.error("An error occurred while saving the team");
+        } finally {
+            setIsLoading(false);
         }
     };
+
+
     return (
         <>
             {isLoading || isLoading == null ? <LoadingBackdrop isLoading={true} />

@@ -34,7 +34,6 @@ const Task = () => {
   const [activeButton, setActiveButton] = useState("table");
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [filters, setFilters] = useRecoilState(Advfilters);
-  console.log('filters: ', filters);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const [tasks, setTasks] = useRecoilState(TaskData);
   const setTaskDataLength = useSetRecoilState(taskLength)
@@ -684,7 +683,6 @@ const Task = () => {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [contextMenu]);
-
 
   return (
     <Box className="task-container">
