@@ -59,7 +59,6 @@ const TaskDetailsModal = ({
     };
 
     const totalPages = Math?.ceil(filteredTasks && filteredTasks?.length / rowsPerPage);
-    console.log('totalPages: ', totalPages);
 
     const paginatedTasks = useMemo(() => {
         const start = (page - 1) * rowsPerPage;
@@ -107,8 +106,6 @@ const TaskDetailsModal = ({
             ))}
         </AvatarGroup>
     );
-
-    console.log("paginatedTasks?.length", paginatedTasks?.length)
 
     return (
         <Dialog

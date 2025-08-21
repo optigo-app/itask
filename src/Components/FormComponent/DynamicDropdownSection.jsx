@@ -10,28 +10,30 @@ const DynamicDropdownSection = ({
     mainMdValue = 4,
     mdValue = 4,
     taskType = 'single',
+    selectedMainGroup,
+    setSelectedMainGroup
 }) => {
-    const [selectedTeam, setSelectedTeam] = useState('');
     const [availableTeams, setAvailableTeams] = useState([]);
     const [filteredGroupConfigs, setFilteredGroupConfigs] = useState([]);
 
     useEffect(() => {
+        debugger
         const teams = Array.from(new Set(dropdownConfigs?.map((d) => d.teamName)))?.map((team) => ({
             id: team,
             labelname: team,
         }));
         setAvailableTeams(teams);
-        setSelectedTeam(teams[0]?.id);
+        setSelectedMainGroup(teams[0]?.id);
     }, [dropdownConfigs]);
 
     useEffect(() => {
-        if (selectedTeam) {
-            const filtered = dropdownConfigs.filter((d) => d.teamName === selectedTeam);
+        if (selectedMainGroup) {
+            const filtered = dropdownConfigs.filter((d) => d.teamName === selectedMainGroup);
             setFilteredGroupConfigs(filtered);
         } else {
             setFilteredGroupConfigs([]);
         }
-    }, [selectedTeam, dropdownConfigs]);
+    }, [selectedMainGroup, dropdownConfigs]);
 
     return (
         <>
@@ -45,12 +47,12 @@ const DynamicDropdownSection = ({
                     {/* Team Dropdown */}
                     <Grid item xs={12} md={12}>
                         <CustomAutocomplete
-                            label="Select Team"
-                            name="team"
-                            value={selectedTeam}
-                            onChange={(e) => setSelectedTeam(e.target.value)}
+                            label="Select Group"
+                            name="mainGroup"
+                            value={selectedMainGroup}
+                            onChange={(e) => setSelectedMainGroup(e.target.value)}
                             options={availableTeams}
-                            placeholder="Select Team"
+                            placeholder="Select Group"
                         />
                     </Grid>
 

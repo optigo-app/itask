@@ -289,14 +289,12 @@ const CalendarGridView = () => {
         ...task,
         workinghr: task.workinghr,
       };
-      console.log('updatedTask: ', updatedTask);
       try {
         const rootSubrootflagval = { Task: 'root' };
         const apiRes = await AddTaskDataApi(updatedTask, rootSubrootflagval);
         if (apiRes) {
           toast.success('Task working hrs added successfully!');
           handleTotalHourCalculate(tasks);
-          console.log('tasks: ', tasks);
         }
         const currentInput = estimateTextFieldRefs.current[taskId];
         if (currentInput) currentInput.blur();
@@ -392,7 +390,6 @@ const CalendarGridView = () => {
   }, [tasks, sortConfig]);
 
   const isValidDecimalInput = (value) => /^(\d{0,2}|\d{0,2}\.\d{0,2}|\.\d{1,2})?$/.test(value);
-  console.log('sortedTasks: ', sortedTasks);
 
   return (
     <Box className="cal-Container">

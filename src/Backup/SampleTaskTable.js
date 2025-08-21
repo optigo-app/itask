@@ -11,7 +11,6 @@ const SampleTaskTable = () => {
   });
 
   const handleDateChange = (range) => {
-    console.log("Selected range:", range);
     setDateRange(range);
     // optionally trigger API/filter update here
   };

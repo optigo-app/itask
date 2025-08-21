@@ -70,6 +70,7 @@ const SidebarDrawer = ({
     const [teams, setTeams] = useState([]);
     const [advMasterData, setAdvMasterData] = useState([]);
     const [prModuleMaster, setPrModuleMaster] = useState([]);
+    const [selectedMainGroup, setSelectedMainGroup] = useState('');
     const [formValues, setFormValues] = React.useState({
         taskName: "",
         bulkTask: [],
@@ -331,7 +332,6 @@ const SidebarDrawer = ({
         }));
     }
 
-
     const handleSubmit = (module) => {
         if (taskType !== "multi_input") {
             if (!formValues?.taskName?.trim()) {
@@ -356,7 +356,7 @@ const SidebarDrawer = ({
             acc[`group${idx + 1}_attr`] = item.selectedId;
             return acc;
         }, {}) || {};
-
+        const selectedMainGroupid = advMasterData?.find(d => d?.name == selectedMainGroup)?.id;
         const statusValue = statusData?.find(d => d.id == formValues.status);
         const updatedFormDataValue = {
             taskid: moduleData?.taskid || formDataValue?.taskid || formValues?.prModule?.taskid || "",
@@ -384,6 +384,7 @@ const SidebarDrawer = ({
             estimate_hrs: formValues.estimate_hrs ?? formDataValue?.estimate_hrs,
             estimate1_hrs: formValues.estimate1_hrs ?? formDataValue?.estimate1_hrs,
             estimate2_hrs: formValues.estimate2_hrs ?? formDataValue?.estimate2_hrs,
+            maingroupids: selectedMainGroupid,
             dynamicDropdowns: dynamicDropdowns ?? formDataValue?.dynamicDropdowns,
         };
 
@@ -661,7 +662,7 @@ const SidebarDrawer = ({
     }
 
     useEffect(() => {
-        if(open){
+        if (open) {
             handleProjectModuleData();
         }
     }, [open])
@@ -720,6 +721,8 @@ const SidebarDrawer = ({
                                     divider={true}
                                     mdValue={12}
                                     taskType="single"
+                                    selectedMainGroup={selectedMainGroup}
+                                    setSelectedMainGroup={setSelectedMainGroup}
                                 />
                             }
                             {taskType === 'multi_input' && (

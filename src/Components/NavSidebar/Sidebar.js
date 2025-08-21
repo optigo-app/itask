@@ -41,7 +41,6 @@ const Sidebar = () => {
     const isMiniDrawer = useMediaQuery('(max-width:1000px)');
     const [isDrawerOpen, setDrawerOpen] = useState(true);
     const [isFullSidebar, setFullSidebar] = useRecoilState(FullSidebar);
-    console.log('isFullSidebar: ', isFullSidebar);
     const [activeItem, setActiveItem] = useState('Home');
     const [openReports, setOpenReports] = useState(false);
     const drawerWidth = isFullSidebar || isDrawerOpen ? 240 : 80;

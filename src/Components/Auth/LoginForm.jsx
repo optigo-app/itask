@@ -28,7 +28,6 @@ const LoginPage = () => {
     const isMobile = useMediaQuery("(max-width:600px)");
     const [showPassword, setShowPassword] = useState(false);
     const [credentials, setCredentials] = useState({ companycode: "", userId: "", password: "" });
-    console.log('credentials: ', credentials);
     const [errors, setErrors] = useState({});
 
     const handleChange = (e) => {
