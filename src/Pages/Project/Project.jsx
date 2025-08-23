@@ -12,31 +12,35 @@ import {
   projectDatasRState,
   selectedCategoryAtom,
 } from "../../Recoil/atom";
-import { formatDate, getCategoryTaskSummary, isTaskToday } from "../../Utils/globalfun";
+import { fetchMasterGlFunc, formatDate, getCategoryTaskSummary, isTaskToday, mapTaskLabels } from "../../Utils/globalfun";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
 import { deleteTaskDataApi } from "../../Api/TaskApi/DeleteTaskApi";
 import { toast } from "react-toastify";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
-import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
 import { useLocation, useNavigate } from "react-router-dom";
+import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
 
 const TaskTable = React.lazy(() =>
   import("../../Components/Project/ListView/TableList")
-);
-
-const KanbanView = React.lazy(() =>
-  import("../../Components/Project/KanbanView/KanbanView")
 );
 
 const Project = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isLaptop = useMediaQuery("(max-width:1150px)");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isTaskLoading, setIsTaskLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(15);
-  const masterData = useRecoilValue(masterDataValue);
+  const [masterData, setMasterData] = useRecoilState(masterDataValue);
+  const [priorityData, setPriorityData] = useState();
+  const [statusData, setStatusData] = useState();
+  const [assigneeData, setAssigneeData] = useState();
+  const [taskDepartment, setTaskDepartment] = useState();
+  const [taskProject, setTaskProject] = useState();
+  const [taskCategory, setTaskCategory] = useState();
   const [activeButton, setActiveButton] = useState("table");
   const [project, setProject] = useRecoilState(projectDatasRState);
   const [filters, setFilters] = useRecoilState(Advfilters);
@@ -45,16 +49,6 @@ const Project = () => {
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [CategoryTSummary, setCategoryTSummary] = useState([]);
   const searchParams = new URLSearchParams(location.search);
-  const {
-    iswhMLoading,
-    iswhTLoading,
-    taskFinalData,
-    taskDepartment,
-    taskProject,
-    taskCategory,
-    priorityData,
-    statusData,
-    taskAssigneeData } = useFullTaskFormatFile();
 
   useEffect(() => {
     if (!location?.pathname?.includes("/projects")) {
@@ -66,16 +60,111 @@ const Project = () => {
     })
   }, [location])
 
-  useEffect(() => {
-    setTimeout(() => {
-      if (taskFinalData) {
-        const summary = getCategoryTaskSummary(taskFinalData?.ModuleList, taskCategory);
-        setCategoryTSummary(summary);
-        setProject(taskFinalData?.ModuleList);
-      }
-    }, 0);
+  const retrieveAndSetData = (key, setter) => {
+    const data = sessionStorage.getItem(key);
+    if (data) {
+      setter(JSON.parse(data));
+    }
+  };
 
-  }, [taskFinalData, callFetchTaskApi]);
+  const fetchMasterData = async () => {
+    setIsLoading(true);
+    try {
+      let storedStructuredData = sessionStorage.getItem("structuredMasterData");
+      let structuredData = storedStructuredData
+        ? JSON.parse(storedStructuredData)
+        : null;
+      if (!structuredData) {
+        await fetchMasterGlFunc();
+        storedStructuredData = sessionStorage.getItem("structuredMasterData");
+        structuredData = storedStructuredData
+          ? JSON.parse(storedStructuredData)
+          : null;
+      }
+      if (structuredData) {
+        setMasterData(structuredData);
+        retrieveAndSetData("taskAssigneeData", setAssigneeData);
+        retrieveAndSetData("taskstatusData", setStatusData);
+        retrieveAndSetData("taskpriorityData", setPriorityData);
+        retrieveAndSetData("taskdepartmentData", setTaskDepartment);
+        retrieveAndSetData("taskprojectData", setTaskProject);
+        retrieveAndSetData("taskworkcategoryData", setTaskCategory);
+      }
+    } catch (error) {
+      console.error("Error fetching master data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // master api call
+  useEffect(() => {
+    const init = sessionStorage.getItem("taskInit");
+    if (init) {
+      fetchMasterData();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (priorityData && statusData && taskProject && taskDepartment) {
+      fetchModuleData();
+    }
+  }, [priorityData, statusData, taskProject, taskDepartment, location]);
+
+  const fetchModuleData = async () => {
+    debugger
+    if (project?.length == 0) {
+      setIsTaskLoading(true);
+    }
+    try {
+      if (!priorityData || !statusData || !taskProject || !taskDepartment) {
+        setIsTaskLoading(false);
+        return;
+      }
+
+      const taskData = await fetchModuleDataApi();
+      const labeledTasks = mapTaskLabels(taskData);
+      const finalTaskData = [...labeledTasks];
+
+      const enhanceTask = (task) => {
+        const priority = priorityData?.find(
+          (item) => item?.id == task?.priorityid
+        );
+        const status = statusData?.find((item) => item?.id == task?.statusid);
+        const project = taskProject?.find(
+          (item) => item?.id == task?.projectid
+        );
+        const department = taskDepartment?.find(
+          (item) => item?.id == task?.departmentid
+        );
+        const category = taskCategory?.find(
+          (item) => item?.id == task?.workcategoryid
+        );
+
+        return {
+          ...task,
+          priority: priority ? priority?.labelname : "",
+          status: status ? status?.labelname : "",
+          taskPr: project ? project?.labelname : "",
+          taskDpt: department ? department?.labelname : "",
+          category: category?.labelname,
+        };
+      };
+
+      const enhancedTasks = finalTaskData?.map((task) => enhanceTask(task));
+      setTimeout(() => {
+        if (project) {
+          const summary = getCategoryTaskSummary(enhancedTasks, taskCategory);
+          setCategoryTSummary(summary);
+        }
+      }, 0);
+      setProject(enhancedTasks);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsTaskLoading(false);
+    }
+  };
 
   const handleFilterChange = (key, value) => {
     if (key === "clearFilter" && value == null) {
@@ -326,13 +415,13 @@ const Project = () => {
         activeButton={activeButton}
         onButtonClick={handleTabBtnClick}
         onFilterChange={handleFilterChange}
-        isLoading={iswhMLoading}
+        isLoading={isTaskLoading}
         masterData={masterData}
         priorityData={priorityData}
         projectData={taskProject}
         statusData={statusData}
         taskCategory={taskCategory}
-        taskAssigneeData={taskAssigneeData}
+        taskAssigneeData={assigneeData}
         CategorySummary={CategoryTSummary}
       />
 
@@ -357,11 +446,11 @@ const Project = () => {
               <Filters
                 {...filters}
                 onFilterChange={handleFilterChange}
-                isLoading={iswhMLoading}
+                isLoading={isLoading}
                 masterData={masterData}
                 priorityData={priorityData}
                 statusData={statusData}
-                assigneeData={taskAssigneeData}
+                assigneeData={assigneeData}
                 taskDepartment={taskDepartment}
                 taskProject={taskProject}
                 taskCategory={taskCategory}
@@ -377,11 +466,11 @@ const Project = () => {
           setFilters={setFilters}
           onFilterChange={handleFilterChange}
           onClearAll={handleClearAllFilters}
-          isLoading={iswhMLoading}
+          isLoading={isLoading}
           masterData={masterData}
           priorityData={priorityData}
           statusData={statusData}
-          assigneeData={taskAssigneeData}
+          assigneeData={assigneeData}
           taskDepartment={taskDepartment}
           taskProject={taskProject}
           taskCategory={taskCategory}
@@ -413,32 +502,17 @@ const Project = () => {
             transition={{ duration: 0.5, ease: "easeInOut" }}
           >
             <Suspense fallback={<></>}>
-              {/* {activeButton === "table" && ( */}
               <TaskTable
                 data={filteredData ?? null}
-                projectProgress={project?.projectProgress}
-                moduleProgress={taskFinalData?.ModuleProgress}
                 page={page}
                 rowsPerPage={rowsPerPage}
-                isLoading={iswhTLoading}
+                isLoading={isTaskLoading}
                 masterData={masterData}
                 handleLockProject={handleLockProject}
                 handleDeleteModule={handleDeleteModule}
                 handleChangePage={handleChangePage}
                 handlePageSizeChnage={handlePageSizeChnage}
               />
-              {/* )} */}
-
-              {/* {activeButton === "kanban" && (
-                <KanbanView
-                  taskdata={filteredData ?? null}
-                  isLoading={isTaskLoading}
-                  masterData={masterData}
-                  statusData={statusData}
-                  handleLockProject={handleLockProject}
-                  handleDeleteModule={handleDeleteModule}
-                />
-              )} */}
             </Suspense>
           </motion.div>
         )}

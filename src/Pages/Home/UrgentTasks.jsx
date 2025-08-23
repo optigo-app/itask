@@ -2,12 +2,17 @@ import React from 'react'
 import { Card, CardContent, Typography, Table, TableBody, TableCell, TableRow, Box, Button } from '@mui/material'
 import { priorityColors } from '../../Utils/globalfun'
 import { FileCheck, Plus, SquareChartGantt } from 'lucide-react'
+import PriorityBadge from '../../Components/ShortcutsComponent/PriorityBadge'
 
 const UrgentTask = ({ urgentTask, navigate, isLoding }) => {
 
     const handleAddTask = () => {
         navigate('/tasks')
     }
+    const onPriorityChange = () => {
+        console.log('urgentTask', urgentTask)
+    };
+
     return (
         <Card className='HomePageCom'>
             <CardContent sx={{ padding: '0', paddingBottom: '0 !important' }}>
@@ -23,21 +28,7 @@ const UrgentTask = ({ urgentTask, navigate, isLoding }) => {
                                         <TableRow key={task.taskid}>
                                             <TableCell>{task.taskname}</TableCell>
                                             <TableCell>
-                                                <div style={{
-                                                    color: priorityColors[task?.priority]?.color,
-                                                    backgroundColor: priorityColors[task?.priority]?.backgroundColor,
-                                                    width: 'fit-content',
-                                                    padding: '0.2rem 0.8rem',
-                                                    borderRadius: '5px',
-                                                    textAlign: 'center',
-                                                    fontSize: '13.5px',
-                                                    fontWeight: '500',
-                                                    display: 'flex',
-                                                    justifyContent: 'center',
-                                                    alignItems: 'center',
-                                                }}>
-                                                    {task.priority}
-                                                </div>
+                                                <PriorityBadge task={task} priorityColors={priorityColors} onPriorityChange={onPriorityChange} disable={true} />
                                             </TableCell>
                                         </TableRow>
                                     ))}

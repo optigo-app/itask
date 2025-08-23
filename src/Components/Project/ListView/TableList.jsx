@@ -11,7 +11,6 @@ import {
     TableSortLabel,
     Box,
     Typography,
-    Pagination,
     LinearProgress,
     IconButton,
     Tooltip,
@@ -114,7 +113,6 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
 
     const groupByProject = (tasks) => {
         const grouped = {};
-
         tasks.forEach((task) => {
             const projectId = task.projectid;
             if (!grouped[projectId]) {
@@ -253,7 +251,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
             moduleid: task?.taskid,
             maingroupids: task?.maingroupids,
             isLimited: isLimitedAccess ?? 0,
-            breadcrumbTitles:task?.breadcrumbTitles
+            breadcrumbTitles: task?.breadcrumbTitles
         }
         const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
         const formattedPrName = task?.taskPr?.trim()?.replace(/\s+/g, '-') || '';
@@ -425,26 +423,14 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                     </Tooltip>
                 ))}
             </AvatarGroup>
-
-            {/* <IconButton
-                id="add-task"
-                aria-label="add-task"
-                aria-labelledby="add-task"
-                size="small"
-                onClick={() => handleAssigneeShortcut(task, { Task: 'root' })}
-                style={{
-                    visibility: hoveredTaskId === task?.taskid && hoveredColumnname === 'Assignee' ? 'visible' : 'hidden',
-                }}
-            >
-                <CirclePlus size={20} color="#7367f0" />
-            </IconButton> */}
         </Box>
     );
 
+
     return (
         <>
-            {(isLoading === null || isLoading || (!data && isLoading !== false)) ? (
-                <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
+            {isLoading && projectData?.length == 0 ? (
+                <LoadingBackdrop isLoading={true} />
             ) :
                 <TableContainer
                     component={Paper}
@@ -530,7 +516,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                     </Box>
                                                 </TableCell>
                                                 <TableCell colSpan={1}>
-                                                    <Box display="flex" alignItems="center" gap={2} width="100%">
+                                                    {/* <Box display="flex" alignItems="center" gap={2} width="100%">
                                                         <Box width="100%" position="relative">
                                                             <LinearProgress
                                                                 aria-label="Task progress status"
@@ -550,7 +536,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                         <Typography className="progressBarText" variant="body2" minWidth={100}>
                                                             {`${project?.projectProgress}%`}
                                                         </Typography>
-                                                    </Box>
+                                                    </Box> */}
                                                 </TableCell>
                                                 <TableCell colSpan={4} />
                                                 <TableCell colSpan={1} sx={{ textAlign: "right" }}>
@@ -602,20 +588,20 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                                     <LinearProgress
                                                                         aria-label="Task progress status"
                                                                         variant="determinate"
-                                                                        value={moduleProgress[task?.taskid]}
+                                                                        value={task?.progress}
                                                                         sx={{
                                                                             height: 7,
                                                                             borderRadius: 5,
                                                                             backgroundColor: "#e0e0e0",
                                                                             "& .MuiLinearProgress-bar": {
-                                                                                backgroundColor: getStatusColor(moduleProgress[task?.taskid]),
+                                                                                backgroundColor: getStatusColor(task?.progress),
                                                                             },
                                                                         }}
                                                                         className="progressBar"
                                                                     />
                                                                 </Box>
                                                                 <Typography className="progressBarText" variant="body2" minWidth={100}>
-                                                                    {`${moduleProgress[task?.taskid]}%`}
+                                                                    {`${task?.progress}%`}
                                                                 </Typography>
                                                             </Box>
                                                         </TableCell>
@@ -658,19 +644,19 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
 
                             {!isLoading && data?.length !== 0 &&
                                 <TableRow>
-                                <TableCell colSpan={columns.length}>
-                                    {currentData?.length !== 0 && (
-                                        <TablePaginationFooter
-                                            page={page}
-                                            rowsPerPage={rowsPerPage}
-                                            totalCount={data?.length}
-                                            totalPages={totalPages}
-                                            onPageChange={handleChangePage}
-                                            onPageSizeChange={handlePageSizeChnage}
-                                        />
-                                    )}
-                                </TableCell>
-                            </TableRow>
+                                    <TableCell colSpan={columns.length}>
+                                        {currentData?.length !== 0 && (
+                                            <TablePaginationFooter
+                                                page={page}
+                                                rowsPerPage={rowsPerPage}
+                                                totalCount={data?.length}
+                                                totalPages={totalPages}
+                                                onPageChange={handleChangePage}
+                                                onPageSizeChange={handlePageSizeChnage}
+                                            />
+                                        )}
+                                    </TableCell>
+                                </TableRow>
                             }
                         </TableBody>
                     </Table>

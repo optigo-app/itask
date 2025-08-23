@@ -46,6 +46,8 @@ import { useReactToPrint } from "react-to-print";
 import { ResizableBox } from "react-resizable";
 import { debounce } from "lodash";
 import TablePaginationFooter from "../../ShortcutsComponent/Pagination/TablePaginationFooter";
+import { PERMISSIONS, ROLES } from "../../Auth/Role/permissions";
+import useAccess from "../../Auth/Role/useAccess";
 
 const initialColumns = [
     { id: "taskname", label: "Task Name", width: 240 },
@@ -83,6 +85,7 @@ const TableView = ({
     handleDeadlineDateChange,
     handlePageSizeChnage,
     isLoading }) => {
+    const { hasAccess } = useAccess();
     const [anchorPrintEl, setAnchorPrintEl] = useState(null);
     const printRef1 = React.useRef(null);
     const printRef2 = React.useRef(null);
@@ -109,10 +112,12 @@ const TableView = ({
     const [isHoveredResizable, setIsHoveredResizable] = useState(false);
     const [resizingColumnId, setResizingColumnId] = useState(null);
 
-    const handleDeadlineClick = (e, task) => {
+    const handleDeadlineClick = (e, task, access) => {
+        if (access) return;
         setAnchorDeadlineEl(e.currentTarget)
         setSelectedItem(task);
     };
+
     const handlDeadlineeClose = () => setAnchorDeadlineEl(null);
 
     const openDeadline = Boolean(anchorDeadlineEl);
@@ -363,77 +368,83 @@ const TableView = ({
         handleTimeTrackModalOpen,
         handleEditTask,
         handleViewTask
-    ) => (
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-            <IconButton
-                aria-label="Time Track Task button"
-                onClick={() => handleTimeTrackModalOpen(task)}
-                sx={{
-                    color: taskTimeRunning[task.taskid] ? "#FFD700 !important" : "#7d7f85 !important",
-                    transition: "color 0.3s",
-                    backgroundColor: taskTimeRunning[task.taskid] ? "#6D6B77" : "transparent",
-                    "&:hover": {
-                        color: taskTimeRunning[task.taskid] ? "#FFD700" : "#333",
+    ) => {
+        const access = task?.isparentfreeze == 1
+        console.log('access: ', access);
+        return (
+
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+                <IconButton
+                    aria-label="Time Track Task button"
+                    onClick={() => handleTimeTrackModalOpen(task)}
+                    sx={{
+                        color: taskTimeRunning[task.taskid] ? "#FFD700 !important" : "#7d7f85 !important",
+                        transition: "color 0.3s",
                         backgroundColor: taskTimeRunning[task.taskid] ? "#6D6B77" : "transparent",
-                    },
-                }}
-            >
-                <Timer size={20} className="iconbtn" />
-            </IconButton>
-            <IconButton
-                aria-label="print mom and maintenance Sheet button"
-                onClick={(event) => handleOpenPrintMenu(event, task)}
-                sx={{
-                    '&.Mui-disabled': {
-                        color: 'rgba(0, 0, 0, 0.26)',
-                    },
-                }}
-            >
-                <PrinterCheck size={20} className="iconbtn" />
-            </IconButton>
-            <IconButton
-                aria-label="View Module button"
-                onClick={() => handleOpenFileDrawer(task, { Task: "root" })}
-                sx={{
-                    '&.Mui-disabled': {
-                        color: 'rgba(0, 0, 0, 0.26)',
-                    },
-                }}
-            >
-                <Paperclip
-                    size={20}
-                    color="#808080"
-                    className="iconbtn"
-                />
-            </IconButton>
-            <IconButton
-                disabled={task?.isFreezed == 1}
-                onClick={() => handleEditTask(task, { Task: "root" })}
-                sx={{
-                    '&.Mui-disabled': {
-                        color: 'rgba(0, 0, 0, 0.26)',
-                    },
-                }}
-                aria-label="Edit-Task button"
-            >
-                <Pencil
-                    size={20}
-                    color={task?.isFreezed == 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                    className="iconbtn"
-                />
-            </IconButton>
-            <IconButton
-                aria-label="view Task button"
-                onClick={() => handleViewTask(task, { Task: "root" })}
-            >
-                <Eye
-                    size={20}
-                    color="#808080"
-                    className="iconbtn"
-                />
-            </IconButton>
-        </Box>
-    );
+                        "&:hover": {
+                            color: taskTimeRunning[task.taskid] ? "#FFD700" : "#333",
+                            backgroundColor: taskTimeRunning[task.taskid] ? "#6D6B77" : "transparent",
+                        },
+                    }}
+                >
+                    <Timer size={20} className="iconbtn" />
+                </IconButton>
+                <IconButton
+                    aria-label="print mom and maintenance Sheet button"
+                    onClick={(event) => handleOpenPrintMenu(event, task)}
+                    sx={{
+                        '&.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                        },
+                    }}
+                >
+                    <PrinterCheck size={20} className="iconbtn" />
+                </IconButton>
+                <IconButton
+                    disabled={access}
+                    aria-label="View Module button"
+                    onClick={() => handleOpenFileDrawer(task, { Task: "root" })}
+                    sx={{
+                        '&.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                        },
+                    }}
+                >
+                    <Paperclip
+                        size={20}
+                        color={access ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                        className="iconbtn"
+                    />
+                </IconButton>
+                <IconButton
+                    disabled={access}
+                    onClick={() => handleEditTask(task, { Task: "root" })}
+                    sx={{
+                        '&.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                        },
+                    }}
+                    aria-label="Edit-Task button"
+                >
+                    <Pencil
+                        size={20}
+                        color={access ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                        className="iconbtn"
+                    />
+                </IconButton>
+                <IconButton
+                    aria-label="view Task button"
+                    onClick={() => handleViewTask(task, { Task: "root" })}
+                >
+                    <Eye
+                        size={20}
+                        color="#808080"
+                        className="iconbtn"
+                    />
+                </IconButton>
+            </Box>
+        )
+    };
 
     const renderTaskNameSection = (
         task,
@@ -780,73 +791,76 @@ const TableView = ({
                         <TableBody>
                             {data && data?.length !== 0 ? (
                                 <>
-                                    {currentData?.map((task, taskIndex) => (
-                                        <React.Fragment key={taskIndex}>
-                                            <TableRow key={taskIndex}
-                                                sx={{
-                                                    opacity: task?.isCopyActive == true ? "0.7 !important" : "1 !important",
-                                                    pointerEvents: task?.isCopyActive ? 'none' : 'auto',
-                                                    cursor: task?.isCopyActive ? 'not-allowed' : 'default',
-                                                    backgroundColor: task?.isCopyActive == true
-                                                        ? '#F1EDFE !important'
-                                                        : hoveredTaskId === task?.taskid
-                                                            ? '#f5f5f5'
-                                                            : expandedTasks[task.taskid]
+                                    {currentData?.map((task, taskIndex) => {
+                                        const access = task?.isparentfreeze == 1;
+                                        return (
+                                            <React.Fragment key={taskIndex}>
+                                                <TableRow key={taskIndex}
+                                                    sx={{
+                                                        opacity: task?.isCopyActive == true ? "0.7 !important" : "1 !important",
+                                                        pointerEvents: task?.isCopyActive ? 'none' : 'auto',
+                                                        cursor: task?.isCopyActive ? 'not-allowed' : 'default',
+                                                        backgroundColor: task?.isCopyActive == true
+                                                            ? '#F1EDFE !important'
+                                                            : hoveredTaskId === task?.taskid
                                                                 ? '#f5f5f5'
-                                                                : 'inherit',
-                                                }}
-                                                onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
-                                                onMouseLeave={handleTaskMouseLeave}
-                                                onContextMenu={(e) => handleContextMenu(e, task)}
-                                            >
-                                                <TableCell
+                                                                : expandedTasks[task.taskid]
+                                                                    ? '#f5f5f5'
+                                                                    : 'inherit',
+                                                    }}
                                                     onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
                                                     onMouseLeave={handleTaskMouseLeave}
+                                                    onContextMenu={(e) => handleContextMenu(e, task)}
                                                 >
-                                                    {renderTaskNameSection(
-                                                        task,
-                                                        expandedTasks,
-                                                        toggleSubtasks,
-                                                        handleAddTask,
-                                                        hoveredTaskId,
-                                                        hoveredColumnname,
-                                                        resizingColumnId === 'task'
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="taskPriorityCell" title={task?.taskPr}>{task?.taskPr}</TableCell>
-                                                <TableCell>
-                                                    {renderTaskProgressBar(
-                                                        task?.progress_per,
-                                                        task?.isNotShowProgress,
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange} disable={false} />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange} disable={false} flag="secondaryStatus" />
-                                                </TableCell>
-                                                <TableCell
-                                                    onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
-                                                    onMouseLeave={handleTaskMouseLeave}>
-                                                    {renderAssigneeAvatars(task?.assignee, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
-                                                </TableCell>
-                                                <TableCell onClick={(e) => handleDeadlineClick(e, task)}>
-                                                    {cleanDate(task?.DeadLineDate) ? formatDate2(task.DeadLineDate) : '-'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <PriorityBadge task={task} priorityColors={priorityColors} onPriorityChange={onPriorityChange} disable={true} />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <StatusCircles task={task} />
-                                                </TableCell>
-                                                <TableCell align="center" className="sticky-last-col">
-                                                    {renderTaskActions(task, taskTimeRunning, handleTimeTrackModalOpen, handleEditTask, handleViewTask)}
-                                                </TableCell>
-                                            </TableRow>
-                                            {expandedTasks[task.taskid] && task?.subtasks?.length > 0 && renderSubtasks(task.subtasks, task.taskid)}
-                                        </React.Fragment>
-                                    ))}
+                                                    <TableCell
+                                                        onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
+                                                        onMouseLeave={handleTaskMouseLeave}
+                                                    >
+                                                        {renderTaskNameSection(
+                                                            task,
+                                                            expandedTasks,
+                                                            toggleSubtasks,
+                                                            handleAddTask,
+                                                            hoveredTaskId,
+                                                            hoveredColumnname,
+                                                            resizingColumnId === 'task'
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="taskPriorityCell" title={task?.taskPr}>{task?.taskPr}</TableCell>
+                                                    <TableCell>
+                                                        {renderTaskProgressBar(
+                                                            task?.progress_per,
+                                                            task?.isNotShowProgress,
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange} disable={access ? true : false} />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange} disable={access ? true : false} flag="secondaryStatus" />
+                                                    </TableCell>
+                                                    <TableCell
+                                                        onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
+                                                        onMouseLeave={handleTaskMouseLeave}>
+                                                        {renderAssigneeAvatars(task?.assignee, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
+                                                    </TableCell>
+                                                    <TableCell onClick={(e) => handleDeadlineClick(e, task, access)} sx={{ cursor: access ? 'default' : 'pointer' }}>
+                                                        {cleanDate(task?.DeadLineDate) ? formatDate2(task.DeadLineDate) : '-'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <PriorityBadge task={task} priorityColors={priorityColors} onPriorityChange={onPriorityChange} disable={access ? true : false} />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <StatusCircles task={task} />
+                                                    </TableCell>
+                                                    <TableCell align="center" className="sticky-last-col">
+                                                        {renderTaskActions(task, taskTimeRunning, handleTimeTrackModalOpen, handleEditTask, handleViewTask)}
+                                                    </TableCell>
+                                                </TableRow>
+                                                {expandedTasks[task.taskid] && task?.subtasks?.length > 0 && renderSubtasks(task.subtasks, task.taskid)}
+                                            </React.Fragment>
+                                        )
+                                    })}
                                 </>
                             ) :
                                 <TableRow>
