@@ -352,8 +352,8 @@ const SidebarDrawer = ({
                 return acc;
             }, {}) || {}
         );
-        const dynamicDropdowns = formValues?.dynamicDropdowns?.reduce((acc, item, idx) => {
-            acc[`group${idx + 1}_attr`] = item.selectedId;
+        const dynamicDropdowns = formValues?.dynamicDropdowns?.reduce((acc, item) => {
+            acc[`group${item.groupId}_attr`] = item.selectedId;
             return acc;
         }, {}) || {};
         const selectedMainGroupid = advMasterData?.find(d => d?.name == selectedMainGroup)?.id;
@@ -384,7 +384,7 @@ const SidebarDrawer = ({
             estimate_hrs: formValues.estimate_hrs ?? formDataValue?.estimate_hrs,
             estimate1_hrs: formValues.estimate1_hrs ?? formDataValue?.estimate1_hrs,
             estimate2_hrs: formValues.estimate2_hrs ?? formDataValue?.estimate2_hrs,
-            maingroupids: selectedMainGroupid,
+            maingroupids: selectedMainGroupid ?? formDataValue?.maingroupids,
             dynamicDropdowns: dynamicDropdowns ?? formDataValue?.dynamicDropdowns,
         };
 
