@@ -28,8 +28,11 @@ function KanbanView({
   const [hoveredTaskId, setHoveredTaskId] = useState(null);
   const taskStatusData = JSON?.parse(sessionStorage.getItem("taskstatusData")) || [];
 
-  const handleToggleShowAll = () => {
-    setShowAll(prevState => !prevState);
+  const handleToggleShowAll = (task) => {
+    setShowAll(prevState => ({
+      ...prevState,
+      [task.taskid]: !prevState[task.taskid]
+    }));
   };
 
   const handleDelete = (task) => {
@@ -378,7 +381,7 @@ function KanbanView({
                                     </Typography>
                                   </Box>
                                   <Box position="relative">
-                                    {task?.subtasks?.slice(0, showAll ? task.subtasks.length : 5).map((subtask, index) => (
+                                    {task?.subtasks?.slice(0, showAll[task.taskid] ? task.subtasks.length : 5).map((subtask, index) => (
                                       <Box
                                         key={subtask.taskid}
                                         display="flex"
@@ -414,12 +417,12 @@ function KanbanView({
                                           textDecoration: 'underline !important',
                                           transition: 'all 0.3s ease-in-out',
                                         }}
-                                        onClick={handleToggleShowAll}
+                                        onClick={() => handleToggleShowAll(task)}
                                       >
-                                        {showAll ? 'Show Less' : 'Show More'}
+                                        {showAll[task.taskid] ? 'Show Less' : 'Show More'}
                                       </Button>
                                     )}
-                                  </Box>
+                                  </Box>                 
                                   {/* <Button
                                     onClick={() => handleAddTask(task, { Task: 'subroot' })}
                                     className="buttonClassname"

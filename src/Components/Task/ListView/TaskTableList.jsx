@@ -370,7 +370,6 @@ const TableView = ({
         handleViewTask
     ) => {
         const access = task?.isparentfreeze == 1
-        console.log('access: ', access);
         return (
 
             <Box sx={{ display: "flex", alignItems: "center" }}>

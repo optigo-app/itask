@@ -383,7 +383,7 @@ const ToggleGroup = ({ options, selectedValue, onRedirection, className }) => (
             {options?.map((option) => (
                 <ToggleButton key={option.value} value={option.value} className="toggle-button" onClick={() => onRedirection(option.value)}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                        {option.icon && <option.icon size={18} />}
+                        {option.icon && <option.icon size={16} />}
                         {option.label}
                     </Box>
                 </ToggleButton>

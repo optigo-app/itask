@@ -35,6 +35,7 @@ import {
   ClipboardPaste,
   Kanban,
   List,
+  ListFilter,
   SearchIcon,
   TimerIcon,
   User,
@@ -197,6 +198,9 @@ const HeaderButtons = ({
         </ToggleButton>
         <ToggleButton value="kanban" aria-label="kanban view" sx={{ borderRadius: '8px' }}>
           <Kanban className="iconbtn" size={20} />
+        </ToggleButton>
+        <ToggleButton value="Dynamic-Filter" aria-label="Dynamic Filter" sx={{ borderRadius: '8px' }}>
+          <ListFilter className="iconbtn" size={20} />
         </ToggleButton>
         <ToggleButton value="calendar" aria-label="Calendar view" sx={{ borderRadius: '8px' }}>
           <Calendar className="iconbtn" size={20} />

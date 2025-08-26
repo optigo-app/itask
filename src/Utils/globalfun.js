@@ -204,6 +204,64 @@ export const getStatusColor = (value) => {
     }
 };
 
+export const getcolorsData = {
+    red: {
+        color: "#f44336",
+        backgroundColor: "#ffebee",
+    },
+    green: {
+        color: "#4caf50",
+        backgroundColor: "#e8f5e9",
+    },
+    yellow: {
+        color: "#ffeb3b",
+        backgroundColor: "#fff9c4",
+    },
+    blue: {
+        color: "#2196f3",
+        backgroundColor: "#e3f2fd",
+    },
+    pink: {
+        color: "#e91e63",
+        backgroundColor: "#f8bbd0",
+    },
+    orange: {
+        color: "#ff9800",
+        backgroundColor: "#fff3e0",
+    },
+    purple: {
+        color: "#9c27b0",
+        backgroundColor: "#e1bee7",
+    },
+    cyan: {
+        color: "#00bcd4",
+        backgroundColor: "#e0f7fa",
+    },
+    indigo: {
+        color: "#3f51b5",
+        backgroundColor: "#e8eaf6",
+    },
+    teal: {
+        color: "#009688",
+        backgroundColor: "#b2dfdb",
+    },
+    brown: {    
+        color: "#795548",
+        backgroundColor: "#d7ccc8",
+    },
+    gray: {
+        color: "#9e9e9e",
+        backgroundColor: "#f5f5f5",
+    },
+    white: {
+        color: "#ffffff",
+        backgroundColor: "#ffffff",
+    },
+    black: {
+        color: "#000000",
+        backgroundColor: "#000000",
+    }
+}
 
 export function getPerformanceStatus(value) {
     const performance = typeof value === "string" ? parseFloat(value.replace("%", "")) : value;

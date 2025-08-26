@@ -234,7 +234,7 @@ const Sidebar = () => {
                                         <ListItem key={label} onClick={() => handleItemClick(path, routes)} sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row' }}>
                                             <ListItemButton className={`itask_drawerListItem ${activeItem === routes ? 'itask_drawerItemActive' : ''}`}>
                                                 <ListItemIcon className="itask_drawerItemIcon">
-                                                    <Icon className={activeItem === routes ? "iconActive" : 'iconUnactive'} size={22} />
+                                                    <Icon className={activeItem === routes ? "iconActive" : 'iconUnactive'} size={18} />
                                                 </ListItemIcon>
                                                 {isDrawerOpen && <ListItemText primary={label} className="itask_drawerItemText" />}
                                             </ListItemButton>
@@ -248,7 +248,7 @@ const Sidebar = () => {
                                         <ListItem sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row' }} key="Reports">
                                             <ListItemButton onClick={isDrawerOpen ? toggleReportsMenu : handleReportsClick} className={`itask_drawerListItem ${activeItem === 'Reports' ? 'itask_drawerItemActive1' : ''}`}>
                                                 <ListItemIcon className="itask_drawerItemIcon">
-                                                    <Ratio size={22} className={activeItem === 'Reports' ? "iconActive1" : 'iconUnactive'} />
+                                                    <Ratio size={18} className={activeItem === 'Reports' ? "iconActive1" : 'iconUnactive'} />
                                                 </ListItemIcon>
                                                 {isDrawerOpen && <ListItemText sx={{ m: 0 }} primary="Reports" />}
                                                 {isDrawerOpen && <span style={{ paddingRight: '8px' }}>{openReports ? <ExpandLess /> : <ExpandMore />}</span>}
