@@ -8,7 +8,7 @@
   background-color: red;
   border-radius: 50%;
 }
- 
+
 
 .noHistoryBox {
   display: flex;
@@ -21,24 +21,41 @@
   margin-top: 1rem;
 
   .emptyImg {
-      width: 50px;
-      height: auto;
-      margin-bottom: .2rem;
+    width: 50px;
+    height: auto;
+    margin-bottom: .2rem;
   }
 
   p {
-      &:first-of-type {
-          font-size: 14px;
-          font-weight: 600;
-          color: #6D6B77;
-          margin-bottom: 0.2rem;
-      }
+    &:first-of-type {
+      font-size: 14px;
+      font-weight: 600;
+      color: #6D6B77;
+      margin-bottom: 0.2rem;
+    }
 
-      &:last-of-type {
-          font-size: 12px;
-          color: #6D6B77;
-          max-width: 80%;
-          line-height: 1.4;
-      }
+    &:last-of-type {
+      font-size: 12px;
+      color: #6D6B77;
+      max-width: 80%;
+      line-height: 1.4;
+    }
   }
+}
+
+
+.MuiDataGrid-root .MuiDataGrid-cell:focus-within {
+  outline: none !important;
+}
+
+.MuiDataGrid-root .MuiDataGrid-columnHeader:focus-within {
+  outline: none !important;
+}
+
+.MuiDataGrid-root .MuiDataGrid-cell {
+  padding: 8px 16px;
+}
+
+.MuiDataGrid-toolbarContainer {
+  padding: 8px 16px !important;
 }

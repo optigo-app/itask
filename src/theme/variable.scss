@@ -60,7 +60,10 @@ $dark-light: #fff;
 // Divider Color
 $divider-color: #e0e0e0;
 
-
+p,
+div {
+    font-family: $font-family !important;
+}
 
 .buttonClassname {
     font-family: $font-family !important;

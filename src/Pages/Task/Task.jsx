@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
 import { MoveTaskApi } from "../../Api/TaskApi/MoveTaskApi";
 import CloseIcon from '@mui/icons-material/Close';
+import DynamicFilterReport from "../../Components/Task/DynamicReport/DynamicFilterReport";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
@@ -242,7 +243,6 @@ const Task = () => {
 
   const sortedData = recursiveSort(tasks, getComparator(order, orderBy));
 
-  // all level of filtering
   const filteredData = sortedData
     ?.map((task) => {
       const {
@@ -849,6 +849,9 @@ const Task = () => {
                   handleTaskFavorite={handleTaskFavorite}
                   handleFreezeTask={handleFreezeTask}
                 />
+              )}
+              {activeButton === "Dynamic-Filter" && (
+                <DynamicFilterReport />
               )}
             </Suspense>
           </motion.div>
