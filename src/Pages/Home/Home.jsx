@@ -156,7 +156,7 @@ const Home = () => {
     setIsLoding(true);
     handleMeetingbyLogin();
     fetchTaskAPiData();
-  }, []);
+  }, [location]);
 
   useEffect(() => {
     setPrTasksList(flattenTasks(task));

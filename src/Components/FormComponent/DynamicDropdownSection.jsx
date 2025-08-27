@@ -17,7 +17,6 @@ const DynamicDropdownSection = ({
     const [filteredGroupConfigs, setFilteredGroupConfigs] = useState([]);
 
     useEffect(() => {
-        debugger
         const teams = Array.from(new Set(dropdownConfigs?.map((d) => d.teamName)))?.map((team) => ({
             id: team,
             labelname: team,
@@ -34,7 +33,7 @@ const DynamicDropdownSection = ({
             setFilteredGroupConfigs([]);
         }
     }, [selectedMainGroup, dropdownConfigs]);
-
+debugger
     return (
         <>
             {divider && (
@@ -64,7 +63,7 @@ const DynamicDropdownSection = ({
                                 name={dropdown.groupName}
                                 value={
                                     formValues.dynamicDropdowns?.find(
-                                        (d) => d.label === dropdown.label
+                                        (d) => d?.label === dropdown?.label
                                     )?.selectedId || ''
                                 }
                                 onChange={(e) => handleDropdownChange(dropdown, e.target.value)}

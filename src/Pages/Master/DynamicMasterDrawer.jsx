@@ -6,8 +6,10 @@ import {
     Typography,
     Paper,
     Divider,
+    IconButton,
 } from '@mui/material';
 import { commonTextFieldProps } from '../../Utils/globalfun';
+import { Trash2 } from 'lucide-react';
 
 const DynamicMasterDrawer = ({ groups, setGroups }) => {
     const [hideAddGroupBtn, setHideAddGroupBtn] = useState(false);
@@ -84,7 +86,6 @@ const DynamicMasterDrawer = ({ groups, setGroups }) => {
             )
         );
     };
-    
 
     return (
         <Box sx={{ mt: 2 }}>
@@ -108,38 +109,45 @@ const DynamicMasterDrawer = ({ groups, setGroups }) => {
                             >
                                 Group Name
                             </Typography>
-                            <TextField
-                                placeholder='Enter Group Name'
-                                variant="outlined"
-                                size="small"
-                                value={group.name}
-                                onChange={e => updateGroupName(group.id, e.target.value)}
-                                {...commonTextFieldProps}
-                            />
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                size="small"
-                                onClick={() => removeGroup(group.id)}
-                                className='dangerbtnClassname'
-                            >
-                                Remove Group
-                            </Button>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                                <TextField
+                                    placeholder='Enter Group Name'
+                                    variant="outlined"
+                                    size="small"
+                                    value={group.name}
+                                    onChange={e => updateGroupName(group.id, e.target.value)}
+                                    {...commonTextFieldProps}
+                                />
+                                <IconButton
+                                    color="error"
+                                    size="small"
+                                    onClick={() => removeGroup(group.id)}
+                                >
+                                    <Trash2 size={20} />
+                                </IconButton>
+                            </Box>
                         </Box>
                     </Box>
 
-                    {group.masters.map(master => (
+                    {group?.masters?.map(master => (
                         <Box key={master.id} sx={{ borderTop: '1px solid #ccc', pt: 2, mt: 2 }}>
                             <Box className="form-group">
-                                <Typography
-                                    variant="subtitle1"
-                                    className="form-label"
-                                    htmlFor="taskName"
-                                >
-                                    Master Name
-                                </Typography>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography
+                                        variant="subtitle1"
+                                        className="form-label"
+                                        htmlFor="taskName"
+                                    >
+                                        Master Name
+                                    </Typography>
+                                    <IconButton
+                                        color="error"
+                                        size="small"
+                                        onClick={() => removeMaster(group.id, master.id)}
+                                    >
+                                        <Trash2 size={20} />
+                                    </IconButton>
+                                </Box>
                                 <TextField
                                     placeholder='Enter Master Name'
                                     fullWidth
@@ -170,17 +178,6 @@ const DynamicMasterDrawer = ({ groups, setGroups }) => {
                                         marginBottom: '10px'
                                     }}
                                 />
-                            </Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-                                <Button
-                                    variant="outlined"
-                                    color="error"
-                                    size="small"
-                                    onClick={() => removeMaster(group.id, master.id)}
-                                    className='dangerbtnClassname'
-                                >
-                                    Remove Master
-                                </Button>
                             </Box>
                         </Box>
                     ))}

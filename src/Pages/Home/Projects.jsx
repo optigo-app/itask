@@ -33,12 +33,11 @@ const Projects = ({ projects, navigate, isLoding }) => {
                 <Typography className='cardTitle' component="div" variant="h5">
                     Projects
                 </Typography>
-
-                {filteredProjects.length > 0 ? (
+                {filteredProjects?.length > 0 ? (
                     <>
                         <Table>
                             <TableBody>
-                                {visibleProjects.map((project, idx) => (
+                                {visibleProjects?.map((project, idx) => (
                                     <TableRow key={idx}>
                                         <TableCell>
                                             <Link className='prNameUrl' to={`/projects?filter=${project?.taskname}`}>
