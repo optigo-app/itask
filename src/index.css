@@ -29,7 +29,7 @@ body {
 
 /* Target Horizontal Scrollbar */
 ::-webkit-scrollbar:horizontal {
-  height: 10px;
+  height: 8px;
   /* For horizontal scrollbar */
 }
 

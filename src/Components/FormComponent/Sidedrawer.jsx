@@ -31,6 +31,8 @@ import MultiTaskInput from "./MultiTaskInput";
 import Breadcrumb from "../BreadCrumbs/Breadcrumb";
 import CustomDateTimePicker from "../../Utils/DateComponent/CustomDateTimePicker";
 import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
+import { getAdvancedtaseditApi } from "../../Api/MasterApi/AssigneeMaster";
+import { set } from "lodash";
 
 const TASK_OPTIONS = [
     { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -59,8 +61,6 @@ const SidebarDrawer = ({
     const date = new Date();
     dayjs.extend(utc);
     dayjs.extend(timezone);
-    const projectModuleData = useRecoilValue(projectDatasRState);
-    const taskDataValue = useRecoilValue(TaskData);
     const formDataValue = useRecoilValue(formData);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
     const [taskType, setTaskType] = useState("single");
@@ -68,6 +68,7 @@ const SidebarDrawer = ({
     const [isDuplicateTask, setIsDuplicateTask] = useState(false);
     const [isTaskNameEmpty, setIsTaskNameEmpty] = useState(false);
     const [teams, setTeams] = useState([]);
+    const [dynamicFilterData, setDynamicFilterData] = useState([]);
     const [advMasterData, setAdvMasterData] = useState([]);
     const [prModuleMaster, setPrModuleMaster] = useState([]);
     const [selectedMainGroup, setSelectedMainGroup] = useState('');
@@ -152,9 +153,68 @@ const SidebarDrawer = ({
         }
     };
 
+    const mapMergedToStructured = (mergedData, masterData) => {
+        const result = [];
+        const mainTeam = masterData.find(team => team.id === mergedData?.bindedmaingroupid);
+        if (!mainTeam || !mainTeam.groups) return result;
+        for (const key in mergedData) {
+          if (key.toLowerCase() === 'id' || key.toUpperCase().startsWith('G')) continue;
+          const selectedId = mergedData[key];
+          if (!selectedId) continue;
+          let matched = false;
+          for (const group of mainTeam.groups) {
+            if (!group.attributes) continue;
+            const attribute = group.attributes.find(attr => attr.id === selectedId);
+            if (attribute) {
+              if ((group.name || '').toLowerCase().replace(/\s+/g, '') === key.toLowerCase().replace(/\s+/g, '')) {
+                result.push({
+                  teamId: mainTeam.id,
+                  teamName: mainTeam.name || '',
+                  groupId: group.id,
+                  groupName: group.name,
+                  label: `${mainTeam.name || ''}/${group.name}`,
+                  selectedId: selectedId
+                });
+                matched = true;
+                break;
+              }
+            }
+          }
+          if (matched) continue;
+        }
+      
+        return result;
+      };
+
+    const structuredAdvData = JSON.parse(
+        sessionStorage.getItem("structuredAdvMasterData")
+    ) || [];
+
+    const handleGetDynamicFilterValue = async () => {
+        const selectedRow = formDataValue;
+        if (selectedRow?.maingroupids !== "0" && selectedRow?.maingroupids !== "") {
+            const apiRes = await getAdvancedtaseditApi(selectedRow?.taskid);
+            if (apiRes) {
+                const merged = {};
+                for (const key in apiRes?.rd[0]) {
+                    if (apiRes?.rd[0].hasOwnProperty(key) && apiRes?.rd1[0].hasOwnProperty(key)) {
+                        merged[apiRes?.rd[0][key]] = apiRes?.rd1[0][key];
+                    }
+                }
+                const structuredResult = mapMergedToStructured(merged, structuredAdvData);
+                setSelectedMainGroup(structuredResult[0]?.teamName)
+                setDynamicFilterData(structuredResult);
+            } else {
+                toast.error("Something went wrong");
+                setTeams([]);
+            }
+        }
+    }
+
     useEffect(() => {
         if (open) {
             handleGetTeamMembers();
+            handleGetDynamicFilterValue();
         }
     }, [open])
 
@@ -196,6 +256,7 @@ const SidebarDrawer = ({
                 priority: formDataValue?.priorityid ?? "",
                 project: (formDataValue?.projectid || formValues?.prModule?.priorityid) ?? "",
                 prModule: formDataValue?.prModule || (fallbackPrModule?.projectid && fallbackPrModule) || null,
+                dynamicDropdowns: dynamicFilterData ?? [],
                 description: formDataValue?.descr ?? "",
                 attachment: formDataValue?.attachment ?? null,
                 progress: formDataValue?.progress ?? "",
@@ -217,7 +278,7 @@ const SidebarDrawer = ({
                 prModule: formDataValue?.prModule || (fallbackPrModule?.projectid && fallbackPrModule) || null,
             }));
         }
-    }, [open, formDataValue, rootSubrootflagval]);
+    }, [open, formDataValue, rootSubrootflagval, dynamicFilterData]);
 
     const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);
 
@@ -356,6 +417,7 @@ const SidebarDrawer = ({
             acc[`group${item.groupId}_attr`] = item.selectedId;
             return acc;
         }, {}) || {};
+        const selectedMainGroupId = structuredAdvData?.find(d => d?.name == selectedMainGroup)?.id;
         const selectedMainGroupid = advMasterData?.find(d => d?.name == selectedMainGroup)?.id;
         const statusValue = statusData?.find(d => d.id == formValues.status);
         const updatedFormDataValue = {
@@ -386,6 +448,8 @@ const SidebarDrawer = ({
             estimate2_hrs: formValues.estimate2_hrs ?? formDataValue?.estimate2_hrs,
             maingroupids: selectedMainGroupid ?? formDataValue?.maingroupids,
             dynamicDropdowns: dynamicDropdowns ?? formDataValue?.dynamicDropdowns,
+            bindedMainGroupid: selectedMainGroupId ?? '',
+
         };
 
         onSubmit(updatedFormDataValue, { mode: taskType }, module);
@@ -397,6 +461,7 @@ const SidebarDrawer = ({
         onClose();
         handleResetState();
         setTaskType("single");
+        setSelectedMainGroup('');
         setFormValues({
             taskName: "",
             bulkTask: [],
@@ -439,6 +504,7 @@ const SidebarDrawer = ({
             milestoneChecked: false,
         });
         setIsTaskNameEmpty(false);
+        setSelectedMainGroup('');
     }
 
     const renderTextField = (label, name, value, placeholder, error, helperText, onChange) => (
@@ -637,6 +703,8 @@ const SidebarDrawer = ({
             }))
         );
     }, [advMasterData]);
+
+
 
     const handleProjectModuleData = async () => {
         const taskProject = JSON?.parse(sessionStorage?.getItem('taskprojectData'));

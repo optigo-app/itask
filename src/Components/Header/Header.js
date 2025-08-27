@@ -6,21 +6,22 @@ import { Bell, MailOpen, User, LogOut, House, FileCheck, FileClock } from "lucid
 import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
 import "./header.scss";
 import NotificationCard from "../Notification/NotificationCard";
-import { taskLength, webReload } from "../../Recoil/atom";
+import { taskLength, userRoleAtom, webReload } from "../../Recoil/atom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import PendingAcceptanceDrawer from "../ShortcutsComponent/Notification/PendingAcceptanceDrawer";
 
 // Profile Hook
 const useProfileData = () => {
+    const location = useLocation();
     const [profileData, setProfileData] = useState(null);
     const setReload = useSetRecoilState(webReload);
+    const role = useRecoilValue(userRoleAtom);
+
 
     useEffect(() => {
-        setTimeout(() => {
-            const userData = JSON.parse(localStorage.getItem("UserProfileData"));
-            setProfileData(userData);
-        }, 500);
-    }, []);
+        const userData = JSON.parse(localStorage.getItem("UserProfileData"));
+        setProfileData(userData);
+    }, [location, role]);
 
     const handleReload = () => setReload(true);
 
@@ -68,23 +69,25 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
                 },
             }}
         >
-            <Box sx={{ display: "flex", alignItems: "center", padding: "16px", borderBottom: "1px solid #e0e0e0" }}>
-                <Avatar
-                    alt={`${profileData?.firstname} ${profileData?.lastname}`}
-                    src={ImageUrl(profileData)}
-                    sx={{ backgroundColor: avatarBackgroundColor, color: "#fff", width: 40, height: 40, marginRight: "12px" }}
-                >
-                    {!avatarSrc && profileData?.firstname?.charAt(0).toUpperCase()}
-                </Avatar>
-                <Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                        {`${profileData?.firstname} ${profileData?.lastname}`}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#7d7f85" }}>
-                        {profileData?.designation}
-                    </Typography>
+            {profileData !== null &&
+                <Box sx={{ display: "flex", alignItems: "center", padding: "16px", borderBottom: "1px solid #e0e0e0" }}>
+                    <Avatar
+                        alt={`${profileData?.firstname} ${profileData?.lastname}`}
+                        src={ImageUrl(profileData)}
+                        sx={{ backgroundColor: avatarBackgroundColor, color: "#fff", width: 40, height: 40, marginRight: "12px" }}
+                    >
+                        {!avatarSrc && profileData?.firstname?.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                            {`${profileData?.firstname} ${profileData?.lastname}`}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: "#7d7f85" }}>
+                            {profileData?.designation}
+                        </Typography>
+                    </Box>
                 </Box>
-            </Box>
+            }
 
             {menuItems?.map((item, index) => (
                 <MenuItem key={index} sx={{ margin: "10px 10px !important", borderRadius: "8px !important", "&:hover": { backgroundColor: "#f0f0f0 !important", borderRadius: "8px !important" } }}>

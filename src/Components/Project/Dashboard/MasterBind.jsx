@@ -9,7 +9,9 @@ import {
     InputAdornment,
     ToggleButtonGroup,
     ToggleButton,
+    Button,
 } from "@mui/material";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import "./Styles/MasterBind.scss"
 import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -21,9 +23,10 @@ import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
 import { toast } from "react-toastify";
 import { fetchlistApiCall, selectedRowData } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
-import { SearchIcon } from "lucide-react";
+import { Plus, SearchIcon } from "lucide-react";
 
 export default function MasterBind({ taskModuleList }) {
+    const [showadvMaster, setShowadvMaster] = useState(false);
     const [leftGroups, setLeftGroups] = useState([]);
     const [rightGroups, setRightGroups] = useState([]);
     const [openCards, setOpenCards] = useState({});
@@ -156,13 +159,15 @@ export default function MasterBind({ taskModuleList }) {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
+                        onClick={() => toggleCard(group.id)}
                         sx={{
                             p: 1,
                             mb: 2,
                             cursor: "grab",
                             userSelect: "none",
-                            boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important',
-                            borderRadius: '8px'
+                            boxShadow:
+                                "rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important",
+                            borderRadius: "8px",
                         }}
                     >
                         <Box display="flex" alignItems="center">
@@ -170,18 +175,30 @@ export default function MasterBind({ taskModuleList }) {
                             <Typography flexGrow={1}>{group?.name}</Typography>
                             <IconButton
                                 size="small"
-                                onClick={() => toggleCard(group.id)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleCard(group.id);
+                                }}
                                 sx={{ ml: 1 }}
                             >
                                 {openCards[group.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                             </IconButton>
+
+                            {/* Delete Button */}
                             {isDeletable && (
-                                <IconButton size="small" onClick={() => handleDelete(group.id)}>
+                                <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDelete(group.id);
+                                    }}
+                                >
                                     <DeleteIcon fontSize="small" />
                                 </IconButton>
                             )}
                         </Box>
 
+                        {/* Collapsible Content */}
                         <Collapse in={openCards[group.id]}>
                             <Box mt={1} ml={3}>
                                 {group?.groups?.map((subGroup) => (
@@ -189,9 +206,11 @@ export default function MasterBind({ taskModuleList }) {
                                         <Typography variant="subtitle2" gutterBottom>
                                             {subGroup.name}
                                         </Typography>
-                                        <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+                                        <ul style={{ margin: 0, paddingLeft: "1.2rem" }}>
                                             {subGroup?.attributes?.map((attr) => (
-                                                <li style={{ color: '#6D6B75' }} key={attr.id}>{attr.name}</li>
+                                                <li style={{ color: "#6D6B75" }} key={attr.id}>
+                                                    {attr.name}
+                                                </li>
                                             ))}
                                         </ul>
                                     </Box>
@@ -246,59 +265,9 @@ export default function MasterBind({ taskModuleList }) {
                         </ToggleButton>
                     </ToggleButtonGroup>
                 </Box>
+
                 <Box display="flex" height="100vh" gap={2}>
                     <DragDropContext onDragEnd={handleDragEnd}>
-                        <Droppable droppableId="left" isDropDisabled>
-                            {(provided) => (
-                                <Box
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    flex={1}
-                                    border="1px solid #ccc"
-                                    p={2}
-                                    borderRadius={2}
-                                    overflow="auto"
-                                >
-                                    <Typography variant="h6" mb={2}>
-                                        Advanced Filter Groups
-                                    </Typography>
-
-                                    {leftGroups.map((group, index) => {
-                                        const alreadyAssigned = rightGroups.some((g) => g.id === group.id);
-
-                                        if (alreadyAssigned) {
-                                            return (
-                                                <Paper
-                                                    key={group.id}
-                                                    sx={{
-                                                        p: 1,
-                                                        mb: 2,
-                                                        border: "1px solid #ccc",
-                                                        opacity: 0.5,
-                                                        cursor: "not-allowed",
-                                                        backgroundColor: "#f2f2f2",
-                                                        boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important',
-                                                        borderRadius: '8px'
-                                                    }}
-                                                >
-                                                    <Box display="flex" alignItems="center">
-                                                        <DragIndicatorIcon fontSize="small" sx={{ mr: 1 }} />
-                                                        <Typography flexGrow={1}>{group.name}</Typography>
-                                                        <Typography variant="caption" color="error">
-                                                            Already Bind
-                                                        </Typography>
-                                                    </Box>
-                                                </Paper>
-                                            );
-                                        }
-
-                                        return renderCard(group, index, false);
-                                    })}
-
-                                    {provided.placeholder}
-                                </Box>
-                            )}
-                        </Droppable>
                         <Droppable droppableId="right">
                             {(provided) => (
                                 <Box
@@ -309,19 +278,119 @@ export default function MasterBind({ taskModuleList }) {
                                     p={2}
                                     borderRadius={2}
                                     overflow="auto"
+                                    position="relative"
                                 >
-                                    <Typography variant="h6" mb={2}>
-                                        Module Bind Groups
-                                    </Typography>
+                                    {/* Header with Bind Button */}
+                                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                                        <Typography variant="h6">Module Bind Groups</Typography>
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<Plus size={17} />}
+                                            onClick={() => setShowadvMaster((prev) => !prev)}
+                                            className="buttonClassname"
+                                            size="small"
+                                        >
+                                            Bind Master
+                                        </Button>
+                                    </Box>
 
-                                    {rightGroups.map((group, index) =>
-                                        renderCard(group, index, true)
+                                    {/* Empty State */}
+                                    {rightGroups.length === 0 ? (
+                                        <Box
+                                            display="flex"
+                                            flexDirection="column"
+                                            alignItems="center"
+                                            justifyContent="center"
+                                            height="70%"
+                                            gap={2}
+                                            textAlign="center"
+                                            color="text.secondary"
+                                        >
+                                            <Typography variant="h6" gutterBottom>
+                                                No bind master yet
+                                            </Typography>
+                                        </Box>
+                                    ) : (
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                flexWrap: 'wrap',
+                                                gap: 2,
+                                            }}
+                                        >
+                                            {rightGroups?.map((group, index) => (
+                                                <Box
+                                                    key={group.id}
+                                                    sx={{
+                                                        flex: showadvMaster ? '1 1 100%' : '1 1 calc(50% - 16px)',
+                                                        boxSizing: 'border-box',
+                                                    }}
+                                                >
+                                                    {renderCard(group, index, true)}
+                                                </Box>
+                                            ))}
+                                            {provided.placeholder}
+                                        </Box>
                                     )}
-
-                                    {provided.placeholder}
                                 </Box>
                             )}
                         </Droppable>
+
+                        {/* Left panel - Advanced Filter Groups */}
+                        {showadvMaster && (
+                            <Droppable droppableId="left" isDropDisabled>
+                                {(provided) => (
+                                    <Box
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        flex={1}
+                                        border="1px solid #ccc"
+                                        p={2}
+                                        borderRadius={2}
+                                        overflow="auto"
+                                    >
+                                        <Typography variant="h6" mb={2}>
+                                            Advanced Filter Groups
+                                        </Typography>
+
+                                        {leftGroups.map((group, index) => {
+                                            const alreadyAssigned = rightGroups.some((g) => g.id === group.id);
+
+                                            if (alreadyAssigned) {
+                                                return (
+                                                    <Paper
+                                                        key={group.id}
+                                                        sx={{
+                                                            p: 1,
+                                                            mb: 2,
+                                                            border: "1px solid #ccc",
+                                                            opacity: 0.5,
+                                                            cursor: "not-allowed",
+                                                            backgroundColor: "#f2f2f2",
+                                                            boxShadow:
+                                                                "rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important",
+                                                            borderRadius: "8px",
+                                                        }}
+                                                    >
+                                                        <Box display="flex" alignItems="center">
+                                                            <DragIndicatorIcon fontSize="small" sx={{ mr: 1 }} />
+                                                            <Typography flexGrow={1}>{group.name}</Typography>
+                                                            <Typography variant="caption" color="error">
+                                                                Already Bind
+                                                            </Typography>
+                                                        </Box>
+                                                    </Paper>
+                                                );
+                                            }
+
+                                            return renderCard(group, index, false);
+                                        })}
+
+                                        {provided.placeholder}
+                                    </Box>
+                                )}
+                            </Droppable>
+                        )}
                     </DragDropContext>
                 </Box>
             </>
