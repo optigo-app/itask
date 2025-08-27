@@ -33,6 +33,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "createdbyid": userProfile?.id ?? 0,
                 "assigneids": userProfile?.id ?? "",
                 "maingroupids": formValues?.maingroupids ?? 0,
+                "bindedMainGroupid": formValues?.bindedMainGroupid ?? 0,
                 ...dropdowns,
             });
         } else {
@@ -62,6 +63,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "createdbyid": (Array.isArray(formValues?.createdBy) && formValues?.createdBy.length > 0 ? formValues?.createdBy[0]?.id : formValues?.createdbyid) ?? 0,
                 "departmentAssigneelist": formValues?.departmentAssigneelist ?? "",
                 "maingroupids": formValues?.maingroupids ?? 0,
+                "bindedMainGroupid": formValues?.bindedMainGroupid ?? 0,
                 ...dropdowns,
             });
         }

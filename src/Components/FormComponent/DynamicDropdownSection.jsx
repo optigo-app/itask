@@ -33,7 +33,7 @@ const DynamicDropdownSection = ({
             setFilteredGroupConfigs([]);
         }
     }, [selectedMainGroup, dropdownConfigs]);
-debugger
+    
     return (
         <>
             {divider && (
