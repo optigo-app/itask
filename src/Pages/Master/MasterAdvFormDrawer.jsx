@@ -39,16 +39,17 @@ const MasterAdvFormDrawer = ({ open, onClose, mode, filteredData, groups, setGro
 
     useEffect(() => {
         const selectedGroup = filteredData?.find(item => item.name === formData.masterName);
-        const selectedSubGroup = selectedGroup?.groups?.find(group => group.name === formData.subMasterName);
-        if (selectedSubGroup) {
-            const values = selectedSubGroup.attributes.map(attr => attr.name);
-            setValueOptions(values);
-
-            if (!values.includes(formData.masterValue)) {
-                setFormData(prev => ({ ...prev, masterValue: '' }));
+        if (selectedGroup) {
+            const subGroups = selectedGroup.groups.map(group => group.name);
+            setSubMasterOptions(subGroups);
+    
+            // Reset only if value is not in options
+            if (formData.subMasterName && !subGroups.includes(formData.subMasterName.replace(/^#/, ''))) {
+                setFormData(prev => ({ ...prev, subMasterName: '', masterValue: '' }));
             }
         }
-    }, [formData.subMasterName]);
+    }, [formData.masterName]);
+    
 
     return (
         <Drawer anchor="right" open={open} onClose={onClose}>
@@ -93,7 +94,10 @@ const MasterAdvFormDrawer = ({ open, onClose, mode, filteredData, groups, setGro
                         <SmartDropdown
                             label="Master Name"
                             value={formData.subMasterName}
-                            setValue={(val) => setFormData({ ...formData, subMasterName: val })}
+                            setValue={(val) => {
+                                const newVal = val ? (val?.startsWith('#') ? val : `#${val}`) : ''; 
+                                setFormData({ ...formData, subMasterName: newVal });
+                            }}
                             options={subMasterOptions}
                             setOptions={setSubMasterOptions}
                         />
