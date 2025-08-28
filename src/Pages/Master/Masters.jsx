@@ -127,10 +127,10 @@ const MasterToggle = () => {
                     const finalMasterData = masterIndApi?.rd || [];
                     const sortedMasterData = finalMasterData.sort((a, b) => {
                         if (a.displayorder !== b.displayorder) {
-                          return a.displayorder - b.displayorder;
+                            return a.displayorder - b.displayorder;
                         }
                         return a.labelname.localeCompare(b.labelname);
-                      });
+                    });
                     const mergedData = sortedMasterData.map((item, index) => ({
                         srno: index + 1,
                         ...item,
@@ -272,6 +272,7 @@ const MasterToggle = () => {
     const handleEditAdvRow = (master, sub, item) => {
         setDrawerOpen(true);
         setSelectedRow(item);
+        setMasterType('single')
         setMode('edit');
         setFormAdvData({
             masterName: master.name,
@@ -287,13 +288,13 @@ const MasterToggle = () => {
 
     const handleAdvDeleteRow = (master, sub, item) => {
         setFormAdvData({
-            masterName: master.name,
-            subMasterName: sub.name,
-            masterValue: item.name,
-            id: master.id,
-            subid: sub.id,
-            itemid: item.id,
-            bindid: item.bindid,
+            masterName: master?.name,
+            subMasterName: sub?.name,
+            masterValue: item?.name,
+            id: master?.id,
+            subid: sub?.id,
+            itemid: item?.id,
+            bindid: item?.bindid,
         });
         setCnfDelDialogOpen(true);
     }

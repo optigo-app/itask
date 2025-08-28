@@ -154,7 +154,11 @@ const DynamicMasterDrawer = ({ groups, setGroups }) => {
                                     size="small"
                                     sx={{ mb: 2 }}
                                     value={master.name}
-                                    onChange={e => updateMaster(group.id, master.id, 'name', e.target.value)}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        const newVal = val ? (val.startsWith('#') ? val : `#${val}`) : '';
+                                        updateMaster(group.id, master.id, 'name', newVal);
+                                    }}
                                     {...commonTextFieldProps}
                                 />
                             </Box>
