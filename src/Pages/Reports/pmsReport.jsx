@@ -45,6 +45,10 @@ const PmsReport = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
 
+    useEffect(() => {
+        setIsLoading(iswhTLoading);
+    }, [iswhTLoading]);
+
     // helper function for date wise data get
     const isWithinDateRange = (task, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
         if (filters.timeFilter === 'All') return true;

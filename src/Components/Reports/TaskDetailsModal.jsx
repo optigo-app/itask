@@ -213,7 +213,7 @@ const TaskDetailsModal = ({
                                                 : '-'}</Typography></TableCell>
                                             <TableCell><Typography variant="body2">{task.category}</Typography></TableCell>
                                             <TableCell>{task.estimate_hrs}</TableCell>
-                                            <TableCell>{task.estimate1_hrsT}</TableCell>
+                                            <TableCell>{task.workinghr}</TableCell>
                                         </TableRow>
                                     ))
                                 ) : (

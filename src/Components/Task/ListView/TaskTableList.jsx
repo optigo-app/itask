@@ -490,7 +490,7 @@ const TableView = ({
                                     maxHeight: '2.4em',
                                     fontSize: '14px',
                                 }}
-                                className="tasknameCl"
+                                className={`tasknameCl ${task?.isCopyActive ? 'cut-task-name' : ''}`}
                             >
                                 {task?.taskname}
                             </span>
@@ -588,18 +588,19 @@ const TableView = ({
     const renderSubtasks = (subtasks, parentTaskId, depth = 0) => {
         return subtasks?.map((subtask) => (
             <React.Fragment key={subtask.taskid}>
-                <TableRow sx={{
-                    opacity: subtask?.isCopyActive ? '0.7 !important' : '1 !important',
-                    pointerEvents: subtask?.isCopyActive ? 'none' : 'auto',
-                    cursor: subtask?.isCopyActive ? 'not-allowed' : 'default',
-                    backgroundColor: subtask?.isCopyActive
-                        ? '#F1EDFE !important'
-                        : hoveredSubtaskId === subtask?.taskid
-                            ? '#f5f5f5'
-                            : expandedTasks[subtask.taskid]
+                <TableRow 
+                    className={subtask?.isCopyActive ? 'cut-task-row' : ''}
+                    sx={{
+                        pointerEvents: subtask?.isCopyActive ? 'none' : 'auto',
+                        cursor: subtask?.isCopyActive ? 'not-allowed' : 'default',
+                        backgroundColor: !subtask?.isCopyActive && (
+                            hoveredSubtaskId === subtask?.taskid
                                 ? '#f5f5f5'
-                                : 'inherit',
-                }}
+                                : expandedTasks[subtask.taskid]
+                                    ? '#f5f5f5'
+                                    : 'inherit'
+                        ),
+                    }}
                     onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid, { Tbcell: 'TaskName' })}
                     onMouseLeave={handleSubtaskMouseLeave}
                     onContextMenu={(e) => handleContextMenu(e, subtask)}
@@ -795,17 +796,17 @@ const TableView = ({
                                         return (
                                             <React.Fragment key={taskIndex}>
                                                 <TableRow key={taskIndex}
+                                                    className={task?.isCopyActive ? 'cut-task-row' : ''}
                                                     sx={{
-                                                        opacity: task?.isCopyActive == true ? "0.7 !important" : "1 !important",
                                                         pointerEvents: task?.isCopyActive ? 'none' : 'auto',
                                                         cursor: task?.isCopyActive ? 'not-allowed' : 'default',
-                                                        backgroundColor: task?.isCopyActive == true
-                                                            ? '#F1EDFE !important'
-                                                            : hoveredTaskId === task?.taskid
+                                                        backgroundColor: !task?.isCopyActive && (
+                                                            hoveredTaskId === task?.taskid
                                                                 ? '#f5f5f5'
                                                                 : expandedTasks[task.taskid]
                                                                     ? '#f5f5f5'
-                                                                    : 'inherit',
+                                                                    : 'inherit'
+                                                        ),
                                                     }}
                                                     onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
                                                     onMouseLeave={handleTaskMouseLeave}

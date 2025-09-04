@@ -141,6 +141,14 @@ const Project = () => {
           (item) => item?.id == task?.workcategoryid
         );
 
+        const assigneeIdArray = task?.assigneids
+          ?.split(",")
+          ?.map((id) => Number(id));
+
+        const matchedAssignees = assigneeData?.filter((user) =>
+          assigneeIdArray?.includes(user.id)
+        );
+
         return {
           ...task,
           priority: priority ? priority?.labelname : "",
@@ -148,6 +156,7 @@ const Project = () => {
           taskPr: project ? project?.labelname : "",
           taskDpt: department ? department?.labelname : "",
           category: category?.labelname,
+          assignee: matchedAssignees ? matchedAssignees : [],
         };
       };
 

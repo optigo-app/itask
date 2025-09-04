@@ -426,6 +426,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
         </Box>
     );
 
+    console.log('projectData: ', projectData);
 
     return (
         <>
@@ -516,27 +517,6 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                     </Box>
                                                 </TableCell>
                                                 <TableCell colSpan={1}>
-                                                    {/* <Box display="flex" alignItems="center" gap={2} width="100%">
-                                                        <Box width="100%" position="relative">
-                                                            <LinearProgress
-                                                                aria-label="Task progress status"
-                                                                variant="determinate"
-                                                                value={project?.projectProgress}
-                                                                sx={{
-                                                                    height: 7,
-                                                                    borderRadius: 5,
-                                                                    backgroundColor: "#e0e0e0",
-                                                                    "& .MuiLinearProgress-bar": {
-                                                                        backgroundColor: getStatusColor(project?.projectProgress),
-                                                                    },
-                                                                }}
-                                                                className="progressBar"
-                                                            />
-                                                        </Box>
-                                                        <Typography className="progressBarText" variant="body2" minWidth={100}>
-                                                            {`${project?.projectProgress}%`}
-                                                        </Typography>
-                                                    </Box> */}
                                                 </TableCell>
                                                 <TableCell colSpan={4} />
                                                 <TableCell colSpan={1} sx={{ textAlign: "right" }}>
