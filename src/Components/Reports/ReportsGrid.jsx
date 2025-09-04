@@ -41,6 +41,7 @@ const ReportsGrid = ({
 }) => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedTaskRow, setSelectedTaskRow] = useState(null);
+  console.log('selectedTaskRow: ', selectedTaskRow);
 
   const paginatedData = data || [];
 

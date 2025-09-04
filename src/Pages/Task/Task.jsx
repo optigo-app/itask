@@ -621,10 +621,16 @@ const Task = () => {
         setTasks((prevTasks) => {
           const updateTasksRecursively = (tasks) => {
             return tasks?.map((task) => {
+              // Clear isCopyActive from the original cut task
+              if (task.taskid === taskId) {
+                return { ...task, isCopyActive: false };
+              }
+              // Add the pasted task to the target parent
               if (task.taskid === parentId) {
+                const pastedTask = { ...copiedData, isCopyActive: false };
                 const updatedTask = {
                   ...task,
-                  subtasks: [...task.subtasks, copiedData],
+                  subtasks: [...task.subtasks, pastedTask],
                 };
                 return updatedTask;
               }
