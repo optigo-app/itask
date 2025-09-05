@@ -617,34 +617,7 @@ const Task = () => {
     if (taskId && parentId) {
       const apiRes = await MoveTaskApi(taskId, parentId);
       if (apiRes) {
-        setOpenChildTask(true);
-        setTasks((prevTasks) => {
-          const updateTasksRecursively = (tasks) => {
-            return tasks?.map((task) => {
-              // Clear isCopyActive from the original cut task
-              if (task.taskid === taskId) {
-                return { ...task, isCopyActive: false };
-              }
-              // Add the pasted task to the target parent
-              if (task.taskid === parentId) {
-                const pastedTask = { ...copiedData, isCopyActive: false };
-                const updatedTask = {
-                  ...task,
-                  subtasks: [...task.subtasks, pastedTask],
-                };
-                return updatedTask;
-              }
-              if (task.subtasks?.length > 0) {
-                return {
-                  ...task,
-                  subtasks: updateTasksRecursively(task.subtasks),
-                };
-              }
-              return task;
-            });
-          };
-          return updateTasksRecursively(prevTasks);
-        });
+        setOpenChildTask(Date.now());
         toast?.success("Task pasted successfully");
         setCopiedData({});
       }
