@@ -14,6 +14,8 @@ import {
   Box,
 } from '@mui/material';
 import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate3, handleAddApicall, priorityColors, statusColors } from '../../Utils/globalfun';
+import { PERMISSIONS, ROLES } from '../../Components/Auth/Role/permissions';
+import useAccess from '../../Components/Auth/Role/useAccess';
 
 // Import dayjs and plugins for date calculations
 import dayjs from "dayjs";
@@ -70,6 +72,7 @@ const CalendarGridView = () => {
   const [splitParts, setSplitParts] = useState([]);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState(null);
   const [totalHours, setTotalHours] = useState({ estimate: 0, working: 0 });
+  const { hasAccess } = useAccess();
   const {
     iswhTLoading,
     taskFinalData,
@@ -462,7 +465,13 @@ const CalendarGridView = () => {
                             }}
                             inputRef={(el) => (estimateTextFieldRefs.current[task.taskid] = el)}
                             onKeyDown={(e) => handleKeyDown(e, task.taskid, index)}
-                            disabled={!dayjs(task.StartDate).isSame(dayjs(), 'day')}
+                            disabled={(() => {
+                              const canEditWorkingHr = hasAccess(PERMISSIONS.canWorkinghrEdit);
+                              if (canEditWorkingHr) {
+                                return false;
+                              }
+                              return !dayjs(task.StartDate).isAfter(dayjs().subtract(4, 'day').startOf('day')) || dayjs(task.StartDate).isAfter(dayjs().endOf('day'));
+                            })()}
                             {...commonTextFieldProps}
                           />
                         </TableCell>
@@ -479,7 +488,7 @@ const CalendarGridView = () => {
                             size='small'
                             startIcon={<SeparatorHorizontal size={18} />}
                             onClick={() => handleSplit(task.taskid)}
-                            className='buttonClassname'
+                            className={dayjs(task.StartDate).isSame(dayjs(), 'day') ? 'buttonClassname' : 'disablebuttonClassanme'}
                             disabled={!dayjs(task.StartDate).isSame(dayjs(), 'day')}
                           >
                             Split

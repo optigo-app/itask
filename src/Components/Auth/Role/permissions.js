@@ -15,5 +15,6 @@ export const ROLES = {
     CALENDAR_A_DROPDOWN: [ROLES.ADMIN],
     CALENDAR_VIEW_ALL: [ROLES.ADMIN],
     MEETING_VIEW_ALL: [ROLES.ADMIN],
+    canWorkinghrEdit: [ROLES.ADMIN],
   };
   

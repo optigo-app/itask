@@ -25,32 +25,27 @@ export function formatDate2(dateStr) {
     return `${day} ${month} ${year}`;
 }
 
-// output like January 29, 2024 at 06:30:00 PM
+// Output like: Jan 29, 2024 at 06:30 PM
 export const formatDate3 = (date) => {
     if (!date) return '';
 
     const formattedDate = new Date(date).toLocaleString('en-US', {
         year: 'numeric',
-        month: 'long',
+        month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit',
         hour12: true,
     });
-
-    return formattedDate;
+    return formattedDate.replace(',', ' at');
 };
+
 
 export const formatDate4 = (date) => {
     if (!date) return 'N/A';
-
     try {
         const entryDate = new Date(date);
-
-        // Handle invalid dates
         if (isNaN(entryDate.getTime())) return 'Invalid Date';
-
         const formatted = entryDate.toLocaleString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -58,9 +53,8 @@ export const formatDate4 = (date) => {
             hour: 'numeric',
             minute: '2-digit',
             hour12: true,
-            timeZone: 'UTC' // Ensure UTC display
+            timeZone: 'UTC'
         });
-
         return formatted;
     } catch (error) {
         console.error('Error formatting date:', error);
@@ -114,6 +108,7 @@ export function toISTDateTime(isoDate) {
     });
     return istDate;
 }
+
 // output like 01 Jan 1990 return ""
 export function cleanDate(dateStr) {
     const defaultDates = [
@@ -245,7 +240,7 @@ export const getcolorsData = {
         color: "#009688",
         backgroundColor: "#b2dfdb",
     },
-    brown: {    
+    brown: {
         color: "#795548",
         backgroundColor: "#d7ccc8",
     },
