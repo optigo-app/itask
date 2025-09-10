@@ -8,7 +8,6 @@ import {
   TableBody,
   TableContainer,
   Paper,
-  Pagination,
   Box,
   Typography,
   LinearProgress,
@@ -24,7 +23,7 @@ import {
   background,
   getPerformanceStatus,
 } from "../../Utils/globalfun";
-import TaskDetailsModal from "./TaskDetailsModal"; // Import modal component
+import TaskDetailsModal from "./TaskDetailsModal";
 import TablePaginationFooter from "../ShortcutsComponent/Pagination/TablePaginationFooter";
 
 const ReportsGrid = ({
@@ -41,7 +40,6 @@ const ReportsGrid = ({
 }) => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedTaskRow, setSelectedTaskRow] = useState(null);
-  console.log('selectedTaskRow: ', selectedTaskRow);
 
   const paginatedData = data || [];
 

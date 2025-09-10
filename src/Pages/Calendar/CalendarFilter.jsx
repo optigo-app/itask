@@ -54,19 +54,34 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, curren
       </Box>
       <Box className="filter-box">
         <CustomDateRangePicker value={customRange} onChange={handleDateChange} />
-        {/* <Box display="flex" alignItems="center" gap={1}>
-          <IconButton onClick={() => onNavigate('prev')} size="small">
-            <ChevronLeft />
+        <Box className="navigation-container">
+          <IconButton 
+            onClick={() => onNavigate('prev')} 
+            size="small"
+            className="nav-button"
+          >
+            <ChevronLeft fontSize="small" />
           </IconButton>
-
-          <Typography variant="subtitle1">
-            {dayjs(currentDate).format('DD MMM YYYY')}
-          </Typography>
-
-          <IconButton onClick={() => onNavigate('next')} size="small">
-            <ChevronRight />
+          
+          <Box className="date-display">
+            {selectedFilter === 'Week' 
+              ? `Week ${dayjs(currentDate).week()}`
+              : selectedFilter === 'Today'
+              ? dayjs(currentDate).format('MMM DD, YYYY')
+              : selectedFilter === 'Tomorrow'
+              ? dayjs(currentDate).add(1, 'day').format('MMM DD, YYYY')
+              : 'Custom Range'
+            }
+          </Box>
+          
+          <IconButton 
+            onClick={() => onNavigate('next')} 
+            size="small"
+            className="nav-button"
+          >
+            <ChevronRight fontSize="small" />
           </IconButton>
-        </Box> */}
+        </Box>
 
         <ToggleButtonGroup
           value={selectedFilter}

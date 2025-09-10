@@ -22,6 +22,7 @@ import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import utc from "dayjs/plugin/utc";
 import timezone from 'dayjs/plugin/timezone';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import SplitTaskModal from '../../Components/Calendar/SplitTaskModal';
 import StatusBadge from '../../Components/ShortcutsComponent/StatusBadge';
 import TaskPriority from '../../Components/ShortcutsComponent/TaskPriority';
@@ -38,12 +39,22 @@ import CalendarFilter from './CalendarFilter';
 dayjs.extend(duration);
 dayjs.extend(utc);
 dayjs.extend(timezone);
+dayjs.extend(isSameOrBefore);
 
 // Helper to extract number from estimate string (e.g., "4h" -> 4)
 const parseEstimateToNumber = (estimateString) => {
   const str = String(estimateString ?? '').trim();
   const match = str.match(/^(\d+(\.\d{1,3})?)$/);
   return match ? parseFloat(match[1]) : 0;
+};
+
+// Helper to check if a date is editable (past dates up to yesterday and today)
+const isDateEditable = (dateString) => {
+  if (!dateString) return false;
+  const taskDate = dayjs(dateString).startOf('day');
+  const today = dayjs().startOf('day');
+  // Allow editing for dates that are today or in the past
+  return taskDate.isSameOrBefore(today);
 };
 
 const tableHeaders = [
@@ -128,6 +139,11 @@ const CalendarGridView = () => {
     setTasks(filteredTasks);
     handleTotalHourCalculate(filteredTasks);
   }, [filteredTasks]);
+
+  // Initialize date picker on component mount
+  useEffect(() => {
+    updateDatePickerBasedOnFilter(selectedFilter, currentDate);
+  }, []);
 
   const handleTotalHourCalculate = (tasks) => {
     const total = tasks?.reduce(
@@ -352,20 +368,67 @@ const CalendarGridView = () => {
   };
 
   const handleNavigate = (direction) => {
-    const newDate = direction === 'prev'
-      ? currentDate.subtract(1, 'day')
-      : currentDate.add(1, 'day');
+    let newDate;
+    
+    if (selectedFilter === 'Today') {
+      newDate = direction === 'prev'
+        ? currentDate.subtract(1, 'day')
+        : currentDate.add(1, 'day');
+    } else if (selectedFilter === 'Tomorrow') {
+      newDate = direction === 'prev'
+        ? currentDate.subtract(1, 'day')
+        : currentDate.add(1, 'day');
+    } else if (selectedFilter === 'Week') {
+      newDate = direction === 'prev'
+        ? currentDate.subtract(1, 'week')
+        : currentDate.add(1, 'week');
+    } else {
+      newDate = direction === 'prev'
+        ? currentDate.subtract(1, 'day')
+        : currentDate.add(1, 'day');
+    }
+    
     setCurrentDate(newDate);
+    updateDatePickerBasedOnFilter(selectedFilter, newDate);
   };
 
   const handleFilterChange = (filter) => {
     setSelectedFilter(filter);
-    setCurrentDate(dayjs());
+    const today = dayjs();
+    setCurrentDate(today);
+    updateDatePickerBasedOnFilter(filter, today);
   };
 
   const handleDateChange = (range) => {
     setCustomRange(range);
-    setSelectedFilter('Custom');
+    if (range.startDate && range.endDate) {
+      setSelectedFilter('Custom');
+    }
+  };
+
+  // Helper function to update date picker based on selected filter
+  const updateDatePickerBasedOnFilter = (filter, date) => {
+    const targetDate = date || currentDate;
+    
+    if (filter === 'Today') {
+      setCustomRange({
+        startDate: targetDate.startOf('day').toISOString(),
+        endDate: targetDate.endOf('day').toISOString()
+      });
+    } else if (filter === 'Tomorrow') {
+      const tomorrow = targetDate.add(1, 'day');
+      setCustomRange({
+        startDate: tomorrow.startOf('day').toISOString(),
+        endDate: tomorrow.endOf('day').toISOString()
+      });
+    } else if (filter === 'Week') {
+      const startOfWeek = targetDate.startOf('week');
+      const endOfWeek = targetDate.endOf('week');
+      setCustomRange({
+        startDate: startOfWeek.toISOString(),
+        endDate: endOfWeek.toISOString()
+      });
+    }
   };
 
   const sortedTasks = React.useMemo(() => {
@@ -465,13 +528,7 @@ const CalendarGridView = () => {
                             }}
                             inputRef={(el) => (estimateTextFieldRefs.current[task.taskid] = el)}
                             onKeyDown={(e) => handleKeyDown(e, task.taskid, index)}
-                            disabled={(() => {
-                              const canEditWorkingHr = hasAccess(PERMISSIONS.canWorkinghrEdit);
-                              if (canEditWorkingHr) {
-                                return false;
-                              }
-                              return !dayjs(task.StartDate).isAfter(dayjs().subtract(4, 'day').startOf('day')) || dayjs(task.StartDate).isAfter(dayjs().endOf('day'));
-                            })()}
+                            disabled={!hasAccess(PERMISSIONS.canWorkinghrEdit) && !isDateEditable(task.StartDate)}
                             {...commonTextFieldProps}
                           />
                         </TableCell>
