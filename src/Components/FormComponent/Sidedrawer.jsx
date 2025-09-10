@@ -77,7 +77,7 @@ const SidebarDrawer = ({
         bulkTask: [],
         multiTaskName: [""],
         dueDate: null,
-        startDate: null,
+        startDate: date?.toISOString(),
         assignee: "",
         createdBy: [],
         projectLead: "",
@@ -158,33 +158,33 @@ const SidebarDrawer = ({
         const mainTeam = masterData.find(team => team.id === mergedData?.bindedmaingroupid);
         if (!mainTeam || !mainTeam.groups) return result;
         for (const key in mergedData) {
-          if (key.toLowerCase() === 'id' || key.toUpperCase().startsWith('G')) continue;
-          const selectedId = mergedData[key];
-          if (!selectedId) continue;
-          let matched = false;
-          for (const group of mainTeam.groups) {
-            if (!group.attributes) continue;
-            const attribute = group.attributes.find(attr => attr.id === selectedId);
-            if (attribute) {
-              if ((group.name || '').toLowerCase().replace(/\s+/g, '') === key.toLowerCase().replace(/\s+/g, '')) {
-                result.push({
-                  teamId: mainTeam.id,
-                  teamName: mainTeam.name || '',
-                  groupId: group.id,
-                  groupName: group.name,
-                  label: `${mainTeam.name || ''}/${group.name}`,
-                  selectedId: selectedId
-                });
-                matched = true;
-                break;
-              }
+            if (key.toLowerCase() === 'id' || key.toUpperCase().startsWith('G')) continue;
+            const selectedId = mergedData[key];
+            if (!selectedId) continue;
+            let matched = false;
+            for (const group of mainTeam.groups) {
+                if (!group.attributes) continue;
+                const attribute = group.attributes.find(attr => attr.id === selectedId);
+                if (attribute) {
+                    if ((group.name || '').toLowerCase().replace(/\s+/g, '') === key.toLowerCase().replace(/\s+/g, '')) {
+                        result.push({
+                            teamId: mainTeam.id,
+                            teamName: mainTeam.name || '',
+                            groupId: group.id,
+                            groupName: group.name,
+                            label: `${mainTeam.name || ''}/${group.name}`,
+                            selectedId: selectedId
+                        });
+                        matched = true;
+                        break;
+                    }
+                }
             }
-          }
-          if (matched) continue;
+            if (matched) continue;
         }
-      
+
         return result;
-      };
+    };
 
     const structuredAdvData = JSON.parse(
         sessionStorage.getItem("structuredAdvMasterData")
@@ -197,7 +197,7 @@ const SidebarDrawer = ({
             if (apiRes) {
                 const merged = {};
                 for (const key in apiRes?.rd[0]) {
-                    if (apiRes?.rd[0].hasOwnProperty(key) && apiRes?.rd1[0].hasOwnProperty(key)) {
+                    if (apiRes?.rd[0]?.hasOwnProperty(key) && apiRes?.rd1[0]?.hasOwnProperty(key)) {
                         merged[apiRes?.rd[0][key]] = apiRes?.rd1[0][key];
                     }
                 }
@@ -260,7 +260,7 @@ const SidebarDrawer = ({
                 description: formDataValue?.descr ?? "",
                 attachment: formDataValue?.attachment ?? null,
                 progress: formDataValue?.progress ?? "",
-                startDate: cleanDate(formDataValue?.StartDate || formDataValue?.start) ?? null,
+                startDate: cleanDate(formDataValue?.StartDate || formDataValue?.start) ?? date?.toISOString(),
                 category: categoryflag ? category?.id : (formDataValue?.workcategoryid || formDataValue?.category) ?? "",
                 estimate: formDataValue?.estimate ?? [""],
                 actual: formDataValue?.actual ?? [""],
@@ -276,6 +276,7 @@ const SidebarDrawer = ({
                 guests: matchedAssignees.length ? matchedAssignees : [loggedAssignee],
                 createdBy: createdByUsers.length ? createdByUsers : [loggedAssignee],
                 prModule: formDataValue?.prModule || (fallbackPrModule?.projectid && fallbackPrModule) || null,
+                startDate: cleanDate(formDataValue?.StartDate || formDataValue?.start) ?? date?.toISOString(),
             }));
         }
     }, [open, formDataValue, rootSubrootflagval, dynamicFilterData]);
@@ -332,7 +333,7 @@ const SidebarDrawer = ({
                 [name]: value,
             };
             const statusValue = statusData?.find((st) => st.id == value)?.labelname
-            if (name === "status" && statusValue.toLowerCase() === "completed") {
+            if (name === "status" && statusValue?.toLowerCase() === "completed") {
                 updatedValues.endDate = date.toISOString();
             }
 

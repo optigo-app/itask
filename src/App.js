@@ -22,6 +22,8 @@ import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
 import LoginPage from './Components/Auth/LoginForm';
 import SampleTaskTable from './Backup/SampleTaskTable';
+import CalendarComparisonDemo from './Backup/CalendarComparisonDemo';
+import CalendarViewDemo from './Backup/CalendarViewDemo';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -284,7 +286,8 @@ const AppWrapper = () => {
                                         <Route path="/reports/pms" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
-                                        <Route path="/test" element={<SampleTaskTable />} />
+                                        <Route path="/test" element={<CalendarComparisonDemo />} />
+                                        <Route path="/test1" element={<CalendarViewDemo />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>
