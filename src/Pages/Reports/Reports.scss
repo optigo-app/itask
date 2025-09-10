@@ -58,5 +58,46 @@
             align-items: center;
             gap: 10px;
         }
+
+        // Navigation container styles for reports
+        .navigation-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        // Navigation button styles for reports
+        .nav-button {
+            padding: 2px;
+            background-color: #fff !important;
+            border: 1px solid #ddd !important;
+            border-radius: 6px !important;
+            transition: all 0.2s ease !important;
+
+            &:hover {
+                background-color: #7367f0 !important;
+                color: #fff !important;
+                border-color: #7367f0 !important;
+            }
+
+            .MuiSvgIcon-root {
+                font-size: 1.15rem;
+            }
+        }
+
+        // Date display styles for reports
+        .date-display {
+            min-width: 120px;
+            text-align: center;
+            padding: 5px 8px;
+            background-color: #fff;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
     }
 }

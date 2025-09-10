@@ -92,7 +92,7 @@ const CustomDateRangePicker = ({ value = {}, onChange }) => {
 
 				<Popover open={open} anchorEl={anchorEl} onClose={handleClose} anchorOrigin={{ vertical: "bottom", horizontal: "left" }} transformOrigin={{ vertical: "top", horizontal: "left" }}>
 					<Box p={2}>
-						<DateRangePicker open toggle={handleClose} onChange={handleDateChange} initialDateRange={tempRange} closeOnClickOutside />
+						<DateRangePicker open toggle={handleClose} onChange={handleDateChange} initialDateRange={tempRange} closeOnClickOutside  wrapperClassName="dateRangePicker"/>
 						<Stack direction="row" justifyContent="flex-end" mt={2} spacing={1}>
 							<Button onClick={handleClose} color="secondary">
 								Cancel

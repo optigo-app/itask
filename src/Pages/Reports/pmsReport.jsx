@@ -296,10 +296,28 @@ const PmsReport = () => {
     };
 
     const handleNavigate = (direction) => {
-        const newDate = direction === 'prev'
-            ? currentDate.subtract(1, 'day')
-            : currentDate.add(1, 'day');
+        let newDate;
+        
+        if (filters.timeFilter === 'Today') {
+            newDate = direction === 'prev'
+                ? currentDate.subtract(1, 'day')
+                : currentDate.add(1, 'day');
+        } else if (filters.timeFilter === 'Tomorrow') {
+            newDate = direction === 'prev'
+                ? currentDate.subtract(1, 'day')
+                : currentDate.add(1, 'day');
+        } else if (filters.timeFilter === 'Week') {
+            newDate = direction === 'prev'
+                ? currentDate.subtract(1, 'week')
+                : currentDate.add(1, 'week');
+        } else {
+            newDate = direction === 'prev'
+                ? currentDate.subtract(1, 'day')
+                : currentDate.add(1, 'day');
+        }
+        
         setCurrentDate(newDate);
+        updateDatePickerBasedOnFilter(filters.timeFilter, newDate);
     };
 
     const handleToggleChange = (event, newFilter) => {
@@ -311,6 +329,43 @@ const PmsReport = () => {
                     endDate: ''
                 },
             });
+            const today = dayjs();
+            setCurrentDate(today);
+            updateDatePickerBasedOnFilter(newFilter, today);
+        }
+    };
+
+    // Helper function to update date picker based on selected filter
+    const updateDatePickerBasedOnFilter = (filter, date) => {
+        const targetDate = date || currentDate;
+        
+        if (filter === 'Today') {
+            setFilters(prev => ({
+                ...prev,
+                dateRangeFilter: {
+                    startDate: targetDate.startOf('day').toISOString(),
+                    endDate: targetDate.endOf('day').toISOString()
+                }
+            }));
+        } else if (filter === 'Tomorrow') {
+            const tomorrow = targetDate.add(1, 'day');
+            setFilters(prev => ({
+                ...prev,
+                dateRangeFilter: {
+                    startDate: tomorrow.startOf('day').toISOString(),
+                    endDate: tomorrow.endOf('day').toISOString()
+                }
+            }));
+        } else if (filter === 'Week') {
+            const startOfWeek = targetDate.startOf('week');
+            const endOfWeek = targetDate.endOf('week');
+            setFilters(prev => ({
+                ...prev,
+                dateRangeFilter: {
+                    startDate: startOfWeek.toISOString(),
+                    endDate: endOfWeek.toISOString()
+                }
+            }));
         }
     };
 
