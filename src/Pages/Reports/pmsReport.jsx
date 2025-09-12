@@ -29,6 +29,7 @@ const PmsReport = () => {
     const [searchText, setSearchText] = useState('');
     const [selectedProject, setSelectedProject] = useState('');
     const [selectedAssignee, setSelectedAssignee] = useState('');
+    const [selectedDepartment, setSelectedDepartment] = useState('');
     const filterOptions = ['Today', 'Tomorrow', 'Week'];
     const [currentDate, setCurrentDate] = useState(dayjs());
     const [filters, setFilters] = useState({
@@ -37,6 +38,10 @@ const PmsReport = () => {
             startDate: '',
             endDate: ''
         },
+        department: '',
+        assignee: '',
+        project: '',
+        search: ''
     });
     const actualData = useRecoilValue(actualTaskData);
     const { iswhTLoading, taskCategory, taskFinalData } = useFullTaskFormatFile();
@@ -257,6 +262,12 @@ const PmsReport = () => {
         return [...new Set(all)];
     }, [pmsReportData, viewMode]);
 
+    const departmentOptions = useMemo(() => {
+        const data = pmsReportData || [];
+        const departments = data.map(d => d.department || 'Unknown').filter(Boolean);
+        return [...new Set(departments)];
+    }, [pmsReportData]);
+
     const columns = useMemo(() => {
         const nameColumn = {
             key: viewMode === 'EmployeeWiseData' ? 'firstname' : 'modulename',
@@ -284,6 +295,7 @@ const PmsReport = () => {
             setSearchText('');
             setSelectedAssignee('');
             setSelectedProject('');
+            setSelectedDepartment('');
             localStorage.setItem('rpviewMode', newMode);
         }
     };
@@ -297,7 +309,7 @@ const PmsReport = () => {
 
     const handleNavigate = (direction) => {
         let newDate;
-        
+
         if (filters.timeFilter === 'Today') {
             newDate = direction === 'prev'
                 ? currentDate.subtract(1, 'day')
@@ -315,7 +327,7 @@ const PmsReport = () => {
                 ? currentDate.subtract(1, 'day')
                 : currentDate.add(1, 'day');
         }
-        
+
         setCurrentDate(newDate);
         updateDatePickerBasedOnFilter(filters.timeFilter, newDate);
     };
@@ -338,7 +350,7 @@ const PmsReport = () => {
     // Helper function to update date picker based on selected filter
     const updateDatePickerBasedOnFilter = (filter, date) => {
         const targetDate = date || currentDate;
-        
+
         if (filter === 'Today') {
             setFilters(prev => ({
                 ...prev,
@@ -388,13 +400,26 @@ const PmsReport = () => {
 
     const handleClearFilter = (filter) => {
         if (filter === 'Date-Range') {
-            setFilters({
+            setFilters(prev => ({
+                ...prev,
                 timeFilter: 'All',
                 dateRangeFilter: {
                     startDate: '',
                     endDate: ''
                 },
-            });
+            }));
+        } else if (filter === 'department') {
+            setSelectedDepartment('');
+            setFilters(prev => ({ ...prev, department: '' }));
+        } else if (filter === 'assignee') {
+            setSelectedAssignee('');
+            setFilters(prev => ({ ...prev, assignee: '' }));
+        } else if (filter === 'project') {
+            setSelectedProject('');
+            setFilters(prev => ({ ...prev, project: '' }));
+        } else if (filter === 'search') {
+            setSearchText('');
+            setFilters(prev => ({ ...prev, search: '' }));
         }
     };
 
@@ -405,7 +430,15 @@ const PmsReport = () => {
                 startDate: '',
                 endDate: ''
             },
+            department: '',
+            assignee: '',
+            project: '',
+            search: ''
         });
+        setSearchText('');
+        setSelectedProject('');
+        setSelectedAssignee('');
+        setSelectedDepartment('');
     };
 
     const handleChangePage = (event) => {
@@ -437,6 +470,10 @@ const PmsReport = () => {
                 )
             );
         }
+        if (selectedDepartment) {
+            data = data.filter(d => (d.department || 'Unknown') === selectedDepartment);
+        }
+
         if (viewMode === 'EmployeeWiseData' && selectedAssignee) {
             data = data.filter(d => `${d.firstname} ${d.lastname}`.trim() === selectedAssignee);
         }
@@ -478,16 +515,31 @@ const PmsReport = () => {
         <Box className="report-container">
             <PmFilters
                 searchText={searchText}
-                setSearchText={setSearchText}
+                setSearchText={(value) => {
+                    setSearchText(value);
+                    setFilters(prev => ({ ...prev, search: value }));
+                }}
                 selectedAssignee={selectedAssignee}
-                setSelectedAssignee={setSelectedAssignee}
+                setSelectedAssignee={(value) => {
+                    setSelectedAssignee(value);
+                    setFilters(prev => ({ ...prev, assignee: value }));
+                }}
                 selectedProject={selectedProject}
-                setSelectedProject={setSelectedProject}
+                setSelectedProject={(value) => {
+                    setSelectedProject(value);
+                    setFilters(prev => ({ ...prev, project: value }));
+                }}
+                selectedDepartment={selectedDepartment}
+                setSelectedDepartment={(value) => {
+                    setSelectedDepartment(value);
+                    setFilters(prev => ({ ...prev, department: value }));
+                }}
                 selectedFilter={filters}
                 filterOptions={filterOptions}
                 currentDate={currentDate}
                 assigneeOptions={assigneeOptions}
                 projectOptions={projectOptions}
+                departmentOptions={departmentOptions}
                 viewMode={viewMode}
                 handleTaskChange={handleTaskChange}
                 TASK_OPTIONS={TASK_OPTIONS}

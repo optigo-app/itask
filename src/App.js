@@ -24,6 +24,9 @@ import LoginPage from './Components/Auth/LoginForm';
 import SampleTaskTable from './Backup/SampleTaskTable';
 import CalendarComparisonDemo from './Backup/CalendarComparisonDemo';
 import CalendarViewDemo from './Backup/CalendarViewDemo';
+import SampleQuickForm from './Backup/sampleQuickForm';
+import SampleQuickFormVersion2 from './Backup/sampleQuickFormVersion2';
+import StructuredQuickTask from './Backup/StructuredQuickTask';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -288,10 +291,13 @@ const AppWrapper = () => {
                                         <Route path="/taskView" element={<CalendarGridView />} />
                                         <Route path="/test" element={<CalendarComparisonDemo />} />
                                         <Route path="/test1" element={<CalendarViewDemo />} />
-                                        <Route path="*" element={<PagenotFound />} />
+                                        <Route path="/test2" element={<SampleQuickForm />} />
+                                        <Route path="/test3" element={<SampleQuickFormVersion2 />} />
+                                        <Route path="/test4" element={<StructuredQuickTask />} />
+                                        <Route path="*" element={<PagenotFound />} />   
                                     </Routes>
                                 </Layout>
-                            }
+                              }
                         />
                     </Routes>
                 </Suspense>
