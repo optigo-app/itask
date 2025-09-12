@@ -1,6 +1,5 @@
 import React from 'react';
-import { Box, TextField, Autocomplete, ToggleButtonGroup, ToggleButton, IconButton, Typography } from '@mui/material';
-import { List, Square } from 'lucide-react';
+import { Box, TextField, Autocomplete, ToggleButtonGroup, ToggleButton, IconButton } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import CustomDateRangePicker from '../ShortcutsComponent/DateRangePicker';
@@ -12,11 +11,14 @@ const PmFilters = ({
   setSelectedAssignee,
   selectedProject,
   setSelectedProject,
+  selectedDepartment,
+  setSelectedDepartment,
   selectedFilter,
   currentDate,
   filterOptions,
   assigneeOptions,
   projectOptions,
+  departmentOptions,
   viewMode,
   handleTaskChange,
   TASK_OPTIONS,
@@ -27,24 +29,6 @@ const PmFilters = ({
   handleToggleChange,
   commonTextFieldProps = {}
 }) => {
-  const ViewToggleButtons = ({ view, onViewChange }) => {
-    return (
-      <ToggleButtonGroup
-        size='small'
-        value={view}
-        exclusive
-        onChange={onViewChange}
-        aria-label="view mode"
-      >
-        <ToggleButton value="table" aria-label="table view" sx={{ borderRadius: '8px' }}>
-          <List className="iconbtn" size={20} />
-        </ToggleButton>
-        <ToggleButton value="card" aria-label="card view" sx={{ borderRadius: '8px' }}>
-          <Square className="iconbtn" size={20} />
-        </ToggleButton>
-      </ToggleButtonGroup>
-    );
-  };
   return (
     <Box className="pmsFilterBox">
       <Box className="pmsSideBarTgBox">
@@ -56,10 +40,25 @@ const PmFilters = ({
               size="small"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              sx={{ minWidth: 280 }}
+              sx={{ minWidth: 200 }}
               {...commonTextFieldProps}
             />
           </Box>
+
+          <Box>
+            <Autocomplete
+              options={departmentOptions || []}
+              value={selectedDepartment || null}
+              onChange={(e, newValue) => setSelectedDepartment(newValue || '')}
+              renderInput={(params) => (
+                <TextField {...params} placeholder="Select Department" size="small" {...commonTextFieldProps} />
+              )}
+              sx={{ minWidth: 200 }}
+              clearOnEscape
+              isOptionEqualToValue={(option, value) => option === value}
+            />
+          </Box>
+
           <Box>
             {viewMode === 'EmployeeWiseData' && (
               <Autocomplete
@@ -69,7 +68,7 @@ const PmFilters = ({
                 renderInput={(params) => (
                   <TextField {...params} placeholder="Select Assignee" size="small" {...commonTextFieldProps} />
                 )}
-                sx={{ minWidth: 280 }}
+                sx={{ minWidth: 200 }}
                 clearOnEscape
                 isOptionEqualToValue={(option, value) => option === value}
               />
@@ -83,7 +82,7 @@ const PmFilters = ({
                 renderInput={(params) => (
                   <TextField {...params} placeholder="Select Project" size="small" {...commonTextFieldProps} />
                 )}
-                sx={{ minWidth: 280 }}
+                sx={{ minWidth: 200 }}
                 clearOnEscape
                 isOptionEqualToValue={(option, value) => option === value}
               />
@@ -106,32 +105,31 @@ const PmFilters = ({
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
-        {/* <ViewToggleButtons view={viewType} onViewChange={handleViewChange} /> */}
       </Box>
       <Box className="pmsDateFilterBox">
         <CustomDateRangePicker value={selectedFilter?.dateRangeFilter} onChange={handleDateChange} />
         <Box className="navigation-container">
-          <IconButton 
-            onClick={() => onNavigate('prev')} 
+          <IconButton
+            onClick={() => onNavigate('prev')}
             size="small"
             className="nav-button"
           >
             <ChevronLeft fontSize="small" />
           </IconButton>
-          
-          <Box className="date-display">
-            {selectedFilter?.timeFilter === 'Week' 
+
+          {/* <Box className="date-display">
+            {selectedFilter?.timeFilter === 'Week'
               ? `Week ${dayjs(currentDate).week()}`
               : selectedFilter?.timeFilter === 'Today'
-              ? dayjs(currentDate).format('MMM DD, YYYY')
-              : selectedFilter?.timeFilter === 'Tomorrow'
-              ? dayjs(currentDate).add(1, 'day').format('MMM DD, YYYY')
-              : 'Custom Range'
+                ? dayjs(currentDate).format('MMM DD, YYYY')
+                : selectedFilter?.timeFilter === 'Tomorrow'
+                  ? dayjs(currentDate).add(1, 'day').format('MMM DD, YYYY')
+                  : 'Custom Range'
             }
-          </Box>
-          
-          <IconButton 
-            onClick={() => onNavigate('next')} 
+          </Box> */}
+
+          <IconButton
+            onClick={() => onNavigate('next')}
             size="small"
             className="nav-button"
           >
