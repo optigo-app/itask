@@ -210,6 +210,12 @@ const useFullTaskFormatFile = () => {
     return clone;
   };
 
+  const TASK_TYPES = {
+    MODULE: "module",
+    MAJOR: "major",
+    MINOR: "minor",
+  };
+
   // Chunk 4: Category Tasks Collection with Optimization
   const collectCategoryTasks = (task, categoryMap, category, projectCategoryTasks, path = []) => {
     const categoryKey = categoryMap[task.workcategoryid];
@@ -217,6 +223,14 @@ const useFullTaskFormatFile = () => {
     const currentPath = [...path, task.taskname];
 
     task.breadcrumbTitles = currentPath;
+
+    // ✅ Decide type based on parentId and children
+    if (task.parentid === 0) {
+      task.type = TASK_TYPES.MODULE;
+    } else {
+      const hasChildren = task.subtasks && task.subtasks.length > 0;
+      task.type = hasChildren ? TASK_TYPES.MAJOR : TASK_TYPES.MINOR;
+    }
 
     // Initialize totals
     let totals = {
@@ -431,7 +445,7 @@ const useFullTaskFormatFile = () => {
         ModuleProgress,
         ModuleTeamMembers
       } = processModuleData(TaskData, categoryMap, taskCategory);
-      
+
       // Set loading state
       setTimeout(() => setIsWhTLoading(false), 50);
 

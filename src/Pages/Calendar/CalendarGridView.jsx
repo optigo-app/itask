@@ -106,6 +106,12 @@ const CalendarGridView = () => {
 
     let nonRootTasks = rawTasks.filter(task => task.parentid !== 0);
 
+    // Filter to show only minor tasks (hide major tasks)
+    nonRootTasks = nonRootTasks.filter(task => {
+      const taskType = (task.type || '').toLowerCase();
+      return taskType === 'minor';
+    });
+
     if (selectedAssigneeId != null) {
       nonRootTasks = nonRootTasks.filter(task => {
         if (!task.assigneids) return false;

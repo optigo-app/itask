@@ -202,3 +202,57 @@ $light-gray: #F5F5F5;
         }
     }
 }
+
+
+.customPms2TgBox {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    position: relative;
+    padding: 5px;
+    gap: 10px;
+
+    .toggle-group {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 5px;
+        min-width: 150px;
+        display: flex;
+        gap: 5px;
+
+        .toggle-button {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            font-size: 14px;
+            font-family: $font-family !important;
+            color: #666;
+            border: none;
+            line-height: .4rem;
+            padding: 10px;
+            text-transform: none;
+            transition: all 0.2s ease-in-out;
+
+            &.Mui-selected {
+                background: $button-Bgcolor !important;
+                color: #fff !important;
+                font-weight: 700;
+            }
+        }
+    }
+}
+
+.task-sub_count {
+    background-color: #7d7f8799;
+    color: #fff;
+    width: fit-content;
+    padding: 0.05rem 0.4rem;
+    border-radius: 50px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 500;
+    margin-left: 5px;
+    // display: flex;
+    // justify-content: center;
+    // align-items: center;
+}
