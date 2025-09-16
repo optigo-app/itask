@@ -49,6 +49,7 @@ const Error401Page = lazy(() => import('./Pages/ErrorPages/Error401Page'));
 
 // report
 const PmsReport = lazy(() => import('./Pages/Reports/pmsReport'));
+const PmsReport2 = lazy(() => import('./Pages/Reports/pms-report-2'));
 
 const Layout = ({ children, pageDataLoaded }) => {
     const isMobile = useMediaQuery('(max-width:712px)');
@@ -287,6 +288,7 @@ const AppWrapper = () => {
                                         <Route path="/masters" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1007"><Masters /></ProtectedRoute>} />
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
                                         <Route path="/reports/pms" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport /></ProtectedRoute>} />
+                                        <Route path="/reports/pms-2" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport2 /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
                                         <Route path="/test" element={<CalendarComparisonDemo />} />

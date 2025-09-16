@@ -1,39 +1,45 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import {
     Dialog,
     DialogTitle,
     DialogContent,
-    Table,
-    TableHead,
-    TableRow,
-    TableCell,
-    TableBody,
-    TableContainer,
     Typography,
     IconButton,
-    Paper,
     Box,
     TextField,
     Stack,
     AvatarGroup,
     Autocomplete,
-    Button
+    Button,
+    useMediaQuery,
+    useTheme,
+    ToggleButtonGroup,
+    ToggleButton
 } from "@mui/material";
 
 import CloseIcon from "@mui/icons-material/Close";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 
-import { cleanDate, commonTextFieldProps, formatDate2, statusColors } from "../../Utils/globalfun";
+import { commonTextFieldProps, priorityColors } from "../../Utils/globalfun";
 import TablePaginationFooter from "../ShortcutsComponent/Pagination/TablePaginationFooter";
 import ProfileImageMenu from "../ShortcutsComponent/ProfileImageMenu";
-import PriorityBadge from "../ShortcutsComponent/PriorityBadge";
+import HierarchicalTaskTreeTable from "./HierarchicalTaskTreeTable";
+import CustomSwitch from "../Common/CustomSwitch";
+import TaskTable from "./pms2TaskTable";
+import { ListTree, StretchHorizontal } from "lucide-react";
 
 const TaskDetailsModal = ({
     open,
     onClose,
     employee,
+    reportType,
+    viewMode,
 }) => {
+    const theme = useTheme();
+    const isLaptop = useMediaQuery("(max-width:1440px)");
+    const isProjectMode = viewMode === 'ModuleWiseData';
+
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [searchText, setSearchText] = useState('');
     const [page, setPage] = useState(1);
@@ -44,18 +50,22 @@ const TaskDetailsModal = ({
     const [priorityFilter, setPriorityFilter] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
     const [assigneeFilter, setAssigneeFilter] = useState('');
-
-    // Priority colors for PriorityBadge
-    const priorityColors = {
-        high: { color: '#d32f2f', backgroundColor: '#ffebee' },
-        medium: { color: '#f57c00', backgroundColor: '#fff3e0' },
-        low: { color: '#388e3c', backgroundColor: '#e8f5e8' },
-        urgent: { color: '#7b1fa2', backgroundColor: '#f3e5f5' }
-    };
+    const [showMinorTasks, setShowMinorTasks] = useState(false);
+    const [isTreeView, setIsTreeView] = useState(false);
 
     const handlePriorityChange = (task, newPriority) => {
         console.log('Priority changed for task:', task.id, 'to:', newPriority);
     };
+
+    const handleTaskTypeToggle = useCallback((e) => {
+        setShowMinorTasks(e.target.checked);
+    }, []);
+
+    const handleTableViewToggle = useCallback((event, newValue) => {
+        if (newValue !== null) {
+            setIsTreeView(newValue === 'tree');
+        }
+    }, []);
 
     // Get unique values for filter dropdowns
     const uniqueStatuses = useMemo(() => {
@@ -170,37 +180,33 @@ const TaskDetailsModal = ({
         setPage(1);
     };
 
-    const totalPages = Math?.ceil(filteredTasks && filteredTasks?.length / rowsPerPage);
+    // Calculate total count based on hierarchical tasks from the table component
+    const [hierarchicalTasksCount, setHierarchicalTasksCount] = useState(0);
 
-    const paginatedTasks = useMemo(() => {
-        const start = (page - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-        return filteredTasks.slice(start, end);
-    }, [filteredTasks, page, rowsPerPage]);
+    // Calculate total count for pagination based on table view
+    const totalTasksCount = useMemo(() => {
+        if (isTreeView) {
+            return hierarchicalTasksCount;
+        } else {
+            // For flat view, calculate based on filtered tasks
+            if (!filteredTasks || filteredTasks.length === 0) return 0;
+            if (showMinorTasks) {
+                // Show both major and minor tasks
+                return filteredTasks.filter(task => {
+                    const taskType = (task.type || '').toLowerCase();
+                    return taskType === 'major' || taskType === 'minor';
+                }).length;
+            } else {
+                // Show only major tasks
+                return filteredTasks.filter(task => {
+                    const taskType = (task.type || '').toLowerCase();
+                    return taskType === 'major';
+                }).length;
+            }
+        }
+    }, [isTreeView, hierarchicalTasksCount, filteredTasks, showMinorTasks]);
 
-    const renderAssignees = (assignees) => (
-        <AvatarGroup
-            max={6}
-            spacing={2}
-            sx={{
-                flexDirection: 'row',
-                '& .MuiAvatar-root': {
-                    border: 'none',
-                },
-            }}
-        >
-            {assignees?.map((assignee, idx) => (
-                <ProfileImageMenu
-                    key={assignee?.id || idx}
-                    profile={assignee}
-                    allAssignees={assignees}
-                    size={30}
-                    fontSize="1rem"
-                    showTooltip={true}
-                />
-            ))}
-        </AvatarGroup>
-    );
+    const totalPages = Math?.ceil(totalTasksCount / rowsPerPage);
 
     return (
         <Dialog
@@ -254,70 +260,116 @@ const TaskDetailsModal = ({
                             />
                         </Box>
 
-                        {/* Dynamic Filter Dropdowns */}
-                        {[
-                            {
-                                label: "Status",
-                                key: "status",
-                                value: statusFilter,
-                                onChange: setStatusFilter,
-                                options: uniqueStatuses,
-                                width: 180
-                            },
-                            {
-                                label: "Priority",
-                                key: "priority",
-                                value: priorityFilter,
-                                onChange: setPriorityFilter,
-                                options: uniquePriorities,
-                                width: 180
-                            },
-                            {
-                                label: "Category",
-                                key: "category",
-                                value: categoryFilter,
-                                onChange: setCategoryFilter,
-                                options: uniqueCategories,
-                                width: 180
+                        {/* Dynamic Filter Dropdowns - Responsive based on screen size and view mode */}
+                        {(() => {
+                            let filtersToShow = [];
+
+                            if (isLaptop) {
+                                // Laptop: Show only Status filter
+                                if (isProjectMode) {
+                                    // Project mode: Show Assignee filter
+                                    filtersToShow = [
+                                        {
+                                            label: "Assignee",
+                                            key: "assignee",
+                                            value: uniqueAssignees.find(a => a.id === assigneeFilter) || null,
+                                            onChange: (newValue) => setAssigneeFilter(newValue?.id || ''),
+                                            options: [{ id: '', name: 'All' }, ...uniqueAssignees],
+                                            getOptionLabel: (option) => option?.name || '',
+                                            placeholder: "Select Assignee",
+                                            width: 180
+                                        }
+                                    ];
+                                } else {
+                                    // Employee mode: Show Status filter
+                                    filtersToShow = [
+                                        {
+                                            label: "Status",
+                                            key: "status",
+                                            value: statusFilter,
+                                            onChange: setStatusFilter,
+                                            options: uniqueStatuses,
+                                            width: 180
+                                        }
+                                    ];
+                                }
+                            } else {
+                                // Desktop: Show all filters
+                                filtersToShow = [
+                                    {
+                                        label: "Status",
+                                        key: "status",
+                                        value: statusFilter,
+                                        onChange: setStatusFilter,
+                                        options: uniqueStatuses,
+                                        width: 180
+                                    },
+                                    {
+                                        label: "Priority",
+                                        key: "priority",
+                                        value: priorityFilter,
+                                        onChange: setPriorityFilter,
+                                        options: uniquePriorities,
+                                        width: 180
+                                    },
+                                    {
+                                        label: "Category",
+                                        key: "category",
+                                        value: categoryFilter,
+                                        onChange: setCategoryFilter,
+                                        options: uniqueCategories,
+                                        width: 180
+                                    }
+                                ];
                             }
-                        ].map((filter) => (
-                            <Box key={filter.key} sx={{ minWidth: filter.width, maxWidth: filter.width }}>
+
+                            return filtersToShow.map((filter) => (
+                                <Box key={filter.key} sx={{ minWidth: filter.width, maxWidth: filter.width }}>
+                                    <Autocomplete
+                                        size="small"
+                                        fullWidth
+                                        value={filter.key === 'assignee' ? filter.value : (filter.value || null)}
+                                        onChange={(event, newValue) => {
+                                            if (filter.key === 'assignee') {
+                                                filter.onChange(newValue);
+                                            } else {
+                                                filter.onChange(newValue || '');
+                                            }
+                                        }}
+                                        options={filter.key === 'assignee' ? filter.options : ['', ...filter.options]}
+                                        getOptionLabel={filter.getOptionLabel || ((option) => option === '' ? 'All' : option)}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                placeholder={filter.placeholder || `Select ${filter.label}`}
+                                                {...commonTextFieldProps}
+                                            />
+                                        )}
+                                    />
+                                </Box>
+                            ));
+                        })()}
+
+                        {/* Assignee Filter - Only show on desktop and not in project mode */}
+                        {!isLaptop && !isProjectMode && (
+                            <Box sx={{ minWidth: 180, maxWidth: 180 }}>
                                 <Autocomplete
                                     size="small"
                                     fullWidth
-                                    value={filter.value || null}
-                                    onChange={(event, newValue) => filter.onChange(newValue || '')}
-                                    options={['', ...filter.options]}
-                                    getOptionLabel={(option) => option === '' ? 'All' : option}
+                                    value={uniqueAssignees.find(a => a.id === assigneeFilter) || null}
+                                    onChange={(event, newValue) => setAssigneeFilter(newValue?.id || '')}
+                                    options={[{ id: '', name: 'All' }, ...uniqueAssignees]}
+                                    getOptionLabel={(option) => option?.name || ''}
                                     renderInput={(params) => (
                                         <TextField
                                             {...params}
-                                            placeholder={`Select ${filter.label}`}
+                                            placeholder="Select Assignee"
                                             {...commonTextFieldProps}
                                         />
                                     )}
                                 />
                             </Box>
-                        ))}
-
-                        {/* Assignee Filter */}
-                        <Box sx={{ minWidth: 180, maxWidth: 180 }}>
-                            <Autocomplete
-                                size="small"
-                                fullWidth
-                                value={uniqueAssignees.find(a => a.id === assigneeFilter) || null}
-                                onChange={(event, newValue) => setAssigneeFilter(newValue?.id || '')}
-                                options={[{ id: '', name: 'All' }, ...uniqueAssignees]}
-                                getOptionLabel={(option) => option?.name || ''}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        placeholder="Select Assignee"
-                                        {...commonTextFieldProps}
-                                    />
-                                )}
-                            />
-                        </Box>
+                        )}
 
                         {/* Clear Filters Button */}
                         {activeFiltersCount > 0 && (
@@ -334,7 +386,46 @@ const TaskDetailsModal = ({
                         )}
                     </Box>
 
-                    <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+
+                        {/* Task Type Toggle Switch */}
+                        <CustomSwitch
+                            checked={showMinorTasks}
+                            onChange={handleTaskTypeToggle}
+                            label={showMinorTasks ? "Minor+Major" : "Major"}
+                            color="#7367f0"
+                        />
+                        {/* Table View Toggle Switch */}
+                        <ToggleButtonGroup
+                            value={isTreeView ? 'tree' : 'table'}
+                            exclusive
+                            onChange={handleTableViewToggle}
+                            size="small"
+                            sx={{
+                                '& .MuiToggleButton-root': {
+                                    minWidth: '40px',
+                                    border: '1px solid #e0e0e0',
+                                    '&.Mui-selected': {
+                                        backgroundColor: '#7367f0',
+                                        color: '#fff',
+                                        '&:hover': {
+                                            backgroundColor: '#7367f0',
+                                        }
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: '#f5f5f5',
+                                    }
+                                }
+                            }}
+                        >
+                            <ToggleButton value="table" title="Major Tasks Only">
+                                <StretchHorizontal size={20} />
+                            </ToggleButton>
+                            <ToggleButton value="tree" title="Major + Minor Tasks">
+                                <ListTree size={20} />
+                            </ToggleButton>
+                        </ToggleButtonGroup>
+
                         <IconButton
                             onClick={() => setIsFullScreen(!isFullScreen)}
                             title="Toggle Fullscreen"
@@ -363,115 +454,40 @@ const TaskDetailsModal = ({
                 }}
             >
                 {employee ? (
-                    <TableContainer component={Paper} className="muiTableTaContainer">
-                        <Table className="muiTable" aria-label="task table">
-                            <TableHead className="muiTableHead">
-                                <TableRow sx={{ backgroundColor: "#fafafa" }}>
-                                    <TableCell width={20} sx={{ fontWeight: 600 }}>Sr#</TableCell>
-                                    <TableCell width={280} sx={{ fontWeight: 600 }}>Task Name</TableCell>
-                                    <TableCell width={300} sx={{ fontWeight: 600 }}>Project/Module</TableCell>
-                                    <TableCell width={100} sx={{ fontWeight: 600 }}>Assignee</TableCell>
-                                    <TableCell width={80} sx={{ fontWeight: 600 }}>Priority</TableCell>
-                                    <TableCell width={100} sx={{ fontWeight: 600 }}>Deadline</TableCell>
-                                    <TableCell width={80} sx={{ fontWeight: 600 }}>Estimate (hrs)</TableCell>
-                                    <TableCell width={80} sx={{ fontWeight: 600 }}>Working (hrs)</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {paginatedTasks?.length > 0 ? (
-                                    paginatedTasks?.map((task, index) => {
-                                        const statusColor = statusColors[task.status?.toLowerCase()] || { color: '#666', backgroundColor: '#f5f5f5' };
-                                        return (
-                                            <TableRow key={task.id || index} hover>
-                                                <TableCell>{index + 1}</TableCell>
-                                                <TableCell>
-                                                    <Box>
-                                                        <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
-                                                            {task.taskname}
-                                                        </Typography>
-                                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                                            {task.status && (
-                                                                <Box
-                                                                    sx={{
-                                                                        display: 'inline-flex',
-                                                                        alignItems: 'center',
-                                                                        px: 0.8,
-                                                                        py: 0.2,
-                                                                        borderRadius: '8px',
-                                                                        backgroundColor: statusColor.backgroundColor,
-                                                                        color: statusColor.color,
-                                                                        fontSize: '0.65rem',
-                                                                        fontWeight: 400,
-                                                                        textTransform: 'capitalize'
-                                                                    }}
-                                                                >
-                                                                    {task.status}
-                                                                </Box>
-                                                            )}
-                                                            {task.category && (
-                                                                <Box
-                                                                    sx={{
-                                                                        display: 'inline-flex',
-                                                                        alignItems: 'center',
-                                                                        px: 0.8,
-                                                                        py: 0.2,
-                                                                        borderRadius: '8px',
-                                                                        backgroundColor: '#e3f2fd',
-                                                                        color: '#1976d2',
-                                                                        fontSize: '0.65rem',
-                                                                        fontWeight: 400,
-                                                                        textTransform: 'capitalize'
-                                                                    }}
-                                                                >
-                                                                    {task.category}
-                                                                </Box>
-                                                            )}
-                                                        </Box>
-                                                    </Box>
-                                                </TableCell>
-                                                <TableCell>{task.taskPr}/{task.moduleName}</TableCell>
-                                                <TableCell>{renderAssignees(task.assignee)}</TableCell>
-                                                <TableCell>
-                                                    <PriorityBadge
-                                                        task={task}
-                                                        priorityColors={priorityColors}
-                                                        onPriorityChange={handlePriorityChange}
-                                                        fontSize="12px"
-                                                        padding="0.15rem 0.6rem"
-                                                        minWidth="60px"
-                                                        disable={true}
-                                                    />
-                                                </TableCell>
-                                                <TableCell><Typography variant="body2">{task?.DeadLineDate && cleanDate(task?.DeadLineDate)
-                                                    ? formatDate2(cleanDate(task?.DeadLineDate))
-                                                    : '-'}</Typography></TableCell>
-                                                <TableCell>{task.estimate_hrs}</TableCell>
-                                                <TableCell>{task.workinghr}</TableCell>
-                                            </TableRow>
-                                        );
-                                    })
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={8} align="center">
-                                            No matching tasks found.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                    <>
+                        {isTreeView ? (
+                            <HierarchicalTaskTreeTable
+                                tasks={filteredTasks}
+                                priorityColors={priorityColors}
+                                handlePriorityChange={handlePriorityChange}
+                                page={page}
+                                rowsPerPage={rowsPerPage}
+                                showMinorTasks={showMinorTasks}
+                                onHierarchicalCountChange={setHierarchicalTasksCount}
+                            />
+                        ) : (
+                            <TaskTable
+                                tasks={filteredTasks}
+                                priorityColors={priorityColors}
+                                handlePriorityChange={handlePriorityChange}
+                                page={page}
+                                rowsPerPage={rowsPerPage}
+                                excludeMinorTasks={showMinorTasks}
+                            />
+                        )}
                         <Box sx={{ padding: '0px 10px' }}>
-                            {filteredTasks?.length !== 0 && (
+                            {totalTasksCount !== 0 && (
                                 <TablePaginationFooter
                                     page={page}
                                     rowsPerPage={rowsPerPage}
-                                    totalCount={filteredTasks?.length}
+                                    totalCount={totalTasksCount}
                                     totalPages={totalPages}
                                     onPageChange={handleChangePage}
                                     onPageSizeChange={handleChangeRowsPerPage}
                                 />
                             )}
                         </Box>
-                    </TableContainer>
+                    </>
                 ) : null}
             </DialogContent>
         </Dialog>

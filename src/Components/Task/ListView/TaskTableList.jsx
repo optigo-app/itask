@@ -307,12 +307,12 @@ const TableView = ({
     const renderAssigneeAvatars = (assignees, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut) => (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <AvatarGroup
-                max={6}
+                max={4}
                 spacing={2}
                 sx={{
                     '& .MuiAvatar-root': {
-                        width: 25,
-                        height: 25,
+                        width: 30,
+                        height: 30,
                         fontSize: '0.8rem',
                         cursor: 'pointer',
                         border: 'none',
@@ -588,7 +588,7 @@ const TableView = ({
     const renderSubtasks = (subtasks, parentTaskId, depth = 0) => {
         return subtasks?.map((subtask) => (
             <React.Fragment key={subtask.taskid}>
-                <TableRow 
+                <TableRow
                     className={subtask?.isCopyActive ? 'cut-task-row' : ''}
                     sx={{
                         pointerEvents: subtask?.isCopyActive ? 'none' : 'auto',

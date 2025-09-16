@@ -72,6 +72,7 @@ const Sidebar = () => {
         // { label: 'Issue & Blocker', path: '/reports/issue-blocker' },
         // { label: 'Project Status Summary', path: '/reports/project-status-summary' },
         { label: 'PMS Report', path: '/reports/pms' },
+        { label: 'PMS Report 2', path: '/reports/pms-2' },
     ];
 
     useEffect(() => {
@@ -268,7 +269,7 @@ const Sidebar = () => {
                                         <List component="div" disablePadding className="itask_subMenuList">
                                             {reportSubItems.map(({ label, path }) => (
                                                 <ListItemButton key={label} onClick={() => handleItemClick(path, 'Reports')}
-                                                    className={location?.pathname?.includes(path) ? 'itask_drawerItemActive' : ''}>
+                                                    className={location?.pathname === path ? 'itask_drawerItemActive' : ''}>
                                                     <ListItemText primary={label} className="itask_drawerItemText" />
                                                 </ListItemButton>
                                             ))}
@@ -305,7 +306,7 @@ const Sidebar = () => {
                                                         borderRadius: "8px !important",
                                                     },
                                                 }}
-                                                className={location?.pathname?.includes(path) ? 'itask_drawerItemActive' : ''}
+                                                className={location?.pathname === path ? 'itask_drawerItemActive' : ''}
                                                 key={label} onClick={() => {
                                                     handleItemClick(path, 'Reports');
                                                     handleReportsClose();

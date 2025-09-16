@@ -22,7 +22,13 @@ const TASK_OPTIONS = [
     { id: 2, value: "ModuleWiseData", label: "Project", icon: <SquareChartGantt size={18} /> },
 ];
 
-const PmsReport = () => {
+const TASK_TYPES = {
+    MODULE: "module",
+    MAJOR: "major",
+    MINOR: "minor",
+};
+
+const PmsReport2 = () => {
     const [pmsReportData, setPmsReportData] = useState([]);
     const [viewMode, setViewMode] = useState('EmployeeWiseData');
     const [viewType, setViewType] = useState('table');
@@ -50,7 +56,6 @@ const PmsReport = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
 
-    console.log("taskfinalData", taskFinalData)
 
     useEffect(() => {
         setIsLoading(iswhTLoading);
@@ -123,6 +128,10 @@ const PmsReport = () => {
                             InProgress: 0,
                             TotalEstimate: 0,
                             TotalActual: 0,
+                            TotalMajor: 0,
+                            TotalMinor: 0,
+                            TotalMajorCompleted: 0,
+                            TotalMinorCompleted: 0,
                             Tasks: [],
                             CategorySummaryMap: new Map(),
                         });
@@ -136,6 +145,12 @@ const PmsReport = () => {
 
                     if (status === "completed") emp.Completed += 1;
                     if (status === "running") emp.InProgress += 1;
+                    // ✅ Count Major & Minor
+                    if (task.type?.toLowerCase() === TASK_TYPES.MAJOR) emp.TotalMajor += 1;
+                    if (task.type?.toLowerCase() === TASK_TYPES.MINOR) emp.TotalMinor += 1;
+                    // ✅ Count Major & Minor Completed
+                    if (task.type?.toLowerCase() === TASK_TYPES.MAJOR && status === "completed") emp.TotalMajorCompleted += 1;
+                    if (task.type?.toLowerCase() === TASK_TYPES.MINOR && status === "completed") emp.TotalMinorCompleted += 1;
 
                     const labelObj = taskCategory?.find(c => c.id === task.workcategoryid);
                     const labelName = labelObj?.labelname || "Unknown";
@@ -187,6 +202,10 @@ const PmsReport = () => {
                     InProgress: 0,
                     TotalEstimate: 0,
                     TotalActual: 0,
+                    TotalMajor: 0,
+                    TotalMinor: 0,
+                    TotalMajorCompleted: 0,
+                    TotalMinorCompleted: 0,
                     Tasks: [],
                     CategorySummaryTemp: new Map(),
                 });
@@ -202,6 +221,12 @@ const PmsReport = () => {
 
             if (status === "completed") mod.Completed += 1;
             if (status === "running") mod.InProgress += 1;
+            // ✅ Count Major & Minor
+            if (task.type?.toLowerCase() === TASK_TYPES.MAJOR) mod.TotalMajor += 1;
+            if (task.type?.toLowerCase() === TASK_TYPES.MINOR) mod.TotalMinor += 1;
+            // ✅ Count Major & Minor Completed
+            if (task.type?.toLowerCase() === TASK_TYPES.MAJOR && status === "completed") mod.TotalMajorCompleted += 1;
+            if (task.type?.toLowerCase() === TASK_TYPES.MINOR && status === "completed") mod.TotalMinorCompleted += 1;
 
             const labelObj = taskCategory?.find(c => c.id === task.workcategoryid);
             const labelName = labelObj?.labelname || "Unknown";
@@ -244,6 +269,7 @@ const PmsReport = () => {
             setIsLoading(false);
         }
     }, [currentDate, actualData, viewMode, taskCategory, taskFinalData, filters]);
+    console.log("pmsReportData", pmsReportData)
 
     useEffect(() => {
         const viemodeValue = localStorage.getItem('rpviewMode') ?? 'EmployeeWiseData';
@@ -278,22 +304,22 @@ const PmsReport = () => {
         };
         return [
             nameColumn,
-            { key: 'TotalTasks', label: 'Total Tasks', width: '100px' },
-            { key: 'Completed', label: 'Completed', width: '80px' },
-            { key: 'Progress', label: 'Progress', width: '100px' },
+            { key: 'TotalMajor', label: 'Total Tasks', width: '110px' },
+            { key: 'TotalMajorCompleted', label: 'Completed', width: '80px' },
+            { key: 'Progress', label: 'Progress', width: '200px' },
             { key: 'Performance', label: 'Performance', width: '120px' },
             { key: 'running', label: 'Running', width: '100px' },
             { key: 'onhold', label: 'OnHold', width: '100px' },
             { key: 'challenges', label: 'Challenges', width: '100px' },
-            { key: 'TotalEstimate', label: 'Estimate (hrs)', width: '118px' },
-            { key: 'TotalActual', label: 'Working (hrs)', width: '118px' },
-            { key: 'TotalDiff', label: 'Diff (hrs)', width: '90px' },
+            { key: 'TotalEstimate', label: 'Estimate', width: '118px' },
+            { key: 'TotalActual', label: 'Working', width: '118px' },
+            { key: 'TotalDiff', label: 'Diff', width: '90px' },
         ];
     }, [viewMode]);
 
     const handleTaskChange = (event, newMode) => {
         if (newMode) {
-            setViewMode(newMode);
+            setViewMode(newMode);   
             setSearchText('');
             setSelectedAssignee('');
             setSelectedProject('');
@@ -585,6 +611,7 @@ const PmsReport = () => {
                     sortConfig={sortConfig}
                     onSortChange={handleSortChange}
                     viewMode={viewMode}
+                    reportType="pms-report-2"
                 />
 
             )}
@@ -592,4 +619,4 @@ const PmsReport = () => {
     );
 };
 
-export default PmsReport;
+export default PmsReport2;

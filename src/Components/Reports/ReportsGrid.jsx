@@ -14,6 +14,8 @@ import {
   Chip,
   Avatar,
   TableSortLabel,
+  CircularProgress,
+  Tooltip,
 } from "@mui/material";
 import {
   formatDate2,
@@ -36,10 +38,11 @@ const ReportsGrid = ({
   onPageSizeChange,
   sortConfig,
   onSortChange,
-  viewMode
+  viewMode,
+  reportType
 }) => {
   const [openModal, setOpenModal] = useState(false);
-  const [selectedTaskRow, setSelectedTaskRow] = useState(null);
+  const [selectedTaskRow, setSelectedTaskRow] = useState(null);  
 
   const paginatedData = data || [];
 
@@ -92,7 +95,184 @@ const ReportsGrid = ({
 
     if (lowerKey === "progress") {
       const numericValue = typeof value === "string" ? parseFloat(value.replace("%", "")) : value;
-      const barColor = getStatusColor(numericValue);
+      const getCustomColor = (progress) => {
+        if (progress >= 100) return "#c8e6c9";
+        if (progress >= 50) return "#bbdefb";
+        return "#e0e0e0";
+      };
+      
+      const barColor = reportType === "pms-report-2" ? getCustomColor(numericValue) : getStatusColor(numericValue);
+      
+      // Use circular indicator for pms-report-2
+      if (reportType === "pms-report-2") {
+        const majorTasks = row?.TotalMajor || 0;
+        const createTaskCircles = (count) => {
+          const circles = [];
+          const maxCircles = Math.min(count, 4);
+          
+          for (let i = 0; i < maxCircles; i++) {
+            const isCompleted = i < (count * numericValue / 100);
+            const completedColor = "#c8e6c9";
+            const currentColor = isCompleted ? completedColor : barColor;
+            const circleSize = 20;
+            
+            circles?.push(
+              <Tooltip 
+                key={i} 
+                title={`Task ${i + 1} - ${isCompleted ? 'Completed' : 'Pending'}`} 
+                arrow
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      backgroundColor: isCompleted ? '#c8e6c9' : '#666',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                    }
+                  }
+                }}
+              >
+                <Box
+                  sx={{
+                    width: circleSize,
+                    height: circleSize,
+                    position: "relative",
+                    margin: "2px",
+                    cursor: "pointer",
+                    transition: "all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                    filter: `drop-shadow(0 3px 6px ${currentColor}50)`,
+                    "&:hover": {
+                      transform: isCompleted ? "scale(1.25)" : "scale(1.18)",
+                      filter: `drop-shadow(0 6px 12px ${currentColor}70)`,
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "50%",
+                      background: `
+                        repeating-linear-gradient(
+                          45deg,
+                          rgba(0, 0, 0, 0.05),
+                          rgba(0, 0, 0, 0.05) 4px,
+                          transparent 4px,
+                          transparent 10px
+                        ),
+                        ${currentColor}
+                      `,
+                      boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+                      border: "1px solid rgba(0, 0, 0, 0.05)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      position: "relative"
+                    }}
+                  >
+                    {/* {isCompleted && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          transform: "translate(-50%, -50%)",
+                          color: "#333",
+                          fontSize: "16px",
+                          fontWeight: "bold",
+                          zIndex: 2
+                        }}
+                      >
+                        ✓
+                      </Box>
+                    )} */}
+                  </Box>
+                </Box>
+              </Tooltip>
+            );
+          }
+          if (count > 4) {
+            circles.push(
+              <Tooltip key="overflow" title={`+${count - 4} more tasks`} arrow>
+                <Box
+                  sx={{
+                    width: 23,
+                    height: 23,
+                    borderRadius: "50%",
+                    background: `
+                      repeating-linear-gradient(
+                        45deg,
+                        rgba(0, 0, 0, 0.05),
+                        rgba(0, 0, 0, 0.05) 4px,
+                        transparent 4px,
+                        transparent 10px
+                      ),
+                      ${barColor}
+                    `,
+                    // boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                    margin: "2px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    transition: "all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                    "&:hover": {
+                      transform: "scale(1.18)",
+                      filter: `drop-shadow(0 6px 12px ${barColor}70)`,
+                    }
+                  }}
+                >
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      fontWeight: 700, 
+                      fontSize: "10px",
+                      color: "white",
+                      textShadow: "0 1px 2px rgba(0,0,0,0.7)",
+                      zIndex: 2
+                    }}
+                  >
+                    +{count - 4}
+                  </Typography>
+                </Box>
+              </Tooltip>
+            );
+          }
+          
+          return circles;
+        };
+
+        return (
+          <Box 
+            sx={{ 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "flex-start",
+              flexWrap: "wrap",
+              gap: "4px",
+              maxWidth: "180px",
+              padding: "4px",
+              minHeight: "32px",
+            }}
+          >
+            {majorTasks > 0 ? createTaskCircles(majorTasks) : (
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  fontWeight: 500, 
+                  fontSize: "11px",
+                  color: "#999",
+                  fontStyle: "italic"
+                }}
+              >
+                No tasks
+              </Typography>
+            )}
+          </Box>
+        );
+      }
+      
+      // Default linear progress for other reports
       return (
         <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
           <LinearProgress
@@ -156,7 +336,6 @@ const ReportsGrid = ({
             color: '#6D6B77',
             fontSize: "13px",
             height: "24px",
-            fontFamily: "Public Sans",
           }}
         />
       );
@@ -172,7 +351,6 @@ const ReportsGrid = ({
             color: '#6D6B77',
             fontSize: "13px",
             height: "24px",
-            fontFamily: "Public Sans",
           }}
         />
       );
@@ -292,6 +470,8 @@ const ReportsGrid = ({
         open={openModal}
         onClose={() => setOpenModal(false)}
         employee={selectedTaskRow}
+        reportType={reportType}
+        viewMode={viewMode}
       />
     </>
   );
