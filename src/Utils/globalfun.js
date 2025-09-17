@@ -345,7 +345,51 @@ export const statusColors = {
     },
 };
 
-// colors.js (Global colors)
+// Enhanced Color Master System with 35+ Light/Dark Variants
+export const colorMaster = {
+    "red": { "light": "#ffebee", "dark": "#c62828", "name": "Red" },
+    "pink": { "light": "#fce4ec", "dark": "#ad1457", "name": "Pink" },
+    "purple": { "light": "#f3e5f5", "dark": "#6a1b9a", "name": "Purple" },
+    "deepPurple": { "light": "#ede7f6", "dark": "#4527a0", "name": "Deep Purple" },
+    "indigo": { "light": "#e8eaf6", "dark": "#283593", "name": "Indigo" },
+    "blue": { "light": "#e3f2fd", "dark": "#1565c0", "name": "Blue" },
+    "lightBlue": { "light": "#e1f5fe", "dark": "#0277bd", "name": "Light Blue" },
+    "cyan": { "light": "#e0f7fa", "dark": "#00838f", "name": "Cyan" },
+    "teal": { "light": "#e0f2f1", "dark": "#00695c", "name": "Teal" },
+    "green": { "light": "#e8f5e9", "dark": "#2e7d32", "name": "Green" },
+    "lightGreen": { "light": "#f1f8e9", "dark": "#558b2f", "name": "Light Green" },
+    "lime": { "light": "#f9fbe7", "dark": "#9e9d24", "name": "Lime" },
+    "yellow": { "light": "#fffde7", "dark": "#f9a825", "name": "Yellow" },
+    "amber": { "light": "#fff8e1", "dark": "#ff8f00", "name": "Amber" },
+    "orange": { "light": "#fff3e0", "dark": "#ef6c00", "name": "Orange" },
+    "deepOrange": { "light": "#fbe9e7", "dark": "#d84315", "name": "Deep Orange" },
+    "brown": { "light": "#efebe9", "dark": "#4e342e", "name": "Brown" },
+    "grey": { "light": "#fafafa", "dark": "#424242", "name": "Grey" },
+    "blueGrey": { "light": "#eceff1", "dark": "#37474f", "name": "Blue Grey" },
+    "black": { "light": "#f5f5f5", "dark": "#212121", "name": "Black" },
+    "maroon": { "light": "#ffebee", "dark": "#5c0000", "name": "Maroon" },
+    "forest": { "light": "#e8f5e9", "dark": "#1b5e20", "name": "Forest" },
+    "navy": { "light": "#e8eaf6", "dark": "#00003f", "name": "Navy" },
+    "slate": { "light": "#eceff1", "dark": "#4f606e", "name": "Slate" },
+    "oceanBlue": { "light": "#e0f2f7", "dark": "#01579b", "name": "Ocean Blue" },
+    "sand": { "light": "#f9f5ed", "dark": "#886f6f", "name": "Sand" },
+    "charcoal": { "light": "#e0e0e0", "dark": "#2c3e50", "name": "Charcoal" },
+    "skyBlue": { "light": "#e8faff", "dark": "#2980b9", "name": "Sky Blue" },
+    "coralReef": { "light": "#fff3e0", "dark": "#e67e22", "name": "Coral Reef" },
+    "roseQuartz": { "light": "#fbe9e7", "dark": "#d44e52", "name": "Rose Quartz" },
+    "sageGreen": { "light": "#f1f8e9", "dark": "#6c7a59", "name": "Sage Green" },
+    "mustard": { "light": "#fffde7", "dark": "#d4ac0d", "name": "Mustard" },
+    "lilac": { "light": "#f3e5f5", "dark": "#a06ba8", "name": "Lilac" },
+    "burgundy": { "light": "#ffebee", "dark": "#800020", "name": "Burgundy" },
+    "cobalt": { "light": "#e3f2fd", "dark": "#004085", "name": "Cobalt" },
+    "oliveDrab": { "light": "#f1f8e9", "dark": "#6b8e23", "name": "Olive Drab" },
+    "rust": { "light": "#fbe9e7", "dark": "#b7410e", "name": "Rust" },
+    "stoneGrey": { "light": "#eceff1", "dark": "#6c7a89", "name": "Stone Grey" },
+    "midnightBlue": { "light": "#e8eaf6", "dark": "#191970", "name": "Midnight Blue" },
+    "cerulean": { "light": "#e3f2fd", "dark": "#007BA7", "name": "Cerulean" }
+};
+
+// Legacy colors array for backward compatibility
 export const colors = [
     "#FF5722", "#4CAF50", "#2196F3", "#FFC107", "#E91E63", "#9C27B0", "#3F51B5", "#00BCD4",
     "#FF9800", "#9E9E9E", "#795548", "#607D8B", "#8BC34A", "#FFEB3B", "#FF4081", "#673AB7",
@@ -358,6 +402,114 @@ export const getRandomAvatarColor = (name) => {
         ?.split("")
         ?.reduce((sum, char) => sum + char?.charCodeAt(0), 0);
     return colors[charSum % colors.length];
+};
+
+// Dynamic Priority Color Function
+export const getDynamicPriorityColor = (priorityName, colorKey = null) => {
+    // Get stored priority colors from sessionStorage
+    const storedPriorityColors = JSON.parse(sessionStorage.getItem('priorityMasterColors') || '{}');
+
+    if (colorKey && colorMaster[colorKey]) {
+        return {
+            color: colorMaster[colorKey].dark,
+            backgroundColor: colorMaster[colorKey].light,
+            colorKey: colorKey
+        };
+    }
+
+    if (storedPriorityColors[priorityName?.toLowerCase()]) {
+        const colorKey = storedPriorityColors[priorityName?.toLowerCase()];
+        return {
+            color: colorMaster[colorKey].dark,
+            backgroundColor: colorMaster[colorKey].light,
+            colorKey: colorKey
+        };
+    }
+
+    // Fallback to existing priority colors
+    return priorityColors[priorityName?.toLowerCase()] || priorityColors.normal;
+};
+
+// Dynamic Status Color Function
+export const getDynamicStatusColor = (statusName, colorKey = null) => {
+    // Get stored status colors from sessionStorage
+    const storedStatusColors = JSON.parse(sessionStorage.getItem('statusMasterColors') || '{}');
+
+    if (colorKey && colorMaster[colorKey]) {
+        return {
+            color: colorMaster[colorKey].dark,
+            backgroundColor: colorMaster[colorKey].light,
+            colorKey: colorKey
+        };
+    }
+
+    if (storedStatusColors[statusName?.toLowerCase()]) {
+        const colorKey = storedStatusColors[statusName?.toLowerCase()];
+        return {
+            color: colorMaster[colorKey].dark,
+            backgroundColor: colorMaster[colorKey].light,
+            colorKey: colorKey
+        };
+    }
+
+    // Fallback to existing status colors
+    return statusColors[statusName?.toLowerCase()] || { color: "#9e9e9e", backgroundColor: "#f5f5f5" };
+};
+
+// Auto Text Color Selection based on background
+export const getContrastTextColor = (backgroundColor) => {
+    // Convert hex to RGB
+    const hex = backgroundColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Return black for light backgrounds, white for dark backgrounds
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+};
+
+// Get all available color options for UI
+export const getColorOptions = () => {
+    return Object.entries(colorMaster).map(([key, value]) => ({
+        key,
+        name: value.name,
+        light: value.light,
+        dark: value.dark,
+        preview: value.dark
+    }));
+};
+
+// Get color options organized by categories
+export const getColorOptionsByCategory = () => {
+    const colors = getColorOptions();
+
+    // Define light colors - colors with good contrast (based on priority/status colors)
+    const lightColorKeys = [
+        'yellow', 'lime', 'lightGreen', 'mint', 'cyan', 'lightBlue',
+        'pink', 'coral', 'salmon', 'gold', 'amber',
+        'silver', 'grey', 'tan'
+    ];
+
+    // Define dark colors - colors with strong, dark contrast
+    const darkColorKeys = [
+        'red', 'deepOrange', 'orange', 'brown', 'chocolate',
+        'purple', 'deepPurple', 'indigo', 'blue', 'navy', 'royal',
+        'teal', 'green', 'forest', 'emerald', 'olive',
+        'crimson', 'maroon', 'violet', 'magenta', 'black', 'slate',
+        'blueGrey', 'turquoise', 'lavender', 'khaki'
+    ];
+
+    const lightColors = colors.filter(color => lightColorKeys.includes(color.key));
+    const darkColors = colors.filter(color => darkColorKeys.includes(color.key));
+
+    return {
+        light: lightColors,
+        dark: darkColors,
+        all: colors
+    };
 };
 
 export const AdvancedMasterApiFunc = async () => {

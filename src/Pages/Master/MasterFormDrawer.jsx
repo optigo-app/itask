@@ -3,6 +3,7 @@ import { Drawer, Box, Typography, TextField, Button, IconButton, ToggleButtonGro
 import CloseIcon from "@mui/icons-material/Close";
 import { commonTextFieldProps } from "../../Utils/globalfun";
 import { Grid2x2, ListTodo } from "lucide-react";
+import ColorPicker from "../../Components/Common/ColorPicker";
 
 const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, formattedData, setFormData, selectedRow }) => {
 
@@ -13,6 +14,14 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, format
             setFormData((prev) => ({ ...prev, [name]: value }));
         }
     };
+
+    const handleColorSelect = (colorKey) => {
+        setFormData((prev) => ({ ...prev, colorKey: colorKey }));
+    };
+
+    // Check if this is a priority or status master
+    const isPriorityMaster = activeTab?.toLowerCase().includes('priority');
+    const isStatusMaster = activeTab?.toLowerCase().includes('status');
 
     return (
         <Drawer anchor="right" open={open} onClose={onClose}>
@@ -52,6 +61,22 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, format
                         {...commonTextFieldProps}
                         sx={{ marginTop: .5 }}
                     />
+                    
+                    {/* Color Picker for Priority and Status Masters */}
+                    {(isPriorityMaster || isStatusMaster) && (
+                        <Box sx={{ mt: 2 }}>
+                            <ColorPicker
+                                selectedColor={formData.colorKey}
+                                onColorSelect={handleColorSelect}
+                                label={`${activeTab} Color`}
+                                showPreview={true}
+                                size="medium"
+                            />
+                            <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+                                This color will be used for {activeTab.toLowerCase()} display in tasks and grids
+                            </Typography>
+                        </Box>
+                    )}
                 </>
                 <Box sx={{ display: "flex", justifyContent: "end", marginTop: 3, gap: '10px' }}>
                     <Button variant="outlined" className="secondaryBtnClassname" onClick={onClose}>
