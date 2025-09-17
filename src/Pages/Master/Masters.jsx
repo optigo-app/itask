@@ -16,6 +16,8 @@ import DynamicMasterDrawer from './DynamicMasterDrawer';
 import AdvancedMasterTable from './AdvancedMasterTable';
 import { AddAdvFilterGroupAttrApi, deleteAdvancedMasterApi } from '../../Api/MasterApi/AddAdvFilterGroupAttrApi';
 import { useLocation } from 'react-router-dom';
+import ColorGridShortcuts from '../../Components/Common/ColorGridShortcuts';
+import ViewToggle from '../../Components/Common/ViewToggle';
 
 const MasterToggle = () => {
     const location = useLocation();
@@ -26,11 +28,13 @@ const MasterToggle = () => {
     const [formattedData, setFormattedData] = useState([]);
     const [tableTabData, setTableTabData] = useState([]);
     const [categoryStates, setCategoryStates] = useState({});
+    console.log(categoryStates)
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [structuredAdvMasterData, setStructuredAdvMasterData] = useState([]);
     const [formData, setFormData] = useState({
         name: '',
-        displayorder: ''
+        displayorder: '',
+        colorKey: null
     });
     const [formAdvData, setFormAdvData] = useState({
         masterName: '',
@@ -44,6 +48,7 @@ const MasterToggle = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
     const [masterType, setMasterType] = useState("single");
+    const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
 
     const fetchAdvMasterData = async (forceRefresh = false) => {
         if (!forceRefresh) {
@@ -73,7 +78,9 @@ const MasterToggle = () => {
     const handleOpenDrawer = () => {
         setSelectedRow(null);
         setFormData({
-            name: ''
+            name: '',
+            displayorder: '',
+            colorKey: null
         });
         setMode('add');
         setDrawerOpen(true)
@@ -83,7 +90,9 @@ const MasterToggle = () => {
         setDrawerOpen(false);
         setSelectedRow(null);
         setFormData({
-            name: ''
+            name: '',
+            displayorder: '',
+            colorKey: null
         });
         setMode('');
         setFormAdvData({
@@ -186,6 +195,13 @@ const MasterToggle = () => {
 
             const response = await addEditDelMaster(payload);
             if (response[0]?.stat == 1) {
+                // Save color mapping if it's a priority or status master
+                if (formData.colorKey && (categoryStates?.title?.toLowerCase().includes('priority') || categoryStates?.title?.toLowerCase().includes('status'))) {
+                    const colorType = categoryStates?.title?.toLowerCase().includes('priority') ? 'priorityMasterColors' : 'statusMasterColors';
+                    const existingColors = JSON.parse(sessionStorage.getItem(colorType) || '{}');
+                    existingColors[formData.name?.toLowerCase()] = formData.colorKey;
+                    sessionStorage.setItem(colorType, JSON.stringify(existingColors));
+                }
                 handleTaskApicall();
             }
         } catch (error) {
@@ -266,6 +282,8 @@ const MasterToggle = () => {
         setMode('edit');
         setFormData({
             name: row?.labelname,
+            displayorder: row?.displayorder || '',
+            colorKey: row?.colorkey || null
         });
     };
 
@@ -365,27 +383,54 @@ const MasterToggle = () => {
             }
         } else {
             try {
-                const payload = {
-                    ...selectedRow,
-                    ...formData,
-                    mode: 'trash',
-                };
-                const response = await addEditDelMaster(payload);
-                setCnfDelDialogOpen(false);
-                if (response[0]?.stat === 1) {
-                    setFormattedData(prevData => prevData.filter(item => item.id !== selectedRow.id));
-                    toast.success('Data Removed Successfully');
-                } else {
-                    toast.error('Failed to remove data');
+                const result = await addEditDelMaster({ ...selectedRow, isdelete: 2 });
+                if (result?.rd) {
+                    const updatedData = formattedData.filter(item => item.id !== selectedRow.id);
+                    setFormattedData(updatedData);
+                    toast.success('Record permanently deleted successfully!');
                 }
+                handleCloseCnfDialog();
             } catch (error) {
                 console.error('Error in handleRemoveMasterData:', error);
-                toast.error('An error occurred while removing the data');
+                toast.error('Failed to delete record');
             }
         }
     };
 
+    const handleColorChange = async (row, colorKey, masterType) => {
+        try {
+            // Update the row with the new color key
+            const updatedRow = { ...row, colorkey: colorKey };
+            
+            // Save to database
+            const result = await addEditDelMaster(updatedRow);
+            
+            if (result?.rd) {
+                // Update local data
+                const updatedData = formattedData.map(item => 
+                    item.id === row.id ? { ...item, colorkey: colorKey } : item
+                );
+                setFormattedData(updatedData);
+                
+                // Update sessionStorage for color mappings
+                const storageKey = masterType === 'priority' ? 'priorityMasterColors' : 'statusMasterColors';
+                const existingColors = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+                existingColors[row.labelname.toLowerCase()] = colorKey;
+                sessionStorage.setItem(storageKey, JSON.stringify(existingColors));
+                
+                toast.success(`Color updated for ${row.labelname}!`);
+            } else {
+                toast.error('Failed to update color');
+            }
+        } catch (error) {
+            console.error('Error updating color:', error);
+            toast.error('Failed to update color');
+        }
+    };
+
     const isAdvanced = categoryStates?.id === "advanced_master";
+    const isPriorityOrStatus = categoryStates?.title?.toLowerCase().includes('priority') || categoryStates?.title?.toLowerCase().includes('status');
+    const masterType_display = categoryStates?.table_name;
 
     const searchAllNestedNames = (data, searchTerm) => {
         const lowerSearch = (searchTerm || "").toLowerCase();
@@ -477,6 +522,19 @@ const MasterToggle = () => {
                                         endAdornment: <SearchIcon />,
                                     }}
                                 />
+                                
+                                {/* View Mode Toggle for Priority/Status */}
+                                {isPriorityOrStatus && (
+                                    <ViewToggle
+                                        view={viewMode}
+                                        onViewChange={setViewMode}
+                                        size="small"
+                                        variant="outlined"
+                                        showLabels={false}
+                                        sx={{ ml: 1 }}
+                                    />
+                                )}
+                                
                                 <Button
                                     variant="contained"
                                     startIcon={<AddIcon />}
@@ -493,18 +551,33 @@ const MasterToggle = () => {
                             <>
                                 {categoryStates?.id != "advanced_master" ?
                                     (
-                                        <Mastergrid
-                                            data={paginatedData}
-                                            handleEditRow={handleEditRow}
-                                            handleDeleteRow={handleDeleteRow}
-                                            handleRestoreRow={handleRestoreRow}
-                                            paginationCount={Math.ceil(filteredData.length / rowsPerPage)}
-                                            totalRows={filteredData.length}
-                                            paginationPage={page}
-                                            rowsPerPage={rowsPerPage}
-                                            onPaginationChange={handlePageChange}
-                                            handleFinalDelete={handleFinalDelete}
-                                        />
+                                        <>
+                                            {/* Show Grid View for Priority/Status when enabled */}
+                                            {isPriorityOrStatus && viewMode === 'grid' ? (
+                                                <ColorGridShortcuts
+                                                    data={filteredData}
+                                                    type={masterType_display}
+                                                    onEdit={handleEditRow}
+                                                    onDelete={handleDeleteRow}
+                                                    showActions={true}
+                                                />
+                                            ) : (
+                                                <Mastergrid
+                                                    data={paginatedData}
+                                                    handleEditRow={handleEditRow}
+                                                    handleDeleteRow={handleDeleteRow}
+                                                    handleRestoreRow={handleRestoreRow}
+                                                    paginationCount={Math.ceil(filteredData.length / rowsPerPage)}
+                                                    totalRows={filteredData.length}
+                                                    paginationPage={page}
+                                                    rowsPerPage={rowsPerPage}
+                                                    onPaginationChange={handlePageChange}
+                                                    handleFinalDelete={handleFinalDelete}
+                                                    masterType={masterType_display}
+                                                    onColorChange={handleColorChange}
+                                                />
+                                            )}
+                                        </>
                                     ) :
                                     <div>
                                         <AdvancedMasterTable
