@@ -1324,8 +1324,8 @@ export const renderAssigneeAvatars = (assignees, hanldePAvatarClick) => (
             spacing={2}
             sx={{
                 '& .MuiAvatar-root': {
-                    width: 25,
-                    height: 25,
+                    width: 30,
+                    height: 30,
                     fontSize: '0.8rem',
                     cursor: 'pointer',
                     border: 'none',
