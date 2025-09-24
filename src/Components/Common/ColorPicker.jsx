@@ -162,8 +162,7 @@ const ColorPicker = ({
                 <Box sx={{
                     p: 3,
                     pb: 2,
-                    background: 'linear-gradient(135deg, #7367f0 0%, #9c88ff 100%)',
-                    color: 'white'
+                    borderBottom: '1px dashed rgb(125, 127, 133)',
                 }}>
                     <Typography variant="h6" sx={{ mb: 0, fontWeight: 600, fontSize: '1.1rem' }}>
                         Choose Color

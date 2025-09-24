@@ -352,7 +352,7 @@ const Calendar = () => {
         onClose={handleCloseDialog}
         onConfirm={handleConfirmRemoveAll}
         title="Confirm"
-        content="Are you sure you want to remove this Event?"
+        content="Are you sure you want to remove this task from the calendar?"
       />
     </Box>
   );

@@ -223,7 +223,7 @@ const Mastergrid = ({
                             );
                         })}
                         <TableRow className='paginationRow'>
-                            <TableCell colSpan={(masterType === 'priority' || masterType === 'status') ? 5 : 4}>
+                            <TableCell colSpan={(masterType === 'task_priority' || masterType === 'task_status') ? 5 : 4}>
                                 <CustomFooter
                                     totalRows={totalRows}
                                     paginationCount={paginationCount}

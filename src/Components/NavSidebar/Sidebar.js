@@ -43,7 +43,7 @@ const Sidebar = () => {
     const [isFullSidebar, setFullSidebar] = useRecoilState(FullSidebar);
     const [activeItem, setActiveItem] = useState('Home');
     const [openReports, setOpenReports] = useState(false);
-    const drawerWidth = isFullSidebar || isDrawerOpen ? 240 : 80;
+    const drawerWidth = isFullSidebar || isDrawerOpen ? 220 : 80;
     const [reportsAnchorEl, setReportsAnchorEl] = React.useState(null);
     const setFilters = useSetRecoilState(Advfilters);
     const taskInit = JSON?.parse(sessionStorage?.getItem('taskInit'));
@@ -63,14 +63,6 @@ const Sidebar = () => {
 
     // Sub menu items for Reports
     const reportSubItems = [
-        // { label: 'Admin Report', path: '/reports/admin' },
-        // { label: 'Team Lead Report', path: '/reports/team-lead' },
-        // { label: 'Employee Report', path: '/reports/employee' },
-        // { label: 'Overall Project Status', path: '/reports/overall-project-status' },
-        // { label: 'Team Productivity', path: '/reports/team-productivity' },
-        // { label: 'Task Time Utilization', path: '/reports/task-time-utilization' },
-        // { label: 'Issue & Blocker', path: '/reports/issue-blocker' },
-        // { label: 'Project Status Summary', path: '/reports/project-status-summary' },
         { label: 'PMS Report', path: '/reports/pms' },
         { label: 'PMS Report 2', path: '/reports/pms-2' },
     ];
@@ -145,7 +137,7 @@ const Sidebar = () => {
     return (
         <motion.div
             layout
-            initial={{ width: isMobile ? 0 : 240 }}
+            initial={{ width: isMobile ? 0 : 220 }}
             animate={{ width: isMobile ? 0 : drawerWidth }}
             transition={{ type: "spring", stiffness: 200, damping: 25 }}
             className="itask_sidebarDrawer"

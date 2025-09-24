@@ -27,7 +27,7 @@ const PriorityBadge = ({ task, priorityColors, onPriorityChange, fontSize, paddi
                     fontFamily: '"Public Sans", sans-serif',
                     width: "fit-content",
                     minWidth: minWidth ?? "inherit",
-                    padding: padding ?? "0.2rem 0.8rem",
+                    padding: padding ?? "0.2rem 0.4rem",
                     borderRadius: "5px",
                     textAlign: "center",
                     fontSize: fontSize ?? "13.5px",

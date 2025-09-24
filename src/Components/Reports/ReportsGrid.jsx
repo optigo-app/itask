@@ -71,8 +71,8 @@ const ReportsGrid = ({
               src={ImageUrl(row)}
               alt={row?.firstname}
               sx={{
-                width: 25,
-                height: 25,
+                width: 30,
+                height: 30,
                 bgcolor: background(row?.firstname),
                 fontSize: 14,
               }}

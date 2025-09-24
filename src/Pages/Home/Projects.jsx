@@ -39,12 +39,12 @@ const Projects = ({ projects, navigate, isLoding }) => {
                             <TableBody>
                                 {visibleProjects?.map((project, idx) => (
                                     <TableRow key={idx}>
-                                        <TableCell>
+                                        <TableCell colSpan={2}>
                                             <Link className='prNameUrl' to={`/projects?filter=${project?.taskname}`}>
                                                 {project?.taskname}
                                             </Link>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell colSpan={1}>
                                             <div style={{
                                                 display: 'flex',
                                                 alignItems: 'center',

@@ -21,8 +21,10 @@ import {
     Menu,
     MenuItem,
     Select,
+    TextareaAutosize,
+    Button,
 } from "@mui/material";
-import { CirclePlus, Eye, Paperclip, Pencil, PrinterCheck, Timer } from "lucide-react";
+import { CirclePlus, CloudUpload, Eye, MessageCircleMore, Paperclip, Pencil, PrinterCheck, Timer, Send } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -31,6 +33,7 @@ import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
+import AssigneeAvatarGroup from "../../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
 import TaskTimeTracking from "../../ShortcutsComponent/TimerComponent/TaskTimeTracking";
 import BurningImage from "../../../Assests/fire.webp";
 import StatusBadge from "../../ShortcutsComponent/StatusBadge";
@@ -40,6 +43,7 @@ import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawer
 import MenuDatePicker from "../../ShortcutsComponent/Date/DeadlineDate";
 import PriorityBadge from "../../ShortcutsComponent/PriorityBadge";
 import CutPasetContextMenu from "../../ShortcutsComponent/CutPasteMenu";
+import CommentMenuPopup from "../../ShortcutsComponent/Comment/CommentMenuPopup";
 import MomSheet from "../../PrintSheet/MomSheet";
 import MaintenanceSheet from "../../PrintSheet/MaintenanceSheet";
 import { useReactToPrint } from "react-to-print";
@@ -48,18 +52,20 @@ import { debounce } from "lodash";
 import TablePaginationFooter from "../../ShortcutsComponent/Pagination/TablePaginationFooter";
 import { PERMISSIONS, ROLES } from "../../Auth/Role/permissions";
 import useAccess from "../../Auth/Role/useAccess";
+import { taskCommentAddApi } from "../../../Api/TaskApi/TaskCommentAddApi";
+import { taskCommentGetApi } from "../../../Api/TaskApi/TaskCommentGetApi";
 
 const initialColumns = [
-    { id: "taskname", label: "Task Name", width: 240 },
+    { id: "taskname", label: "Task Name", width: 280 },
     { id: "taskPr", label: "Project", width: 110 },
     { id: "progress", label: "Progress", width: 90 },
-    { id: "status", label: "Status", width: 120 },
-    { id: "secStatus", label: "What Next", width: 120 },
+    { id: "status", label: "Status", width: 100 },
+    { id: "secStatus", label: "What Next", width: 100 },
     { id: "assignee", label: "Assignee", width: 100 },
-    { id: "DeadLineDate", label: "Deadline", width: 100 },
-    { id: "priority", label: "Priority", width: 120 },
-    { id: "estimate", label: "Estimate", width: 100 },
-    { id: "actions", label: "Actions", width: 160 },
+    { id: "DeadLineDate", label: "Deadline", width: 90 },
+    { id: "priority", label: "Priority", width: 80 },
+    { id: "estimate", label: "Estimate", width: 70 },
+    { id: "actions", label: "Actions", width: 165 },
 ];
 
 const TableView = ({
@@ -87,6 +93,7 @@ const TableView = ({
     isLoading }) => {
     const { hasAccess } = useAccess();
     const [anchorPrintEl, setAnchorPrintEl] = useState(null);
+    const [anchorCommentEl, setAnchorCommentEl] = useState(null);
     const printRef1 = React.useRef(null);
     const printRef2 = React.useRef(null);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
@@ -239,6 +246,61 @@ const TableView = ({
         setAnchorPrintEl(null);
     };
 
+    const handleOpenCommentProver = async (event, task) => {
+        setAnchorCommentEl(event.currentTarget);
+        
+        try {
+            // Fetch comments for the selected task
+            const taskComment = await taskCommentGetApi(task);
+            const assigneesMaster = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"));
+
+            if (taskComment) {
+                const cleanedComments = taskComment.rd.map(comment => ({
+                    ...comment,
+                    id: comment?.id,
+                    user: comment?.user,
+                    assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
+                    attachments: comment?.attachments || []
+                }));
+
+                // Set the selected item with comments
+                setSelectedItem({
+                    ...task,
+                    comments: cleanedComments
+                });
+            } else {
+                setSelectedItem({
+                    ...task,
+                    comments: []
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+            setSelectedItem({
+                ...task,
+                comments: []
+            });
+        }
+    };
+
+    const handleCloseCommentMenu = () => {
+        setAnchorCommentEl(null);
+    };
+
+    const handleCommentAdded = (updatedComments) => {
+        // Update the selected item with new comments
+        setSelectedItem(prev => ({
+            ...prev,
+            comments: updatedComments
+        }));
+    };
+
+    const handleViewAllComments = (task) => {
+        // Open task detail drawer to show all comments
+        setTaskDetailModalOpen(true);
+        setSelectedTask(task);
+    };
+
     const handlePrintA = useReactToPrint({
         contentRef: printRef1,
         documentTitle: "AwesomeFileName",
@@ -305,61 +367,18 @@ const TableView = ({
     }
 
     const renderAssigneeAvatars = (assignees, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <AvatarGroup
-                max={4}
-                spacing={2}
-                sx={{
-                    '& .MuiAvatar-root': {
-                        width: 30,
-                        height: 30,
-                        fontSize: '0.8rem',
-                        cursor: 'pointer',
-                        border: 'none',
-                        transition: 'transform 0.3s ease-in-out',
-                        '&:hover': {
-                            transform: 'scale(1.2)',
-                            zIndex: 10,
-                        },
-                    },
-                }}
-            >
-                {assignees?.map((assignee, teamIdx) => (
-                    <Tooltip
-                        placement="top"
-                        key={assignee?.id}
-                        title={`${assignee?.firstname} ${assignee?.lastname}`}
-                        arrow
-                        classes={{ tooltip: 'custom-tooltip' }}
-                    >
-                        <Avatar
-                            key={teamIdx}
-                            alt={`${assignee?.firstname} ${assignee?.lastname}`}
-                            src={ImageUrl(assignee) || null}
-                            sx={{
-                                backgroundColor: background(`${assignee?.firstname + " " + assignee?.lastname}`)
-                            }}
-                            onClick={() => hanldePAvatarClick(assignees, assignee?.id)}
-                        >
-                            {!assignee.avatar && assignee?.firstname?.charAt(0)}
-                        </Avatar>
-                    </Tooltip>
-                ))}
-            </AvatarGroup>
-
-            <IconButton
-                id="add-task"
-                aria-label="add-task"
-                aria-labelledby="add-task"
-                size="small"
-                onClick={() => handleAssigneeShortcut(task, { Task: 'root' })}
-                style={{
-                    visibility: hoveredTaskId === task?.taskid && hoveredColumnname === 'Assignee' ? 'visible' : 'hidden',
-                }}
-            >
-                <CirclePlus size={20} color="#7367f0" />
-            </IconButton>
-        </Box>
+        <AssigneeAvatarGroup
+            assignees={assignees}
+            task={task}
+            maxVisible={3}
+            showAddButton={true}
+            hoveredTaskId={hoveredTaskId}
+            hoveredColumnName={hoveredColumnname}
+            onAvatarClick={hanldePAvatarClick}
+            onAddClick={(task) => handleAssigneeShortcut(task, { Task: 'root' })}
+            size={25}
+            spacing={0.5}
+        />
     );
 
     const renderTaskActions = (
@@ -371,7 +390,6 @@ const TableView = ({
     ) => {
         const access = task?.isparentfreeze == 1
         return (
-
             <Box sx={{ display: "flex", alignItems: "center" }}>
                 <IconButton
                     aria-label="Time Track Task button"
@@ -401,6 +419,22 @@ const TableView = ({
                 </IconButton>
                 <IconButton
                     disabled={access}
+                    aria-label="Comment button"
+                    onClick={(event) => handleOpenCommentProver(event, task)}
+                    sx={{
+                        '&.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                        },
+                    }}
+                >
+                    <MessageCircleMore 
+                        size={20}
+                        color={access ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                        className="iconbtn"
+                    />
+                </IconButton>
+                <IconButton
+                    disabled={access}
                     aria-label="View Module button"
                     onClick={() => handleOpenFileDrawer(task, { Task: "root" })}
                     sx={{
@@ -409,7 +443,7 @@ const TableView = ({
                         },
                     }}
                 >
-                    <Paperclip
+                    <CloudUpload 
                         size={20}
                         color={access ? "rgba(0, 0, 0, 0.26)" : "#808080"}
                         className="iconbtn"
@@ -975,6 +1009,15 @@ const TableView = ({
                     </MenuItem>
                 ))}
             </Menu>
+
+            <CommentMenuPopup
+                anchorEl={anchorCommentEl}
+                open={Boolean(anchorCommentEl)}
+                onClose={handleCloseCommentMenu}
+                selectedTask={selectedItem}
+                onCommentAdded={handleCommentAdded}
+                onViewAllComments={handleViewAllComments}
+            />
 
             <div style={{ display: 'none' }}>
                 <MomSheet selectedData={selectedItem} ref={printRef1} />

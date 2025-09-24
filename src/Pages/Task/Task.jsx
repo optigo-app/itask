@@ -58,6 +58,8 @@ const Task = () => {
     secStatusData,
     taskAssigneeData } = useFullTaskFormatFile();
 
+    console.log("taskFinalData",taskFinalData?.TaskData)
+
   useEffect(() => {
     setTasks([]);
   }, [location.pathname]);

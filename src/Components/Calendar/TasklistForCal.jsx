@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import {
     Box, Card, CardContent, Typography, TextField,
-    ButtonGroup,
-    Button
+    InputAdornment,
+    Tooltip,
+    styled,
+    IconButton
 } from "@mui/material";
 import { Draggable } from "@fullcalendar/interaction";
 import { useRecoilValue } from "recoil";
@@ -10,20 +12,15 @@ import Fuse from "fuse.js";
 
 import './TasklistForCal.scss';
 import { TaskData } from "../../Recoil/atom";
-import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate2, priorityColors, statusColors } from "../../Utils/globalfun";
+import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate2, formatDueTask, priorityColors, statusColors } from "../../Utils/globalfun";
 import PriorityBadge from "../ShortcutsComponent/PriorityBadge";
 import StatusBadge from "../ShortcutsComponent/StatusBadge";
+import { Info } from "lucide-react";
 
 const TasklistForCal = ({ calendarsColor }) => {
     const task = useRecoilValue(TaskData);
     const [calTasksList, setCalTasksList] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
-    // const [selected, setSelected] = useState("Today");
-
-    // const handleClick = (value) => {
-    //     setSelected(value);
-    //     console.log("Selected:", value);
-    // };
 
     useEffect(() => {
         const userProfileData = JSON?.parse(localStorage?.getItem("UserProfileData"));
@@ -152,12 +149,8 @@ const TasklistForCal = ({ calendarsColor }) => {
             {
                 keys: [
                     "taskname",
-                    "descr",
                     "status",
                     "priority",
-                    "taskPr",
-                    "assignee.firstname",
-                    "assignee.lastname",
                     "searchable_startDate",
                     "searchable_dueDate",
                     "searchable_startDay",
@@ -174,18 +167,27 @@ const TasklistForCal = ({ calendarsColor }) => {
         );
 
         const matched = searchQuery
-            ? (fuse?.search(searchQuery) || []).map(res => res.item)
-            : filteredList;
+            ? (fuse?.search(searchQuery) || [])
+                .sort((a, b) => (a.score ?? 1) - (b.score ?? 1)) // lower score = better match
+                .map(res => ({ ...res.item, searchScore: res.score })) // preserve search score
+            : filteredList.map(item => ({ ...item, searchScore: null }));
 
         const matchedIds = new Set(matched.map(t => t.taskid));
         const moduleMap = {};
+
+        // Create search score map for sorting
+        const searchScoreMap = {};
+        matched.forEach(task => {
+            searchScoreMap[task.taskid] = task.searchScore;
+        });
 
         filteredList.forEach(task => {
             const modId = task.moduleid;
             if (!moduleMap[modId]) {
                 moduleMap[modId] = {
                     ...task,
-                    subtasks: []
+                    subtasks: [],
+                    searchScore: searchScoreMap[task.taskid] || null
                 };
             }
         });
@@ -193,20 +195,53 @@ const TasklistForCal = ({ calendarsColor }) => {
         filteredList.forEach(task => {
             const modId = task.moduleid;
             if (task.parentid !== 0 && !moduleMap[modId].subtasks.find(t => t.taskid === task.taskid)) {
-                moduleMap[modId].subtasks.push({ ...task });
+                moduleMap[modId].subtasks.push({ 
+                    ...task, 
+                    searchScore: searchScoreMap[task.taskid] || null 
+                });
             }
         });
 
-        return Object.values(moduleMap).filter(module => {
+        const result = Object.values(moduleMap).filter(module => {
             const moduleMatch = matchedIds.has(module.taskid);
             const filteredSubtasks = module.subtasks.filter(child => matchedIds.has(child.taskid));
-            module.subtasks = moduleMatch ? module.subtasks : filteredSubtasks;
-            return moduleMatch || filteredSubtasks.length > 0;
+            
+            if (searchQuery) {
+                const allSubtasks = moduleMatch ? module.subtasks : filteredSubtasks;
+                const finalSubtasks = searchQuery ? 
+                    allSubtasks.filter(child => matchedIds.has(child.taskid)) : 
+                    allSubtasks;
+                if (finalSubtasks.length > 0) {
+                    finalSubtasks.sort((a, b) => {
+                        const scoreA = a.searchScore ?? 1;
+                        const scoreB = b.searchScore ?? 1;
+                        return scoreA - scoreB;
+                    });
+                }
+                module.subtasks = finalSubtasks;
+            } else {
+                module.subtasks = moduleMatch ? module.subtasks : filteredSubtasks;
+            }
+            return moduleMatch || module.subtasks.length > 0;
         });
+        if (searchQuery) {
+            result.sort((a, b) => {
+                const getModuleBestScore = (module) => {
+                    const scores = [module.searchScore, ...module.subtasks.map(s => s.searchScore)]
+                        .filter(score => score !== null && score !== undefined);
+                    return scores.length > 0 ? Math.min(...scores) : 1;
+                };
+                const scoreA = getModuleBestScore(a);
+                const scoreB = getModuleBestScore(b);
+                return scoreA - scoreB;
+            });
+        }
+        return result;
     };
 
 
     const groupedTasks = getFilteredHierarchy();
+    console.log('groupedTasks: ', groupedTasks);
 
     if (task === undefined) {
         return (
@@ -225,23 +260,23 @@ const TasklistForCal = ({ calendarsColor }) => {
         );
     }
 
+    const CustomTooltip = styled(({ className, ...props }) => (
+        <Tooltip {...props} classes={{ popper: className }} />
+    ))(({ theme }) => ({
+        [`& .MuiTooltip-tooltip`]: {
+            backgroundColor: "#fff",
+            color: "#333",
+            fontSize: "0.7rem",
+            padding: "8px 12px",
+            borderRadius: "6px",
+            boxShadow: "0px 2px 6px rgba(0,0,0,0.15)",
+            maxWidth: 280,
+            whiteSpace: "pre-line",   // allows line breaks
+        },
+    }));
 
     return (
         <>
-            {/* <Box className="calendar-btn-group">
-            <ButtonGroup variant="outlined" aria-label="outlined button group">
-                {["Today", "Tomorrow", "Week"].map((label) => (
-                    <Button
-                        key={label}
-                        onClick={() => handleClick(label)}
-                        variant={selected === label ? "contained" : "outlined"}
-                        size="small"
-                    >
-                        {label}
-                    </Button>
-                ))}
-            </ButtonGroup>
-            </Box> */}
             <Box sx={{ px: 1.25, my: 1 }}>
                 <TextField
                     fullWidth
@@ -251,6 +286,23 @@ const TasklistForCal = ({ calendarsColor }) => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     {...commonTextFieldProps}
+                    InputProps={{
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                <CustomTooltip
+                                    title={`Search Guide:\n
+• Normal text: type keywords (e.g., task name, description, project, assignee, status, priority, dates)\n
+• Exact match: use quotes "" (e.g., "UI Bug")\n
+• Top Match: after your search term (e.g., 1560")`}
+                                    placement="left"
+                                >
+                                    <IconButton edge="end">
+                                        <Info fontSize="small" />
+                                    </IconButton>
+                                </CustomTooltip>
+                            </InputAdornment>
+                        )
+                    }}
                 />
             </Box>
             <Box id="external-tasks" sx={{ padding: 1.25, maxHeight: '88vh', overflow: 'auto' }}>
@@ -280,41 +332,70 @@ const TasklistForCal = ({ calendarsColor }) => {
                                         boxShadow: "0px 1px 3px rgba(0,0,0,0.1)"
                                     }}
                                 >
-                                    <CardContent className={`bg-${colorClass} text-${colorClass}`} sx={{ p: '10px !important', m: 0 }}>
-                                        <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                                            <Typography variant="body2" fontWeight={500}>
-                                                {child.taskname}
-                                            </Typography>
-                                        </Box>
-                                        <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap">
-                                            <Typography variant="caption" color="text.secondary" mb={0.5} display="block">
-                                                Est. {child.estimate_hrs || '-'}
-                                            </Typography>
-                                            {child?.StartDate &&
-                                                <Typography variant="caption" color="text.secondary">
+                                    <CardContent
+                                        className={`bg-${colorClass} text-${colorClass}`}
+                                        sx={{ p: '8px !important', m: 0 }}
+                                    >
+                                        <Typography
+                                            variant="body2"
+                                            fontWeight={600}
+                                            sx={{ mb: 0.2 }}
+                                        >
+                                            {child.taskname}
+                                        </Typography>
+                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
+                                            {child?.StartDate && (
+                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "11px" }}>
                                                     Start: {child?.StartDate && cleanDate(child?.StartDate)
                                                         ? formatDate2(cleanDate(child?.StartDate))
                                                         : '-'}
                                                 </Typography>
-                                            }
-                                        </Box>
-
-                                        <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap">
-                                            <Box display="flex" alignItems="center" gap={0.5}>
-                                                {child?.priority && (
-                                                    <PriorityBadge task={child} priorityColors={priorityColors} disable={true} fontSize={10} padding={5} minWidth={50} />
-                                                )}
-                                                {child?.status && (
-                                                    <StatusBadge task={child} statusColors={statusColors} disable={true} fontSize={10} padding={5} minWidth={50} />
-                                                )}
-                                            </Box>
-                                            {child?.DeadLineDate &&
-                                                <Typography variant="caption" color="text.secondary">
-                                                    Due:  {child?.DeadLineDate && cleanDate(child?.DeadLineDate)
-                                                        ? formatDate2(cleanDate(child?.DeadLineDate))
+                                            )}
+                                            {child?.DeadLineDate && (
+                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "11px" }}>
+                                                    Due: {child?.DeadLineDate && cleanDate(child?.DeadLineDate)
+                                                        ? formatDueTask(child?.DeadLineDate)
                                                         : '-'}
                                                 </Typography>
-                                            }
+                                            )}
+                                        </Box>
+                                        <Box display="flex" alignItems="center" gap={0.5} flexWrap="wrap">
+                                            <Box
+                                                component="span"
+                                                sx={{
+                                                    fontSize: '12px',
+                                                    px: 0.2,
+                                                    py: 0.4,
+                                                    borderRadius: '4px',
+                                                    bgcolor: '#f0f0f0',
+                                                    color: 'text.secondary',
+                                                    fontWeight: 500,
+                                                    minWidth: 40,
+                                                    textAlign: 'center'
+                                                }}
+                                            >
+                                                Est: {child.estimate_hrs || '-'}
+                                            </Box>
+                                            {child?.priority && (
+                                                <PriorityBadge
+                                                    task={child}
+                                                    priorityColors={priorityColors}
+                                                    disable={true}
+                                                    fontSize={10}
+                                                    padding={2}
+                                                    minWidth={40}
+                                                />
+                                            )}
+                                            {child?.status && (
+                                                <StatusBadge
+                                                    task={child}
+                                                    statusColors={statusColors}
+                                                    disable={true}
+                                                    fontSize={10}
+                                                    padding={2}
+                                                    minWidth={40}
+                                                />
+                                            )}
                                         </Box>
                                     </CardContent>
 
