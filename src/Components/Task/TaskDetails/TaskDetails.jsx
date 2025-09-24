@@ -426,15 +426,32 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                 />
                                 <Grid item xs={12} className='tabDataMain'>
                                     <Tabs value={activeTab} onChange={handleTabChange} className='muiTaskTabs'>
-                                        <Tab label={`Subtasks`} />
-                                        <Tab label={`Attachment (${totalCount})`} />
                                         <Tab label={`Comments (${comments?.length})`} />
+                                        <Tab label={`Attachment (${totalCount})`} />
+                                        <Tab label={`Subtasks`} />
                                     </Tabs>
                                     <Box
                                         className="tab-content"
-                                        sx={{ justifyContent: activeTab === 2 ? 'flex-end' : 'flex-start' }}
+                                        sx={{ justifyContent: activeTab === 0 ? 'flex-end' : 'flex-start' }}
                                     >
-                                        {activeTab === 0 &&
+                                        {activeTab === 0 && (
+                                            <CommentSection
+                                                comments={comments}
+                                                newComment={newComment}
+                                                onCommentChange={handleCommentChange}
+                                                onSendComment={handleSendComment}
+                                                onEditComment={handleEditComment}
+                                                onDeleteComment={handleRemoveComment}
+                                            />
+                                        )}
+
+                                        {activeTab === 1 &&
+                                            <Box>
+                                                <AttachmentSidebar uploadedFile={uploadedFile} isAtttLoading={isLoading?.isAtttLoading} />
+                                            </Box>
+                                        }
+
+                                        {activeTab === 2 &&
                                             <Box className="subtask_CardBox">
                                                 <Box className="addNewTaskBtn">
                                                     <Button
@@ -457,21 +474,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                 <SubtaskCard subtasks={taskData?.subtasks} onAddDubTask={handleAddSubTask} />
                                             </Box>
                                         }
-                                        {activeTab === 1 &&
-                                            <Box>
-                                                <AttachmentSidebar uploadedFile={uploadedFile} isAtttLoading={isLoading?.isAtttLoading} />
-                                            </Box>
-                                        }
-                                        {activeTab === 2 && (
-                                            <CommentSection
-                                                comments={comments}
-                                                newComment={newComment}
-                                                onCommentChange={handleCommentChange}
-                                                onSendComment={handleSendComment}
-                                                onEditComment={handleEditComment}
-                                                onDeleteComment={handleRemoveComment}
-                                            />
-                                        )}
                                     </Box>
                                 </Grid>
                             </Grid>

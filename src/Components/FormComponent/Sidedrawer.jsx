@@ -227,7 +227,7 @@ const SidebarDrawer = ({
         const loggedAssignee = JSON.parse(localStorage?.getItem("UserProfileData"));
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(Number) || [];
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray.includes(user.id)) || [];
-        const createdByUsers = taskAssigneeData?.filter(user => user.id === loggedAssignee?.id) || [];
+        const createdByUsers = formDataValue?.createdbyid ? taskAssigneeData?.filter(user => user.id === formDataValue?.createdbyid) : taskAssigneeData?.filter(user => user.id === loggedAssignee?.id) || [];
         const categoryflag = location?.pathname?.includes("meeting");
         const category = taskCategory?.find(cat => cat.labelname?.toLowerCase() === "meeting");
         const fallbackPrModule = {
@@ -237,6 +237,7 @@ const SidebarDrawer = ({
             taskid: formDataValue?.taskid ?? decodedData?.taskid,
             taskname: formDataValue?.taskname ?? decodedData?.module,
         };
+        debugger
         const isAddMode = ["AddTask", "root", "meeting"].includes(rootSubrootflagval?.Task);
         if (open && isAddMode) {
             setFormValues(prev => ({

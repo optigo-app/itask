@@ -33,7 +33,7 @@ const PmsReport = () => {
     const filterOptions = ['Today', 'Tomorrow', 'Week'];
     const [currentDate, setCurrentDate] = useState(dayjs());
     const [filters, setFilters] = useState({
-        timeFilter: 'All',
+        timeFilter: 'Week',
         dateRangeFilter: {
             startDate: '',
             endDate: ''
@@ -267,7 +267,10 @@ const PmsReport = () => {
     const departmentOptions = useMemo(() => {
         const data = pmsReportData || [];
         const departments = data.map(d => d.department || 'Unknown').filter(Boolean);
-        return [...new Set(departments)];
+    
+        return [...new Set(departments)].sort((a, b) =>
+            a.localeCompare(b, undefined, { sensitivity: "base" })
+        );
     }, [pmsReportData]);
 
     const columns = useMemo(() => {
@@ -386,7 +389,7 @@ const PmsReport = () => {
     const handleDateChange = (range) => {
         if (!range.startDate || !range.endDate) {
             setFilters({
-                timeFilter: 'All',
+                timeFilter: 'Week',
                 dateRangeFilter: {
                     startDate: '',
                     endDate: ''
@@ -404,7 +407,7 @@ const PmsReport = () => {
         if (filter === 'Date-Range') {
             setFilters(prev => ({
                 ...prev,
-                timeFilter: 'All',
+                timeFilter: 'Week',
                 dateRangeFilter: {
                     startDate: '',
                     endDate: ''

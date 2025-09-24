@@ -62,6 +62,26 @@ export const formatDate4 = (date) => {
     }
 };
 
+export function formatDueTask(dateStr) {
+    const now = new Date();
+    const dueDate = new Date(dateStr);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const target = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+  
+    const diffMs = target - today;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+    if (diffDays === 0) {
+      return "Today";
+    }
+  
+    if (diffDays > 0 && diffDays <= 30) {
+      return `${diffDays} day${diffDays > 1 ? "s" : ""}`;
+    }
+    return dueDate.toISOString().split("T")[0];
+  }
+  
+
 export function getTimeLeft(dateString) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
