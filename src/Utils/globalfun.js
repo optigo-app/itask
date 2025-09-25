@@ -78,7 +78,7 @@ export function formatDueTask(dateStr) {
     if (diffDays > 0 && diffDays <= 30) {
       return `${diffDays} day${diffDays > 1 ? "s" : ""}`;
     }
-    return dueDate.toISOString().split("T")[0];
+    return dateStr && cleanDate(dateStr) ? formatDate2(cleanDate(dateStr)) : '-';
   }
   
 

@@ -107,46 +107,67 @@ const TasklistForCal = ({ calendarsColor }) => {
     }, [calTasksList]);
 
 
-    // Fuzzy match using Fuse.js
+    // Enhanced search with both exact and fuzzy matching
     const getFilteredHierarchy = () => {
         const filteredList = (calTasksList || []).filter(
             task => task.status?.toLowerCase() !== "completed"
         );
 
-        const fuse = new Fuse(
-            filteredList.map(task => {
-                const startDate = cleanDate(task?.StartDate);
-                const deadline = cleanDate(task?.DeadLineDate);
+        // Check if search query is purely numeric
+        const isNumericSearch = /^\d+$/.test(searchQuery.trim());
+        
+        // Prepare data for Fuse.js search
+        const searchableData = filteredList.map(task => {
+            const startDate = cleanDate(task?.StartDate);
+            const deadline = cleanDate(task?.DeadLineDate);
 
-                const formatForSearch = (date) => {
-                    if (!date) return {};
-                    const d = new Date(date);
-                    return {
-                        day: d.getDate().toString().padStart(2, '0'),
-                        month: d.toLocaleString('default', { month: 'short' }),
-                        year: d.getFullYear().toString(),
-                        full: `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`
-                    };
-                };
-
-                const start = formatForSearch(startDate);
-                const end = formatForSearch(deadline);
-
+            const formatForSearch = (date) => {
+                if (!date) return {};
+                const d = new Date(date);
                 return {
-                    ...task,
-                    searchable_startDate: start.full || '',
-                    searchable_dueDate: end.full || '',
-                    searchable_startDay: start.day || '',
-                    searchable_startMonth: start.month || '',
-                    searchable_startYear: start.year || '',
-                    searchable_dueDay: end.day || '',
-                    searchable_dueMonth: end.month || '',
-                    searchable_dueYear: end.year || '',
-                    searchable_priority: task?.priority ?? '',
-                    searchable_status: task?.status ?? '',
+                    day: d.getDate().toString().padStart(2, '0'),
+                    month: d.toLocaleString('default', { month: 'short' }),
+                    year: d.getFullYear().toString(),
+                    full: `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`
                 };
-            }),
-            {
+            };
+
+            const start = formatForSearch(startDate);
+            const end = formatForSearch(deadline);
+
+            return {
+                ...task,
+                searchable_startDate: start.full || '',
+                searchable_dueDate: end.full || '',
+                searchable_startDay: start.day || '',
+                searchable_startMonth: start.month || '',
+                searchable_startYear: start.year || '',
+                searchable_dueDay: end.day || '',
+                searchable_dueMonth: end.month || '',
+                searchable_dueYear: end.year || '',
+                searchable_priority: task?.priority ?? '',
+                searchable_status: task?.status ?? '',
+                searchable_estimate: task?.estimate_hrs?.toString() ?? '',
+                searchable_estimate1: task?.estimate1_hrs?.toString() ?? '',
+                searchable_estimate2: task?.estimate2_hrs?.toString() ?? '',
+            };
+        });
+
+        let matched;
+        
+        if (!searchQuery) {
+            matched = filteredList.map(item => ({ ...item, searchScore: null }));
+        } else {
+            // First, try exact matches for numeric searches
+            let exactMatches = [];
+            if (isNumericSearch) {
+                exactMatches = filteredList.filter(task => 
+                    task.taskname?.toString().includes(searchQuery) ||
+                    task.taskid?.toString() === searchQuery
+                ).map(task => ({ ...task, searchScore: 0 })); // Perfect score for exact matches
+            }
+
+            const fuse = new Fuse(searchableData, {
                 keys: [
                     "taskname",
                     "status",
@@ -160,17 +181,31 @@ const TasklistForCal = ({ calendarsColor }) => {
                     "searchable_dueMonth",
                     "searchable_dueYear",
                     "searchable_priority",
-                    "searchable_status"
+                    "searchable_status",
+                    "searchable_estimate",
+                    "searchable_estimate1",
+                    "searchable_estimate2"
                 ],
-                threshold: 0.3,
-            }
-        );
+                threshold: isNumericSearch ? 0.1 : 0.4, // Stricter threshold for numeric searches
+                includeScore: true,
+                ignoreLocation: true, // Don't consider location of match
+                findAllMatches: true, // Find all matches, not just the first
+            });
 
-        const matched = searchQuery
-            ? (fuse?.search(searchQuery) || [])
-                .sort((a, b) => (a.score ?? 1) - (b.score ?? 1)) // lower score = better match
-                .map(res => ({ ...res.item, searchScore: res.score })) // preserve search score
-            : filteredList.map(item => ({ ...item, searchScore: null }));
+            // Get fuzzy matches
+            const fuzzyMatches = (fuse?.search(searchQuery) || [])
+                .sort((a, b) => (a.score ?? 1) - (b.score ?? 1))
+                .map(res => ({ ...res.item, searchScore: res.score }));
+
+            // Combine exact and fuzzy matches, prioritizing exact matches
+            const exactMatchIds = new Set(exactMatches.map(t => t.taskid));
+            const combinedMatches = [
+                ...exactMatches,
+                ...fuzzyMatches.filter(match => !exactMatchIds.has(match.taskid))
+            ];
+
+            matched = combinedMatches.length > 0 ? combinedMatches : [];
+        }
 
         const matchedIds = new Set(matched.map(t => t.taskid));
         const moduleMap = {};
@@ -208,9 +243,7 @@ const TasklistForCal = ({ calendarsColor }) => {
             
             if (searchQuery) {
                 const allSubtasks = moduleMatch ? module.subtasks : filteredSubtasks;
-                const finalSubtasks = searchQuery ? 
-                    allSubtasks.filter(child => matchedIds.has(child.taskid)) : 
-                    allSubtasks;
+                const finalSubtasks = allSubtasks.filter(child => matchedIds.has(child.taskid));
                 if (finalSubtasks.length > 0) {
                     finalSubtasks.sort((a, b) => {
                         const scoreA = a.searchScore ?? 1;
@@ -220,10 +253,11 @@ const TasklistForCal = ({ calendarsColor }) => {
                 }
                 module.subtasks = finalSubtasks;
             } else {
-                module.subtasks = moduleMatch ? module.subtasks : filteredSubtasks;
+                module.subtasks = module.subtasks;
             }
             return moduleMatch || module.subtasks.length > 0;
         });
+        
         if (searchQuery) {
             result.sort((a, b) => {
                 const getModuleBestScore = (module) => {
@@ -291,7 +325,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                             <InputAdornment position="end">
                                 <CustomTooltip
                                     title={`Search Guide:\n
-• Normal text: type keywords (e.g., task name, description, project, assignee, status, priority, dates)\n
+• Normal text: type keywords (e.g., task name, status, priority, dates, estimates)\n
 • Exact match: use quotes "" (e.g., "UI Bug")\n
 • Top Match: after your search term (e.g., 1560")`}
                                     placement="left"
@@ -353,7 +387,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                                             )}
                                             {child?.DeadLineDate && (
                                                 <Typography variant="caption" color="text.secondary" sx={{ fontSize: "11px" }}>
-                                                    Due: {child?.DeadLineDate && cleanDate(child?.DeadLineDate)
+                                                    Due: {child?.DeadLineDate && formatDate2(cleanDate(child?.DeadLineDate))
                                                         ? formatDueTask(child?.DeadLineDate)
                                                         : '-'}
                                                 </Typography>
