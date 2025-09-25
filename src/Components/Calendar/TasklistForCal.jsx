@@ -113,8 +113,12 @@ const TasklistForCal = ({ calendarsColor }) => {
             task => task.status?.toLowerCase() !== "completed"
         );
 
+        // Check if search query is wrapped in single quotes for exact search
+        const isExactSearch = searchQuery.trim().startsWith("'") && searchQuery.trim().endsWith("'");
+        const actualSearchQuery = isExactSearch ? searchQuery.trim().slice(1, -1) : searchQuery.trim();
+        
         // Check if search query is purely numeric
-        const isNumericSearch = /^\d+$/.test(searchQuery.trim());
+        const isNumericSearch = /^\d+$/.test(actualSearchQuery);
         
         // Prepare data for Fuse.js search
         const searchableData = filteredList.map(task => {
@@ -157,13 +161,18 @@ const TasklistForCal = ({ calendarsColor }) => {
         
         if (!searchQuery) {
             matched = filteredList.map(item => ({ ...item, searchScore: null }));
+        } else if (isExactSearch) {
+            // Handle exact search when wrapped in single quotes
+            matched = filteredList.filter(task => 
+                task.taskname?.toLowerCase() === actualSearchQuery.toLowerCase()
+            ).map(task => ({ ...task, searchScore: 0 })); // Perfect score for exact matches
         } else {
             // First, try exact matches for numeric searches
             let exactMatches = [];
             if (isNumericSearch) {
                 exactMatches = filteredList.filter(task => 
-                    task.taskname?.toString().includes(searchQuery) ||
-                    task.taskid?.toString() === searchQuery
+                    task.taskname?.toString().includes(actualSearchQuery) ||
+                    task.taskid?.toString() === actualSearchQuery
                 ).map(task => ({ ...task, searchScore: 0 })); // Perfect score for exact matches
             }
 
@@ -193,7 +202,7 @@ const TasklistForCal = ({ calendarsColor }) => {
             });
 
             // Get fuzzy matches
-            const fuzzyMatches = (fuse?.search(searchQuery) || [])
+            const fuzzyMatches = (fuse?.search(actualSearchQuery) || [])
                 .sort((a, b) => (a.score ?? 1) - (b.score ?? 1))
                 .map(res => ({ ...res.item, searchScore: res.score }));
 
@@ -326,8 +335,10 @@ const TasklistForCal = ({ calendarsColor }) => {
                                 <CustomTooltip
                                     title={`Search Guide:\n
 • Normal text: type keywords (e.g., task name, status, priority, dates, estimates)\n
-• Exact match: use quotes "" (e.g., "UI Bug")\n
-• Top Match: after your search term (e.g., 1560")`}
+• Exact task name: use single quotes '' (e.g., 'Bug Fix Task')\n
+• Related search: use double quotes "" (e.g., "Bug Fix Task")\n
+• Numeric search: type numbers (e.g., 1560)\n
+• Fuzzy search: type partial text for flexible matching`}
                                     placement="left"
                                 >
                                     <IconButton edge="end">
