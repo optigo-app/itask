@@ -22,13 +22,14 @@ import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import utc from "dayjs/plugin/utc";
 import timezone from 'dayjs/plugin/timezone';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isoWeek from "dayjs/plugin/isoWeek";
 import SplitTaskModal from '../../Components/Calendar/SplitTaskModal';
 import StatusBadge from '../../Components/ShortcutsComponent/StatusBadge';
 import TaskPriority from '../../Components/ShortcutsComponent/TaskPriority';
 import useFullTaskFormatFile from '../../Utils/TaskList/FullTasKFromatfile';
 import { SeparatorHorizontal } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import { AddTaskDataApi } from '../../Api/TaskApi/AddTaskApi';
 import { toast } from 'react-toastify';
@@ -40,6 +41,8 @@ dayjs.extend(duration);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isoWeek);
 
 // Helper to extract number from estimate string (e.g., "4h" -> 4)
 const parseEstimateToNumber = (estimateString) => {
@@ -51,10 +54,15 @@ const parseEstimateToNumber = (estimateString) => {
 // Helper to check if a date is editable (past dates up to yesterday and today)
 const isDateEditable = (dateString) => {
   if (!dateString) return false;
-  const taskDate = dayjs(dateString).startOf('day');
-  const today = dayjs().startOf('day');
-  // Allow editing for dates that are today or in the past
-  return taskDate.isSameOrBefore(today);
+  const taskDate = dayjs(dateString).startOf("day");
+  const today = dayjs().startOf("day");
+  const startOfWeek = today.startOf("isoWeek");
+  const endOfWeek = today.endOf("isoWeek");
+  return (
+    taskDate.isSameOrAfter(startOfWeek) &&
+    taskDate.isSameOrBefore(today) &&
+    taskDate.isSameOrBefore(endOfWeek)
+  );
 };
 
 const tableHeaders = [
