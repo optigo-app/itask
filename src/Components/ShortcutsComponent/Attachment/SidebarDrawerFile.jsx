@@ -21,6 +21,7 @@ import ImageSkeleton from './ImageSkeleton';
 import { toast } from 'react-toastify';
 import { removeFileApi } from '../../../Api/UploadApi/filesRemoveApi';
 import Breadcrumb from '../../BreadCrumbs/Breadcrumb';
+import DocsViewerModal from '../../DocumentViewer/DocsViewerModal';
 
 const tabData = [
   { id: 1, value: "file", label: "File", icon: <File size={18} /> },
@@ -36,6 +37,8 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   const [showError, setShowError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [fileUrl, setFileUrl] = useState(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   useEffect(() => {
     const getAttachment = async () => {
@@ -353,6 +356,11 @@ const SidebarDrawerFile = ({ open, onClose }) => {
     e.target.src = Document;
   };
 
+  const handlePreviewClick = (fileData) => {
+    setFileUrl(fileData);
+    setViewerOpen(true);
+  };
+
   return (
     <Drawer anchor="right" open={open}>
       <Box className="filedrawerMainBox">
@@ -455,8 +463,20 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                     const fileURL = item.url;
                     const isVideo = item?.fileType === "application/octet-stream";
 
+                    const fileData = {
+                      url: fileURL,
+                      filename: item.fileName,
+                      extension: item.fileName?.split('.').pop()?.toLowerCase(),
+                      fileObject: null
+                    };
+
                     return (
-                      <Box key={`uploaded-${index}`} className="file-card">
+                      <Box 
+                        key={`uploaded-${index}`} 
+                        className="file-card"
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => handlePreviewClick(fileData)}
+                      >
                         {isImage ? (
                           <img src={fileURL} alt={item.fileName} className="preview-image" loading="lazy" onError={handleImgError} />
                         ) : isPdf ? (
@@ -469,7 +489,13 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                           <img src={Document} alt="doc" className="preview-file" loading="lazy" onError={handleImgError} />
                         )}
                         <Typography className="file-title">{item.fileName}</Typography>
-                        <IconButton className="delete-icon" onClick={() => handleDeleteFile(folder, index, 'uploaded')}>
+                        <IconButton 
+                          className="delete-icon" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteFile(folder, index, 'uploaded');
+                          }}
+                        >
                           <CircleX size={16} />
                         </IconButton>
                       </Box>
@@ -483,6 +509,14 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                     const isPdf = fileType === 'application/pdf';
                     const isVideo = fileType == "application/octet-stream";
                     const isExcel = fileType?.includes('spreadsheet') || fileType?.includes('excel');
+                    
+                    const fileData = {
+                      url: fileURL,
+                      filename: fileName,
+                      extension: fileName?.split('.').pop()?.toLowerCase(),
+                      fileObject: f.file
+                    };
+
                     return (
                       <Box
                         key={`local-${index}`}
@@ -490,7 +524,9 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                         sx={{
                           border: "1px solid #FFD700 !important",
                           background: "linear-gradient(to right, #fff8e1, #fff3cd) !important",
+                          cursor: 'pointer'
                         }}
+                        onClick={() => handlePreviewClick(fileData)}
                       >
                         {isImage ? (
                           <img src={fileURL} alt={fileName} className="preview-image" loading="lazy" onError={handleImgError} />
@@ -504,7 +540,13 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                           <img src={Document} alt="doc" className="preview-file" loading="lazy" onError={handleImgError} />
                         )}
                         <Typography className="file-title">{fileName}</Typography>
-                        <IconButton className="delete-icon" onClick={() => handleDeleteFile(folder, index, 'local')}>
+                        <IconButton 
+                          className="delete-icon" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteFile(folder, index, 'local');
+                          }}
+                        >
                           <CircleX size={16} />
                         </IconButton>
                       </Box>
@@ -558,6 +600,12 @@ const SidebarDrawerFile = ({ open, onClose }) => {
           </Button>
         </Box>
       </Box>
+      
+      <DocsViewerModal
+        fileData={fileUrl}
+        modalOpen={viewerOpen}
+        closeModal={() => setViewerOpen(false)}
+      />
     </Drawer>
   );
 };
