@@ -25,7 +25,7 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, curren
             Total Estimate:
           </Typography>
           <Typography variant="subtitle1" className='value'>
-            {totalHours.estimate} hrs
+            {(totalHours.estimate)?.toFixed(2)} hrs
           </Typography>
         </Box>
         <Box className="summaryBox">
@@ -33,7 +33,7 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, curren
             Total Working Hrs:
           </Typography>
           <Typography variant="subtitle1" className='value'>
-            {totalHours.working} hrs
+            {(totalHours.working)?.toFixed(2)} hrs
           </Typography>
         </Box>
         {hasAccess(PERMISSIONS.CALENDAR_A_DROPDOWN) &&
