@@ -174,7 +174,6 @@ const TableView = ({
     const handleTaskMouseEnter = (taskId, value) => {
         setHoveredColumnName(value?.Tbcell)
         setHoveredTaskId(taskId);
-        setHoveredSubtaskId(null);
     };
 
     const handleTaskMouseLeave = () => {

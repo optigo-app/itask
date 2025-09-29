@@ -8,8 +8,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData, FullSidebar, rootSubrootflag } from '../../Recoil/atom';
-import { v4 as uuidv4 } from 'uuid';
-import { Box, Button, Menu, TextField } from '@mui/material';
+import { Box, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Divider } from '@mui/material';
 import { AddMeetingApi } from '../../Api/MeetingApi/AddMeetingApi';
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 import { PERMISSIONS } from '../Auth/Role/permissions';
@@ -22,7 +21,6 @@ const Calendar = ({
     hasAccess,
     calendarsColor,
     handleCaleFormSubmit,
-    handleRemoveAMeeting,
     handleAssigneeChange,
     setFormDrawerOpen,
     setFormDataValue,
@@ -36,15 +34,9 @@ const Calendar = ({
     const setCalFormData = useSetRecoilState(CalformData);
     const selectedEventfilter = useRecoilValue(CalEventsFilter)
     const [calEvData, setCalEvData] = useRecoilState(calendarData);
-    const [contextMenu, setContextMenu] = useState(null);
-    const [selectedEvent, setSelectedEvent] = useState(null);
-    const inputRef = useRef(null);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
+    const [duplicateDialog, setDuplicateDialog] = useState({ open: false, event: null });
 
-    const handleClose = () => {
-        setContextMenu(null);
-        setSelectedEvent(null);
-    };
 
     // Smooth scroll to 9:15 AM function with throttling
     const smoothScrollToTime = (timeString = '09:15:00') => {
@@ -87,63 +79,9 @@ const Calendar = ({
         }
     }, [date, calendarApi]);
 
-    const handleSplit = async (type) => {
-        const days = parseInt(inputRef.current?.value);
-        if (!days || days < 1) return alert("Enter valid number of days");
-        if (!selectedEvent) return alert("No selected date");
-        const originalEvent = calEvData?.find(ev => ev.meetingid == selectedEvent.id);
-        if (!originalEvent) return alert("Original event not found");
-        const originalStart = new Date(originalEvent.StartDate);
-        const originalEnd = new Date(originalEvent.EndDate);
-        const totalDurationMs = originalEnd.getTime() - originalStart.getTime();
-        const dailyDurationMs = Math.floor(totalDurationMs / days);
-        const startHour = originalStart.getHours();
-        const startMin = originalStart.getMinutes();
-        const startSec = originalStart.getSeconds();
-        const newEvents = [];
-        for (let i = 0; i < days; i++) {
-            const baseDate = new Date(originalStart);
-            baseDate.setDate(originalStart.getDate() + i);
-            baseDate.setHours(startHour, startMin, startSec, 0);
-            const splitStart = new Date(baseDate);
-            const splitEnd = new Date(splitStart.getTime() + dailyDurationMs);
-            const idString = (originalEvent?.guests ?? []).map(user => user.id)?.join(",");
-            const splitEvent = {
-                meetingid: uuidv4(),
-                meetingtitle: originalEvent.meetingtitle,
-                category: originalEvent?.category,
-                ProjectName: originalEvent?.ProjectName,
-                projectid: originalEvent?.projectid,
-                taskname: originalEvent?.taskname,
-                taskid: originalEvent?.taskid,
-                prModule: originalEvent?.prModule,
-                StartDate: splitStart.toISOString(),
-                EndDate: splitEnd.toISOString(),
-                guests: originalEvent?.guests,
-                Desc: originalEvent.Desc,
-                isAllDay: originalEvent.isAllDay ? 1 : 0,
-                assigneids: idString ?? "",
-                type,
-                entrydate: new Date().toISOString(),
-            };
-            const apiRes = await AddMeetingApi(splitEvent);
-            if (apiRes?.rd?.[0]?.stat === 1) {
-                newEvents.push(splitEvent);
-            } else {
-                toast.error(`Split failed at part ${i + 1}`);
-                return;
-            }
-        }
-        let formData = originalEvent
-        handleRemoveAMeeting(formData);
-        toast.success("Meeting split successfully");
 
-        setCalEvData(prev => [
-            ...prev.filter(ev => ev.meetingid !== selectedEvent.id),
-            ...newEvents
-        ]);
-
-        handleClose();
+    const handleDuplicate = (event) => {
+        setDuplicateDialog({ open: true, event });
     };
 
     const filterEvents = (events, selectedCalendars) => {
@@ -307,21 +245,99 @@ const Calendar = ({
             const colorClass = calendarsColor[category] || 'primary';
             return [`bg-${colorClass}`];
         },
+
+        eventContent(arg) {
+            const { event } = arg;
+            const estimateHrs = event.extendedProps?.estimate_hrs || 0;
+            
+            // Format estimate hours to show as (2) for 2 hours, (0.5) for 30 minutes, etc.
+            const formatEstimate = (hours) => {
+                if (hours === 0) return '';
+                if (hours % 1 === 0) return `(${hours})`;
+                return `(${hours})`;
+            };
+
+            const estimateText = formatEstimate(estimateHrs);
+            
+            return {
+                html: `
+                    <div class="fc-event-main-frame calendar-event-container">
+                        <div class="fc-event-time">${arg.timeText}</div>
+                        <div class="fc-event-title-container">
+                            <div class="fc-event-title fc-sticky">
+                                ${event.title || ''} ${estimateText}
+                            </div>
+                        </div>
+                        <button class="duplicate-btn" data-event-id="${event.id}" title="Duplicate Event">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                        <style>
+                            .calendar-event-container {
+                                position: relative;
+                            }
+                            .duplicate-btn {
+                                position: absolute;
+                                top: 2px;
+                                right: 2px;
+                                width: 34px;
+                                height: 34px;
+                                border-radius: 50%;
+                                border: 1px solid #ccc;
+                                background: rgba(255, 255, 255, 0.9);
+                                color: #666;
+                                cursor: pointer;
+                                display: none;
+                                align-items: center;
+                                justify-content: center;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                                transition: all 0.2s ease;
+                                z-index: 10;
+                            }
+                            .calendar-event-container:hover .duplicate-btn {
+                                display: flex;
+                            }
+                            .duplicate-btn:hover {
+                                background: #7367f0;
+                                color: white;
+                                transform: scale(1.1);
+                                box-shadow: 0 4px 8px rgba(115, 103, 240, 0.3);
+                            }
+                        </style>
+                    </div>
+                `
+            };
+        },
+
+        eventDidMount(info) {
+            const duplicateBtn = info.el.querySelector('.duplicate-btn');
+            if (duplicateBtn) {
+                duplicateBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handleDuplicate(info.event);
+                });
+            }
+            info.el.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }, true);
+            
+            info.el.addEventListener('mousedown', (e) => {
+                if (e.button === 2) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            }, true);
+        },
         
         eventAllow(dropInfo, draggedEvent) {
             return !draggedEvent.extendedProps?.isMeeting;
         },
         
-        eventDidMount(info) {
-            info.el.addEventListener('contextmenu', function (e) {
-                e.preventDefault();
-                setSelectedEvent(info.event);
-                setContextMenu({
-                    mouseX: e.clientX - 2,
-                    mouseY: e.clientY - 4,
-                });
-            });
-        },
 
         dateClick(info) {
             const eventDetails = {
@@ -335,6 +351,7 @@ const Calendar = ({
 
         eventClick({ event }) {
             const eventDetails = mapEventDetails(event);
+            console.log("eventDetails",eventDetails)
             setCalFormData(eventDetails);
             setFormDataValue(eventDetails);
             setRootSubroot({ Task: "meeting" });
@@ -404,6 +421,41 @@ const Calendar = ({
         },
     };
 
+    const handleDuplicateEdit = () => {
+        const { event } = duplicateDialog;
+        const eventDetails = mapEventDetails(event);
+        console.log("eventDetails for duplicate", eventDetails);
+
+        // Open sidebar drawer for editing
+        setCalFormData(eventDetails);
+        setFormDataValue(eventDetails);
+        setRootSubroot({ Task: "meeting" });
+        setFormDrawerOpen(true);
+        setDuplicateDialog({ open: false, event: null });
+    };
+
+    const handleDuplicateRepeat = async () => {
+        const { event } = duplicateDialog;
+        const eventDetails = mapEventDetails(event);
+        
+        const duplicatedEvent = {
+            ...eventDetails,
+            meetingid: "",
+            title: eventDetails.title,
+            entrydate: new Date().toISOString(),
+            repeatflag: "repeat",
+        };
+
+        try {
+            await handleCaleFormSubmit(duplicatedEvent);
+            setDuplicateDialog({ open: false, event: null });
+            toast.success("Event repeated successfully");
+        } catch (error) {
+            console.error("Error repeating event:", error);
+            toast.error("Error repeating event");
+        }
+    };
+
     useEffect(() => {
         const timer = setTimeout(() => {
             if (calendarRef.current) {
@@ -417,56 +469,44 @@ const Calendar = ({
     return (
         <>
             <FullCalendar ref={calendarRef} {...calendarOptions} />
-            <Menu
-                open={contextMenu !== null}
-                onClose={handleClose}
-                anchorReference="anchorPosition"
-                anchorPosition={
-                    contextMenu !== null
-                        ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-                        : undefined
-                }
-                slotProps={{
-                    paper: {
-                        sx: {
-                            borderRadius: "8px !important",
-                            padding: '10px',
-                            boxShadow:
-                                "rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px",
-                        },
-                    },
-                }}
+            
+            {/* Duplicate Dialog */}
+            <Dialog
+                open={duplicateDialog.open}
+                onClose={() => setDuplicateDialog({ open: false, event: null })}
+                aria-labelledby="duplicate-dialog-title"
+                aria-describedby="duplicate-dialog-description"
+                className='DRM'
             >
-                <TextField
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    placeholder="Enter days"
-                    inputRef={inputRef}
-                    className="textfieldsClass"
-                    inputProps={{
-                        inputMode: "decimal",
-                        pattern: "^\\d*\\.?\\d{0,2}$"
-                    }}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Tab') {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        } else if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleSplit("Split");
-                        }
-                    }}
-                    sx={{ mb: 2 }}
-                />
-                <Box sx={{ display: "flex", justifyContent: 'end', gap: '10px' }}>
-                    <Button className="secondaryBtnClassname" onClick={handleClose}>Cancel</Button>
-                    <Button className="buttonClassname" onClick={() => handleSplit("Split")}>
-                        Split
+                <DialogTitle id="duplicate-dialog-title" className='alert-TitleCl'>
+                    Duplicate Event
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="duplicate-dialog-description" className='alert-titleContent'>
+                        How would you like to duplicate this event?
+                    </DialogContentText>
+                </DialogContent>
+                <Divider />
+                <DialogActions>
+                    <Button 
+                        className='for_DialogBtn' 
+                        onClick={handleDuplicateEdit} 
+                        autoFocus 
+                        fullWidth
+                    >
+                        Edit
                     </Button>
-                </Box>
-            </Menu>
-
+                    <Divider orientation="vertical" flexItem />
+                    <Button 
+                        className='for_DialogBtn' 
+                        onClick={handleDuplicateRepeat} 
+                        autoFocus 
+                        fullWidth
+                    >
+                        Repeat
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 };
