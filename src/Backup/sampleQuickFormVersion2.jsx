@@ -209,7 +209,6 @@ const SampleQuickFormVersion2 = () => {
       createdAt: dayjs().toISOString(),
     };
 
-    console.log('Task created:', taskData);
     alert('Task created successfully!');
     handleClear();
   };

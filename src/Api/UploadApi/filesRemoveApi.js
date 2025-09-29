@@ -15,6 +15,7 @@ export const removeFileApi = async ({ attachments }) => {
             },
             maxBodyLength: Infinity,
         });
+        return response
     } catch (error) {
         console.error('File remove failed:', error);
     }

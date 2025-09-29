@@ -6,7 +6,6 @@ import { Grid2x2, ListTodo } from "lucide-react";
 import ColorPicker from "../../Components/Common/ColorPicker";
 
 const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, formattedData, setFormData, selectedRow }) => {
-    console.log("selectedRow", selectedRow)
 
     const handleChange = (e) => {
         if (activeTab == "Advanced Master") {

@@ -6,6 +6,8 @@ export const AddMeetingApi = async (formValues) => {
         const combinedValue = JSON.stringify({
             "meetingid": (formValues?.meetingid || formValues?.id) ?? 0,
             "taskid": formValues?.taskid ?? 0,
+            "parentid": formValues?.parentid ?? 0,
+            "moduleid": formValues?.moduleid ?? 0,
             "projectid": formValues?.projectid ?? 0,
             "createdbyid": AuthData?.id ?? '',
             "assigneids": formValues?.assigneids ?? "",
@@ -25,6 +27,7 @@ export const AddMeetingApi = async (formValues) => {
             "ismilestone": formValues?.ismilestone ?? 0,
             "isAllDay": (formValues?.isAllDay) ? 1 : 0 ?? 0,
             "descr": (formValues?.description || formValues?.descr) ?? "",
+            "repeatflag": formValues?.repeatflag ?? ""
         });
 
         const body = {

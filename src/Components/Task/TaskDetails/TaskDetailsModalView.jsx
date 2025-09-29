@@ -11,6 +11,7 @@ import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
+import AssigneeAvatarGroup from '../../ShortcutsComponent/Assignee/AssigneeAvatarGroup';
 import AttachmentImg from "../../../Assests/Attachment.webp";
 
 const TaskDetail = ({ open, onClose }) => {
@@ -23,9 +24,10 @@ const TaskDetail = ({ open, onClose }) => {
     const [activeTab, setActiveTab] = useState(0);
     const placeholderImage = AttachmentImg;
 
-    const assignees = [
-        { name: "John Doe", avatar: "https://via.placeholder.com/30" },
-        { name: "Jane Smith", avatar: "https://via.placeholder.com/30" },
+    // Get assignees from taskData or use fallback
+    const assignees = taskData?.assignee || [
+        { id: 1, firstname: "John", lastname: "Doe", avatar: "https://via.placeholder.com/30" },
+        { id: 2, firstname: "Jane", lastname: "Smith", avatar: "https://via.placeholder.com/30" },
     ];
 
     const handleClose = () => {
@@ -170,37 +172,13 @@ const TaskDetail = ({ open, onClose }) => {
                                 <Grid item xs={9}><Typography className='taskValue'>{taskData?.priority}</Typography></Grid>
                                 <Grid item xs={3}><Typography className='tasklable'>Assignees</Typography></Grid>
                                 <Grid item xs={9}>
-                                    <Grid container spacing={1}>
-                                        {assignees.map((assignee, index) => (
-                                            <Grid item key={index}>
-                                                <Box
-                                                    sx={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '5px',
-                                                        background: '#4c4c4c0d',
-                                                        padding: '0px 10px 0px 0px',
-                                                        borderRadius: '30px',
-                                                    }}
-                                                >
-                                                    <Avatar
-                                                        alt={assignee.name}
-                                                        src={assignee.avatars || undefined}
-                                                        sx={{
-                                                            backgroundColor: getRandomColor(assignee.name),
-                                                            color: '#fff',
-                                                            width: '30px',
-                                                            height: '30px',
-                                                            fontSize: '15px',
-                                                        }}
-                                                    >
-                                                        {assignee.avatars ? null : assignee.name.charAt(0)}
-                                                    </Avatar>
-                                                    <span>{assignee.name}</span>
-                                                </Box>
-                                            </Grid>
-                                        ))}
-                                    </Grid>
+                                    <AssigneeAvatarGroup
+                                        assignees={assignees}
+                                        task={taskData}
+                                        maxVisible={5}
+                                        size={30}
+                                        spacing={1}
+                                    />
                                 </Grid>
                                 <Grid item xs={3}><Typography className='tasklable'>Tags</Typography></Grid>
                                 <Grid item xs={9}>

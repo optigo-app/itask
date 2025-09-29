@@ -9,13 +9,12 @@ import {
     Typography,
     Paper,
     Box,
-    AvatarGroup,
     IconButton,
     Collapse
 } from "@mui/material";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { cleanDate, formatDate2, statusColors } from "../../Utils/globalfun";
-import ProfileImageMenu from "../ShortcutsComponent/ProfileImageMenu";
+import AssigneeAvatarGroup from "../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
 import PriorityBadge from "../ShortcutsComponent/PriorityBadge";
 import StatusBadge from "../ShortcutsComponent/StatusBadge";
 
@@ -30,17 +29,13 @@ const HierarchicalTaskTreeTable = memo(({
 }) => {
     const [expandedTasks, setExpandedTasks] = useState({});
 
-    console.log("oidjisjdjs", tasks)
 
-    // Group tasks into hierarchical structure
     const hierarchicalTasks = useMemo(() => {
         if (!tasks || tasks.length === 0) return [];
 
         const majorTasks = [];
         const minorTasks = [];
         const usedMinorTaskIds = new Set();
-
-        // Separate major and minor tasks                
         tasks.forEach(task => {
             const taskType = (task.type || '').toLowerCase();
             if (taskType === 'major') {
@@ -49,22 +44,12 @@ const HierarchicalTaskTreeTable = memo(({
                 minorTasks.push(task);
             }
         });
-
-        console.log('Major tasks:', majorTasks.length);
-        console.log('Minor tasks:', minorTasks.length);
-        console.log('showMinorTasks:', showMinorTasks);
-
-        // Group minor tasks under their major parents
         const taskHierarchy = [];
-
         majorTasks.forEach(majorTask => {
-            // First try to find by parentid (direct parent-child relationship)
             let relatedMinorTasks = minorTasks.filter(minorTask =>
                 !usedMinorTaskIds.has(minorTask.taskid) &&
                 minorTask.parentid === majorTask.taskid
             );
-
-            // If no direct children found, try by moduleid (same module relationship)
             if (relatedMinorTasks.length === 0) {
                 relatedMinorTasks = minorTasks.filter(minorTask =>
                     !usedMinorTaskIds.has(minorTask.taskid) &&
@@ -73,12 +58,9 @@ const HierarchicalTaskTreeTable = memo(({
                 );
             }
 
-            // Mark these minor tasks as used
             relatedMinorTasks.forEach(task => {
                 usedMinorTaskIds.add(task.taskid);
             });
-
-            console.log(`Major task ${majorTask.taskname} has ${relatedMinorTasks.length} children`);
 
             taskHierarchy.push({
                 ...majorTask,
@@ -98,17 +80,10 @@ const HierarchicalTaskTreeTable = memo(({
                 hasChildren: false
             }));
 
-        console.log('Standalone minor tasks:', standaloneMinorTasks.length);
-
-        // When showMinorTasks is false, only show major tasks (no standalone minor tasks)
-        // When showMinorTasks is true, show major tasks + standalone minor tasks
         const finalHierarchy = showMinorTasks ?
             [...taskHierarchy, ...standaloneMinorTasks] :
             taskHierarchy;
 
-        console.log('Final hierarchy length:', finalHierarchy.length);
-
-        // Notify parent component of the count change
         if (onHierarchicalCountChange) {
             onHierarchicalCountChange(finalHierarchy.length);
         }
@@ -130,28 +105,14 @@ const HierarchicalTaskTreeTable = memo(({
         }));
     }, []);
 
-    const renderAssignees = useCallback((assignees) => (
-        <AvatarGroup
-            max={6}
-            spacing={2}
-            sx={{
-                flexDirection: 'row',
-                '& .MuiAvatar-root': {
-                    border: 'none',
-                },
-            }}
-        >
-            {assignees?.map((assignee, idx) => (
-                <ProfileImageMenu
-                    key={assignee?.id || idx}
-                    profile={assignee}
-                    allAssignees={assignees}
-                    size={30}
-                    fontSize="1rem"
-                    showTooltip={true}
-                />
-            ))}
-        </AvatarGroup>
+    const renderAssignees = useCallback((assignees, task) => (
+        <AssigneeAvatarGroup
+            assignees={assignees}
+            task={task}
+            maxVisible={4}
+            size={40}
+            spacing={0}
+        />
     ), []);
 
     const renderTaskRow = useCallback((task, index, isChild = false, depth = 0) => {
@@ -293,7 +254,7 @@ const HierarchicalTaskTreeTable = memo(({
                             </Box>
                         </Box>
                     </TableCell>
-                    <TableCell>{renderAssignees(task.assignee)}</TableCell>
+                    <TableCell>{renderAssignees(task.assignee, task)}</TableCell>
                     <TableCell>
                         <StatusBadge
                             task={task}

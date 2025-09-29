@@ -31,6 +31,7 @@ const Calendar = ({
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
     const calendarRef = useRef();
     const [calendarApi, setCalendarApi] = useState(null);
+    const lastScrollTime = useRef(0);
     const date = useRecoilValue(calendarM);
     const setCalFormData = useSetRecoilState(CalformData);
     const selectedEventfilter = useRecoilValue(CalEventsFilter)
@@ -45,6 +46,20 @@ const Calendar = ({
         setSelectedEvent(null);
     };
 
+    // Smooth scroll to 9:15 AM function with throttling
+    const smoothScrollToTime = (timeString = '09:15:00') => {
+        const now = Date.now();
+        if (now - lastScrollTime.current < 1000) {
+            return;
+        }
+        if (calendarApi) {
+            lastScrollTime.current = now;
+            setTimeout(() => {
+                calendarApi.scrollToTime(timeString);
+            }, 200);
+        }
+    };
+
     useEffect(() => {
         if (calendarRef?.current) {
             setCalendarApi(calendarRef?.current?.getApi());
@@ -52,16 +67,24 @@ const Calendar = ({
     }, []);
 
     useEffect(() => {
-        setTimeout(() => {
-            if (calendarApi && date) {
-                const validDate = new Date(date);
-                if (!isNaN(validDate?.getTime())) {
-                    calendarApi.gotoDate(validDate);
-                } else {
-                    console.error('Invalid date:', date);
-                }
+        if (calendarApi) {
+            smoothScrollToTime();
+        }
+    }, [calendarApi]);
+
+    // Handle date changes
+    useEffect(() => {
+        if (calendarApi && date) {
+            const validDate = new Date(date);
+            if (!isNaN(validDate?.getTime())) {
+                calendarApi.gotoDate(validDate);
+                setTimeout(() => {
+                    smoothScrollToTime();
+                }, 500);
+            } else {
+                console.error('Invalid date:', date);
             }
-        }, 500);
+        }
     }, [date, calendarApi]);
 
     const handleSplit = async (type) => {
@@ -163,7 +186,6 @@ const Calendar = ({
     const mapEventDetails = (event) => {
         const start = event?.start ?? event?.StartDate;
         const end = event?.end ?? event?.EndDate ?? start;
-
         return {
             meetingid: event?.id ?? event?.meetingid,
             title: event?.title ?? event?.meetingtitle ?? '',
@@ -184,9 +206,11 @@ const Calendar = ({
             workinghr: event?.extendedProps?.workinghr ?? event?.workinghr ?? 0,
             DeadLineDate: event?.extendedProps?.DeadLineDate ?? event?.DeadLineDate,
             taskid: event?.extendedProps?.taskid ?? event?.taskid,
+            parentid: event?.extendedProps?.parentid ?? event?.parentid,
             projectid: event?.extendedProps?.projectid ?? event?.projectid,
             prModule: event?.extendedProps?.prModule ?? {
                 taskid: event?.taskid,
+                parentid: event?.parentid,
                 projectid: event?.projectid,
                 taskname: event?.taskname,
                 projectname: event?.ProjectName,
@@ -198,7 +222,6 @@ const Calendar = ({
             description: event?.extendedProps?.description ?? event?.Desc ?? '',
         };
     };
-
     const calendarOptions = {
         firstDay: 1,
         events: filteredEvents?.map(event => ({
@@ -231,7 +254,8 @@ const Calendar = ({
                     taskPr: event?.ProjectName,
                 },
                 taskid: event?.taskid,
-                projectid: event?.projectid,
+                parentid: event?.parentid,
+                projectid: event?.projectid,    
                 workcategoryid: event?.workcategoryid,
                 category: event?.category || '',
                 statusid: event?.statusid,
@@ -278,17 +302,16 @@ const Calendar = ({
                 }
             }
         },
-
         eventClassNames({ event }) {
             const category = event.extendedProps.category || 'ETC';
             const colorClass = calendarsColor[category] || 'primary';
             return [`bg-${colorClass}`];
         },
-
+        
         eventAllow(dropInfo, draggedEvent) {
             return !draggedEvent.extendedProps?.isMeeting;
         },
-
+        
         eventDidMount(info) {
             info.el.addEventListener('contextmenu', function (e) {
                 e.preventDefault();
@@ -386,7 +409,7 @@ const Calendar = ({
             if (calendarRef.current) {
                 calendarRef.current.getApi().updateSize();
             }
-        }, 500); // match sidebar transition duration (0.3s)
+        }, 500); 
 
         return () => clearTimeout(timer);
     }, [isFullSidebar]);

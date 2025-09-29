@@ -8,11 +8,10 @@ import {
     TableContainer,
     Typography,
     Paper,
-    Box,
-    AvatarGroup
+    Box
 } from "@mui/material";
 import { cleanDate, formatDate2, statusColors } from "../../Utils/globalfun";
-import ProfileImageMenu from "../ShortcutsComponent/ProfileImageMenu";
+import AssigneeAvatarGroup from "../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
 import PriorityBadge from "../ShortcutsComponent/PriorityBadge";
 import StatusBadge from "../ShortcutsComponent/StatusBadge";
 
@@ -49,28 +48,14 @@ const TaskTable = memo(({
     }, [filteredTasks, page, rowsPerPage]);
 
 
-    const renderAssignees = (assignees) => (
-        <AvatarGroup
-            max={6}
-            spacing={2}
-            sx={{
-                flexDirection: 'row',
-                '& .MuiAvatar-root': {
-                    border: 'none',
-                },
-            }}
-        >
-            {assignees?.map((assignee, idx) => (
-                <ProfileImageMenu
-                    key={assignee?.id || idx}
-                    profile={assignee}
-                    allAssignees={assignees}
-                    size={30}
-                    fontSize="1rem"
-                    showTooltip={true}
-                />
-            ))}
-        </AvatarGroup>
+    const renderAssignees = (assignees, task) => (
+        <AssigneeAvatarGroup
+            assignees={assignees}
+            task={task}
+            maxVisible={4}
+            size={40}
+            spacing={0}
+        />
     );
 
     const renderTaskRow = (task, index) => {
@@ -137,7 +122,7 @@ const TaskTable = memo(({
                         </Box>
                     </Box>
                 </TableCell>
-                <TableCell>{renderAssignees(task.assignee)}</TableCell>
+                <TableCell>{renderAssignees(task.assignee, task)}</TableCell>
                 <TableCell>
                     <StatusBadge
                         task={task}

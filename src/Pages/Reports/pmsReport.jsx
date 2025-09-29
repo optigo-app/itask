@@ -50,7 +50,6 @@ const PmsReport = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
 
-    console.log("taskfinalData", taskFinalData)
 
     useEffect(() => {
         setIsLoading(iswhTLoading);

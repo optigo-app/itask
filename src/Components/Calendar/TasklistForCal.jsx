@@ -33,6 +33,7 @@ const TasklistForCal = ({ calendarsColor }) => {
 
     // Drag only children (parentid !== 0)
     useEffect(() => {
+        debugger
         const container = document.getElementById("external-tasks");
         if (container) {
             new Draggable(container, {
@@ -53,6 +54,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                             start,
                             end,
                             taskid: dragtask?.taskid,
+                            parentid: dragtask?.parentid,
                             projectid: dragtask?.projectid ?? 0,
                             allDay: dragtask?.allDay ? 1 : 0,
                             category: dragtask?.category ?? "",
@@ -72,6 +74,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                             workcategoryid: dragtask?.workcategoryid ?? 0,
                             extendedProps: {
                                 taskid: dragtask?.taskid,
+                                parentid: dragtask?.parentid ?? 0,
                                 projectid: dragtask?.projectid ?? 0,
                                 guests: guests,
                                 assigneids: guests.map(u => u.id)?.join(","),
@@ -284,7 +287,6 @@ const TasklistForCal = ({ calendarsColor }) => {
 
 
     const groupedTasks = getFilteredHierarchy();
-    console.log('groupedTasks: ', groupedTasks);
 
     if (task === undefined) {
         return (
