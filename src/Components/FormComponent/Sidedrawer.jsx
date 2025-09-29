@@ -599,7 +599,7 @@ const SidebarDrawer = ({
                             >
                                 Delete
                             </Button>
-                            {/* <Button
+                            <Button
                                 variant="contained"
                                 color="primary"
                                 onClick={() => handleSubmit({ repeat: true })}
@@ -607,7 +607,7 @@ const SidebarDrawer = ({
                                 className="buttonClassname"
                             >
                                 Repeat
-                            </Button> */}
+                            </Button>
                         </Box>
                     }
                     <Box>
