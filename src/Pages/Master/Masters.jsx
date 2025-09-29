@@ -28,7 +28,6 @@ const MasterToggle = () => {
     const [formattedData, setFormattedData] = useState([]);
     const [tableTabData, setTableTabData] = useState([]);
     const [categoryStates, setCategoryStates] = useState({});
-    console.log(categoryStates)
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [structuredAdvMasterData, setStructuredAdvMasterData] = useState([]);
     const [formData, setFormData] = useState({

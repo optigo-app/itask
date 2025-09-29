@@ -426,8 +426,6 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
         </Box>
     );
 
-    console.log('projectData: ', projectData);
-
     return (
         <>
             {isLoading && projectData?.length == 0 ? (

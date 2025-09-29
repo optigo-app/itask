@@ -162,7 +162,7 @@ const Home = () => {
     setPrTasksList(flattenTasks(task));
   }, [task]);
 
-  const profileData = JSON.parse(localStorage.getItem('UserProfileData'));
+  const profileData = JSON?.parse(localStorage.getItem('UserProfileData'));
 
   const prFilterData = prTasksList
     ?.filter((task) => {

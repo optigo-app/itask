@@ -8,7 +8,6 @@ import {
     Box,
     TextField,
     Stack,
-    AvatarGroup,
     Autocomplete,
     Button,
     useMediaQuery,
@@ -24,6 +23,7 @@ import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 import { commonTextFieldProps, priorityColors } from "../../Utils/globalfun";
 import TablePaginationFooter from "../ShortcutsComponent/Pagination/TablePaginationFooter";
 import ProfileImageMenu from "../ShortcutsComponent/ProfileImageMenu";
+import AssigneeAvatarGroup from "../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
 import HierarchicalTaskTreeTable from "./HierarchicalTaskTreeTable";
 import CustomSwitch from "../Common/CustomSwitch";
 import TaskTable from "./pms2TaskTable";

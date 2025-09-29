@@ -17,6 +17,7 @@ const ProfileImageMenu = ({
     profile,
     allAssignees = [],
     size = 25,
+    limit = 5,
     fontSize = '0.8rem',
     showTooltip = true,
     onProfileClick,
@@ -53,6 +54,7 @@ const ProfileImageMenu = ({
             sx={{
                 width: size,
                 height: size,
+            
                 fontSize: fontSize,
                 cursor: 'pointer',
                 backgroundColor: background(displayName),

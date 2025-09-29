@@ -237,7 +237,6 @@ const SidebarDrawer = ({
             taskid: formDataValue?.taskid ?? decodedData?.taskid,
             taskname: formDataValue?.taskname ?? decodedData?.module,
         };
-        debugger
         const isAddMode = ["AddTask", "root", "meeting"].includes(rootSubrootflagval?.Task);
         if (open && isAddMode) {
             setFormValues(prev => ({
@@ -451,9 +450,9 @@ const SidebarDrawer = ({
             maingroupids: selectedMainGroupid ?? formDataValue?.maingroupids,
             dynamicDropdowns: dynamicDropdowns ?? formDataValue?.dynamicDropdowns,
             bindedMainGroupid: selectedMainGroupId ?? '',
-
+            repeatflag: module?.repeat ? "Repeat" : "",
+            parentid: formValues.parentid ?? formDataValue?.parentid,
         };
-
         onSubmit(updatedFormDataValue, { mode: taskType }, module);
         handleClear();
     };
@@ -590,7 +589,7 @@ const SidebarDrawer = ({
                     justifyContent: formValues?.taskName && location?.pathname?.includes('/calendar') ? 'space-between' : 'flex-end'
                 }}>
                     {formValues?.taskName && location?.pathname?.includes('/calendar') &&
-                        <Box>
+                        <Box sx={{ display: 'flex', gap: 2 }}>
                             <Button
                                 variant="contained"
                                 color="primary"
@@ -600,6 +599,15 @@ const SidebarDrawer = ({
                             >
                                 Delete
                             </Button>
+                            {/* <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={() => handleSubmit({ repeat: true })}
+                                disabled={isLoading}
+                                className="buttonClassname"
+                            >
+                                Repeat
+                            </Button> */}
                         </Box>
                     }
                     <Box>

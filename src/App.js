@@ -191,12 +191,10 @@ const AppWrapper = () => {
         const masterFuncCall = async () => {
             if (reload) {
                 sessionStorage.clear();
-                localStorage.clear();
                 window.location.reload();
                 const roleData = await fetchMasterGlFunc();
                 setRole(roleData?.designation);
                 setReload(false);
-
             }
         }
         masterFuncCall();

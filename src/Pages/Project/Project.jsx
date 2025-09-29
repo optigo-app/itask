@@ -112,7 +112,6 @@ const Project = () => {
   }, [priorityData, statusData, taskProject, taskDepartment, location]);
 
   const fetchModuleData = async () => {
-    debugger
     if (project?.length == 0) {
       setIsTaskLoading(true);
     }

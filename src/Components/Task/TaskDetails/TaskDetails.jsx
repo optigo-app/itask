@@ -138,10 +138,45 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
 
                 const taskComment = await taskCommentGetApi(taskData);
                 if (taskComment) {
-                    const commentsWithAttachments = taskComment.rd.map(comment => ({
-                        ...comment,
-                        assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
-                    }));
+                    const commentsWithAttachments = taskComment.rd.map(comment => {
+                        // Process attachments from new format
+                        let attachments = [];
+                        if (comment?.DocumentName) {
+                            const documentUrls = comment.DocumentName.split(',').filter(Boolean);
+                            const documentLinks = comment?.DocumentUrl ? comment.DocumentUrl.split(',').filter(Boolean) : [];
+                            
+                            attachments = documentUrls.map((url, index) => {
+                                const fileName = url.substring(url.lastIndexOf('/') + 1);
+                                const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+                                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
+                                
+                                return {
+                                    url: url,
+                                    filename: fileName,
+                                    extension: ext,
+                                    isImage: isImage,
+                                    folderName: comment?.foldername || 'Comments'
+                                };
+                            });
+
+                            // Add document URLs if any
+                            documentLinks.forEach((link, index) => {
+                                attachments.push({
+                                    url: link,
+                                    filename: `Link ${index + 1}`,
+                                    extension: 'url',
+                                    isImage: false,
+                                    folderName: comment?.foldername || 'Comments'
+                                });
+                            });
+                        }
+
+                        return {
+                            ...comment,
+                            assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
+                            attachments: attachments
+                        };
+                    });
                     setComments(commentsWithAttachments);
                 }
             } catch (error) {
@@ -158,25 +193,59 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
         setNewComment(event.target.value);
     };
 
-    const handleSendComment = async () => {
+    const handleSendComment = async (attachments = []) => {
         const assigneesMaster = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"))
         if (!newComment.trim()) return;
 
         try {
-            await taskCommentAddApi(taskData, newComment);
+            await taskCommentAddApi(taskData, newComment, attachments);
 
             setNewComment('');
 
             const taskComment = await taskCommentGetApi(taskData);
 
             if (taskComment) {
-                const cleanedComments = taskComment.rd.map(comment => ({
-                    ...comment,
-                    id: comment?.id,
-                    user: comment?.user,
-                    assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
-                    attachments: comment?.attachments || []
-                }));
+                const cleanedComments = taskComment.rd.map(comment => {
+                    // Process attachments from new format
+                    let attachments = [];
+                    if (comment?.DocumentName) {
+                        const documentUrls = comment.DocumentName.split(',').filter(Boolean);
+                        const documentLinks = comment?.DocumentUrl ? comment.DocumentUrl.split(',').filter(Boolean) : [];
+                        
+                        attachments = documentUrls.map((url, index) => {
+                            const fileName = url.substring(url.lastIndexOf('/') + 1);
+                            const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+                            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
+                            
+                            return {
+                                url: url,
+                                filename: fileName,
+                                extension: ext,
+                                isImage: isImage,
+                                folderName: comment?.foldername || 'Comments'
+                            };
+                        });
+
+                        // Add document URLs if any
+                        documentLinks.forEach((link, index) => {
+                            attachments.push({
+                                url: link,
+                                filename: `Link ${index + 1}`,
+                                extension: 'url',
+                                isImage: false,
+                                folderName: comment?.foldername || 'Comments'
+                            });
+                        });
+                    }
+
+                    return {
+                        ...comment,
+                        id: comment?.id,
+                        user: comment?.user,
+                        assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
+                        attachments: attachments
+                    };
+                });
 
                 setComments(cleanedComments);
             }
@@ -442,6 +511,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                 onSendComment={handleSendComment}
                                                 onEditComment={handleEditComment}
                                                 onDeleteComment={handleRemoveComment}
+                                                taskData={taskData}
                                             />
                                         )}
 

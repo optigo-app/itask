@@ -111,7 +111,6 @@ const Mastergrid = ({
                             } else if (masterType === "task_status") {
                                 colorInfo = getDynamicStatusColor(row.labelname, row.colorkey);
                             }
-                            console.log("row", row)
                             return (
                                 <TableRow key={row.id}>
                                     <TableCell>{row?.srno}</TableCell>

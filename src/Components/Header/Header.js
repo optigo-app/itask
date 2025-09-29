@@ -17,11 +17,46 @@ const useProfileData = () => {
     const setReload = useSetRecoilState(webReload);
     const role = useRecoilValue(userRoleAtom);
 
+    // Function to get and set profile data from localStorage
+    const updateProfileData = () => {
+        try {
+            const userData = localStorage.getItem("UserProfileData");
+            if (userData) {
+                const parsedData = JSON.parse(userData);
+                setProfileData(parsedData);
+            } else {
+                setProfileData(null);
+            }
+        } catch (error) {
+            console.error("Error parsing UserProfileData from localStorage:", error);
+            setProfileData(null);
+        }
+    };
+    useEffect(() => {
+        updateProfileData();
+    }, [location, role]);
 
     useEffect(() => {
-        const userData = JSON.parse(localStorage.getItem("UserProfileData"));
-        setProfileData(userData);
-    }, [location, role]);
+        const handleStorageChange = (e) => {
+            if (e.key === "UserProfileData") {
+                updateProfileData();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const currentData = localStorage.getItem("UserProfileData");
+            if (currentData && !profileData) {
+                updateProfileData();
+            }
+        }, 1000); // Check every second
+
+        return () => clearInterval(interval);
+    }, [profileData]);
 
     const handleReload = () => setReload(true);
 

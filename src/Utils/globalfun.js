@@ -1336,7 +1336,6 @@ export const Datetheme = createTheme({
     },
 });
 
-
 export const renderAssigneeAvatars = (assignees, hanldePAvatarClick) => (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <AvatarGroup

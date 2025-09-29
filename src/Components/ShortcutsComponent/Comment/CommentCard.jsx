@@ -1,7 +1,8 @@
 import React from "react";
-import { Card, Grid, Typography, Box, Avatar, Link } from "@mui/material";
-import { Download } from "lucide-react";
+import { Card, Grid, Typography, Box, Avatar, Link, IconButton } from "@mui/material";
+import { Download, Eye, ExternalLink, Paperclip } from "lucide-react";
 import DescriptionIcon from "@mui/icons-material/Description";
+import ImageIcon from "@mui/icons-material/Image";
 import { formatDate4, getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
 import './style.scss';
 
@@ -46,32 +47,220 @@ const CommentCard = ({ comment }) => {
 
             {/* Attachment Section */}
             {comment.attachments?.length > 0 && (
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        marginTop: 2,
-                    }}
-                >
-                    <DescriptionIcon sx={{ color: "#007BFF", fontSize: 20, marginRight: 1 }} />
-                    <Link
-                        href={comment.attachments[0].url}
-                        download
-                        underline="always"
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            color: '#007BFF !important',
-                            textDecorationColor: '#007BFF !important',
+                <Box sx={{ marginTop: 1.5 }}>
+                    <Box sx={{
+                        position: 'relative',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
+                        gap: 0.8,
+                        maxHeight: comment.attachments.length > 6 ? '160px' : 'auto',
+                        overflowY: comment.attachments.length > 6 ? 'auto' : 'visible',
+                        padding: comment.attachments.length > 6 ? '4px' : '0',
+                        backgroundColor: comment.attachments.length > 6 ? '#fafbfc' : 'transparent',
+                        borderRadius: comment.attachments.length > 6 ? '6px' : '0',
+                        border: comment.attachments.length > 6 ? '1px solid #e9ecef' : 'none',
+                        '&::-webkit-scrollbar': {
+                            width: '3px',
+                        },
+                        '&::-webkit-scrollbar-track': {
+                            backgroundColor: '#f1f1f1',
+                            borderRadius: '2px',
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                            backgroundColor: '#c1c1c1',
+                            borderRadius: '2px',
                             '&:hover': {
-                                color: '#0056b3',
-                                textDecorationColor: '#0056b3',
+                                backgroundColor: '#a8a8a8',
                             }
-                        }}
-                    >
-                        {comment.attachments[0].filename}
-                        <Download size={16} style={{ marginLeft: 4 }} />
-                    </Link>
+                        },
+                    }}>
+                        {comment.attachments.map((attachment, index) => (
+                            <Box key={index} sx={{
+                                position: 'relative',
+                                aspectRatio: attachment.isImage ? '1' : 'auto',
+                                minHeight: attachment.isImage ? '60px' : '45px',
+                                backgroundColor: '#fff',
+                                borderRadius: '6px',
+                                border: '1px solid #e1e5e9',
+                                overflow: 'hidden',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                                transition: 'all 0.15s ease',
+                                cursor: 'pointer',
+                                '&:hover': {
+                                    transform: 'translateY(-0.5px)',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                                    borderColor: '#7367f0'
+                                }
+                            }}
+                            onClick={() => window.open(attachment.url, '_blank')}
+                            >
+                                {attachment.isImage ? (
+                                    // Image attachment - compact card
+                                    <Box sx={{ 
+                                        position: 'relative',
+                                        width: '100%',
+                                        height: '100%',
+                                        '&:hover': {
+                                            '&::after': {
+                                                content: '"👁"',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                backgroundColor: 'rgba(115, 103, 240, 0.7)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '16px',
+                                                color: 'white',
+                                                zIndex: 1,
+                                                pointerEvents: 'none'
+                                            }
+                                        }
+                                    }}>
+                                        <img 
+                                            src={attachment.url} 
+                                            alt={attachment.filename}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover',
+                                                display: 'block'
+                                            }}
+                                        />
+                                        {/* Download button overlay */}
+                                        <IconButton 
+                                            size="small" 
+                                            component="a" 
+                                            href={attachment.url} 
+                                            download={attachment.filename}
+                                            onClick={(e) => e.stopPropagation()}
+                                            sx={{ 
+                                                position: 'absolute',
+                                                bottom: '3px',
+                                                right: '3px',
+                                                width: '24px',
+                                                height: '24px',
+                                                backgroundColor: 'rgba(255,255,255,0.95)',
+                                                color: '#7367f0',
+                                                borderRadius: '50%',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                                zIndex: 2,
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(255,255,255,1)',
+                                                    transform: 'scale(1.1)',
+                                                    boxShadow: '0 3px 6px rgba(0,0,0,0.15)'
+                                                }
+                                            }}
+                                        >
+                                            <Download size={12} />
+                                        </IconButton>
+                                    </Box>
+                                ) : attachment.extension === 'url' ? (
+                                    // URL link - compact card
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: '4px',
+                                        height: '100%',
+                                        textAlign: 'center',
+                                        backgroundColor: '#fff3e0',
+                                        '&:hover': {
+                                            backgroundColor: '#ffecb3'
+                                        }
+                                    }}>
+                                        <ExternalLink size={14} color="#ff9800" style={{ marginBottom: '2px' }} />
+                                        <Typography variant="caption" sx={{ 
+                                            fontSize: '7px',
+                                            fontWeight: '600',
+                                            color: '#ff9800',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap',
+                                            width: '100%'
+                                        }}>
+                                            {attachment.filename}
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    // File attachment - compact card
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: '4px',
+                                        height: '100%',
+                                        textAlign: 'center',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(115, 103, 240, 0.02)'
+                                        }
+                                    }}>
+                                        <Box sx={{ 
+                                            backgroundColor: '#e8f4fd',
+                                            borderRadius: '4px',
+                                            padding: '3px',
+                                            marginBottom: '3px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}>
+                                            <DescriptionIcon sx={{ color: "#2196f3", fontSize: 12 }} />
+                                        </Box>
+                                        <Typography variant="caption" sx={{ 
+                                            fontSize: '7px',
+                                            fontWeight: '600',
+                                            display: 'block',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap',
+                                            color: '#2c3e50',
+                                            width: '100%',
+                                            marginBottom: '1px'
+                                        }}>
+                                            {attachment.filename}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ 
+                                            fontSize: '5px',
+                                            color: '#7f8c8d',
+                                            fontWeight: '500'
+                                        }}>
+                                            {attachment.extension.toUpperCase()}
+                                        </Typography>
+                                        {/* Download button */}
+                                        <IconButton 
+                                            size="small" 
+                                            component="a" 
+                                            href={attachment.url} 
+                                            download={attachment.filename}
+                                            onClick={(e) => e.stopPropagation()}
+                                            sx={{ 
+                                                position: 'absolute',
+                                                bottom: '2px',
+                                                right: '2px',
+                                                width: '20px',
+                                                height: '20px',
+                                                backgroundColor: 'rgba(33, 150, 243, 0.15)',
+                                                color: '#2196f3',
+                                                borderRadius: '50%',
+                                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(33, 150, 243, 0.25)',
+                                                    transform: 'scale(1.1)',
+                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.15)'
+                                                }
+                                            }}
+                                        >
+                                            <Download size={10} />
+                                        </IconButton>
+                                    </Box>
+                                )}
+                            </Box>
+                        ))}
+                    </Box>
                 </Box>
             )}
 
