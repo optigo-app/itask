@@ -483,17 +483,32 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                 <>
                                     {currentData?.map((project) => (
                                         <React.Fragment key={project.projectid}>
-                                            {/* Render Project Name Row with Toggle Icon */}
-                                            <TableRow>
+                                            <TableRow
+                                                sx={{
+                                                    cursor: 'pointer',
+                                                    '&:hover': {
+                                                        backgroundColor: '#f8f9fa'
+                                                    }
+                                                }}
+                                                onClick={(e) => {
+                                                    const isInteractiveElement = e.target.closest('button, .MuiIconButton-root, .MuiChip-root, .MuiSelect-root, input, textarea, [role="button"]');
+                                                    const isFirstCell = e.target.closest('td:first-child') || e.target.closest('.prNameTypo');
+                                                    if (isFirstCell || !isInteractiveElement) {
+                                                        handleToggle(project.projectid, project);
+                                                    }
+                                                }}
+                                            >
                                                 <TableCell colSpan={1}>
                                                     <Box display="flex" alignItems="center" gap={.5}>
-                                                        {/* Toggle IconButton */}
                                                         <IconButton
                                                             id="toggle-task"
                                                             aria-label="toggle-task"
                                                             aria-labelledby="toggle-task"
                                                             size="small"
-                                                            onClick={() => handleToggle(project.projectid, project)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleToggle(project.projectid, project);
+                                                            }}
                                                         >
                                                             <PlayArrowIcon
                                                                 style={{
@@ -504,8 +519,15 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                                 }}
                                                             />
                                                         </IconButton>
-                                                        {/* Project Name */}
-                                                        <Typography variant="body" className="prNameTypo" sx={{ cursor: "pointer" }} onClick={() => handleToggle(project.projectid, project)}>
+                                                        <Typography 
+                                                            variant="body" 
+                                                            className="prNameTypo" 
+                                                            sx={{ cursor: "pointer" }} 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleToggle(project.projectid, project);
+                                                            }}
+                                                        >
                                                             {project.projectName} {project?.taskcount != 0 && (
                                                                 <span className="pr-md_count">
                                                                     {project?.taskcount}
@@ -538,9 +560,20 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                     <TableRow
                                                         sx={{
                                                             backgroundColor: hoveredTaskId === task?.taskid ? '#f5f5f5' : 'inherit',
+                                                            cursor: 'pointer',
+                                                            '&:hover': {
+                                                                backgroundColor: '#f8f9fa'
+                                                            }
                                                         }}
                                                         onMouseEnter={() => handleMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
                                                         onMouseLeave={handleMouseLeave}
+                                                        onClick={(e) => {
+                                                            // Prevent row click if clicking on interactive elements
+                                                            const isInteractiveElement = e.target.closest('button, .MuiIconButton-root, .MuiChip-root, .MuiSelect-root, input, textarea, [role="button"], a');
+                                                            if (!isInteractiveElement && !task?.isFreez) {
+                                                                handleViewPrDashboard(task, "md");
+                                                            }
+                                                        }}
                                                     >
                                                         <TableCell sx={{ paddingLeft: '55px' }}>
                                                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

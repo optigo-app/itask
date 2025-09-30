@@ -1,17 +1,75 @@
-import React from "react";
-import { Card, Grid, Typography, Box, Avatar, Link, IconButton } from "@mui/material";
+import React, { useState } from "react";
+import { Card, Grid, Typography, Box, Avatar, Link, IconButton, Button } from "@mui/material";
 import { Download, Eye, ExternalLink, Paperclip } from "lucide-react";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ImageIcon from "@mui/icons-material/Image";
 import { formatDate4, getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
+import DocsViewerModal from '../../DocumentViewer/DocsViewerModal';
 import './style.scss';
 
 const CommentCard = ({ comment }) => {
+    const [currentAttachments, setCurrentAttachments] = useState([]);
+    const [viewerOpen, setViewerOpen] = useState(false);
+    const [initialSlideIndex, setInitialSlideIndex] = useState(0);
+    
     const background = (assignee) => {
         const avatarBackgroundColor = assignee?.avatar
             ? "transparent"
             : getRandomAvatarColor(assignee);
         return avatarBackgroundColor;
+    };
+
+    // Handle single file preview with multiple attachments support
+    const handlePreviewClick = (attachment, allAttachments = [], startIndex = 0) => {
+        const fileData = {
+            url: attachment.url,
+            filename: attachment.filename,
+            extension: attachment.extension,
+            fileObject: null
+        };
+        
+        if (allAttachments.length > 0) {
+            // Multiple files - use Swiper
+            const attachmentFiles = allAttachments
+                .filter(att => att.extension !== 'url') // Exclude URL links from Swiper
+                .map(att => ({
+                    url: att.url,
+                    filename: att.filename,
+                    extension: att.extension,
+                    fileObject: null
+                }));
+            
+            if (attachmentFiles.length > 0) {
+                setCurrentAttachments(attachmentFiles);
+                // Find the correct index in the filtered array
+                const filteredIndex = attachmentFiles.findIndex(att => att.url === attachment.url);
+                setInitialSlideIndex(filteredIndex >= 0 ? filteredIndex : 0);
+                setViewerOpen(true);
+            }
+        } else {
+            // Single file - backward compatibility
+            setCurrentAttachments([fileData]);
+            setInitialSlideIndex(0);
+            setViewerOpen(true);
+        }
+    };
+
+    // Handle viewing all file attachments (excluding URLs)
+    const handleViewAllAttachments = (startIndex = 0) => {
+        const fileAttachments = comment.attachments
+            ?.filter(att => att.extension !== 'url')
+            ?.map(att => ({
+                url: att.url,
+                filename: att.filename,
+                extension: att.extension,
+                fileObject: null
+            })) || [];
+        
+        if (fileAttachments.length > 0) {
+            setCurrentAttachments(fileAttachments);
+            setInitialSlideIndex(startIndex);
+            setViewerOpen(true);
+        }
     };
     return (
         <Card className="commentCard">
@@ -92,7 +150,13 @@ const CommentCard = ({ comment }) => {
                                     borderColor: '#7367f0'
                                 }
                             }}
-                            onClick={() => window.open(attachment.url, '_blank')}
+                            onClick={() => {
+                                if (attachment.extension === 'url') {
+                                    window.open(attachment.url, '_blank');
+                                } else {
+                                    handlePreviewClick(attachment, comment.attachments);
+                                }
+                            }}
                             >
                                 {attachment.isImage ? (
                                     // Image attachment - compact card
@@ -289,6 +353,17 @@ const CommentCard = ({ comment }) => {
                     </IconButton>
                 </Box>
             )} */}
+            
+            <DocsViewerModal
+                attachments={currentAttachments}
+                initialSlideIndex={initialSlideIndex}
+                modalOpen={viewerOpen}
+                closeModal={() => {
+                    setViewerOpen(false);
+                    setCurrentAttachments([]);
+                    setInitialSlideIndex(0);
+                }}
+            />
         </Card>
     );
 };

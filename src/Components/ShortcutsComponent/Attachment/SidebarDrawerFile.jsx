@@ -37,8 +37,9 @@ const SidebarDrawerFile = ({ open, onClose }) => {
   const [showError, setShowError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [fileUrl, setFileUrl] = useState(null);
+  const [currentAttachments, setCurrentAttachments] = useState([]);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [initialSlideIndex, setInitialSlideIndex] = useState(0);
 
   useEffect(() => {
     const getAttachment = async () => {
@@ -292,7 +293,6 @@ const SidebarDrawerFile = ({ open, onClose }) => {
         uploadedAttachment[folderName] = uploadedResults;
       }
 
-      // 2. Merge with previously uploaded files
       const combinedAttachment = { ...uploadedFile.attachment };
 
       for (const folder in uploadedAttachment) {
@@ -302,7 +302,6 @@ const SidebarDrawerFile = ({ open, onClose }) => {
         ];
       }
 
-      // 3. Prepare full payload with both file URLs and URL links
       const allFolders = Array.from(new Set([
         ...Object.keys(combinedAttachment),
         ...Object.keys(folderUrls),
@@ -356,9 +355,41 @@ const SidebarDrawerFile = ({ open, onClose }) => {
     e.target.src = Document;
   };
 
-  const handlePreviewClick = (fileData) => {
-    setFileUrl(fileData);
+  // Handle single file preview with multiple attachments support
+  const handlePreviewClick = (fileData, allFiles = [], startIndex = 0) => {
+    if (allFiles.length > 0) {
+      setCurrentAttachments(allFiles);
+      setInitialSlideIndex(startIndex);
+    } else {
+      setCurrentAttachments([fileData]);
+      setInitialSlideIndex(0);
+    }
     setViewerOpen(true);
+  };
+
+  // Handle viewing all attachments from a folder
+  const handleViewAllAttachments = (folder, startIndex = 0) => {
+    const uploadedFiles = (uploadedFile.attachment[folder] || []).map(item => ({
+      url: item.url,
+      filename: item.fileName,
+      extension: item.fileName?.split('.').pop()?.toLowerCase(),
+      fileObject: null
+    }));
+    
+    const localFiles = (formValues.attachment[folder] || []).map(f => ({
+      url: URL.createObjectURL(f.file),
+      filename: f.file?.name,
+      extension: f.file?.name?.split('.').pop()?.toLowerCase(),
+      fileObject: f.file
+    }));
+    
+    const allAttachments = [...uploadedFiles, ...localFiles];
+    
+    if (allAttachments.length > 0) {
+      setCurrentAttachments(allAttachments);
+      setInitialSlideIndex(startIndex);
+      setViewerOpen(true);
+    }
   };
 
   return (
@@ -454,7 +485,21 @@ const SidebarDrawerFile = ({ open, onClose }) => {
               ])
             )?.map((folder) => (
               <Box key={folder} className="folder-preview">
-                <Typography variant="subtitle2" className="folder-title">{folder}</Typography>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                  <Typography variant="subtitle2" className="folder-title">{folder}</Typography>
+                  {/* View All Button for folders with multiple files */}
+                  {((uploadedFile.attachment[folder] || []).length + (formValues.attachment[folder] || []).length) > 1 && (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      className="buttonClassname"
+                      onClick={() => handleViewAllAttachments(folder, 0)}
+                      sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
+                    >
+                      View All {(uploadedFile.attachment[folder] || []).length + (formValues.attachment[folder] || []).length}
+                    </Button>
+                  )}
+                </Box>
                 <Box className="preview-grid">
                   {(uploadedFile.attachment[folder] || []).map((item, index) => {
                     const isImage = item?.fileType?.startsWith('image/');
@@ -474,8 +519,31 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                       <Box 
                         key={`uploaded-${index}`} 
                         className="file-card"
-                        sx={{ cursor: 'pointer' }}
-                        onClick={() => handlePreviewClick(fileData)}
+                        sx={{ 
+                          cursor: 'pointer',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+                            transition: 'all 0.2s ease-in-out'
+                          }
+                        }}
+                        onClick={() => {
+                          const uploadedFiles = (uploadedFile.attachment[folder] || []).map(item => ({
+                            url: item.url,
+                            filename: item.fileName,
+                            extension: item.fileName?.split('.').pop()?.toLowerCase(),
+                            fileObject: null
+                          }));
+                          const localFiles = (formValues.attachment[folder] || []).map(f => ({
+                            url: URL.createObjectURL(f.file),
+                            filename: f.file?.name,
+                            extension: f.file?.name?.split('.').pop()?.toLowerCase(),
+                            fileObject: f.file
+                          }));
+                          const allFiles = [...uploadedFiles, ...localFiles];
+                          const currentIndex = index;
+                          handlePreviewClick(fileData, allFiles, currentIndex);
+                        }}
                       >
                         {isImage ? (
                           <img src={fileURL} alt={item.fileName} className="preview-image" loading="lazy" onError={handleImgError} />
@@ -524,9 +592,30 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                         sx={{
                           border: "1px solid #FFD700 !important",
                           background: "linear-gradient(to right, #fff8e1, #fff3cd) !important",
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: '0px 4px 12px rgba(255, 215, 0, 0.3)',
+                            transition: 'all 0.2s ease-in-out'
+                          }
                         }}
-                        onClick={() => handlePreviewClick(fileData)}
+                        onClick={() => {
+                          const uploadedFiles = (uploadedFile.attachment[folder] || []).map(item => ({
+                            url: item.url,
+                            filename: item.fileName,
+                            extension: item.fileName?.split('.').pop()?.toLowerCase(),
+                            fileObject: null
+                          }));
+                          const localFiles = (formValues.attachment[folder] || []).map(f => ({
+                            url: URL.createObjectURL(f.file),
+                            filename: f.file?.name,
+                            extension: f.file?.name?.split('.').pop()?.toLowerCase(),
+                            fileObject: f.file
+                          }));
+                          const allFiles = [...uploadedFiles, ...localFiles];
+                          const currentIndex = uploadedFiles.length + index;
+                          handlePreviewClick(fileData, allFiles, currentIndex);
+                        }}
                       >
                         {isImage ? (
                           <img src={fileURL} alt={fileName} className="preview-image" loading="lazy" onError={handleImgError} />
@@ -602,9 +691,14 @@ const SidebarDrawerFile = ({ open, onClose }) => {
       </Box>
       
       <DocsViewerModal
-        fileData={fileUrl}
+        attachments={currentAttachments}
+        initialSlideIndex={initialSlideIndex}
         modalOpen={viewerOpen}
-        closeModal={() => setViewerOpen(false)}
+        closeModal={() => {
+          setViewerOpen(false);
+          setCurrentAttachments([]);
+          setInitialSlideIndex(0);
+        }}
       />
     </Drawer>
   );

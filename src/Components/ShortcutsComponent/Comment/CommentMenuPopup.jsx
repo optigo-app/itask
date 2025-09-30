@@ -16,9 +16,10 @@ import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { background, formatDate4, ImageUrl } from '../../../Utils/globalfun';
 import { uploadFilesForComment } from '../../../Utils/uploadHelpers';
 import { toast } from 'react-toastify';
+import DocsViewerModal from '../../DocumentViewer/DocsViewerModal';
 
 // Memoized CompactComment component to prevent re-renders
-const CompactComment = memo(({ comment, onClose, selectedTask, onViewAllComments }) => (
+const CompactComment = memo(({ comment, onClose, selectedTask, onViewAllComments, onAttachmentClick }) => (
     <Box sx={{
         display: 'flex',
         gap: 1,
@@ -81,7 +82,13 @@ const CompactComment = memo(({ comment, onClose, selectedTask, onViewAllComments
                                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                 }
                             }}
-                            onClick={() => window.open(attachment.url, '_blank')}
+                            onClick={() => {
+                                if (attachment.extension === 'url') {
+                                    window.open(attachment.url, '_blank');
+                                } else {
+                                    onAttachmentClick(attachment, comment.attachments);
+                                }
+                            }}
                             >
                                 {attachment.isImage ? (
                                     <img 
@@ -166,6 +173,9 @@ const CommentMenuPopup = ({
     const [comments, setComments] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoadingComments, setIsLoadingComments] = useState(false);
+    const [currentAttachments, setCurrentAttachments] = useState([]);
+    const [viewerOpen, setViewerOpen] = useState(false);
+    const [initialSlideIndex, setInitialSlideIndex] = useState(0);
 
     useEffect(() => {
         debugger
@@ -390,11 +400,47 @@ const CommentMenuPopup = ({
         });
     };
 
+    // Handle attachment click from CompactComment
+    const handleAttachmentClick = (attachment, allAttachments) => {
+        const fileAttachments = allAttachments
+            .filter(att => att.extension !== 'url')
+            .map(att => ({
+                url: att.url,
+                filename: att.filename,
+                extension: att.extension,
+                fileObject: null
+            }));
+        
+        if (fileAttachments.length > 0) {
+            setCurrentAttachments(fileAttachments);
+            const attachmentIndex = fileAttachments.findIndex(att => att.url === attachment.url);
+            setInitialSlideIndex(attachmentIndex >= 0 ? attachmentIndex : 0);
+            setViewerOpen(true);
+        }
+    };
+
+    // Handle file preview click in input section
+    const handleFilePreviewClick = (preview, index) => {
+        const allFiles = filePreviews.map(p => ({
+            url: p.url,
+            filename: p.file.name,
+            extension: p.file.name?.split('.').pop()?.toLowerCase(),
+            fileObject: p.file
+        }));
+        
+        setCurrentAttachments(allFiles);
+        setInitialSlideIndex(index);
+        setViewerOpen(true);
+    };
+
     const handleClose = () => {
         setNewComment('');
         filePreviews.forEach(preview => URL.revokeObjectURL(preview.url));
         setSelectedFiles([]);
         setFilePreviews([]);
+        setViewerOpen(false);
+        setCurrentAttachments([]);
+        setInitialSlideIndex(0);
         onClose();
     };
 
@@ -518,6 +564,7 @@ const CommentMenuPopup = ({
                                     onClose={handleClose}
                                     selectedTask={selectedTask}
                                     onViewAllComments={onViewAllComments}
+                                    onAttachmentClick={handleAttachmentClick}
                                 />
                             ))}
 
@@ -709,7 +756,7 @@ const CommentMenuPopup = ({
                                                     borderColor: '#7367f0'
                                                 }
                                             }}
-                                                onClick={() => window.open(preview.url, '_blank')}
+                                                onClick={() => handleFilePreviewClick(preview, index)}
                                             >
                                                 {isImage ? (
                                                     // Image preview - square thumbnail
@@ -875,6 +922,17 @@ const CommentMenuPopup = ({
                     </Box>
                 </Box>
             </Box>
+            
+            <DocsViewerModal
+                attachments={currentAttachments}
+                initialSlideIndex={initialSlideIndex}
+                modalOpen={viewerOpen}
+                closeModal={() => {
+                    setViewerOpen(false);
+                    setCurrentAttachments([]);
+                    setInitialSlideIndex(0);
+                }}
+            />
         </Menu>
     );
 };

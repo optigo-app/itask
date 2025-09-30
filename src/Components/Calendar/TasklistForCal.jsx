@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import {
     Box, Card, CardContent, Typography, TextField,
     InputAdornment,
@@ -11,16 +11,156 @@ import { useRecoilValue } from "recoil";
 import Fuse from "fuse.js";
 
 import './TasklistForCal.scss';
-import { TaskData } from "../../Recoil/atom";
+import { TaskData, calendarData } from "../../Recoil/atom";
 import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate2, formatDueTask, priorityColors, statusColors } from "../../Utils/globalfun";
 import PriorityBadge from "../ShortcutsComponent/PriorityBadge";
 import StatusBadge from "../ShortcutsComponent/StatusBadge";
 import { Info } from "lucide-react";
 
+// Memoized TaskCard component for better performance
+const TaskCard = memo(({ child, colorClass, isScheduled, calendarsColor }) => {
+    return (
+        <Card
+            key={child.taskid}
+            className={`draggable-task bg-${colorClass} text-default ${isScheduled ? 'scheduled-task' : ''}`}
+            data-id={child.taskid}
+            sx={{
+                cursor: "grab",
+                mb: 1,
+                ml: 2,
+                borderRadius: 1,
+                boxShadow: isScheduled 
+                    ? "0px 2px 8px rgba(115, 103, 240, 0.3)" 
+                    : "0px 1px 3px rgba(0,0,0,0.1)",
+                border: isScheduled 
+                    ? "2px solid #7367f0" 
+                    : "1px solid transparent",
+                position: "relative",
+                opacity: isScheduled ? 0.8 : 1
+            }}
+        >
+            <CardContent
+                className={`bg-${colorClass} text-${colorClass}`}
+                sx={{ p: '8px !important', m: 0 }}
+            >
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.2}>
+                    <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        sx={{ flex: 1 }}
+                    >
+                        {child.taskname}
+                    </Typography>
+                    {isScheduled && (
+                        <Tooltip title="Task is scheduled in calendar">
+                            <Box
+                                sx={{
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: '50%',
+                                    backgroundColor: '#7367f0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    ml: 1
+                                }}
+                            >
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        color: 'white',
+                                        fontSize: '10px',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    ✓
+                                </Typography>
+                            </Box>
+                        </Tooltip>
+                    )}
+                </Box>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
+                    {child?.StartDate && (
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: "11px" }}>
+                            Start: {child?.StartDate && cleanDate(child?.StartDate)
+                                ? formatDate2(cleanDate(child?.StartDate))
+                                : '-'}
+                        </Typography>
+                    )}
+                    {child?.DeadLineDate && (
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: "11px" }}>
+                            Due: {child?.DeadLineDate && formatDate2(cleanDate(child?.DeadLineDate))
+                                ? formatDueTask(child?.DeadLineDate)
+                                : '-'}
+                        </Typography>
+                    )}
+                </Box>
+                <Box display="flex" alignItems="center" gap={0.5} flexWrap="wrap">
+                    <Box
+                        component="span"
+                        sx={{
+                            fontSize: '12px',
+                            px: 0.2,
+                            py: 0.4,
+                            borderRadius: '4px',
+                            bgcolor: '#f0f0f0',
+                            color: 'text.secondary',
+                            fontWeight: 500,
+                            minWidth: 40,
+                            textAlign: 'center'
+                        }}
+                    >
+                        Est: {child.estimate_hrs || '-'}
+                    </Box>
+                    {child?.priority && (
+                        <PriorityBadge
+                            task={child}
+                            priorityColors={priorityColors}
+                            disable={true}
+                            fontSize={10}
+                            padding={2}
+                            minWidth={40}
+                        />
+                    )}
+                    {child?.status && (
+                        <StatusBadge
+                            task={child}
+                            statusColors={statusColors}
+                            disable={true}
+                            fontSize={10}
+                            padding={2}
+                            minWidth={40}
+                        />
+                    )}
+                </Box>
+            </CardContent>
+        </Card>
+    );
+});
+
+TaskCard.displayName = 'TaskCard';
+
 const TasklistForCal = ({ calendarsColor }) => {
     const task = useRecoilValue(TaskData);
+    const calEvData = useRecoilValue(calendarData);
     const [calTasksList, setCalTasksList] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
+
+    // Debounced search handler for better performance
+    const handleSearchChange = useCallback((event) => {
+        setSearchQuery(event.target.value);
+    }, []);
+
+    // Memoized set of scheduled task IDs for O(1) lookup
+    const scheduledTaskIds = useMemo(() => {
+        if (!calEvData?.length) return new Set();
+        return new Set(calEvData.map(meeting => meeting.taskid).filter(Boolean));
+    }, [calEvData]);
+
+    // Optimized function to check if a task is scheduled
+    const isTaskScheduled = useCallback((taskId) => {
+        return scheduledTaskIds.has(taskId);
+    }, [scheduledTaskIds]);
 
     useEffect(() => {
         const userProfileData = JSON?.parse(localStorage?.getItem("UserProfileData"));
@@ -110,180 +250,152 @@ const TasklistForCal = ({ calendarsColor }) => {
     }, [calTasksList]);
 
 
-    // Enhanced search with both exact and fuzzy matching
-    const getFilteredHierarchy = () => {
-        const filteredList = (calTasksList || []).filter(
+    // Memoized filtered tasks list (excluding completed)
+    const filteredTasksList = useMemo(() => {
+        return (calTasksList || []).filter(
             task => task.status?.toLowerCase() !== "completed"
         );
+    }, [calTasksList]);
 
-        // Check if search query is wrapped in single quotes for exact search
-        const isExactSearch = searchQuery.trim().startsWith("'") && searchQuery.trim().endsWith("'");
-        const actualSearchQuery = isExactSearch ? searchQuery.trim().slice(1, -1) : searchQuery.trim();
+    // Memoized Fuse instance for search
+    const fuseInstance = useMemo(() => {
+        if (!filteredTasksList.length) return null;
         
-        // Check if search query is purely numeric
-        const isNumericSearch = /^\d+$/.test(actualSearchQuery);
-        
-        // Prepare data for Fuse.js search
-        const searchableData = filteredList.map(task => {
-            const startDate = cleanDate(task?.StartDate);
-            const deadline = cleanDate(task?.DeadLineDate);
-
-            const formatForSearch = (date) => {
-                if (!date) return {};
-                const d = new Date(date);
-                return {
-                    day: d.getDate().toString().padStart(2, '0'),
-                    month: d.toLocaleString('default', { month: 'short' }),
-                    year: d.getFullYear().toString(),
-                    full: `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })} ${d.getFullYear()}`
-                };
-            };
-
-            const start = formatForSearch(startDate);
-            const end = formatForSearch(deadline);
-
-            return {
-                ...task,
-                searchable_startDate: start.full || '',
-                searchable_dueDate: end.full || '',
-                searchable_startDay: start.day || '',
-                searchable_startMonth: start.month || '',
-                searchable_startYear: start.year || '',
-                searchable_dueDay: end.day || '',
-                searchable_dueMonth: end.month || '',
-                searchable_dueYear: end.year || '',
-                searchable_priority: task?.priority ?? '',
-                searchable_status: task?.status ?? '',
-                searchable_estimate: task?.estimate_hrs?.toString() ?? '',
-                searchable_estimate1: task?.estimate1_hrs?.toString() ?? '',
-                searchable_estimate2: task?.estimate2_hrs?.toString() ?? '',
-            };
+        return new Fuse(filteredTasksList, {
+            keys: [
+                { name: 'taskname', weight: 0.7 },
+                { name: 'taskid', weight: 0.3 },
+                { name: 'descr', weight: 0.2 },
+                { name: 'priority', weight: 0.1 },
+                { name: 'status', weight: 0.1 }
+            ],
+            threshold: 0.4,
+            includeScore: true,
+            ignoreLocation: true,
+            findAllMatches: true,
         });
+    }, [filteredTasksList]);
 
-        let matched;
+    // Memoized date formatters for better performance
+    const formatTaskDate = useCallback((dateStr) => {
+        if (!dateStr) return null;
+        const cleanedDate = cleanDate(dateStr);
+        if (!cleanedDate) return null;
         
-        if (!searchQuery) {
-            matched = filteredList.map(item => ({ ...item, searchScore: null }));
-        } else if (isExactSearch) {
-            // Handle exact search when wrapped in single quotes
-            matched = filteredList.filter(task => 
-                task.taskname?.toLowerCase() === actualSearchQuery.toLowerCase()
-            ).map(task => ({ ...task, searchScore: 0 })); // Perfect score for exact matches
-        } else {
-            // First, try exact matches for numeric searches
-            let exactMatches = [];
-            if (isNumericSearch) {
-                exactMatches = filteredList.filter(task => 
-                    task.taskname?.toString().includes(actualSearchQuery) ||
-                    task.taskid?.toString() === actualSearchQuery
-                ).map(task => ({ ...task, searchScore: 0 })); // Perfect score for exact matches
-            }
+        const date = new Date(cleanedDate);
+        return {
+            formatted: formatDate2(cleanedDate).toLowerCase(),
+            monthShort: date.toLocaleString('default', { month: 'short' }).toLowerCase(),
+            monthFull: date.toLocaleString('default', { month: 'long' }).toLowerCase(),
+            day: date.getDate().toString(),
+            year: date.getFullYear().toString()
+        };
+    }, []);
 
-            const fuse = new Fuse(searchableData, {
-                keys: [
-                    "taskname",
-                    "status",
-                    "priority",
-                    "searchable_startDate",
-                    "searchable_dueDate",
-                    "searchable_startDay",
-                    "searchable_startMonth",
-                    "searchable_startYear",
-                    "searchable_dueDay",
-                    "searchable_dueMonth",
-                    "searchable_dueYear",
-                    "searchable_priority",
-                    "searchable_status",
-                    "searchable_estimate",
-                    "searchable_estimate1",
-                    "searchable_estimate2"
-                ],
-                threshold: isNumericSearch ? 0.1 : 0.4, // Stricter threshold for numeric searches
-                includeScore: true,
-                ignoreLocation: true, // Don't consider location of match
-                findAllMatches: true, // Find all matches, not just the first
+    // Optimized date matching function
+    const matchesDateQuery = useCallback((dateInfo, query) => {
+        if (!dateInfo) return false;
+        return dateInfo.formatted.includes(query) ||
+               dateInfo.monthShort.includes(query) ||
+               dateInfo.monthFull.includes(query) ||
+               dateInfo.day.includes(query) ||
+               dateInfo.year.includes(query);
+    }, []);
+
+    // Enhanced search function with date filtering
+    const performSearch = useCallback((query, tasks) => {
+        if (!query.trim()) return tasks;
+        if (!tasks.length) return tasks; // Early return for empty tasks
+        
+        const lowerQuery = query.toLowerCase().trim();
+        if (lowerQuery.startsWith("'") && lowerQuery.endsWith("'")) {
+            const exactQuery = lowerQuery.slice(1, -1);
+            return tasks.filter(task => 
+                task.taskname?.toLowerCase() === exactQuery
+            );
+        }
+        if (lowerQuery.startsWith('"') && lowerQuery.endsWith('"')) {
+            const relatedQuery = lowerQuery.slice(1, -1);
+            return tasks.filter(task => 
+                task.taskname?.toLowerCase().includes(relatedQuery) ||
+                task.descr?.toLowerCase().includes(relatedQuery)
+            );
+        }
+        
+        // Optimized date-specific searches
+        if (lowerQuery.startsWith('start:')) {
+            const dateQuery = lowerQuery.replace('start:', '').trim();
+            return tasks.filter(task => {
+                const dateInfo = formatTaskDate(task.StartDate);
+                return matchesDateQuery(dateInfo, dateQuery);
             });
-
-            // Get fuzzy matches
-            const fuzzyMatches = (fuse?.search(actualSearchQuery) || [])
-                .sort((a, b) => (a.score ?? 1) - (b.score ?? 1))
-                .map(res => ({ ...res.item, searchScore: res.score }));
-
-            // Combine exact and fuzzy matches, prioritizing exact matches
-            const exactMatchIds = new Set(exactMatches.map(t => t.taskid));
-            const combinedMatches = [
-                ...exactMatches,
-                ...fuzzyMatches.filter(match => !exactMatchIds.has(match.taskid))
-            ];
-
-            matched = combinedMatches.length > 0 ? combinedMatches : [];
+        }
+        
+        if (lowerQuery.startsWith('due:')) {
+            const dateQuery = lowerQuery.replace('due:', '').trim();
+            return tasks.filter(task => {
+                const dateInfo = formatTaskDate(task.DeadLineDate);
+                return matchesDateQuery(dateInfo, dateQuery);
+            });
         }
 
-        const matchedIds = new Set(matched.map(t => t.taskid));
-        const moduleMap = {};
+        // Check for status-specific searches
+        if (lowerQuery.startsWith('status:')) {
+            const statusQuery = lowerQuery.replace('status:', '').trim();
+            return tasks.filter(task => 
+                task.status?.toLowerCase().includes(statusQuery)
+            );
+        }
 
-        // Create search score map for sorting
-        const searchScoreMap = {};
-        matched.forEach(task => {
-            searchScoreMap[task.taskid] = task.searchScore;
-        });
+        // Check for priority-specific searches
+        if (lowerQuery.startsWith('priority:')) {
+            const priorityQuery = lowerQuery.replace('priority:', '').trim();
+            return tasks.filter(task => 
+                task.priority?.toLowerCase().includes(priorityQuery)
+            );
+        }
 
-        filteredList.forEach(task => {
+        // Regular search using Fuse.js
+        if (!fuseInstance) return tasks;
+        const searchResults = fuseInstance.search(query);
+        return searchResults.map(result => result.item);
+    }, [fuseInstance, formatTaskDate, matchesDateQuery]);
+
+    // Optimized search and hierarchy function
+    const getFilteredHierarchy = useCallback(() => {
+        // Apply enhanced search
+        const tasksToProcess = performSearch(searchQuery, filteredTasksList);
+        
+        // Early return if no tasks
+        if (!tasksToProcess.length) return [];
+
+        // Build module hierarchy with optimized lookups
+        const moduleMap = new Map();
+        const subtaskIds = new Set();
+        
+        // First pass: create modules
+        for (const task of tasksToProcess) {
             const modId = task.moduleid;
-            if (!moduleMap[modId]) {
-                moduleMap[modId] = {
-                    ...task,
-                    subtasks: [],
-                    searchScore: searchScoreMap[task.taskid] || null
-                };
+            if (!moduleMap.has(modId)) {
+                moduleMap.set(modId, { ...task, subtasks: [] });
             }
-        });
+        }
 
-        filteredList.forEach(task => {
+        // Second pass: add subtasks with duplicate check
+        for (const task of tasksToProcess) {
             const modId = task.moduleid;
-            if (task.parentid !== 0 && !moduleMap[modId].subtasks.find(t => t.taskid === task.taskid)) {
-                moduleMap[modId].subtasks.push({ 
-                    ...task, 
-                    searchScore: searchScoreMap[task.taskid] || null 
-                });
-            }
-        });
-
-        const result = Object.values(moduleMap).filter(module => {
-            const moduleMatch = matchedIds.has(module.taskid);
-            const filteredSubtasks = module.subtasks.filter(child => matchedIds.has(child.taskid));
-            
-            if (searchQuery) {
-                const allSubtasks = moduleMatch ? module.subtasks : filteredSubtasks;
-                const finalSubtasks = allSubtasks.filter(child => matchedIds.has(child.taskid));
-                if (finalSubtasks.length > 0) {
-                    finalSubtasks.sort((a, b) => {
-                        const scoreA = a.searchScore ?? 1;
-                        const scoreB = b.searchScore ?? 1;
-                        return scoreA - scoreB;
-                    });
+            if (task.parentid !== 0 && !subtaskIds.has(task.taskid)) {
+                const module = moduleMap.get(modId);
+                if (module) {
+                    module.subtasks.push(task);
+                    subtaskIds.add(task.taskid);
                 }
-                module.subtasks = finalSubtasks;
-            } else {
-                module.subtasks = module.subtasks;
             }
-            return moduleMatch || module.subtasks.length > 0;
-        });
-        
-        if (searchQuery) {
-            result.sort((a, b) => {
-                const getModuleBestScore = (module) => {
-                    const scores = [module.searchScore, ...module.subtasks.map(s => s.searchScore)]
-                        .filter(score => score !== null && score !== undefined);
-                    return scores.length > 0 ? Math.min(...scores) : 1;
-                };
-                const scoreA = getModuleBestScore(a);
-                const scoreB = getModuleBestScore(b);
-                return scoreA - scoreB;
-            });
         }
-        return result;
-    };
+
+        // Convert Map to array and filter
+        return Array.from(moduleMap.values()).filter(module => module.subtasks.length > 0);
+    }, [filteredTasksList, searchQuery, performSearch]);
 
 
     const groupedTasks = getFilteredHierarchy();
@@ -329,17 +441,18 @@ const TasklistForCal = ({ calendarsColor }) => {
                     size="small"
                     placeholder="Search tasks..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleSearchChange}
                     {...commonTextFieldProps}
                     InputProps={{
                         endAdornment: (
                             <InputAdornment position="end">
                                 <CustomTooltip
-                                    title={`Search Guide:\n
-• Normal text: type keywords (e.g., task name, status, priority, dates, estimates)\n
-• Exact task name: use single quotes '' (e.g., 'Bug Fix Task')\n
-• Related search: use double quotes "" (e.g., "Bug Fix Task")\n
-• Numeric search: type numbers (e.g., 1560)\n
+                                    title={`Enhanced Search Guide:\n
+• Normal text: type keywords (e.g., task name, description)\n
+• Exact match: use single quotes 'Task Name' (exact task name)\n
+• Related search: use double quotes "keyword" (name + description)\n
+• Start date: "start:jan", "start:2024", "start:15" (day/month/year)\n
+• Due date: "due:feb", "due:2024", "due:28" (day/month/year)\n
 • Fuzzy search: type partial text for flexible matching`}
                                     placement="left"
                                 >
@@ -366,87 +479,16 @@ const TasklistForCal = ({ calendarsColor }) => {
 
                         {parent?.subtasks?.map(child => {
                             const colorClass = calendarsColor[child.category] || "default";
+                            const isScheduled = isTaskScheduled(child.taskid);
                             return (
-                                <Card
+                                <TaskCard
                                     key={child.taskid}
-                                    className={`draggable-task bg-${colorClass} text-default`}
-                                    data-id={child.taskid}
-                                    sx={{
-                                        cursor: "grab",
-                                        mb: 1,
-                                        ml: 2,
-                                        borderRadius: 1,
-                                        boxShadow: "0px 1px 3px rgba(0,0,0,0.1)"
-                                    }}
-                                >
-                                    <CardContent
-                                        className={`bg-${colorClass} text-${colorClass}`}
-                                        sx={{ p: '8px !important', m: 0 }}
-                                    >
-                                        <Typography
-                                            variant="body2"
-                                            fontWeight={600}
-                                            sx={{ mb: 0.2 }}
-                                        >
-                                            {child.taskname}
-                                        </Typography>
-                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
-                                            {child?.StartDate && (
-                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "11px" }}>
-                                                    Start: {child?.StartDate && cleanDate(child?.StartDate)
-                                                        ? formatDate2(cleanDate(child?.StartDate))
-                                                        : '-'}
-                                                </Typography>
-                                            )}
-                                            {child?.DeadLineDate && (
-                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "11px" }}>
-                                                    Due: {child?.DeadLineDate && formatDate2(cleanDate(child?.DeadLineDate))
-                                                        ? formatDueTask(child?.DeadLineDate)
-                                                        : '-'}
-                                                </Typography>
-                                            )}
-                                        </Box>
-                                        <Box display="flex" alignItems="center" gap={0.5} flexWrap="wrap">
-                                            <Box
-                                                component="span"
-                                                sx={{
-                                                    fontSize: '12px',
-                                                    px: 0.2,
-                                                    py: 0.4,
-                                                    borderRadius: '4px',
-                                                    bgcolor: '#f0f0f0',
-                                                    color: 'text.secondary',
-                                                    fontWeight: 500,
-                                                    minWidth: 40,
-                                                    textAlign: 'center'
-                                                }}
-                                            >
-                                                Est: {child.estimate_hrs || '-'}
-                                            </Box>
-                                            {child?.priority && (
-                                                <PriorityBadge
-                                                    task={child}
-                                                    priorityColors={priorityColors}
-                                                    disable={true}
-                                                    fontSize={10}
-                                                    padding={2}
-                                                    minWidth={40}
-                                                />
-                                            )}
-                                            {child?.status && (
-                                                <StatusBadge
-                                                    task={child}
-                                                    statusColors={statusColors}
-                                                    disable={true}
-                                                    fontSize={10}
-                                                    padding={2}
-                                                    minWidth={40}
-                                                />
-                                            )}
-                                        </Box>
-                                    </CardContent>
-
-                                </Card>
+                                    child={child}
+                                    colorClass={colorClass}
+                                    // isScheduled={isScheduled}
+                                    isScheduled=''
+                                    calendarsColor={calendarsColor}
+                                />
                             );
                         })}
                     </Box>
@@ -456,4 +498,4 @@ const TasklistForCal = ({ calendarsColor }) => {
     );
 };
 
-export default TasklistForCal;
+export default memo(TasklistForCal);
