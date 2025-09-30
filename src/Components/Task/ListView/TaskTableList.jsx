@@ -625,7 +625,7 @@ const TableView = ({
                     className={subtask?.isCopyActive ? 'cut-task-row' : ''}
                     sx={{
                         pointerEvents: subtask?.isCopyActive ? 'none' : 'auto',
-                        cursor: subtask?.isCopyActive ? 'not-allowed' : 'default',
+                        cursor: subtask?.isCopyActive ? 'not-allowed' : 'pointer',
                         backgroundColor: !subtask?.isCopyActive && (
                             hoveredSubtaskId === subtask?.taskid
                                 ? '#f5f5f5'
@@ -633,10 +633,21 @@ const TableView = ({
                                     ? '#f5f5f5'
                                     : 'inherit'
                         ),
+                        '&:hover': {
+                            backgroundColor: !subtask?.isCopyActive ? '#f8f9fa' : 'inherit'
+                        }
                     }}
                     onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid, { Tbcell: 'TaskName' })}
                     onMouseLeave={handleSubtaskMouseLeave}
                     onContextMenu={(e) => handleContextMenu(e, subtask)}
+                    onClick={(e) => {
+                        // Prevent row click if clicking on interactive elements or deadline column
+                        const isInteractiveElement = e.target.closest('button, .MuiIconButton-root, .MuiChip-root, .MuiSelect-root, input, textarea, [role="button"]');
+                        const isDeadlineColumn = e.target.closest('[data-deadline-column="true"]');
+                        if (!isInteractiveElement && !isDeadlineColumn && !subtask?.isCopyActive) {
+                            handleViewTask(subtask, { Task: "subroot" });
+                        }
+                    }}
                 >
                     <TableCell >
                         <div style={{
@@ -689,7 +700,28 @@ const TableView = ({
                         onMouseLeave={handleTaskMouseLeave}>
                         {renderAssigneeAvatars(subtask?.assignee, subtask, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
                     </TableCell>
-                    <TableCell onClick={(e) => handleDeadlineClick(e, subtask)}>
+                    <TableCell 
+                        data-deadline-column="true"
+                        onClick={(e) => handleDeadlineClick(e, subtask)}
+                        sx={{
+                            cursor: 'pointer',
+                            '&:hover': {
+                                backgroundColor: '#e3f2fd',
+                                borderRadius: '4px'
+                            },
+                            transition: 'background-color 0.2s ease',
+                            position: 'relative',
+                            '&::after': {
+                                content: '"📅"',
+                                position: 'absolute',
+                                right: '4px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                fontSize: '12px',
+                                opacity: 0.6
+                            }
+                        }}
+                    >
                         {cleanDate(subtask?.DeadLineDate) ? formatDate2(subtask.DeadLineDate) : '-'}
                     </TableCell>
                     <TableCell>
@@ -832,7 +864,7 @@ const TableView = ({
                                                     className={task?.isCopyActive ? 'cut-task-row' : ''}
                                                     sx={{
                                                         pointerEvents: task?.isCopyActive ? 'none' : 'auto',
-                                                        cursor: task?.isCopyActive ? 'not-allowed' : 'default',
+                                                        cursor: task?.isCopyActive ? 'not-allowed' : 'pointer',
                                                         backgroundColor: !task?.isCopyActive && (
                                                             hoveredTaskId === task?.taskid
                                                                 ? '#f5f5f5'
@@ -840,10 +872,21 @@ const TableView = ({
                                                                     ? '#f5f5f5'
                                                                     : 'inherit'
                                                         ),
+                                                        '&:hover': {
+                                                            backgroundColor: !task?.isCopyActive ? '#f8f9fa' : 'inherit'
+                                                        }
                                                     }}
                                                     onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
                                                     onMouseLeave={handleTaskMouseLeave}
                                                     onContextMenu={(e) => handleContextMenu(e, task)}
+                                                    onClick={(e) => {
+                                                        // Prevent row click if clicking on interactive elements or deadline column
+                                                        const isInteractiveElement = e.target.closest('button, .MuiIconButton-root, .MuiChip-root, .MuiSelect-root, input, textarea, [role="button"]');
+                                                        const isDeadlineColumn = e.target.closest('[data-deadline-column="true"]');
+                                                        if (!isInteractiveElement && !isDeadlineColumn && !task?.isCopyActive) {
+                                                            handleViewTask(task, { Task: "root" });
+                                                        }
+                                                    }}
                                                 >
                                                     <TableCell
                                                         onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
@@ -877,7 +920,28 @@ const TableView = ({
                                                         onMouseLeave={handleTaskMouseLeave}>
                                                         {renderAssigneeAvatars(task?.assignee, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
                                                     </TableCell>
-                                                    <TableCell onClick={(e) => handleDeadlineClick(e, task, access)} sx={{ cursor: access ? 'default' : 'pointer' }}>
+                                                    <TableCell 
+                                                        data-deadline-column="true"
+                                                        onClick={(e) => handleDeadlineClick(e, task, access)} 
+                                                        sx={{ 
+                                                            cursor: access ? 'default' : 'pointer',
+                                                            '&:hover': {
+                                                                backgroundColor: access ? 'inherit' : '#e3f2fd',
+                                                                borderRadius: '4px'
+                                                            },
+                                                            transition: 'background-color 0.2s ease',
+                                                            position: 'relative',
+                                                            '&::after': {
+                                                                content: access ? 'none' : '"📅"',
+                                                                position: 'absolute',
+                                                                right: '4px',
+                                                                top: '50%',
+                                                                transform: 'translateY(-50%)',
+                                                                fontSize: '12px',
+                                                                opacity: 0.6
+                                                            }
+                                                        }}
+                                                    >
                                                         {cleanDate(task?.DeadLineDate) ? formatDate2(task.DeadLineDate) : '-'}
                                                     </TableCell>
                                                     <TableCell>

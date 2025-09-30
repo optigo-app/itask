@@ -18,7 +18,8 @@ import {
     Card,
     IconButton,
     Avatar,
-    Link
+    Link,
+    Button
 } from "@mui/material";
 import { getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -33,8 +34,9 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
     const [expanded, setExpanded] = useState(null);
     const [selectedFolder, setSelectedFolder] = useState("");
     const [reffData, setReffData] = useState([]);
-    const [fileUrl, setFileUrl] = useState(null);
+    const [currentAttachments, setCurrentAttachments] = useState([]);
     const [viewerOpen, setViewerOpen] = useState(false);
+    const [initialSlideIndex, setInitialSlideIndex] = useState(0);
     const groupedByProjectId = refferenceData.reduce((acc, item) => {
         const { projectid } = item;
         if (!acc[projectid]) {
@@ -44,9 +46,32 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
         return acc;
     }, {});
 
-    const handlePreviewClick = (url) => {
-        setFileUrl(url);
+    // Handle single file preview
+    const handlePreviewClick = (file, allFiles = [], startIndex = 0) => {
+        if (allFiles.length > 0) {
+            // Multiple files - use Swiper
+            setCurrentAttachments(allFiles);
+            setInitialSlideIndex(startIndex);
+        } else {
+            // Single file - backward compatibility
+            setCurrentAttachments([file]);
+            setInitialSlideIndex(0);
+        }
         setViewerOpen(true);
+    };
+
+    // Handle viewing all attachments from a task
+    const handleViewAllAttachments = (item, startIndex = 0) => {
+        const allAttachments = [
+            ...(item.DocumentName || []),
+            ...(item.DocumentUrl || [])
+        ];
+        
+        if (allAttachments.length > 0) {
+            setCurrentAttachments(allAttachments);
+            setInitialSlideIndex(startIndex);
+            setViewerOpen(true);
+        }
     };
 
     useEffect(() => {
@@ -197,6 +222,19 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
                                                     <TableCell colSpan={5} style={{ paddingBottom: 0, paddingTop: 0 }}>
                                                         <Collapse in={expanded === index} timeout="auto" unmountOnExit>
                                                             <Box margin={2}>
+                                                                {/* View All Attachments Button */}
+                                                                {((item?.DocumentName?.length || 0) + (item?.DocumentUrl?.length || 0)) > 1 && (
+                                                                    <Box mb={2} display="flex" justifyContent="center">
+                                                                        <Button
+                                                                            variant="outlined"
+                                                                            size="small"
+                                                                            className="buttonClassname"
+                                                                            onClick={() => handleViewAllAttachments(item, 0)}
+                                                                        >
+                                                                            View All {(item?.DocumentName?.length || 0) + (item?.DocumentUrl?.length || 0)} Attachments
+                                                                        </Button>
+                                                                    </Box>
+                                                                )}
                                                                 <Grid container spacing={2} className="collapse-grid">
                                                                     {/* DocumentName Files */}
                                                                     {item?.DocumentName?.map((doc, docIndex) => (
@@ -207,8 +245,18 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
                                                                                     boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.08)',
                                                                                     overflow: 'hidden',
                                                                                     backgroundColor: '#fff',
+                                                                                    cursor: 'pointer',
+                                                                                    '&:hover': {
+                                                                                        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+                                                                                        transform: 'translateY(-2px)',
+                                                                                        transition: 'all 0.2s ease-in-out'
+                                                                                    }
                                                                                 }}
-                                                                                onClick={() => handlePreviewClick(doc)}
+                                                                                onClick={() => {
+                                                                                    const allFiles = [...(item.DocumentName || []), ...(item.DocumentUrl || [])];
+                                                                                    const currentIndex = item.DocumentName.findIndex(d => d.url === doc.url);
+                                                                                    handlePreviewClick(doc, allFiles, currentIndex);
+                                                                                }}
                                                                             >
                                                                                 <Box
                                                                                     sx={{
@@ -276,6 +324,17 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
                                                                                     boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.08)',
                                                                                     overflow: 'hidden',
                                                                                     backgroundColor: '#fff',
+                                                                                    cursor: 'pointer',
+                                                                                    '&:hover': {
+                                                                                        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+                                                                                        transform: 'translateY(-2px)',
+                                                                                        transition: 'all 0.2s ease-in-out'
+                                                                                    }
+                                                                                }}
+                                                                                onClick={() => {
+                                                                                    const allFiles = [...(item.DocumentName || []), ...(item.DocumentUrl || [])];
+                                                                                    const currentIndex = (item.DocumentName?.length || 0) + item.DocumentUrl.findIndex(d => d.url === doc.url);
+                                                                                    handlePreviewClick(doc, allFiles, currentIndex);
                                                                                 }}
                                                                             >
                                                                                 <Box
@@ -333,9 +392,14 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
                 </>
             }
             <DocsViewerModal
-                fileData={fileUrl}
+                attachments={currentAttachments}
+                initialSlideIndex={initialSlideIndex}
                 modalOpen={viewerOpen}
-                closeModal={() => setViewerOpen(false)}
+                closeModal={() => {
+                    setViewerOpen(false);
+                    setCurrentAttachments([]);
+                    setInitialSlideIndex(0);
+                }}
             />
         </div>
     );

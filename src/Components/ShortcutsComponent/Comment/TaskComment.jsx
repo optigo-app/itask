@@ -4,10 +4,14 @@ import { Eye, Paperclip, Send } from 'lucide-react';
 import CommentCard from './CommentCard';
 import { uploadFilesForComment } from '../../../Utils/uploadHelpers';
 import { toast } from 'react-toastify';
+import DocsViewerModal from '../../DocumentViewer/DocsViewerModal';
 
 const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, onDeleteComment, onSendComment, taskData }) => {
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [filePreviews, setFilePreviews] = useState([]);
+    const [currentAttachments, setCurrentAttachments] = useState([]);
+    const [viewerOpen, setViewerOpen] = useState(false);
+    const [initialSlideIndex, setInitialSlideIndex] = useState(0);
 
     const handleFileChange = (event) => {
         const files = Array.from(event.target.files);
@@ -235,7 +239,23 @@ const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, 
                                                 borderColor: '#7367f0'
                                             }
                                         }}
-                                        onClick={() => window.open(preview.url, '_blank')}
+                                        onClick={() => {
+                                            const allFiles = filePreviews.map((p, idx) => ({
+                                                url: p.url,
+                                                filename: p.file.name,
+                                                extension: p.file.name?.split('.').pop()?.toLowerCase(),
+                                                fileObject: p.file
+                                            }));
+                                            const fileData = {
+                                                url: preview.url,
+                                                filename: preview.file.name,
+                                                extension: preview.file.name?.split('.').pop()?.toLowerCase(),
+                                                fileObject: preview.file
+                                            };
+                                            setCurrentAttachments(allFiles);
+                                            setInitialSlideIndex(index);
+                                            setViewerOpen(true);
+                                        }}
                                         >
                                             {/* Remove button */}
                                             <IconButton 
@@ -390,7 +410,19 @@ const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, 
                         </Button>
                     </Box>
                 </Box>
+
             </Box>
+
+            <DocsViewerModal
+                attachments={currentAttachments}
+                initialSlideIndex={initialSlideIndex}
+                modalOpen={viewerOpen}
+                closeModal={() => {
+                    setViewerOpen(false);
+                    setCurrentAttachments([]);
+                    setInitialSlideIndex(0);
+                }}
+            />
         </>
     );
 };

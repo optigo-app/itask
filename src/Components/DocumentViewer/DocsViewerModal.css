@@ -1,0 +1,70 @@
+/* Custom Swiper Styles for DocsViewerModal */
+.docs-viewer-swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.docs-viewer-swiper .swiper-slide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f5f5f5;
+}
+
+.docs-viewer-swiper .swiper-pagination {
+  bottom: 20px !important;
+}
+
+.docs-viewer-swiper .swiper-pagination-bullet {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 2px solid rgba(0, 0, 0, 0.3) !important;
+  opacity: 1 !important;
+  width: 12px !important;
+  height: 12px !important;
+}
+
+.docs-viewer-swiper .swiper-pagination-bullet-active {
+  background: #1976d2 !important;
+  border-color: #1976d2 !important;
+}
+
+.docs-viewer-swiper .swiper-button-prev,
+.docs-viewer-swiper .swiper-button-next {
+  color: rgba(255, 255, 255, 0.8) !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  margin-top: -20px !important;
+}
+
+.docs-viewer-swiper .swiper-button-prev:hover,
+.docs-viewer-swiper .swiper-button-next:hover {
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: white !important;
+}
+
+.docs-viewer-swiper .swiper-button-prev::after,
+.docs-viewer-swiper .swiper-button-next::after {
+  font-size: 16px !important;
+  font-weight: bold !important;
+}
+
+/* Hide navigation buttons on small screens */
+@media (max-width: 768px) {
+  .swiper-button-prev-custom,
+  .swiper-button-next-custom {
+    display: none !important;
+  }
+}
+
+/* Ensure proper z-index for navigation */
+.swiper-button-prev-custom,
+.swiper-button-next-custom {
+  z-index: 1000 !important;
+}
+
+/* Smooth transitions */
+.docs-viewer-swiper .swiper-slide-active {
+  transition: all 0.3s ease-in-out;
+}
