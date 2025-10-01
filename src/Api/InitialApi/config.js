@@ -1,8 +1,10 @@
 // http://localhost:3000/?yc=e3tsaXZlLm9wdGlnb2FwcHMuY29tfX17ezIwfX17e3Byb2l0YXNrfX17e3Byb2l0YXNrfX0=&uid=amrut@eg.com&sv=1&ifid=TaskList&pid=undefined/
 
-const isLocal = ["localhost", "nzen"].includes(window.location.hostname);
+const isLocal = ["localhost", "nzen", "itaskweb", "itask"].includes(window.location.hostname);
 
 export const APIURL = isLocal ? "http://newnextjs.web/api/report" : "https://livenx.optigoapps.com/api/report";
+
+// export const APIURL = isLocal ? "http://newnextjs.web/api/report" : "https://livenx.optigoapps.com/api/report";
 // export const APIURL = !isLocal ? "http://nextjstest.web/api/report" : "https://testnx.optigoapps.com/api/report";
 
 export const getHeaders = (init = {}) => {
