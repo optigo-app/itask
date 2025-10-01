@@ -102,7 +102,8 @@ const CalendarGridView = () => {
     if (!taskFinalData?.TaskData) return [];
     const today = currentDate.startOf('day');
     const tomorrow = today.add(1, 'day');
-    const weekEnd = today.endOf('week');
+    // Set Monday as start of week, Sunday as end of week
+    const weekEnd = today.startOf('week').add(1, 'day').endOf('week');
 
     const userProfile = JSON?.parse(localStorage.getItem('UserProfileData')) ?? {};
     const isAdmin = userProfile.designation?.toLowerCase() === 'admin';
@@ -133,9 +134,12 @@ const CalendarGridView = () => {
     } else if (selectedFilter === 'Tomorrow') {
       return nonRootTasks.filter(task => dayjs(task.StartDate).isSame(tomorrow, 'day'));
     } else if (selectedFilter === 'Week') {
+      // Calculate Monday-based week range
+      const startOfWeek = today.startOf('week').add(1, 'day'); // Monday
+      const endOfWeek = startOfWeek.add(6, 'day'); // Sunday
       return nonRootTasks.filter(task =>
-        dayjs(task.StartDate).isAfter(today.subtract(1, 'day')) &&
-        dayjs(task.StartDate).isBefore(weekEnd.add(1, 'day'))
+        dayjs(task.StartDate).isSameOrAfter(startOfWeek, 'day') &&
+        dayjs(task.StartDate).isSameOrBefore(endOfWeek, 'day')
       );
     } else if (selectedFilter === 'Custom') {
       return nonRootTasks.filter(task => {
@@ -436,8 +440,9 @@ const CalendarGridView = () => {
         endDate: tomorrow.endOf('day').toISOString()
       });
     } else if (filter === 'Week') {
-      const startOfWeek = targetDate.startOf('week');
-      const endOfWeek = targetDate.endOf('week');
+      // Set Monday as start of week
+      const startOfWeek = targetDate.startOf('week').add(1, 'day');
+      const endOfWeek = targetDate.endOf('week').add(1, 'day');
       setCustomRange({
         startDate: startOfWeek.toISOString(),
         endDate: endOfWeek.toISOString()

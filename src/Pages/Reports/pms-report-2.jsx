@@ -78,7 +78,10 @@ const PmsReport2 = () => {
         tomorrow.setDate(baseDate.getDate() + 1);
 
         const startOfWeek = new Date(baseDate);
-        startOfWeek.setDate(baseDate.getDate() - baseDate.getDay());
+        // Calculate Monday as start of week (getDay(): 0=Sunday, 1=Monday, ...)
+        const dayOfWeek = baseDate.getDay();
+        const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days to Monday
+        startOfWeek.setDate(baseDate.getDate() - daysFromMonday);
 
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
@@ -398,8 +401,9 @@ const PmsReport2 = () => {
                 }
             }));
         } else if (filter === 'Week') {
-            const startOfWeek = targetDate.startOf('week');
-            const endOfWeek = targetDate.endOf('week');
+            // Set Monday as start of week
+            const startOfWeek = targetDate.startOf('week').add(1, 'day');
+            const endOfWeek = targetDate.endOf('week').add(1, 'day');
             setFilters(prev => ({
                 ...prev,
                 dateRangeFilter: {
