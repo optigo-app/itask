@@ -46,18 +46,13 @@ const HierarchicalTaskTreeTable = memo(({
         });
         const taskHierarchy = [];
         majorTasks.forEach(majorTask => {
-            let relatedMinorTasks = minorTasks.filter(minorTask =>
+            // Only match minor tasks that have this major task as their direct parent
+            const relatedMinorTasks = minorTasks.filter(minorTask =>
                 !usedMinorTaskIds.has(minorTask.taskid) &&
                 minorTask.parentid === majorTask.taskid
             );
-            if (relatedMinorTasks.length === 0) {
-                relatedMinorTasks = minorTasks.filter(minorTask =>
-                    !usedMinorTaskIds.has(minorTask.taskid) &&
-                    minorTask.moduleid === majorTask.moduleid &&
-                    minorTask.taskid !== majorTask.taskid // Don't include self
-                );
-            }
 
+            // Mark these minor tasks as used
             relatedMinorTasks.forEach(task => {
                 usedMinorTaskIds.add(task.taskid);
             });
@@ -284,7 +279,7 @@ const HierarchicalTaskTreeTable = memo(({
                                 : '-'}
                         </Typography>
                     </TableCell>
-                    <TableCell>{task.estimate_hrs}</TableCell>
+                    <TableCell>{task.estimate1_hrsT}</TableCell>
                     <TableCell>{task.workinghr}</TableCell>
                 </TableRow>
 

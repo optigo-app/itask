@@ -213,7 +213,7 @@ const Calendar = () => {
         handleMeetingListByLogin();
       }
       if (formValues?.taskid) {
-        toast.success("Metting or Task updated successfully");
+        toast.success("Meeting or Task updated successfully");
       } else {
         toast.success("Meeting added successfully");
       }

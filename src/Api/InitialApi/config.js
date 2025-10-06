@@ -1,14 +1,42 @@
-// http://localhost:3000/?yc=e3tsaXZlLm9wdGlnb2FwcHMuY29tfX17ezIwfX17e3Byb2l0YXNrfX17e3Byb2l0YXNrfX0=&uid=amrut@eg.com&sv=1&ifid=TaskList&pid=undefined/
+// Environment variables
+const LOCAL_HOSTNAMES = (process.env.REACT_APP_LOCAL_HOSTNAMES || "localhost,nzen").split(',');
+const API_VERSION = process.env.REACT_APP_API_VERSION || "v4";
+const API_ENVIRONMENT = process.env.REACT_APP_API_ENVIRONMENT || "testing";
+const REPORT_ENDPOINT = process.env.REACT_APP_REPORT_ENDPOINT || "/api/report";
+const UPLOAD_ENDPOINT = process.env.REACT_APP_UPLOAD_ENDPOINT || "/api/upload";
+const REMOVE_FILE_ENDPOINT = process.env.REACT_APP_REMOVE_FILE_ENDPOINT || "/api/removefile";
 
-const isLocal = ["localhost", "nzen", "itaskweb", "itask"].includes(window.location.hostname);
+console.log("API Environment:", process.env.REACT_APP_API_ENVIRONMENT);
 
-export const APIURL = isLocal ? "http://newnextjs.web/api/report" : "https://apilx.optigoapps.com/api/report";
+// Domain configuration
+const DOMAINS = {
+  local: process.env.REACT_APP_LOCAL_DOMAIN || "http://newnextjs.web",
+  testing: process.env.REACT_APP_TESTING_DOMAIN || "https://nxt03.optigoapps.com",
+  live: process.env.REACT_APP_LIVE_DOMAIN || "https://apilx.optigoapps.com",
+  backup_live: process.env.REACT_APP_BACKUP_LIVE_DOMAIN || "https://livenx.optigoapps.com"
+};
 
-// export const APIURL = isLocal ? "http://newnextjs.web/api/report" : "https://livenx.optigoapps.com/api/report";
-// export const APIURL = !isLocal ? "http://nextjstest.web/api/report" : "https://testnx.optigoapps.com/api/report";
+const isLocal = LOCAL_HOSTNAMES.includes(window.location.hostname);
+
+// Get current domain based on environment
+const getCurrentDomain = () => {
+  if (isLocal) {
+    return DOMAINS.local;
+  }
+  return DOMAINS[API_ENVIRONMENT] || DOMAINS.testing;
+};
+
+// Build API URLs
+const buildApiUrl = (endpoint) => {
+  return getCurrentDomain() + endpoint;
+};
+
+export const APIURL = buildApiUrl(REPORT_ENDPOINT);
+export const UPLOAD_URL = buildApiUrl(UPLOAD_ENDPOINT);
+export const REMOVE_FILE_URL = buildApiUrl(REMOVE_FILE_ENDPOINT);
 
 export const getHeaders = (init = {}) => {
-  const { version = "v4", token = "" } = init;
+  const { version = API_VERSION, token = "" } = init;
   const AuthData = JSON.parse(localStorage.getItem("AuthqueryParams"));
 
   return {

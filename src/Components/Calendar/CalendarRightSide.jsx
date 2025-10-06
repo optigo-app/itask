@@ -156,7 +156,7 @@ const Calendar = ({
             },
             guests: event?.extendedProps?.guests ?? event?.guests ?? [],
             assigneids: event?.extendedProps?.guests?.map(u => u.id)?.join(',') ?? '',
-            estimate: event?.extendedProps?.estimate ?? 1,
+            estimate: event?.extendedProps?.estimate ?? (event?.extendedProps?.estimate_hrs || 1),
             description: event?.extendedProps?.description ?? event?.Desc ?? '',
         };
     };
@@ -340,8 +340,13 @@ const Calendar = ({
         
 
         dateClick(info) {
+            const startDate = new Date(info.dateStr);
+            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // Default 1 hour duration
+            
             const eventDetails = {
-                start: new Date(info.dateStr).toISOString(),
+                start: startDate.toISOString(),
+                end: endDate.toISOString(),
+                estimate_hrs: 1, // Default 1 hour estimate
             };
             setCalFormData(eventDetails);
             setFormDataValue(eventDetails);
@@ -401,16 +406,20 @@ const Calendar = ({
         },
         eventReceive({ event }) {
             if (!event?.title) return;
-
             const eventDetails = mapEventDetails(event);
             const startDate = new Date(eventDetails.start);
-            const endDate = new Date(startDate.getTime() + eventDetails.estimate * 60 * 60 * 1000);
-
+            const estimateHours = eventDetails.estimate_hrs || eventDetails.estimate || 1;
+            const endDate = new Date(startDate.getTime() + estimateHours * 60 * 60 * 1000);
             eventDetails.end = endDate.toISOString();
-
+            eventDetails.estimate_hrs = estimateHours;
             const updatedData = calEvData?.map(ev =>
                 ev?.meetingid == eventDetails?.meetingid
-                    ? { ...ev, StartDate: eventDetails.start, EndDate: eventDetails.end }
+                    ? { 
+                        ...ev, 
+                        StartDate: eventDetails.start, 
+                        EndDate: eventDetails.end,
+                        estimate_hrs: estimateHours
+                    }
                     : ev
             );
 
@@ -426,7 +435,6 @@ const Calendar = ({
         const eventDetails = mapEventDetails(event);
         console.log("eventDetails for duplicate", eventDetails);
 
-        // Open sidebar drawer for editing
         setCalFormData(eventDetails);
         setFormDataValue(eventDetails);
         setRootSubroot({ Task: "meeting" });
