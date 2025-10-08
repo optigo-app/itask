@@ -12,7 +12,7 @@ const ScrollableCategoryTabs = ({ taskCategory = [], selectedCategory, handleFil
         value={false}
         onChange={(event, newValue) => handleFilterChange("category", newValue)}
         variant={shouldScroll ? "scrollable" : "standard"}
-        scrollButtons={shouldScroll ? "auto" : false}
+        scrollButtons={shouldScroll ? true : false}
         allowScrollButtonsMobile
         className="scrollable-tabs"
         aria-label="task category tabs"

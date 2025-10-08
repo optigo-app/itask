@@ -22,7 +22,7 @@ import {
     ExpandMore
 } from "@mui/icons-material";
 import { Asterisk, Boxes, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
-import logo from "../../Assests/logo.webp";
+import logo from "../../Assests/logo.png";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';

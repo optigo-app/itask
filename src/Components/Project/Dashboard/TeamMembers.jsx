@@ -11,6 +11,7 @@ import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { Pencil, Trash2 } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { DelPrTeamsApi } from "../../../Api/TaskApi/DelPrTeamsApi";
+import TeamTemplateInfoButton from "../../ShortcutsComponent/TeamTemplate/TeamTemplateInfoButton";
 
 const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
     const [open, setOpen] = React.useState(false);
@@ -109,15 +110,19 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
             {isLoading || isLoading == null ? <LoadingBackdrop isLoading={true} />
                 :
                 <>
-                    <Box sx={{ display: "flex", justifyContent: "end", mb: 2 }}>
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            className="buttonClassname"
-                            onClick={handleSidebarOpen}
-                        >
-                            Add Team
-                        </Button>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                        <Box />
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                            <TeamTemplateInfoButton />
+                            <Button
+                                variant="contained"
+                                startIcon={<AddIcon />}
+                                className="buttonClassname"
+                                onClick={handleSidebarOpen}
+                            >
+                                Add Team
+                            </Button>
+                        </Box>
                     </Box>
                     <ReusableTable
                         className="reusable-table-container"

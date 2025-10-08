@@ -51,23 +51,42 @@
         .MuiTabs-scrollButtons {
             background: $button-Bgcolor !important;
             color: #fff !important;
-            height: 30px;
-            width: 30px;
-            color: $primary-main;
+            height: 33px;
+            width: 33px;
             border-radius: 50%;
             transition: background-color 0.3s ease-in-out;
             visibility: visible !important;
+            opacity: 1 !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            margin: 0 4px;
 
             .MuiSvgIcon-root {
-                font-size: 20px;
-                width: 20px;
-                height: 20px;
+                font-size: 25px;
+                width: 25px;
+                height: 25px;
+                color: #fff !important;
             }
 
             &:hover {
-                background-color: rgba(25, 118, 210, 0.3);
+                background-color: rgba(25, 118, 210, 0.8) !important;
+                transform: scale(1.1);
             }
 
+            &.Mui-disabled {
+                background-color: #e0e0e0 !important;
+                opacity: 0.5 !important;
+                
+                .MuiSvgIcon-root {
+                    color: #9e9e9e !important;
+                }
+            }
+        }
+
+        // Force both scroll buttons to always be visible
+        .MuiTabs-scrollButtonsHideMobile {
+            display: flex !important;
         }
     }
 }

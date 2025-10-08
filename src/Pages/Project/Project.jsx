@@ -109,7 +109,7 @@ const Project = () => {
     if (priorityData && statusData && taskProject && taskDepartment) {
       fetchModuleData();
     }
-  }, [priorityData, statusData, taskProject, taskDepartment, location]);
+  }, [priorityData, statusData, taskProject, taskDepartment, location,callFetchTaskApi]);
 
   const fetchModuleData = async () => {
     if (project?.length == 0) {
@@ -148,6 +148,11 @@ const Project = () => {
           assigneeIdArray?.includes(user.id)
         );
 
+        // Create assignees array with formatted names
+        const assignees = Array.isArray(matchedAssignees)
+          ? matchedAssignees.map((a) => `${a?.firstname} ${a?.lastname}`)
+          : [matchedAssignees?.assignee || ''];
+
         return {
           ...task,
           priority: priority ? priority?.labelname : "",
@@ -156,6 +161,7 @@ const Project = () => {
           taskDpt: department ? department?.labelname : "",
           category: category?.labelname,
           assignee: matchedAssignees ? matchedAssignees : [],
+          assignees: assignees,
         };
       };
 
@@ -312,14 +318,13 @@ const Project = () => {
             return (task?.category ?? "").toLowerCase() === catLower;
           });
 
-
         const matchesSearch =
           !searchTerm ||
           matchText(task?.taskname) ||
           matchText(task?.status) ||
           matchText(task?.priority) ||
           (Array.isArray(task?.assignee)
-            ? task?.assignee?.some((a) => matchText(a?.name))
+            ? task?.assignee?.some((a) => matchText(`${a?.firstname} ${a?.lastname}`))
             : matchText(task?.assignee)) ||
           matchText(task?.description) ||
           matchText(task?.taskPr) ||
@@ -343,7 +348,7 @@ const Project = () => {
           (!isValidFilter(assignee) ||
             (Array.isArray(task?.assignee)
               ? task.assignee.some(
-                (a) => (a?.name ?? "").toLowerCase() === assignee.toLowerCase()
+                (a) => `${a?.firstname} ${a?.lastname}`.toLowerCase() === assignee.toLowerCase()
               )
               : (task?.assignee ?? "").toLowerCase() === assignee.toLowerCase())) &&
           matchesSearch

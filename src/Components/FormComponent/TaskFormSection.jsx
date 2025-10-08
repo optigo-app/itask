@@ -25,6 +25,7 @@ const TaskFormSection = ({
   handleEstimateChange,
   isTaskNameEmpty,
   isDuplicateTask,
+  isCategoryEmpty,
   taskCategory,
   statusData,
   secStatusData,
@@ -178,7 +179,16 @@ const TaskFormSection = ({
             </Grid>
 
             <Grid item xs={12} md={6}>
-              {renderAutocomplete('Category', 'category', formValues.category, 'Select Category', taskCategory, handleChange)}
+              {renderAutocomplete(
+                'Category', 
+                'category', 
+                formValues.category, 
+                'Select Category', 
+                taskCategory, 
+                handleChange,
+                isCategoryEmpty,
+                isCategoryEmpty ? 'Category is required.' : ''
+              )}
             </Grid>
 
             <Grid item xs={12}>

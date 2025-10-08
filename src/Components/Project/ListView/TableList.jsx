@@ -14,13 +14,11 @@ import {
     LinearProgress,
     IconButton,
     Tooltip,
-    AvatarGroup,
-    Avatar,
 } from "@mui/material";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, ImageUrl, priorityColors } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, priorityColors } from "../../../Utils/globalfun";
 import { Eye, Lock, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { assigneeId, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -29,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawerFile";
 import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
+import AssigneeAvatarGroup from "../../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
 import useAccess from "../../Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
 import { GetPrTeamsApi } from "../../../Api/TaskApi/prTeamListApi";
@@ -70,11 +69,12 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
             : getRandomAvatarColor(assignee);
         return avatarBackgroundColor;
     };
+
     const [toggleState, setToggleState] = useState({});
     const handleToggle = (projectId) => {
-        setToggleState((prev) => ({
-            ...prev,
-            [projectId]: !prev[projectId],
+        setToggleState((prevState) => ({
+            ...prevState,
+            [projectId]: !prevState[projectId],
         }));
     };
     const handleMouseEnter = (taskId, value) => {
@@ -149,7 +149,9 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                 projectid: task?.projectid,
             }
             const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
-            navigate(`/projects/dashboard/${urlData?.project}/?data=${encodedFormData}`);
+            // Format project name for URL (replace spaces with hyphens)
+            const formattedProjectName = task.projectName?.trim()?.replace(/\s+/g, '-') || '';
+            navigate(`/projects/dashboard/${formattedProjectName}/?data=${encodedFormData}`);
         } else {
             let urlData = {
                 project: task.taskPr,
@@ -158,7 +160,9 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                 taskname: task?.taskname
             }
             const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
-            navigate(`/projects/dashboard/${urlData?.project}/${urlData?.taskname}/?data=${encodedFormData}`);
+            // Format project name for URL (replace spaces with hyphens)
+            const formattedProjectName = task.taskPr?.trim()?.replace(/\s+/g, '-') || '';
+            navigate(`/projects/dashboard/${formattedProjectName}/${urlData?.taskname}/?data=${encodedFormData}`);
         }
     }
 
@@ -319,22 +323,24 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                 >
                     <Paperclip size={20} color="#808080" className="iconbtn" />
                 </IconButton>
-                <IconButton
-                    aria-label="Edit-Task button"
-                    disabled={task?.isFreez === 1}
-                    onClick={() => handleEditProject(task, { Task: "root" })}
-                    sx={{
-                        '&.Mui-disabled': {
-                            color: 'rgba(0, 0, 0, 0.26)',
-                        },
-                    }}
-                >
-                    <Pencil
-                        size={20}
-                        color={task?.isFreez === 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                        className="iconbtn"
-                    />
-                </IconButton>
+                {hasAccess(PERMISSIONS.canEditPrModule) &&
+                    <IconButton
+                        aria-label="Edit-Task button"
+                        disabled={task?.isFreez === 1}
+                        onClick={() => handleEditProject(task, { Task: "root" })}
+                        sx={{
+                            '&.Mui-disabled': {
+                                color: 'rgba(0, 0, 0, 0.26)',
+                            },
+                        }}
+                    >
+                        <Pencil
+                            size={20}
+                            color={task?.isFreez === 1 ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                            className="iconbtn"
+                        />
+                    </IconButton>
+                }
                 {hasAccess(PERMISSIONS.canPrModuleDelete) &&
                     <IconButton
                         aria-label="Delete Task button"
@@ -382,48 +388,18 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
     };
 
     const renderAssigneeAvatars = (assignees, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <AvatarGroup
-                max={6}
-                spacing={2}
-                sx={{
-                    '& .MuiAvatar-root': {
-                        width: 30,
-                        height: 30,
-                        fontSize: '0.8rem',
-                        cursor: 'pointer',
-                        border: 'none',
-                        transition: 'transform 0.3s ease-in-out',
-                        '&:hover': {
-                            transform: 'scale(1.2)',
-                            zIndex: 10,
-                        },
-                    },
-                }}
-            >
-                {assignees?.map((assignee, teamIdx) => (
-                    <Tooltip
-                        placement="top"
-                        key={assignee?.id}
-                        title={`${assignee?.firstname} ${assignee?.lastname}`}
-                        arrow
-                        classes={{ tooltip: 'custom-tooltip' }}
-                    >
-                        <Avatar
-                            key={teamIdx}
-                            alt={`${assignee?.firstname} ${assignee?.lastname}`}
-                            src={ImageUrl(assignee) || null}
-                            sx={{
-                                backgroundColor: background(`${assignee?.firstname + " " + assignee?.lastname}`),
-                            }}
-                            onClick={() => hanldePAvatarClick(assignees, assignee?.id)}
-                        >
-                            {!assignee.avatar && assignee?.firstname?.charAt(0)}
-                        </Avatar>
-                    </Tooltip>
-                ))}
-            </AvatarGroup>
-        </Box>
+        <AssigneeAvatarGroup
+            assignees={assignees}
+            task={task}
+            maxVisible={3}
+            showAddButton={true}
+            hoveredTaskId={hoveredTaskId}
+            hoveredColumnName={hoveredColumnname}
+            onAvatarClick={hanldePAvatarClick}
+            onAddClick={(task) => handleAssigneeShortcut(task, { Task: 'root' })}
+            size={35}
+            spacing={0.5}
+        />
     );
 
     return (
@@ -527,6 +503,10 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                                 e.stopPropagation();
                                                                 handleToggle(project.projectid, project);
                                                             }}
+                                                            onDoubleClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleViewPrDashboard(project, "pr");
+                                                            }}
                                                         >
                                                             {project.projectName} {project?.taskcount != 0 && (
                                                                 <span className="pr-md_count">
@@ -560,20 +540,12 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                     <TableRow
                                                         sx={{
                                                             backgroundColor: hoveredTaskId === task?.taskid ? '#f5f5f5' : 'inherit',
-                                                            cursor: 'pointer',
                                                             '&:hover': {
                                                                 backgroundColor: '#f8f9fa'
                                                             }
                                                         }}
                                                         onMouseEnter={() => handleMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
                                                         onMouseLeave={handleMouseLeave}
-                                                        onClick={(e) => {
-                                                            // Prevent row click if clicking on interactive elements
-                                                            const isInteractiveElement = e.target.closest('button, .MuiIconButton-root, .MuiChip-root, .MuiSelect-root, input, textarea, [role="button"], a');
-                                                            if (!isInteractiveElement && !task?.isFreez) {
-                                                                handleViewPrDashboard(task, "md");
-                                                            }
-                                                        }}
                                                     >
                                                         <TableCell sx={{ paddingLeft: '55px' }}>
                                                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
