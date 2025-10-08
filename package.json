@@ -28,6 +28,7 @@
     "date-fns": "^3.6.0",
     "dayjs": "^1.11.13",
     "dayjs-plugin-utc": "^0.1.2",
+    "dotenv": "^17.2.3",
     "emoji-picker-react": "^4.12.0",
     "framer-motion": "^12.4.3",
     "fuse.js": "^7.1.0",

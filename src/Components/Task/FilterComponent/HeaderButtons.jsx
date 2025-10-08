@@ -213,13 +213,6 @@ const HeaderButtons = ({
     <>
       <Box className="headerButtons">
         <Box className="FirstMainBox">
-          {!isLaptop && (
-            <ScrollableCategoryTabs
-              taskCategory={categoryMaster}
-              selectedCategory={filters?.category}
-              handleFilterChange={handleFilterChange}
-            />
-          )}
           <Box sx={{ display: "flex", justifyContent: "end" }}>
             <TextField
               placeholder="Search tasks..."
@@ -241,6 +234,13 @@ const HeaderButtons = ({
               aria-label="Search tasks..."
             />
           </Box>
+          {!isLaptop && (
+            <ScrollableCategoryTabs
+              taskCategory={categoryMaster}
+              selectedCategory={filters?.category}
+              handleFilterChange={handleFilterChange}
+            />
+          )}
           <Tooltip
             placement="top"
             title="Filter tasks"
@@ -254,7 +254,7 @@ const HeaderButtons = ({
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                padding: '7px',
+                padding: '4px',
                 backgroundColor: filterDrawerOpen ? "#ffd700" : "white",
                 boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
                 "&:hover": {
@@ -280,7 +280,7 @@ const HeaderButtons = ({
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
-                  padding: '7px',
+                  padding: '4px',
                   backgroundColor:
                     completedFlag ? "#dcedc8" : "white",
                   boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
@@ -326,44 +326,78 @@ const HeaderButtons = ({
                   New
                 </Button>
               )}
-              {location?.pathname?.includes("/tasks/") && (
-                <ToggleButtonGroup
-                  value={viewTaskMode}
-                  exclusive
-                  size="small"
-                  onChange={handleViewModeChange}
-                  aria-label="View mode"
-                  className="view-mode-toggle"
+              <ToggleButtonGroup
+                value={location?.pathname?.includes("/tasks/") ? viewTaskMode : null}
+                exclusive
+                size="small"
+                onChange={location?.pathname?.includes("/tasks/") ? handleViewModeChange : null}
+                aria-label="View mode"
+                className="view-mode-toggle"
+              >
+                <Tooltip
+                  title={!location?.pathname?.includes("/tasks/") ? "Available only when process with project to task page" : "My tasks view"}
+                  arrow
+                  placement="top"
+                  classes={{ tooltip: 'custom-tooltip' }}
                 >
-                  <ToggleButton value="me" className="toggle-btn" sx={{ borderRadius: '8px' }}>
-                    <User size={20} className="toggle-icon" />
-                  </ToggleButton>
-                  <Tooltip
-                    title={parsedData?.isLimited == 1 ? "Access limited: Team view disabled" : ""}
-                    arrow
-                    disableHoverListener={!parsedData?.isLimited == 1}
-                    placement="top"
-                    classes={{ tooltip: 'custom-tooltip' }}
-                  >
+                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <ToggleButton 
+                      value="me" 
+                      className="toggle-btn" 
+                      sx={{ borderRadius: '8px', minHeight: '40px' }}
+                      disabled={!location?.pathname?.includes("/tasks/")}
+                    >
+                      <User size={20} className="toggle-icon" />
+                    </ToggleButton>
+                  </span>
+                </Tooltip>
+                <Tooltip
+                  title={
+                    !location?.pathname?.includes("/tasks/") 
+                      ? "Available only when process with project to task page" 
+                      : parsedData?.isLimited == 1 
+                        ? "Access limited: Team view disabled" 
+                        : "Team tasks view"
+                  }
+                  arrow
+                  placement="top"
+                  classes={{ tooltip: 'custom-tooltip' }}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                     <ToggleButton
-                      disabled={parsedData?.isLimited == 1}
+                      disabled={!location?.pathname?.includes("/tasks/") || parsedData?.isLimited == 1}
                       value="team"
                       className="toggle-btn"
-                      sx={{ borderRadius: '8px' }}
+                      sx={{ borderRadius: '8px', minHeight: '40px' }}
                     >
                       <Users size={20} className="toggle-icon" />
                     </ToggleButton>
-                  </Tooltip>
-                  <ToggleButton
-                    disabled={parsedData?.isLimited == 1}
-                    value="createdby"
-                    className="toggle-btn"
-                    sx={{ borderRadius: '8px' }}
-                  >
-                    <UserPlus size={20} className="toggle-icon" />
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              )}
+                  </span>
+                </Tooltip>
+                <Tooltip
+                  title={
+                    !location?.pathname?.includes("/tasks/") 
+                      ? "Available only when process with project to task page" 
+                      : parsedData?.isLimited == 1 
+                        ? "Access limited: Created by view disabled" 
+                        : "Tasks created by me view"
+                  }
+                  arrow
+                  placement="top"
+                  classes={{ tooltip: 'custom-tooltip' }}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <ToggleButton
+                      disabled={!location?.pathname?.includes("/tasks/") || parsedData?.isLimited == 1}
+                      value="createdby"
+                      className="toggle-btn"
+                      sx={{ borderRadius: '8px', minHeight: '40px' }}
+                    >
+                      <UserPlus size={20} className="toggle-icon" />
+                    </ToggleButton>
+                  </span>
+                </Tooltip>
+              </ToggleButtonGroup>
               <IconButton
                 className="buttonClassname"
                 onClick={handleTimerCompOpen}

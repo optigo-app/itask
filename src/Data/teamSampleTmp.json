@@ -1,0 +1,165 @@
+{
+    "teams": [
+      {
+        "variant": 1,
+        "members": [
+          {
+            "name": "Olivia Brown",
+            "role": "Product Owner",
+            "responsibilities": [
+              "Define product vision and roadmap",
+              "Gather and prioritize customer requirements",
+              "Collaborate with stakeholders to ensure product success"
+            ]
+          },
+          {
+            "name": "James Miller",
+            "role": "Backend Developer",
+            "responsibilities": [
+              "Develop and maintain server-side logic",
+              "Integrate APIs and databases",
+              "Optimize application performance"
+            ]
+          },
+          {
+            "name": "Sophia Davis",
+            "role": "Frontend Engineer",
+            "responsibilities": [
+              "Build responsive user interfaces",
+              "Implement designs using modern frameworks",
+              "Ensure cross-browser compatibility"
+            ]
+          },
+          {
+            "name": "Liam Wilson",
+            "role": "Data Analyst",
+            "responsibilities": [
+              "Collect and analyze data to support decisions",
+              "Generate performance reports",
+              "Provide insights to improve product metrics"
+            ]
+          },
+          {
+            "name": "Emily Clark",
+            "role": "Quality Analyst",
+            "responsibilities": [
+              "Perform functional and regression testing",
+              "Ensure product quality through automated tests",
+              "Document and communicate bugs effectively"
+            ]
+          },
+          {
+            "name": "John Miller",
+            "role": "Sales Manager",
+            "responsibilities": [
+              "Perform functional and regression testing",
+              "Ensure product quality through automated tests",
+              "Document and communicate bugs effectively"
+            ]
+          }
+        ]
+      },
+      {
+        "variant": 2,
+        "members": [
+          {
+            "name": "Noah Walker",
+            "role": "Scrum Master",
+            "responsibilities": [
+              "Facilitate daily stand-ups and sprint planning",
+              "Remove obstacles for the team",
+              "Ensure agile principles are followed"
+            ]
+          },
+          {
+            "name": "Ava Scott",
+            "role": "Full Stack Developer",
+            "responsibilities": [
+              "Develop both client-side and server-side features",
+              "Collaborate with designers and product managers",
+              "Maintain code quality and scalability"
+            ]
+          },
+          {
+            "name": "Benjamin Lewis",
+            "role": "Mobile App Developer",
+            "responsibilities": [
+              "Design and build Android and iOS applications",
+              "Optimize app performance and usability",
+              "Fix bugs and improve app stability"
+            ]
+          },
+          {
+            "name": "Isabella Hall",
+            "role": "Content Strategist",
+            "responsibilities": [
+              "Plan and create digital content",
+              "Maintain brand voice consistency",
+              "Collaborate with marketing and design teams"
+            ]
+          },
+          {
+            "name": "Daniel Young",
+            "role": "QA Engineer",
+            "responsibilities": [
+              "Develop test automation scripts",
+              "Execute performance and stress testing",
+              "Track defects and verify fixes"
+            ]
+          }
+        ]
+      },
+      {
+        "variant": 3,
+        "members": [
+          {
+            "name": "Charlotte Perez",
+            "role": "Technical Project Manager",
+            "responsibilities": [
+              "Coordinate between technical and business teams",
+              "Plan and monitor project milestones",
+              "Ensure timely delivery within budget"
+            ]
+          },
+          {
+            "name": "William Adams",
+            "role": "DevOps Engineer",
+            "responsibilities": [
+              "Manage CI/CD pipelines",
+              "Monitor server infrastructure",
+              "Automate deployment processes"
+            ]
+          },
+          {
+            "name": "Amelia Torres",
+            "role": "UI Designer",
+            "responsibilities": [
+              "Create engaging and consistent UI components",
+              "Work closely with UX designers and developers",
+              "Ensure accessibility standards are met"
+            ]
+          },
+          {
+            "name": "Lucas Rivera",
+            "role": "SEO Specialist",
+            "responsibilities": [
+              "Optimize website visibility and rankings",
+              "Conduct keyword research and link building",
+              "Monitor SEO performance metrics"
+            ]
+          },
+          {
+            "name": "Harper Nguyen",
+            "role": "Test Automation Lead",
+            "responsibilities": [
+              "Design test automation frameworks",
+              "Train QA team on automation tools",
+              "Integrate automated testing into CI/CD pipeline"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+  
+  

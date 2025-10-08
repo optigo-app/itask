@@ -12,6 +12,8 @@ const CustomAutocomplete = ({
   getOptionLabel = (option) => option?.labelname || '',
   disabled = false,
   refProp,
+  error = false,
+  helperText = '',
 }) => {
   return (
     <Box className="form-group">
@@ -36,6 +38,8 @@ const CustomAutocomplete = ({
             inputRef={refProp}
             variant="outlined"
             fullWidth
+            error={error}
+            helperText={helperText}
           />
         )}
         disabled={disabled}

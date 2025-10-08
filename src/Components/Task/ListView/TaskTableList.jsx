@@ -50,9 +50,8 @@ import { useReactToPrint } from "react-to-print";
 import { ResizableBox } from "react-resizable";
 import { debounce } from "lodash";
 import TablePaginationFooter from "../../ShortcutsComponent/Pagination/TablePaginationFooter";
-import { PERMISSIONS, ROLES } from "../../Auth/Role/permissions";
 import useAccess from "../../Auth/Role/useAccess";
-import { taskCommentAddApi } from "../../../Api/TaskApi/TaskCommentAddApi";
+import { PERMISSIONS } from "../../Auth/Role/permissions";
 import { taskCommentGetApi } from "../../../Api/TaskApi/TaskCommentGetApi";
 
 const initialColumns = [
@@ -375,7 +374,7 @@ const TableView = ({
             hoveredColumnName={hoveredColumnname}
             onAvatarClick={hanldePAvatarClick}
             onAddClick={(task) => handleAssigneeShortcut(task, { Task: 'root' })}
-            size={25}
+            size={30}
             spacing={0.5}
         />
     );
@@ -449,7 +448,7 @@ const TableView = ({
                     />
                 </IconButton>
                 <IconButton
-                    disabled={access}
+                    disabled={access || (task?.parentid === 0 && !hasAccess(PERMISSIONS.canEditPrModule))}
                     onClick={() => handleEditTask(task, { Task: "root" })}
                     sx={{
                         '&.Mui-disabled': {
@@ -460,7 +459,7 @@ const TableView = ({
                 >
                     <Pencil
                         size={20}
-                        color={access ? "rgba(0, 0, 0, 0.26)" : "#808080"}
+                        color={(access || (task?.parentid === 0 && !hasAccess(PERMISSIONS.canEditPrModule))) ? "rgba(0, 0, 0, 0.26)" : "#808080"}
                         className="iconbtn"
                     />
                 </IconButton>
@@ -625,7 +624,7 @@ const TableView = ({
                     className={subtask?.isCopyActive ? 'cut-task-row' : ''}
                     sx={{
                         pointerEvents: subtask?.isCopyActive ? 'none' : 'auto',
-                        cursor: subtask?.isCopyActive ? 'not-allowed' : 'pointer',
+                        cursor: subtask?.isCopyActive ? 'not-allowed' : 'default',
                         backgroundColor: !subtask?.isCopyActive && (
                             hoveredSubtaskId === subtask?.taskid
                                 ? '#f5f5f5'
@@ -640,14 +639,6 @@ const TableView = ({
                     onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid, { Tbcell: 'TaskName' })}
                     onMouseLeave={handleSubtaskMouseLeave}
                     onContextMenu={(e) => handleContextMenu(e, subtask)}
-                    onClick={(e) => {
-                        // Prevent row click if clicking on interactive elements or deadline column
-                        const isInteractiveElement = e.target.closest('button, .MuiIconButton-root, .MuiChip-root, .MuiSelect-root, input, textarea, [role="button"]');
-                        const isDeadlineColumn = e.target.closest('[data-deadline-column="true"]');
-                        if (!isInteractiveElement && !isDeadlineColumn && !subtask?.isCopyActive) {
-                            handleViewTask(subtask, { Task: "subroot" });
-                        }
-                    }}
                 >
                     <TableCell >
                         <div style={{
@@ -864,7 +855,7 @@ const TableView = ({
                                                     className={task?.isCopyActive ? 'cut-task-row' : ''}
                                                     sx={{
                                                         pointerEvents: task?.isCopyActive ? 'none' : 'auto',
-                                                        cursor: task?.isCopyActive ? 'not-allowed' : 'pointer',
+                                                        cursor: task?.isCopyActive ? 'not-allowed' : 'default',
                                                         backgroundColor: !task?.isCopyActive && (
                                                             hoveredTaskId === task?.taskid
                                                                 ? '#f5f5f5'
@@ -879,14 +870,6 @@ const TableView = ({
                                                     onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
                                                     onMouseLeave={handleTaskMouseLeave}
                                                     onContextMenu={(e) => handleContextMenu(e, task)}
-                                                    onClick={(e) => {
-                                                        // Prevent row click if clicking on interactive elements or deadline column
-                                                        const isInteractiveElement = e.target.closest('button, .MuiIconButton-root, .MuiChip-root, .MuiSelect-root, input, textarea, [role="button"]');
-                                                        const isDeadlineColumn = e.target.closest('[data-deadline-column="true"]');
-                                                        if (!isInteractiveElement && !isDeadlineColumn && !task?.isCopyActive) {
-                                                            handleViewTask(task, { Task: "root" });
-                                                        }
-                                                    }}
                                                 >
                                                     <TableCell
                                                         onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}

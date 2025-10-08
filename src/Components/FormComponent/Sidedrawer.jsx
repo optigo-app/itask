@@ -67,6 +67,7 @@ const SidebarDrawer = ({
     const [decodedData, setDecodedData] = useState(null);
     const [isDuplicateTask, setIsDuplicateTask] = useState(false);
     const [isTaskNameEmpty, setIsTaskNameEmpty] = useState(false);
+    const [isCategoryEmpty, setIsCategoryEmpty] = useState(false);
     const [teams, setTeams] = useState([]);
     const [dynamicFilterData, setDynamicFilterData] = useState([]);
     const [advMasterData, setAdvMasterData] = useState([]);
@@ -310,16 +311,19 @@ const SidebarDrawer = ({
         if (!rootSubrootflagval?.Task) return;
         if (selectedId) {
             setIsTaskNameEmpty(taskName === "");
+            setIsCategoryEmpty(!formValues?.category);
         }
         if (!selectedId || !taskName) {
             return;
         }
         setIsTaskNameEmpty(taskName.trim() === "");
+        setIsCategoryEmpty(!formValues?.category);
         setIsDuplicateTask(false);
     }, [
         open,
         taskName,
         selectedId,
+        formValues?.category,
         rootSubrootflagval?.Task,
         location?.pathname
     ]);
@@ -327,6 +331,15 @@ const SidebarDrawer = ({
     // Handle form value changes
     const handleChange = (e) => {
         const { name, value } = e.target;
+        
+        // Reset validation states when user starts typing
+        if (name === "taskName") {
+            setIsTaskNameEmpty(false);
+        }
+        if (name === "category") {
+            setIsCategoryEmpty(false);
+        }
+        
         setFormValues((prev) => {
             const updatedValues = {
                 ...prev,
@@ -398,6 +411,10 @@ const SidebarDrawer = ({
         if (taskType !== "multi_input") {
             if (!formValues?.taskName?.trim()) {
                 setIsTaskNameEmpty(true);
+                return;
+            }
+            if (!formValues?.category) {
+                setIsCategoryEmpty(true);
                 return;
             }
         }
@@ -482,6 +499,7 @@ const SidebarDrawer = ({
             milestoneChecked: false,
         });
         setIsTaskNameEmpty(false);
+        setIsCategoryEmpty(false);
     };
 
     const handleResetState = () => {
@@ -505,6 +523,7 @@ const SidebarDrawer = ({
             milestoneChecked: false,
         });
         setIsTaskNameEmpty(false);
+        setIsCategoryEmpty(false);
         setSelectedMainGroup('');
     }
 
@@ -523,7 +542,7 @@ const SidebarDrawer = ({
         </Box>
     );
 
-    const renderAutocomplete = (label, name, value, placeholder, options, onChange, disabled) => (
+    const renderAutocomplete = (label, name, value, placeholder, options, onChange, error = false, helperText = '', disabled) => (
         <CustomAutocomplete
             label={label}
             name={name}
@@ -532,6 +551,8 @@ const SidebarDrawer = ({
             options={options}
             placeholder={placeholder}
             disabled={disabled || name === "category" ? categoryDisabled : false}
+            error={error}
+            helperText={helperText}
         />
     );
 
@@ -572,7 +593,7 @@ const SidebarDrawer = ({
         const isDisabled =
             formValues.bulkTask.length > 0
                 ? false
-                : isLoading || isTaskNameEmpty || isDuplicateTask;
+                : isLoading || isTaskNameEmpty || isDuplicateTask || isCategoryEmpty;
 
         return (
             (taskType !== 'multi_input' || (taskType === 'multi_input' && formValues.bulkTask.length > 0)) && (
@@ -778,6 +799,7 @@ const SidebarDrawer = ({
                                     handlebulkTaskSave={handlebulkTaskSave}
                                     isTaskNameEmpty={isTaskNameEmpty}
                                     isDuplicateTask={isDuplicateTask}
+                                    isCategoryEmpty={isCategoryEmpty}
                                     taskCategory={taskCategory}
                                     statusData={statusData}
                                     secStatusData={secStatusData}
