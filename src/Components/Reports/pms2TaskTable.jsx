@@ -23,7 +23,6 @@ const TaskTable = memo(({
     rowsPerPage,
     excludeMinorTasks
 }) => {
-
     const filteredTasks = useMemo(() => {
         if (!tasks || tasks.length === 0) return [];
         if (excludeMinorTasks) {
@@ -153,7 +152,7 @@ const TaskTable = memo(({
                     </Typography>
                 </TableCell>
                 <TableCell>{task.estimate1_hrsT}</TableCell>
-                <TableCell>{task.workinghr}</TableCell>
+                <TableCell>{task.workingHrt}</TableCell>
             </TableRow>
         );
     };

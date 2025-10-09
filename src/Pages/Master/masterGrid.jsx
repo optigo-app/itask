@@ -19,7 +19,6 @@ const Mastergrid = ({
     masterType = '', // Add masterType prop to identify priority/status
     onColorChange // Add callback for color changes
 }) => {
-    console.log(masterType, 'masterType');
     const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
     const [colorPickerAnchor, setColorPickerAnchor] = useState(null);
     const [selectedRowForColor, setSelectedRowForColor] = useState(null);

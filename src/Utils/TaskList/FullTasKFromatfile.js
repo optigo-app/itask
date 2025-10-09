@@ -237,6 +237,7 @@ const useFullTaskFormatFile = () => {
       estimate_hrsT: task.estimate_hrs || 0,
       estimate1_hrsT: task.estimate1_hrs || 0,
       estimate2_hrsT: task.estimate2_hrs || 0,
+      workingHrt: task.workinghr || 0,
       completed: task.status === "Completed" ? 1 : 0,
       total: 1
     };
@@ -257,7 +258,8 @@ const useFullTaskFormatFile = () => {
       isNotShowProgress: !task.subtasks || task.subtasks.length === 0,
       estimate_hrsT: totals.estimate_hrsT,
       estimate1_hrsT: totals.estimate1_hrsT,
-      estimate2_hrsT: totals.estimate2_hrsT
+      estimate2_hrsT: totals.estimate2_hrsT,
+      workingHrt: totals.workingHrt,
     });
 
     // Category grouping

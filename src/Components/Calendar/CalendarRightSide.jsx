@@ -391,7 +391,6 @@ const Calendar = ({
 
         eventClick({ event }) {
             const eventDetails = mapEventDetails(event);
-            console.log("eventDetails",eventDetails)
             setCalFormData(eventDetails);
             setFormDataValue(eventDetails);
             setRootSubroot({ Task: "meeting" });
@@ -468,7 +467,6 @@ const Calendar = ({
     const handleDuplicateEdit = () => {
         const { event } = duplicateDialog;
         const eventDetails = mapEventDetails(event);
-        console.log("eventDetails for duplicate", eventDetails);
 
         setCalFormData(eventDetails);
         setFormDataValue(eventDetails);

@@ -29,7 +29,6 @@ const HierarchicalTaskTreeTable = memo(({
 }) => {
     const [expandedTasks, setExpandedTasks] = useState({});
 
-
     const hierarchicalTasks = useMemo(() => {
         if (!tasks || tasks.length === 0) return [];
 
@@ -46,13 +45,10 @@ const HierarchicalTaskTreeTable = memo(({
         });
         const taskHierarchy = [];
         majorTasks.forEach(majorTask => {
-            // Only match minor tasks that have this major task as their direct parent
             const relatedMinorTasks = minorTasks.filter(minorTask =>
                 !usedMinorTaskIds.has(minorTask.taskid) &&
                 minorTask.parentid === majorTask.taskid
             );
-
-            // Mark these minor tasks as used
             relatedMinorTasks.forEach(task => {
                 usedMinorTaskIds.add(task.taskid);
             });
@@ -65,7 +61,6 @@ const HierarchicalTaskTreeTable = memo(({
             });
         });
 
-        // Find standalone minor tasks (those not used by any major task)
         const standaloneMinorTasks = minorTasks
             .filter(minorTask => !usedMinorTaskIds.has(minorTask.taskid))
             .map(minorTask => ({
@@ -280,7 +275,7 @@ const HierarchicalTaskTreeTable = memo(({
                         </Typography>
                     </TableCell>
                     <TableCell>{task.estimate1_hrsT}</TableCell>
-                    <TableCell>{task.workinghr}</TableCell>
+                    <TableCell>{task.workingHrt}</TableCell>
                 </TableRow>
 
                 {/* Render child tasks when expanded and showMinorTasks is true */}
