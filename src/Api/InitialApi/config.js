@@ -6,8 +6,6 @@ const REPORT_ENDPOINT = process.env.REACT_APP_REPORT_ENDPOINT || "/api/report";
 const UPLOAD_ENDPOINT = process.env.REACT_APP_UPLOAD_ENDPOINT || "/api/upload";
 const REMOVE_FILE_ENDPOINT = process.env.REACT_APP_REMOVE_FILE_ENDPOINT || "/api/removefile";
 
-console.log("API Environment:", process.env.REACT_APP_API_ENVIRONMENT);
-
 // Domain configuration
 const DOMAINS = {
   local: process.env.REACT_APP_LOCAL_DOMAIN || "http://newnextjs.web",
