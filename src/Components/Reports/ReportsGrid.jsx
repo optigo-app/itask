@@ -32,7 +32,7 @@ const ReportsGrid = ({
   columns,
   data,
   totalPages,
-  rowsPerPage = 10,
+  rowsPerPage = 100,
   page = 1,
   onPageChange,
   onPageSizeChange,

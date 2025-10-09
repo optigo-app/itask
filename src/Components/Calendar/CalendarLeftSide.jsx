@@ -56,8 +56,23 @@ const CalendarLeftSide = ({ calendarsColor }) => {
         }
     };
 
+    // Map category colors to Material-UI colors and get actual color values
+    const getCategoryColorInfo = (categoryClass) => {
+        const colorMap = {
+            'productive': { muiColor: 'info', actualColor: '#03A9F4' },
+            'rnd-tech': { muiColor: 'secondary', actualColor: '#9C27B0' },
+            'creative': { muiColor: 'warning', actualColor: '#f57c00' },
+            'sop-correction': { muiColor: 'success', actualColor: '#28C76F' },
+            'leave': { muiColor: 'error', actualColor: '#d32f2f' },
+            'maintenance': { muiColor: 'warning', actualColor: '#FFC107' },
+            'unplanned': { muiColor: 'default', actualColor: '#757575' }
+        };
+        return colorMap[categoryClass] || { muiColor: 'default', actualColor: '#757575' };
+    };
+
     const renderFilters = Object?.entries(calendarsColor)?.length
         ? Object?.entries(calendarsColor)?.map(([key, value]) => {
+            const colorInfo = getCategoryColorInfo(value);
             return (
                 <FormControlLabel
                     key={key}
@@ -65,7 +80,7 @@ const CalendarLeftSide = ({ calendarsColor }) => {
                     sx={{ '& .MuiFormControlLabel-label': { textTransform: 'capitalize', color: '#7D7f85', fontSize: '15px' } }}
                     control={
                         <Checkbox
-                            color={value}
+                            color={colorInfo.muiColor}
                             checked={selectedCalendars?.includes(key)}
                             onChange={() => handleCalendarChange(key)}
                             sx={{
@@ -73,9 +88,13 @@ const CalendarLeftSide = ({ calendarsColor }) => {
                                     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
                                     borderRadius: '8px',
                                     transition: 'box-shadow 0.3s ease',
+                                    color: selectedCalendars?.includes(key) ? colorInfo.actualColor : 'inherit',
                                     '&:hover': {
                                         boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
                                     },
+                                },
+                                '&.Mui-checked .MuiSvgIcon-root': {
+                                    color: colorInfo.actualColor,
                                 },
                             }}
                         />
@@ -172,10 +191,10 @@ const CalendarLeftSide = ({ calendarsColor }) => {
                         </Typography>
                         <FormControlLabel
                             label="View All"
-                            sx={{ '& .MuiButtonBase-root': { color: 'red' } }}
+                            sx={{ '& .MuiFormControlLabel-label': { textTransform: 'capitalize', color: '#7D7f85', fontSize: '15px', fontWeight: 'bold' } }}
                             control={
                                 <Checkbox
-                                    color="default"
+                                    color="primary"
                                     checked={selectedCalendars?.length === Object.keys(calendarsColor).length}
                                     onChange={handleViewAllToggle}
                                     sx={{
@@ -183,9 +202,13 @@ const CalendarLeftSide = ({ calendarsColor }) => {
                                             boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
                                             borderRadius: '8px',
                                             transition: 'box-shadow 0.3s ease',
+                                            color: selectedCalendars?.length === Object.keys(calendarsColor).length ? '#7367f0' : 'inherit',
                                             '&:hover': {
                                                 boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
                                             },
+                                        },
+                                        '&.Mui-checked .MuiSvgIcon-root': {
+                                            color: '#7367f0',
                                         },
                                     }}
                                 />

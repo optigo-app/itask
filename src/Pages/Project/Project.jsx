@@ -33,7 +33,7 @@ const Project = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTaskLoading, setIsTaskLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(15);
+  const [rowsPerPage, setRowsPerPage] = useState(100);
   const [masterData, setMasterData] = useRecoilState(masterDataValue);
   const [priorityData, setPriorityData] = useState();
   const [statusData, setStatusData] = useState();

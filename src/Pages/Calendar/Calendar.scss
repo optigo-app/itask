@@ -290,6 +290,84 @@
                             color: $dark-main !important;
                         }
                     }
+
+                    // Category-specific color classes
+                    &.bg-productive {
+                        border-color: transparent !important;
+                        color: $productive-main !important;
+                        background-color: $productive-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $productive-main !important;
+                        }
+                    }
+
+                    &.bg-rnd-tech {
+                        border-color: transparent !important;
+                        color: $rnd-tech-main !important;
+                        background-color: $rnd-tech-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $rnd-tech-main !important;
+                        }
+                    }
+
+                    &.bg-creative {
+                        border-color: transparent !important;
+                        color: $creative-main !important;
+                        background-color: $creative-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $creative-main !important;
+                        }
+                    }
+
+                    &.bg-sop-correction {
+                        border-color: transparent !important;
+                        color: $sop-correction-main !important;
+                        background-color: $sop-correction-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $sop-correction-main !important;
+                        }
+                    }
+
+                    &.bg-leave {
+                        border-color: transparent !important;
+                        color: $leave-main !important;
+                        background-color: $leave-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $leave-main !important;
+                        }
+                    }
+
+                    &.bg-maintenance {
+                        border-color: transparent !important;
+                        color: $maintenance-main !important;
+                        background-color: $maintenance-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $maintenance-main !important;
+                        }
+                    }
+
+                    &.bg-unplanned {
+                        border-color: transparent !important;
+                        color: $unplanned-main !important;
+                        background-color: $unplanned-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $unplanned-main !important;
+                        }
+                    }
                 }
 
                 &.bg-primary {
@@ -380,6 +458,91 @@
 
                     &:hover td {
                         background-color: rgba($dark-light, 0.1) !important;
+                    }
+                }
+
+                // Category-specific list event styles
+                &.bg-productive {
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $productive-main !important;
+                        background-color: $productive-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($productive-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-rnd-tech {
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $rnd-tech-main !important;
+                        background-color: $rnd-tech-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($rnd-tech-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-creative {
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $creative-main !important;
+                        background-color: $creative-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($creative-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-sop-correction {
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $sop-correction-main !important;
+                        background-color: $sop-correction-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($sop-correction-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-leave {
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $leave-main !important;
+                        background-color: $leave-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($leave-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-maintenance {
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $maintenance-main !important;
+                        background-color: $maintenance-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($maintenance-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-unplanned {
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $unplanned-main !important;
+                        background-color: $unplanned-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($unplanned-light, 0.1) !important;
                     }
                 }
 
