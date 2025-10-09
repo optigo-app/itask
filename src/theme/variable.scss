@@ -45,9 +45,6 @@ $info-light-bg: rgba($info-main, 0.16);
 
 $new-main: #a6a2d18a;
 $new-light: #33299f;
-$new-light-bg: rgba($new-main, 0.16);
-
-
 $support-bg: #e3e3e3;
 $support-main: $titleColor;
 $support-light: #e3e3e3;
@@ -56,9 +53,43 @@ $dark-bg: #6788f394;
 $dark-main: #fff;
 $dark-light: #fff;
 
-
-// Divider Color
 $divider-color: #e0e0e0;
+
+// Category-specific Colors
+// Productive - Light Blue
+$productive-main: #03A9F4;
+$productive-light: #B3E5FC;
+$productive-light-bg: rgba($productive-main, 0.16);
+
+// RND Tech - Purple
+$rnd-tech-main: #9C27B0;
+$rnd-tech-light: #E1BEE7;
+$rnd-tech-light-bg: rgba($rnd-tech-main, 0.16);
+
+// Creative - Warning (Orange)
+$creative-main: $warning-main;
+$creative-light: $warning-light;
+$creative-light-bg: $warning-light-bg;
+
+// SOP Correction - Success (Green)
+$sop-correction-main: $success-main;
+$sop-correction-light: $success-light;
+$sop-correction-light-bg: $success-light-bg;
+
+// Leave - Error (Red)
+$leave-main: $error-main;
+$leave-light: $error-light;
+$leave-light-bg: $error-light-bg;
+
+// Maintenance - Yellow
+$maintenance-main: #FFC107;
+$maintenance-light: #FFF9C4;
+$maintenance-light-bg: rgba($maintenance-main, 0.16);
+
+// Unplanned - Grey
+$unplanned-main: #757575;
+$unplanned-light: #F5F5F5;
+$unplanned-light-bg: rgba($unplanned-main, 0.16);
 
 p,
 div {

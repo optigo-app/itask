@@ -83,16 +83,13 @@ const Calendar = () => {
     const taskCategories =
       JSON?.parse(sessionStorage.getItem("taskworkcategoryData")) || [];
     const colorClasses = [
-      "error",
-      "primary",
-      "warning",
-      "success",
-      "info",
-      "secondary",
-      "support",
-      "dark",
-      "light",
-      "muted",
+      "productive",
+      "rnd-tech", 
+      "creative",
+      "sop-correction",
+      "leave",
+      "maintenance",
+      "unplanned",
     ];
     const dynamicCalendarsColor = taskCategories.reduce(
       (acc, category, index) => {

@@ -29,7 +29,7 @@ const Task = () => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("entrydate");
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(15);
+  const [rowsPerPage, setRowsPerPage] = useState(100);
   const searchParams = new URLSearchParams(location.search);
   const masterData = useRecoilValue(masterDataValue);
   const [activeButton, setActiveButton] = useState("table");

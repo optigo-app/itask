@@ -246,15 +246,50 @@ const Calendar = ({
             return [`bg-${colorClass}`];
         },
 
+        dayHeaderContent(arg) {
+            const calendarApi = arg.view.calendar;
+            const dayEvents = calendarApi.getEvents().filter(event => {
+                const eventDate = new Date(event.start).toDateString();
+                const headerDate = arg.date.toDateString();
+                return eventDate === headerDate;
+            });
+
+            const totalHours = dayEvents.reduce((sum, event) => {
+                return sum + (event.extendedProps?.estimate_hrs || 0);
+            }, 0);
+
+            const formatTotalHours = (hours) => {
+                if (hours === 0) return '0 hrs';
+                const unit = hours <= 1 ? 'hr' : 'hrs';
+                return `${hours} ${unit}`;
+            };
+
+            const formatDate = (date) => {
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const day = date.getDate();
+                const month = date.toLocaleDateString('en-US', { month: 'short' });
+                return `${dayName} ${day}-${month}`;
+            };
+
+            const formattedDate = formatDate(arg.date);
+            const totalText = formatTotalHours(totalHours);
+
+            return {
+                html: `
+                    <div style="text-align: center; font-weight: 600; font-size: 16px;">
+                        ${formattedDate} (${totalText})
+                    </div>
+                `
+            };
+        },
+
         eventContent(arg) {
             const { event } = arg;
             const estimateHrs = event.extendedProps?.estimate_hrs || 0;
-            
-            // Format estimate hours to show as (2) for 2 hours, (0.5) for 30 minutes, etc.
             const formatEstimate = (hours) => {
                 if (hours === 0) return '';
-                if (hours % 1 === 0) return `(${hours})`;
-                return `(${hours})`;
+                const unit = hours <= 1 ? 'hr' : 'hrs';
+                return `(${hours} ${unit})`;
             };
 
             const estimateText = formatEstimate(estimateHrs);

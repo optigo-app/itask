@@ -53,7 +53,7 @@ const PmsReport2 = () => {
     const { iswhTLoading, taskCategory, taskFinalData } = useFullTaskFormatFile();
     const [isLoading, setIsLoading] = useState(iswhTLoading);
     const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(100);
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
 
 
@@ -272,7 +272,6 @@ const PmsReport2 = () => {
             setIsLoading(false);
         }
     }, [currentDate, actualData, viewMode, taskCategory, taskFinalData, filters]);
-    console.log("pmsReportData", pmsReportData)
 
     useEffect(() => {
         const viemodeValue = localStorage.getItem('rpviewMode') ?? 'EmployeeWiseData';

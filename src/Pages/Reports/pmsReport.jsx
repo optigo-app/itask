@@ -47,7 +47,7 @@ const PmsReport = () => {
     const { iswhTLoading, taskCategory, taskFinalData } = useFullTaskFormatFile();
     const [isLoading, setIsLoading] = useState(iswhTLoading);
     const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(100);
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
 
 
