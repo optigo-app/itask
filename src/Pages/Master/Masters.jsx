@@ -398,20 +398,14 @@ const MasterToggle = () => {
 
     const handleColorChange = async (row, colorKey, masterType) => {
         try {
-            // Update the row with the new color key
             const updatedRow = { ...row, colorkey: colorKey };
-            
-            // Save to database
             const result = await addEditDelMaster(updatedRow);
             
             if (result?.rd) {
-                // Update local data
                 const updatedData = formattedData.map(item => 
                     item.id === row.id ? { ...item, colorkey: colorKey } : item
                 );
                 setFormattedData(updatedData);
-                
-                // Update sessionStorage for color mappings
                 const storageKey = masterType === 'priority' ? 'priorityMasterColors' : 'statusMasterColors';
                 const existingColors = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
                 existingColors[row.labelname.toLowerCase()] = colorKey;
@@ -522,7 +516,6 @@ const MasterToggle = () => {
                                     }}
                                 />
                                 
-                                {/* View Mode Toggle for Priority/Status */}
                                 {isPriorityOrStatus && (
                                     <ViewToggle
                                         view={viewMode}

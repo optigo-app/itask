@@ -30,7 +30,7 @@ import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, ImageUrl, priorityColors, statusColors } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, ImageUrl, priorityColors, statusColors, getDaysFromDeadline } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 import AssigneeAvatarGroup from "../../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
@@ -159,6 +159,94 @@ const TableView = ({
             ? "transparent"
             : getRandomAvatarColor(assignee);
         return avatarBackgroundColor;
+    };
+
+    // Helper function to format days display
+    const formatDaysDisplay = (deadlineDate, task) => {
+        const days = getDaysFromDeadline(deadlineDate);
+        
+        if (days === null || !cleanDate(deadlineDate)) {
+            return <span>-</span>; // No deadline set
+        }
+        
+        const formattedDate = formatDate2(deadlineDate);
+        
+        // Check if task is completed
+        const isCompleted = task?.status?.toLowerCase() === 'completed' || task?.progress_per === 100;
+        
+        // Determine chip color based on status and days
+        let chipColor, chipBgColor, displayText;
+        
+        if (isCompleted) {
+            // For completed tasks, compare EndDate with DeadLineDate
+            if (task?.EndDate && cleanDate(task?.EndDate)) {
+                const endDate = new Date(task.EndDate);
+                const deadline = new Date(deadlineDate);
+                const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                const deadlineOnly = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
+                
+                if (endDateOnly.getTime() === deadlineOnly.getTime()) {
+                    // Completed on time (same date)
+                    chipColor = '#388e3c';
+                    chipBgColor = '#dcedc8';
+                    displayText = 'On Time';
+                } else if (endDateOnly < deadlineOnly) {
+                    // Completed before deadline (early) - calculate days early
+                    const diffMs = deadlineOnly - endDateOnly;
+                    const daysEarly = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    chipColor = '#388e3c';
+                    chipBgColor = '#dcedc8';
+                    displayText = `${daysEarly} days early`;
+                } else {
+                    // Completed after deadline (late) - calculate days late
+                    const diffMs = endDateOnly - deadlineOnly;
+                    const daysLate = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    chipColor = '#d32f2f';
+                    chipBgColor = '#ffcdd2';
+                    displayText = `${daysLate} days late`;
+                }
+            } else {
+                // Completed but no end date
+                chipColor = '#388e3c';
+                chipBgColor = '#dcedc8';
+                displayText = 'Completed';
+            }
+        } else if (days < 0) {
+            // Overdue - Red
+            chipColor = '#d32f2f';
+            chipBgColor = '#ffcdd2';
+            displayText = `${Math.abs(days)} days overdue`;
+        } else if (days === 0) {
+            // Today - Green
+            chipColor = '#388e3c';
+            chipBgColor = '#dcedc8';
+            displayText = 'Today';
+        } else {
+            // Future - Blue
+            chipColor = '#1976d2';
+            chipBgColor = '#bbdefb';
+            displayText = `${days} days`;
+        }
+        
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                <span style={{ fontSize: '13px', lineHeight: '1.2' }}>{formattedDate}</span>
+                <Chip
+                    label={displayText}
+                    size="small"
+                    sx={{
+                        backgroundColor: chipBgColor,
+                        color: chipColor,
+                        fontSize: '10px',
+                        height: '16px',
+                        '& .MuiChip-label': {
+                            padding: '0 4px',
+                            fontWeight: '500'
+                        }
+                    }}
+                />
+            </div>
+        );
     };
 
     const handleTimeTrackModalOpen = (task) => {
@@ -701,19 +789,10 @@ const TableView = ({
                                 borderRadius: '4px'
                             },
                             transition: 'background-color 0.2s ease',
-                            position: 'relative',
-                            '&::after': {
-                                content: '"📅"',
-                                position: 'absolute',
-                                right: '4px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                fontSize: '12px',
-                                opacity: 0.6
-                            }
+                            padding: '8px 16px'
                         }}
                     >
-                        {cleanDate(subtask?.DeadLineDate) ? formatDate2(subtask.DeadLineDate) : '-'}
+                        {formatDaysDisplay(subtask?.DeadLineDate, subtask)}
                     </TableCell>
                     <TableCell>
                         <PriorityBadge task={subtask} priorityColors={priorityColors} onPriorityChange={onPriorityChange} disable={true} />
@@ -913,19 +992,10 @@ const TableView = ({
                                                                 borderRadius: '4px'
                                                             },
                                                             transition: 'background-color 0.2s ease',
-                                                            position: 'relative',
-                                                            '&::after': {
-                                                                content: access ? 'none' : '"📅"',
-                                                                position: 'absolute',
-                                                                right: '4px',
-                                                                top: '50%',
-                                                                transform: 'translateY(-50%)',
-                                                                fontSize: '12px',
-                                                                opacity: 0.6
-                                                            }
+                                                            padding: '8px 16px'
                                                         }}
                                                     >
-                                                        {cleanDate(task?.DeadLineDate) ? formatDate2(task.DeadLineDate) : '-'}
+                                                        {formatDaysDisplay(task?.DeadLineDate, task)}
                                                     </TableCell>
                                                     <TableCell>
                                                         <PriorityBadge task={task} priorityColors={priorityColors} onPriorityChange={onPriorityChange} disable={access ? true : false} />

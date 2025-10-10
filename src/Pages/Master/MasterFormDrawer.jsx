@@ -1,8 +1,7 @@
-import React, { useState } from "react";
-import { Drawer, Box, Typography, TextField, Button, IconButton, ToggleButtonGroup, ToggleButton, TextareaAutosize } from "@mui/material";
+import React from "react";
+import { Drawer, Box, Typography, TextField, Button, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { commonTextFieldProps } from "../../Utils/globalfun";
-import { Grid2x2, ListTodo } from "lucide-react";
 import ColorPicker from "../../Components/Common/ColorPicker";
 
 const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, formattedData, setFormData, selectedRow }) => {
@@ -19,7 +18,6 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, format
         setFormData((prev) => ({ ...prev, colorKey: colorKey }));
     };
 
-    // Check if this is a priority or status master
     const isPriorityMaster = activeTab?.toLowerCase().includes('priority');
     const isStatusMaster = activeTab?.toLowerCase().includes('status');
 
@@ -62,7 +60,6 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, format
                         sx={{ marginTop: .5 }}
                     />
                     
-                    {/* Color Picker for Priority and Status Masters */}
                     {(isPriorityMaster || isStatusMaster) && (
                         <Box sx={{ mt: 2 }}>
                             <ColorPicker
