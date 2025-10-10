@@ -276,9 +276,35 @@ const Calendar = ({
 
             return {
                 html: `
-                    <div style="text-align: center; font-weight: 600; font-size: 16px;">
-                        ${formattedDate} (${totalText})
+                    <div class="calendar-day-header" style="text-align: center; font-weight: 600; font-size: 15px;">
+                        <div class="date-text">${formattedDate}</div>
+                        <div class="estimate-text">(${totalText})</div>
                     </div>
+                    <style>
+                        .calendar-day-header {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            gap: 2px;
+                        }
+                        
+                        @media (min-width: 1441px) {
+                            .calendar-day-header {
+                                flex-direction: row;
+                                justify-content: center;
+                                gap: 4px;
+                            }
+                        }
+                        
+                        .date-text {
+                            white-space: nowrap;
+                        }
+                        
+                        .estimate-text {
+                            font-size: 13px;
+                            opacity: 0.8;
+                        }
+                    </style>
                 `
             };
         },

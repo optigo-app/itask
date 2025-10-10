@@ -1009,7 +1009,12 @@ export function showNotification({
 export const isTaskDue = (dateStr) => {
     const now = new Date();
     if (!dateStr) return false;
-    return new Date(dateStr) < now;
+    const taskDate = new Date(dateStr);
+    return (
+        taskDate.getDate() === now.getDate() &&
+        taskDate.getMonth() === now.getMonth() &&
+        taskDate.getFullYear() === now.getFullYear()
+    );
 };
 
 export const isTaskToday = (dateStr) => {
@@ -1021,6 +1026,23 @@ export const isTaskToday = (dateStr) => {
         taskDate.getMonth() === now.getMonth() &&
         taskDate.getFullYear() === now.getFullYear()
     );
+};
+
+// Calculate days difference between current date and deadline date
+export const getDaysFromDeadline = (deadlineDate) => {
+    if (!deadlineDate || !cleanDate(deadlineDate)) {
+        return null; // No deadline set
+    }
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const deadline = new Date(deadlineDate);
+    const targetDate = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
+    
+    const diffMs = targetDate - today;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    return diffDays; // Positive for future dates, negative for overdue dates, 0 for today
 };
 
 export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {

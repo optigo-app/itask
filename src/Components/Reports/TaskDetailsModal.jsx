@@ -22,8 +22,6 @@ import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 
 import { commonTextFieldProps, priorityColors } from "../../Utils/globalfun";
 import TablePaginationFooter from "../ShortcutsComponent/Pagination/TablePaginationFooter";
-import ProfileImageMenu from "../ShortcutsComponent/ProfileImageMenu";
-import AssigneeAvatarGroup from "../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
 import HierarchicalTaskTreeTable from "./HierarchicalTaskTreeTable";
 import CustomSwitch from "../Common/CustomSwitch";
 import TaskTable from "./pms2TaskTable";
@@ -43,7 +41,7 @@ const TaskDetailsModal = ({
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [searchText, setSearchText] = useState('');
     const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(100);
 
     // Filter states
     const [statusFilter, setStatusFilter] = useState('');
