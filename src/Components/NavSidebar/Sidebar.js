@@ -22,7 +22,8 @@ import {
     ExpandMore
 } from "@mui/icons-material";
 import { Asterisk, Boxes, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
-import logo from "../../Assests/logo.png";
+import logo from "../../Assests/iconLogo.png";
+import itasknewLogo from "../../Assests/tecotask.png"
 import useMediaQuery from "@mui/material/useMediaQuery";
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
@@ -177,7 +178,7 @@ const Sidebar = () => {
                                     onMouseEnter={handleMouseEnter}
                                     onMouseLeave={handleMouseLeave}
                                 >
-                                    <div className="itask_logoWrapper" onClick={() => navigate("/")}>
+                                    {/* <div className="itask_logoWrapper" onClick={() => navigate("/")}>
                                         <motion.img
                                             src={logo}
                                             alt="Itask Logo"
@@ -187,6 +188,16 @@ const Sidebar = () => {
                                             transition={{ duration: 0.5 }}
                                         />
                                         {isDrawerOpen && <ListItemText primary="iTask" className="itask_logoTxt" />}
+                                    </div> */}
+                                    <div className="itask_logoWrapper" onClick={() => navigate("/")}>
+                                        <motion.img
+                                            src={isDrawerOpen ? itasknewLogo : logo}
+                                            alt="Itask Logo"
+                                            className="itask_logo"
+                                            initial={{ opacity: 0, scale: 0.5 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ duration: 0.5 }}
+                                        />
                                     </div>
                                     <div>
                                         {!isMobile && isDrawerOpen && (

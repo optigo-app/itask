@@ -229,9 +229,10 @@ const Calendar = ({
         eventResizableFromStart: true,
         resizable: true,
         dragScroll: true,
-        dayMaxEvents: false,
+        dayMaxEvents: 4, // Limit events per day in month view to prevent overflow
+        moreLinkClick: 'popover', // Show popover when clicking "more" link
         navLinks: true,
-        weekNumbers: true,
+        weekNumbers: true, // Enable week numbers (controlled by CSS per view)
         customButtons: {
             sidebarToggle: {
                 icon: 'bi bi-list',
@@ -248,6 +249,8 @@ const Calendar = ({
 
         dayHeaderContent(arg) {
             const calendarApi = arg.view.calendar;
+            const currentView = arg.view.type;
+            
             const dayEvents = calendarApi.getEvents().filter(event => {
                 const eventDate = new Date(event.start).toDateString();
                 const headerDate = arg.date.toDateString();
@@ -264,54 +267,49 @@ const Calendar = ({
                 return `${hours} ${unit}`;
             };
 
-            const formatDate = (date) => {
-                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-                const day = date.getDate();
-                const month = date.toLocaleDateString('en-US', { month: 'short' });
-                return `${dayName} ${day}-${month}`;
+            const formatForView = (date, viewType) => {
+                if (viewType === 'dayGridMonth') {
+                    // Month view: show only day name
+                    return date.toLocaleDateString('en-US', { weekday: 'long' });
+                } else {
+                    // Week/Day view: show day name with date
+                    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    const day = date.getDate();
+                    const month = date.toLocaleDateString('en-US', { month: 'short' });
+                    return `${dayName} ${day}-${month}`;
+                }
             };
 
-            const formattedDate = formatDate(arg.date);
+            const formattedDate = formatForView(arg.date, currentView);
             const totalText = formatTotalHours(totalHours);
 
+            // For month view, don't show hours in header
+            if (currentView === 'dayGridMonth') {
+                return {
+                    html: `
+                        <div class="calendar-day-header">
+                            <div class="date-text">${formattedDate}</div>
+                        </div>
+                    `
+                };
+            }
+
+            // For week/day view, show hours
             return {
                 html: `
-                    <div class="calendar-day-header" style="text-align: center; font-weight: 600; font-size: 15px;">
+                    <div class="calendar-day-header">
                         <div class="date-text">${formattedDate}</div>
                         <div class="estimate-text">(${totalText})</div>
                     </div>
-                    <style>
-                        .calendar-day-header {
-                            display: flex;
-                            flex-direction: column;
-                            align-items: center;
-                            gap: 2px;
-                        }
-                        
-                        @media (min-width: 1441px) {
-                            .calendar-day-header {
-                                flex-direction: row;
-                                justify-content: center;
-                                gap: 4px;
-                            }
-                        }
-                        
-                        .date-text {
-                            white-space: nowrap;
-                        }
-                        
-                        .estimate-text {
-                            font-size: 13px;
-                            opacity: 0.8;
-                        }
-                    </style>
                 `
             };
         },
 
         eventContent(arg) {
             const { event } = arg;
+            const currentView = arg.view.type;
             const estimateHrs = event.extendedProps?.estimate_hrs || 0;
+            
             const formatEstimate = (hours) => {
                 if (hours === 0) return '';
                 const unit = hours <= 1 ? 'hr' : 'hrs';
@@ -320,6 +318,49 @@ const Calendar = ({
 
             const estimateText = formatEstimate(estimateHrs);
             
+            // For month view, use simpler layout
+            if (currentView === 'dayGridMonth') {
+                return {
+                    html: `
+                        <div class="fc-event-main-frame calendar-event-container month-event">
+                            <div class="fc-event-content">
+                                <span class="fc-event-title">${event.title || ''}</span>
+                                ${estimateText ? `<span class="fc-event-estimate">${estimateText}</span>` : ''}
+                            </div>
+                            <style>
+                                .month-event {
+                                    width: 100%;
+                                    height: 100%;
+                                    display: flex;
+                                    align-items: center;
+                                    padding: 0;
+                                }
+                                .month-event .fc-event-content {
+                                    width: 100%;
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 4px;
+                                    overflow: hidden;
+                                }
+                                .month-event .fc-event-title {
+                                    flex: 1;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    white-space: nowrap;
+                                    font-size: inherit;
+                                }
+                                .month-event .fc-event-estimate {
+                                    flex-shrink: 0;
+                                    font-size: 0.65em;
+                                    opacity: 0.8;
+                                }
+                            </style>
+                        </div>
+                    `
+                };
+            }
+            
+            // For week/day view, use full layout with duplicate button
             return {
                 html: `
                     <div class="fc-event-main-frame calendar-event-container">
@@ -332,7 +373,7 @@ const Calendar = ({
                         <button class="duplicate-btn" data-event-id="${event.id}" title="Duplicate Event">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2 2v1"></path>
                             </svg>
                         </button>
                         <style>

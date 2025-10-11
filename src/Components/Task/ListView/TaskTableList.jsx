@@ -28,6 +28,7 @@ import { CirclePlus, CloudUpload, Eye, MessageCircleMore, Paperclip, Pencil, Pri
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
+import { useNavigate } from "react-router-dom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, ImageUrl, priorityColors, statusColors, getDaysFromDeadline } from "../../../Utils/globalfun";
@@ -91,7 +92,15 @@ const TableView = ({
     handlePageSizeChnage,
     isLoading }) => {
     const { hasAccess } = useAccess();
+    const navigate = useNavigate();
     const [anchorPrintEl, setAnchorPrintEl] = useState(null);
+
+    // Handle project navigation
+    const handleProjectClick = (task) => {
+        if (task?.projectid) {
+            navigate('/projects');
+        }
+    };
     const [anchorCommentEl, setAnchorCommentEl] = useState(null);
     const printRef1 = React.useRef(null);
     const printRef2 = React.useRef(null);
@@ -164,19 +173,19 @@ const TableView = ({
     // Helper function to format days display
     const formatDaysDisplay = (deadlineDate, task) => {
         const days = getDaysFromDeadline(deadlineDate);
-        
+
         if (days === null || !cleanDate(deadlineDate)) {
             return <span>-</span>; // No deadline set
         }
-        
+
         const formattedDate = formatDate2(deadlineDate);
-        
+
         // Check if task is completed
         const isCompleted = task?.status?.toLowerCase() === 'completed' || task?.progress_per === 100;
-        
+
         // Determine chip color based on status and days
         let chipColor, chipBgColor, displayText;
-        
+
         if (isCompleted) {
             // For completed tasks, compare EndDate with DeadLineDate
             if (task?.EndDate && cleanDate(task?.EndDate)) {
@@ -184,7 +193,7 @@ const TableView = ({
                 const deadline = new Date(deadlineDate);
                 const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
                 const deadlineOnly = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
-                
+
                 if (endDateOnly.getTime() === deadlineOnly.getTime()) {
                     // Completed on time (same date)
                     chipColor = '#388e3c';
@@ -227,7 +236,7 @@ const TableView = ({
             chipBgColor = '#bbdefb';
             displayText = `${days} days`;
         }
-        
+
         return (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
                 <span style={{ fontSize: '13px', lineHeight: '1.2' }}>{formattedDate}</span>
@@ -334,7 +343,7 @@ const TableView = ({
 
     const handleOpenCommentProver = async (event, task) => {
         setAnchorCommentEl(event.currentTarget);
-        
+
         try {
             // Fetch comments for the selected task
             const taskComment = await taskCommentGetApi(task);
@@ -513,7 +522,7 @@ const TableView = ({
                         },
                     }}
                 >
-                    <MessageCircleMore 
+                    <MessageCircleMore
                         size={20}
                         color={access ? "rgba(0, 0, 0, 0.26)" : "#808080"}
                         className="iconbtn"
@@ -529,7 +538,7 @@ const TableView = ({
                         },
                     }}
                 >
-                    <CloudUpload 
+                    <CloudUpload
                         size={20}
                         color={access ? "rgba(0, 0, 0, 0.26)" : "#808080"}
                         className="iconbtn"
@@ -764,7 +773,21 @@ const TableView = ({
                             </IconButton>
                         </div>
                     </TableCell>
-                    <TableCell className="taskPriorityCell" title={subtask?.taskPr}>{subtask?.taskPr}</TableCell>
+                    <TableCell
+                        className="taskPriorityCell"
+                        title={subtask?.taskPr}
+                        onClick={() => handleProjectClick(subtask)}
+                        sx={{
+                            cursor: subtask?.projectid ? 'pointer' : 'default',
+                            color: subtask?.projectid ? '#1976d2' : 'inherit',
+                            '&:hover': {
+                                color: '#7367f0 !important'
+                            },
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        {subtask?.taskPr}
+                    </TableCell>
                     <TableCell>
                         {renderTaskProgressBar(subtask?.progress_per, subtask?.isNotShowProgress)}
                     </TableCell>
@@ -779,7 +802,7 @@ const TableView = ({
                         onMouseLeave={handleTaskMouseLeave}>
                         {renderAssigneeAvatars(subtask?.assignee, subtask, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
                     </TableCell>
-                    <TableCell 
+                    <TableCell
                         data-deadline-column="true"
                         onClick={(e) => handleDeadlineClick(e, subtask)}
                         sx={{
@@ -964,7 +987,21 @@ const TableView = ({
                                                             resizingColumnId === 'task'
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="taskPriorityCell" title={task?.taskPr}>{task?.taskPr}</TableCell>
+                                                    <TableCell
+                                                        className="taskPriorityCell"
+                                                        title={task?.taskPr}
+                                                        onClick={() => handleProjectClick(task)}
+                                                        sx={{
+                                                            cursor: task?.projectid ? 'pointer' : 'default',
+                                                            color: task?.projectid ? '#1976d2' : 'inherit',
+                                                            '&:hover': {
+                                                                color: '#7367f0 !important'
+                                                            },
+                                                            transition: 'all 0.2s ease'
+                                                        }}
+                                                    >
+                                                        {task?.taskPr}
+                                                    </TableCell>
                                                     <TableCell>
                                                         {renderTaskProgressBar(
                                                             task?.progress_per,
@@ -982,10 +1019,10 @@ const TableView = ({
                                                         onMouseLeave={handleTaskMouseLeave}>
                                                         {renderAssigneeAvatars(task?.assignee, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
                                                     </TableCell>
-                                                    <TableCell 
+                                                    <TableCell
                                                         data-deadline-column="true"
-                                                        onClick={(e) => handleDeadlineClick(e, task, access)} 
-                                                        sx={{ 
+                                                        onClick={(e) => handleDeadlineClick(e, task, access)}
+                                                        sx={{
                                                             cursor: access ? 'default' : 'pointer',
                                                             '&:hover': {
                                                                 backgroundColor: access ? 'inherit' : '#e3f2fd',

@@ -19,6 +19,8 @@ import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
 import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments } from '../../../Utils/globalfun';
+import useAccess from '../../Auth/Role/useAccess';
+import { PERMISSIONS } from '../../Auth/Role/permissions';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
@@ -31,6 +33,7 @@ import Breadcrumb from '../../BreadCrumbs/Breadcrumb';
 
 const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const theme = useTheme();
+    const { hasAccess } = useAccess();
     const [isLoading, setIsLoading] = useState(
         {
             isAtttLoading: false,
@@ -400,16 +403,19 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                 <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>
                                     <Breadcrumb breadcrumbTitles={taskData?.breadcrumbTitles} />
                                 </Typography>
-                                <Button
-                                    size='small'
-                                    variant="contained"
-                                    onClick={() => handleRemoveEvent()}
-                                    sx={{ marginRight: "10px" }}
-                                    className="dangerbtnClassname"
-                                // disabled={isLoading}
-                                >
-                                    Delete
-                                </Button>
+                                {/* Only show delete button if not a root task (parentid=0) or user has CanModuleDelete permission */}
+                                {(taskData?.parentid !== 0 || hasAccess(PERMISSIONS.CanModuleDelete)) && (
+                                    <Button
+                                        size='small'
+                                        variant="contained"
+                                        onClick={() => handleRemoveEvent()}
+                                        sx={{ marginRight: "10px" }}
+                                        className="dangerbtnClassname"
+                                    // disabled={isLoading}
+                                    >
+                                        Delete
+                                    </Button>
+                                )}
                             </Box>
                             <Grid container className="task-details">
                                 <Grid container spacing={2}>

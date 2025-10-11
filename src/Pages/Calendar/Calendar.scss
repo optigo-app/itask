@@ -558,16 +558,135 @@
                 width: calc(100% + 12px) !important;
             }
 
+            // ** Week Numbers Control
+            // Hide week numbers in month view only
+            .fc-dayGridMonth-view {
+                .fc-daygrid-week-number {
+                    display: none !important;
+                }
+                
+                .fc-col-header-week {
+                    display: none !important;
+                }
+                
+                .fc-col-header-cell {
+                    .calendar-day-header {
+                        .date-text {
+                            font-size: 1rem !important;
+                            font-weight: 600 !important;
+                            color: $titleColor !important;
+                            text-transform: capitalize;
+                        }
+                    }
+                }
+            }
+            
+            // ** Week View Specific Styling
+            .fc-timeGridWeek-view {
+                .fc-daygrid-week-number {
+                    display: table-cell !important;
+                    font-weight: 600;
+                    color: $placeholderColor !important;
+                    font-size: 0.85rem;
+                    text-align: center;
+                    vertical-align: middle;
+                    padding: 8px 6px;
+                    border-right: 1px solid $divider-color;
+                    background-color: rgba(115, 103, 240, 0.05);
+                    min-width: 40px;
+                    width: 40px;
+                    
+                    .fc-daygrid-week-number-cushion {
+                        color: inherit;
+                        text-decoration: none;
+                        font-weight: 600;
+                    }
+                }
+                
+                .fc-col-header-week {
+                    display: table-cell !important;
+                    font-weight: 600;
+                    color: $titleColor !important;
+                    font-size: 0.9rem;
+                    text-align: center;
+                    padding: 8px 6px;
+                    border-right: 1px solid $divider-color;
+                    background-color: rgba(115, 103, 240, 0.1);
+                    min-width: 40px;
+                    width: 40px;
+                    
+                    .fc-col-header-cell-cushion {
+                        color: inherit;
+                        text-decoration: none;
+                        font-weight: 600;
+                    }
+                }
+            }
+            
+            // ** Day View - Hide week numbers
+            .fc-timeGridDay-view {
+                .fc-daygrid-week-number {
+                    display: none !important;
+                }
+                
+                .fc-col-header-week {
+                    display: none !important;
+                }
+            }
+            
+            // ** List View - Hide week numbers
+            .fc-listMonth-view {
+                .fc-daygrid-week-number {
+                    display: none !important;
+                }
+                
+                .fc-col-header-week {
+                    display: none !important;
+                }
+            }
+
             // ** Calendar Head
             .fc-col-header {
                 .fc-col-header-cell {
                     font-weight: 500;
                     color: $titleColor !important;
                     font-size: 1rem;
-
+                    text-align: center;
+                    vertical-align: middle;
+                    min-height: 60px; // Ensure adequate header height
+                    
                     .fc-col-header-cell-cushion {
-                        padding: 0.5rem 0rem;
+                        padding: 0.5rem 0.25rem;
                         text-decoration: none !important;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100%;
+                        
+                        // Fix header content alignment
+                        .calendar-day-header {
+                            display: flex !important;
+                            flex-direction: column !important;
+                            align-items: center !important;
+                            justify-content: center !important;
+                            gap: 2px !important;
+                            width: 100%;
+                            
+                            .date-text {
+                                font-size: 0.9rem;
+                                font-weight: 600;
+                                color: $titleColor !important;
+                                white-space: nowrap;
+                            }
+                            
+                            .estimate-text {
+                                font-size: 0.75rem;
+                                opacity: 0.7;
+                                color: $placeholderColor !important;
+                                white-space: nowrap;
+                            }
+                        }
                     }
                 }
             }
@@ -581,14 +700,57 @@
                 .fc-event {
                     margin-top: 0;
                     font-weight: 500;
-                    margin-bottom: 0;
-                    border-radius: 4px;
-                    padding: 0.2rem 1rem;
-                    font-size: 0.875rem;
+                    margin-bottom: 1px; // Minimal margin for better spacing
+                    border-radius: 3px;
+                    padding: 0.2rem 0.4rem; // Better padding for readability
+                    font-size: 0.75rem; // Smaller font for month view
+                    line-height: 1.3; // Better line height for readability
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    min-height: 20px; // Increased minimum height
+                    max-height: 22px; // Slightly increased max height
+                    display: flex !important;
+                    align-items: center;
+                    width: calc(100% - 2px) !important; // Ensure full width minus margins
+                    box-sizing: border-box;
+                    
+                    .fc-event-main {
+                        width: 100%;
+                        overflow: hidden;
+                        display: flex;
+                        align-items: center;
+                    }
+                    
+                    .fc-event-main-frame {
+                        width: 100%;
+                        overflow: hidden;
+                    }
+                    
+                    .fc-event-title-container {
+                        width: 100%;
+                        overflow: hidden;
+                    }
+                    
+                    .fc-event-title {
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        font-size: inherit;
+                        width: 100%;
+                        display: block;
+                    }
+                    
+                    .fc-event-time {
+                        font-size: 0.65rem;
+                        opacity: 0.8;
+                        margin-right: 4px;
+                        flex-shrink: 0;
+                    }
                 }
 
                 &:not(:last-of-type) {
-                    margin-bottom: 0.8rem;
+                    margin-bottom: 1px; // Minimal margin between events
                 }
             }
 
@@ -597,10 +759,67 @@
             }
 
             .fc-daygrid-day {
-                padding: 5px;
+                padding: 3px; // Reduced padding for more space
+                min-height: 120px; // Ensure minimum height for month view cells
+                max-height: 150px; // Limit maximum height to prevent overflow
+                overflow: visible; // Allow events to be visible
+                position: relative;
 
                 .fc-daygrid-day-top {
                     flex-direction: row;
+                    margin-bottom: 2px; // Small margin below day number
+                }
+
+                .fc-daygrid-day-number {
+                    padding: 2px 4px;
+                    margin-bottom: 2px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                }
+
+                // Month view specific styles
+                &.fc-day {
+                    .fc-daygrid-day-events {
+                        max-height: 95px; // Increased event container height
+                        overflow: hidden; // Hide overflowing events
+                        position: relative;
+                        margin: 0 1px; // Small horizontal margin
+                        
+                        // Ensure events don't get cut off
+                        .fc-daygrid-event-harness {
+                            margin-left: 0 !important;
+                            margin-right: 0 !important;
+                            
+                            .fc-event {
+                                margin-left: 0 !important;
+                                margin-right: 0 !important;
+                            }
+                        }
+                        
+                        // Add fade effect for overflow indication
+                        &::after {
+                            content: '';
+                            position: absolute;
+                            bottom: 0;
+                            left: 0;
+                            right: 0;
+                            height: 10px;
+                            background: linear-gradient(transparent, rgba(255, 255, 255, 0.9));
+                            pointer-events: none;
+                            opacity: 0;
+                            transition: opacity 0.2s ease;
+                        }
+                        
+                        // Show fade effect when there are many events
+                        &.fc-daygrid-day-events-overflow::after {
+                            opacity: 1;
+                        }
+                    }
+                    
+                    .fc-daygrid-day-bg {
+                        // Ensure background doesn't interfere with events
+                        z-index: 0;
+                    }
                 }
             }
 
@@ -619,7 +838,26 @@
             // ** All Views Event
             .fc-daygrid-day-number {
                 margin-bottom: .5rem;
-                padding: 0 1.5rem;
+                padding: 0 0.5rem; // Reduced padding for better space utilization
+                font-weight: 600;
+                font-size: 0.9rem;
+            }
+            
+            // ** More Events Link Styling
+            .fc-daygrid-more-link {
+                font-size: 0.7rem !important;
+                padding: 2px 4px !important;
+                margin: 1px 2px !important;
+                background-color: rgba(115, 103, 240, 0.1) !important;
+                color: #7367f0 !important;
+                border-radius: 3px !important;
+                text-decoration: none !important;
+                font-weight: 500 !important;
+                
+                &:hover {
+                    background-color: rgba(115, 103, 240, 0.2) !important;
+                    color: #5a52d5 !important;
+                }
             }
 
             .fc-daygrid-day-number,
@@ -796,15 +1034,127 @@
                 .fc-toolbar-title {
                     margin-left: 0;
                 }
+                
+                // Larger screens - show more events
+                .fc-daygrid-day {
+                    min-height: 140px;
+                    max-height: 180px;
+                    
+                    .fc-daygrid-day-events {
+                        max-height: 120px;
+                    }
+                }
             }
 
-            @media (max-width: 610px) {
+            @media (max-width: 1419px) and (min-width: 1024px) {
+                // Medium screens - moderate event display
+                .fc-daygrid-day {
+                    min-height: 120px;
+                    max-height: 150px;
+                    
+                    .fc-daygrid-day-events {
+                        max-height: 90px;
+                    }
+                }
+                
+                .fc-col-header-cell {
+                    .calendar-day-header {
+                        .date-text {
+                            font-size: 0.85rem !important;
+                        }
+                        
+                        .estimate-text {
+                            font-size: 0.7rem !important;
+                        }
+                    }
+                }
+            }
+
+            @media (max-width: 1023px) and (min-width: 768px) {
+                // Tablet screens - compact display
+                .fc-daygrid-day {
+                    min-height: 100px;
+                    max-height: 130px;
+                    padding: 3px;
+                    
+                    .fc-daygrid-day-events {
+                        max-height: 70px;
+                    }
+                }
+                
+                .fc-daygrid-event-harness .fc-event {
+                    font-size: 0.7rem;
+                    padding: 0.15rem 0.3rem;
+                    min-height: 18px;
+                    max-height: 20px;
+                    width: calc(100% - 1px) !important;
+                }
+                
+                .fc-col-header-cell {
+                    min-height: 50px;
+                    
+                    .calendar-day-header {
+                        .date-text {
+                            font-size: 0.8rem !important;
+                        }
+                        
+                        .estimate-text {
+                            font-size: 0.65rem !important;
+                        }
+                    }
+                }
+            }
+
+            @media (max-width: 767px) {
                 .fc-header-toolbar .fc-toolbar-chunk:last-of-type {
                     margin-top: 20px;
                 }
 
                 .fc-sidebarToggle-button {
                     display: block;
+                }
+                
+                // Mobile screens - very compact display
+                .fc-daygrid-day {
+                    min-height: 80px;
+                    max-height: 100px;
+                    padding: 2px;
+                    
+                    .fc-daygrid-day-events {
+                        max-height: 50px;
+                    }
+                }
+                
+                .fc-daygrid-event-harness .fc-event {
+                    font-size: 0.65rem;
+                    padding: 0.1rem 0.2rem;
+                    min-height: 16px;
+                    max-height: 18px;
+                    width: calc(100% - 1px) !important;
+                }
+                
+                .fc-col-header-cell {
+                    min-height: 40px;
+                    
+                    .calendar-day-header {
+                        .date-text {
+                            font-size: 0.75rem !important;
+                        }
+                        
+                        .estimate-text {
+                            font-size: 0.6rem !important;
+                        }
+                    }
+                }
+                
+                .fc-daygrid-day-number {
+                    font-size: 0.8rem;
+                    padding: 0 0.3rem;
+                }
+                
+                .fc-daygrid-more-link {
+                    font-size: 0.6rem !important;
+                    padding: 1px 2px !important;
                 }
             }
 
