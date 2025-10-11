@@ -316,6 +316,19 @@ const Sidebar = () => {
                         }
                     </List>
                 }
+                <Box
+                    sx={{
+                        position: "absolute",
+                        bottom: 0,
+                        width: drawerWidth - 21,
+                        textAlign: "center",
+                        padding: "10px",
+                    }}
+                >
+                    <Typography variant="caption" sx={{ fontSize: "9px", color: "#b0b0b0" }}>
+                        iTask_V5_111020250600
+                    </Typography>
+                </Box>
             </Drawer>
         </motion.div>
     );

@@ -293,7 +293,7 @@ const AppWrapper = () => {
                                         <Route path="/test1" element={<CalendarViewDemo />} />
                                         <Route path="/test2" element={<SampleQuickForm />} />
                                         <Route path="/test3" element={<SampleQuickFormVersion2 />} />
-                                        <Route path="/test4" element={<StructuredQuickTask />} />
+                                        <Route path="/test4321" element={<StructuredQuickTask />} />
                                         <Route path="*" element={<PagenotFound />} />   
                                     </Routes>
                                 </Layout>

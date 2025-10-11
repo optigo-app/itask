@@ -109,7 +109,7 @@ const StructuredQuickTask = ({ open = true, onClose, onSubmit }) => {
     if (assigneeMatches) {
       assigneeMatches.forEach(match => {
         const name = match.substring(1);
-        const employee = sampleEmployees.find(emp => 
+        const employee = sampleEmployees.find(emp =>
           emp.name.toLowerCase() === name.toLowerCase()
         );
         if (employee) assignees.push(employee);
@@ -182,21 +182,21 @@ const StructuredQuickTask = ({ open = true, onClose, onSubmit }) => {
       const textAfterAt = taskText.substring(lastAtIndex + 1);
       const spaceIndex = textAfterAt.indexOf(' ');
       const currentWord = spaceIndex === -1 ? textAfterAt : textAfterAt.substring(0, spaceIndex);
-      
+
       if (currentWord.length >= 0 && !textAfterAt.includes(' ')) {
         setCurrentMention(currentWord);
         setShowEmployeeMenu(true);
         setSelectedIndex(0);
-        
+
         if (textAreaRef.current) {
           const rect = textAreaRef.current.getBoundingClientRect();
           const menuHeight = 200;
           const viewportHeight = window.innerHeight;
           const spaceAbove = rect.top;
           const spaceBelow = viewportHeight - rect.bottom;
-          
+
           const showAbove = spaceAbove > menuHeight || spaceBelow < menuHeight;
-          
+
           setMenuPosition({
             top: showAbove ? rect.top - menuHeight - 5 : rect.bottom + 5,
             left: rect.left,
@@ -230,13 +230,13 @@ const StructuredQuickTask = ({ open = true, onClose, onSubmit }) => {
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex(prev => 
+        setSelectedIndex(prev =>
           prev < filteredEmployees.length - 1 ? prev + 1 : 0
         );
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setSelectedIndex(prev => 
+        setSelectedIndex(prev =>
           prev > 0 ? prev - 1 : filteredEmployees.length - 1
         );
         break;
@@ -260,12 +260,12 @@ const StructuredQuickTask = ({ open = true, onClose, onSubmit }) => {
     const lastAtIndex = taskText.lastIndexOf('@');
     const beforeAt = taskText.substring(0, lastAtIndex);
     const afterMention = taskText.substring(lastAtIndex).replace(/@\w*/, `@${employee.name}`);
-    
+
     setTaskText(beforeAt + afterMention + ' ');
     setShowEmployeeMenu(false);
     setCurrentMention('');
     setSelectedIndex(0);
-    
+
     setTimeout(() => {
       if (textAreaRef.current) {
         textAreaRef.current.focus();
@@ -291,7 +291,7 @@ const StructuredQuickTask = ({ open = true, onClose, onSubmit }) => {
     setParsedTasks([]);
   };
 
-  const filteredEmployees = sampleEmployees.filter(emp => 
+  const filteredEmployees = sampleEmployees.filter(emp =>
     emp.name.toLowerCase().includes(currentMention.toLowerCase())
   );
 
@@ -307,15 +307,15 @@ const StructuredQuickTask = ({ open = true, onClose, onSubmit }) => {
   if (!open) return null;
 
   return (
-    <Box sx={{ 
-      height: '100%', 
-      display: 'flex', 
+    <Box sx={{
+      height: '100%',
+      display: 'flex',
       flexDirection: 'column',
       bgcolor: theme.palette.background.paper
     }}>
       {/* Header */}
-      <Box sx={{ 
-        p: 2, 
+      <Box sx={{
+        p: 2,
         borderBottom: `1px solid ${theme.palette.divider}`,
         display: 'flex',
         alignItems: 'center',
@@ -388,7 +388,7 @@ Use shift+enter to save`}
               }
             }}
           />
-          
+
           {/* Employee Menu */}
           {showEmployeeMenu && (
             <Portal>
@@ -432,9 +432,9 @@ Use shift+enter to save`}
                         }}
                       >
                         <ListItemAvatar sx={{ minWidth: 36 }}>
-                          <Avatar sx={{ 
-                            width: 28, 
-                            height: 28, 
+                          <Avatar sx={{
+                            width: 28,
+                            height: 28,
                             fontSize: '12px',
                             bgcolor: index === selectedIndex ? theme.palette.primary.main : theme.palette.grey[400]
                           }}>
@@ -444,11 +444,11 @@ Use shift+enter to save`}
                         <ListItemText
                           primary={employee.name}
                           secondary={employee.department}
-                          primaryTypographyProps={{ 
+                          primaryTypographyProps={{
                             fontSize: '13px',
                             fontWeight: index === selectedIndex ? 600 : 400
                           }}
-                          secondaryTypographyProps={{ 
+                          secondaryTypographyProps={{
                             fontSize: '11px',
                             color: theme.palette.text.secondary
                           }}
@@ -459,8 +459,8 @@ Use shift+enter to save`}
                     <ListItem sx={{ py: 0.5, px: 1.5 }}>
                       <ListItemText
                         primary="No employees found"
-                        primaryTypographyProps={{ 
-                          fontSize: '13px', 
+                        primaryTypographyProps={{
+                          fontSize: '13px',
                           color: theme.palette.text.secondary,
                           fontStyle: 'italic'
                         }}
@@ -491,8 +491,8 @@ Use shift+enter to save`}
             <Typography variant="subtitle2" gutterBottom sx={{ color: theme.palette.primary.main }}>
               Parsed Tasks ({parsedTasks.length})
             </Typography>
-            <Box sx={{ 
-              bgcolor: theme.palette.grey[50], 
+            <Box sx={{
+              bgcolor: theme.palette.grey[50],
               borderRadius: theme.shape.borderRadius,
               border: `1px solid ${theme.palette.divider}`,
               p: 1.5,
@@ -536,7 +536,9 @@ Use shift+enter to save`}
       </Box>
 
       <Divider />
-
+      <Box>
+        <Typography>https://workupload.com/file/jQqQUyfeVsz</Typography>
+      </Box>
       {/* Footer Actions */}
       <Box sx={{ p: 2, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
         <Button
