@@ -1,4 +1,5 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
+import { getAuthData } from "../../Utils/globalfun";
 
 export const AssigneeMaster = async () => {
     try {
@@ -30,7 +31,7 @@ export const AssigneeMaster = async () => {
 
 
 export const editAdvancedMasterApi = async (formAdvData) => {
-    const AuthData = JSON.parse(localStorage.getItem("AuthqueryParams") ?? "");
+    const AuthData = getAuthData();
     try {
         const body = {
             con: `{\"id\":\"\",\"mode\":\"editfiltergroupattr\",\"appuserid\":\"${AuthData?.uid ?? "" }\"}`,
@@ -55,7 +56,7 @@ export const editAdvancedMasterApi = async (formAdvData) => {
 };
 
 export const getAdvancedtaseditApi = async (taskid) => {
-    const AuthData = JSON.parse(localStorage.getItem("AuthqueryParams") ?? "");
+    const AuthData = getAuthData();
     try {
         const body = {
             con: `{\"id\":\"\",\"mode\":\"Quicklist_filter\",\"appuserid\":\"${AuthData?.uid ?? "" }\"}`,

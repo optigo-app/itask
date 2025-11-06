@@ -152,7 +152,8 @@ const AppWrapper = () => {
         const token = Cookies.get('skey');
         const isLoggedIn = Cookies.get('isLoggedIn');
         if (!token) {
-            const authQueryParams = localStorage.getItem("AuthqueryParams");
+            // Check both localStorage and sessionStorage for AuthqueryParams
+            const authQueryParams = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
             if (authQueryParams && isLoggedIn) {
                 const decodedPayload = JSON.parse(authQueryParams);
                 setCookieData(decodedPayload);

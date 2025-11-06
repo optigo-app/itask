@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
     TextField,
     Button,
@@ -6,7 +6,9 @@ import {
     Paper,
     useMediaQuery,
     InputAdornment,
-    IconButton
+    IconButton,
+    Checkbox,
+    FormControlLabel
 } from "@mui/material";
 import loginImage from "../../Assests/loginImage.webp";
 import { commonTextFieldProps } from "../../Utils/globalfun";
@@ -30,8 +32,8 @@ const LoginPage = () => {
     const [credentials, setCredentials] = useState({ companycode: "", userId: "", password: "" });
     const [errors, setErrors] = useState({});
     const [companyValidation, setCompanyValidation] = useState({ isValid: false, isChecking: false, message: "" });
+    const [rememberMe, setRememberMe] = useState(false);
 
-    // Check if form should be disabled
     const isFormDisabled = companyValidation.message && !companyValidation.isValid && credentials.companycode.trim();
 
     const handleChange = (e) => {
@@ -102,9 +104,20 @@ const LoginPage = () => {
                 yc: loginData?.rd[0]?.yearcode
             }
             if (loginData?.rd[0]?.stat == 1) {
-                localStorage.setItem("AuthqueryParams", JSON.stringify(formatData));
-                Cookies.set('isLoggedIn', 'true', { expires: 10 });
-                window.location.href = "/";
+                if (rememberMe) {
+                    localStorage.setItem("AuthqueryParams", JSON.stringify(formatData));
+                } else {
+                    sessionStorage.setItem("AuthqueryParams", JSON.stringify(formatData));
+                }
+                
+                const cookieExpiry = rememberMe ? { expires: formatData.exp } : {};
+                Cookies.set('isLoggedIn', 'true', cookieExpiry);
+                
+                if(process.env.REACT_APP_LOCAL_HOSTNAMES.includes(window.location.hostname)) {
+                    window.location.href = "/itaskweb";
+                }else{
+                    window.location.href = "/";
+                }
                 toast.success("Login successful");
             } else {
                 toast.error("Invalid credentials");
@@ -121,15 +134,12 @@ const LoginPage = () => {
                 <div className="decorative-circle decorative-circle--top-left"></div>
 
                 <Paper className="login-paper">
-                    {/* Left Side: Login Form */}
                     <div className="login-form-section">
                         <div className="login-form-content">
                             <Typography variant="h5" className="login-title">LOGIN</Typography>
                             <Typography variant="body2" className="login-subtitle">
                                 How to get started task
                             </Typography>
-
-                            {/* Project Code */}
                             <div className="form-group">
                                 <Typography variant="subtitle1" className="field-label">
                                     Company Code
@@ -160,7 +170,6 @@ const LoginPage = () => {
                                 />
                             </div>
 
-                            {/* User ID */}
                             <div className="form-group">
                                 <Typography variant="subtitle1" className="field-label">
                                     User Id
@@ -177,8 +186,6 @@ const LoginPage = () => {
                                     {...commonTextFieldProps}
                                 />
                             </div>
-
-                            {/* Password */}
                             <div className="form-group">
                                 <Typography variant="subtitle1" className="field-label">
                                     Password
@@ -224,6 +231,20 @@ const LoginPage = () => {
 
                             </div>
 
+                            <div className="remember-me-container">
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={rememberMe}
+                                            onChange={(e) => setRememberMe(e.target.checked)}
+                                            color="primary"
+                                            disabled={isFormDisabled}
+                                        />
+                                    }
+                                    label="Remember me"
+                                />
+                            </div>
+
                             <div className="login-button-container">
                                 <Button
                                     variant="contained"
@@ -237,7 +258,6 @@ const LoginPage = () => {
                         </div>
                     </div>
 
-                    {/* Right Side: Image */}
                     {!isMobile && (
                         <div className="login-image-section">
                             <div className="image-container">

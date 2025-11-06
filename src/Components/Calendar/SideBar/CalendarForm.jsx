@@ -17,7 +17,7 @@ import { CalformData } from "../../../Recoil/atom";
 import MultiSelectChipWithLimit from "../../ShortcutsComponent/AssigneeAutocomplete";
 import { useLocation } from "react-router-dom";
 import CustomSwitch from "../../../Utils/Common/CustomSwitch";
-import { commonTextFieldProps, mapTaskLabels } from "../../../Utils/globalfun";
+import { commonTextFieldProps, getUserProfileData, mapTaskLabels } from "../../../Utils/globalfun";
 import { fetchModuleDataApi } from "../../../Api/TaskApi/ModuleDataApi";
 import CustomDateTimePicker from "../../../Utils/DateComponent/CustomDateTimePicker";
 import dayjs from "dayjs";
@@ -98,7 +98,7 @@ const CalendarForm = ({
     }, [])
 
     useEffect(() => {
-        const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
+        const logedAssignee = getUserProfileData()
         if (CalformDataValue) {
             setFormValues({
                 id: (CalformDataValue?.id || CalformDataValue?.meetingid) ?? "",

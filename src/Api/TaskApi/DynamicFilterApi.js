@@ -1,7 +1,8 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
+import { getAuthData } from "../../Utils/globalfun";
 
 export const DynamicFilterApi = async () => {
-    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
+    const AuthData = getAuthData();
     try {
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"QUICKLIST\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,

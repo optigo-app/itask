@@ -1,7 +1,8 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
+import { getAuthData, getUserProfileData } from "../../Utils/globalfun";
 
 export const AddMeetingApi = async (formValues) => {
-    const AuthData = JSON.parse(localStorage.getItem('UserProfileData'));
+    const AuthData = getUserProfileData();
     try {
         const combinedValue = JSON.stringify({
             "meetingid": (formValues?.meetingid || formValues?.id) ?? 0,

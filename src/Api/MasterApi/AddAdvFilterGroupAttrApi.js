@@ -1,7 +1,8 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
+import { getAuthData } from "../../Utils/globalfun";
 
 export const AddAdvFilterGroupAttrApi = async (payload) => {
-    const AuthData = JSON.parse(localStorage.getItem("AuthqueryParams"));
+    const AuthData = getAuthData();
     try {
         const body = {
             con: `{\"id\":\"\",\"mode\":\"addfiltergroupattr\",\"appuserid\":\"${AuthData?.uid ?? ""
@@ -23,7 +24,7 @@ export const AddAdvFilterGroupAttrApi = async (payload) => {
 
 // Main Master Name
 export const AttrMasterNameApi = async () => {
-    const AuthData = JSON.parse(localStorage.getItem("AuthqueryParams") ?? "");
+    const AuthData = getAuthData();
     try {
         const body = {
             con: `{\"id\":\"\",\"mode\":\"filtermaingroup\",\"appuserid\":\"${AuthData?.uid ?? ""
@@ -45,7 +46,7 @@ export const AttrMasterNameApi = async () => {
 
 // Group Name
 export const AttrGroupApi = async () => {
-    const AuthData = JSON.parse(localStorage.getItem("AuthqueryParams") ?? "");
+    const AuthData = getAuthData();
     try {
         const body = {
             con: `{\"id\":\"\",\"mode\":\"filtergroup\",\"appuserid\":\"${AuthData?.uid ?? ""
@@ -67,7 +68,7 @@ export const AttrGroupApi = async () => {
 
 //  Master Option list api
 export const AttrListApi = async () => {
-    const AuthData = JSON.parse(localStorage.getItem("AuthqueryParams") ?? "");
+    const AuthData = getAuthData();
     try {
         const body = {
             con: `{\"id\":\"\",\"mode\":\"filterattr\",\"appuserid\":\"${AuthData?.uid ?? ""
@@ -89,7 +90,7 @@ export const AttrListApi = async () => {
 
 // merge Group and Attr
 export const BindAttrGroupApi = async () => {
-    const AuthData = JSON.parse(localStorage.getItem("AuthqueryParams") ?? "");
+    const AuthData = getAuthData();
     try {
         const body = {
             con: `{\"id\":\"\",\"mode\":\"filter_group_attr_bind\",\"appuserid\":\"${AuthData?.uid ?? ""
@@ -111,7 +112,7 @@ export const BindAttrGroupApi = async () => {
 
 // delete master
 export const deleteAdvancedMasterApi = async (formAdvData) => {
-    const AuthData = JSON.parse(localStorage.getItem("AuthqueryParams") ?? "");
+    const AuthData = getAuthData();
     try {
         const body = {
             con: `{\"id\":\"\",\"mode\":\"delfiltergroupattr\",\"appuserid\":\"${AuthData?.uid ?? "" }\"}`,
@@ -132,7 +133,7 @@ export const deleteAdvancedMasterApi = async (formAdvData) => {
 
 // Edit master
 export const editAdvancedMasterApi = async (formAdvData) => {
-    const AuthData = JSON.parse(localStorage.getItem("AuthqueryParams") ?? "");
+    const AuthData = getAuthData();
     try {
         const body = {
             con: `{\"id\":\"\",\"mode\":\"editfiltergroupattr\",\"appuserid\":\"${AuthData?.uid ?? "" }\"}`,

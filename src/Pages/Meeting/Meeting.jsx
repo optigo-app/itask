@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { lazy, Suspense } from "react";
 import { Box, Typography, Button, Grid } from "@mui/material";
 import { Calendar, Plus } from "lucide-react";
-import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
+import { getRandomAvatarColor, getUserProfileData, ImageUrl } from "../../Utils/globalfun";
 import CalendarForm from "../../Components/Calendar/SideBar/CalendarForm";
 import { assigneeId, CalformData, filterDrawer, formData, masterDataValue, openFormDrawer, rootSubrootflag } from "../../Recoil/atom";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
@@ -192,9 +192,7 @@ const MeetingPage = () => {
       const taskAssigneeData = JSON?.parse(
         sessionStorage.getItem("taskAssigneeData") || "[]"
       );
-      const loginUserData = JSON?.parse(
-        localStorage.getItem("UserProfileData") || "{}"
-      );
+      const loginUserData = getUserProfileData();
       const categoryData = JSON?.parse(
         sessionStorage?.getItem("taskworkcategoryData")
       );
@@ -287,9 +285,7 @@ const MeetingPage = () => {
       const taskAssigneeData = JSON?.parse(
         sessionStorage.getItem("taskAssigneeData") || "[]"
       );
-      const loginUserData = JSON?.parse(
-        localStorage.getItem("UserProfileData") || "{}"
-      );
+      const loginUserData = getUserProfileData();
       const categoryData = JSON?.parse(
         sessionStorage?.getItem("taskworkcategoryData")
       );

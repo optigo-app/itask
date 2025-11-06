@@ -5,7 +5,7 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, Chip, Typography, useMediaQuery } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { Advfilters, completedTask, copyRowData, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
-import { filterNestedTasksByView, formatDate2, getCategoryTaskSummary, handleAddApicall, isTaskDue, isTaskToday } from "../../Utils/globalfun";
+import { filterNestedTasksByView, formatDate2, getCategoryTaskSummary, getUserProfileData, handleAddApicall, isTaskDue, isTaskToday } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
@@ -25,7 +25,7 @@ const Task = () => {
   const date = new Date();
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const location = useLocation();
-  const userProfile = JSON.parse(localStorage.getItem("UserProfileData"));
+  const userProfile = getUserProfileData();
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("entrydate");
   const [page, setPage] = useState(1);

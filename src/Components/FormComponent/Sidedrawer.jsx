@@ -19,7 +19,7 @@ import { formData, projectDatasRState, rootSubrootflag, TaskData } from "../../R
 import dayjs from 'dayjs';
 import utc from "dayjs/plugin/utc";
 import { useLocation } from "react-router-dom";
-import { cleanDate, commonTextFieldProps, customDatePickerProps, flattenTasks, mapTaskLabels } from "../../Utils/globalfun";
+import { cleanDate, commonTextFieldProps, customDatePickerProps, flattenTasks, getUserProfileData, mapTaskLabels } from "../../Utils/globalfun";
 import timezone from 'dayjs/plugin/timezone';
 import CustomAutocomplete from "../ShortcutsComponent/CustomAutocomplete";
 import { GetPrTeamsApi } from "../../Api/TaskApi/prTeamListApi";
@@ -225,7 +225,7 @@ const SidebarDrawer = ({
     };
 
     useEffect(() => {
-        const loggedAssignee = JSON.parse(localStorage?.getItem("UserProfileData"));
+        const loggedAssignee = getUserProfileData();
         const assigneeIdArray = formDataValue?.assigneids?.split(',')?.map(Number) || [];
         const matchedAssignees = taskAssigneeData?.filter(user => assigneeIdArray.includes(user.id)) || [];
         const createdByUsers = formDataValue?.createdbyid ? taskAssigneeData?.filter(user => user.id === formDataValue?.createdbyid) : taskAssigneeData?.filter(user => user.id === loggedAssignee?.id) || [];
@@ -503,7 +503,7 @@ const SidebarDrawer = ({
     };
 
     const handleResetState = () => {
-        const logedAssignee = JSON?.parse(localStorage?.getItem("UserProfileData"))
+        const logedAssignee = getUserProfileData()
         setFormValues({
             taskName: "",
             bulkTask: [],

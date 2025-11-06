@@ -6,6 +6,27 @@ import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi"
 import { AddTaskDataApi } from "../Api/TaskApi/AddTaskApi";
 import { Avatar, AvatarGroup, Box, createTheme, Tooltip } from "@mui/material";
 
+// Utility function to get AuthData from both localStorage and sessionStorage
+export const getAuthData = () => {
+    try {
+        const authData = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
+        return authData ? JSON.parse(authData) : null;
+    } catch (error) {
+        console.error("Error parsing AuthData:", error);
+        return null;
+    }
+};
+
+// Utility function to get UserProfileData from both localStorage and sessionStorage
+export const getUserProfileData = () => {
+    try {
+        const userProfileData = localStorage.getItem("UserProfileData") || sessionStorage.getItem("UserProfileData");
+        return userProfileData ? JSON.parse(userProfileData) : null;
+    } catch (error) {
+        console.error("Error parsing UserProfileData:", error);
+        return null;
+    }
+};
 
 // output like 01/01/2023
 export const formatDate = (dateStr) => {
@@ -555,13 +576,20 @@ export const fetchMasterGlFunc = async () => {
             sessionStorage.setItem('structuredAdvMasterData', JSON.stringify(safeData));
         }
         const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
-        const AuthUrlData = JSON?.parse(localStorage.getItem('AuthqueryParams'));
+        const AuthUrlData = getAuthData();
         const uniqueDepartments = new Set();
         let UserProfileData
+        
+        // Helper function to determine storage location based on remember me
+        const setUserProfileData = (data) => {
+            const storageLocation = localStorage.getItem('AuthqueryParams') ? localStorage : sessionStorage;
+            storageLocation.setItem('UserProfileData', JSON?.stringify(data));
+        };
+        
         if (!AssigneeMasterData) {
             const assigneeRes = await AssigneeMaster();
             UserProfileData = assigneeRes?.rd?.find(item => item?.userid == AuthUrlData?.uid);
-            localStorage.setItem('UserProfileData', JSON?.stringify(UserProfileData));
+            setUserProfileData(UserProfileData);
             assigneeRes?.rd?.forEach(item => {
                 if (item.department) {
                     uniqueDepartments.add(item.department);
@@ -569,7 +597,7 @@ export const fetchMasterGlFunc = async () => {
             });
         } else {
             UserProfileData = AssigneeMasterData?.find(item => item?.userid == AuthUrlData?.uid) ?? {};
-            localStorage.setItem('UserProfileData', JSON?.stringify(UserProfileData));
+            setUserProfileData(UserProfileData);
             AssigneeMasterData?.forEach(item => {
                 if (item.department) {
                     uniqueDepartments.add(item.department);
@@ -711,6 +739,7 @@ export const flattenTasks = (tasks, level = 0) => {
         return flatList;
     }, []);
 };
+
 export function transformAttachments(data) {
     const mimeTypes = {
         jpg: "image/jpeg",

@@ -6,7 +6,7 @@ import { fetchMettingListByLoginApi } from '../../Api/MeetingApi/MeetingListApi'
 import TaskAPiCallWithFormat from '../../Utils/TaskList/TaskAPiCallWithFormat';
 import { TaskData } from '../../Recoil/atom';
 import { useRecoilValue } from 'recoil';
-import { flattenTasks, showNotification } from '../../Utils/globalfun';
+import { flattenTasks, getUserProfileData, showNotification } from '../../Utils/globalfun';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const UrgentTask = React.lazy(() => import('./UrgentTasks'));
@@ -162,7 +162,7 @@ const Home = () => {
     setPrTasksList(flattenTasks(task));
   }, [task]);
 
-  const profileData = JSON?.parse(localStorage.getItem('UserProfileData'));
+  const profileData = getUserProfileData();
 
   const prFilterData = prTasksList
     ?.filter((task) => {

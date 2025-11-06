@@ -1,8 +1,9 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
+import { getAuthData, getUserProfileData } from "../../Utils/globalfun";
 
 export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => {
-    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
-    const userProfile = JSON.parse(localStorage.getItem('UserProfileData'));
+    const AuthData = getAuthData();
+    const userProfile = getUserProfileData();
     try {
         let taskid;
         let parentid;

@@ -1,8 +1,9 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
+import { getAuthData } from "../../Utils/globalfun";
 
 export const DynamicFilterEditApi = async (data, task) => {
 
-    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
+    const AuthData = getAuthData();
     try {
         const combinedValue = JSON.stringify({
             "taskid": task?.id ?? "",
