@@ -12,7 +12,7 @@ import Fuse from "fuse.js";
 
 import './TasklistForCal.scss';
 import { TaskData, calendarData } from "../../Recoil/atom";
-import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate2, formatDueTask, priorityColors, statusColors } from "../../Utils/globalfun";
+import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate2, formatDueTask, getUserProfileData, priorityColors, statusColors } from "../../Utils/globalfun";
 import PriorityBadge from "../ShortcutsComponent/PriorityBadge";
 import StatusBadge from "../ShortcutsComponent/StatusBadge";
 import { Info } from "lucide-react";
@@ -163,7 +163,7 @@ const TasklistForCal = ({ calendarsColor }) => {
     }, [scheduledTaskIds]);
 
     useEffect(() => {
-        const userProfileData = JSON?.parse(localStorage?.getItem("UserProfileData"));
+        const userProfileData = getUserProfileData();
         if (userProfileData?.id && task?.length > 0) {
             const myNestedTasks = filterNestedTasksByView(task, 'me', userProfileData.id);
             const flatMyTasks = flattenTasks(myNestedTasks);

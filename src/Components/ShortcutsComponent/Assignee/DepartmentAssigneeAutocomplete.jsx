@@ -42,14 +42,16 @@ export default function DepartmentAssigneeAutocomplete({
         return avatarBackgroundColor;
     };
 
-    const getFullName = (emp) => `${emp.firstname} ${emp.lastname}`;
-    const getDeptAssignee = (emp) => `${emp.department} / ${getFullName(emp)}`;
+    const getFullName = (emp) => `${emp?.firstname || ''} ${emp?.lastname || ''}`;
+    const getDeptAssignee = (emp) => `${emp?.department || ''} / ${getFullName(emp)}`;
 
     const filterOptions = (options, { inputValue }) =>
         options.filter(
             (emp) =>
-                getFullName(emp).toLowerCase().includes(inputValue.toLowerCase()) ||
-                emp.department.toLowerCase().includes(inputValue.toLowerCase())
+                emp && (
+                    getFullName(emp).toLowerCase().includes(inputValue.toLowerCase()) ||
+                    (emp?.department || '').toLowerCase().includes(inputValue.toLowerCase())
+                )
         );
 
     return (
@@ -64,7 +66,7 @@ export default function DepartmentAssigneeAutocomplete({
                 getOptionLabel={(option) =>
                     option && option.firstname ? getDeptAssignee(option) : ""
                 }
-                isOptionEqualToValue={(option, value) => option.id === value.id}
+                isOptionEqualToValue={(option, value) => option?.id === value?.id}
                 value={selectedValues}
                 onChange={handleChange}
                 sx={{
@@ -76,7 +78,7 @@ export default function DepartmentAssigneeAutocomplete({
                 {...(multiple
                     ? {
                         renderTags: (value, getTagProps) =>
-                            value.map((option, index) => {
+                            value?.filter(option => option != null).map((option, index) => {
                                 const imageSrc = ImageUrl(option);
                                 const { key, ...tagProps } = getTagProps({ index });
                                 return (
@@ -84,16 +86,16 @@ export default function DepartmentAssigneeAutocomplete({
                                         key={key}
                                         avatar={
                                             imageSrc ? (
-                                                <Avatar src={imageSrc} alt={option.firstname} />
+                                                <Avatar src={imageSrc} alt={option?.firstname || ''} />
                                             ) : (
                                                 <Avatar
                                                     sx={{
                                                         fontSize: "14px",
                                                         textTransform: "capitalize",
-                                                        backgroundColor: background(option?.firstname),
+                                                        backgroundColor: background(option?.firstname || ''),
                                                     }}
                                                 >
-                                                    {option.firstname.charAt(0)}
+                                                    {option?.firstname?.charAt(0) || ''}
                                                 </Avatar>
                                             )
                                         }
@@ -106,7 +108,7 @@ export default function DepartmentAssigneeAutocomplete({
                                                     whiteSpace: "nowrap",
                                                 }}
                                             >
-                                                {option.firstname + " " + option.lastname}
+                                                {`${option?.firstname || ''} ${option?.lastname || ''}`}
                                             </Box>
                                         }
                                         {...tagProps}

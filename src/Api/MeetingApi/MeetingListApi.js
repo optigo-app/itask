@@ -1,7 +1,8 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
+import { getAuthData, getUserProfileData } from "../../Utils/globalfun";
 
 export const fetchMettingListApi = async (selectedRow) => {
-    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
+    const AuthData = getAuthData();
     try {
         const combinedValue = JSON.stringify({
             taskid: `${selectedRow?.taskid ?? ''}`,
@@ -25,7 +26,7 @@ export const fetchMettingListApi = async (selectedRow) => {
 
 
 export const fetchMettingListByLoginApi = async (selectedRow) => {
-    const UserProfileData = JSON?.parse(localStorage?.getItem('UserProfileData'))
+    const UserProfileData = getUserProfileData()
     try {
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"meetinglistbylogin\",\"appuserid\":\"${(selectedRow?.uid || selectedRow?.userid) ?? UserProfileData?.userid}\"}`,
@@ -45,7 +46,7 @@ export const fetchMettingListByLoginApi = async (selectedRow) => {
 };
 
 export const fetchMettingFullDetailsListApi = async (selectedRow) => {
-    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
+    const AuthData = getAuthData();
     try {
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"meetingdetailslist\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,

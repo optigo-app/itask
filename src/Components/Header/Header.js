@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Typography, Avatar, Menu, MenuItem, Divider, Button, Chip, Tooltip, IconButton, Badge, ToggleButtonGroup, ToggleButton } from "@mui/material";
 import { Bell, MailOpen, User, LogOut, House, FileCheck, FileClock } from "lucide-react";
-import { getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
+import { getRandomAvatarColor, ImageUrl, getUserProfileData } from "../../Utils/globalfun";
 import "./header.scss";
 import NotificationCard from "../Notification/NotificationCard";
 import { taskLength, userRoleAtom, webReload } from "../../Recoil/atom";
@@ -17,18 +17,17 @@ const useProfileData = () => {
     const setReload = useSetRecoilState(webReload);
     const role = useRecoilValue(userRoleAtom);
 
-    // Function to get and set profile data from localStorage
+    // Function to get and set profile data from both localStorage and sessionStorage
     const updateProfileData = () => {
         try {
-            const userData = localStorage.getItem("UserProfileData");
+            const userData = getUserProfileData();
             if (userData) {
-                const parsedData = JSON.parse(userData);
-                setProfileData(parsedData);
+                setProfileData(userData);
             } else {
                 setProfileData(null);
             }
         } catch (error) {
-            console.error("Error parsing UserProfileData from localStorage:", error);
+            console.error("Error parsing UserProfileData:", error);
             setProfileData(null);
         }
     };
@@ -49,7 +48,7 @@ const useProfileData = () => {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            const currentData = localStorage.getItem("UserProfileData");
+            const currentData = getUserProfileData();
             if (currentData && !profileData) {
                 updateProfileData();
             }
@@ -82,7 +81,11 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
         sessionStorage.clear();
         Cookies.remove("isLoggedIn");
         Cookies.remove("skey");
-        window.location.href = "/login";
+        if (process.env.REACT_APP_LOCAL_HOSTNAMES.includes(window.location.hostname)) {
+            window.location.href = "itaskweb/login";
+        } else {
+            window.location.href = "/login";
+        }
     };
 
     return (

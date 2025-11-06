@@ -13,7 +13,7 @@ import {
   TableSortLabel,
   Box,
 } from '@mui/material';
-import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate3, handleAddApicall, priorityColors, statusColors } from '../../Utils/globalfun';
+import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate3, getUserProfileData, handleAddApicall, priorityColors, statusColors } from '../../Utils/globalfun';
 import { PERMISSIONS, ROLES } from '../../Components/Auth/Role/permissions';
 import useAccess from '../../Components/Auth/Role/useAccess';
 
@@ -105,7 +105,7 @@ const CalendarGridView = () => {
     // Set Monday as start of week, Sunday as end of week
     const weekEnd = today.startOf('week').add(1, 'day').endOf('week');
 
-    const userProfile = JSON?.parse(localStorage.getItem('UserProfileData')) ?? {};
+     const userProfile = getUserProfileData();
     const isAdmin = userProfile.designation?.toLowerCase() === 'admin';
 
     // Flatten all tasks or only "my" tasks

@@ -1,7 +1,8 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
+import { getAuthData } from "../../Utils/globalfun";
 
 export const taskCommentAddApi = async (selectedRow, newCommentData, attachments = []) => {
-    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
+    const AuthData = getAuthData();
     try {
         const combinedValue = JSON.stringify({
             taskid: `${selectedRow?.taskid ?? '0'}`,

@@ -1,7 +1,8 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
+import { getAuthData } from "../../Utils/globalfun";
 
 export const GetPrTeamsApi = async (decodedData, flag) => {
-    const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
+    const AuthData = getAuthData();
     try {
         const combinedValue = JSON.stringify({
             "taskid": (flag == "subroot" ? decodedData?.moduleid : decodedData?.moduleid ?? decodedData?.taskid) ?? "",

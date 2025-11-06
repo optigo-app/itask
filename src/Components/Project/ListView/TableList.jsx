@@ -18,7 +18,7 @@ import {
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, priorityColors } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, getUserProfileData, priorityColors } from "../../../Utils/globalfun";
 import { Eye, Lock, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { assigneeId, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -243,7 +243,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
         sortedData?.slice((page - 1) * rowsPerPage, page * rowsPerPage) || [];
 
     const handleNavigate = async (task) => {
-        const userLoginData = JSON?.parse(localStorage?.getItem("UserProfileData"));
+        const userLoginData = getUserProfileData();
         const decodedData = task
         const teamApiRes = await GetPrTeamsApi(task, "root")
         const isLimitedAccess = teamApiRes?.rd?.find((item) => item.assigneeid == userLoginData?.id)?.islimitedaccess;

@@ -1,9 +1,10 @@
 import axios from "axios";
 import { APIURL, getHeaders } from "./config";
+import { getAuthData } from "../../Utils/globalfun";
 
 export const taskInit = async () => {
   const headers = getHeaders();
-  const AuthData = JSON.parse(localStorage.getItem('AuthqueryParams'));
+  const AuthData = getAuthData();
 
   const body = {
     con: JSON.stringify({ id: "", mode: "gettoken", appuserid: AuthData?.uid ?? '' }),
