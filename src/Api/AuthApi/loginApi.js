@@ -12,11 +12,15 @@ export const fetchLoginApi = async (data) => {
             "f": "Task Management (login)",
             "p": combinedValue,
         };
+        debugger
         const response = await CommonAPI(body);
-        if (response?.Data) {
+        console.log("loginData", response);
+        if (response?.Data?.rd?.[0]?.stat === 1) {
+            sessionStorage.setItem("taskInit", JSON.stringify(response.Data.rd[0]));
+            sessionStorage.setItem("pageAccess", JSON.stringify(response.Data.rd1));
             return response?.Data;
         } else {
-            return [];
+            console.warn("No `rd` data found in response:", response);
         }
     } catch (error) {
         console.error('Error:', error);

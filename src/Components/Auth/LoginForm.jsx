@@ -10,12 +10,12 @@ import {
 } from "@mui/material";
 import loginImage from "../../Assests/loginImage.webp";
 import { commonTextFieldProps } from "../../Utils/globalfun";
-import { useNavigate } from "react-router-dom";
 import Cookies from 'js-cookie';
 import { fetchLoginApi } from "../../Api/AuthApi/loginApi";
+import { GetTokenByCompanyCodeApi } from "../../Api/InitialApi/GetTokenByCompanyCodeApi";
 import { z } from "zod";
 import "./LoginPage.scss";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "react-toastify";
 
 const loginSchema = z.object({
@@ -29,11 +29,55 @@ const LoginPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [credentials, setCredentials] = useState({ companycode: "", userId: "", password: "" });
     const [errors, setErrors] = useState({});
+    const [companyValidation, setCompanyValidation] = useState({ isValid: false, isChecking: false, message: "" });
+
+    // Check if form should be disabled
+    const isFormDisabled = companyValidation.message && !companyValidation.isValid && credentials.companycode.trim();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setCredentials({ ...credentials, [name]: value });
         setErrors(prev => ({ ...prev, [name]: "" }));
+        if (name === "companycode") {
+            setCompanyValidation({ isValid: false, isChecking: false, message: "" });
+        }
+    };
+
+    const validateCompanyCode = async () => {
+        if (!credentials.companycode.trim()) {
+            setCompanyValidation({ isValid: false, isChecking: false, message: "" });
+            return;
+        }
+        setCompanyValidation({ isValid: false, isChecking: true, message: "" });
+        try {
+            const response = await GetTokenByCompanyCodeApi({ companycode: credentials.companycode });
+            if (response?.rd && response.rd.length > 0) {
+                const result = response.rd[0];
+
+                if (result.stat === 1) {
+                    setCompanyValidation({ isValid: true, isChecking: false, message: "" });
+                } else {
+                    setCompanyValidation({
+                        isValid: false,
+                        isChecking: false,
+                        message: result.stat_msg || "Invalid company code"
+                    });
+                }
+            } else {
+                setCompanyValidation({
+                    isValid: false,
+                    isChecking: false,
+                    message: "Invalid company code"
+                });
+            }
+        } catch (error) {
+            console.error("Company validation error:", error);
+            setCompanyValidation({
+                isValid: false,
+                isChecking: false,
+                message: "Validation failed"
+            });
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -88,7 +132,7 @@ const LoginPage = () => {
                             {/* Project Code */}
                             <div className="form-group">
                                 <Typography variant="subtitle1" className="field-label">
-                                    Project Code
+                                    Company Code
                                 </Typography>
                                 <TextField
                                     name="companycode"
@@ -96,9 +140,23 @@ const LoginPage = () => {
                                     placeholder="Enter project code"
                                     value={credentials.companycode}
                                     onChange={handleChange}
-                                    error={!!errors.companycode}
-                                    helperText={errors.companycode}
+                                    onBlur={validateCompanyCode}
+                                    error={!!errors.companycode || (!!companyValidation.message && !companyValidation.isValid)}
+                                    helperText={errors.companycode || (companyValidation.message && !companyValidation.isValid ? companyValidation.message : "")}
                                     {...commonTextFieldProps}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                {companyValidation.isChecking ? (
+                                                    <div className="animate-spin" style={{ width: 16, height: 16, border: '2px solid #f3f3f3', borderTop: '2px solid #3498db', borderRadius: '50%' }}></div>
+                                                ) : companyValidation.isValid ? (
+                                                    <CheckCircle size={20} color="#22c55e" />
+                                                ) : companyValidation.message ? (
+                                                    <XCircle size={20} color="#ef4444" />
+                                                ) : null}
+                                            </InputAdornment>
+                                        )
+                                    }}
                                 />
                             </div>
 
@@ -113,6 +171,7 @@ const LoginPage = () => {
                                     placeholder="Enter username"
                                     value={credentials.userId}
                                     onChange={handleChange}
+                                    disabled={isFormDisabled}
                                     error={!!errors.userId}
                                     helperText={errors.userId}
                                     {...commonTextFieldProps}
@@ -131,6 +190,7 @@ const LoginPage = () => {
                                     type={showPassword ? "text" : "password"}
                                     value={credentials.password}
                                     onChange={handleChange}
+                                    disabled={isFormDisabled}
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                             handleSubmit(e);
@@ -153,6 +213,7 @@ const LoginPage = () => {
                                                     aria-label={showPassword ? "Hide password" : "Show password"}
                                                     tabIndex={0}
                                                     className="password-toggle"
+                                                    disabled={isFormDisabled}
                                                 >
                                                     {showPassword ? <EyeOff width={20} height={20} /> : <Eye width={20} height={20} />}
                                                 </IconButton>
@@ -168,6 +229,7 @@ const LoginPage = () => {
                                     variant="contained"
                                     className="buttonClassname login-button"
                                     onClick={handleSubmit}
+                                    disabled={isFormDisabled}
                                 >
                                     Login Now
                                 </Button>

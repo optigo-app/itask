@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "./ReportsGrid.scss";
 import {
   Table,
@@ -45,7 +45,6 @@ const ReportsGrid = ({
   const [selectedTaskRow, setSelectedTaskRow] = useState(null);  
 
   const paginatedData = data || [];
-
 
   const handleRowClick = (row) => {
     setSelectedTaskRow(row);
