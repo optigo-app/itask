@@ -49,6 +49,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
         setRd3(masterRes?.rd3 ?? []);
 
         const dataRes = await DynamicFilterApi();
+        console.log("dataRes", dataRes);
         setQlColIdToName(dataRes?.rd?.[0] ?? {});
         setRawRows(dataRes?.rd1 ?? []);
       } catch {
@@ -90,9 +91,9 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
     return allColumnNames?.filter((name) => !/^G\d+$/i.test(name)).map((name) => {
       const base = {
         field: name,
-        headerName: name.replace(/_/g, " ").toUpperCase(),
-        width: name === "id" ? 60 : name === "taskname" ? 250 : 120,
-        flex: name === "id" || name === "taskname" ? "" : 1,
+        headerName: name?.replace(/_/g, " ")?.toUpperCase(),
+        width: name === "id" ? 60 : name === "taskname" ? 250 : name === "estimate_hrs" || name === "working_hr" ? 120 : 140,
+        flex: name === "id" || name === "taskname" ? "" : '',
       };
       if (masterColNameSet?.has(name)) {
         return {

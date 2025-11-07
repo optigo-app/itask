@@ -58,6 +58,7 @@ const Task = () => {
     secStatusData,
     taskAssigneeData } = useFullTaskFormatFile();
 
+    console.log("taskFinalData",taskFinalData)
 
   useEffect(() => {
     setTasks([]);
@@ -288,20 +289,19 @@ const Task = () => {
       };
 
       resetInvalidFilters();
-
       const matchesFilters = (item) => {
         const matchesCategory =
           !Array.isArray(category) ||
           category.length === 0 ||
           category.some((cat) => {
             const lowerCat = cat.toLowerCase();
-            if (lowerCat.includes("due")) {
+            if (lowerCat === "due") {
               return isTaskDue(item?.DeadLineDate) && !isUnsetDeadline(item?.DeadLineDate);
-            } else if (lowerCat.includes("unset deadline")) {
+            } else if (lowerCat === "unset deadline") {
               return isUnsetDeadline(item?.DeadLineDate);
-            } else if (lowerCat.includes("today")) {
+            } else if (lowerCat === "today") {
               return isTaskToday(item?.StartDate);
-            } else if (lowerCat.includes("new")) {
+            } else if (lowerCat === "new") {
               return item?.isnew == 1;
             }
             return (item?.category ?? "").toLowerCase() === lowerCat;

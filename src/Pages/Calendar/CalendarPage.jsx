@@ -193,7 +193,7 @@ const Calendar = () => {
       handleMeetingListByLogin();
     } else {
       if (hasAccess(PERMISSIONS.CALENDAR_VIEW_ALL)) {
-        handleMeetingList();
+        // handleMeetingList();
       } else {
         handleMeetingListByLogin();
       }

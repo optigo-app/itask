@@ -11,7 +11,7 @@ import { DatePicker } from "@mui/x-date-pickers";
 import { customDatePickerProps } from "../../Utils/globalfun";
 import DynamicDropdownSection from "./DynamicDropdownSection";
 
-const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownChange, renderDateField }) => {
+const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownChange, renderDateField, selectedMainGroup, setSelectedMainGroup }) => {
     dayjs.extend(utc);
     dayjs.extend(timezone);
     const [tasks, setTasks] = useState([]);
@@ -558,6 +558,8 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                     <DynamicDropdownSection
                                         dropdownConfigs={dropdownConfigs}
                                         formValues={formValues}
+                                        selectedMainGroup={selectedMainGroup}
+                                        setSelectedMainGroup={setSelectedMainGroup}
                                         handleDropdownChange={handleDropdownChange}
                                         divider={false}
                                         mdValue={4}
