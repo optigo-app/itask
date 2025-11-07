@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -7,6 +7,7 @@ import {
   Button,
   ButtonGroup,
   Chip,
+  Tooltip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -23,19 +24,15 @@ import 'swiper/css/pagination';
 import './DocsViewerModal.css';
 
 const DocsViewerModal = ({ modalOpen, closeModal, fileData, attachments = [], initialSlideIndex = 0 }) => {
-  // Support both single file and multiple attachments
   const files = attachments.length > 0 ? attachments : (fileData ? [fileData] : []);
   const [currentIndex, setCurrentIndex] = useState(initialSlideIndex);
   const [zoom, setZoom] = useState(1);
   const [fullWidth, setFullWidth] = useState(false);
   const swiperRef = useRef(null);
-
-  // Get current file data
   const currentFile = files[currentIndex] || {};
   const { url, filename, extension, fileObject } = currentFile;
   const lowerExt = extension?.toLowerCase();
   
-  // File type definitions
   const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'];
   const videoExts = ['mp4', 'webm', 'ogg'];
   const pdfExts = ['pdf'];
@@ -56,32 +53,112 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData, attachments = [], in
     window.open(url, '_blank');
   };
 
-  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 3));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.25));
+  const handleZoomIn = useCallback(() => {
+    setZoom(prev => Math.min(prev + 0.1, 3));
+  }, []);
 
-  const handleSlideChange = (swiper) => {
+  const handleZoomOut = useCallback(() => {
+    setZoom(prev => Math.max(prev - 0.1, 0.25));
+  }, []);
+
+  const handleResetZoom = useCallback(() => {
+    setZoom(1);
+  }, []);
+
+  const handleSlideChange = useCallback((swiper) => {
     setCurrentIndex(swiper.activeIndex);
-    setZoom(1); // Reset zoom when changing slides
-  };
+    setZoom(1);
+  }, []);
 
-  const handlePrevSlide = () => {
+  const handlePrevSlide = useCallback(() => {
     if (swiperRef.current) {
       swiperRef.current.slidePrev();
     }
-  };
+  }, []);
 
-  const handleNextSlide = () => {
+  const handleNextSlide = useCallback(() => {
     if (swiperRef.current) {
       swiperRef.current.slideNext();
     }
-  };
+  }, []);
 
-  // Reset current index when modal opens/closes
+  const handleFirstSlide = useCallback(() => {
+    if (swiperRef.current) {
+      swiperRef.current.slideTo(0);
+    }
+  }, []);
+
+  const handleLastSlide = useCallback(() => {
+    if (swiperRef.current && files.length > 0) {
+      swiperRef.current.slideTo(files.length - 1);
+    }
+  }, [files.length]);
+
+  const toggleFullWidth = useCallback(() => {
+    setFullWidth(prev => !prev);
+  }, []);
+
+  const handleKeyDown = useCallback((event) => {
+    if (!modalOpen) return;
+
+    const keyActions = {
+      '+': handleZoomIn,
+      '=': handleZoomIn,
+      '-': handleZoomOut,
+      '_': handleZoomOut,
+      '0': handleResetZoom,
+      'f': toggleFullWidth,
+      'F': toggleFullWidth,
+      'Escape': closeModal,
+      'Home': handleFirstSlide,
+      'End': handleLastSlide,
+    };
+
+    const action = keyActions[event.key];
+    if (action) {
+      event.preventDefault();
+      action();
+    }
+  }, [
+    modalOpen,
+    handleZoomIn,
+    handleZoomOut,
+    handleResetZoom,
+    toggleFullWidth,
+    closeModal,
+    handleFirstSlide,
+    handleLastSlide,
+  ]);
+
+  const handleWheel = useCallback((event) => {
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+      const delta = event.deltaY > 0 ? -0.1 : 0.1;
+      setZoom(prev => Math.max(0.25, Math.min(3, prev + delta)));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (modalOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      const modalElement = document.querySelector('.docs-viewer-modal');
+      if (modalElement) {
+        modalElement.addEventListener('wheel', handleWheel, { passive: false });
+      }
+
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        if (modalElement) {
+          modalElement.removeEventListener('wheel', handleWheel);
+        }
+      };
+    }
+  }, [modalOpen, handleKeyDown, handleWheel]);
+
   useEffect(() => {
     if (modalOpen) {
       setCurrentIndex(initialSlideIndex);
       setZoom(1);
-      // Set initial slide in Swiper if it exists
       if (swiperRef.current && initialSlideIndex > 0) {
         setTimeout(() => {
           swiperRef.current.slideTo(initialSlideIndex, 0);
@@ -90,7 +167,6 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData, attachments = [], in
     }
   }, [modalOpen, initialSlideIndex]);
 
-  // Helper component to render file content
   const renderFileContent = (file, zoomLevel = 1) => {
     const { url, filename, extension, fileObject } = file;
     const lowerExt = extension?.toLowerCase();
@@ -227,7 +303,7 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData, attachments = [], in
 
   return (
     <Box>
-      <Modal open={modalOpen} onClose={closeModal}>
+      <Modal open={modalOpen} onClose={closeModal} className="docs-viewer-modal">
         <Box
           sx={{
             position: 'absolute',
@@ -294,12 +370,23 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData, attachments = [], in
                 {fullWidth ? <FullscreenExitIcon /> : <FullscreenIcon />}
               </IconButton>
 
-              <Button onClick={handleZoomIn} title="Zoom In" className='secondaryBtnClassname'>
-                <ZoomIn size={18} />
-              </Button>
-              <Button onClick={handleZoomOut} title="Zoom Out" className='secondaryBtnClassname'>
-                <ZoomOut size={18} />
-              </Button>
+              <Tooltip title="Zoom In (+ or Ctrl+Wheel Up)" arrow>
+                <Button onClick={handleZoomIn} className='secondaryBtnClassname'>
+                  <ZoomIn size={18} />
+                </Button>
+              </Tooltip>
+
+              <Tooltip title="Reset Zoom (0)" arrow>
+                <Button onClick={handleResetZoom} className='secondaryBtnClassname'>
+                  100%
+                </Button>
+              </Tooltip>
+
+              <Tooltip title="Zoom Out (- or Ctrl+Wheel Down)" arrow>
+                <Button onClick={handleZoomOut} className='secondaryBtnClassname'>
+                  <ZoomOut size={18} />
+                </Button>
+              </Tooltip>
 
               <Button
                 size="small"
@@ -311,9 +398,11 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData, attachments = [], in
                 Download
               </Button>
 
-              <IconButton onClick={closeModal} className="docs-close-icon" title="Close">
-                <CloseIcon />
-              </IconButton>
+              <Tooltip title="Close (Escape)" arrow>
+                <IconButton onClick={closeModal} className="docs-close-icon">
+                  <CloseIcon />
+                </IconButton>
+              </Tooltip>
             </Box>
           </Box>
 
@@ -325,6 +414,13 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData, attachments = [], in
               opacity: 0.3,
             }}
           />
+
+          {/* Keyboard Shortcuts Help */}
+          <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
+            <Typography variant="caption" sx={{ color: '#7d7f85', fontSize: '11px' }}>
+              Keyboard: <strong>+/-</strong> Zoom | <strong>0</strong> Reset | <strong>F</strong> Fullscreen | <strong>Home/End</strong> First/Last | <strong>Esc</strong> Close | <strong>Ctrl+Wheel</strong> Zoom
+            </Typography>
+          </Box>
 
           {/* Preview Area with Swiper */}
           <Box flexGrow={1} sx={{ overflow: 'hidden', position: 'relative' }}>
@@ -364,54 +460,58 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData, attachments = [], in
                 ))}
                 
                 {/* Custom Navigation Buttons */}
-                <Box
-                  className="swiper-button-prev-custom"
-                  sx={{
-                    position: 'absolute',
-                    left: 10,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    zIndex: 10,
-                    cursor: 'pointer',
-                    bgcolor: 'rgba(0,0,0,0.5)',
-                    color: 'white',
-                    borderRadius: '50%',
-                    width: 40,
-                    height: 40,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    '&:hover': {
-                      bgcolor: 'rgba(0,0,0,0.7)',
-                    },
-                  }}
-                >
-                  <ChevronLeft  />
-                </Box>
-                <Box
-                  className="swiper-button-next-custom"
-                  sx={{
-                    position: 'absolute',
-                    right: 10,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    zIndex: 10,
-                    cursor: 'pointer',
-                    bgcolor: 'rgba(0,0,0,0.5)',
-                    color: 'white',
-                    borderRadius: '50%',
-                    width: 40,
-                    height: 40,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    '&:hover': {
-                      bgcolor: 'rgba(0,0,0,0.7)',
-                    },
-                  }}
-                >
-                  <ChevronRight  />
-                </Box>
+                <Tooltip title="Previous" arrow placement="left">
+                  <Box
+                    className="swiper-button-prev-custom"
+                    sx={{
+                      position: 'absolute',
+                      left: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      zIndex: 10,
+                      cursor: 'pointer',
+                      bgcolor: 'rgba(0,0,0,0.5)',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: 40,
+                      height: 40,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      '&:hover': {
+                        bgcolor: 'rgba(0,0,0,0.7)',
+                      },
+                    }}
+                  >
+                    <ChevronLeft  />
+                  </Box>
+                </Tooltip>
+                <Tooltip title="Next" arrow placement="right">
+                  <Box
+                    className="swiper-button-next-custom"
+                    sx={{
+                      position: 'absolute',
+                      right: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      zIndex: 10,
+                      cursor: 'pointer',
+                      bgcolor: 'rgba(0,0,0,0.5)',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: 40,
+                      height: 40,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      '&:hover': {
+                        bgcolor: 'rgba(0,0,0,0.7)',
+                      },
+                    }}
+                  >
+                    <ChevronRight  />
+                  </Box>
+                </Tooltip>
               </Swiper>
             ) : (
               // Single file display (backward compatibility)

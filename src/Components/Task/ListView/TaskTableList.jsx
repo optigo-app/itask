@@ -12,26 +12,20 @@ import {
     TableSortLabel,
     Box,
     Typography,
-    Pagination,
-    AvatarGroup,
-    Avatar,
     Chip,
     Tooltip,
     LinearProgress,
     Menu,
     MenuItem,
-    Select,
-    TextareaAutosize,
-    Button,
 } from "@mui/material";
-import { CirclePlus, CloudUpload, Eye, MessageCircleMore, Paperclip, Pencil, PrinterCheck, Timer, Send } from "lucide-react";
+import { CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Timer } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import { useNavigate } from "react-router-dom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, ImageUrl, priorityColors, statusColors, getDaysFromDeadline } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, priorityColors, statusColors, getDaysFromDeadline } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 import AssigneeAvatarGroup from "../../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
@@ -175,19 +169,16 @@ const TableView = ({
         const days = getDaysFromDeadline(deadlineDate);
 
         if (days === null || !cleanDate(deadlineDate)) {
-            return <span>-</span>; // No deadline set
+            return <span>-</span>;
         }
 
         const formattedDate = formatDate2(deadlineDate);
 
-        // Check if task is completed
         const isCompleted = task?.status?.toLowerCase() === 'completed' || task?.progress_per === 100;
 
-        // Determine chip color based on status and days
         let chipColor, chipBgColor, displayText;
 
         if (isCompleted) {
-            // For completed tasks, compare EndDate with DeadLineDate
             if (task?.EndDate && cleanDate(task?.EndDate)) {
                 const endDate = new Date(task.EndDate);
                 const deadline = new Date(deadlineDate);
@@ -195,19 +186,16 @@ const TableView = ({
                 const deadlineOnly = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
 
                 if (endDateOnly.getTime() === deadlineOnly.getTime()) {
-                    // Completed on time (same date)
                     chipColor = '#388e3c';
                     chipBgColor = '#dcedc8';
                     displayText = 'On Time';
                 } else if (endDateOnly < deadlineOnly) {
-                    // Completed before deadline (early) - calculate days early
                     const diffMs = deadlineOnly - endDateOnly;
                     const daysEarly = Math.floor(diffMs / (1000 * 60 * 60 * 24));
                     chipColor = '#388e3c';
                     chipBgColor = '#dcedc8';
                     displayText = `${daysEarly} days early`;
                 } else {
-                    // Completed after deadline (late) - calculate days late
                     const diffMs = endDateOnly - deadlineOnly;
                     const daysLate = Math.floor(diffMs / (1000 * 60 * 60 * 24));
                     chipColor = '#d32f2f';
@@ -215,23 +203,19 @@ const TableView = ({
                     displayText = `${daysLate} days late`;
                 }
             } else {
-                // Completed but no end date
                 chipColor = '#388e3c';
                 chipBgColor = '#dcedc8';
                 displayText = 'Completed';
             }
         } else if (days < 0) {
-            // Overdue - Red
             chipColor = '#d32f2f';
             chipBgColor = '#ffcdd2';
             displayText = `${Math.abs(days)} days overdue`;
         } else if (days === 0) {
-            // Today - Green
             chipColor = '#388e3c';
             chipBgColor = '#dcedc8';
             displayText = 'Today';
         } else {
-            // Future - Blue
             chipColor = '#1976d2';
             chipBgColor = '#bbdefb';
             displayText = `${days} days`;

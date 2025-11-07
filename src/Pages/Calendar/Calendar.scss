@@ -2,7 +2,7 @@
 
 .calendarMain {
     display: flex;
-    height: 1000px;
+    min-height: 1000px;
     width: 100%;
     overflow: hidden;
     font-family: $font-family;
@@ -463,6 +463,7 @@
 
                 // Category-specific list event styles
                 &.bg-productive {
+
                     .fc-list-event-dot,
                     .fc-daygrid-event-dot {
                         border-color: $productive-main !important;
@@ -475,6 +476,7 @@
                 }
 
                 &.bg-rnd-tech {
+
                     .fc-list-event-dot,
                     .fc-daygrid-event-dot {
                         border-color: $rnd-tech-main !important;
@@ -487,6 +489,7 @@
                 }
 
                 &.bg-creative {
+
                     .fc-list-event-dot,
                     .fc-daygrid-event-dot {
                         border-color: $creative-main !important;
@@ -499,6 +502,7 @@
                 }
 
                 &.bg-sop-correction {
+
                     .fc-list-event-dot,
                     .fc-daygrid-event-dot {
                         border-color: $sop-correction-main !important;
@@ -511,6 +515,7 @@
                 }
 
                 &.bg-leave {
+
                     .fc-list-event-dot,
                     .fc-daygrid-event-dot {
                         border-color: $leave-main !important;
@@ -523,6 +528,7 @@
                 }
 
                 &.bg-maintenance {
+
                     .fc-list-event-dot,
                     .fc-daygrid-event-dot {
                         border-color: $maintenance-main !important;
@@ -535,6 +541,7 @@
                 }
 
                 &.bg-unplanned {
+
                     .fc-list-event-dot,
                     .fc-daygrid-event-dot {
                         border-color: $unplanned-main !important;
@@ -564,11 +571,11 @@
                 .fc-daygrid-week-number {
                     display: none !important;
                 }
-                
+
                 .fc-col-header-week {
                     display: none !important;
                 }
-                
+
                 .fc-col-header-cell {
                     .calendar-day-header {
                         .date-text {
@@ -580,7 +587,7 @@
                     }
                 }
             }
-            
+
             // ** Week View Specific Styling
             .fc-timeGridWeek-view {
                 .fc-daygrid-week-number {
@@ -595,14 +602,14 @@
                     background-color: rgba(115, 103, 240, 0.05);
                     min-width: 40px;
                     width: 40px;
-                    
+
                     .fc-daygrid-week-number-cushion {
                         color: inherit;
                         text-decoration: none;
                         font-weight: 600;
                     }
                 }
-                
+
                 .fc-col-header-week {
                     display: table-cell !important;
                     font-weight: 600;
@@ -614,7 +621,7 @@
                     background-color: rgba(115, 103, 240, 0.1);
                     min-width: 40px;
                     width: 40px;
-                    
+
                     .fc-col-header-cell-cushion {
                         color: inherit;
                         text-decoration: none;
@@ -622,24 +629,24 @@
                     }
                 }
             }
-            
+
             // ** Day View - Hide week numbers
             .fc-timeGridDay-view {
                 .fc-daygrid-week-number {
                     display: none !important;
                 }
-                
+
                 .fc-col-header-week {
                     display: none !important;
                 }
             }
-            
+
             // ** List View - Hide week numbers
             .fc-listMonth-view {
                 .fc-daygrid-week-number {
                     display: none !important;
                 }
-                
+
                 .fc-col-header-week {
                     display: none !important;
                 }
@@ -654,7 +661,7 @@
                     text-align: center;
                     vertical-align: middle;
                     min-height: 60px; // Ensure adequate header height
-                    
+
                     .fc-col-header-cell-cushion {
                         padding: 0.5rem 0.25rem;
                         text-decoration: none !important;
@@ -663,7 +670,7 @@
                         align-items: center;
                         justify-content: center;
                         height: 100%;
-                        
+
                         // Fix header content alignment
                         .calendar-day-header {
                             display: flex !important;
@@ -672,14 +679,14 @@
                             justify-content: center !important;
                             gap: 2px !important;
                             width: 100%;
-                            
+
                             .date-text {
                                 font-size: 0.9rem;
                                 font-weight: 600;
                                 color: $titleColor !important;
                                 white-space: nowrap;
                             }
-                            
+
                             .estimate-text {
                                 font-size: 0.75rem;
                                 opacity: 0.7;
@@ -714,24 +721,24 @@
                     align-items: center;
                     width: calc(100% - 2px) !important; // Ensure full width minus margins
                     box-sizing: border-box;
-                    
+
                     .fc-event-main {
                         width: 100%;
                         overflow: hidden;
                         display: flex;
                         align-items: center;
                     }
-                    
+
                     .fc-event-main-frame {
                         width: 100%;
                         overflow: hidden;
                     }
-                    
+
                     .fc-event-title-container {
                         width: 100%;
                         overflow: hidden;
                     }
-                    
+
                     .fc-event-title {
                         overflow: hidden;
                         text-overflow: ellipsis;
@@ -740,7 +747,7 @@
                         width: 100%;
                         display: block;
                     }
-                    
+
                     .fc-event-time {
                         font-size: 0.65rem;
                         opacity: 0.8;
@@ -784,18 +791,18 @@
                         overflow: hidden; // Hide overflowing events
                         position: relative;
                         margin: 0 1px; // Small horizontal margin
-                        
+
                         // Ensure events don't get cut off
                         .fc-daygrid-event-harness {
                             margin-left: 0 !important;
                             margin-right: 0 !important;
-                            
+
                             .fc-event {
                                 margin-left: 0 !important;
                                 margin-right: 0 !important;
                             }
                         }
-                        
+
                         // Add fade effect for overflow indication
                         &::after {
                             content: '';
@@ -809,13 +816,13 @@
                             opacity: 0;
                             transition: opacity 0.2s ease;
                         }
-                        
+
                         // Show fade effect when there are many events
                         &.fc-daygrid-day-events-overflow::after {
                             opacity: 1;
                         }
                     }
-                    
+
                     .fc-daygrid-day-bg {
                         // Ensure background doesn't interfere with events
                         z-index: 0;
@@ -842,7 +849,7 @@
                 font-weight: 600;
                 font-size: 0.9rem;
             }
-            
+
             // ** More Events Link Styling
             .fc-daygrid-more-link {
                 font-size: 0.7rem !important;
@@ -853,7 +860,7 @@
                 border-radius: 3px !important;
                 text-decoration: none !important;
                 font-weight: 500 !important;
-                
+
                 &:hover {
                     background-color: rgba(115, 103, 240, 0.2) !important;
                     color: #5a52d5 !important;
@@ -1034,12 +1041,12 @@
                 .fc-toolbar-title {
                     margin-left: 0;
                 }
-                
+
                 // Larger screens - show more events
                 .fc-daygrid-day {
                     min-height: 140px;
                     max-height: 180px;
-                    
+
                     .fc-daygrid-day-events {
                         max-height: 120px;
                     }
@@ -1047,22 +1054,23 @@
             }
 
             @media (max-width: 1419px) and (min-width: 1024px) {
+
                 // Medium screens - moderate event display
                 .fc-daygrid-day {
                     min-height: 120px;
                     max-height: 150px;
-                    
+
                     .fc-daygrid-day-events {
                         max-height: 90px;
                     }
                 }
-                
+
                 .fc-col-header-cell {
                     .calendar-day-header {
                         .date-text {
                             font-size: 0.85rem !important;
                         }
-                        
+
                         .estimate-text {
                             font-size: 0.7rem !important;
                         }
@@ -1071,17 +1079,18 @@
             }
 
             @media (max-width: 1023px) and (min-width: 768px) {
+
                 // Tablet screens - compact display
                 .fc-daygrid-day {
                     min-height: 100px;
                     max-height: 130px;
                     padding: 3px;
-                    
+
                     .fc-daygrid-day-events {
                         max-height: 70px;
                     }
                 }
-                
+
                 .fc-daygrid-event-harness .fc-event {
                     font-size: 0.7rem;
                     padding: 0.15rem 0.3rem;
@@ -1089,15 +1098,15 @@
                     max-height: 20px;
                     width: calc(100% - 1px) !important;
                 }
-                
+
                 .fc-col-header-cell {
                     min-height: 50px;
-                    
+
                     .calendar-day-header {
                         .date-text {
                             font-size: 0.8rem !important;
                         }
-                        
+
                         .estimate-text {
                             font-size: 0.65rem !important;
                         }
@@ -1113,18 +1122,18 @@
                 .fc-sidebarToggle-button {
                     display: block;
                 }
-                
+
                 // Mobile screens - very compact display
                 .fc-daygrid-day {
                     min-height: 80px;
                     max-height: 100px;
                     padding: 2px;
-                    
+
                     .fc-daygrid-day-events {
                         max-height: 50px;
                     }
                 }
-                
+
                 .fc-daygrid-event-harness .fc-event {
                     font-size: 0.65rem;
                     padding: 0.1rem 0.2rem;
@@ -1132,26 +1141,26 @@
                     max-height: 18px;
                     width: calc(100% - 1px) !important;
                 }
-                
+
                 .fc-col-header-cell {
                     min-height: 40px;
-                    
+
                     .calendar-day-header {
                         .date-text {
                             font-size: 0.75rem !important;
                         }
-                        
+
                         .estimate-text {
                             font-size: 0.6rem !important;
                         }
                     }
                 }
-                
+
                 .fc-daygrid-day-number {
                     font-size: 0.8rem;
                     padding: 0 0.3rem;
                 }
-                
+
                 .fc-daygrid-more-link {
                     font-size: 0.6rem !important;
                     padding: 1px 2px !important;

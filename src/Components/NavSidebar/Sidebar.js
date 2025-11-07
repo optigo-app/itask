@@ -21,7 +21,7 @@ import {
     ExpandLess,
     ExpandMore
 } from "@mui/icons-material";
-import { Asterisk, Boxes, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
+import { Boxes, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
 import logo from "../../Assests/iconLogo.png";
 import itasknewLogo from "../../Assests/tecotask.png"
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -66,6 +66,7 @@ const Sidebar = () => {
     const reportSubItems = [
         { label: 'PMS Report', path: '/reports/pms' },
         { label: 'PMS Report 2', path: '/reports/pms-2' },
+        { label: 'Emp Cl Report', path: '/reports/empClReport' },
     ];
 
     useEffect(() => {
@@ -336,9 +337,11 @@ const Sidebar = () => {
                         padding: "10px",
                     }}
                 >
-                    <Typography variant="caption" sx={{ fontSize: "9px", color: "#b0b0b0" }}>
-                        iTask_V5_061120250250
-                    </Typography>
+                    {isDrawerOpen &&
+                        <Typography variant="caption" sx={{ fontSize: "9px", color: "#b0b0b0" }}>
+                            iTask_V5_061120250250
+                        </Typography>
+                    }
                 </Box>
             </Drawer>
         </motion.div>

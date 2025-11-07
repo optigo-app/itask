@@ -21,7 +21,6 @@ import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
 import LoginPage from './Components/Auth/LoginForm';
-import SampleTaskTable from './Backup/SampleTaskTable';
 import CalendarComparisonDemo from './Backup/CalendarComparisonDemo';
 import CalendarViewDemo from './Backup/CalendarViewDemo';
 import SampleQuickForm from './Backup/sampleQuickForm';
@@ -50,6 +49,7 @@ const Error401Page = lazy(() => import('./Pages/ErrorPages/Error401Page'));
 // report
 const PmsReport = lazy(() => import('./Pages/Reports/pmsReport'));
 const PmsReport2 = lazy(() => import('./Pages/Reports/pms-report-2'));
+const CalendarReport = lazy(() => import('./Pages/Reports/CalendarReport/CalendarReport'));
 
 const Layout = ({ children, pageDataLoaded }) => {
     const isMobile = useMediaQuery('(max-width:712px)');
@@ -288,6 +288,7 @@ const AppWrapper = () => {
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
                                         <Route path="/reports/pms" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport /></ProtectedRoute>} />
                                         <Route path="/reports/pms-2" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport2 /></ProtectedRoute>} />
+                                        <Route path="/reports/empClReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><CalendarReport /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
                                         <Route path="/test" element={<CalendarComparisonDemo />} />
@@ -295,10 +296,11 @@ const AppWrapper = () => {
                                         <Route path="/test2" element={<SampleQuickForm />} />
                                         <Route path="/test3" element={<SampleQuickFormVersion2 />} />
                                         <Route path="/test4321" element={<StructuredQuickTask />} />
-                                        <Route path="*" element={<PagenotFound />} />   
+                                        <Route path="/test4322" element={<CalendarReport />} />
+                                        <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>
-                              }
+                            }
                         />
                     </Routes>
                 </Suspense>
@@ -310,7 +312,7 @@ const AppWrapper = () => {
 const App = () => (
     <RecoilRoot>
         {/* <Router basename="/itaskweb"> */}
-            <Router>
+        <Router>
             <AppWrapper />
         </Router>
     </RecoilRoot>

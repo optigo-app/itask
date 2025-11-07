@@ -331,7 +331,7 @@ const SidebarDrawer = ({
     // Handle form value changes
     const handleChange = (e) => {
         const { name, value } = e.target;
-        
+
         // Reset validation states when user starts typing
         if (name === "taskName") {
             setIsTaskNameEmpty(false);
@@ -339,7 +339,7 @@ const SidebarDrawer = ({
         if (name === "category") {
             setIsCategoryEmpty(false);
         }
-        
+
         setFormValues((prev) => {
             const updatedValues = {
                 ...prev,
@@ -838,6 +838,8 @@ const SidebarDrawer = ({
                                             dropdownConfigs={dropdownConfigs}
                                             formValues={formValues}
                                             taskType={taskType}
+                                            selectedMainGroup={selectedMainGroup}
+                                            setSelectedMainGroup={setSelectedMainGroup}
                                             handleDropdownChange={handleDropdownChange}
                                             renderDateField={renderDateField}
                                             divider={true}

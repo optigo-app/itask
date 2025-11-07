@@ -1039,11 +1039,8 @@ export const isTaskDue = (dateStr) => {
     const now = new Date();
     if (!dateStr) return false;
     const taskDate = new Date(dateStr);
-    return (
-        taskDate.getDate() === now.getDate() &&
-        taskDate.getMonth() === now.getMonth() &&
-        taskDate.getFullYear() === now.getFullYear()
-    );
+    // Return true if task is due today or overdue (past due date)
+    return taskDate <= now;
 };
 
 export const isTaskToday = (dateStr) => {
@@ -1088,10 +1085,13 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
         return result;
     };
     const flatData = flattenTasks(nestedData);
+    console.log("flatData",flatData)
+    
     const isValidDate = (dateStr) => {
         const date = new Date(dateStr);
         return dateStr && date.toISOString().slice(0, 10) !== "1900-01-01";
     };
+    
     const isToday = (dateStr) => {
         if (!isValidDate(dateStr)) return false;
         const date = new Date(dateStr);
@@ -1102,6 +1102,7 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
             date.getDate() === today.getDate()
         );
     };
+
     const hasNoDeadline = (dateStr) => !isValidDate(dateStr);
     const isPast = (dateStr) => {
         if (!isValidDate(dateStr)) return false;
@@ -1162,6 +1163,7 @@ export const filterNestedTasksByView = (tasks = [], mode = 'me', userId) => {
             const hasAssignees = !!task?.assigneids?.trim();
             const isMyTask = isCreatedByMe && isAssignedToMe && hasAssignees;
             const isTeamTask = !isMyTask;
+            const isCreatedByMeAssignedToOthers = isCreatedByMe && !isAssignedToMe && hasAssignees;
 
             const filteredSubtasks = task?.subtasks
                 ? filterNestedTasksByView(task.subtasks, mode, userId)
@@ -1174,7 +1176,7 @@ export const filterNestedTasksByView = (tasks = [], mode = 'me', userId) => {
             } else if (mode === 'team') {
                 shouldInclude = isTeamTask;
             } else if (mode === 'createdby') {
-                shouldInclude = isCreatedByMe;
+                shouldInclude = isCreatedByMeAssignedToOthers;
             }
 
             if (shouldInclude || filteredSubtasks.length > 0) {

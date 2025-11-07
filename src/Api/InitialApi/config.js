@@ -35,13 +35,13 @@ export const REMOVE_FILE_URL = buildApiUrl(REMOVE_FILE_ENDPOINT);
 
 // Utility function to get AuthData from both localStorage and sessionStorage
 const getAuthData = () => {
-    try {
-        const authData = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
-        return authData ? JSON.parse(authData) : null;
-    } catch (error) {
-        console.error("Error parsing AuthData:", error);
-        return null;
-    }
+  try {
+    const authData = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
+    return authData ? JSON.parse(authData) : null;
+  } catch (error) {
+    console.error("Error parsing AuthData:", error);
+    return null;
+  }
 };
 
 export const getHeaders = (init = {}) => {
