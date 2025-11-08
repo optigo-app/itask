@@ -1,4 +1,3 @@
-import React from 'react';
 import { Grid, Typography, Box, IconButton, TextareaAutosize, Button } from '@mui/material';
 import { SquarePen } from 'lucide-react';
 

@@ -1,11 +1,10 @@
-import React from "react";
 import "./ReportsGrid.scss";
 import { TextField, MenuItem, Box } from "@mui/material";
 import { commonSelectProps, commonTextFieldProps } from "../../Utils/globalfun";
 
 const Filters = ({ filterShow, setFilterShow, filters, handleFilterChange, filterColumns }) => {
   return (
-    <Box className="filters-container" sx={{display:'flex', gap:'10px', marginBlock:2}}>
+    <Box className="filters-container" sx={{ display: 'flex', gap: '10px', marginBlock: 2 }}>
       {filterShow && filterColumns?.map((col) => (
         <div key={col.key} className="filter-item">
           {col.type === "select" ? (

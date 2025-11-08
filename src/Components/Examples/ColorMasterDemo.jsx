@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -13,7 +13,6 @@ import {
     getDynamicPriorityColor, 
     getDynamicStatusColor, 
     getColorOptions,
-    colorMaster 
 } from '../../Utils/globalfun';
 import ViewToggle from '../Common/ViewToggle';
 import ColorGridShortcuts from '../Common/ColorGridShortcuts';

@@ -22,7 +22,6 @@ const EmployeeList = ({ selectedEmployee, onEmployeeClick }) => {
         setEmployeeData(assigneeData);
     }, []);
 
-    // Filter employees based on search term
     const filteredEmployees = useMemo(() => {
         if (!searchTerm) return employeeData;
         const lowerSearch = searchTerm.toLowerCase();
@@ -34,7 +33,6 @@ const EmployeeList = ({ selectedEmployee, onEmployeeClick }) => {
         });
     }, [employeeData, searchTerm]);
 
-    // Group employees by department
     const groupedEmployees = useMemo(() => {
         const grouped = {};
         filteredEmployees.forEach((employee) => {
@@ -64,7 +62,7 @@ const EmployeeList = ({ selectedEmployee, onEmployeeClick }) => {
     const handleAccordionChange = (department) => (event, isExpanded) => {
         setExpandedDepartments((prev) =>
             isExpanded
-                ? [department] // Only keep the current department open
+                ? [department] 
                 : prev.filter((dept) => dept !== department)
         );
     };

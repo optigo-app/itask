@@ -1,4 +1,4 @@
-import React, { useMemo, memo } from "react";
+import { useMemo, memo } from "react";
 import {
     Table,
     TableHead,
@@ -26,20 +26,18 @@ const TaskTable = memo(({
     const filteredTasks = useMemo(() => {
         if (!tasks || tasks.length === 0) return [];
         if (excludeMinorTasks) {
-            // Show both major and minor tasks when toggle is ON
-            return tasks.filter(task => {
+            return tasks?.filter(task => {
                 const taskType = (task.type || '').toLowerCase();
                 return taskType === 'major' || taskType === 'minor';
             });
         } else {
-            return tasks.filter(task => {
+            return tasks?.filter(task => {
                 const taskType = (task.type || '').toLowerCase();
                 return taskType === 'major';
             });
         }
     }, [tasks, excludeMinorTasks]);
 
-    // Pagination
     const paginatedTasks = useMemo(() => {
         const start = (page - 1) * rowsPerPage;
         const end = start + rowsPerPage;
@@ -58,14 +56,12 @@ const TaskTable = memo(({
     );
 
     const renderTaskRow = (task, index) => {
-        const statusColor = statusColors[task.status?.toLowerCase()] || { color: '#666', backgroundColor: '#f5f5f5' };
 
         return (
             <TableRow key={task.taskid || `task-${index}`} hover>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>
                     <Box>
-                        {/* Project/Module info at top */}
                         <Typography
                             variant="caption"
                             sx={{
