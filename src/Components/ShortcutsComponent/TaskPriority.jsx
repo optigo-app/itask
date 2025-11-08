@@ -1,4 +1,3 @@
-import React from 'react';
 
 const TaskPriority = (priority, priorityColors) => {
     const color = priority && priorityColors[priority]?.color || '#fff';

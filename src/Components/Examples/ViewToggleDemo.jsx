@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     Box,
     Typography,
@@ -146,7 +146,7 @@ const ViewToggleDemo = () => {
 
     const renderUserList = () => (
         <List>
-            {sampleUsers.map((user) => (
+            {sampleUsers?.map((user) => (
                 <ListItem key={user.id} divider>
                     <Avatar sx={{ mr: 2, bgcolor: '#7367f0' }}>
                         {user.avatar}
@@ -169,7 +169,7 @@ const ViewToggleDemo = () => {
 
     const renderUserGrid = () => (
         <Grid container spacing={2}>
-            {sampleUsers.map((user) => (
+            {sampleUsers?.map((user) => (
                 <Grid item xs={12} sm={6} md={3} key={user.id}>
                     <Card sx={{ textAlign: 'center', p: 2 }}>
                         <Avatar sx={{ mx: 'auto', mb: 1, bgcolor: '#7367f0', width: 56, height: 56 }}>
@@ -257,7 +257,7 @@ const ViewToggleDemo = () => {
                     </Box>
                     {categoryView === 'list' ? (
                         <List>
-                            {sampleCategories.map((category) => (
+                            {sampleCategories?.map((category) => (
                                 <ListItem key={category.id} divider>
                                     <Box
                                         sx={{
@@ -277,7 +277,7 @@ const ViewToggleDemo = () => {
                         </List>
                     ) : (
                         <Grid container spacing={2}>
-                            {sampleCategories.map((category) => (
+                            {sampleCategories?.map((category) => (
                                 <Grid item xs={12} sm={6} md={3} key={category.id}>
                                     <Paper
                                         sx={{
