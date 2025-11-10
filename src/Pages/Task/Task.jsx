@@ -309,6 +309,7 @@ const Task = () => {
 
         const fieldsToCheck = [
           item?.taskname,
+          item?.taskno,
           item?.status,
           item?.priority,
           item?.description,

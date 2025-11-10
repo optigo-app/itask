@@ -149,8 +149,29 @@ const AppWrapper = () => {
     };
 
     const getQueryParams = () => {
-        const token = Cookies.get('skey');
         const isLoggedIn = Cookies.get('isLoggedIn');
+        
+        // If isLoggedIn is true, bypass skey token reading
+        if (isLoggedIn === 'true') {
+            // Check both localStorage and sessionStorage for AuthqueryParams
+            const authQueryParams = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
+            if (authQueryParams) {
+                const decodedPayload = JSON.parse(authQueryParams);
+                setCookieData(decodedPayload);
+                setIsReady(true);
+                setPageDataLoaded(true);
+                setIsLoggedIn(true);
+                return decodedPayload;
+            } else {
+                // If no stored auth data but isLoggedIn is true, redirect to login
+                setIsReady(true);
+                setPageDataLoaded(true);
+                return navigate('/login', { replace: true });
+            }
+        }
+        
+        // If isLoggedIn is false or not present, read skey token
+        const token = Cookies.get('skey');
         if (!token) {
             // Check both localStorage and sessionStorage for AuthqueryParams
             const authQueryParams = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");

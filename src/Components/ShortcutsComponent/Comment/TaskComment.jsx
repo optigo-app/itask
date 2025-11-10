@@ -109,7 +109,7 @@ const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, 
     return (
         <>
             {/* Mapping through multiple comments */}
-            {comments.map((comment, index) => (
+            {comments?.map((comment, index) => (
                 <CommentCard key={index} comment={comment} onEditComment={onEditComment} onDeleteComment={onDeleteComment} />
             ))}
 
@@ -192,7 +192,7 @@ const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, 
                             )}
                         </Box>
                         
-                        {selectedFiles.length > 0 && (
+                        {selectedFiles?.length > 0 && (
                             <Box sx={{ 
                                 display: 'grid',
                                 gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
@@ -219,7 +219,7 @@ const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, 
                                     }
                                 },
                             }}>
-                                {filePreviews.map((preview, index) => {
+                                {filePreviews?.map((preview, index) => {
                                     const isImage = preview.file.type.startsWith('image/');
                                     return (
                                         <Box key={index} sx={{ 
@@ -240,18 +240,13 @@ const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, 
                                             }
                                         }}
                                         onClick={() => {
-                                            const allFiles = filePreviews.map((p, idx) => ({
+                                            const allFiles = filePreviews?.map((p, idx) => ({
                                                 url: p.url,
                                                 filename: p.file.name,
                                                 extension: p.file.name?.split('.').pop()?.toLowerCase(),
                                                 fileObject: p.file
                                             }));
-                                            const fileData = {
-                                                url: preview.url,
-                                                filename: preview.file.name,
-                                                extension: preview.file.name?.split('.').pop()?.toLowerCase(),
-                                                fileObject: preview.file
-                                            };
+                                      
                                             setCurrentAttachments(allFiles);
                                             setInitialSlideIndex(index);
                                             setViewerOpen(true);

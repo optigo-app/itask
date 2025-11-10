@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import "./TaskTable.scss";
 import {
     Table,
@@ -329,7 +329,6 @@ const TableView = ({
         setAnchorCommentEl(event.currentTarget);
 
         try {
-            // Fetch comments for the selected task
             const taskComment = await taskCommentGetApi(task);
             const assigneesMaster = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"));
 
@@ -342,7 +341,6 @@ const TableView = ({
                     attachments: comment?.attachments || []
                 }));
 
-                // Set the selected item with comments
                 setSelectedItem({
                     ...task,
                     comments: cleanedComments
@@ -367,7 +365,6 @@ const TableView = ({
     };
 
     const handleCommentAdded = (updatedComments) => {
-        // Update the selected item with new comments
         setSelectedItem(prev => ({
             ...prev,
             comments: updatedComments
@@ -375,7 +372,6 @@ const TableView = ({
     };
 
     const handleViewAllComments = (task) => {
-        // Open task detail drawer to show all comments
         setTaskDetailModalOpen(true);
         setSelectedTask(task);
     };
@@ -591,7 +587,7 @@ const TableView = ({
                                 }}
                             />
                         </IconButton>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', maxWidth: `${columns[0]?.width}` }} title={task?.taskname}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', maxWidth: `${columns[0]?.width}` }} title={`${task?.taskno ? task.taskno + ' - ' : ''}${task?.taskname}`}>
                             <span
                                 style={{
                                     display: '-webkit-box',
@@ -605,6 +601,11 @@ const TableView = ({
                                 }}
                                 className={`tasknameCl ${task?.isCopyActive ? 'cut-task-name' : ''}`}
                             >
+                                {task?.taskno && (
+                                    <span style={{ color: '#666', fontWeight: '500', marginRight: '8px' }}>
+                                        {task.taskno}
+                                    </span>
+                                )}
                                 {task?.taskname}
                             </span>
                             {task?.subtasks?.length > 0 && (
