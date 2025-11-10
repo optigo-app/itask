@@ -110,7 +110,7 @@ const LoginPage = () => {
                     sessionStorage.setItem("AuthqueryParams", JSON.stringify(formatData));
                 }
                 
-                const cookieExpiry = rememberMe ? { expires: formatData.exp } : {};
+                const cookieExpiry = rememberMe ? { expires: new Date(formatData.exp * 1000) } : {};
                 Cookies.set('isLoggedIn', 'true', cookieExpiry);
                 
                 if(process.env.REACT_APP_LOCAL_HOSTNAMES.includes(window.location.hostname)) {

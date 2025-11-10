@@ -1174,7 +1174,7 @@ export const filterNestedTasksByView = (tasks = [], mode = 'me', userId) => {
             if (mode === 'me') {
                 shouldInclude = isMyTask;
             } else if (mode === 'team') {
-                shouldInclude = isTeamTask;
+                shouldInclude = true; // Show all tasks in team mode
             } else if (mode === 'createdby') {
                 shouldInclude = isCreatedByMeAssignedToOthers;
             }

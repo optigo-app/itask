@@ -21,7 +21,7 @@ const CalendarLeftSide = ({ calendarsColor }) => {
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const [caledrawerOpen, setCaledrawerOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState(dayjs());
-    const [view, setView] = useState("filter");
+    const [view, setView] = useState("tasklist");
 
     const handleChange = (event, newView) => {
         if (newView !== null) {

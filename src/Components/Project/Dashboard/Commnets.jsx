@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { MessageSquare } from "lucide-react";
 import "./Styles/Comments.scss";
 import AnnouncementCard from "../../ShortcutsComponent/AnouncementCard/AnnouncementCard";
-import { taskCommentGetApi } from "../../../Api/TaskApi/TaskCommentGetApi";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 
 const Comments = ({comments, isCommentLoading }) => {

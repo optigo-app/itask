@@ -1,8 +1,8 @@
 import React, { useEffect, useState, Suspense, lazy } from 'react';
-import { Box, Typography } from '@mui/material';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
+import { useLocation } from 'react-router-dom';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
-import { getRandomAvatarColor, mapKeyValuePair, transformAttachments } from '../../Utils/globalfun';
+import { getRandomAvatarColor, mapKeyValuePair } from '../../Utils/globalfun';
 import { useRecoilValue } from 'recoil';
 import { selectedRowData } from '../../Recoil/atom';
 import useFullTaskFormatFile from '../../Utils/TaskList/FullTasKFromatfile';
@@ -82,25 +82,37 @@ const ProjectDashboard = () => {
         }
     }, [location]);
 
-
-
     const handleFetchComment = async () => {
         setIsCommentLoading(true);
         const selectedRow = decodedData;
         try {
             const assigneesMaster = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
             const apiRes = await taskCommentGetApi(selectedRow);
-
-            if (apiRes?.rd1?.length > 0) {
-                const today = new Date();
-                const commentsToday = apiRes.rd1.filter(comment => {
-                    const commentDate = new Date(comment.entrydate);
-                    return commentDate.toDateString() === today.toDateString();
-                });
-                const commentsWithAttachments = commentsToday.map(comment => ({
-                    ...comment,
-                    user: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
-                }));
+            
+            if (apiRes?.rd?.length > 0) {
+                const commentsWithAttachments = apiRes?.rd?.map(comment => {
+                    let attachments = [];
+                    if (comment?.DocumentName && comment.DocumentName.trim() !== '') {
+                        const documentUrls = comment.DocumentName.split(',').map(url => url.trim()).filter(url => url);
+                        attachments = documentUrls.map((url, index) => {
+                            const urlParts = url.split('/');
+                            const filename = urlParts[urlParts.length - 1] || `attachment_${index + 1}`;
+                            
+                            return {
+                                url: url,
+                                filename: filename
+                            };
+                        });
+                    }
+                    
+                    return {
+                        ...comment,
+                        user: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
+                        attachments: attachments
+                    };
+                })
+                .sort((a, b) => new Date(b.entrydate) - new Date(a.entrydate));
+                
                 setComments(commentsWithAttachments);
                 setCommentCount(commentsWithAttachments.length);
             } else {
