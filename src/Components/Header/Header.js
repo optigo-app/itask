@@ -254,7 +254,7 @@ const useDataMap = (location, decodedData) => {
     const dataMap = {
         "/": { title: "Home", subtitle: "Monitor all your project and tasks here" },
         "/inbox": { title: "Inbox", subtitle: "Check your messages and notifications" },
-        "/calendar": { title: "Calendar", subtitle: "Keep track of your events and tasks" },
+        "/myCalendar": { title: "Calendar", subtitle: "Keep track of your events and tasks" },
         "/meetings": { title: "Meetings", subtitle: "Manage and schedule your meetings" },
         "/tasks": { title: 'My Tasks', subtitle: "View all of your tasks here" },
         "/projects": { title: "Projects", subtitle: "Manage and monitor your projects" },
@@ -263,6 +263,7 @@ const useDataMap = (location, decodedData) => {
         "/account-settings": { title: "Profile", subtitle: "Manage your Profile here" },
         "/reports": { title: "Reports", subtitle: "View All your Reports here" },
         "/reports/pms": { title: "PMS iTask Report", subtitle: "View All your Reports here" },
+        "/reports/teamCalReport": { title: "Team Calendar Report", subtitle: "View All your Team Calendar Reports here" },
         "/notification": { title: "Notification", subtitle: "View All your notification here" },
         "/taskView": { title: "Today Tasks", subtitle: "View All your Today Tasks here" },
     };
@@ -381,12 +382,12 @@ const useToggleNavigation = (location, decodedData) => {
 
     useEffect(() => {
         setSelectedTab(location.pathname.includes("/tasks/") ? "taskView" : "projectHome");
-        setSelectedCalTab(location?.pathname.includes("/calendar") ? "calendarView" : "todayTasks");
+        setSelectedCalTab(location?.pathname.includes("/myCalendar") ? "calendarView" : "todayTasks");
     }, [location]);
 
     const handleRedirection = (value) => {
         if (location?.pathname.includes("calendar") || location?.pathname?.includes("/taskView")) {
-            navigate(value === "calendarView" ? "/calendar" : "/taskView");
+            navigate(value === "calendarView" ? "/myCalendar" : "/taskView");
         } else {
             const urlData = {
                 project: decodedData?.project,
@@ -490,7 +491,7 @@ const Header = ({ avatarSrc = "" }) => {
                     <ToggleGroup options={toggleOptions} selectedValue={selectedTab} onRedirection={handleRedirection} className="taskHeaderTDBox" />
                 )}
 
-                {(location?.pathname?.includes("/calendar") || location?.pathname?.includes("/taskView")) && (
+                {(location?.pathname?.includes("/myCalendar") || location?.pathname?.includes("/taskView")) && (
                     <ToggleGroup options={toggleCalOptions} selectedValue={selectedCalTab} onRedirection={handleRedirection} className="taskHeaderTDBox" />
                 )}
 

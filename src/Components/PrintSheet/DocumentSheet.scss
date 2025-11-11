@@ -1,0 +1,179 @@
+.dContainer_main {
+  box-sizing: border-box;
+  word-break: break-all;
+  max-width: 850px;
+  margin: 0 auto;
+  padding-bottom: 150px;
+  font-family: Calibri;
+  letter-spacing: 0.3px;
+
+  .TxtCentr {
+    text-align: center;
+  }
+
+  .CmonFntSize {
+    font-size: 15px;
+  }
+
+  .WdthMost {
+    width: 70%;
+    white-space: nowrap;
+  }
+
+  .WdthMIN {
+    width: 30%;
+  }
+
+  .WdMost {
+    width: 40%;
+    white-space: nowrap;
+  }
+
+  .valueBind {
+    margin-left: 2px;
+    font-weight: normal !important;
+    text-transform: capitalize;
+  }
+
+  .taskname {
+    margin-left: 2px;
+    font-weight: normal !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  .WdAvg {
+    width: 30%;
+  }
+
+  .WdMIN {
+    width: 30%;
+  }
+
+  .ScndryWdMost {
+    width: 35%;
+  }
+
+  .ScndryWdMdle {
+    width: 30%;
+  }
+
+  .ScndryWdMIN {
+    width: 35%;
+  }
+
+  .checkbox{
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    box-sizing: border-box;
+    margin-top: 0px;
+    margin-left: 4px;
+    margin-right: 10px;
+  }
+
+  .SpacRitDPL {
+    margin-right: 60px;
+  }
+
+  .SpacRit {
+    margin-right: 4px;
+  }
+
+  .SpacLft {
+    margin-left: 25px;
+  }
+
+  .MostWd {
+    width: 28%;
+    white-space: nowrap;
+  }
+
+  .AvgWd1 {
+    width: 18%;
+    white-space: nowrap;
+  }
+
+  .AvgWd2 {
+    width: 24%;
+    white-space: nowrap;
+  }
+
+  .MINWd {
+    width: 30%;
+  }
+
+  .higtCmon {
+    height: 25px;
+    box-sizing: border-box;
+  }
+
+  .CmonCentrEvry {
+    display: flex;
+    align-items: center;
+    padding-left: 2px;
+    white-space: nowrap;
+  }
+
+  .TxtDark {
+    font-weight: 600;
+  }
+
+  .BrderEvry {
+    border: 1px solid #bdbdbd;
+  }
+
+  .BrderTop {
+    border-top: 1px solid #bdbdbd;
+  }
+
+  .BrderRigt {
+    border-right: 1px solid #bdbdbd;
+  }
+
+  .BrderBtom {
+    border-bottom: 1px solid #bdbdbd;
+  }
+
+  .BrderLft {
+    border-left: 1px solid #bdbdbd;
+  }
+}
+
+@media print {
+  @page {
+    margin: 5px 25px;
+  }
+
+  .dContainer_main {
+    padding-bottom: 0px;
+
+    .CmonFntSize {
+      font-size: 12px;
+    }
+
+    .checkbox{
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      box-sizing: border-box;
+      margin-top: 0px;
+      margin-left: 4px;
+      margin-right: 7.5px;
+    }
+
+    .higtCmon {
+      height: 24px;
+    }
+
+    .SpacRit {
+      margin-right: 4px;
+    }
+    
+    .SpacLft {
+      margin-left: 25px;
+    }
+  }
+}

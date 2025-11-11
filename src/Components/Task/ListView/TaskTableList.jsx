@@ -48,6 +48,7 @@ import TablePaginationFooter from "../../ShortcutsComponent/Pagination/TablePagi
 import useAccess from "../../Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
 import { taskCommentGetApi } from "../../../Api/TaskApi/TaskCommentGetApi";
+import DocumentSheet from "../../PrintSheet/DocumentSheet";
 
 const initialColumns = [
     { id: "taskname", label: "Task Name", width: 280 },
@@ -98,6 +99,7 @@ const TableView = ({
     const [anchorCommentEl, setAnchorCommentEl] = useState(null);
     const printRef1 = React.useRef(null);
     const printRef2 = React.useRef(null);
+    const printRef3 = React.useRef(null);
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const setFormDataValue = useSetRecoilState(formData);
@@ -386,6 +388,11 @@ const TableView = ({
         documentTitle: "AwesomeFileName",
     });
 
+    const handlePrintC = useReactToPrint({
+        contentRef: printRef3,
+        documentTitle: "AwesomeFileName",
+    });
+
     const printOptions = [
         {
             label: "MOM Sheet",
@@ -394,6 +401,10 @@ const TableView = ({
         {
             label: "Maintenance Sheet",
             onClick: handlePrintB,
+        },
+        {
+            label: "Document Sheet",
+            onClick: handlePrintC,
         },
     ];
 
@@ -1160,6 +1171,7 @@ const TableView = ({
             <div style={{ display: 'none' }}>
                 <MomSheet selectedData={selectedItem} ref={printRef1} />
                 <MaintenanceSheet selectedData={selectedItem} ref={printRef2} />
+                <DocumentSheet selectedData={selectedItem} ref={printRef3} />
             </div>
 
         </>

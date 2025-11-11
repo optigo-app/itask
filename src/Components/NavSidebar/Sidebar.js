@@ -57,7 +57,7 @@ const Sidebar = () => {
         { pagename: "Project", label: "Project", routes: "Projects", path: "/projects", icon: SquareChartGantt },
         { pagename: "Inbox", label: "Inbox", routes: "Inbox", path: "/inbox", icon: Inbox },
         { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
-        { pagename: "Calender", label: "Calendar", routes: "Calendar", path: "/calendar", icon: CalendarCheck },
+        { pagename: "Calender", label: "My Calendar", routes: "Calendar", path: "/myCalendar", icon: CalendarCheck },
         { pagename: "Maters", label: "Masters", routes: "Masters", path: "/masters", icon: Boxes },
         { pagename: "Reports", label: "Reports", routes: "Reports", path: "/reports", icon: Ratio }
     ];
@@ -66,7 +66,7 @@ const Sidebar = () => {
     const reportSubItems = [
         { label: 'PMS Report', path: '/reports/pms' },
         { label: 'PMS Report 2', path: '/reports/pms-2' },
-        { label: 'Emp Cl Report', path: '/reports/empClReport' },
+        { label: 'Team Cal View', path: '/reports/teamCalReport' },
     ];
 
     useEffect(() => {
