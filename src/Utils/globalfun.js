@@ -1085,7 +1085,6 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
         return result;
     };
     const flatData = flattenTasks(nestedData);
-    console.log("flatData",flatData)
     
     const isValidDate = (dateStr) => {
         const date = new Date(dateStr);

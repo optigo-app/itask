@@ -26,7 +26,6 @@ import CalendarViewDemo from './Backup/CalendarViewDemo';
 import SampleQuickForm from './Backup/sampleQuickForm';
 import SampleQuickFormVersion2 from './Backup/sampleQuickFormVersion2';
 import StructuredQuickTask from './Backup/StructuredQuickTask';
-import DocumentSheet from './Components/PrintSheet/DocumentSheet';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -310,7 +309,7 @@ const AppWrapper = () => {
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
                                         <Route path="/reports/pms" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport /></ProtectedRoute>} />
                                         <Route path="/reports/pms-2" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport2 /></ProtectedRoute>} />
-                                        <Route path="/reports/teamCalReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><CalendarReport /></ProtectedRoute>} />
+                                        <Route path="/teamCalReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1009"><CalendarReport /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
                                         <Route path="/test" element={<CalendarComparisonDemo />} />
@@ -319,7 +318,6 @@ const AppWrapper = () => {
                                         <Route path="/test3" element={<SampleQuickFormVersion2 />} />
                                         <Route path="/test4321" element={<StructuredQuickTask />} />
                                         <Route path="/test4322" element={<CalendarReport />} />
-                                        <Route path="/test4323" element={<DocumentSheet />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>

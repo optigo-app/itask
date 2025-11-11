@@ -59,14 +59,15 @@ const Sidebar = () => {
         { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
         { pagename: "Calender", label: "My Calendar", routes: "Calendar", path: "/myCalendar", icon: CalendarCheck },
         { pagename: "Maters", label: "Masters", routes: "Masters", path: "/masters", icon: Boxes },
-        { pagename: "Reports", label: "Reports", routes: "Reports", path: "/reports", icon: Ratio }
+        { pagename: "Team Cal View", label: "Team Cal View", routes: "teamCalReport", path: "/teamCalReport", icon: Ratio },
+        { pagename: "Reports", label: "Reports", routes: "Reports", path: "/reports", icon: Ratio },
     ];
 
     // Sub menu items for Reports
     const reportSubItems = [
         { label: 'PMS Report', path: '/reports/pms' },
         { label: 'PMS Report 2', path: '/reports/pms-2' },
-        { label: 'Team Cal View', path: '/reports/teamCalReport' },
+        // { label: 'Team Cal View', path: '/reports/teamCalReport' },
     ];
 
     useEffect(() => {

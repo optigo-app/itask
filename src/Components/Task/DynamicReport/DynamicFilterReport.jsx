@@ -49,7 +49,6 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
         setRd3(masterRes?.rd3 ?? []);
 
         const dataRes = await DynamicFilterApi();
-        console.log("dataRes", dataRes);
         setQlColIdToName(dataRes?.rd?.[0] ?? {});
         setRawRows(dataRes?.rd1 ?? []);
       } catch {
