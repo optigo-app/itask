@@ -206,7 +206,7 @@ const AppWrapper = () => {
                                         <Route path="/tasks/*" element={<ProtectedRoute pageName="Task" pageId="-1002"><Task /></ProtectedRoute>} />
                                         <Route path="/tasks/unassigned" element={<ProtectedRoute pageName="Task" pageId="-1002"><UnassignedTaskList /></ProtectedRoute>} />
                                         <Route path="/taskDetails" element={<ProtectedRoute pageName="Task" pageId="-1002"><TaskDetails /></ProtectedRoute>} />
-                                        <Route path="/calendar" element={<ProtectedRoute pageName="Calender" pageId="-1006"><Calendar /></ProtectedRoute>} />
+                                        <Route path="/myCalendar" element={<ProtectedRoute pageName="Calender" pageId="-1006"><Calendar /></ProtectedRoute>} />
                                         <Route path="/meetings" element={<ProtectedRoute pageName="Meeting" pageId="-1005"><Meeting /></ProtectedRoute>} />
                                         <Route path="/inbox" element={<ProtectedRoute pageName="Inbox" pageId="-1004"><Inbox /></ProtectedRoute>} />
                                         <Route path="/masters" element={<ProtectedRoute pageName="Maters" pageId="-1007"><Masters /></ProtectedRoute>} />

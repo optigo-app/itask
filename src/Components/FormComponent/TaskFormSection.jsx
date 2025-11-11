@@ -93,7 +93,7 @@ const TaskFormSection = ({
                 </Box>
               }
             </Box>
-            {formValues?.taskName && location?.pathname?.includes("/calendar") &&
+            {formValues?.taskName && location?.pathname?.includes("/myCalendar") &&
               <Box>
                 {formValues.title != "" &&
                   <Grid item xs={12}>

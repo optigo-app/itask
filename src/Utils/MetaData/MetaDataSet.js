@@ -1,8 +1,5 @@
-import React from 'react';
 import MetaData from './MetaData';
 import { useLocation } from 'react-router-dom';
-
-
 
 const MetaDataSet = () => {
   const location = useLocation();
@@ -50,7 +47,7 @@ const MetaDataSet = () => {
       keywords: "meeting scheduler, calendar, task tracking, team meetings",
       url: window.location.href,
     },
-    "/calendar": {
+    "/myCalendar": {
       title: "Calendar View - Plan Your Schedule",
       description: "View all your tasks, deadlines, and meetings in one easy-to-use calendar interface.",
       image: "https://example.com/calendar-image.jpg",

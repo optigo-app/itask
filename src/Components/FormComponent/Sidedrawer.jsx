@@ -607,9 +607,9 @@ const SidebarDrawer = ({
                     px: 3,
                     zIndex: 1301,
                     display: 'flex',
-                    justifyContent: formValues?.taskName && location?.pathname?.includes('/calendar') ? 'space-between' : 'flex-end'
+                    justifyContent: formValues?.taskName && location?.pathname?.includes('/myCalendar') ? 'space-between' : 'flex-end'
                 }}>
-                    {formValues?.taskName && location?.pathname?.includes('/calendar') &&
+                    {formValues?.taskName && location?.pathname?.includes('/myCalendar') &&
                         <Box sx={{ display: 'flex', gap: 2 }}>
                             <Button
                                 variant="contained"
@@ -774,7 +774,7 @@ const SidebarDrawer = ({
                 className="MainDrawer"
                 sx={{ display: open == true ? 'block' : 'none', zIndex: theme.zIndex.drawer + 2, }}
             >
-                {['/tasks', '/meetings', '/calendar']?.some(path => location?.pathname?.includes(path)) &&
+                {['/tasks', '/meetings', '/myCalendar']?.some(path => location?.pathname?.includes(path)) &&
                     <Box className="drawer-container">
                         <TaskDrawerHeader
                             taskType={taskType}

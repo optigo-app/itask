@@ -152,7 +152,7 @@ const HeaderButtons = ({
   const handleViewChange = (event, newView) => {
     if (!newView || newView === view) return;
     if (newView === "calendar") {
-      navigate('/calendar');
+      navigate('/myCalendar');
     } else {
       setView(newView);
       onButtonClick(newView);
