@@ -263,7 +263,7 @@ const useDataMap = (location, decodedData) => {
         "/account-settings": { title: "Profile", subtitle: "Manage your Profile here" },
         "/reports": { title: "Reports", subtitle: "View All your Reports here" },
         "/reports/pms": { title: "PMS iTask Report", subtitle: "View All your Reports here" },
-        "/reports/teamCalReport": { title: "Team Calendar Report", subtitle: "View All your Team Calendar Reports here" },
+        "/teamCalReport": { title: "Team Calendar Report", subtitle: "View All your Team Calendar Reports here" },
         "/notification": { title: "Notification", subtitle: "View All your notification here" },
         "/taskView": { title: "Today Tasks", subtitle: "View All your Today Tasks here" },
     };

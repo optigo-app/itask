@@ -3,7 +3,6 @@ import './DocumentSheet.scss';
 import { formatDate3 } from '../../Utils/globalfun';
 
 const DocumentSheet = forwardRef((selectedData, ref) => {
-    console.log("selectedData", selectedData);
     
     const getAssigneeNames = (assignees) => {
         if (!assignees || !Array.isArray(assignees)) return '';
