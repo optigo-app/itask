@@ -12,7 +12,7 @@
   }
 
   .CmonFntSize {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .WdthMost {
@@ -42,6 +42,18 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 100%;
+  }
+
+  // Bold and dark labels
+  .label-bold {
+    font-weight: 600 !important;
+    color: #000 !important;
+  }
+
+  // Light colored text for other content
+  .text-light {
+    color: #666 !important;
+    font-weight: 400 !important;
   }
 
   .WdAvg {
@@ -144,14 +156,14 @@
 
 @media print {
   @page {
-    margin: 5px 25px;
+    margin: 5px 20px !important;
   }
 
   .dContainer_main {
     padding-bottom: 0px;
 
     .CmonFntSize {
-      font-size: 12px;
+      font-size: 12px !important;
     }
 
     .checkbox{

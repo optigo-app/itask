@@ -178,7 +178,6 @@ const CommentMenuPopup = ({
     const [initialSlideIndex, setInitialSlideIndex] = useState(0);
 
     useEffect(() => {
-        debugger
         const assigneesMaster = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"));
         const fetchTaskComment = async () => {
             setIsLoadingComments(true);

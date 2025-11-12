@@ -173,7 +173,6 @@ const TasklistForCal = ({ calendarsColor }) => {
 
     // Drag only children (parentid !== 0)
     useEffect(() => {
-        debugger
         const container = document.getElementById("external-tasks");
         if (container) {
             new Draggable(container, {

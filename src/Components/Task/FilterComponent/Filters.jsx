@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Box, TextField, Typography, MenuItem, Menu, Checkbox, ListItemText, Button, Autocomplete } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { useRecoilState, useSetRecoilState } from "recoil";
-import { Advfilters, selectedCategoryAtom } from "../../../Recoil/atom";
+import { Advfilters, dynamicFilterDrawer, selectedCategoryAtom } from "../../../Recoil/atom";
 import { commonTextFieldProps, customDatePickerProps } from "../../../Utils/globalfun";
 import DepartmentAssigneeAutocomplete from "../../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete";
 
@@ -14,6 +14,8 @@ const Filters = ({
   taskProject,
   taskDepartment,
 }) => {
+  const [dynamicFilter, setDynamicFilters] = useRecoilState(dynamicFilterDrawer)
+  const activetaskView = localStorage.getItem("activeTaskTab")
   const [filters, setFilters] = useRecoilState(Advfilters);
 
   const [filterVisibility, setFilterVisibility] = useState({
@@ -55,10 +57,13 @@ const Filters = ({
     onFilterChange(key, newValue);
   };
 
-
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
+
+  const handleDynamicFilterOpen = () => {
+    setDynamicFilters(!dynamicFilter);
+  }
 
   const handleMenuClose = () => {
     setAnchorEl(null);
@@ -80,41 +85,44 @@ const Filters = ({
   return (
     <Box className="filterMainContainer">
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: 'end', gap: 2 }}>
-        {[
-          { label: "Project", key: "project", data: taskProject },
-          { label: "Status", key: "status", data: statusData },
-          { label: "Priority", key: "priority", data: priorityData },
-        ]?.map((filter) =>
-          filterVisibility[filter.key] ? (
-            <Box key={filter.key} className="form-group" sx={{ minWidth: 180, maxWidth: 180 }}>
-              <Typography variant="subtitle1" className="filterLabletxt">
-                {filter.label}
-              </Typography>
-              <Autocomplete
-                size="small"
-                fullWidth
-                value={filters[filter.key] || null}
-                {...commonTextFieldProps}
-                onChange={(event, newValue) =>
-                  handleFilterChange(filter.key, newValue)
-                }
-                options={filter?.data?.map((item) =>
-                  filter.key === "assignee"
-                    ? `${item?.firstname} ${item?.lastname}`
-                    : item?.labelname
-                )}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder={`Select ${filter.label}`}
-                    className="textfieldsClass"
+        {activetaskView != "Dynamic-Filter" &&
+          <>
+            {[
+              { label: "Project", key: "project", data: taskProject },
+              { label: "Status", key: "status", data: statusData },
+              { label: "Priority", key: "priority", data: priorityData },
+            ]?.map((filter) =>
+              filterVisibility[filter.key] ? (
+                <Box key={filter.key} className="form-group" sx={{ minWidth: 180, maxWidth: 180 }}>
+                  <Typography variant="subtitle1" className="filterLabletxt">
+                    {filter.label}
+                  </Typography>
+                  <Autocomplete
+                    size="small"
+                    fullWidth
+                    value={filters[filter.key] || null}
+                    {...commonTextFieldProps}
+                    onChange={(event, newValue) =>
+                      handleFilterChange(filter.key, newValue)
+                    }
+                    options={filter?.data?.map((item) =>
+                      filter.key === "assignee"
+                        ? `${item?.firstname} ${item?.lastname}`
+                        : item?.labelname
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder={`Select ${filter.label}`}
+                        className="textfieldsClass"
+                      />
+                    )}
                   />
-                )}
-              />
-            </Box>
-          ) : null
-        )}
-
+                </Box>
+              ) : null
+            )}
+          </>
+        }
         {assigneeVisible && (
           <Box sx={{ maxWidth: 250 }}>
             <DepartmentAssigneeAutocomplete
@@ -172,7 +180,11 @@ const Filters = ({
 
 
       <Box>
-        <Button size='medium' className="buttonClassname" variant="contained" onClick={handleMenuOpen} sx={{ marginRight: '10px' }}>Show Filter</Button>
+        {activetaskView == "Dynamic-Filter" ? (
+          <Button size='medium' className="buttonClassname" variant="contained" onClick={handleDynamicFilterOpen} sx={{ marginRight: '10px' }}>More Filter</Button>
+        ) :
+          <Button size='medium' className="buttonClassname" variant="contained" onClick={handleMenuOpen} sx={{ marginRight: '10px' }}>Show Filter</Button>
+        }
         <Menu
           anchorEl={anchorEl}
           open={openMenu}

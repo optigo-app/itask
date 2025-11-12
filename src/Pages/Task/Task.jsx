@@ -14,12 +14,12 @@ import { toast } from "react-toastify";
 import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
 import { MoveTaskApi } from "../../Api/TaskApi/MoveTaskApi";
 import CloseIcon from '@mui/icons-material/Close';
-import DynamicFilterReport from "../../Components/Task/DynamicReport/DynamicFilterReport";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
 const KanbanView = React.lazy(() => import("../../Components/Task/KanbanView/KanbanView"));
 const CardView = React.lazy(() => import("../../Components/Task/CardView/CardView"));
+const DynamicFilterReport = React.lazy(() => import("../../Components/Task/DynamicReport/DynamicFilterReport"))
 
 const Task = () => {
   const date = new Date();
