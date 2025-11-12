@@ -41,6 +41,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
   const [finalRowData, setFinalRowData] = useState([]);
   const taskAssigneeData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
   const taskWorkCategoryData = JSON?.parse(sessionStorage.getItem("taskworkcategoryData"));
+  const taskCategory = JSON?.parse(sessionStorage.getItem("taskworkcategoryData"));
   const searchParams = new URLSearchParams(location.search);
   const encodedData = searchParams.get("data");
 
@@ -59,7 +60,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
         console.error("Error decoding or parsing encodedData:", error);
       }
     }
-    
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -341,6 +342,60 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
           }
         }
       }
+debugger
+      // Category filtering (special handling for Unset Deadline and Due)
+      if (filters?.category && filters.category.length > 0) {
+        const hasUnsetDeadline = filters.category.includes("Unset Deadline");
+        const hasDue = filters.category.includes("Due");
+        
+        if (hasUnsetDeadline || hasDue) {
+          // Handle special deadline categories
+          if (hasUnsetDeadline && hasDue) {
+            // Both selected - show tasks with no deadline OR due tasks
+            const hasNoDeadline = !row?.deadline || !cleanDate(row?.deadline);
+            const isDue = row?.deadline && cleanDate(row?.deadline) && 
+                         new Date(cleanDate(row?.deadline)) <= new Date();
+            if (!hasNoDeadline && !isDue) return false;
+          } else if (hasUnsetDeadline) {
+            // Only Unset Deadline selected
+            if (row?.deadline && cleanDate(row?.deadline)) return false;
+          } else if (hasDue) {
+            // Only Due selected
+            if (!row?.deadline || !cleanDate(row?.deadline)) return false;
+            const deadlineDate = new Date(cleanDate(row?.deadline));
+            if (deadlineDate > new Date()) return false;
+          }
+          
+          // Remove special categories from further processing
+          const regularCategories = filters.category.filter(cat => 
+            cat !== "Unset Deadline" && cat !== "Due"
+          );
+          
+          // If there are regular categories, also check those
+          if (regularCategories.length > 0) {
+            const rowCategoryId = row?.workcategoryid;
+            if (!rowCategoryId) return false;
+            
+            const hasMatchingCategory = regularCategories.some(catName => {
+              const category = taskCategory?.find(cat => cat.labelname === catName);
+              return category && rowCategoryId == category.id;
+            });
+            
+            if (!hasMatchingCategory) return false;
+          }
+        } else {
+          // Regular category filtering
+          const rowCategoryId = row?.workcategoryid;
+          if (!rowCategoryId) return false;
+          
+          const hasMatchingCategory = filters.category.some(catName => {
+            const category = taskCategory?.find(cat => cat.labelname === catName);
+            return category && rowCategoryId == category.id;
+          });
+          
+          if (!hasMatchingCategory) return false;
+        }
+      }
 
       // Search term filtering
       if (filters?.searchTerm?.trim()) {
@@ -378,7 +433,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
       }
       return true;
     });
-  }, [finalRowData, selectedAttrsByGroupId, groupIdToColumnKey, idToAttr, filters, masterColNameSet, taskAssigneeData, taskWorkCategoryData]);
+  }, [finalRowData, selectedAttrsByGroupId, groupIdToColumnKey, idToAttr, filters, masterColNameSet, taskAssigneeData, taskWorkCategoryData, taskCategory]);
 
   // Count active filters
   const activeFiltersCount = Object.keys(filters).filter(key =>
