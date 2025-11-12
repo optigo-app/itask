@@ -155,6 +155,11 @@ export const timerCompOpen = atom({
   default: false
 })
 
+export const dynamicFilterDrawer = atom({
+  key: 'dynamicFilterDrawer',
+  default: false
+})
+
 
 
 

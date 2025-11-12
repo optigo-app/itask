@@ -26,6 +26,7 @@ import CalendarViewDemo from './Backup/CalendarViewDemo';
 import SampleQuickForm from './Backup/sampleQuickForm';
 import SampleQuickFormVersion2 from './Backup/sampleQuickFormVersion2';
 import StructuredQuickTask from './Backup/StructuredQuickTask';
+import DocumentSheet from './Components/PrintSheet/DocumentSheet';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -318,6 +319,7 @@ const AppWrapper = () => {
                                         <Route path="/test3" element={<SampleQuickFormVersion2 />} />
                                         <Route path="/test4321" element={<StructuredQuickTask />} />
                                         <Route path="/test4322" element={<CalendarReport />} />
+                                        <Route path="/test4323" element={<DocumentSheet />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>

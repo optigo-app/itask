@@ -37,7 +37,7 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
     const [currentAttachments, setCurrentAttachments] = useState([]);
     const [viewerOpen, setViewerOpen] = useState(false);
     const [initialSlideIndex, setInitialSlideIndex] = useState(0);
-    const groupedByProjectId = refferenceData.reduce((acc, item) => {
+    const groupedByProjectId = refferenceData?.reduce((acc, item) => {
         const { projectid } = item;
         if (!acc[projectid]) {
             acc[projectid] = [];

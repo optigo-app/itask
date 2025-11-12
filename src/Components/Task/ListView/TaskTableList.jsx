@@ -96,6 +96,7 @@ const TableView = ({
             navigate('/projects');
         }
     };
+    
     const [anchorCommentEl, setAnchorCommentEl] = useState(null);
     const printRef1 = React.useRef(null);
     const printRef2 = React.useRef(null);
@@ -380,17 +381,17 @@ const TableView = ({
 
     const handlePrintA = useReactToPrint({
         contentRef: printRef1,
-        documentTitle: "AwesomeFileName",
+        documentTitle: "MOMSheet",
     });
 
     const handlePrintB = useReactToPrint({
         contentRef: printRef2,
-        documentTitle: "AwesomeFileName",
+        documentTitle: "MaintenanceSheet",
     });
 
     const handlePrintC = useReactToPrint({
         contentRef: printRef3,
-        documentTitle: "AwesomeFileName",
+        documentTitle: "DocumentSheet",
     });
 
     const printOptions = [
