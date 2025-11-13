@@ -19,7 +19,8 @@ const EmployeeList = ({ selectedEmployee, onEmployeeClick }) => {
 
     useEffect(() => {
         const assigneeData = JSON?.parse(sessionStorage?.getItem('taskAssigneeData')) || [];
-        setEmployeeData(assigneeData);
+        const activeEmp = assigneeData.filter((emp) => emp.isactive === 1);
+        setEmployeeData(activeEmp);
     }, []);
 
     const filteredEmployees = useMemo(() => {

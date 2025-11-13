@@ -126,6 +126,7 @@ const AppWrapper = () => {
                 handleRefetch();
             }
         };
+
         const handleFocus = () => {
             handleRefetch();
         };
