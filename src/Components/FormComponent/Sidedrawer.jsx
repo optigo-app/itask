@@ -804,7 +804,7 @@ const SidebarDrawer = ({
                                     statusData={statusData}
                                     secStatusData={secStatusData}
                                     priorityData={priorityData}
-                                    teams={location?.pathname?.includes('/tasks') ? teams : taskAssigneeData}
+                                    teams={location?.pathname?.includes('/tasks') ? teams : taskAssigneeData?.filter((emp) => emp.isactive === 1)}
                                     prModuleMaster={prModuleMaster}
                                     renderAutocomplete={renderAutocomplete}
                                     renderDateField={renderDateTimeField}

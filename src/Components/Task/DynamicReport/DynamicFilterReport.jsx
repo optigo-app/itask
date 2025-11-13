@@ -28,7 +28,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
   const [filters] = useRecoilState(Advfilters);
   const [isLoading, setIsLoading] = useState(false);
   const [status500, setStatus500] = useState(false);
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 20 });
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 100 });
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const pageSizeOptions = [20, 25, 50, 100];
 
@@ -342,20 +342,41 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
           }
         }
       }
-debugger
-      // Category filtering (special handling for Unset Deadline and Due)
+      // Category filtering (special handling for Unset Deadline, Due, and Today)
       if (filters?.category && filters.category.length > 0) {
         const hasUnsetDeadline = filters.category.includes("Unset Deadline");
         const hasDue = filters.category.includes("Due");
+        const hasToday = filters.category.includes("Today");
         
-        if (hasUnsetDeadline || hasDue) {
-          // Handle special deadline categories
-          if (hasUnsetDeadline && hasDue) {
-            // Both selected - show tasks with no deadline OR due tasks
+        if (hasUnsetDeadline || hasDue || hasToday) {
+          // Handle special categories
+          if (hasUnsetDeadline && hasDue && hasToday) {
+            // All three selected - show tasks with no deadline OR due tasks OR start_date today
+            const hasNoDeadline = !row?.deadline || !cleanDate(row?.deadline);
+            const isDue = row?.deadline && cleanDate(row?.deadline) && 
+                         new Date(cleanDate(row?.deadline)) <= new Date();
+            const isToday = row?.start_date && cleanDate(row?.start_date) && 
+                           formatDate2(cleanDate(row?.start_date)) === formatDate2(new Date());
+            if (!hasNoDeadline && !isDue && !isToday) return false;
+          } else if (hasUnsetDeadline && hasDue) {
+            // Unset Deadline + Due selected - show tasks with no deadline OR due tasks
             const hasNoDeadline = !row?.deadline || !cleanDate(row?.deadline);
             const isDue = row?.deadline && cleanDate(row?.deadline) && 
                          new Date(cleanDate(row?.deadline)) <= new Date();
             if (!hasNoDeadline && !isDue) return false;
+          } else if (hasUnsetDeadline && hasToday) {
+            // Unset Deadline + Today selected - show tasks with no deadline OR start_date today
+            const hasNoDeadline = !row?.deadline || !cleanDate(row?.deadline);
+            const isToday = row?.start_date && cleanDate(row?.start_date) && 
+                           formatDate2(cleanDate(row?.start_date)) === formatDate2(new Date());
+            if (!hasNoDeadline && !isToday) return false;
+          } else if (hasDue && hasToday) {
+            // Due + Today selected - show due tasks OR start_date today
+            const isDue = row?.deadline && cleanDate(row?.deadline) && 
+                         new Date(cleanDate(row?.deadline)) <= new Date();
+            const isToday = row?.start_date && cleanDate(row?.start_date) && 
+                           formatDate2(cleanDate(row?.start_date)) === formatDate2(new Date());
+            if (!isDue && !isToday) return false;
           } else if (hasUnsetDeadline) {
             // Only Unset Deadline selected
             if (row?.deadline && cleanDate(row?.deadline)) return false;
@@ -364,11 +385,15 @@ debugger
             if (!row?.deadline || !cleanDate(row?.deadline)) return false;
             const deadlineDate = new Date(cleanDate(row?.deadline));
             if (deadlineDate > new Date()) return false;
+          } else if (hasToday) {
+            // Only Today selected - show tasks with start_date today
+            if (!row?.start_date || !cleanDate(row?.start_date)) return false;
+            if (formatDate2(cleanDate(row?.start_date)) !== formatDate2(new Date())) return false;
           }
           
           // Remove special categories from further processing
           const regularCategories = filters.category.filter(cat => 
-            cat !== "Unset Deadline" && cat !== "Due"
+            cat !== "Unset Deadline" && cat !== "Due" && cat !== "Today"
           );
           
           // If there are regular categories, also check those

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Typography, Avatar, Menu, MenuItem, Divider, Button, Chip, Tooltip, IconButton, Badge, ToggleButtonGroup, ToggleButton } from "@mui/material";
-import { Bell, MailOpen, User, LogOut, House, FileCheck, FileClock } from "lucide-react";
+import { Bell, MailOpen, User, LogOut, House, FileCheck } from "lucide-react";
 import { getRandomAvatarColor, ImageUrl, getUserProfileData } from "../../Utils/globalfun";
 import "./header.scss";
 import NotificationCard from "../Notification/NotificationCard";
@@ -31,6 +31,7 @@ const useProfileData = () => {
             setProfileData(null);
         }
     };
+    
     useEffect(() => {
         updateProfileData();
     }, [location, role]);
@@ -386,7 +387,7 @@ const useToggleNavigation = (location, decodedData) => {
     }, [location]);
 
     const handleRedirection = (value) => {
-        if (location?.pathname.includes("calendar") || location?.pathname?.includes("/taskView")) {
+        if (location?.pathname.includes("myCalendar") || location?.pathname?.includes("/taskView")) {
             navigate(value === "calendarView" ? "/myCalendar" : "/taskView");
         } else {
             const urlData = {

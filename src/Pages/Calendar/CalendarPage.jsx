@@ -313,7 +313,7 @@ const Calendar = () => {
           calendarsColor={calendarsColor}
           handleCaleFormSubmit={handleCaleFormSubmit}
           isLoding={isLoding}
-          assigneeData={assigneeData}
+          assigneeData={assigneeData?.filter((emp) => emp.isactive === 1)}
           selectedAssignee={selectedAssignee}
           handleAssigneeChange={handleAssigneeChange}
           hasAccess={hasAccess}

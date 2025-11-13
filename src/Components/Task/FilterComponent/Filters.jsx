@@ -5,6 +5,7 @@ import { useRecoilState, useSetRecoilState } from "recoil";
 import { Advfilters, dynamicFilterDrawer, selectedCategoryAtom } from "../../../Recoil/atom";
 import { commonTextFieldProps, customDatePickerProps } from "../../../Utils/globalfun";
 import DepartmentAssigneeAutocomplete from "../../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete";
+import { useLocation } from "react-router-dom";
 
 const Filters = ({
   onFilterChange,
@@ -14,6 +15,7 @@ const Filters = ({
   taskProject,
   taskDepartment,
 }) => {
+  const location = useLocation();
   const [dynamicFilter, setDynamicFilters] = useRecoilState(dynamicFilterDrawer)
   const activetaskView = localStorage.getItem("activeTaskTab")
   const [filters, setFilters] = useRecoilState(Advfilters);
@@ -85,7 +87,10 @@ const Filters = ({
   return (
     <Box className="filterMainContainer">
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: 'end', gap: 2 }}>
-        {activetaskView != "Dynamic-Filter" &&
+        {(location?.pathname?.includes("/tasks") && activetaskView == "Dynamic-Filter") ? (
+          <>
+          </>
+        ) :
           <>
             {[
               { label: "Project", key: "project", data: taskProject },
@@ -128,7 +133,7 @@ const Filters = ({
             <DepartmentAssigneeAutocomplete
               name="assignee"
               value={guest?.assignee}
-              options={assigneeData}
+              options={assigneeData?.filter((emp) => emp.isactive === 1)}
               label="Assignee"
               placeholder="Select assignees"
               limitTags={2}
@@ -180,7 +185,7 @@ const Filters = ({
 
 
       <Box>
-        {activetaskView == "Dynamic-Filter" ? (
+        {(location?.pathname?.includes("/tasks") && activetaskView == "Dynamic-Filter") ? (
           <Button size='medium' className="buttonClassname" variant="contained" onClick={handleDynamicFilterOpen} sx={{ marginRight: '10px' }}>More Filter</Button>
         ) :
           <Button size='medium' className="buttonClassname" variant="contained" onClick={handleMenuOpen} sx={{ marginRight: '10px' }}>Show Filter</Button>
