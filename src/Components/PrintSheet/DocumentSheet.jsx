@@ -17,8 +17,8 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
 
       <div className='BrderEvry'>
         <div className='CmonCentrEvry TxtDark BrderBtom CmonFntSize'>
-          <div className='WdthMost higtCmon CmonCentrEvry BrderRigt'><span className='label-bold'>Task Name:</span> <span className='valueBind taskname label-bold'>{selectedData?.selectedData && selectedData?.selectedData?.taskname}</span></div>
-          <div className='WdthMIN higtCmon CmonCentrEvry'><span className='label-bold'>Task No:</span> <span className='valueBind label-bold'>{selectedData?.selectedData && selectedData?.selectedData?.taskno}</span></div>
+          <div className='WdthMost higtT CmonCentrEvry BrderRigt'><span className='label-bold'></span> <span className='valueBind taskname label-bold'>{selectedData?.selectedData && selectedData?.selectedData?.taskname}</span></div>
+          <div className='WdthMIN higtT CmonCentrEvry'><span className='label-bold'>Task No:</span> <span className='valueBind taskno label-bold'>{selectedData?.selectedData && selectedData?.selectedData?.taskno}</span></div>
         </div>
 
         <div className='CmonCentrEvry CmonFntSize BrderBtom'>
