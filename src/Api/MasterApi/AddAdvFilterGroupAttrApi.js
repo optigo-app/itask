@@ -111,13 +111,16 @@ export const BindAttrGroupApi = async () => {
 };
 
 // delete master
-export const deleteAdvancedMasterApi = async (formAdvData) => {
+export const deleteAdvancedMasterApi = async (formAdvData, bindType) => {
+    console.log("deleteAdvancedMasterApi", formAdvData, bindType);
     const AuthData = getAuthData();
+    const bindMode = bindType == "main group" ? "maingroup" : bindType == "group" ? "group" : "attr";
+    const bindid = bindType == "main group" ? formAdvData?.id : bindType == "group" ? formAdvData?.subid : formAdvData?.itemid;
     try {
         const body = {
-            con: `{\"id\":\"\",\"mode\":\"delfiltergroupattr\",\"appuserid\":\"${AuthData?.uid ?? "" }\"}`,
+            con: `{\"id\":\"\",\"mode\":\"delfiltergroupattr\",\"appuserid\":\"${AuthData?.uid ?? ""}\"}`,
             f: "Task Management (deleteAdvancedMasterApi)",
-            p: JSON.stringify({ bindid: formAdvData?.bindid ?? '' }),
+            p: JSON.stringify({ bindtype: bindMode ?? "", bindid: bindid ?? "" }),
         };
         const response = await CommonAPI(body);
         if (response?.Data) {
@@ -132,18 +135,19 @@ export const deleteAdvancedMasterApi = async (formAdvData) => {
 };
 
 // Edit master
-export const editAdvancedMasterApi = async (formAdvData) => {
+export const editAdvancedMasterApi = async (formAdvData, bindType) => {
     const AuthData = getAuthData();
+    const bindMode = bindType == "main group" ? "maingroup" : bindType == "group" ? "group" : "attr";
+    const bindid = bindType == "main group" ? formAdvData?.id : bindType == "group" ? formAdvData?.subid : formAdvData?.itemid;
     try {
         const body = {
-            con: `{\"id\":\"\",\"mode\":\"editfiltergroupattr\",\"appuserid\":\"${AuthData?.uid ?? "" }\"}`,
+            con: `{\"id\":\"\",\"mode\":\"editfiltergroupattr\",\"appuserid\":\"${AuthData?.uid ?? ""}\"}`,
             f: "Task Management (editfiltergroupattr)",
-            p: JSON.stringify({ 
-                bindid: formAdvData?.id ?? '',
-                filtermaingroupid: formAdvData?.filtermaingroupid ?? '',
-                filtergroupid: formAdvData?.filtergroupid ?? '',
-                filterattrid: formAdvData?.filterattrid ?? '',
-             }),
+            p: JSON.stringify({
+                bindid: bindid ?? '',
+                bindtype: bindMode ?? '',
+                bindname: formAdvData?.updatedValue ?? '',
+            }),
         };
         const response = await CommonAPI(body);
         if (response?.Data) {
