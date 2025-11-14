@@ -14,7 +14,7 @@ import { toast } from 'react-toastify';
 import MasterAdvFormDrawer from './MasterAdvFormDrawer';
 import DynamicMasterDrawer from './DynamicMasterDrawer';
 import AdvancedMasterTable from './AdvancedMasterTable';
-import { AddAdvFilterGroupAttrApi, deleteAdvancedMasterApi } from '../../Api/MasterApi/AddAdvFilterGroupAttrApi';
+import { AddAdvFilterGroupAttrApi, deleteAdvancedMasterApi, editAdvancedMasterApi } from '../../Api/MasterApi/AddAdvFilterGroupAttrApi';
 import { useLocation } from 'react-router-dom';
 import ColorGridShortcuts from '../../Components/Common/ColorGridShortcuts';
 import ViewToggle from '../../Components/Common/ViewToggle';
@@ -46,6 +46,8 @@ const MasterToggle = () => {
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
+    const [deleteType, setDeleteType] = useState('');
+    const [editType, setEditType] = useState('');
     const [masterType, setMasterType] = useState("single");
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
 
@@ -72,6 +74,16 @@ const MasterToggle = () => {
 
     const handleCloseCnfDialog = () => {
         setCnfDelDialogOpen(false);
+        setDeleteType('');
+    };
+
+    const getDeleteMessage = () => {
+        const itemName = deleteType === 'attribute' ? formAdvData.masterValue :
+                        deleteType === 'group' ? formAdvData.subMasterName :
+                        deleteType === 'main group' ? formAdvData.masterName :
+                        selectedRow?.labelname || 'this item';
+
+        return `Are you sure you want to remove this ${deleteType}${itemName ? ` "${itemName}"` : ''}?`;
     };
 
     const handleOpenDrawer = () => {
@@ -94,6 +106,7 @@ const MasterToggle = () => {
             colorKey: null
         });
         setMode('');
+        setEditType('');
         setFormAdvData({
             masterName: '',
             subMasterName: '',
@@ -242,34 +255,81 @@ const MasterToggle = () => {
 
     const handleAddAdvRow = async (groups) => {
         try {
-            if (masterType === 'single') {
-                const payload = formatAdvPayload([], formAdvData, mode, formAdvData?.masterName);
-                const response = await AddAdvFilterGroupAttrApi(payload);
-
+            if (mode === 'edit') {
+                // Handle edit operation
+                const response = await editAdvancedMasterApi(formAdvData, editType);
+                
                 if (response?.rd?.[0]?.stat == 1) {
-                    const data = await AdvancedMasterApiFunc();
-                    setStructuredAdvMasterData(data);
+                    toast.success("Data Updated Successfully");
+                    
+                    // Update the local state to reflect changes immediately
+                    setStructuredAdvMasterData(prev =>
+                        prev.map(master => {
+                            if (editType === 'main group' && master.id === formAdvData.id) {
+                                return { ...master, name: formAdvData.updatedValue };
+                            }
+                            
+                            if (master.id !== formAdvData.id) return master;
+                            
+                            return {
+                                ...master,
+                                groups: master.groups.map(group => {
+                                    if (editType === 'group' && group.id === formAdvData.subid) {
+                                        return { ...group, name: formAdvData.updatedValue };
+                                    }
+                                    
+                                    if (group.id !== formAdvData.subid) return group;
+                                    
+                                    return {
+                                        ...group,
+                                        attributes: group.attributes.map(attr => {
+                                            if (editType === 'attribute' && attr.id === formAdvData.itemid) {
+                                                return { ...attr, name: formAdvData.updatedValue };
+                                            }
+                                            return attr;
+                                        })
+                                    };
+                                })
+                            };
+                        })
+                    );
+                } else {
+                    toast.error("Failed to update data");
                 }
             } else {
-                let hasSuccess = false;
-                for (const master of groups[0]?.masters || []) {
-                    const singleGroup = {
-                        ...groups[0],
-                        masters: [master]
-                    };
-                    const payload = formatAdvPayload([singleGroup], formAdvData, mode, "DocTeam");
+                // Handle add operation (existing logic)
+                if (masterType === 'single') {
+                    const payload = formatAdvPayload([], formAdvData, mode, formAdvData?.masterName);
                     const response = await AddAdvFilterGroupAttrApi(payload);
+
                     if (response?.rd?.[0]?.stat == 1) {
-                        hasSuccess = true;
+                        const data = await AdvancedMasterApiFunc();
+                        setStructuredAdvMasterData(data);
+                        toast.success("Data Added Successfully");
                     }
-                }
-                if (hasSuccess) {
-                    const data = await AdvancedMasterApiFunc();
-                    setStructuredAdvMasterData(data);
+                } else {
+                    let hasSuccess = false;
+                    for (const master of groups[0]?.masters || []) {
+                        const singleGroup = {
+                            ...groups[0],
+                            masters: [master]
+                        };
+                        const payload = formatAdvPayload([singleGroup], formAdvData, mode, "DocTeam");
+                        const response = await AddAdvFilterGroupAttrApi(payload);
+                        if (response?.rd?.[0]?.stat == 1) {
+                            hasSuccess = true;
+                        }
+                    }
+                    if (hasSuccess) {
+                        const data = await AdvancedMasterApiFunc();
+                        setStructuredAdvMasterData(data);
+                        toast.success("Data Added Successfully");
+                    }
                 }
             }
         } catch (error) {
             console.error("Error in handleAddAdvRow:", error);
+            toast.error("Operation failed");
         } finally {
             handleCloseDrawer();
         }
@@ -288,20 +348,53 @@ const MasterToggle = () => {
 
     const handleEditAdvRow = (master, sub, item) => {
         setDrawerOpen(true);
-        setSelectedRow(item);
-        setMasterType('single')
+        setMasterType('single');
         setMode('edit');
-        setFormAdvData({
-            masterName: master.name,
-            subMasterName: sub.name,
-            masterValue: item.name,
-            id: master.id,
-            bindid: item.bindid,
-            filtermaingroupid: master.id,
-            filtergroupid: sub.id,
-            filterattrid: item.id,
-        });
+        // Determine edit type based on parameters
+        if (item) {
+            setEditType('attribute');
+            setSelectedRow(item);
+            setFormAdvData({
+                masterName: master?.name,
+                subMasterName: sub?.name,
+                masterValue: item?.name,
+                id: master?.id,
+                subid: sub?.id,
+                itemid: item?.id,
+                bindid: item?.bindid,
+                filtermaingroupid: master?.id,
+                filtergroupid: sub?.id,
+                filterattrid: item?.id,
+                updatedValue: item?.name // Current value for editing
+            });
+        } else if (sub) {
+            setEditType('group');
+            setSelectedRow(sub);
+            setFormAdvData({
+                masterName: master?.name,
+                subMasterName: sub?.name,
+                masterValue: '',
+                id: master?.id,
+                subid: sub?.id,
+                itemid: null,
+                updatedValue: sub?.name // Current value for editing
+            });
+        } else {
+            setEditType('main group');
+            setSelectedRow(master);
+            setFormAdvData({
+                masterName: master?.name,
+                subMasterName: sub?.name,
+                masterValue: '',
+                id: master?.id,
+                subid: null,
+                itemid: null,
+                updatedValue: master?.name // Current value for editing
+            });
+        }
     }
+
+    console.log(formAdvData,"formAdvData");
 
     const handleAdvDeleteRow = (master, sub, item) => {
         setFormAdvData({
@@ -313,6 +406,16 @@ const MasterToggle = () => {
             itemid: item?.id,
             bindid: item?.bindid,
         });
+        
+        // Determine delete type based on parameters
+        if (item) {
+            setDeleteType('attribute');
+        } else if (sub) {
+            setDeleteType('group');
+        } else {
+            setDeleteType('main group');
+        }
+        
         setCnfDelDialogOpen(true);
     }
 
@@ -354,29 +457,44 @@ const MasterToggle = () => {
 
     const handleFinalDelete = (row) => {
         setSelectedRow(row);
+        setDeleteType('master record');
         setCnfDelDialogOpen(true);
     }
 
     const handleRemoveMasterData = async () => {
         if (categoryStates?.id === "advanced_master") {
-            const apiRes = await deleteAdvancedMasterApi(formAdvData);
+            const apiRes = await deleteAdvancedMasterApi(formAdvData, deleteType);
             if (apiRes?.rd?.[0]?.stat == 1) {
                 toast.success("Data Removed Successfully");
                 setStructuredAdvMasterData(prev =>
                     prev.map(master => {
+                        // If deleting a main group, filter it out completely
+                        if (deleteType === 'main group' && master.id === formAdvData.id) {
+                            return null;
+                        }
+                        
                         if (master.id !== formAdvData.id) return master;
+                        
                         return {
                             ...master,
                             groups: master.groups.map(group => {
-                                if (group.id !== formAdvData.subid) return group;
-
-                                return {
-                                    ...group,
-                                    attributes: group.attributes.filter(attr => attr.bindid !== formAdvData.bindid)
-                                };
-                            }).filter(group => group.attributes.length > 0)
+                                // If deleting a group, filter it out completely
+                                if (deleteType === 'group' && group.id === formAdvData.subid) {
+                                    return null;
+                                }
+                                
+                                // If deleting an attribute, filter it from the group
+                                if (deleteType === 'attribute' && group.id === formAdvData.subid) {
+                                    return {
+                                        ...group,
+                                        attributes: group.attributes.filter(attr => attr.id !== formAdvData.itemid)
+                                    };
+                                }
+                                
+                                return group;
+                            }).filter(group => group !== null && group.attributes.length > 0)
                         };
-                    }).filter(master => master.groups.length > 0)
+                    }).filter(master => master !== null && master.groups.length > 0)
                 );
                 handleCloseCnfDialog();
             }
@@ -598,6 +716,7 @@ const MasterToggle = () => {
                             open={drawerOpen}
                             activeTab={value}
                             mode={mode}
+                            editType={editType}
                             filteredData={filteredData}
                             groups={groups}
                             setGroups={setGroups}
@@ -618,10 +737,10 @@ const MasterToggle = () => {
                 open={cnfDelDialogOpen}
                 onClose={handleCloseCnfDialog}
                 onConfirm={handleRemoveMasterData}
-                title="Confirm"
+                title="Confirm Deletion"
                 cancelLabel="Cancel"
                 confirmLabel="Remove"
-                content='Are you sure you want to Remove this Fields'
+                content={getDeleteMessage()}
             />
         </>
     );

@@ -340,7 +340,7 @@ const Sidebar = () => {
                 >
                     {isDrawerOpen &&
                         <Typography variant="caption" sx={{ fontSize: "9px", color: "#b0b0b0" }}>
-                            iTask_V5_061120250250
+                            iTask_V5_131120250320
                         </Typography>
                     }
                 </Box>
