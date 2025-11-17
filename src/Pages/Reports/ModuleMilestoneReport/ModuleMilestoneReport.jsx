@@ -81,6 +81,7 @@ const ModuleMilestoneReport = () => {
                             milestones: [],
                             priorities: [],
                             statuses: [],
+                            tasknmes: [],
                             deadlines: [],
                             startDates: [],
                             // identifiers for timeline
@@ -102,6 +103,7 @@ const ModuleMilestoneReport = () => {
                         // arrays
                         modules[module.taskid].priorities.push(milestone.priority);
                         modules[module.taskid].statuses.push(milestone.status);
+                        modules[module.taskid].tasknmes.push(milestone.taskname);
                         if (milestone.StartDate) modules[module.taskid].startDates.push(milestone.StartDate);
                         if (milestone.DeadLineDate) modules[module.taskid].deadlines.push(milestone.DeadLineDate);
                     });
@@ -461,9 +463,62 @@ const ModuleMilestoneReport = () => {
                                                 <Typography variant="body1">Dt: {formatDate2(row.DeadLineDate)}</Typography>
                                                 <Typography variant="caption">St: {formatDate2(row.StartDate)}</Typography>
                                             </TableCell>
-                                            <TableCell className="status-cell">
+                                            {/* <TableCell className="status-cell">
                                                 {row?.statuses?.map((status, i) => (
                                                     <StatusBadge key={i} task={{ status }} statusColors={statusColors} disable={true} />
+                                                ))}
+                                            </TableCell> */}
+                                            <TableCell className="status-cell">
+                                                {row?.milestones?.map((milestone, i) => (
+                                                    <Box
+                                                        key={i}
+                                                        sx={{
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            alignItems: 'flex-start',
+                                                            gap: 0.25,
+                                                            mb: 0.5,
+                                                            p: '5px 10px',
+                                                            borderRadius: 2,
+                                                            backgroundColor: '#f8f9fb',
+                                                            border: '1px solid #eceff4',
+                                                        }}
+                                                    >
+                                                        <Typography
+                                                            variant="caption"
+                                                            sx={{
+                                                                width: '100%',
+                                                                fontSize: '14px',
+                                                                fontWeight: 500,
+                                                                whiteSpace: 'nowrap',
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis',
+                                                            }}
+                                                            title={milestone?.taskname}
+                                                        >
+                                                            {milestone?.taskname}
+                                                        </Typography>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                            {/* {milestone?.priority && (
+                                                                <PriorityBadge
+                                                                    task={milestone}
+                                                                    priorityColors={priorityColors}
+                                                                    disable={true}
+                                                                    fontSize={9}
+                                                                    padding={1}
+                                                                />
+                                                            )} */}
+                                                            {milestone?.status && (
+                                                                <StatusBadge
+                                                                    task={milestone}
+                                                                    statusColors={statusColors}
+                                                                    disable={true}
+                                                                    fontSize={9}
+                                                                    padding={1}
+                                                                />
+                                                            )}
+                                                        </Box>
+                                                    </Box>
                                                 ))}
                                             </TableCell>
                                         </TableRow>

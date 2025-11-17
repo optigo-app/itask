@@ -144,7 +144,13 @@ const TasklistForCal = ({ calendarsColor }) => {
     const task = useRecoilValue(TaskData);
     const calEvData = useRecoilValue(calendarData);
     const [calTasksList, setCalTasksList] = useState([]);
-    const [searchQuery, setSearchQuery] = useState("");
+
+    // Default search: show tasks starting today using the existing `start:` date search
+    const [searchQuery, setSearchQuery] = useState(() => {
+        const todayIso = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        const todayLabel = formatDate2(todayIso)?.toLowerCase() || "";
+        return todayLabel ? `start:${todayLabel}` : "";
+    });
 
     // Debounced search handler for better performance
     const handleSearchChange = useCallback((event) => {
