@@ -68,6 +68,7 @@ const Sidebar = () => {
         { label: 'PMS Report', path: '/reports/pms' },
         { label: 'PMS Report 2', path: '/reports/pms-2' },
         // { label: 'Team Cal View', path: '/reports/teamCalReport' },
+        { label: 'Milestone Report', path: '/reports/milestoneReport' },
     ];
 
     useEffect(() => {

@@ -166,6 +166,7 @@ const Project = () => {
       };
 
       const enhancedTasks = finalTaskData?.map((task) => enhanceTask(task));
+      
       setTimeout(() => {
         if (project) {
           const summary = getCategoryTaskSummary(enhancedTasks, taskCategory);
