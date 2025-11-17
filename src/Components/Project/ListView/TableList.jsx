@@ -547,7 +547,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                         onMouseEnter={() => handleMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
                                                         onMouseLeave={handleMouseLeave}
                                                     >
-                                                        <TableCell sx={{ paddingLeft: '55px' }}>
+                                                        <TableCell sx={{ paddingLeft: '55px !important' }}>
                                                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                                                 <div className="projectModuleName">
                                                                     <a
