@@ -219,7 +219,7 @@ const Sidebar = () => {
                                 </Box>
                             </ListItemButton>
                         </ListItem>
-                        <Chip
+                        {/* <Chip
                             label={taskInit?.companycode || '--'}
                             size={isDrawerOpen ? 'medium' : 'small'}
                             sx={{
@@ -233,7 +233,7 @@ const Sidebar = () => {
                                 textOverflow: 'ellipsis'
                             }}
                             className="itask_drawerText"
-                        />
+                        /> */}
                         <div className="itask_separator" />
                         {pageList.length > 0 ? (
                             <>
@@ -247,7 +247,7 @@ const Sidebar = () => {
                                                 {isDrawerOpen && <ListItemText primary={label} className="itask_drawerItemText" />}
                                             </ListItemButton>
                                             {!isDrawerOpen && (
-                                                <Typography variant="caption" className="itask_drawerItemText">
+                                                <Typography variant="caption" className="itask_drawerItemText" sx={{textAlign:"center"}}>
                                                     {label}
                                                 </Typography>
                                             )}

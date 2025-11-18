@@ -72,12 +72,33 @@ const WordPreview = ({ url, filename, fileObject }) => {
       sx={{
         height: '100%',
         overflow: 'auto',
+        bgcolor: '#f3f3f3',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        p: 2,
       }}
     >
-      <div
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
-        className="wordPreviewContent"
-      />
+      <Box
+        sx={{
+          mt: 1,
+          mb: 3,
+          bgcolor: '#ffffff',
+          boxShadow: '0 0 0 1px rgba(0,0,0,0.06), 0 4px 10px rgba(0,0,0,0.12)',
+          borderRadius: 1,
+          width: '100%',
+          maxWidth: 900,
+          minHeight: '80vh',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <div
+          dangerouslySetInnerHTML={{ __html: htmlContent }}
+          className="wordPreviewContent"
+          style={{ width: '100%' }}
+        />
+      </Box>
     </Box>
   );
 };

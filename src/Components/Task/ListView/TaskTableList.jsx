@@ -96,7 +96,7 @@ const TableView = ({
             navigate('/projects');
         }
     };
-    
+
     const [anchorCommentEl, setAnchorCommentEl] = useState(null);
     const printRef1 = React.useRef(null);
     const printRef2 = React.useRef(null);
@@ -565,7 +565,6 @@ const TableView = ({
             </Box>
         )
     };
-
     const renderTaskNameSection = (
         task,
         expandedTasks,
@@ -613,7 +612,7 @@ const TableView = ({
                                 }}
                                 className={`tasknameCl ${task?.isCopyActive ? 'cut-task-name' : ''}`}
                             >
-                                {task?.taskno && (
+                                {task?.taskno && task.taskno != 0 && (
                                     <span style={{ color: '#666', fontWeight: '500', marginRight: '8px' }}>
                                         {task.taskno}
                                     </span>

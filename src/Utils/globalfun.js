@@ -88,20 +88,20 @@ export function formatDueTask(dateStr) {
     const dueDate = new Date(dateStr);
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const target = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
-  
+
     const diffMs = target - today;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  
+
     if (diffDays === 0) {
-      return "Today";
+        return "Today";
     }
-  
+
     if (diffDays > 0 && diffDays <= 30) {
-      return `${diffDays} day${diffDays > 1 ? "s" : ""}`;
+        return `${diffDays} day${diffDays > 1 ? "s" : ""}`;
     }
     return dateStr && cleanDate(dateStr) ? formatDate2(cleanDate(dateStr)) : '-';
-  }
-  
+}
+
 
 export function getTimeLeft(dateString) {
     const now = new Date();
@@ -197,27 +197,31 @@ export const ImageUrl = (data) => {
 
 // priority color
 export const priorityColors = {
-    low: {
+    Low: {
         color: "#4caf50",
         backgroundColor: "#e8f5e9",
     },
-    medium: {
+    Medium: {
         color: "#ff9800",
         backgroundColor: "#fff3e0",
     },
-    high: {
+    High: {
         color: "#f44336",
         backgroundColor: "#ffebee",
     },
-    urgent: {
+    'Very High': {
+        color: "#f44336",
+        backgroundColor: "#ffebee",
+    },
+    Urgent: {
         color: "#d32f2f",
         backgroundColor: "#ffcccb",
     },
-    critical: {
+    Critical: {
         color: "#ffffff",
         backgroundColor: "#b71c1c",
     },
-    normal: {
+    Normal: {
         color: "#212529",
         bgcolor: "#e2e6ea"
     },
@@ -579,13 +583,13 @@ export const fetchMasterGlFunc = async () => {
         const AuthUrlData = getAuthData();
         const uniqueDepartments = new Set();
         let UserProfileData
-        
+
         // Helper function to determine storage location based on remember me
         const setUserProfileData = (data) => {
             const storageLocation = localStorage.getItem('AuthqueryParams') ? localStorage : sessionStorage;
             storageLocation.setItem('UserProfileData', JSON?.stringify(data));
         };
-        
+
         if (!AssigneeMasterData) {
             const assigneeRes = await AssigneeMaster();
             UserProfileData = assigneeRes?.rd?.find(item => item?.userid == AuthUrlData?.uid);
@@ -1059,15 +1063,15 @@ export const getDaysFromDeadline = (deadlineDate) => {
     if (!deadlineDate || !cleanDate(deadlineDate)) {
         return null; // No deadline set
     }
-    
+
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const deadline = new Date(deadlineDate);
     const targetDate = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
-    
+
     const diffMs = targetDate - today;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     return diffDays; // Positive for future dates, negative for overdue dates, 0 for today
 };
 
@@ -1085,12 +1089,12 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
         return result;
     };
     const flatData = flattenTasks(nestedData);
-    
+
     const isValidDate = (dateStr) => {
         const date = new Date(dateStr);
         return dateStr && date.toISOString().slice(0, 10) !== "1900-01-01";
     };
-    
+
     const isToday = (dateStr) => {
         if (!isValidDate(dateStr)) return false;
         const date = new Date(dateStr);
