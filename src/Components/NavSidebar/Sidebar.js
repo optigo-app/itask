@@ -60,6 +60,7 @@ const Sidebar = () => {
         { pagename: "Calender", label: "My Calendar", routes: "Calendar", path: "/myCalendar", icon: CalendarCheck },
         { pagename: "Maters", label: "Masters", routes: "Masters", path: "/masters", icon: Boxes },
         { pagename: "Team Cal View", label: "Team Cal View", routes: "teamCalReport", path: "/teamCalReport", icon: Ratio },
+        { pagename: "Milestone Report", label: "Milestone Report", routes: "milestoneReport", path: "/milestoneReport", icon: Ratio },
         { pagename: "Reports", label: "Reports", routes: "Reports", path: "/reports", icon: Ratio },
     ];
 
@@ -68,7 +69,7 @@ const Sidebar = () => {
         { label: 'PMS Report', path: '/reports/pms' },
         { label: 'PMS Report 2', path: '/reports/pms-2' },
         // { label: 'Team Cal View', path: '/reports/teamCalReport' },
-        { label: 'Milestone Report', path: '/reports/milestoneReport' },
+        // { label: 'Milestone Report', path: '/reports/milestoneReport' },
     ];
 
     useEffect(() => {

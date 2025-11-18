@@ -312,8 +312,8 @@ const AppWrapper = () => {
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
                                         <Route path="/reports/pms" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport /></ProtectedRoute>} />
                                         <Route path="/reports/pms-2" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport2 /></ProtectedRoute>} />
-                                        <Route path="/reports/milestoneReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1009"><ModuleMilestoneReport /></ProtectedRoute>} />
                                         <Route path="/teamCalReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1009"><CalendarReport /></ProtectedRoute>} />
+                                        <Route path="/milestoneReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1010"><ModuleMilestoneReport /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
                                         <Route path="/test" element={<CalendarComparisonDemo />} />

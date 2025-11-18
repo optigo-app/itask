@@ -75,7 +75,7 @@ const MetaDataSet = () => {
       keywords: "task inbox, notifications, task updates, workflow, alerts, Reports",
       url: window.location.href,
     },
-    "/reports/milestoneReport": {
+    "/milestoneReport": {
       title: "Module Milestone Report - Stay Updated",
       description: "Check pending tasks, receive updates, and take action on important assignments.",
       image: window.location.origin + '/static/media/tecotask.d889fb524f89f048a45c.png',
