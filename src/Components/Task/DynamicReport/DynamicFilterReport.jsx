@@ -71,8 +71,14 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
         setRd3(masterRes?.rd3 ?? []);
 
         const dataRes = await DynamicFilterApi(parsedData?.taskid);
-        setQlColIdToName(dataRes?.rd?.[0] ?? {});
-        setRawRows(dataRes?.rd1 ?? []);
+        if (dataRes?.rd[0]?.stat == 1) {
+          setQlColIdToName(dataRes?.rd?.[0] ?? {});
+          setRawRows(dataRes?.rd1 ?? []);
+        } else {
+          toast.error(dataRes?.rd[0]?.stat_msg);
+          setRawRows([]);
+          setQlColIdToName({});
+        }
       } catch {
         setStatus500(true);
       } finally {
@@ -347,35 +353,35 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
         const hasUnsetDeadline = filters.category.includes("Unset Deadline");
         const hasDue = filters.category.includes("Due");
         const hasToday = filters.category.includes("Today");
-        
+
         if (hasUnsetDeadline || hasDue || hasToday) {
           // Handle special categories
           if (hasUnsetDeadline && hasDue && hasToday) {
             // All three selected - show tasks with no deadline OR due tasks OR start_date today
             const hasNoDeadline = !row?.deadline || !cleanDate(row?.deadline);
-            const isDue = row?.deadline && cleanDate(row?.deadline) && 
-                         new Date(cleanDate(row?.deadline)) <= new Date();
-            const isToday = row?.start_date && cleanDate(row?.start_date) && 
-                           formatDate2(cleanDate(row?.start_date)) === formatDate2(new Date());
+            const isDue = row?.deadline && cleanDate(row?.deadline) &&
+              new Date(cleanDate(row?.deadline)) <= new Date();
+            const isToday = row?.start_date && cleanDate(row?.start_date) &&
+              formatDate2(cleanDate(row?.start_date)) === formatDate2(new Date());
             if (!hasNoDeadline && !isDue && !isToday) return false;
           } else if (hasUnsetDeadline && hasDue) {
             // Unset Deadline + Due selected - show tasks with no deadline OR due tasks
             const hasNoDeadline = !row?.deadline || !cleanDate(row?.deadline);
-            const isDue = row?.deadline && cleanDate(row?.deadline) && 
-                         new Date(cleanDate(row?.deadline)) <= new Date();
+            const isDue = row?.deadline && cleanDate(row?.deadline) &&
+              new Date(cleanDate(row?.deadline)) <= new Date();
             if (!hasNoDeadline && !isDue) return false;
           } else if (hasUnsetDeadline && hasToday) {
             // Unset Deadline + Today selected - show tasks with no deadline OR start_date today
             const hasNoDeadline = !row?.deadline || !cleanDate(row?.deadline);
-            const isToday = row?.start_date && cleanDate(row?.start_date) && 
-                           formatDate2(cleanDate(row?.start_date)) === formatDate2(new Date());
+            const isToday = row?.start_date && cleanDate(row?.start_date) &&
+              formatDate2(cleanDate(row?.start_date)) === formatDate2(new Date());
             if (!hasNoDeadline && !isToday) return false;
           } else if (hasDue && hasToday) {
             // Due + Today selected - show due tasks OR start_date today
-            const isDue = row?.deadline && cleanDate(row?.deadline) && 
-                         new Date(cleanDate(row?.deadline)) <= new Date();
-            const isToday = row?.start_date && cleanDate(row?.start_date) && 
-                           formatDate2(cleanDate(row?.start_date)) === formatDate2(new Date());
+            const isDue = row?.deadline && cleanDate(row?.deadline) &&
+              new Date(cleanDate(row?.deadline)) <= new Date();
+            const isToday = row?.start_date && cleanDate(row?.start_date) &&
+              formatDate2(cleanDate(row?.start_date)) === formatDate2(new Date());
             if (!isDue && !isToday) return false;
           } else if (hasUnsetDeadline) {
             // Only Unset Deadline selected
@@ -390,34 +396,34 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
             if (!row?.start_date || !cleanDate(row?.start_date)) return false;
             if (formatDate2(cleanDate(row?.start_date)) !== formatDate2(new Date())) return false;
           }
-          
+
           // Remove special categories from further processing
-          const regularCategories = filters.category.filter(cat => 
+          const regularCategories = filters.category.filter(cat =>
             cat !== "Unset Deadline" && cat !== "Due" && cat !== "Today"
           );
-          
+
           // If there are regular categories, also check those
           if (regularCategories.length > 0) {
             const rowCategoryId = row?.workcategoryid;
             if (!rowCategoryId) return false;
-            
+
             const hasMatchingCategory = regularCategories.some(catName => {
               const category = taskCategory?.find(cat => cat.labelname === catName);
               return category && rowCategoryId == category.id;
             });
-            
+
             if (!hasMatchingCategory) return false;
           }
         } else {
           // Regular category filtering
           const rowCategoryId = row?.workcategoryid;
           if (!rowCategoryId) return false;
-          
+
           const hasMatchingCategory = filters.category.some(catName => {
             const category = taskCategory?.find(cat => cat.labelname === catName);
             return category && rowCategoryId == category.id;
           });
-          
+
           if (!hasMatchingCategory) return false;
         }
       }

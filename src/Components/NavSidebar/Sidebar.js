@@ -171,7 +171,7 @@ const Sidebar = () => {
                 className="itask_Menudrawer"
             >
                 {!isLoading &&
-                    <List>
+                    <List sx={{overflowY: 'hidden', overflow: 'auto'}}>
                         <ListItem className="itask_drawerHeader">
                             <ListItemButton className="itask_drawerListItem">
                                 <Box
@@ -239,7 +239,7 @@ const Sidebar = () => {
                             <>
                                 {pageList.map(({ label, path, icon: Icon, routes }) => (
                                     label !== 'Reports' ? (
-                                        <ListItem key={label} onClick={() => handleItemClick(path, routes)} sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row' }}>
+                                        <ListItem key={label} onClick={() => handleItemClick(path, routes)} sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row'}}>
                                             <ListItemButton className={`itask_drawerListItem ${activeItem === routes ? 'itask_drawerItemActive' : ''}`}>
                                                 <ListItemIcon className="itask_drawerItemIcon">
                                                     <Icon className={activeItem === routes ? "iconActive" : 'iconUnactive'} size={18} />

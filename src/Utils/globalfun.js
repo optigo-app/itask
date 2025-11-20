@@ -197,31 +197,31 @@ export const ImageUrl = (data) => {
 
 // priority color
 export const priorityColors = {
-    Low: {
+    low: {
         color: "#4caf50",
         backgroundColor: "#e8f5e9",
     },
-    Medium: {
+    medium: {
         color: "#ff9800",
         backgroundColor: "#fff3e0",
     },
-    High: {
+    high: {
         color: "#f44336",
         backgroundColor: "#ffebee",
     },
-    'Very High': {
+    'very high': {
         color: "#f44336",
         backgroundColor: "#ffebee",
     },
-    Urgent: {
+    urgent: {
         color: "#d32f2f",
         backgroundColor: "#ffcccb",
     },
-    Critical: {
+    critical: {
         color: "#ffffff",
         backgroundColor: "#b71c1c",
     },
-    Normal: {
+    normal: {
         color: "#212529",
         bgcolor: "#e2e6ea"
     },
@@ -381,7 +381,15 @@ export const statusColors = {
         backgroundColor: "#c8e6c9",
     },
     "cancelled": {
-        color: "#d32f2f", // Red - removed
+        color: "#d32f2f", // Red - removed  
+        backgroundColor: "#ffcdd2",
+    },
+    "reschedule": {
+        color: "#00796b", // Teal - design phase
+        backgroundColor: "#b2dfdb",
+    },
+    "delayed": {
+        color: "#d32f2f", // Red - removed  
         backgroundColor: "#ffcdd2",
     },
     "feedback": {
