@@ -191,7 +191,6 @@ const HeaderButtons = ({
         exclusive
         onChange={onViewChange}
         aria-label="view mode"
-
       >
         <ToggleButton value="table" aria-label="table view" sx={{ borderRadius: '8px' }}>
           <List className="iconbtn" size={20} />

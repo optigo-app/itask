@@ -91,6 +91,7 @@ const CalendarGridView = () => {
   const [splitParts, setSplitParts] = useState([]);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState(null);
   const [totalHours, setTotalHours] = useState({ estimate: 0, working: 0 });
+  const [localWorkingEdits, setLocalWorkingEdits] = useState({});
   const { hasAccess } = useAccess();
   const {
     iswhTLoading,
@@ -105,7 +106,7 @@ const CalendarGridView = () => {
     // Set Monday as start of week, Sunday as end of week
     const weekEnd = today.startOf('week').add(1, 'day').endOf('week');
 
-     const userProfile = getUserProfileData();
+    const userProfile = getUserProfileData();
     const isAdmin = userProfile.designation?.toLowerCase() === 'admin';
 
     // Flatten all tasks or only "my" tasks
@@ -154,9 +155,18 @@ const CalendarGridView = () => {
   }, [taskFinalData, selectedFilter, currentDate, selectedAssigneeId, customRange]);
 
   useEffect(() => {
-    setTasks(filteredTasks);
-    handleTotalHourCalculate(filteredTasks);
-  }, [filteredTasks]);
+    const applyLocalEdits = (task) => {
+      const edits = localWorkingEdits[task.taskid] || {};
+      return {
+        ...task,
+        ...edits,
+      };
+    };
+
+    const updated = filteredTasks.map(applyLocalEdits);
+    setTasks(updated);
+    handleTotalHourCalculate(updated);
+  }, [filteredTasks, localWorkingEdits]);
 
   // Initialize date picker on component mount
   useEffect(() => {
@@ -308,6 +318,14 @@ const CalendarGridView = () => {
   }, [selectedTaskToSplit, numberOfDaysToSplit]);
 
   const handleEstimateChange = (taskId, newEstimate) => {
+    setLocalWorkingEdits((prev) => ({
+      ...prev,
+      [taskId]: {
+        ...(prev[taskId] || {}),
+        workinghr: newEstimate,
+      },
+    }));
+
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
         task.taskid === taskId
@@ -364,6 +382,15 @@ const CalendarGridView = () => {
             statusid: newStatus?.id,
             status: newStatus?.labelname
           };
+          setLocalWorkingEdits((prev) => ({
+            ...prev,
+            [task.taskid]: {
+              ...(prev[task.taskid] || {}),
+              statusid: newStatus?.id,
+              status: newStatus?.labelname,
+            },
+          }));
+
           handleAddApicall(updatedTask);
           return updatedTask;
         }
@@ -387,7 +414,7 @@ const CalendarGridView = () => {
 
   const handleNavigate = (direction) => {
     let newDate;
-    
+
     if (selectedFilter === 'Today') {
       newDate = direction === 'prev'
         ? currentDate.subtract(1, 'day')
@@ -405,7 +432,7 @@ const CalendarGridView = () => {
         ? currentDate.subtract(1, 'day')
         : currentDate.add(1, 'day');
     }
-    
+
     setCurrentDate(newDate);
     updateDatePickerBasedOnFilter(selectedFilter, newDate);
   };
@@ -427,7 +454,7 @@ const CalendarGridView = () => {
   // Helper function to update date picker based on selected filter
   const updateDatePickerBasedOnFilter = (filter, date) => {
     const targetDate = date || currentDate;
-    
+
     if (filter === 'Today') {
       setCustomRange({
         startDate: targetDate.startOf('day').toISOString(),

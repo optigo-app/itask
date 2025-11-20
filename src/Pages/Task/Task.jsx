@@ -57,6 +57,7 @@ const Task = () => {
     statusData,
     secStatusData,
     taskAssigneeData } = useFullTaskFormatFile();
+  const [localTaskEdits, setLocalTaskEdits] = useState({});
 
   useEffect(() => {
     setTasks([]);
@@ -100,9 +101,22 @@ const Task = () => {
       });
     };
 
+    // 🔹 helper: apply local edits by taskid (and to subtasks)
+    const applyLocalEditsRecursively = (task) => {
+      const edits = localTaskEdits[task.taskid] || {};
+      return {
+        ...task,
+        ...edits,
+        subtasks: task.subtasks
+          ? task.subtasks.map(applyLocalEditsRecursively)
+          : [],
+      };
+    };
+
     if (parsedData == null) {
       let rawTasks = taskFinalData?.TaskData || [];
       rawTasks = filterByStatus(rawTasks);
+      rawTasks = rawTasks.map(applyLocalEditsRecursively);   // <-- add this
       const summary = getCategoryTaskSummary(rawTasks, taskCategory);
       setCategoryTSummary(summary);
       setTasks(rawTasks);
@@ -114,6 +128,7 @@ const Task = () => {
         if (matchedTask) {
           let filteredSubtasks = filterNestedTasksByView(matchedTask.subtasks || [], meTeamView, userId);
           filteredSubtasks = filterByStatus(filteredSubtasks);
+          filteredSubtasks = filteredSubtasks.map(applyLocalEditsRecursively); // <-- add
           const summary = getCategoryTaskSummary(filteredSubtasks, taskCategory);
           setCategoryTSummary(summary);
           setTasks(filteredSubtasks);
@@ -126,11 +141,12 @@ const Task = () => {
       }
       let filtered = filterNestedTasksByView(fallbackTasks, meTeamView, userId);
       filtered = filterByStatus(filtered);
+      filtered = filtered.map(applyLocalEditsRecursively);  // <-- add
       const summary = getCategoryTaskSummary(filtered, taskCategory);
       setCategoryTSummary(summary);
       setTasks(filtered);
     }
-  }, [encodedData, taskFinalData, selectedRow, meTeamView, completedFlag]);
+  }, [encodedData, taskFinalData, selectedRow, meTeamView, completedFlag, localTaskEdits]);
 
   useEffect(() => {
     const activeTab = localStorage?.getItem('activeTaskTab');
@@ -386,6 +402,13 @@ const Task = () => {
               ...task,
               isfavourite: task?.isfavourite ? 0 : 1,
             };
+            setLocalTaskEdits((prev) => ({
+              ...prev,
+              [task.taskid]: {
+                ...(prev[task.taskid] || {}),
+                isfavourite: task?.isfavourite ? 0 : 1,
+              },
+            }));
             handleAddApicall(updatedTask);
             return updatedTask;
           }
@@ -411,7 +434,13 @@ const Task = () => {
             isFreezed: !task.isFreezed,
           };
         }
-
+        setLocalTaskEdits((prev) => ({
+          ...prev,
+          [task.taskid]: {
+            ...(prev[task.taskid] || {}),
+            isFreezed: !task.isFreezed,
+          },
+        }));
         if (task.subtasks && task.subtasks.length > 0) {
           return {
             ...task,
@@ -442,6 +471,15 @@ const Task = () => {
                 secstatusid: status?.id,
                 secStatus: status?.labelname
               };
+              setLocalTaskEdits((prev) => ({
+                ...prev,
+                [task.taskid]: {
+                  ...(prev[task.taskid] || {}),
+                  secstatusid: status?.id,
+                  secStatus: status?.labelname,
+                },
+              }));
+
             } else {
               updatedTask = {
                 ...task,
@@ -449,6 +487,16 @@ const Task = () => {
                 status: status?.labelname,
                 EndDate: status?.labelname?.toLowerCase() === "completed" ? date.toISOString() : ""
               };
+              setLocalTaskEdits((prev) => ({
+                ...prev,
+                [task.taskid]: {
+                  ...(prev[task.taskid] || {}),
+                  statusid: status?.id,
+                  status: status?.labelname,
+                  EndDate: status?.labelname?.toLowerCase() === "completed" ? date.toISOString() : "",
+                },
+              }));
+
             }
             handleAddApicall(updatedTask);
             return updatedTask;
@@ -476,6 +524,14 @@ const Task = () => {
               priorityid: priority?.id,
               priority: priority?.labelname
             };
+            setLocalTaskEdits((prev) => ({
+              ...prev,
+              [task.taskid]: {
+                ...(prev[task.taskid] || {}),
+                priorityid: priority?.id,
+                priority: priority?.labelname,
+              },
+            }));
             handleAddApicall(updatedTask);
             return updatedTask;
           }
@@ -501,6 +557,13 @@ const Task = () => {
               ...task,
               DeadLineDate: DeadLineDate,
             };
+            setLocalTaskEdits((prev) => ({
+              ...prev,
+              [task.taskid]: {
+                ...(prev[task.taskid] || {}),
+                DeadLineDate: DeadLineDate,
+              },
+            }));
             handleAddApicall(updatedTask);
             return updatedTask;
           }
@@ -532,6 +595,17 @@ const Task = () => {
         return acc;
       }, {})
     );
+    // store persistent local edit
+    setLocalTaskEdits((prev) => ({
+      ...prev,
+      [updatedRowData.taskid]: {
+        departmentid: updatedRowData?.departmentid,
+        assigneids: updatedRowData?.assigneids,
+        assignee: updatedRowData?.assignee,
+        departmentAssigneelist: assignees,
+      },
+    }));
+
     setTasks((prevTasks) => {
       const updateTasksRecursively = (tasks) => {
         return tasks?.map((task) => {
