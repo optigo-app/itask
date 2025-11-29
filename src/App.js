@@ -153,7 +153,7 @@ const AppWrapper = () => {
 
     const getQueryParams = () => {
         const isLoggedIn = Cookies.get('isLoggedIn');
-        
+
         // If isLoggedIn is true, bypass skey token reading
         if (isLoggedIn === 'true') {
             // Check both localStorage and sessionStorage for AuthqueryParams
@@ -172,7 +172,7 @@ const AppWrapper = () => {
                 return navigate('/login', { replace: true });
             }
         }
-        
+
         // If isLoggedIn is false or not present, read skey token
         const token = Cookies.get('skey');
         if (!token) {

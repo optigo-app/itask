@@ -49,6 +49,7 @@ import useAccess from "../../Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
 import { taskCommentGetApi } from "../../../Api/TaskApi/TaskCommentGetApi";
 import DocumentSheet from "../../PrintSheet/DocumentSheet";
+import useSafeRedirect from "../../../Utils/useSafeRedirect";
 
 const initialColumns = [
     { id: "taskname", label: "Task Name", width: 280 },
@@ -87,7 +88,7 @@ const TableView = ({
     handlePageSizeChnage,
     isLoading }) => {
     const { hasAccess } = useAccess();
-    const navigate = useNavigate();
+    const navigate = useSafeRedirect();
     const [anchorPrintEl, setAnchorPrintEl] = useState(null);
 
     // Handle project navigation

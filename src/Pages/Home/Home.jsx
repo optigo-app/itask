@@ -8,6 +8,7 @@ import { TaskData } from '../../Recoil/atom';
 import { useRecoilValue } from 'recoil';
 import { flattenTasks, getUserProfileData, showNotification } from '../../Utils/globalfun';
 import { useLocation, useNavigate } from 'react-router-dom';
+import useSafeRedirect from '../../Utils/useSafeRedirect';
 
 const UrgentTask = React.lazy(() => import('./UrgentTasks'));
 const SummaryDashnoard = React.lazy(() => import('./TaskSummary'));
@@ -36,7 +37,7 @@ const removeFromSessionArray = (key, value) => {
 };
 
 const Home = () => {
-  const navigate = useNavigate();
+  const navigate = useSafeRedirect();
   const location = useLocation();
   const { fetchTaskData } = TaskAPiCallWithFormat();
   const task = useRecoilValue(TaskData);

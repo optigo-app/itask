@@ -9,6 +9,7 @@ import NotificationCard from "../Notification/NotificationCard";
 import { taskLength, userRoleAtom, webReload } from "../../Recoil/atom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import PendingAcceptanceDrawer from "../ShortcutsComponent/Notification/PendingAcceptanceDrawer";
+import useSafeRedirect from "../../Utils/useSafeRedirect";
 
 // Profile Hook
 const useProfileData = () => {
@@ -306,7 +307,7 @@ const BreadcrumbItem = ({ label, onClick }) => (
 );
 
 const Breadcrumbs = ({ location, decodedData, matchedKey, dataMap }) => {
-    const navigate = useNavigate();
+    const navigate = useSafeRedirect();
     const pathname = location.pathname;
 
     const isTasks = pathname === "/tasks" || pathname.startsWith("/tasks?");

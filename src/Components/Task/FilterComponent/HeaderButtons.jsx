@@ -49,6 +49,7 @@ import TaskTimeTrackerComp from "../../ShortcutsComponent/TimerComponent/TaskTim
 import ScrollableCategoryTabs from "./ScrollableCategoryTabs";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
 import useAccess from "../../Auth/Role/useAccess";
+import useSafeRedirect from "../../../Utils/useSafeRedirect";
 
 const HeaderButtons = ({
   onFilterChange,
@@ -67,7 +68,7 @@ const HeaderButtons = ({
   handleCompletedTaskFilter
 }) => {
   const { hasAccess } = useAccess();
-  const navigate = useNavigate()
+  const navigate = useSafeRedirect()
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const isSmallScreen = useMediaQuery("(max-width:600px)");
   const isMediumScreen = useMediaQuery("(min-width:601px) and (max-width:960px)");
