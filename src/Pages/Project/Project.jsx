@@ -21,6 +21,7 @@ import { toast } from "react-toastify";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
+import useSafeRedirect from "../../Utils/useSafeRedirect";
 
 const TaskTable = React.lazy(() =>
   import("../../Components/Project/ListView/TableList")
@@ -28,7 +29,7 @@ const TaskTable = React.lazy(() =>
 
 const Project = () => {
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useSafeRedirect();
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const [isLoading, setIsLoading] = useState(false);
   const [isTaskLoading, setIsTaskLoading] = useState(false);

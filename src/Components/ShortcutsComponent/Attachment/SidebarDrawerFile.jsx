@@ -650,7 +650,46 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                           className="file-title url-title"
                           noWrap
                           sx={{ maxWidth: '150px', cursor: 'pointer' }}
-                          onClick={() => window.open(link, '_blank')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+
+                            const isHttpUrl = /^https?:\/\//i.test(link);
+
+                            if (isHttpUrl) {
+                              // Open valid http/https links in new tab
+                              window.open(link, '_blank', 'noopener,noreferrer');
+                              return;
+                            }
+
+                            // Otherwise: copy to clipboard
+                            const copyToClipboard = (text) => {
+                              if (navigator.clipboard && navigator.clipboard.writeText) {
+                                return navigator.clipboard.writeText(text);
+                              }
+                              return new Promise((resolve, reject) => {
+                                const tempInput = document.createElement('input');
+                                tempInput.value = text;
+                                document.body.appendChild(tempInput);
+                                tempInput.select();
+                                try {
+                                  const ok = document.execCommand('copy');
+                                  document.body.removeChild(tempInput);
+                                  ok ? resolve() : reject();
+                                } catch {
+                                  document.body.removeChild(tempInput);
+                                  reject();
+                                }
+                              });
+                            };
+
+                            copyToClipboard(link)
+                              .then(() => {
+                                toast.success('URL copied to clipboard');
+                              })
+                              .catch(() => {
+                                toast.error('Failed to copy URL');
+                              });
+                          }}
                         >
                           {link.replace(/^https?:\/\//, '')?.split('?')[0].slice(0, 30)}...
                         </Typography>

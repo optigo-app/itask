@@ -1,9 +1,10 @@
 import { Package, UserCheck, UserX, Clock, Settings, Layers, Star } from 'lucide-react';
 import { Card, CardContent, Box, Typography } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
+import useSafeRedirect from '../../Utils/useSafeRedirect';
 
 export default function SummaryDashboard() {
-    const navigate = useNavigate();
+    const navigate = useSafeRedirect();
     const iconMapping = {
         "Favorite Tasks": Star,
         "Services Tasks": Package,

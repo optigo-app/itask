@@ -105,7 +105,7 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
         </div>
         
         <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='MostWd higtCmon BrderRigt label-bold CmonCentrEvry' style={{ textDecoration: "underline", textDecorationColor: "#000000" }}>SRD</div>
+          <div className='MostWd higtCmon BrderRigt label-bold CmonCentrEvry' style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd" }}>SRD</div>
           <div className='AvgWd1 BrderRigt higtCmon CmonCentrEvry text-light'>Checklist</div>
           <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry text-light'>Checklist</div>
           <div className='MINWd higtCmon CmonCentrEvry label-bold'>Remark:</div>
@@ -114,11 +114,11 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
         <div className='CmonCentrEvry CmonFntSize BrderBtom'>
           <div className='MostWd higtCmon BrderRigt CmonCentrEvry'>
             <div className='text-light' style={{ marginRight: "5px" }}>M1:</div> 
-            <div style={{ textDecoration: "underline", textDecorationColor: "#000000", marginRight: "5px" }}>
+            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             </div> 
             <div className='text-light' style={{ marginRight: "5px" }}>Sign:</div> 
-            <div style={{ textDecoration: "underline", textDecorationColor: "#000000", marginRight: "5px" }}>
+            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             </div> 
           </div>
@@ -136,11 +136,11 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
         <div className='CmonCentrEvry CmonFntSize BrderBtom'>
           <div className='MostWd higtCmon BrderRigt CmonCentrEvry'>
             <div className='text-light' style={{ marginRight: "5px" }}>M2:</div> 
-            <div style={{ textDecoration: "underline", textDecorationColor: "#000000", marginRight: "5px" }}>
+            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             </div> 
             <div className='text-light' style={{ marginRight: "5px" }}>Sign:</div> 
-            <div style={{ textDecoration: "underline", textDecorationColor: "#000000", marginRight: "5px" }}>
+            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             </div> 
           </div>
@@ -158,11 +158,11 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
         <div className='CmonCentrEvry CmonFntSize BrderBtom'>
           <div className='MostWd higtCmon BrderRigt CmonCentrEvry'>
             <div className='text-light' style={{ marginRight: "5px" }}>M3:</div> 
-            <div style={{ textDecoration: "underline", textDecorationColor: "#000000", marginRight: "5px" }}>
+            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             </div> 
             <div className='text-light' style={{ marginRight: "5px" }}>Sign:</div> 
-            <div style={{ textDecoration: "underline", textDecorationColor: "#000000", marginRight: "5px" }}>
+            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             </div> 
           </div>
@@ -180,11 +180,11 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
         <div className='CmonCentrEvry CmonFntSize BrderBtom'>
           <div className='MostWd higtCmon BrderRigt CmonCentrEvry'>
             <div className='text-light' style={{ marginRight: "5px" }}>M4:</div> 
-            <div style={{ textDecoration: "underline", textDecorationColor: "#000000", marginRight: "5px" }}>
+            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             </div> 
             <div className='text-light' style={{ marginRight: "5px" }}>Sign:</div> 
-            <div style={{ textDecoration: "underline", textDecorationColor: "#000000", marginRight: "5px" }}>
+            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             </div> 
           </div>
@@ -199,14 +199,14 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
           <div className='MINWd higtCmon CmonCentrEvry TxtDark'></div>
         </div>
 
-        <div className='CmonCentrEvry CmonFntSize higtCmon BrderBtom label-bold' style={{ textDecoration: "underline", textDecorationColor: "#000000" }}>SRS-Estimate</div>
+        <div className='CmonCentrEvry CmonFntSize higtCmon BrderBtom label-bold' style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd" }}>SRS-Estimate</div>
 
         <div className='CmonCentrEvry CmonFntSize'>
           <div className='MostWd higtCmon CmonCentrEvry'>
             <div className='w-50 text-light'>UI | Name :</div>
             <div className='w-50 CmonCentrEvry justify-content-end'>
-              <div className='text-light' style={{ marginRight: "35px" }}>+</div>
-              <div className='text-light'>Hrs:</div>
+              <div className='text-light' style={{ width: "35px" }}></div>
+              <div className='text-light'>+Hrs:</div>
             </div>
           </div>
           <div className='AvgWd1 higtCmon CmonCentrEvry justify-content-center'>
@@ -222,8 +222,8 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
           <div className='MostWd higtCmon CmonCentrEvry'>
             <div className='w-50 text-light'>API | Name :</div>
             <div className='w-50 CmonCentrEvry justify-content-end'>
-              <div className='text-light' style={{ marginRight: "35px" }}>+</div>
-              <div className='text-light'>Hrs:</div>
+              <div className='text-light' style={{ width: "27px" }}></div>
+              <div className='text-light'>+Hrs:</div>
             </div>
           </div>
           <div className='AvgWd1 higtCmon CmonCentrEvry justify-content-center'>
@@ -239,8 +239,8 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
           <div className='MostWd higtCmon CmonCentrEvry'>
             <div className='w-50 text-light'>DB | Name :</div>
             <div className='w-50 CmonCentrEvry justify-content-end'>
-              <div className='text-light' style={{ marginRight: "35px" }}>+</div>
-              <div className='text-light'>Hrs:</div>
+              <div className='text-light' style={{ width: "31px" }}></div>
+              <div className='text-light'>+Hrs:</div>
             </div>
           </div>
           <div className='AvgWd1 higtCmon CmonCentrEvry justify-content-center'>
@@ -251,7 +251,7 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
         </div>
 
         <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry label-bold' style={{ textDecoration: "underline", textDecorationColor: "#000000" }}>Development</div>
+          <div className='MostWd higtCmon CmonCentrEvry label-bold' style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd" }}>Development</div>
           <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry'></div>
           <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry BrderBtom'>
             <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
@@ -261,8 +261,8 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
         </div>
 
         <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry text-light'>BODO By:</div>
-          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry'></div>
+           <div className='MostWd higtCmon CmonCentrEvry text-light'>BODO By:</div>
+          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry text-light'>Development By:</div>
           <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry BrderBtom'>
             <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
             <div className='text-light'>Speed, Load Time</div>
@@ -305,7 +305,7 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
         </div>
 
         <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry label-bold' style={{ textDecoration: "underline", textDecorationColor: "#000000" }}>Testing</div>
+          <div className='MostWd higtCmon CmonCentrEvry label-bold' style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd" }}>Testing</div>
           <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry'></div>
           <div className='AvgWd2 BrderRigt higtCmon BrderBtom CmonCentrEvry text-light'>Is It Complete?</div>
           <div className='MINWd higtCmon CmonCentrEvry label-bold BrderBtom'>Remarks:</div>
@@ -335,11 +335,11 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
         <div className='CmonCentrEvry CmonFntSize BrderBtom'>
           <div className='MostWd higtCmon CmonCentrEvry'>
             <div className='text-light' style={{ marginRight: "5px" }}>Local:</div> 
-            <div style={{ textDecoration: "underline", textDecorationColor: "#000000", marginRight: "10px" }}>
+            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "10px" }}>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             </div> 
             <div className='text-light' style={{ marginRight: "5px" }}>Live:</div> 
-            <div style={{ textDecoration: "underline", textDecorationColor: "#000000", marginRight: "5px" }}>
+            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             </div>
           </div>
@@ -347,7 +347,7 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
           <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry text-light'>Is It Relevant?</div>
           <div className='MINWd higtCmon CmonCentrEvry'></div>
         </div>
-        <div className='CmonCentrEvry CmonFntSize higtCmon BrderBtom label-bold' style={{ textDecoration: "underline", textDecorationColor: "#000000" }}>Delivery Checklist</div>
+        <div className='CmonCentrEvry CmonFntSize higtCmon BrderBtom label-bold' style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd" }}>Delivery Checklist</div>
         
         <div className='CmonCentrEvry CmonFntSize higtCmon'>
           <input type="checkbox" className='checkbox SpacRit text-light' />

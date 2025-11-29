@@ -71,13 +71,13 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
         setRd3(masterRes?.rd3 ?? []);
 
         const dataRes = await DynamicFilterApi(parsedData?.taskid);
-        if (dataRes?.rd[0]?.stat == 1) {
-          setQlColIdToName(dataRes?.rd?.[0] ?? {});
-          setRawRows(dataRes?.rd1 ?? []);
-        } else {
+        if (dataRes?.rd[0]?.stat == 0) {
           toast.error(dataRes?.rd[0]?.stat_msg);
           setRawRows([]);
           setQlColIdToName({});
+        } else {
+          setQlColIdToName(dataRes?.rd?.[0] ?? {});
+          setRawRows(dataRes?.rd1 ?? []);
         }
       } catch {
         setStatus500(true);
@@ -115,117 +115,131 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
 
   // Grid columns
   const gridColumns = useMemo(() => {
-    return allColumnNames?.filter((name) => !/^G\d+$/i.test(name) && name !== "taskno").map((name) => {
-      const base = {
-        field: name,
-        headerName: name?.replace(/_/g, " ")?.toUpperCase(),
-        width: name === "id" ? 60 : name === "taskname" ? 350 : name === "estimate_hrs" || name === "working_hr" ? 120 : 140,
-        flex: name === "id" || name === "taskname" ? "" : '',
-      };
-      if (masterColNameSet?.has(name)) {
-        return {
-          ...base,
-          renderCell: ({ value, row }) => {
-            const label = value ? idToAttr.get(Number(value)) ?? value : "";
-            return (
-              <DynamicFilterBadge
-                task={row}
-                columnKey={name.toLowerCase()}
-                value={label}
-                colors={columnColors[name.toLowerCase()] || {}}
-                onChange={(task, col, newVal) => {
-                  handleDataChnage(task, col, newVal);
-                }}
-              />
-            );
-          },
+    // Dynamic data columns (exclude technical/id & group columns)
+    const dynamicColumns = allColumnNames
+      ?.filter((name) => !/^G\d+$/i.test(name) && name !== "taskno" && name !== "id")
+      .map((name) => {
+        const base = {
+          field: name,
+          headerName: name?.replace(/_/g, " ")?.toUpperCase(),
+          width:
+            name === "taskname"
+              ? 350
+              : name === "estimate_hrs" || name === "working_hr"
+                ? 120
+                : 140,
+          flex: name === "taskname" ? "" : "",
         };
-      }
-      if (name === "deadline") {
-        return {
-          ...base,
-          renderCell: (params) =>
-            params?.row?.deadline && cleanDate(params?.row?.deadline)
-              ? formatDate2(cleanDate(params?.row?.deadline))
-              : '-'
-        };
-      }
-      if (name === "start_date") {
-        return {
-          ...base,
-          renderCell: (params) =>
-            params?.row?.start_date && cleanDate(params?.row?.start_date)
-              ? formatDate2(cleanDate(params?.row?.start_date))
-              : '-'
-        };
-      }
-      if (name === "taskname") {
-        return {
-          ...base,
-          renderCell: (params) => {
-            const taskno = params?.row?.taskno;
-            const taskname = params?.row?.taskname;
-            return (
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
-              }}>
-                {taskno && taskno !== 0 && taskno !== "0" && (
-                  <Box component="span" sx={{
-                    marginRight: '8px',
-                    color: '#666',
-                    fontWeight: '500'
-                  }}>
-                    {taskno}
-                  </Box>
-                )}
-                <Box component="span">
-                  {taskname || '-'}
+        if (masterColNameSet?.has(name)) {
+          return {
+            ...base,
+            renderCell: ({ value, row }) => {
+              const label = value ? idToAttr.get(Number(value)) ?? value : "";
+              return (
+                <DynamicFilterBadge
+                  task={row}
+                  columnKey={name.toLowerCase()}
+                  value={label}
+                  colors={columnColors[name.toLowerCase()] || {}}
+                  onChange={(task, col, newVal) => {
+                    handleDataChnage(task, col, newVal);
+                  }}
+                />
+              );
+            },
+          };
+        }
+        if (name === "deadline") {
+          return {
+            ...base,
+            renderCell: (params) =>
+              params?.row?.deadline && cleanDate(params?.row?.deadline)
+                ? formatDate2(cleanDate(params?.row?.deadline))
+                : "-",
+          };
+        }
+        if (name === "start_date") {
+          return {
+            ...base,
+            renderCell: (params) =>
+              params?.row?.start_date && cleanDate(params?.row?.start_date)
+                ? formatDate2(cleanDate(params?.row?.start_date))
+                : "-",
+          };
+        }
+        if (name === "taskname") {
+          return {
+            ...base,
+            renderCell: (params) => {
+              const taskno = params?.row?.taskno;
+              const taskname = params?.row?.taskname;
+              return (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {taskno && taskno !== 0 && taskno !== "0" && (
+                    <Box
+                      component="span"
+                      sx={{
+                        marginRight: "8px",
+                        color: "#666",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {taskno}
+                    </Box>
+                  )}
+                  <Box component="span">{taskname || "-"}</Box>
                 </Box>
-              </Box>
-            );
-          },
-        };
-      }
-      if (name === "assignee") {
-        return {
-          ...base,
-          renderCell: (params) => {
-            const assigneeIdArray = params?.row?.assignee
-              ?.split(",")
-              ?.map((id) => Number(id));
-            const matchedAssignees = taskAssigneeData?.filter((user) =>
-              assigneeIdArray?.includes(user.id)
-            );
-            return (
-              <ReusableAvatar assineeData={matchedAssignees} width={25} max={4} />
+              );
+            },
+          };
+        }
+        if (name === "assignee") {
+          return {
+            ...base,
+            renderCell: (params) => {
+              const assigneeIdArray = params?.row?.assignee
+                ?.split(",")
+                ?.map((id) => Number(id));
+              const matchedAssignees = taskAssigneeData?.filter((user) =>
+                assigneeIdArray?.includes(user.id)
+              );
+              return <ReusableAvatar assineeData={matchedAssignees} width={25} max={4} />;
+            },
+          };
+        }
 
-            );
-          },
-        };
-      }
+        if (name === "workcategoryid") {
+          return {
+            ...base,
+            renderCell: (params) => {
+              const category = taskWorkCategoryData?.find(
+                (item) => item?.id == params?.row?.workcategoryid
+              );
+              return <Box component="span">{category?.labelname || "-"}</Box>;
+            },
+          };
+        }
+        return base;
+      });
 
-      if (name === "workcategoryid") {
-        return {
-          ...base,
-          renderCell: (params) => {
-            const category = taskWorkCategoryData?.find(
-              (item) => item?.id == params?.row?.workcategoryid
-            );
-            return (
-              <Box component="span">
-                {category?.labelname || '-'}
-              </Box>
+    // Prepend SR NO column (value is precomputed on the row)
+    const srNoColumn = {
+      field: "srNo",
+      headerName: "SR#",
+      width: 80,
+      sortable: false,
+      filterable: false,
+    };
 
-            );
-          },
-        };
-      }
-      return base;
-    });
+    return [srNoColumn, ...(dynamicColumns || [])];
   }, [allColumnNames, masterColNameSet, idToAttr]);
 
   // Original rows with proper column names
@@ -266,7 +280,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
 
   // Filtered rows
   const filteredRows = useMemo(() => {
-    return finalRowData.filter((row) => {
+    const filtered = finalRowData.filter((row) => {
       const matchesGroups = Object.entries(selectedAttrsByGroupId).every(([gid, vals]) => {
         if (!vals?.length) return true;
         const colKey = groupIdToColumnKey[gid];
@@ -464,6 +478,9 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
       }
       return true;
     });
+
+    // Add sequential SR NO based on current filtered order (1-based)
+    return filtered.map((row, index) => ({ ...row, srNo: index + 1 }));
   }, [finalRowData, selectedAttrsByGroupId, groupIdToColumnKey, idToAttr, filters, masterColNameSet, taskAssigneeData, taskWorkCategoryData, taskCategory]);
 
   // Count active filters

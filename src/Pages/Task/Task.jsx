@@ -599,6 +599,7 @@ const Task = () => {
     setLocalTaskEdits((prev) => ({
       ...prev,
       [updatedRowData.taskid]: {
+        ...(prev[updatedRowData.taskid] || {}),
         departmentid: updatedRowData?.departmentid,
         assigneids: updatedRowData?.assigneids,
         assignee: updatedRowData?.assignee,

@@ -28,13 +28,14 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import './sidebar.scss';
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { Advfilters, FullSidebar } from "../../Recoil/atom";
+import useSafeRedirect from "../../Utils/useSafeRedirect";
 
 const Sidebar = () => {
-    const navigate = useNavigate();
+    const navigate = useSafeRedirect();
     const location = useLocation();
     const [isLoading, setLoading] = useState(true);
     const [pageList, setPageList] = useState([]);
@@ -57,10 +58,10 @@ const Sidebar = () => {
         { pagename: "Project", label: "Project", routes: "Projects", path: "/projects", icon: SquareChartGantt },
         { pagename: "Inbox", label: "Inbox", routes: "Inbox", path: "/inbox", icon: Inbox },
         { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
-        { pagename: "Calender", label: "My Calendar", routes: "Calendar", path: "/myCalendar", icon: CalendarCheck },
+        { pagename: "Calender", label: "My Calendar", routes: "MyCalendar", path: "/myCalendar", icon: CalendarCheck },
         { pagename: "Maters", label: "Masters", routes: "Masters", path: "/masters", icon: Boxes },
-        { pagename: "Team Cal View", label: "Team Cal View", routes: "teamCalReport", path: "/teamCalReport", icon: Ratio },
-        { pagename: "Milestone Report", label: "Milestone Report", routes: "milestoneReport", path: "/milestoneReport", icon: Ratio },
+        { pagename: "Team Cal View", label: "Team Cal View", routes: "TeamCalReport", path: "/teamCalReport", icon: Ratio },
+        { pagename: "Milestone Report", label: "Milestone Report", routes: "MilestoneReport", path: "/milestoneReport", icon: Ratio },
         { pagename: "Reports", label: "Reports", routes: "Reports", path: "/reports", icon: Ratio },
     ];
 
