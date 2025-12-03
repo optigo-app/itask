@@ -1,9 +1,10 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData, getUserProfileData } from "../../Utils/globalfun";
+import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const AddMeetingApi = async (formValues) => {
-    const AuthData = getUserProfileData();
+    const AuthData = getAuthData();
     try {
+        const ipAddress = await getClientIpAddress();
         const combinedValue = JSON.stringify({
             "meetingid": (formValues?.meetingid || formValues?.id) ?? 0,
             "taskid": formValues?.taskid ?? 0,
@@ -32,7 +33,7 @@ export const AddMeetingApi = async (formValues) => {
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"taskmeetingsave\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"taskmeetingsave\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };

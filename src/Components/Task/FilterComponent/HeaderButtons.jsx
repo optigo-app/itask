@@ -19,7 +19,6 @@ import {
   formData,
   openFormDrawer,
   rootSubrootflag,
-  selectedRowData,
   selectedCategoryAtom,
   filterDrawer,
   timerCompOpen,
@@ -43,7 +42,7 @@ import {
   Users,
 } from "lucide-react";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import "./Styles.scss";
 import TaskTimeTrackerComp from "../../ShortcutsComponent/TimerComponent/TaskTimeTrackerComp";
 import ScrollableCategoryTabs from "./ScrollableCategoryTabs";
@@ -90,6 +89,7 @@ const HeaderButtons = ({
   const encodedData = searchParams.get("data");
   const [parsedData, setParsedData] = useState();
   const [categoryMaster, setCategoryMaster] = useState([]);
+  const [searchInput, setSearchInput] = useState(filters?.searchTerm || "");
 
   useEffect(() => {
     if (Array.isArray(CategorySummary)) {
@@ -109,6 +109,20 @@ const HeaderButtons = ({
       setViewTaskMode(sessionStorage?.getItem('viewTaskMode'));
     }
   }, [])
+
+  useEffect(() => {
+    setSearchInput(filters?.searchTerm || "");
+  }, [filters?.searchTerm]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (searchInput !== filters?.searchTerm) {
+        onFilterChange("searchTerm", searchInput);
+      }
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [searchInput, filters?.searchTerm, onFilterChange]);
 
   const handleDrawerToggle = () => {
     setFormDrawerOpen(!formdrawerOpen);
@@ -199,6 +213,9 @@ const HeaderButtons = ({
         <ToggleButton value="kanban" aria-label="kanban view" sx={{ borderRadius: '8px' }}>
           <Kanban className="iconbtn" size={20} />
         </ToggleButton>
+        {/* <ToggleButton value="bugtask" aria-label="Bug Task" sx={{ borderRadius: '8px' }}>
+          <ListFilter className="iconbtn" size={20} />
+        </ToggleButton> */}
         <ToggleButton value="Dynamic-Filter" aria-label="Dynamic Filter" sx={{ borderRadius: '8px' }}>
           <ListFilter className="iconbtn" size={20} />
         </ToggleButton>
@@ -216,8 +233,8 @@ const HeaderButtons = ({
           <Box sx={{ display: "flex", justifyContent: "end" }}>
             <TextField
               placeholder="Search tasks..."
-              value={filters?.searchTerm}
-              onChange={(e) => onFilterChange("searchTerm", e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               size="small"
               className="textfieldsClass"
               sx={{
@@ -341,9 +358,9 @@ const HeaderButtons = ({
                   classes={{ tooltip: 'custom-tooltip' }}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <ToggleButton 
-                      value="me" 
-                      className="toggle-btn" 
+                    <ToggleButton
+                      value="me"
+                      className="toggle-btn"
                       sx={{ borderRadius: '8px', minHeight: '40px' }}
                       disabled={!location?.pathname?.includes("/tasks/")}
                     >
@@ -353,10 +370,10 @@ const HeaderButtons = ({
                 </Tooltip>
                 <Tooltip
                   title={
-                    !location?.pathname?.includes("/tasks/") 
-                      ? "Available only when process with project to task page" 
-                      : parsedData?.isLimited == 1 
-                        ? "Access limited: Team view disabled" 
+                    !location?.pathname?.includes("/tasks/")
+                      ? "Available only when process with project to task page"
+                      : parsedData?.isLimited == 1
+                        ? "Access limited: Team view disabled"
                         : "Team tasks view"
                   }
                   arrow
@@ -376,10 +393,10 @@ const HeaderButtons = ({
                 </Tooltip>
                 <Tooltip
                   title={
-                    !location?.pathname?.includes("/tasks/") 
-                      ? "Available only when process with project to task page" 
-                      : parsedData?.isLimited == 1 
-                        ? "Access limited: Created by view disabled" 
+                    !location?.pathname?.includes("/tasks/")
+                      ? "Available only when process with project to task page"
+                      : parsedData?.isLimited == 1
+                        ? "Access limited: Created by view disabled"
                         : "Tasks created by me view"
                   }
                   arrow

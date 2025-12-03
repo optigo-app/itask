@@ -1,13 +1,14 @@
 import axios from "axios";
 import { APIURL, getHeaders } from "./config";
-import { getAuthData } from "../../Utils/globalfun";
+import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const taskInit = async () => {
   const headers = getHeaders();
   const AuthData = getAuthData();
+  const ipAddress = await getClientIpAddress();
 
   const body = {
-    con: JSON.stringify({ id: "", mode: "gettoken", appuserid: AuthData?.uid ?? '' }),
+    con: JSON.stringify({ id: "", mode: "gettoken", appuserid: AuthData?.uid ?? '', IPAddress: ipAddress }),
     p: "",
     f: "init api for initialization",
   };

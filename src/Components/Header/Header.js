@@ -259,6 +259,7 @@ const useDataMap = (location, decodedData) => {
         "/myCalendar": { title: "Calendar", subtitle: "Keep track of your events and tasks" },
         "/meetings": { title: "Meetings", subtitle: "Manage and schedule your meetings" },
         "/tasks": { title: 'My Tasks', subtitle: "View all of your tasks here" },
+        "/bugtrack": { title: 'Bug Track', subtitle: "View all of your bug tracking tasks here" },
         "/projects": { title: "Projects", subtitle: "Manage and monitor your projects" },
         "/masters": { title: "Masters", subtitle: "Manage all your masters here" },
         "/account-profile": { title: "Profile", subtitle: "Manage your Profile here" },

@@ -27,12 +27,14 @@ import SampleQuickForm from './Backup/sampleQuickForm';
 import SampleQuickFormVersion2 from './Backup/sampleQuickFormVersion2';
 import StructuredQuickTask from './Backup/StructuredQuickTask';
 import DocumentSheet from './Components/PrintSheet/DocumentSheet';
+import AppLayout from './Image_Editor/AppLayout';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
 const Header = lazy(() => import('./Components/Header/Header'));
 const Home = lazy(() => import('./Pages/Home/Home'));
 const Inbox = lazy(() => import('./Pages/Inbox/Inbox'));
+const Bugtask = lazy(() => import('./Components/Task/BugView/BugTask'));
 const Calendar = lazy(() => import('./Pages/Calendar/CalendarPage'));
 const CalendarGridView = lazy(() => import('./Pages/Calendar/CalendarGridView'));
 const Meeting = lazy(() => import('./Pages/Meeting/Meeting'));
@@ -288,6 +290,7 @@ const AppWrapper = () => {
                 <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
                     <Routes>
                         <Route path="/error401" element={<Error401Page />} />
+                        <Route path="/test4324" element={<AppLayout />} />
                         <Route
                             path="/login"
                             element={
@@ -314,15 +317,16 @@ const AppWrapper = () => {
                                         <Route path="/reports/pms-2" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport2 /></ProtectedRoute>} />
                                         <Route path="/teamCalReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1009"><CalendarReport /></ProtectedRoute>} />
                                         <Route path="/milestoneReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1010"><ModuleMilestoneReport /></ProtectedRoute>} />
+                                        <Route path="/bugtrack" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1010"><Bugtask /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
-                                        <Route path="/test" element={<CalendarComparisonDemo />} />
-                                        <Route path="/test1" element={<CalendarViewDemo />} />
-                                        <Route path="/test2" element={<SampleQuickForm />} />
-                                        <Route path="/test3" element={<SampleQuickFormVersion2 />} />
-                                        <Route path="/test4321" element={<StructuredQuickTask />} />
-                                        <Route path="/test4322" element={<CalendarReport />} />
-                                        <Route path="/test4323" element={<DocumentSheet />} />
+                                        {/* <Route path="/test" element={<CalendarComparisonDemo />} /> */}
+                                        {/* <Route path="/test1" element={<CalendarViewDemo />} /> */}
+                                        {/* <Route path="/test2" element={<SampleQuickForm />} /> */}
+                                        {/* <Route path="/test3" element={<SampleQuickFormVersion2 />} /> */}
+                                        {/* <Route path="/test4321" element={<StructuredQuickTask />} /> */}
+                                        {/* <Route path="/test4322" element={<CalendarReport />} /> */}
+                                        {/* <Route path="/test4323" element={<DocumentSheet />} /> */}
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>
