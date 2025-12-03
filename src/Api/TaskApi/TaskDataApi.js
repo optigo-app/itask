@@ -1,15 +1,16 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData } from "../../Utils/globalfun";
+import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const fetchTaskDataApi = async (selectedRow) => {
     const AuthData = getAuthData();
+    const ipAddress = await getClientIpAddress();
     try {
         const combinedValue = JSON.stringify({
             taskid: `${selectedRow?.taskid ?? ''}`,
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"tasklist\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"tasklist\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };

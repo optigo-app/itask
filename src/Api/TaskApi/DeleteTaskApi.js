@@ -1,8 +1,9 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData } from "../../Utils/globalfun";
+import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const deleteTaskDataApi = async (selectedRow) => {
     const AuthData = getAuthData();
+    const ipAddress = await getClientIpAddress();
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
@@ -11,7 +12,7 @@ export const deleteTaskDataApi = async (selectedRow) => {
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"task_trash\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"task_trash\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
             "f": "Task Management (task_trash)",
             "p": combinedValue,
         };

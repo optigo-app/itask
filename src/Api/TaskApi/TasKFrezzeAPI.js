@@ -1,8 +1,9 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData } from "../../Utils/globalfun";
+import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const TaskFrezzeApi = async (formValues) => {
     const AuthData = getAuthData();
+    const ipAddress = await getClientIpAddress();
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
         const combinedValue = JSON.stringify({
@@ -11,7 +12,7 @@ export const TaskFrezzeApi = async (formValues) => {
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"task_freez\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"task_freez\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };

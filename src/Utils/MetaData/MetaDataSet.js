@@ -33,6 +33,13 @@ const MetaDataSet = () => {
       keywords: "task management, to-do list, productivity, project planning",
       url: window.location.href,
     },
+    "/bugtrack": {
+      title: "Bug Track Page - Organize Your Work",
+      description: "Create, assign, and track tasks efficiently with our task management tool.",
+      image: window.location.origin + '/static/media/tecotask.d889fb524f89f048a45c.png',
+      keywords: "task management, to-do list, productivity, project planning",
+      url: window.location.href,
+    },
     "/projects": {
       title: "Project Management - Streamline Your Workflow",
       description: "Manage your projects with ease, collaborate with your team, and track progress.",

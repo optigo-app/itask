@@ -56,6 +56,7 @@ const Sidebar = () => {
         { pagename: "Home", label: "Home", routes: "Home", path: "/", icon: House },
         { pagename: "Task", label: "Task", routes: "Tasks", path: "/tasks", icon: FileCheck },
         { pagename: "Project", label: "Project", routes: "Projects", path: "/projects", icon: SquareChartGantt },
+        { pagename: "Bug Track", label: "Bug Track", routes: "bugTrack", path: "/bugtrack", icon: FileCheck },
         { pagename: "Inbox", label: "Inbox", routes: "Inbox", path: "/inbox", icon: Inbox },
         { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
         { pagename: "Calender", label: "My Calendar", routes: "MyCalendar", path: "/myCalendar", icon: CalendarCheck },
@@ -172,7 +173,7 @@ const Sidebar = () => {
                 className="itask_Menudrawer"
             >
                 {!isLoading &&
-                    <List sx={{overflowY: 'hidden', overflow: 'auto'}}>
+                    <List sx={{ overflowY: 'hidden', overflow: 'auto' }}>
                         <ListItem className="itask_drawerHeader">
                             <ListItemButton className="itask_drawerListItem">
                                 <Box
@@ -240,7 +241,7 @@ const Sidebar = () => {
                             <>
                                 {pageList.map(({ label, path, icon: Icon, routes }) => (
                                     label !== 'Reports' ? (
-                                        <ListItem key={label} onClick={() => handleItemClick(path, routes)} sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row'}}>
+                                        <ListItem key={label} onClick={() => handleItemClick(path, routes)} sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row' }}>
                                             <ListItemButton className={`itask_drawerListItem ${activeItem === routes ? 'itask_drawerItemActive' : ''}`}>
                                                 <ListItemIcon className="itask_drawerItemIcon">
                                                     <Icon className={activeItem === routes ? "iconActive" : 'iconUnactive'} size={18} />
@@ -248,7 +249,7 @@ const Sidebar = () => {
                                                 {isDrawerOpen && <ListItemText primary={label} className="itask_drawerItemText" />}
                                             </ListItemButton>
                                             {!isDrawerOpen && (
-                                                <Typography variant="caption" className="itask_drawerItemText" sx={{textAlign:"center"}}>
+                                                <Typography variant="caption" className="itask_drawerItemText" sx={{ textAlign: "center" }}>
                                                     {label}
                                                 </Typography>
                                             )}

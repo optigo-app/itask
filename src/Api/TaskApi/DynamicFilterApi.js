@@ -1,11 +1,12 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData } from "../../Utils/globalfun";
+import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const DynamicFilterApi = async (taskid) => {
     const AuthData = getAuthData();
+    const ipAddress = await getClientIpAddress();
     try {
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"QUICKLIST\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"QUICKLIST\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
             "f": "Task Management Dynamic Filter (tasklist)",
             "p": `{\"taskid\":\"${taskid ?? ''}\"}`,
         };

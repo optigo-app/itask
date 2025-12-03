@@ -1,11 +1,13 @@
+import { getClientIpAddress } from "../../Utils/globalfun";
 import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const fetchMaster = async () => {
     try {
+        const ipAddress = await getClientIpAddress();
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"taskmaster\",\"appuserid\":\"${init?.userid ?? ''}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"taskmaster\",\"appuserid\":\"${init?.userid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
             "f": "Task Management (taskmaster)",
             "p": '',
         };
@@ -23,6 +25,7 @@ export const fetchMaster = async () => {
 
 export const addEditDelMaster = async (payload) => {
     try {
+        const ipAddress = await getClientIpAddress();
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
         let mode = payload?.mode;
         let masterName = payload?.tabData?.table_name;
@@ -37,7 +40,7 @@ export const addEditDelMaster = async (payload) => {
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"master_action\",\"appuserid\":\"${init.userid ?? ''}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"master_action\",\"appuserid\":\"${init.userid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
             "f": "Task Management (taskmaster)",
             "p": combinedValue,
         };

@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
 import { MoveTaskApi } from "../../Api/TaskApi/MoveTaskApi";
 import CloseIcon from '@mui/icons-material/Close';
+import BugTask from "../../Components/Task/BugView/BugTask";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
@@ -259,6 +260,135 @@ const Task = () => {
 
   const sortedData = recursiveSort(tasks, getComparator(order, orderBy));
 
+  // const filteredData = sortedData
+  //   ?.map((task) => {
+  //     const {
+  //       status,
+  //       priority,
+  //       assignee,
+  //       searchTerm,
+  //       dueDate,
+  //       startDate,
+  //       department,
+  //       project,
+  //       category,
+  //     } = filters;
+
+  //     const normalizedSearchTerm = searchTerm?.trim()?.toLowerCase();
+  //     const isQuoted =
+  //       (normalizedSearchTerm?.startsWith('"') && normalizedSearchTerm?.endsWith('"')) ||
+  //       (normalizedSearchTerm?.startsWith("'") && normalizedSearchTerm?.endsWith("'"));
+
+  //     const cleanSearchTerm = isQuoted
+  //       ? normalizedSearchTerm.slice(1, -1)
+  //       : normalizedSearchTerm;
+
+  //     const resetInvalidFilters = () => {
+  //       Object.keys(filters).forEach((key) => {
+  //         const value = filters[key];
+  //         if (
+  //           value === "Select Department" ||
+  //           value === "Select Status" ||
+  //           value === "Select Priority" ||
+  //           value === "Select Assignee" ||
+  //           value === "Select Project"
+  //         ) {
+  //           filters[key] = "";
+  //         }
+  //       });
+  //     };
+
+  //     const isUnsetDeadline = (dateStr) => {
+  //       const date = new Date(dateStr);
+  //       return !dateStr || date.toISOString().slice(0, 10) === "1900-01-01";
+  //     };
+
+  //     resetInvalidFilters();
+  //     const matchesFilters = (item) => {
+  //       const matchesCategory =
+  //         !Array.isArray(category) ||
+  //         category.length === 0 ||
+  //         category.some((cat) => {
+  //           const lowerCat = cat.toLowerCase();
+  //           if (lowerCat === "due") {
+  //             return isTaskDue(item?.DeadLineDate) && !isUnsetDeadline(item?.DeadLineDate);
+  //           } else if (lowerCat === "unset deadline") {
+  //             return isUnsetDeadline(item?.DeadLineDate);
+  //           } else if (lowerCat === "today") {
+  //             return isTaskToday(item?.StartDate);
+  //           } else if (lowerCat === "new") {
+  //             return item?.isnew == 1;
+  //           }
+  //           return (item?.category ?? "").toLowerCase() === lowerCat;
+  //         });
+
+  //       const fieldsToCheck = [
+  //         item?.taskname,
+  //         item?.taskno,
+  //         item?.status,
+  //         item?.priority,
+  //         item?.description,
+  //         item?.DeadLineDate,
+  //         item?.taskPr,
+  //         item?.taskDpt,
+  //       ];
+
+  //       const assignees = Array.isArray(item?.assignee)
+  //         ? item.assignee.map((a) => `${a?.firstname} ${a?.lastname}`)
+  //         : [item?.assignee];
+
+  //       const searchMatchFn = (value) => {
+  //         if (!value) return false;
+  //         const val = value.toLowerCase();
+
+  //         if (isQuoted) {
+  //           const exactWordRegex = new RegExp(`\\b${cleanSearchTerm}\\b`, "i");
+  //           return exactWordRegex.test(val);
+  //         } else {
+  //           return val.includes(cleanSearchTerm);
+  //         }
+  //       };
+
+  //       const matchesSearch =
+  //         !searchTerm || [...fieldsToCheck, ...assignees].some(searchMatchFn);
+
+  //       return (
+  //         matchesCategory &&
+  //         (status ? item?.status?.toLowerCase() === status?.toLowerCase() : true) &&
+  //         (priority ? item?.priority?.toLowerCase() === priority?.toLowerCase() : true) &&
+  //         (department ? item?.taskDpt?.toLowerCase() === department?.toLowerCase() : true) &&
+  //         (project ? item?.taskPr?.toLowerCase() === project?.toLowerCase() : true) &&
+  //         (dueDate ? formatDate2(item?.DeadLineDate) === formatDate2(dueDate) : true) &&
+  //         (startDate ? formatDate2(item?.StartDate) === formatDate2(startDate) : true) &&
+  //         (assignee
+  //           ? item?.assignee?.some((a) => {
+  //             const fullName = `${a?.firstname} ${a?.lastname}`?.toLowerCase();
+  //             return fullName?.includes(assignee?.toLowerCase());
+  //           })
+  //           : true) &&
+  //         matchesSearch
+  //       );
+  //     };
+
+  //     const filterRecursive = (item) => {
+  //       const matches = matchesFilters(item);
+  //       const filteredSubtasks = item?.subtasks
+  //         ?.map(filterRecursive)
+  //         .filter(Boolean) || [];
+
+  //       if (matches || filteredSubtasks.length > 0) {
+  //         return {
+  //           ...item,
+  //           subtasks: filteredSubtasks,
+  //         };
+  //       }
+  //       return null;
+  //     };
+
+  //     return filterRecursive(task);
+  //   })
+  //   ?.filter(Boolean);
+
   const filteredData = sortedData
     ?.map((task) => {
       const {
@@ -303,7 +433,8 @@ const Task = () => {
       };
 
       resetInvalidFilters();
-      const matchesFilters = (item) => {
+
+      const matchesNonSearchFilters = (item) => {
         const matchesCategory =
           !Array.isArray(category) ||
           category.length === 0 ||
@@ -321,6 +452,36 @@ const Task = () => {
             return (item?.category ?? "").toLowerCase() === lowerCat;
           });
 
+        return (
+          matchesCategory &&
+          (status ? item?.status?.toLowerCase() === status?.toLowerCase() : true) &&
+          (priority ? item?.priority?.toLowerCase() === priority?.toLowerCase() : true) &&
+          (department ? item?.taskDpt?.toLowerCase() === department?.toLowerCase() : true) &&
+          (project ? item?.taskPr?.toLowerCase() === project?.toLowerCase() : true) &&
+          (dueDate ? formatDate2(item?.DeadLineDate) === formatDate2(dueDate) : true) &&
+          (startDate ? formatDate2(item?.StartDate) === formatDate2(startDate) : true) &&
+          (assignee
+            ? item?.assignee?.some((a) => {
+              const fullName = `${a?.firstname} ${a?.lastname}`?.toLowerCase();
+              return fullName?.includes(assignee?.toLowerCase());
+            })
+            : true)
+        );
+      };
+
+      const searchMatchFn = (value) => {
+        if (!value) return false;
+        const val = value.toLowerCase();
+
+        if (isQuoted) {
+          const exactWordRegex = new RegExp(`\\b${cleanSearchTerm}\\b`, "i");
+          return exactWordRegex.test(val);
+        } else {
+          return val.includes(cleanSearchTerm);
+        }
+      };
+
+      const matchesFilters = (item, parentMatchedByTaskNo = false) => {
         const fieldsToCheck = [
           item?.taskname,
           item?.taskno,
@@ -336,43 +497,23 @@ const Task = () => {
           ? item.assignee.map((a) => `${a?.firstname} ${a?.lastname}`)
           : [item?.assignee];
 
-        const searchMatchFn = (value) => {
-          if (!value) return false;
-          const val = value.toLowerCase();
-
-          if (isQuoted) {
-            const exactWordRegex = new RegExp(`\\b${cleanSearchTerm}\\b`, "i");
-            return exactWordRegex.test(val);
-          } else {
-            return val.includes(cleanSearchTerm);
-          }
-        };
-
         const matchesSearch =
           !searchTerm || [...fieldsToCheck, ...assignees].some(searchMatchFn);
 
-        return (
-          matchesCategory &&
-          (status ? item?.status?.toLowerCase() === status?.toLowerCase() : true) &&
-          (priority ? item?.priority?.toLowerCase() === priority?.toLowerCase() : true) &&
-          (department ? item?.taskDpt?.toLowerCase() === department?.toLowerCase() : true) &&
-          (project ? item?.taskPr?.toLowerCase() === project?.toLowerCase() : true) &&
-          (dueDate ? formatDate2(item?.DeadLineDate) === formatDate2(dueDate) : true) &&
-          (startDate ? formatDate2(item?.StartDate) === formatDate2(startDate) : true) &&
-          (assignee
-            ? item?.assignee?.some((a) => {
-              const fullName = `${a?.firstname} ${a?.lastname}`?.toLowerCase();
-              return fullName?.includes(assignee?.toLowerCase());
-            })
-            : true) &&
-          matchesSearch
-        );
+        const selfTaskNoMatchesSearch = searchTerm && item?.taskno && searchMatchFn(item.taskno);
+
+        const effectiveSearchMatch = matchesSearch || parentMatchedByTaskNo || selfTaskNoMatchesSearch;
+
+        return matchesNonSearchFilters(item) && effectiveSearchMatch;
       };
 
-      const filterRecursive = (item) => {
-        const matches = matchesFilters(item);
+      const filterRecursive = (item, parentMatchedByTaskNo = false) => {
+        const selfTaskNoMatchesSearch = searchTerm && item?.taskno && searchMatchFn(item.taskno);
+        const matches = matchesFilters(item, parentMatchedByTaskNo);
+        const nextParentMatchedByTaskNo = parentMatchedByTaskNo || selfTaskNoMatchesSearch;
+
         const filteredSubtasks = item?.subtasks
-          ?.map(filterRecursive)
+          ?.map((sub) => filterRecursive(sub, nextParentMatchedByTaskNo))
           .filter(Boolean) || [];
 
         if (matches || filteredSubtasks.length > 0) {
@@ -898,6 +1039,14 @@ const Task = () => {
 
               {activeButton === "card" && (
                 <CardView
+                  isLoading={iswhTLoading}
+                  masterData={masterData}
+                  handleTaskFavorite={handleTaskFavorite}
+                  handleFreezeTask={handleFreezeTask}
+                />
+              )}
+              {activeButton === "bugtask" && (
+                <BugTask
                   isLoading={iswhTLoading}
                   masterData={masterData}
                   handleTaskFavorite={handleTaskFavorite}

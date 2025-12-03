@@ -1,17 +1,18 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData } from "../../Utils/globalfun";
+import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const fetchModuleDataApi = async (selectedRow) => {
     const AuthData = getAuthData();
+    const ipAddress = await getClientIpAddress();
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
-        
+
         const combinedValue = JSON.stringify({
             taskid: `${selectedRow?.taskid ?? ''}`,
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"taskmodulelist\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"taskmodulelist\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };

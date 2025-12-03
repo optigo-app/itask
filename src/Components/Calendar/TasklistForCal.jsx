@@ -490,8 +490,8 @@ const TasklistForCal = ({ calendarsColor }) => {
                                     key={child.taskid}
                                     child={child}
                                     colorClass={colorClass}
-                                    // isScheduled={isScheduled}
-                                    isScheduled=''
+                                    isScheduled={isScheduled}
+                                    // isScheduled=''
                                     calendarsColor={calendarsColor}
                                 />
                             );

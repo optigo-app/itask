@@ -1,9 +1,10 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData } from "../../Utils/globalfun";
+import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const DynamicFilterEditApi = async (data, task) => {
 
     const AuthData = getAuthData();
+    const ipAddress = await getClientIpAddress();
     try {
         const combinedValue = JSON.stringify({
             "taskid": task?.id ?? "",
@@ -11,7 +12,7 @@ export const DynamicFilterEditApi = async (data, task) => {
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"Quicklist_edit\",\"appuserid\":\"${AuthData?.uid ?? ''}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"Quicklist_edit\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };
