@@ -13,6 +13,7 @@ import { DynamicFilterEditApi } from "../../../Api/TaskApi/DynamicFilterEditApi"
 import ReusableAvatar from "../../ShortcutsComponent/ReusableAvatar";
 import DynamicColumnFilterDrawer from "./DynamicColumnFilterDrawer";
 import { useLocation } from "react-router-dom";
+import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 
 const normalize = (s) => (s || "").toString().trim().toLowerCase().replace(/\s+/g, "");
 
@@ -40,6 +41,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
   const [rawRows, setRawRows] = useState([]);
   const [finalRowData, setFinalRowData] = useState([]);
   const taskAssigneeData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
+  const taskStatusData = JSON?.parse(sessionStorage.getItem("taskstatusData"));
   const taskWorkCategoryData = JSON?.parse(sessionStorage.getItem("taskworkcategoryData"));
   const taskCategory = JSON?.parse(sessionStorage.getItem("taskworkcategoryData"));
   const searchParams = new URLSearchParams(location.search);
@@ -158,6 +160,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
                 : "-",
           };
         }
+
         if (name === "start_date") {
           return {
             ...base,
@@ -167,6 +170,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
                 : "-",
           };
         }
+
         if (name === "taskname") {
           return {
             ...base,
@@ -201,6 +205,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
             },
           };
         }
+
         if (name === "assignee") {
           return {
             ...base,
@@ -216,6 +221,19 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
           };
         }
 
+        if (name === "createdbyid") {
+          return {
+            ...base,
+            renderCell: (params) => {
+              const assigneeIdArray = params?.row?.createdbyid
+              const matchedAssignees = taskAssigneeData?.filter((user) =>
+                assigneeIdArray == user.id
+              );
+              return <ReusableAvatar assineeData={matchedAssignees} width={25} max={4} />;
+            },
+          };
+        }
+
         if (name === "workcategoryid") {
           return {
             ...base,
@@ -224,6 +242,27 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
                 (item) => item?.id == params?.row?.workcategoryid
               );
               return <Box component="span">{category?.labelname || "-"}</Box>;
+            },
+          };
+        }
+
+        if (name === "statusid") {
+          return {
+            ...base,
+            renderCell: (params) => {
+              const status = taskStatusData?.find(
+                (item) => item?.id == params?.row?.statusid
+              );
+              return <StatusBadge
+                task={{ status: status?.labelname ?? "" }}
+                statusColors={statusColors}
+                onStatusChange={() => { }}
+                flag="status"
+                fontSize="13px"
+                padding="0.15rem 0.6rem"
+                minWidth="60px"
+                disable={true}
+              />
             },
           };
         }

@@ -125,7 +125,7 @@ $text-muted: #8080808f;
 
 .login-subtitle {
     color: $gray;
-    margin-bottom: 26px !important;
+    margin-bottom: 26px;
 }
 
 // Form styles
@@ -164,6 +164,12 @@ $text-muted: #8080808f;
             }
         }
     }
+}
+
+.login-error-message {
+    color: $error-main !important;
+    text-transform: capitalize;
+    margin-bottom: 15px !important;
 }
 
 // Password toggle button

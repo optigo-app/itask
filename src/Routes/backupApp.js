@@ -112,20 +112,20 @@ const App = () => {
             localStorage?.removeItem("UserProfileData");
             return null;
         }
-    
+
         const decoded = jwtDecode(token);
         const decodedPayload = {
             ...decoded,
             uid: decodeBase64(decoded.uid),
         };
-    
+
         if (decodedPayload) {
             localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
         }
-    
+
         return decodedPayload;
     };
-    
+
 
     const decodeBase64 = (str) => {
         if (!str) return null;

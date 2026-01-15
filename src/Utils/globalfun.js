@@ -4,7 +4,7 @@ import { AssigneeMaster } from "../Api/MasterApi/AssigneeMaster";
 import { fetchMaster } from "../Api/MasterApi/MasterApi";
 import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi"
 import { AddTaskDataApi } from "../Api/TaskApi/AddTaskApi";
-import { Avatar, AvatarGroup, Box, createTheme, Tooltip } from "@mui/material";
+import { Avatar, AvatarGroup, Box, Chip, createTheme, Tooltip } from "@mui/material";
 
 // Utility function to get AuthData from both localStorage and sessionStorage
 export const getAuthData = () => {
@@ -1166,6 +1166,35 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
     return summary;
 };
 
+export const isValidTaskNo = (taskNo) => {
+    if (taskNo == null) return false;
+    const cleaned = String(taskNo).trim().toLowerCase();
+    return (
+        cleaned !== "" &&
+        cleaned !== "0" &&
+        cleaned !== "null" &&
+        cleaned !== "undefined"
+    );
+};
+
+
+export const filterTasksByValidTaskNo = (tasks = []) => {
+    if (!Array.isArray(tasks)) return [];
+    return tasks
+        .map(task => {
+            const filteredSubtasks = filterTasksByValidTaskNo(task.subtasks || []);
+            const validTaskNo = isValidTaskNo(task?.taskno);
+            const isValidTask = validTaskNo && task?.parentid != 0;
+            if (!isValidTask && filteredSubtasks.length === 0) return null;
+
+            return {
+                ...task,
+                subtasks: filteredSubtasks,
+            };
+        })
+        .filter(Boolean);
+};
+
 export const filterNestedTasksByView = (tasks = [], mode = 'me', userId) => {
     return tasks
         ?.map((task) => {
@@ -1445,20 +1474,101 @@ export const renderAssigneeAvatars = (assignees, hanldePAvatarClick) => (
     </Box>
 );
 
+// Helper function to format days display
+export const formatDaysDisplay = (deadlineDate, task) => {
+    const days = getDaysFromDeadline(deadlineDate);
+
+    if (days === null || !cleanDate(deadlineDate)) {
+        return <span>-</span>;
+    }
+
+    const formattedDate = formatDate2(deadlineDate);
+
+    const isCompleted = task?.status?.toLowerCase() === 'completed' || task?.progress_per === 100;
+
+    let chipColor, chipBgColor, displayText;
+
+    if (isCompleted) {
+        if (task?.EndDate && cleanDate(task?.EndDate)) {
+            const endDate = new Date(task.EndDate);
+            const deadline = new Date(deadlineDate);
+            const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+            const deadlineOnly = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
+
+            if (endDateOnly.getTime() === deadlineOnly.getTime()) {
+                chipColor = '#388e3c';
+                chipBgColor = '#dcedc8';
+                displayText = 'On Time';
+            } else if (endDateOnly < deadlineOnly) {
+                const diffMs = deadlineOnly - endDateOnly;
+                const daysEarly = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                chipColor = '#388e3c';
+                chipBgColor = '#dcedc8';
+                displayText = `${daysEarly} days early`;
+            } else {
+                const diffMs = endDateOnly - deadlineOnly;
+                const daysLate = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                chipColor = '#d32f2f';
+                chipBgColor = '#ffcdd2';
+                displayText = `${daysLate} days late`;
+            }
+        } else {
+            chipColor = '#388e3c';
+            chipBgColor = '#dcedc8';
+            displayText = 'Completed';
+        }
+    } else if (days < 0) {
+        chipColor = '#d32f2f';
+        chipBgColor = '#ffcdd2';
+        displayText = `${Math.abs(days)} days overdue`;
+    } else if (days === 0) {
+        chipColor = '#388e3c';
+        chipBgColor = '#dcedc8';
+        displayText = 'Today';
+    } else {
+        chipColor = '#1976d2';
+        chipBgColor = '#bbdefb';
+        displayText = `${days} days`;
+    }
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+            <span style={{ fontSize: '13px', lineHeight: '1.2' }}>{formattedDate}</span>
+            <Chip
+                label={displayText}
+                size="small"
+                sx={{
+                    backgroundColor: chipBgColor,
+                    color: chipColor,
+                    fontSize: '10px',
+                    height: '16px',
+                    '& .MuiChip-label': {
+                        padding: '0 4px',
+                        fontWeight: '500'
+                    }
+                }}
+            />
+        </div>
+    );
+};
 
 export const getClientIpAddress = async () => {
-  try {
-    const cachedIp = sessionStorage.getItem("clientIpAddress");
-    if (cachedIp) return cachedIp;
+    try {
+        const cachedIp = sessionStorage.getItem("clientIpAddress");
+        if (cachedIp) return cachedIp;
 
-    const res = await fetch("https://api.ipify.org?format=json");
-    const data = await res.json();
-    const ip = data?.ip || "";
+        const res = await fetch("https://api.ipify.org?format=json");
+        const data = await res.json();
+        const ip = data?.ip || "";
 
-    sessionStorage.setItem("clientIpAddress", ip);
-    return ip;
-  } catch (error) {
-    console.error("Error fetching IP address:", error);
-    return "";
-  }
+        sessionStorage.setItem("clientIpAddress", ip);
+        return ip;
+    } catch (error) {
+        console.error("Error fetching IP address:", error);
+        return "";
+    }
 };
+
+
+
+

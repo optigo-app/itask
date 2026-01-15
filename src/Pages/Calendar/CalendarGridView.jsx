@@ -115,7 +115,6 @@ const CalendarGridView = () => {
       : flattenTasks(filterNestedTasksByView(taskFinalData.TaskData, 'me', userProfile.id));
 
     let nonRootTasks = rawTasks.filter(task => task.parentid !== 0);
-
     // Filter to show only minor tasks (hide major tasks)
     nonRootTasks = nonRootTasks.filter(task => {
       const taskType = (task.type || '').toLowerCase();

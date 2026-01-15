@@ -180,11 +180,11 @@ const TaskFormSection = ({
 
             <Grid item xs={12} md={6}>
               {renderAutocomplete(
-                'Category', 
-                'category', 
-                formValues.category, 
-                'Select Category', 
-                taskCategory, 
+                'Category',
+                'category',
+                formValues.category,
+                'Select Category',
+                taskCategory,
                 handleChange,
                 isCategoryEmpty,
                 isCategoryEmpty ? 'Category is required.' : ''

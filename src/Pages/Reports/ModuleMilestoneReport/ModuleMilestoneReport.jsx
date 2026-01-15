@@ -122,7 +122,6 @@ const ModuleMilestoneReport = () => {
         return Object.values(modules);
     }, [taskFinalData]);
 
-    console.log("rowData", rowData)
     // compute CategorySummary for header tabs (similar to Project.jsx)
     useEffect(() => {
         if (Array.isArray(rowData) && rowData.length > 0 && Array.isArray(taskCategory) && taskCategory.length > 0) {

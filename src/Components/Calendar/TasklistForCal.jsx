@@ -29,11 +29,11 @@ const TaskCard = memo(({ child, colorClass, isScheduled, calendarsColor }) => {
                 mb: 1,
                 ml: 2,
                 borderRadius: 1,
-                boxShadow: isScheduled 
-                    ? "0px 2px 8px rgba(115, 103, 240, 0.3)" 
+                boxShadow: isScheduled
+                    ? "0px 2px 8px rgba(115, 103, 240, 0.3)"
                     : "0px 1px 3px rgba(0,0,0,0.1)",
-                border: isScheduled 
-                    ? "2px solid #7367f0" 
+                border: isScheduled
+                    ? "2px solid #7367f0"
                     : "1px solid transparent",
                 position: "relative",
                 opacity: isScheduled ? 0.8 : 1
@@ -95,44 +95,68 @@ const TaskCard = memo(({ child, colorClass, isScheduled, calendarsColor }) => {
                         </Typography>
                     )}
                 </Box>
-                <Box display="flex" alignItems="center" gap={0.5} flexWrap="wrap">
-                    <Box
-                        component="span"
-                        sx={{
-                            fontSize: '12px',
-                            px: 0.2,
-                            py: 0.4,
-                            borderRadius: '4px',
-                            bgcolor: '#f0f0f0',
-                            color: 'text.secondary',
-                            fontWeight: 500,
-                            minWidth: 40,
-                            textAlign: 'center'
-                        }}
-                    >
-                        Est: {child.estimate_hrs || '-'}
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box display="flex" alignItems="center" gap={0.5} flexWrap="wrap">
+                        <Box
+                            component="span"
+                            sx={{
+                                fontSize: '12px',
+                                px: 0.2,
+                                py: 0.4,
+                                borderRadius: '4px',
+                                bgcolor: '#f0f0f0',
+                                color: 'text.secondary',
+                                fontWeight: 500,
+                                minWidth: 40,
+                                textAlign: 'center'
+                            }}
+                        >
+                            Est: {child.estimate_hrs || '-'}
+                        </Box>
+
+                        {child?.priority && (
+                            <PriorityBadge
+                                task={child}
+                                priorityColors={priorityColors}
+                                disable
+                                fontSize={10}
+                                padding={2}
+                                minWidth={40}
+                            />
+                        )}
+
+                        {child?.status && (
+                            <StatusBadge
+                                task={child}
+                                statusColors={statusColors}
+                                disable
+                                fontSize={10}
+                                padding={2}
+                                minWidth={40}
+                            />
+                        )}
                     </Box>
-                    {child?.priority && (
-                        <PriorityBadge
-                            task={child}
-                            priorityColors={priorityColors}
-                            disable={true}
-                            fontSize={10}
-                            padding={2}
-                            minWidth={40}
-                        />
-                    )}
-                    {child?.status && (
-                        <StatusBadge
-                            task={child}
-                            statusColors={statusColors}
-                            disable={true}
-                            fontSize={10}
-                            padding={2}
-                            minWidth={40}
-                        />
+
+                    {child?.moduleName && (
+                        <Tooltip title={child.moduleName} arrow>
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{
+                                    fontSize: "11px",
+                                    maxWidth: 120,
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    cursor: 'default'
+                                }}
+                            >
+                                {child.moduleName}
+                            </Typography>
+                        </Tooltip>
                     )}
                 </Box>
+
             </CardContent>
         </Card>
     );
@@ -168,12 +192,26 @@ const TasklistForCal = ({ calendarsColor }) => {
         return scheduledTaskIds.has(taskId);
     }, [scheduledTaskIds]);
 
+    // useEffect(() => {
+    //     const userProfileData = getUserProfileData();
+    //     if (userProfileData?.id && task?.length > 0) {
+    //         const myNestedTasks = filterNestedTasksByView(task, 'me', userProfileData.id);
+    //         const flatMyTasks = flattenTasks(myNestedTasks);
+    //         setCalTasksList(flatMyTasks);
+    //     }
+    // }, [task]);
+
     useEffect(() => {
         const userProfileData = getUserProfileData();
         if (userProfileData?.id && task?.length > 0) {
-            const myNestedTasks = filterNestedTasksByView(task, 'me', userProfileData.id);
-            const flatMyTasks = flattenTasks(myNestedTasks);
-            setCalTasksList(flatMyTasks);
+            const myNestedTasks = flattenTasks(filterNestedTasksByView(task, 'me', userProfileData.id));
+            let nonRootTasks = myNestedTasks.filter(task => task.parentid !== 0);
+            // Filter to show only minor tasks (hide major tasks)
+            nonRootTasks = nonRootTasks.filter(task => {
+                const taskType = (task.type || '').toLowerCase();
+                return taskType === 'minor';
+            });
+            setCalTasksList(nonRootTasks);
         }
     }, [task]);
 
@@ -206,6 +244,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                             description: dragtask?.descr ?? "",
                             guests: guests,
                             assigneids: guests.map(u => u.id)?.join(","),
+                            createdbyid: dragtask?.createdbyid ?? "",
                             estimate: estimate,
                             estimate_hrs: dragtask?.estimate_hrs ?? 0,
                             estimate1_hrs: dragtask?.estimate1_hrs ?? 0,
@@ -254,7 +293,6 @@ const TasklistForCal = ({ calendarsColor }) => {
         }
     }, [calTasksList]);
 
-
     // Memoized filtered tasks list (excluding completed)
     const filteredTasksList = useMemo(() => {
         return (calTasksList || []).filter(
@@ -265,7 +303,7 @@ const TasklistForCal = ({ calendarsColor }) => {
     // Memoized Fuse instance for search
     const fuseInstance = useMemo(() => {
         if (!filteredTasksList.length) return null;
-        
+
         return new Fuse(filteredTasksList, {
             keys: [
                 { name: 'taskname', weight: 0.7 },
@@ -286,7 +324,7 @@ const TasklistForCal = ({ calendarsColor }) => {
         if (!dateStr) return null;
         const cleanedDate = cleanDate(dateStr);
         if (!cleanedDate) return null;
-        
+
         const date = new Date(cleanedDate);
         return {
             formatted: formatDate2(cleanedDate).toLowerCase(),
@@ -301,32 +339,32 @@ const TasklistForCal = ({ calendarsColor }) => {
     const matchesDateQuery = useCallback((dateInfo, query) => {
         if (!dateInfo) return false;
         return dateInfo.formatted.includes(query) ||
-               dateInfo.monthShort.includes(query) ||
-               dateInfo.monthFull.includes(query) ||
-               dateInfo.day.includes(query) ||
-               dateInfo.year.includes(query);
+            dateInfo.monthShort.includes(query) ||
+            dateInfo.monthFull.includes(query) ||
+            dateInfo.day.includes(query) ||
+            dateInfo.year.includes(query);
     }, []);
 
     // Enhanced search function with date filtering
     const performSearch = useCallback((query, tasks) => {
         if (!query.trim()) return tasks;
         if (!tasks.length) return tasks; // Early return for empty tasks
-        
+
         const lowerQuery = query.toLowerCase().trim();
         if (lowerQuery.startsWith("'") && lowerQuery.endsWith("'")) {
             const exactQuery = lowerQuery.slice(1, -1);
-            return tasks.filter(task => 
+            return tasks.filter(task =>
                 task.taskname?.toLowerCase() === exactQuery
             );
         }
         if (lowerQuery.startsWith('"') && lowerQuery.endsWith('"')) {
             const relatedQuery = lowerQuery.slice(1, -1);
-            return tasks.filter(task => 
+            return tasks.filter(task =>
                 task.taskname?.toLowerCase().includes(relatedQuery) ||
                 task.descr?.toLowerCase().includes(relatedQuery)
             );
         }
-        
+
         // Optimized date-specific searches
         if (lowerQuery.startsWith('start:')) {
             const dateQuery = lowerQuery.replace('start:', '').trim();
@@ -335,7 +373,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                 return matchesDateQuery(dateInfo, dateQuery);
             });
         }
-        
+
         if (lowerQuery.startsWith('due:')) {
             const dateQuery = lowerQuery.replace('due:', '').trim();
             return tasks.filter(task => {
@@ -347,7 +385,7 @@ const TasklistForCal = ({ calendarsColor }) => {
         // Check for status-specific searches
         if (lowerQuery.startsWith('status:')) {
             const statusQuery = lowerQuery.replace('status:', '').trim();
-            return tasks.filter(task => 
+            return tasks.filter(task =>
                 task.status?.toLowerCase().includes(statusQuery)
             );
         }
@@ -355,7 +393,7 @@ const TasklistForCal = ({ calendarsColor }) => {
         // Check for priority-specific searches
         if (lowerQuery.startsWith('priority:')) {
             const priorityQuery = lowerQuery.replace('priority:', '').trim();
-            return tasks.filter(task => 
+            return tasks.filter(task =>
                 task.priority?.toLowerCase().includes(priorityQuery)
             );
         }
@@ -370,14 +408,14 @@ const TasklistForCal = ({ calendarsColor }) => {
     const getFilteredHierarchy = useCallback(() => {
         // Apply enhanced search
         const tasksToProcess = performSearch(searchQuery, filteredTasksList);
-        
+
         // Early return if no tasks
         if (!tasksToProcess.length) return [];
 
         // Build module hierarchy with optimized lookups
         const moduleMap = new Map();
         const subtaskIds = new Set();
-        
+
         // First pass: create modules
         for (const task of tasksToProcess) {
             const modId = task.moduleid;

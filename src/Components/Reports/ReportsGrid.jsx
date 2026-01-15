@@ -44,6 +44,8 @@ const ReportsGrid = ({
   const [openModal, setOpenModal] = useState(false);
   const [selectedTaskRow, setSelectedTaskRow] = useState(null);  
 
+  const isPmsReportType = reportType === "pms-report" || reportType === "pms-report-2";
+
   const paginatedData = data || [];
 
   const handleRowClick = (row) => {
@@ -410,7 +412,25 @@ const ReportsGrid = ({
                     key={rowIndex}
                     hover
                     onClick={() => handleRowClick(row)}
-                    style={{ cursor: "pointer" }}
+                    sx={{
+                      cursor: "pointer",
+                      backgroundColor:
+                        isPmsReportType &&
+                        viewMode === "EmployeeWiseData" &&
+                        Number.isFinite(parseFloat(row?.TotalEstimate)) &&
+                        parseFloat(row?.TotalEstimate) < 45
+                          ? "rgba(244, 67, 54, 0.08)"
+                          : undefined,
+                      "&:hover": {
+                        backgroundColor:
+                          isPmsReportType &&
+                          viewMode === "EmployeeWiseData" &&
+                          Number.isFinite(parseFloat(row?.TotalEstimate)) &&
+                          parseFloat(row?.TotalEstimate) < 45
+                            ? "rgba(244, 67, 54, 0.12)"
+                            : undefined,
+                      },
+                    }}
                   >
                     {columns?.map(({ key }) => {
                       const lowerKey = key.toLowerCase();

@@ -275,9 +275,7 @@ const StructuredQuickTask = ({ open = true, onClose, onSubmit }) => {
 
   const handleSubmit = () => {
     if (!taskText.trim()) return;
-
     const structuredTasks = parseStructuredTasks(taskText);
-    console.log('Structured Tasks Created:', structuredTasks);
     alert(`Created ${structuredTasks.length} main tasks with subtasks!`);
     onSubmit?.(structuredTasks);
     handleClear();

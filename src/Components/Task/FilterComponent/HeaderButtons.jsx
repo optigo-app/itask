@@ -35,6 +35,7 @@ import {
   Kanban,
   List,
   ListFilter,
+  OctagonAlert,
   SearchIcon,
   TimerIcon,
   User,
@@ -213,8 +214,8 @@ const HeaderButtons = ({
         <ToggleButton value="kanban" aria-label="kanban view" sx={{ borderRadius: '8px' }}>
           <Kanban className="iconbtn" size={20} />
         </ToggleButton>
-        {/* <ToggleButton value="bugtask" aria-label="Bug Task" sx={{ borderRadius: '8px' }}>
-          <ListFilter className="iconbtn" size={20} />
+        {/* <ToggleButton value="bugview" aria-label="Bug View" sx={{ borderRadius: '8px' }}>
+          <OctagonAlert className="iconbtn" size={20} />
         </ToggleButton> */}
         <ToggleButton value="Dynamic-Filter" aria-label="Dynamic Filter" sx={{ borderRadius: '8px' }}>
           <ListFilter className="iconbtn" size={20} />

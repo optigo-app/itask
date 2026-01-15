@@ -1,5 +1,11 @@
 @import '../../theme//variable.scss';
 
+.DRM {
+    .MuiPaper-root {
+        border-radius: 8px !important;
+    }
+}
+
 .DRM,
 .for_DialogBtn {
     font-family: $font-family !important;

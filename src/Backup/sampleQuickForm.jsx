@@ -75,7 +75,7 @@ const SampleQuickForm = () => {
       ...prev,
       [field]: value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
@@ -87,15 +87,15 @@ const SampleQuickForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.taskName.trim()) {
       newErrors.taskName = 'Task name is required';
     }
-    
+
     if (!formData.project) {
       newErrors.project = 'Project/Module is required';
     }
-    
+
     if (formData.assignees.length === 0) {
       newErrors.assignees = 'At least one assignee is required';
     }
@@ -217,12 +217,12 @@ const SampleQuickForm = () => {
                 )}
                 renderOption={(props, option) => (
                   <li {...props}>
-                    <Chip 
-                      label={option.labelname} 
+                    <Chip
+                      label={option.labelname}
                       size="small"
                       color={
-                        option.labelname === 'High' ? 'error' : 
-                        option.labelname === 'Medium' ? 'warning' : 'success'
+                        option.labelname === 'High' ? 'error' :
+                          option.labelname === 'Medium' ? 'warning' : 'success'
                       }
                     />
                   </li>
@@ -338,25 +338,25 @@ const SampleQuickForm = () => {
           Quick Stats:
         </Typography>
         <Stack direction="row" spacing={2} flexWrap="wrap">
-          <Chip 
-            label={`Task Name: ${formData.taskName || 'Not set'}`} 
-            size="small" 
-            variant="outlined" 
+          <Chip
+            label={`Task Name: ${formData.taskName || 'Not set'}`}
+            size="small"
+            variant="outlined"
           />
-          <Chip 
-            label={`Project: ${formData.project?.taskPr || 'Not selected'}`} 
-            size="small" 
-            variant="outlined" 
+          <Chip
+            label={`Project: ${formData.project?.taskPr || 'Not selected'}`}
+            size="small"
+            variant="outlined"
           />
-          <Chip 
-            label={`Assignees: ${formData.assignees.length}`} 
-            size="small" 
-            variant="outlined" 
+          <Chip
+            label={`Assignees: ${formData.assignees.length}`}
+            size="small"
+            variant="outlined"
           />
-          <Chip 
-            label={`Priority: ${formData.priority?.labelname || 'Not set'}`} 
-            size="small" 
-            variant="outlined" 
+          <Chip
+            label={`Priority: ${formData.priority?.labelname || 'Not set'}`}
+            size="small"
+            variant="outlined"
           />
         </Stack>
       </Box>

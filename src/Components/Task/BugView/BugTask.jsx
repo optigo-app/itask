@@ -8,150 +8,197 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Chip,
     IconButton,
+    TableSortLabel,
 } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import { flattenTasks, formatDate2, isValidTaskNo, priorityColors, statusColors } from "../../../Utils/globalfun";
+import StatusBadge from "../../ShortcutsComponent/StatusBadge";
+import PriorityBadge from "../../ShortcutsComponent/PriorityBadge";
+import { useEffect, useState } from "react";
+import { useSetRecoilState } from "recoil";
+import { assigneeId } from "../../../Recoil/atom";
+import AssigneeAvatarGroup from "../../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
+import TablePaginationFooter from "../../ShortcutsComponent/Pagination/TablePaginationFooter";
+import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
+import { Eye } from "lucide-react";
 
-const BUG_COLUMNS = [
-    { label: 'Task Name', key: 'taskname', width: '20%' },
-    { label: 'Task No', key: 'taskno', width: '10%' },
-    { label: 'Assignee', key: 'assignee', width: '14%' },
-    { label: 'View', key: 'view', width: '8%' },
-    { label: 'Bug Status', key: 'bugStatus', width: '12%' },
-    { label: 'Solved By', key: 'solvedBy', width: '14%' },
-    { label: 'Upload', key: 'upload', width: '8%' },
-    { label: 'Priority', key: 'priority', width: '8%' },
-    { label: 'Recheck Status', key: 'recheckStatus', width: '12%' },
-    { label: 'Date', key: 'date', width: '10%' },
+const initialColumns = [
+    { id: "taskname", label: "Task Name", width: 280 },
+    { id: "taskno", label: "Task No", width: 60 },
+    { id: "assignee", label: "Assignee", width: 100 },
+    { id: "view", label: "View", width: 90 },
+    { id: "status", label: "Status", width: 100 },
+    { id: "solvedBy", label: "Solved By", width: 100 },
+    { id: "upload", label: "Upload", width: 100 },
+    { id: "priority", label: "Priority", width: 80 },
+    { id: "recheckStatus", label: "Recheck Status", width: 70 },
+    { id: "DeadLineDate", label: "Deadline", width: 90 },
 ];
 
-const DUMMY_BUGS = [
-    {
-        id: 1,
-        taskname: 'Login page validation issue',
-        taskno: 'BUG-001',
-        assignee: 'John Doe',
-        bugStatus: 'Open',
-        solvedBy: '-',
-        priority: 'High',
-        uploadVersion: "R74",
-        recheckStatus: 'Pending',
-        date: '2025-12-03',
-    },
-    {
-        id: 2,
-        taskname: 'Dashboard graph not loading',
-        taskno: 'BUG-002',
-        assignee: 'Jane Smith',
-        bugStatus: 'In Progress',
-        solvedBy: '-',
-        priority: 'Medium',
-        uploadVersion: "R75",
-        recheckStatus: 'Pending',
-        date: '2025-12-02',
-    },
-    {
-        id: 3,
-        taskname: 'Email notification duplicated',
-        taskno: 'BUG-003',
-        assignee: 'Alex Johnson',
-        bugStatus: 'Resolved',
-        solvedBy: 'Alex Johnson',
-        priority: 'Low',
-        uploadVersion: "R76",
-        recheckStatus: 'Recheck Pending',
-        date: '2025-12-01',
-    },
-];
+const BugTask = ({
+    data,
+    currentData,
+    page,
+    order,
+    orderBy,
+    rowsPerPage,
+    totalPages,
+    handleChangePage,
+    handleRequestSort,
+    handleStatusChange,
+    handlePriorityChange,
+    handlePageSizeChnage,
+    isLoading
+}) => {
+    const [bugTask, setBugTask] = useState([]);
+    const [hoveredTaskId, setHoveredTaskId] = useState(null);
+    const [hoveredColumnname, setHoveredColumnName] = useState('');
+    const setAssigneeId = useSetRecoilState(assigneeId);
 
-const getStatusColor = (status) => {
-    switch ((status || '').toLowerCase()) {
-        case 'open':
-            return 'error';
-        case 'in progress':
-            return 'warning';
-        case 'resolved':
-        case 'closed':
-            return 'success';
-        default:
-            return 'default';
+
+    useEffect(() => {
+        if (!currentData) return;
+        const flat = flattenTasks(currentData);
+        const filtered = flat.filter(task => isValidTaskNo(task?.taskno));
+        setBugTask(filtered);
+    }, [currentData]);
+
+
+    const handleTaskMouseEnter = (taskId, value) => {
+        setHoveredColumnName(value?.Tbcell)
+        setHoveredTaskId(taskId);
+    };
+
+    const handleTaskMouseLeave = () => {
+        setHoveredTaskId(null);
+        setHoveredColumnName('')
+    };
+
+    const onStatusChange = (task, newStatus, flag) => {
+        handleStatusChange(task, newStatus, flag);
+    };
+
+    const onPriorityChange = (task, newPriority) => {
+        handlePriorityChange(task, newPriority);
+    };
+
+    const hanldePAvatarClick = (task, id) => {
+        setAssigneeId(id);
     }
-};
 
-const getPriorityColor = (priority) => {
-    switch ((priority || '').toLowerCase()) {
-        case 'high':
-            return 'error';
-        case 'medium':
-            return 'warning';
-        case 'low':
-            return 'success';
-        default:
-            return 'default';
-    }
-};
+    const renderAssigneeAvatars = (assignees, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick) => (
+        <AssigneeAvatarGroup
+            assignees={assignees}
+            task={task}
+            maxVisible={3}
+            showAddButton={true}
+            hoveredTaskId={hoveredTaskId}
+            hoveredColumnName={hoveredColumnname}
+            onAvatarClick={hanldePAvatarClick}
+            size={30}
+            spacing={0.5}
+        />
+    );
 
-const BugTask = () => {
     return (
         <Box>
-            <TableContainer component={Paper} className="muiTableTaContainer">
-                <Table aria-label="bug task table" className="muiTable">
-                    <TableHead className="muiTableHead">
-                        <TableRow>
-                            {BUG_COLUMNS.map(({ label, key, width }) => (
-                                <TableCell key={key} sx={{ width }}>
-                                    <strong>{label}</strong>
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {DUMMY_BUGS.map((bug) => (
-                            <TableRow key={bug.id} hover>
-                                <TableCell>{bug.taskname}</TableCell>
-                                <TableCell>{bug.taskno}</TableCell>
-                                <TableCell>{bug.assignee}</TableCell>
-                                <TableCell>
-                                    <IconButton size="small" color="primary">
-                                        <VisibilityIcon fontSize="small" />
-                                    </IconButton>
-                                </TableCell>
-                                <TableCell>
-                                    <Chip
-                                        label={bug.bugStatus}
-                                        size="small"
-                                        color={getStatusColor(bug.bugStatus)}
-                                        variant="outlined"
-                                    />
-                                </TableCell>
-                                <TableCell>{bug.solvedBy}</TableCell>
-                                <TableCell>
-                                    {bug.uploadVersion}
-                                </TableCell>
-                                <TableCell>
-                                    <Chip
-                                        label={bug.priority}
-                                        size="small"
-                                        color={getPriorityColor(bug.priority)}
-                                        variant="outlined"
-                                    />
-                                </TableCell>
-                                <TableCell>{bug.recheckStatus}</TableCell>
-                                <TableCell>{bug.date}</TableCell>
-                            </TableRow>
-                        ))}
-                        {DUMMY_BUGS.length === 0 && (
+            {(isLoading == null || isLoading == true || (!data && isLoading !== false)) ? (
+                <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
+            ) :
+                <TableContainer component={Paper} className="muiTableTaContainer">
+                    <Table aria-label="bug task table" className="muiTable">
+                        <TableHead className="muiTableHead">
                             <TableRow>
-                                <TableCell colSpan={BUG_COLUMNS.length} align="center">
-                                    No bugs found.
-                                </TableCell>
+                                {initialColumns?.map((column) => (
+                                    <TableCell
+                                        key={column?.id}
+                                        style={{
+                                            width: `${column.width}px`,
+                                            minWidth: `${column.width}px`,
+                                            maxWidth: `${column.width}px`,
+                                            overflow: "hidden",
+                                        }}
+                                    >
+                                        <TableSortLabel
+                                            active={
+                                                column.id !== "view" &&
+                                                column.id !== "assignee" &&
+                                                orderBy === column.id
+                                            }
+                                            direction={order}
+                                            onClick={() => {
+                                                if (column.id !== "estimate" && column.id !== "actions") {
+                                                    handleRequestSort(column?.id);
+                                                }
+                                            }}
+                                            hideSortIcon={column.id === "view" || column.id === "assignee"}
+                                        >
+                                            {column.label}
+                                        </TableSortLabel>
+                                    </TableCell>
+                                ))}
                             </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Box>
+                        </TableHead>
+                        <TableBody>
+                            {bugTask?.map((bug) => {
+                                const access = bug?.isparentfreeze == 1;
+                                return (
+                                    <TableRow key={bug.id} hover>
+                                        <TableCell>{bug.taskname}</TableCell>
+                                        <TableCell>{bug.taskno}</TableCell>
+                                        <TableCell
+                                            onMouseEnter={() => handleTaskMouseEnter(bug?.taskid, { Tbcell: 'Assignee' })}
+                                            onMouseLeave={handleTaskMouseLeave}>
+                                            {renderAssigneeAvatars(bug?.assignee, bug, hoveredTaskId, hoveredColumnname, hanldePAvatarClick)}
+                                        </TableCell>
+                                        <TableCell>
+                                            <IconButton
+                                                aria-label="view Task button"
+                                            // onClick={() => handleViewTask(task, { Task: "root" })}
+                                            >
+                                                <Eye
+                                                    size={20}
+                                                    color="#808080"
+                                                    className="iconbtn"
+                                                />
+                                            </IconButton>
+                                        </TableCell>
+                                        <TableCell>
+                                            <StatusBadge task={bug} statusColors={statusColors} onStatusChange={onStatusChange} disable={access ? true : false} />
+                                        </TableCell>
+                                        <TableCell>{bug.solvedBy ?? "shivam"}</TableCell>
+                                        <TableCell>
+                                            {bug.uploadVersion ?? "R75"}
+                                        </TableCell>
+                                        <TableCell>
+                                            <PriorityBadge task={bug} priorityColors={priorityColors} onPriorityChange={onPriorityChange} disable={access ? true : false} />
+                                        </TableCell>
+                                        <TableCell><StatusBadge task={bug} statusColors={statusColors} onStatusChange={onStatusChange} disable={access ? true : false} flag="secondaryStatus" /></TableCell>
+                                        <TableCell>{formatDate2(bug.DeadLineDate)}</TableCell>
+                                    </TableRow>
+                                )
+                            })}
+                            {!isLoading && data?.length !== 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={initialColumns?.length}>
+                                        {currentData?.length !== 0 && (
+                                            <TablePaginationFooter
+                                                page={page}
+                                                rowsPerPage={rowsPerPage}
+                                                totalCount={data?.length}
+                                                totalPages={totalPages}
+                                                onPageChange={handleChangePage}
+                                                onPageSizeChange={handlePageSizeChnage}
+                                            />
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            }
+        </Box >
     );
 };
 
