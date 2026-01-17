@@ -18,7 +18,7 @@ import {
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, getUserProfileData, priorityColors } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, formatDaysDisplay, getRandomAvatarColor, getStatusColor, getUserProfileData, priorityColors } from "../../../Utils/globalfun";
 import { Eye, Lock, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { assigneeId, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -495,10 +495,10 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                                 }}
                                                             />
                                                         </IconButton>
-                                                        <Typography 
-                                                            variant="body" 
-                                                            className="prNameTypo" 
-                                                            sx={{ cursor: "pointer" }} 
+                                                        <Typography
+                                                            variant="body"
+                                                            className="prNameTypo"
+                                                            sx={{ cursor: "pointer" }}
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 handleToggle(project.projectid, project);
@@ -599,9 +599,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                                 : '-'}
                                                         </TableCell>
                                                         <TableCell>
-                                                            {task?.DeadLineDate && cleanDate(task?.DeadLineDate)
-                                                                ? formatDate2(cleanDate(task?.DeadLineDate))
-                                                                : '-'}
+                                                            {formatDaysDisplay(task?.DeadLineDate, task)}
                                                         </TableCell>
                                                         <TableCell>
                                                             {renderPriorityLabel(task)}

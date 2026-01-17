@@ -121,7 +121,11 @@ const PmsReport2 = () => {
 
             if (Array.isArray(task.assignee)) {
                 task.assignee.forEach((assignee) => {
+                    // Only process assignees who are active (isactive: 1)
+                    if (assignee.isactive !== 1) return;
+                    
                     const empKey = assignee.userid || assignee.customercode || assignee.firstname;
+                    console.log(assignee)
 
                     if (!EmployeeWiseDataMap.has(empKey)) {
                         EmployeeWiseDataMap.set(empKey, {
@@ -260,6 +264,7 @@ const PmsReport2 = () => {
         });
     };
 
+    
     // for calling functions
     useEffect(() => {
         if (viewMode === "EmployeeWiseData") {
@@ -272,6 +277,7 @@ const PmsReport2 = () => {
             setIsLoading(false);
         }
     }, [currentDate, actualData, viewMode, taskCategory, taskFinalData, filters]);
+    console.log("processEmployeeData",pmsReportData)
 
     useEffect(() => {
         const viemodeValue = localStorage.getItem('rpviewMode') ?? 'EmployeeWiseData';
