@@ -114,6 +114,9 @@ const PmsReport = () => {
 
             if (Array.isArray(task.assignee)) {
                 task.assignee.forEach((assignee) => {
+                    // Only process assignees who are active (isactive: 1)
+                    if (assignee.isactive !== 1) return;
+                    
                     const empKey = assignee.userid || assignee.customercode || assignee.firstname;
 
                     if (!EmployeeWiseDataMap.has(empKey)) {

@@ -39,7 +39,7 @@ const DashboardContent = ({ isCommentLoading, isAttLoding, selectedTab, decodedD
         decodedData
       }
     },
-    "Team Member": {  
+    "Team Member": {
       component: TeamMembers,
       props: {
         handleDtopen,
