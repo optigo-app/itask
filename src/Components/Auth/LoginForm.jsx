@@ -33,6 +33,7 @@ const LoginPage = () => {
     const [errors, setErrors] = useState({});
     const [companyValidation, setCompanyValidation] = useState({ isValid: false, isChecking: false, message: "" });
     const [rememberMe, setRememberMe] = useState(false);
+    const [loginError, setLoginError] = useState("");
 
     const isFormDisabled = companyValidation.message && !companyValidation.isValid && credentials.companycode.trim();
 
@@ -84,6 +85,7 @@ const LoginPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoginError("");
         const result = loginSchema.safeParse(credentials);
         if (!result.success) {
             const newErrors = {};
@@ -109,22 +111,23 @@ const LoginPage = () => {
                 } else {
                     sessionStorage.setItem("AuthqueryParams", JSON.stringify(formatData));
                 }
-                
+
                 const cookieExpiry = rememberMe ? { expires: new Date(formatData.exp * 1000) } : {};
                 Cookies.set('isLoggedIn', 'true', cookieExpiry);
-                
-                if(process.env.REACT_APP_LOCAL_HOSTNAMES.includes(window.location.hostname)) {
+
+                if (process.env.REACT_APP_LOCAL_HOSTNAMES.includes(window.location.hostname)) {
                     window.location.href = "/itaskweb";
-                }else{
+                } else {
                     window.location.href = "/";
                 }
                 toast.success("Login successful");
             } else {
-                toast.error("Invalid credentials");
+                const errorMsg = loginData?.rd[0]?.stat_msg || "Login failed";
+                setLoginError(errorMsg.charAt(0).toUpperCase() + errorMsg.slice(1));
             }
         } catch (err) {
             console.error("Login error:", err);
-            toast.error("Login failed. Please try again.");
+            setLoginError("Login failed. Please try again.");
         }
     };
 
@@ -137,9 +140,14 @@ const LoginPage = () => {
                     <div className="login-form-section">
                         <div className="login-form-content">
                             <Typography variant="h5" className="login-title">LOGIN</Typography>
-                            <Typography variant="body2" className="login-subtitle">
+                            <Typography variant="body2" className="login-subtitle" sx={{ mb: loginError ? 1 : 2 }}>
                                 How to get started task
                             </Typography>
+                            {loginError && (
+                                <Typography variant="body2" color="error" className="login-error-message">
+                                    {loginError}
+                                </Typography>
+                            )}
                             <div className="form-group">
                                 <Typography variant="subtitle1" className="field-label">
                                     Company Code

@@ -1,9 +1,9 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
+import { getClientIpAddress, getUserProfileData } from "../../Utils/globalfun";
 
 export const AddMeetingApi = async (formValues) => {
-    const AuthData = getAuthData();
     try {
+        const AuthData = getUserProfileData();
         const ipAddress = await getClientIpAddress();
         const combinedValue = JSON.stringify({
             "meetingid": (formValues?.meetingid || formValues?.id) ?? 0,

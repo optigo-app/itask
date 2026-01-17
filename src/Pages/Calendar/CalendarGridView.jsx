@@ -51,18 +51,16 @@ const parseEstimateToNumber = (estimateString) => {
   return match ? parseFloat(match[1]) : 0;
 };
 
-// Helper to check if a date is editable (past dates up to yesterday and today)
+// Helper to check if working hours are editable: from task StartDate up to 7 days window (inclusive)
 const isDateEditable = (dateString) => {
   if (!dateString) return false;
-  const taskDate = dayjs(dateString).startOf("day");
+  const startDate = dayjs(dateString).startOf("day");
   const today = dayjs().startOf("day");
-  const startOfWeek = today.startOf("isoWeek");
-  const endOfWeek = today.endOf("isoWeek");
-  return (
-    taskDate.isSameOrAfter(startOfWeek) &&
-    taskDate.isSameOrBefore(today) &&
-    taskDate.isSameOrBefore(endOfWeek)
-  );
+
+  if (today.isBefore(startDate)) return false;
+
+  const lastEditableDay = startDate.add(6, "day");
+  return today.isSameOrBefore(lastEditableDay);
 };
 
 const tableHeaders = [
@@ -115,7 +113,6 @@ const CalendarGridView = () => {
       : flattenTasks(filterNestedTasksByView(taskFinalData.TaskData, 'me', userProfile.id));
 
     let nonRootTasks = rawTasks.filter(task => task.parentid !== 0);
-
     // Filter to show only minor tasks (hide major tasks)
     nonRootTasks = nonRootTasks.filter(task => {
       const taskType = (task.type || '').toLowerCase();

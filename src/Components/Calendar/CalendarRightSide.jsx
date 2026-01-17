@@ -37,7 +37,6 @@ const Calendar = ({
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const [duplicateDialog, setDuplicateDialog] = useState({ open: false, event: null });
 
-
     // Smooth scroll to 9:15 AM function with throttling
     const smoothScrollToTime = (timeString = '09:15:00') => {
         const now = Date.now();
@@ -141,7 +140,7 @@ const Calendar = ({
             estimate_hrs: event?.extendedProps?.estimate_hrs ?? event?.estimate_hrs ?? 0,
             estimate1_hrs: event?.extendedProps?.estimate1_hrs ?? event?.estimate1_hrs ?? 0,
             estimate2_hrs: event?.extendedProps?.estimate2_hrs ?? event?.estimate2_hrs ?? 0,
-            workinghr: event?.extendedProps?.workinghr ?? event?.workinghr ?? 0,
+            workinghr: (event?.extendedProps?.workinghr || event?.workinghr) ?? 0,
             DeadLineDate: event?.extendedProps?.DeadLineDate ?? event?.DeadLineDate,
             taskid: event?.extendedProps?.taskid ?? event?.taskid,
             parentid: event?.extendedProps?.parentid ?? event?.parentid,
@@ -160,6 +159,7 @@ const Calendar = ({
             description: event?.extendedProps?.description ?? event?.Desc ?? '',
         };
     };
+    debugger
     const calendarOptions = {
         firstDay: 1,
         events: filteredEvents?.map(event => ({
@@ -193,7 +193,7 @@ const Calendar = ({
                 },
                 taskid: event?.taskid,
                 parentid: event?.parentid,
-                projectid: event?.projectid,    
+                projectid: event?.projectid,
                 workcategoryid: event?.workcategoryid,
                 category: event?.category || '',
                 statusid: event?.statusid,
@@ -250,7 +250,7 @@ const Calendar = ({
         dayHeaderContent(arg) {
             const calendarApi = arg.view.calendar;
             const currentView = arg.view.type;
-            
+
             const dayEvents = calendarApi.getEvents().filter(event => {
                 const eventDate = new Date(event.start).toDateString();
                 const headerDate = arg.date.toDateString();
@@ -309,7 +309,7 @@ const Calendar = ({
             const { event } = arg;
             const currentView = arg.view.type;
             const estimateHrs = event.extendedProps?.estimate_hrs || 0;
-            
+
             const formatEstimate = (hours) => {
                 if (hours === 0) return '';
                 const unit = hours <= 1 ? 'hr' : 'hrs';
@@ -317,7 +317,7 @@ const Calendar = ({
             };
 
             const estimateText = formatEstimate(estimateHrs);
-            
+
             // For month view, use simpler layout
             if (currentView === 'dayGridMonth') {
                 return {
@@ -359,7 +359,7 @@ const Calendar = ({
                     `
                 };
             }
-            
+
             // For week/day view, use full layout with duplicate button
             return {
                 html: `
@@ -426,7 +426,7 @@ const Calendar = ({
                 e.stopPropagation();
                 return false;
             }, true);
-            
+
             info.el.addEventListener('mousedown', (e) => {
                 if (e.button === 2) {
                     e.preventDefault();
@@ -435,16 +435,16 @@ const Calendar = ({
                 }
             }, true);
         },
-        
+
         eventAllow(dropInfo, draggedEvent) {
             return !draggedEvent.extendedProps?.isMeeting;
         },
-        
+
 
         dateClick(info) {
             const startDate = new Date(info.dateStr);
             const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // Default 1 hour duration
-            
+
             const eventDetails = {
                 start: startDate.toISOString(),
                 end: endDate.toISOString(),
@@ -515,9 +515,9 @@ const Calendar = ({
             eventDetails.estimate_hrs = estimateHours;
             const updatedData = calEvData?.map(ev =>
                 ev?.meetingid == eventDetails?.meetingid
-                    ? { 
-                        ...ev, 
-                        StartDate: eventDetails.start, 
+                    ? {
+                        ...ev,
+                        StartDate: eventDetails.start,
                         EndDate: eventDetails.end,
                         estimate_hrs: estimateHours
                     }
@@ -530,6 +530,8 @@ const Calendar = ({
             handleCaleFormSubmit(eventDetails);
         },
     };
+    
+
 
     const handleDuplicateEdit = () => {
         const { event } = duplicateDialog;
@@ -545,7 +547,7 @@ const Calendar = ({
     const handleDuplicateRepeat = async () => {
         const { event } = duplicateDialog;
         const eventDetails = mapEventDetails(event);
-        
+
         const duplicatedEvent = {
             ...eventDetails,
             meetingid: "",
@@ -569,7 +571,7 @@ const Calendar = ({
             if (calendarRef.current) {
                 calendarRef.current.getApi().updateSize();
             }
-        }, 500); 
+        }, 500);
 
         return () => clearTimeout(timer);
     }, [isFullSidebar]);
@@ -577,7 +579,7 @@ const Calendar = ({
     return (
         <>
             <FullCalendar ref={calendarRef} {...calendarOptions} />
-            
+
             {/* Duplicate Dialog */}
             <Dialog
                 open={duplicateDialog.open}
@@ -596,19 +598,19 @@ const Calendar = ({
                 </DialogContent>
                 <Divider />
                 <DialogActions>
-                    <Button 
-                        className='for_DialogBtn' 
-                        onClick={handleDuplicateEdit} 
-                        autoFocus 
+                    <Button
+                        className='for_DialogBtn'
+                        onClick={handleDuplicateEdit}
+                        autoFocus
                         fullWidth
                     >
                         Edit
                     </Button>
                     <Divider orientation="vertical" flexItem />
-                    <Button 
-                        className='for_DialogBtn' 
-                        onClick={handleDuplicateRepeat} 
-                        autoFocus 
+                    <Button
+                        className='for_DialogBtn'
+                        onClick={handleDuplicateRepeat}
+                        autoFocus
                         fullWidth
                     >
                         Repeat

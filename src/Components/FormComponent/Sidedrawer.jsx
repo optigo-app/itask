@@ -73,6 +73,9 @@ const SidebarDrawer = ({
     const [advMasterData, setAdvMasterData] = useState([]);
     const [prModuleMaster, setPrModuleMaster] = useState([]);
     const [selectedMainGroup, setSelectedMainGroup] = useState('');
+    const [deadlineCleared, setDeadlineCleared] = useState(false);
+    const [isDeadlineEmpty, setIsDeadlineEmpty] = useState(false);
+    const [deadlineMenuSignal, setDeadlineMenuSignal] = useState(0);
     const [formValues, setFormValues] = React.useState({
         taskName: "",
         bulkTask: [],
@@ -240,6 +243,7 @@ const SidebarDrawer = ({
         };
         const isAddMode = ["AddTask", "root", "meeting"].includes(rootSubrootflagval?.Task);
         if (open && isAddMode) {
+            setDeadlineCleared(false);
             setFormValues(prev => ({
                 ...prev,
                 taskName: formDataValue?.taskname || formDataValue?.title || formDataValue?.meetingtitle || "",
@@ -269,9 +273,11 @@ const SidebarDrawer = ({
                 estimate_hrs: formDataValue?.estimate_hrs ?? 0,
                 estimate1_hrs: formDataValue?.estimate1_hrs ?? 0,
                 estimate2_hrs: formDataValue?.estimate2_hrs ?? 0,
+                workinghr: formDataValue?.workinghr ?? 0,
                 isAllDay: formDataValue?.isAllDay ?? 0,
             }));
         } else if (rootSubrootflagval?.Task === "subroot") {
+            setDeadlineCleared(false);
             setFormValues(prev => ({
                 ...prev,
                 guests: matchedAssignees.length ? matchedAssignees : [loggedAssignee],
@@ -384,10 +390,19 @@ const SidebarDrawer = ({
     };
 
     const handleDateChange = (date, key) => {
+        if (key === 'dueDate') {
+            setDeadlineCleared(!date);
+            setIsDeadlineEmpty(false);
+        }
         if (date) {
             setFormValues((prev) => ({
                 ...prev,
                 [key]: date
+            }));
+        } else {
+            setFormValues((prev) => ({
+                ...prev,
+                [key]: null
             }));
         }
     };
@@ -407,17 +422,19 @@ const SidebarDrawer = ({
         }));
     }
 
-    const handleSubmit = (module) => {
-        if (taskType !== "multi_input") {
-            if (!formValues?.taskName?.trim()) {
-                setIsTaskNameEmpty(true);
-                return;
-            }
-            if (!formValues?.category) {
-                setIsCategoryEmpty(true);
-                return;
-            }
+    const getSubmitDeadlineValue = (deadlineOverride) => {
+        if (deadlineOverride) return deadlineOverride;
+
+        if (deadlineCleared) return "";
+
+        const localValue = formValues?.dueDate;
+        if (dayjs.isDayjs(localValue)) {
+            return localValue.tz('Asia/Kolkata').format('YYYY-MM-DDTHH:mm:ss.SSS');
         }
+        return localValue ?? cleanDate(formDataValue?.DeadLineDate) ?? formDataValue?.DeadLineDate;
+    };
+
+    const submitTask = (module, deadlineOverride) => {
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const assigneeIds = formValues.guests?.map(user => user.id)?.join(",") ?? "";
         const departmentAssigneeList = Object.values(
@@ -449,7 +466,7 @@ const SidebarDrawer = ({
             priorityid: formValues.priority ?? formDataValue?.priorityid,
             projectid: moduleData?.projectid || formValues?.prModule?.projectid || formValues.project || formDataValue?.projectid,
             projectLead: formValues.projectLead ?? formDataValue?.projectLead,
-            DeadLineDate: formValues.dueDate ?? formDataValue?.DeadLineDate,
+            DeadLineDate: getSubmitDeadlineValue(deadlineOverride),
             workcategoryid: formValues.category ?? formDataValue?.workcategoryid,
             StartDate: formValues.startDate ?? formDataValue?.entrydate,
             EndDate: formValues.endDate ?? formDataValue?.EndDate,
@@ -464,6 +481,7 @@ const SidebarDrawer = ({
             estimate_hrs: formValues.estimate_hrs ?? formDataValue?.estimate_hrs,
             estimate1_hrs: formValues.estimate1_hrs ?? formDataValue?.estimate1_hrs,
             estimate2_hrs: formValues.estimate2_hrs ?? formDataValue?.estimate2_hrs,
+            workinghr: formValues.workinghr ?? formDataValue?.workinghr,
             maingroupids: selectedMainGroupid ?? formDataValue?.maingroupids,
             dynamicDropdowns: dynamicDropdowns ?? formDataValue?.dynamicDropdowns,
             bindedMainGroupid: selectedMainGroupId ?? '',
@@ -474,12 +492,34 @@ const SidebarDrawer = ({
         handleClear();
     };
 
+    const handleSubmit = (module) => {
+        if (taskType !== "multi_input") {
+            if (!formValues?.taskName?.trim()) {
+                setIsTaskNameEmpty(true);
+                return;
+            }
+            if (!formValues?.category) {
+                setIsCategoryEmpty(true);
+                return;
+            }
+            const effectiveDeadline = getSubmitDeadlineValue();
+            if (!effectiveDeadline) {
+                setIsDeadlineEmpty(true);
+                setDeadlineMenuSignal((prev) => prev + 1);
+                return;
+            }
+        }
+        submitTask(module);
+    };
+
     // for close and clear form
     const handleClear = () => {
         onClose();
         handleResetState();
         setTaskType("single");
         setSelectedMainGroup('');
+        setDeadlineCleared(false);
+        setIsDeadlineEmpty(false);
         setFormValues({
             taskName: "",
             bulkTask: [],
@@ -504,6 +544,8 @@ const SidebarDrawer = ({
 
     const handleResetState = () => {
         const logedAssignee = getUserProfileData()
+        setDeadlineCleared(false);
+        setIsDeadlineEmpty(false);
         setFormValues({
             taskName: "",
             bulkTask: [],
@@ -556,24 +598,6 @@ const SidebarDrawer = ({
         />
     );
 
-    const renderDateField = (label, name, value, onChange) => (
-        <Box className="form-group">
-            <Typography className="form-label" variant="subtitle1">{label}</Typography>
-            <DatePicker
-                name={name}
-                value={value ? dayjs(value).tz("Asia/Kolkata", true).local() : null}
-                onChange={(date) => onChange(date, name)}
-                sx={{ width: '100%' }}
-                format="DD/MM/YYYY"
-                className="textfieldsClass"
-                textField={(params) => (
-                    <TextField {...params} size="small" className="textfieldsClass" sx={{ p: 0 }} />
-                )}
-                {...customDatePickerProps}
-            />
-        </Box>
-    );
-
     const renderDateTimeField = (label, name, value, onChange) => (
         <Box className="form-group">
             <CustomDateTimePicker
@@ -583,8 +607,8 @@ const SidebarDrawer = ({
                 width='100%'
                 styleprops={commonTextFieldProps}
                 onChange={(date) => onChange(date, name)}
-            // error={Boolean(errors.start)}
-            // helperText={errors.start}
+                error={name === 'dueDate' ? isDeadlineEmpty : false}
+                helperText={name === 'dueDate' && isDeadlineEmpty ? 'Deadline is required' : ''}
             />
         </Box>
     );
@@ -735,8 +759,6 @@ const SidebarDrawer = ({
         );
     }, [advMasterData]);
 
-
-
     const handleProjectModuleData = async () => {
         const taskProject = JSON?.parse(sessionStorage?.getItem('taskprojectData'));
         const taskDepartment = JSON?.parse(sessionStorage?.getItem('taskdepartmentData'));
@@ -797,6 +819,7 @@ const SidebarDrawer = ({
                                     handleDateChange={handleDateChange}
                                     handleEstimateChange={handleEstimateChange}
                                     handlebulkTaskSave={handlebulkTaskSave}
+                                    openDeadlineMenuSignal={deadlineMenuSignal}
                                     isTaskNameEmpty={isTaskNameEmpty}
                                     isDuplicateTask={isDuplicateTask}
                                     isCategoryEmpty={isCategoryEmpty}
@@ -841,7 +864,7 @@ const SidebarDrawer = ({
                                             selectedMainGroup={selectedMainGroup}
                                             setSelectedMainGroup={setSelectedMainGroup}
                                             handleDropdownChange={handleDropdownChange}
-                                            renderDateField={renderDateField}
+                                            renderDateField={renderDateTimeField}
                                             divider={true}
                                             mdValue={12}
                                             mainMdValue={4}
@@ -864,6 +887,9 @@ const SidebarDrawer = ({
                         isLoading={isLoading}
                         isTaskNameEmpty={isTaskNameEmpty}
                         isDuplicateTask={isDuplicateTask}
+                        isCategoryEmpty={isCategoryEmpty}
+                        isDeadlineEmpty={isDeadlineEmpty}
+                        openDeadlineMenuSignal={deadlineMenuSignal}
                         teams={teams}
                         projectData={projectData}
                         taskCategory={taskCategory}
@@ -875,6 +901,7 @@ const SidebarDrawer = ({
                     />
                 }
             </Drawer>
+
         </>
     );
 };

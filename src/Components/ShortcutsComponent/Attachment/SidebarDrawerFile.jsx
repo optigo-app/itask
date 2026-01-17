@@ -505,7 +505,6 @@ const SidebarDrawerFile = ({ open, onClose }) => {
                   {(uploadedFile.attachment[folder] || []).map((item, index) => {
                     const fileURL = item.url;
                     const fileName = item.fileName;
-                    console.log("item.extension", item);
                     const Icon = getFileIcon(item.extention);
                     const isImage = item.extention === 'jpg' || item.extention === 'jpeg' || item.extention === 'png' || item.extention === 'gif' || item.extention === 'webp';
                     const fileData = {

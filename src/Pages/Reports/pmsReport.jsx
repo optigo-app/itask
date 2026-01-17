@@ -590,6 +590,7 @@ const PmsReport = () => {
                     sortConfig={sortConfig}
                     onSortChange={handleSortChange}
                     viewMode={viewMode}
+                    reportType="pms-report"
                 />
 
             )}

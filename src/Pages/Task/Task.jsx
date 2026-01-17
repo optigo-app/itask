@@ -5,7 +5,7 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, Chip, Typography, useMediaQuery } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { Advfilters, completedTask, copyRowData, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
-import { filterNestedTasksByView, formatDate2, getCategoryTaskSummary, getUserProfileData, handleAddApicall, isTaskDue, isTaskToday } from "../../Utils/globalfun";
+import { filterNestedTasksByView, filterTasksByValidTaskNo, flattenTasks, formatDate2, getCategoryTaskSummary, getUserProfileData, handleAddApicall, isTaskDue, isTaskToday } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
@@ -61,100 +61,102 @@ const Task = () => {
   const [localTaskEdits, setLocalTaskEdits] = useState({});
 
   useEffect(() => {
-    setTasks([]);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    let parsedData = null;
-    if (encodedData) {
-      try {
-        const decodedString = decodeURIComponent(encodedData);
-        const jsonString = atob(decodedString);
-        parsedData = JSON.parse(jsonString);
-      } catch (error) {
-        console.error("Error decoding or parsing encodedData:", error);
-      }
-    }
-    const userId = userProfile?.id;
-    const filterByStatus = (tasks) => {
-      const isSameLocalDay = (utcDateString) => {
-        if (!utcDateString) return false;
-        const localDate = new Date(utcDateString);
-        return (
-          localDate.getFullYear() === date.getFullYear() &&
-          localDate.getMonth() === date.getMonth() &&
-          localDate.getDate() === date.getDate()
-        );
-      };
-      return tasks?.filter((task) => {
-        const status = task?.status?.toLowerCase?.() || '';
-        if (completedFlag) {
-          return (
-            status === 'completed' &&
-            !isSameLocalDay(task?.EndDate)
-          );
-        } else {
-          return (
-            status !== 'completed' ||
-            isSameLocalDay(task?.EndDate)
-          );
-        }
-      });
-    };
-
-    // 🔹 helper: apply local edits by taskid (and to subtasks)
-    const applyLocalEditsRecursively = (task) => {
-      const edits = localTaskEdits[task.taskid] || {};
-      return {
-        ...task,
-        ...edits,
-        subtasks: task.subtasks
-          ? task.subtasks.map(applyLocalEditsRecursively)
-          : [],
-      };
-    };
-
-    if (parsedData == null) {
-      let rawTasks = taskFinalData?.TaskData || [];
-      rawTasks = filterByStatus(rawTasks);
-      rawTasks = rawTasks.map(applyLocalEditsRecursively);   // <-- add this
-      const summary = getCategoryTaskSummary(rawTasks, taskCategory);
-      setCategoryTSummary(summary);
-      setTasks(rawTasks);
-    } else {
-      if (parsedData?.taskid) {
-        const matchedTask = taskFinalData?.TaskData?.find(
-          (task) => task.taskid === parsedData.taskid
-        );
-        if (matchedTask) {
-          let filteredSubtasks = filterNestedTasksByView(matchedTask.subtasks || [], meTeamView, userId);
-          filteredSubtasks = filterByStatus(filteredSubtasks);
-          filteredSubtasks = filteredSubtasks.map(applyLocalEditsRecursively); // <-- add
-          const summary = getCategoryTaskSummary(filteredSubtasks, taskCategory);
-          setCategoryTSummary(summary);
-          setTasks(filteredSubtasks);
-          return;
-        }
-      }
-      let fallbackTasks = taskFinalData?.TaskData || [];
-      if (parsedData?.projectid) {
-        fallbackTasks = fallbackTasks.filter(task => task.projectid === parsedData.projectid);
-      }
-      let filtered = filterNestedTasksByView(fallbackTasks, meTeamView, userId);
-      filtered = filterByStatus(filtered);
-      filtered = filtered.map(applyLocalEditsRecursively);  // <-- add
-      const summary = getCategoryTaskSummary(filtered, taskCategory);
-      setCategoryTSummary(summary);
-      setTasks(filtered);
-    }
-  }, [encodedData, taskFinalData, selectedRow, meTeamView, completedFlag, localTaskEdits]);
-
-  useEffect(() => {
     const activeTab = localStorage?.getItem('activeTaskTab');
     if (activeTab) {
       setActiveButton(activeTab);
     }
   }, []);
+
+  useEffect(() => {
+    setTasks([]);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const activeTab = localStorage?.getItem('activeTaskTab');
+
+    const decodeData = () => {
+      if (!encodedData) return null;
+      try {
+        const decoded = decodeURIComponent(encodedData);
+        return JSON.parse(atob(decoded));
+      } catch (error) {
+        console.error("Error decoding or parsing encodedData:", error);
+        return null;
+      }
+    };
+
+    const parsedData = decodeData();
+    const userId = userProfile?.id;
+
+    const isSameLocalDay = (utcDateString) => {
+      if (!utcDateString) return false;
+      const localDate = new Date(utcDateString);
+      return (
+        localDate.getFullYear() === date.getFullYear() &&
+        localDate.getMonth() === date.getMonth() &&
+        localDate.getDate() === date.getDate()
+      );
+    };
+
+    const filterByStatus = (tasks) =>
+      tasks?.filter((task) => {
+        const status = task?.status?.toLowerCase?.() || '';
+        const endToday = isSameLocalDay(task?.EndDate);
+
+        return completedFlag
+          ? status === 'completed' && !endToday
+          : status !== 'completed' || endToday;
+      });
+
+    const applyLocalEditsRecursively = (task) => {
+      const edits = localTaskEdits[task.taskid] || {};
+      return {
+        ...task,
+        ...edits,
+        subtasks: task.subtasks?.map(applyLocalEditsRecursively) || [],
+      };
+    };
+    const processTasks = (tasks) => {
+      let output = tasks || [];
+      if (activeTab === "bugview") {
+        output = filterTasksByValidTaskNo(output);
+      }
+      output = filterByStatus(output);
+      output = output.map(applyLocalEditsRecursively);
+      const summary = getCategoryTaskSummary(output, taskCategory);
+      setCategoryTSummary(summary);
+      setTasks(activeTab === "bugview" ? flattenTasks(output) : output);
+    };
+
+    const rawTaskData = activeTab !== "bugview"
+      ? taskFinalData?.TaskData
+      : filterTasksByValidTaskNo(taskFinalData?.TaskData);
+
+    if (!parsedData) {
+      processTasks(rawTaskData);
+      return;
+    }
+
+    if (parsedData?.taskid) {
+      const matchedTask = rawTaskData?.find(t => t.taskid === parsedData.taskid);
+
+      if (matchedTask) {
+        let subtasks = matchedTask.subtasks || [];
+        subtasks = filterNestedTasksByView(subtasks, meTeamView, userId);
+        processTasks(subtasks);
+        return;
+      }
+    }
+
+    let filteredTasks = rawTaskData || [];
+    if (parsedData?.projectid) {
+      filteredTasks = filteredTasks.filter(
+        t => t.projectid === parsedData.projectid
+      );
+    }
+    filteredTasks = filterNestedTasksByView(filteredTasks, meTeamView, userId);
+    processTasks(filteredTasks);
+  }, [encodedData, taskFinalData, selectedRow, meTeamView, completedFlag, localTaskEdits]);
 
   useEffect(() => {
     if (tasks) {
@@ -529,6 +531,7 @@ const Task = () => {
     })
     ?.filter(Boolean);
 
+
   const handleTabBtnClick = (button) => {
     setActiveButton(button);
     localStorage?.setItem('activeTaskTab', button);
@@ -865,6 +868,7 @@ const Task = () => {
     page * rowsPerPage
   ) || [];
 
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (contextMenu) {
@@ -1045,12 +1049,32 @@ const Task = () => {
                   handleFreezeTask={handleFreezeTask}
                 />
               )}
-              {activeButton === "bugtask" && (
+              {activeButton === "bugview" && (
                 <BugTask
+                  data={filteredData ?? null}
+                  currentData={currentData}
+                  page={page}
+                  order={order}
+                  orderBy={orderBy}
+                  rowsPerPage={rowsPerPage}
+                  totalPages={totalPages}
                   isLoading={iswhTLoading}
                   masterData={masterData}
+                  copiedData={copiedData}
+                  contextMenu={contextMenu}
+                  handleCopy={handleCopyTask}
+                  handlePaste={handlePasteTask}
+                  handleContextMenu={handleOpenRightMenu}
+                  handleCloseContextMenu={handleOpenRightMenu}
                   handleTaskFavorite={handleTaskFavorite}
                   handleFreezeTask={handleFreezeTask}
+                  handleStatusChange={handleStatusChange}
+                  handlePriorityChange={handlePriorityChange}
+                  handleAssigneeShortcutSubmit={handleAssigneeShortcutSubmit}
+                  handleRequestSort={handleRequestSort}
+                  handleChangePage={handleChangePage}
+                  handleDeadlineDateChange={handleDeadlineDateChange}
+                  handlePageSizeChnage={handlePageSizeChnage}
                 />
               )}
               {activeButton === "Dynamic-Filter" && (

@@ -36,11 +36,37 @@
     text-transform: capitalize;
   }
 
+  .teamWrapCell {
+    height: auto !important;
+    white-space: normal !important;
+    align-items: flex-start;
+    display: flex;
+    gap: 4px;
+  }
+
+  .teamLabel {
+    white-space: nowrap;
+    flex: 0 0 auto;
+    display: flex;
+    justify-self: unset;
+    align-self: flex-start;
+  }
+
+  .teamWrapText {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
   .taskname {
     margin-left: 2px;
     font-weight: normal !important;
     display: -webkit-box !important;
     -webkit-line-clamp: 2 !important;
+    line-clamp: 2;
     /* Show only 2 lines */
     -webkit-box-orient: vertical !important;
     overflow: hidden !important;

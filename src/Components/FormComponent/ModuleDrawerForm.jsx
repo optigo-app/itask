@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Box,
   Typography,
   IconButton,
   Grid,
   TextField,
-  Button
+  Button,
+  Menu,
+  MenuItem
 } from '@mui/material';
 import { CircleX } from 'lucide-react';
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 import CustomAutocomplete from '../ShortcutsComponent/CustomAutocomplete';
+import dayjs from 'dayjs';
 
 const ModuleDrawerForm = ({
   rootSubrootflagval,
@@ -21,6 +24,9 @@ const ModuleDrawerForm = ({
   isLoading,
   isTaskNameEmpty,
   isDuplicateTask,
+  isCategoryEmpty,
+  isDeadlineEmpty,
+  openDeadlineMenuSignal,
   teams,
   projectData,
   taskCategory,
@@ -30,6 +36,46 @@ const ModuleDrawerForm = ({
   renderAutocomplete,
   renderDateField
 }) => {
+  const quickBtnRef = useRef(null);
+  const [deadlineMenuAnchorEl, setDeadlineMenuAnchorEl] = useState(null);
+  const isDeadlineMenuOpen = Boolean(deadlineMenuAnchorEl);
+
+  const openDeadlineMenu = (event) => {
+    setDeadlineMenuAnchorEl(event?.currentTarget || quickBtnRef.current);
+  };
+
+  const closeDeadlineMenu = () => {
+    setDeadlineMenuAnchorEl(null);
+  };
+
+  const applyDeadlineQuickAction = (action) => {
+    if (action === 'clear') {
+      handleDateChange(null, 'dueDate');
+      closeDeadlineMenu();
+      return;
+    }
+
+    const base = dayjs();
+    const newValue =
+      action === 'today'
+        ? base
+        : action === 'tomorrow'
+          ? base.add(1, 'day')
+          : action === 'week'
+            ? base.add(7, 'day')
+            : base;
+
+    handleDateChange(newValue, 'dueDate');
+    closeDeadlineMenu();
+  };
+
+  useEffect(() => {
+    if (!openDeadlineMenuSignal) return;
+    if (formValues?.dueDate) return;
+    if (!quickBtnRef.current) return;
+    setDeadlineMenuAnchorEl(quickBtnRef.current);
+  }, [openDeadlineMenuSignal]);
+
   return (
     <Box className="pr_drawer-container">
       <Box className="drawer-header">
@@ -96,7 +142,16 @@ const ModuleDrawerForm = ({
         </Grid>
 
         <Grid item xs={12}>
-          {renderAutocomplete('Category', 'category', formValues.category, 'Select Category', taskCategory, handleChange)}
+          {renderAutocomplete(
+            'Category',
+            'category',
+            formValues.category,
+            'Select Category',
+            taskCategory,
+            handleChange,
+            isCategoryEmpty,
+            isCategoryEmpty ? 'Category is required.' : ''
+          )}
         </Grid>
 
         <Grid item xs={12}>
@@ -114,12 +169,75 @@ const ModuleDrawerForm = ({
           />
         </Grid>
 
-        {[
+        {[ 
           { label: 'Start Date', name: 'startDate' },
           { label: 'Deadline Date', name: 'dueDate' }
         ].map(({ label, name }) => (
           <Grid item xs={12} key={name}>
-            {renderDateField(label, name, formValues[name], handleDateChange)}
+            {name === 'dueDate' ? (
+              <>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Typography className="form-label" variant="subtitle1">
+                    {label}
+                  </Typography>
+                  <Button
+                    ref={quickBtnRef}
+                    size="small"
+                    variant="text"
+                    className="varientTextBtn"
+                    onClick={openDeadlineMenu}
+                    sx={{ color: '#685dd8 !important' }}
+                  >
+                    Quick
+                  </Button>
+                </Box>
+
+                {renderDateField('', name, formValues[name], handleDateChange)}
+
+                <Menu
+                  anchorEl={deadlineMenuAnchorEl}
+                  open={isDeadlineMenuOpen}
+                  onClose={closeDeadlineMenu}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  PaperProps={{
+                    sx: {
+                      mt: 0.5,
+                      borderRadius: '12px',
+                      border: '1px solid rgba(115, 103, 240, 0.18)',
+                      boxShadow: '0 10px 30px rgba(15, 20, 34, 0.15)',
+                      overflow: 'hidden',
+                      '& .MuiMenuItem-root': {
+                        fontFamily: '"Public Sans", sans-serif',
+                        fontSize: '14px',
+                        borderRadius: '10px',
+                        mx: 0.5,
+                        my: 0.25,
+                      },
+                      '& .MuiMenuItem-root:hover': {
+                        backgroundColor: 'rgba(115, 103, 240, 0.08)',
+                      },
+                    },
+                  }}
+                  MenuListProps={{
+                    sx: { p: 0.5 },
+                  }}
+                >
+                  <MenuItem onClick={() => applyDeadlineQuickAction('today')}>Today</MenuItem>
+                  <MenuItem onClick={() => applyDeadlineQuickAction('tomorrow')}>Tomorrow</MenuItem>
+                  <MenuItem onClick={() => applyDeadlineQuickAction('week')}>+7 days</MenuItem>
+                  <MenuItem onClick={() => applyDeadlineQuickAction('clear')}>Clear</MenuItem>
+                </Menu>
+              </>
+            ) : (
+              renderDateField(label, name, formValues[name], handleDateChange)
+            )}
           </Grid>
         ))}
 
@@ -153,7 +271,7 @@ const ModuleDrawerForm = ({
             <Button
               variant="contained"
               color="primary"
-              disabled={isLoading || isTaskNameEmpty || isDuplicateTask}
+              disabled={isLoading || isTaskNameEmpty || isDuplicateTask || isCategoryEmpty}
               onClick={() => handleSubmit({ module: true })}
               className="primary-btn"
             >

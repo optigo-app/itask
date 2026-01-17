@@ -21,13 +21,13 @@ import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
 import LoginPage from './Components/Auth/LoginForm';
-import CalendarComparisonDemo from './Backup/CalendarComparisonDemo';
-import CalendarViewDemo from './Backup/CalendarViewDemo';
-import SampleQuickForm from './Backup/sampleQuickForm';
-import SampleQuickFormVersion2 from './Backup/sampleQuickFormVersion2';
-import StructuredQuickTask from './Backup/StructuredQuickTask';
-import DocumentSheet from './Components/PrintSheet/DocumentSheet';
-import AppLayout from './Image_Editor/AppLayout';
+// import CalendarComparisonDemo from './Backup/CalendarComparisonDemo';
+// import CalendarViewDemo from './Backup/CalendarViewDemo';
+// import SampleQuickForm from './Backup/sampleQuickForm';
+// import SampleQuickFormVersion2 from './Backup/sampleQuickFormVersion2';
+// import StructuredQuickTask from './Backup/StructuredQuickTask';
+// import DocumentSheet from './Components/PrintSheet/DocumentSheet';
+// import AppLayout from './Image_Editor/AppLayout';
 
 // Lazy Components
 const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
@@ -290,7 +290,7 @@ const AppWrapper = () => {
                 <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
                     <Routes>
                         <Route path="/error401" element={<Error401Page />} />
-                        <Route path="/test4324" element={<AppLayout />} />
+                        {/* <Route path="/test4324" element={<AppLayout />} /> */}
                         <Route
                             path="/login"
                             element={
@@ -342,7 +342,7 @@ const AppWrapper = () => {
 const App = () => (
     <RecoilRoot>
         {/* <Router basename="/itaskweb"> */}
-        <Router>
+            <Router>
             <AppWrapper />
         </Router>
     </RecoilRoot>

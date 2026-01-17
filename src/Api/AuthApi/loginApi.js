@@ -22,6 +22,7 @@ export const fetchLoginApi = async (data) => {
             return response?.Data;
         } else {
             console.warn("No `rd` data found in response:", response);
+            return response?.Data;
         }
     } catch (error) {
         console.error('Error:', error);
