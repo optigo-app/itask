@@ -88,7 +88,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
       }
     };
     fetchData();
-  }, []);
+  }, [location.pathname]);
 
   // Map attribute IDs to labels
   const idToAttr = useMemo(() => {

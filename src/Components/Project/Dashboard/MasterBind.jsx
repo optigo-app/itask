@@ -24,6 +24,7 @@ import { toast } from "react-toastify";
 import { fetchlistApiCall, selectedRowData } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
 import { Plus, SearchIcon } from "lucide-react";
+import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 
 export default function MasterBind({ taskModuleList }) {
     const [showadvMaster, setShowadvMaster] = useState(false);
@@ -34,6 +35,13 @@ export default function MasterBind({ taskModuleList }) {
         searchTerm: "",
     });
     const [searchTarget, setSearchTarget] = useState('both');
+    const [confirmDialog, setConfirmDialog] = useState({
+        open: false,
+        title: '',
+        content: '',
+        onConfirm: null,
+        groupId: null
+    });
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
 
@@ -53,6 +61,11 @@ export default function MasterBind({ taskModuleList }) {
     // show master that associated with this module
     useEffect(() => {
         const masterData = JSON?.parse(sessionStorage.getItem('structuredAdvMasterData'));
+        
+        if (!taskModuleList || taskModuleList.length === 0) {
+            return;
+        }
+        
         const selectedGroupIds = taskModuleList[0]?.maingroupids
             ?.split(",")
             ?.map((id) => parseInt(id, 10));
@@ -80,6 +93,10 @@ export default function MasterBind({ taskModuleList }) {
     };
 
     const handleDelete = async (id) => {
+        if (!taskModuleList || taskModuleList.length === 0) {
+            return;
+        }
+        
         setOpenChildTask(false);
         const updatedRightGroups = rightGroups.filter((g) => g.id !== id);
         setRightGroups(updatedRightGroups);
@@ -96,9 +113,25 @@ export default function MasterBind({ taskModuleList }) {
         }, 5000);
     };
 
+    const handleDeleteClick = (groupId, groupName) => {
+        setConfirmDialog({
+            open: true,
+            title: 'Remove Master Group',
+            content: `Remove "${groupName}" from module bind?`,
+            onConfirm: () => handleDelete(groupId),
+            groupId: groupId
+        });
+    };
+
+    const handleConfirmClose = () => {
+        setConfirmDialog(prev => ({ ...prev, open: false }));
+    };
+
     const handleDragEnd = async (result) => {
         const { destination, draggableId } = result;
         if (!destination || destination.droppableId !== "right") return;
+        if (!taskModuleList || taskModuleList.length === 0) return;
+        
         const draggedGroup = leftGroups.find((g) => g.id.toString() === draggableId);
         if (!draggedGroup) return;
         const alreadyExists = rightGroups.find((g) => g.id === draggedGroup.id);
@@ -190,7 +223,7 @@ export default function MasterBind({ taskModuleList }) {
                                     size="small"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        handleDelete(group.id);
+                                        handleDeleteClick(group.id, group.name);
                                     }}
                                 >
                                     <DeleteIcon fontSize="small" />
@@ -394,6 +427,22 @@ export default function MasterBind({ taskModuleList }) {
                     </DragDropContext>
                 </Box>
             </>
+            
+            {/* Confirmation Dialog */}
+            <ConfirmationDialog
+                open={confirmDialog.open}
+                onClose={handleConfirmClose}
+                onConfirm={() => {
+                    if (confirmDialog.onConfirm) {
+                        confirmDialog.onConfirm();
+                    }
+                    handleConfirmClose();
+                }}
+                title={confirmDialog.title}
+                content={confirmDialog.content}
+                confirmLabel="Remove"
+                cancelLabel="Cancel"
+            />
         </Box>
     );
 }

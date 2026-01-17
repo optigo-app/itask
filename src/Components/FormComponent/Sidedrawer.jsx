@@ -33,7 +33,6 @@ import CustomDateTimePicker from "../../Utils/DateComponent/CustomDateTimePicker
 import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
 import { getAdvancedtaseditApi } from "../../Api/MasterApi/AssigneeMaster";
 import { set } from "lodash";
-import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
 
 const TASK_OPTIONS = [
     { id: 1, value: "single", label: "Single", icon: <ListTodo size={20} /> },
@@ -74,8 +73,9 @@ const SidebarDrawer = ({
     const [advMasterData, setAdvMasterData] = useState([]);
     const [prModuleMaster, setPrModuleMaster] = useState([]);
     const [selectedMainGroup, setSelectedMainGroup] = useState('');
-    const [deadlineConfirmOpen, setDeadlineConfirmOpen] = useState(false);
     const [deadlineCleared, setDeadlineCleared] = useState(false);
+    const [isDeadlineEmpty, setIsDeadlineEmpty] = useState(false);
+    const [deadlineMenuSignal, setDeadlineMenuSignal] = useState(0);
     const [formValues, setFormValues] = React.useState({
         taskName: "",
         bulkTask: [],
@@ -392,6 +392,7 @@ const SidebarDrawer = ({
     const handleDateChange = (date, key) => {
         if (key === 'dueDate') {
             setDeadlineCleared(!date);
+            setIsDeadlineEmpty(false);
         }
         if (date) {
             setFormValues((prev) => ({
@@ -503,7 +504,8 @@ const SidebarDrawer = ({
             }
             const effectiveDeadline = getSubmitDeadlineValue();
             if (!effectiveDeadline) {
-                setDeadlineConfirmOpen(true);
+                setIsDeadlineEmpty(true);
+                setDeadlineMenuSignal((prev) => prev + 1);
                 return;
             }
         }
@@ -516,8 +518,8 @@ const SidebarDrawer = ({
         handleResetState();
         setTaskType("single");
         setSelectedMainGroup('');
-        setDeadlineConfirmOpen(false);
         setDeadlineCleared(false);
+        setIsDeadlineEmpty(false);
         setFormValues({
             taskName: "",
             bulkTask: [],
@@ -542,8 +544,8 @@ const SidebarDrawer = ({
 
     const handleResetState = () => {
         const logedAssignee = getUserProfileData()
-        setDeadlineConfirmOpen(false);
         setDeadlineCleared(false);
+        setIsDeadlineEmpty(false);
         setFormValues({
             taskName: "",
             bulkTask: [],
@@ -596,24 +598,6 @@ const SidebarDrawer = ({
         />
     );
 
-    const renderDateField = (label, name, value, onChange) => (
-        <Box className="form-group">
-            <Typography className="form-label" variant="subtitle1">{label}</Typography>
-            <DatePicker
-                name={name}
-                value={value ? dayjs(value).tz("Asia/Kolkata", true).local() : null}
-                onChange={(date) => onChange(date, name)}
-                sx={{ width: '100%' }}
-                format="DD/MM/YYYY"
-                className="textfieldsClass"
-                textField={(params) => (
-                    <TextField {...params} size="small" className="textfieldsClass" sx={{ p: 0 }} />
-                )}
-                {...customDatePickerProps}
-            />
-        </Box>
-    );
-
     const renderDateTimeField = (label, name, value, onChange) => (
         <Box className="form-group">
             <CustomDateTimePicker
@@ -623,8 +607,8 @@ const SidebarDrawer = ({
                 width='100%'
                 styleprops={commonTextFieldProps}
                 onChange={(date) => onChange(date, name)}
-            // error={Boolean(errors.start)}
-            // helperText={errors.start}
+                error={name === 'dueDate' ? isDeadlineEmpty : false}
+                helperText={name === 'dueDate' && isDeadlineEmpty ? 'Deadline is required' : ''}
             />
         </Box>
     );
@@ -775,8 +759,6 @@ const SidebarDrawer = ({
         );
     }, [advMasterData]);
 
-
-
     const handleProjectModuleData = async () => {
         const taskProject = JSON?.parse(sessionStorage?.getItem('taskprojectData'));
         const taskDepartment = JSON?.parse(sessionStorage?.getItem('taskdepartmentData'));
@@ -837,6 +819,7 @@ const SidebarDrawer = ({
                                     handleDateChange={handleDateChange}
                                     handleEstimateChange={handleEstimateChange}
                                     handlebulkTaskSave={handlebulkTaskSave}
+                                    openDeadlineMenuSignal={deadlineMenuSignal}
                                     isTaskNameEmpty={isTaskNameEmpty}
                                     isDuplicateTask={isDuplicateTask}
                                     isCategoryEmpty={isCategoryEmpty}
@@ -881,7 +864,7 @@ const SidebarDrawer = ({
                                             selectedMainGroup={selectedMainGroup}
                                             setSelectedMainGroup={setSelectedMainGroup}
                                             handleDropdownChange={handleDropdownChange}
-                                            renderDateField={renderDateField}
+                                            renderDateField={renderDateTimeField}
                                             divider={true}
                                             mdValue={12}
                                             mainMdValue={4}
@@ -904,6 +887,9 @@ const SidebarDrawer = ({
                         isLoading={isLoading}
                         isTaskNameEmpty={isTaskNameEmpty}
                         isDuplicateTask={isDuplicateTask}
+                        isCategoryEmpty={isCategoryEmpty}
+                        isDeadlineEmpty={isDeadlineEmpty}
+                        openDeadlineMenuSignal={deadlineMenuSignal}
                         teams={teams}
                         projectData={projectData}
                         taskCategory={taskCategory}
@@ -916,25 +902,6 @@ const SidebarDrawer = ({
                 }
             </Drawer>
 
-            <ConfirmationDialog
-                open={deadlineConfirmOpen}
-                onClose={() => {
-                    setDeadlineConfirmOpen(false);
-                }}
-                onConfirm={() => {
-                    const today = dayjs().tz('Asia/Kolkata').format('YYYY-MM-DDTHH:mm:ss.SSS');
-                    setDeadlineCleared(false);
-                    setFormValues((prev) => ({
-                        ...prev,
-                        dueDate: today,
-                    }));
-                    setDeadlineConfirmOpen(false);
-                }}
-                title="Deadline missing"
-                content="No deadline set. Auto-set to today?"
-                confirmLabel="Auto"
-                cancelLabel="Manual"
-            />
         </>
     );
 };
