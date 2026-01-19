@@ -13,7 +13,6 @@ import { ToastContainer } from 'react-toastify';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import 'react-toastify/dist/ReactToastify.css';
-import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
 import { fetchMasterGlFunc } from '../Utils/globalfun';
 import LoadingBackdrop from '../Utils/Common/LoadingBackdrop';
@@ -83,7 +82,10 @@ const Layout = ({ children }) => {
 };
 
 const ProtectedRoute = ({ children, pageId }) => {
-    const accessData = JSON.parse(sessionStorage.getItem("pageAccess"));
+    const accessDataRaw = sessionStorage.getItem("pageAccess");
+    const accessData = accessDataRaw ? JSON.parse(accessDataRaw) : null;
+    if (!accessData) return <LoadingBackdrop />;
+
     const userPages = accessData?.map((item) => item.id.toString());
     const hasAccess = userPages?.includes(pageId.toString());
 
@@ -97,28 +99,17 @@ const AppWrapper = () => {
 
     useEffect(() => {
         const initAuth = () => {
-            const token = Cookies.get('skey');
-            if (!token) {
+            const auth = Cookies.get('auth');
+            if (!auth) {
                 localStorage.clear();
-                navigate('/error_401', { replace: true });
+                sessionStorage.clear();
+                setIsAuthenticated(false);
+                setIsReady(true);
+                navigate('/error401', { replace: true });
                 return;
             }
 
-            try {
-                const decoded = jwtDecode(token);
-                const decodedPayload = {
-                    ...decoded,
-                    uid: decodeBase64(decoded.uid),
-                };
-                if (decodedPayload) {
-                    localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
-                    setIsAuthenticated(true);
-                }
-            } catch (error) {
-                console.error("JWT decode failed:", error);
-                localStorage.clear();
-                navigate('/error_401', { replace: true });
-            }
+            setIsAuthenticated(true);
             setIsReady(true);
         };
 
@@ -127,37 +118,31 @@ const AppWrapper = () => {
 
     useEffect(() => {
         const checkAndInit = async () => {
-            const token = JSON?.parse(localStorage.getItem("token"));
-            if (!token) {
+            const auth = Cookies.get('auth');
+            if (!auth) return;
+
+            const taskInitToken = sessionStorage.getItem("taskInit");
+            if (!taskInitToken) {
                 const result = await taskInit();
                 if (result?.Data?.rd) {
                     fetchMasterGlFunc();
                 }
-            } else {
-                fetchMasterGlFunc();
+                return;
             }
+
+            fetchMasterGlFunc();
         };
 
-        checkAndInit();
-    }, []);
+        if (isReady) checkAndInit();
+    }, [isReady]);
 
     useEffect(() => {
         const handleStorageChange = () => {
-            setIsAuthenticated(localStorage.getItem("isLoggedIn") === "true");
+            setIsAuthenticated(!!Cookies.get('auth'));
         };
         window.addEventListener("storage", handleStorageChange);
         return () => window.removeEventListener("storage", handleStorageChange);
     }, []);
-
-    const decodeBase64 = (str) => {
-        if (!str) return null;
-        try {
-            return atob(str);
-        } catch (e) {
-            console.error("Error decoding base64:", e);
-            return null;
-        }
-    };
 
     if (!isReady) {
         return <LoadingBackdrop />;

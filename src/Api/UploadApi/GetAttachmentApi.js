@@ -1,16 +1,13 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const getAttachmentApi = async (decodedData) => {
-    const AuthData = getAuthData();
-    const ipAddress = await getClientIpAddress();
     try {
         const combinedValue = JSON.stringify({
             taskid: `${decodedData?.taskid ?? ''}`,
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"get_attachment\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"get_attachment\"}`,
             "f": "Task Management (Get Attachment)",
             "p": decodedData?.taskid ? combinedValue : "",
         };

@@ -1,9 +1,6 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const DelPrTeamsApi = async (selectedTeamMember, decodedData) => {
-    const AuthData = getAuthData();
-    const ipAddress = await getClientIpAddress();
     try {
         const combinedValue = JSON.stringify({
             "taskid": decodedData?.taskid ?? "",
@@ -11,7 +8,7 @@ export const DelPrTeamsApi = async (selectedTeamMember, decodedData) => {
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"taskteamroledel\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"taskteamroledel\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { apiClient } from '../InitialApi/CommonApi';
 import { REMOVE_FILE_URL } from '../InitialApi/config';
 
 export const removeFileApi = async ({ attachments }) => {
@@ -6,7 +6,7 @@ export const removeFileApi = async ({ attachments }) => {
         imageUrl: attachments,
     };
     try {
-        const response = await axios.post(REMOVE_FILE_URL, data, {
+        const response = await apiClient.post(REMOVE_FILE_URL, data, {
             headers: {
                 'Content-Type': 'application/json',
             },

@@ -1,16 +1,13 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const GetPrTeamsApi = async (decodedData, flag) => {
-    const AuthData = getAuthData();
-    const ipAddress = await getClientIpAddress();
     try {
         const combinedValue = JSON.stringify({
             "taskid": (flag == "subroot" ? decodedData?.moduleid : decodedData?.moduleid ?? decodedData?.taskid) ?? "",
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"taskteamlist\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"taskteamlist\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };

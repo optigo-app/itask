@@ -1,10 +1,8 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData, getUserProfileData, getClientIpAddress } from "../../Utils/globalfun";
+import {getUserProfileData } from "../../Utils/globalfun";
 
 export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => {
-    const AuthData = getAuthData();
     const userProfile = getUserProfileData();
-    const ipAddress = await getClientIpAddress();
     try {
         let taskid;
         let parentid;
@@ -71,7 +69,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
         }
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"tasksave\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"tasksave\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };
