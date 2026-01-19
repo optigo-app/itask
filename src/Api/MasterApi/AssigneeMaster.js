@@ -1,13 +1,9 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const AssigneeMaster = async () => {
     try {
-        const ipAddress = await getClientIpAddress();
-        const init = JSON.parse(sessionStorage.getItem('taskInit'));
-
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"taskemployee\",\"appuserid\":\"${init?.userid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"taskemployee\"}`,
             "f": "Task Management (taskmaster)",
             "p": '',
         };
@@ -31,11 +27,9 @@ export const AssigneeMaster = async () => {
 };
 
 export const getAdvancedtaseditApi = async (taskid) => {
-    const AuthData = getAuthData();
     try {
-        const ipAddress = await getClientIpAddress();
         const body = {
-            con: `{\"id\":\"\",\"mode\":\"Quicklist_filter\",\"appuserid\":\"${AuthData?.uid ?? ""}\",\"IPAddress\":\"${ipAddress}\"}`,
+            con: `{\"id\":\"\",\"mode\":\"Quicklist_filter\"}`,
             f: "Task Management (Quicklist_filter)",
             p: JSON.stringify({
                 taskid: taskid ?? ''

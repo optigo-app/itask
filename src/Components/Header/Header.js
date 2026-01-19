@@ -10,6 +10,7 @@ import { taskLength, userRoleAtom, webReload } from "../../Recoil/atom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import PendingAcceptanceDrawer from "../ShortcutsComponent/Notification/PendingAcceptanceDrawer";
 import useSafeRedirect from "../../Utils/useSafeRedirect";
+import { LogoutApi } from "../../Api/AuthApi/logoutApi";
 
 // Profile Hook
 const useProfileData = () => {
@@ -32,7 +33,7 @@ const useProfileData = () => {
             setProfileData(null);
         }
     };
-    
+
     useEffect(() => {
         updateProfileData();
     }, [location, role]);
@@ -78,15 +79,19 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
         { text: 'My Profile', icon: <User size={20} style={{ color: "#7d7f85" }} />, route: '/account-profile' },
     ];
 
-    const handleLogoutClick = () => {
-        localStorage.clear();
-        sessionStorage.clear();
-        Cookies.remove("isLoggedIn");
-        Cookies.remove("skey");
+    const handleLogoutClick = async () => {
         if (process.env.REACT_APP_LOCAL_HOSTNAMES.includes(window.location.hostname)) {
             window.location.href = "itaskweb/login";
+            localStorage.clear();
+            sessionStorage.clear();
         } else {
-            window.location.href = "/login";
+            const res = await LogoutApi();
+            if (res) {
+                Cookies.remove("auth");
+                window.location.href = process.env.React_APP_LOGOUT_URL;
+                localStorage.clear();
+                sessionStorage.clear();
+            }
         }
     };
 

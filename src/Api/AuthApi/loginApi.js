@@ -3,15 +3,13 @@ import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const fetchLoginApi = async (data) => {
     try {
-        const ipAddress = await getClientIpAddress();
-
         const combinedValue = JSON.stringify({
             companycode: data?.companycode ?? '',
             psw: data?.password ?? '',
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"login\",\"appuserid\":\"${data?.userId ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"login\"}`,
             "f": "Task Management (login)",
             "p": combinedValue,
         };

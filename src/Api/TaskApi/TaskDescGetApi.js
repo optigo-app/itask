@@ -1,9 +1,6 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const taskDescGetApi = async (selectedRow) => {
-    const AuthData = getAuthData();
-    const ipAddress = await getClientIpAddress();
     try {
         const init = JSON.parse(sessionStorage.getItem('taskInit'));
 
@@ -12,7 +9,7 @@ export const taskDescGetApi = async (selectedRow) => {
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"task_getdescr\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"task_getdescr\"}`,
             "f": "Task Management (task_getdescr)",
             "p": combinedValue,
         };

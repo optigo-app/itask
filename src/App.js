@@ -7,6 +7,7 @@ import {
     Navigate,
     useNavigate
 } from "react-router-dom";
+import { v4 as uuidv4 } from 'uuid';
 import { Box, useMediaQuery } from '@mui/material';
 import { RecoilRoot, useRecoilState, useSetRecoilState } from 'recoil';
 import { ToastContainer } from 'react-toastify';
@@ -16,7 +17,6 @@ import { taskInit } from './Api/InitialApi/TaskInitApi';
 import { fetchMasterGlFunc } from './Utils/globalfun';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
-import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
@@ -111,10 +111,20 @@ const AppWrapper = () => {
     const [pageData, setPageData] = useState([]);
     const [pageDataLoaded, setPageDataLoaded] = useState(false);
     const [isReady, setIsReady] = useState(false);
-    const [cookieData, setCookieData] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const navigate = useNavigate();
     const setRole = useSetRecoilState(userRoleAtom);
+
+    useEffect(() => {
+        if (isReady && !isLoggedIn) {
+            window.location.replace(process.env.React_APP_LOGOUT_URL);
+        }
+    }, [isReady, isLoggedIn]);
+
+    useEffect(() => {
+        let gettok = sessionStorage.getItem("dt");
+        let newtok = (uuidv4());
+        if (!gettok) sessionStorage.setItem("dt", newtok);
+    }, []);
 
     useEffect(() => {
         let timeout;
@@ -143,75 +153,19 @@ const AppWrapper = () => {
         };
     }, []);
 
-    const decodeBase64 = (str) => {
-        if (!str) return null;
-        try {
-            return atob(str);
-        } catch (e) {
-            console.error("Error decoding base64:", e);
-            return null;
-        }
-    };
-
     const getQueryParams = () => {
-        const isLoggedIn = Cookies.get('isLoggedIn');
-
-        // If isLoggedIn is true, bypass skey token reading
-        if (isLoggedIn === 'true') {
-            // Check both localStorage and sessionStorage for AuthqueryParams
-            const authQueryParams = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
-            if (authQueryParams) {
-                const decodedPayload = JSON.parse(authQueryParams);
-                setCookieData(decodedPayload);
-                setIsReady(true);
-                setPageDataLoaded(true);
-                setIsLoggedIn(true);
-                return decodedPayload;
-            } else {
-                // If no stored auth data but isLoggedIn is true, redirect to login
-                setIsReady(true);
-                setPageDataLoaded(true);
-                return navigate('/login', { replace: true });
-            }
-        }
-
-        // If isLoggedIn is false or not present, read skey token
-        const token = Cookies.get('skey');
-        if (!token) {
-            // Check both localStorage and sessionStorage for AuthqueryParams
-            const authQueryParams = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
-            if (authQueryParams && isLoggedIn) {
-                const decodedPayload = JSON.parse(authQueryParams);
-                setCookieData(decodedPayload);
-                setIsReady(true);
-                setPageDataLoaded(true);
-                setIsLoggedIn(true);
-                return decodedPayload;
-            } else {
-                if (!isLoggedIn) {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                }
-                setIsReady(true);
-                setPageDataLoaded(true);
-                return navigate('/login', { replace: true });
-            }
-        }
-
-        const decoded = jwtDecode(token);
-        const decodedPayload = {
-            ...decoded,
-            uid: decodeBase64(decoded.uid),
-        };
-
-        if (decodedPayload) {
-            localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
-            setCookieData(decodedPayload);
+        const auth = Cookies.get('auth');
+        if (auth) {
+            setIsLoggedIn(true);
             setIsReady(true);
-            setPageDataLoaded(true);
+            return;
         }
-
-        return decodedPayload;
+        localStorage.clear();
+        sessionStorage.clear();
+        setIsLoggedIn(false);
+        setIsReady(true);
+        setPageDataLoaded(true);
+        return window.location.replace(process.env.React_APP_LOGOUT_URL);
     };
 
     useEffect(() => {
@@ -249,9 +203,8 @@ const AppWrapper = () => {
             setRole(roleData?.designation);
         };
 
-        if (cookieData) {
-            checkAndInit();
-        }
+        const auth = Cookies.get('auth');
+        if (isReady && auth) checkAndInit();
     }, [isReady]);
 
     const toastStyle = {
@@ -342,7 +295,7 @@ const AppWrapper = () => {
 const App = () => (
     <RecoilRoot>
         {/* <Router basename="/itaskweb"> */}
-            <Router>
+        <Router>
             <AppWrapper />
         </Router>
     </RecoilRoot>

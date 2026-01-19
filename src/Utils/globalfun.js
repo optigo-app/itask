@@ -5,17 +5,7 @@ import { fetchMaster } from "../Api/MasterApi/MasterApi";
 import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi"
 import { AddTaskDataApi } from "../Api/TaskApi/AddTaskApi";
 import { Avatar, AvatarGroup, Box, Chip, createTheme, Tooltip } from "@mui/material";
-
-// Utility function to get AuthData from both localStorage and sessionStorage
-export const getAuthData = () => {
-    try {
-        const authData = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
-        return authData ? JSON.parse(authData) : null;
-    } catch (error) {
-        console.error("Error parsing AuthData:", error);
-        return null;
-    }
-};
+import { UAParser } from 'ua-parser-js';
 
 // Utility function to get UserProfileData from both localStorage and sessionStorage
 export const getUserProfileData = () => {
@@ -588,19 +578,18 @@ export const fetchMasterGlFunc = async () => {
             sessionStorage.setItem('structuredAdvMasterData', JSON.stringify(safeData));
         }
         const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
-        const AuthUrlData = getAuthData();
+        const AuthData = JSON?.parse(sessionStorage.getItem('taskInit'));
         const uniqueDepartments = new Set();
         let UserProfileData
-
+debugger
         // Helper function to determine storage location based on remember me
         const setUserProfileData = (data) => {
-            const storageLocation = localStorage.getItem('AuthqueryParams') ? localStorage : sessionStorage;
-            storageLocation.setItem('UserProfileData', JSON?.stringify(data));
+            sessionStorage.setItem('UserProfileData', JSON?.stringify(data));
         };
 
         if (!AssigneeMasterData) {
             const assigneeRes = await AssigneeMaster();
-            UserProfileData = assigneeRes?.rd?.find(item => item?.userid == AuthUrlData?.uid);
+            UserProfileData = assigneeRes?.rd?.find(item => item?.userid == AuthData?.appuserid);
             setUserProfileData(UserProfileData);
             assigneeRes?.rd?.forEach(item => {
                 if (item.department) {
@@ -608,7 +597,7 @@ export const fetchMasterGlFunc = async () => {
                 }
             });
         } else {
-            UserProfileData = AssigneeMasterData?.find(item => item?.userid == AuthUrlData?.uid) ?? {};
+            UserProfileData = AssigneeMasterData?.find(item => item?.userid == AuthData?.appuserid) ?? {};
             setUserProfileData(UserProfileData);
             AssigneeMasterData?.forEach(item => {
                 if (item.department) {
@@ -1567,6 +1556,55 @@ export const getClientIpAddress = async () => {
         console.error("Error fetching IP address:", error);
         return "";
     }
+};
+
+// Get user location coordinates
+export const getLocation = async () => {
+    return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({
+                Latitude: pos.coords.latitude.toString(),
+                Longitude: pos.coords.longitude.toString(),
+            }),
+            () => resolve({ Latitude: "", Longitude: "" })
+        );
+    });
+};
+
+// Get comprehensive device information
+export const DeviceInfo = async () => {
+    const parser = new UAParser();
+    const ua = parser.getResult();
+
+    let deinfo = {
+        DeviceOS: ua.os.name,
+        DeviceOSVersion: ua.os.version,
+        BrowserName: ua.browser.name,
+        BrowserVersion: ua.browser.version,
+        DeviceType: ua.device.type || 'desktop',
+        CpuCore: navigator.hardwareConcurrency || "",
+        DeviceMemory: navigator.deviceMemory,
+        ScreenHeight: window.screen.height,
+        ScreenWidth: window.screen.width,
+        Language: navigator.language,
+        TimezoneOffset: new Date().getTimezoneOffset(),
+        DoNotTrack: navigator.doNotTrack || "unknown",
+        UserAgent: navigator?.userAgent || "",
+        authtoken: "",
+        UserId: "",
+        RequestToken: "",
+        RefreshToken: "",
+        DeviceToken: "",
+        sv: "",
+        version: "",
+        IPAddress: await getClientIpAddress(),
+        ...(await getLocation())
+    }
+    const deviceString = Object.values(deinfo).join("|");
+    const hash = btoa(deviceString).substring(0, 32);
+    deinfo.FingerPrint = hash;
+
+    return deinfo;
 };
 
 

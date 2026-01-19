@@ -1,16 +1,13 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const taskCommentGetApi = async (selectedRow) => {
-    const AuthData = getAuthData();
-    const ipAddress = await getClientIpAddress();
     try {
         const combinedValue = JSON.stringify({
             taskid: `${selectedRow?.taskid ?? '0'}`,
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"task_getcomment\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"task_getcomment\"}`,
             "f": "Task Management (task_getcomment)",
             "p": combinedValue,
         };
