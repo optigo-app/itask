@@ -87,47 +87,42 @@ const Filters = ({
   return (
     <Box className="filterMainContainer">
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: 'end', gap: 2 }}>
-        {(location?.pathname?.includes("/tasks") && activetaskView == "Dynamic-Filter") ? (
-          <>
-          </>
-        ) :
-          <>
-            {[
-              { label: "Project", key: "project", data: taskProject },
-              { label: "Status", key: "status", data: statusData },
-              { label: "Priority", key: "priority", data: priorityData },
-            ]?.map((filter) =>
-              filterVisibility[filter.key] ? (
-                <Box key={filter.key} className="form-group" sx={{ minWidth: 180, maxWidth: 180 }}>
-                  <Typography variant="subtitle1" className="filterLabletxt">
-                    {filter.label}
-                  </Typography>
-                  <Autocomplete
-                    size="small"
-                    fullWidth
-                    value={filters[filter.key] || null}
-                    {...commonTextFieldProps}
-                    onChange={(event, newValue) =>
-                      handleFilterChange(filter.key, newValue)
-                    }
-                    options={filter?.data?.map((item) =>
-                      filter.key === "assignee"
-                        ? `${item?.firstname} ${item?.lastname}`
-                        : item?.labelname
-                    )}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        placeholder={`Select ${filter.label}`}
-                        className="textfieldsClass"
-                      />
-                    )}
-                  />
-                </Box>
-              ) : null
-            )}
-          </>
-        }
+        <>
+          {[
+            { label: "Project", key: "project", data: taskProject },
+            { label: "Status", key: "status", data: statusData },
+            { label: "Priority", key: "priority", data: priorityData },
+          ]?.map((filter) =>
+            filterVisibility[filter.key] ? (
+              <Box key={filter.key} className="form-group" sx={{ minWidth: 180, maxWidth: 180 }}>
+                <Typography variant="subtitle1" className="filterLabletxt">
+                  {filter.label}
+                </Typography>
+                <Autocomplete
+                  size="small"
+                  fullWidth
+                  value={filters[filter.key] || null}
+                  {...commonTextFieldProps}
+                  onChange={(event, newValue) =>
+                    handleFilterChange(filter.key, newValue)
+                  }
+                  options={filter?.data?.map((item) =>
+                    filter.key === "assignee"
+                      ? `${item?.firstname} ${item?.lastname}`
+                      : item?.labelname
+                  )}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      placeholder={`Select ${filter.label}`}
+                      className="textfieldsClass"
+                    />
+                  )}
+                />
+              </Box>
+            ) : null
+          )}
+        </>
         {assigneeVisible && (
           <Box sx={{ maxWidth: 250 }}>
             <DepartmentAssigneeAutocomplete
@@ -182,7 +177,6 @@ const Filters = ({
           </Box>
         )}
       </Box>
-
 
       <Box>
         {(location?.pathname?.includes("/tasks") && activetaskView == "Dynamic-Filter") ? (

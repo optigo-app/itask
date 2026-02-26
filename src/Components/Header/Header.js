@@ -10,7 +10,7 @@ import { taskLength, userRoleAtom, webReload } from "../../Recoil/atom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import PendingAcceptanceDrawer from "../ShortcutsComponent/Notification/PendingAcceptanceDrawer";
 import useSafeRedirect from "../../Utils/useSafeRedirect";
-import { LogoutApi } from "../../Api/AuthApi/logoutApi";
+import TemplateDialog from "../Common/TemplateDialog";
 
 // Profile Hook
 const useProfileData = () => {
@@ -79,19 +79,15 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
         { text: 'My Profile', icon: <User size={20} style={{ color: "#7d7f85" }} />, route: '/account-profile' },
     ];
 
-    const handleLogoutClick = async () => {
+    const handleLogoutClick = () => {
+        localStorage.clear();
+        sessionStorage.clear();
+        Cookies.remove("isLoggedIn");
+        Cookies.remove("skey");
         if (process.env.REACT_APP_LOCAL_HOSTNAMES.includes(window.location.hostname)) {
             window.location.href = "itaskweb/login";
-            localStorage.clear();
-            sessionStorage.clear();
         } else {
-            const res = await LogoutApi();
-            if (res) {
-                Cookies.remove("auth");
-                window.location.href = process.env.React_APP_LOGOUT_URL;
-                localStorage.clear();
-                sessionStorage.clear();
-            }
+            window.location.href = "/login";
         }
     };
 
@@ -448,6 +444,7 @@ const Header = ({ avatarSrc = "" }) => {
     const location = useLocation();
     const taskDataLength = useRecoilValue(taskLength);
     const [pendingAcceptanceOpen, setPendingAcceptanceOpen] = useState(false);
+    const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
     // Custom hooks
     const { decodedData } = useUrlData(location);
     const { profileData, handleReload, handleLogout } = useProfileData();
@@ -471,6 +468,10 @@ const Header = ({ avatarSrc = "" }) => {
         setPendingAcceptanceOpen(true);
     };
 
+    const handleTemplateManager = () => {
+        setTemplateDialogOpen(true);
+    };
+
     return (
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px" }} className="headerContainer">
             {/* Left Section - Title and Breadcrumbs */}
@@ -482,12 +483,17 @@ const Header = ({ avatarSrc = "" }) => {
                     )}
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Typography variant={decodedData?.isLimited == 1 ? "caption" : "subtitle1"} component="div" className="headerSubtitle">
+                    <Typography variant={(decodedData?.isLimited == 1 || decodedData?.isreadonly == 1) ? "caption" : "subtitle1"} component="div" className="headerSubtitle">
                         {subtitle}
                     </Typography>
                     {decodedData?.isLimited === 1 && location?.pathname?.includes("/tasks/") && (
                         <Typography variant="caption" sx={{ backgroundColor: "#ff9800", color: "#fff", borderRadius: "8px", padding: "2px 6px", fontSize: "0.7rem" }}>
                             Limited Access
+                        </Typography>
+                    )}
+                    {decodedData?.isreadonly === 1 && (location?.pathname?.includes("/tasks/") || location?.pathname?.includes("/projects/dashboard")) && profileData?.designation?.toLowerCase() !== "admin" && (
+                        <Typography variant="caption" sx={{ backgroundColor: "#ff5722", color: "#fff", borderRadius: "8px", padding: "2px 6px", fontSize: "0.7rem" }}>
+                            Read only access
                         </Typography>
                     )}
                 </Box>
@@ -503,6 +509,11 @@ const Header = ({ avatarSrc = "" }) => {
                 {(location?.pathname?.includes("/myCalendar") || location?.pathname?.includes("/taskView")) && (
                     <ToggleGroup options={toggleCalOptions} selectedValue={selectedCalTab} onRedirection={handleRedirection} className="taskHeaderTDBox" />
                 )}
+
+                {/* template manager */}
+                <Box className="pendingAcceptanceBtn" onClick={handleTemplateManager} sx={{ marginLeft: '10px' }}>
+                    <Typography className="pendingText">Template Manager</Typography>
+                </Box>
 
                 {/* pending acceptance */}
                 <Box className="pendingAcceptanceBtn" onClick={handlePendingAcceptance}>
@@ -537,6 +548,7 @@ const Header = ({ avatarSrc = "" }) => {
             <NotificationMenu anchorEl={notificationAnchorEl} open={notificationOpen} onClose={handleCloseNotificationMenu} notifications={notifications} />
             <ProfileMenu anchorEl={profileAnchorEl} open={profileOpen} onClose={handleCloseProfileMenu} profileData={profileData} avatarSrc={avatarSrc} onReload={handleReload} onLogout={handleLogout} />
             <PendingAcceptanceDrawer open={pendingAcceptanceOpen} onClose={() => setPendingAcceptanceOpen(false)} />
+            <TemplateDialog open={templateDialogOpen} onClose={() => setTemplateDialogOpen(false)} />
         </Box>
     );
 };

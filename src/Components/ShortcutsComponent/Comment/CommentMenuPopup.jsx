@@ -1,4 +1,4 @@
-import React, { useEffect, useState, memo } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState, memo } from 'react';
 import {
     Menu,
     Box,
@@ -8,7 +8,8 @@ import {
     IconButton,
     Avatar,
     Chip,
-    CircularProgress
+    CircularProgress,
+    Skeleton
 } from '@mui/material';
 import { Send, Paperclip, MessageCircle } from 'lucide-react';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
@@ -171,18 +172,37 @@ const CommentMenuPopup = ({
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [filePreviews, setFilePreviews] = useState([]);
     const [comments, setComments] = useState([]);
+    const [commentsTaskId, setCommentsTaskId] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoadingComments, setIsLoadingComments] = useState(false);
+    const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
     const [currentAttachments, setCurrentAttachments] = useState([]);
     const [viewerOpen, setViewerOpen] = useState(false);
     const [initialSlideIndex, setInitialSlideIndex] = useState(0);
+    const activeFetchIdRef = useRef(0);
+
+    useLayoutEffect(() => {
+        if (open && selectedTask?.taskid) {
+            if (commentsTaskId !== selectedTask.taskid) {
+                setComments([]);
+                setCommentsTaskId(selectedTask.taskid);
+            }
+            setIsLoadingComments(true);
+            setShowLoadingIndicator(false);
+        }
+    }, [open, selectedTask?.taskid]);
 
     useEffect(() => {
         const assigneesMaster = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"));
         const fetchTaskComment = async () => {
+            const taskId = selectedTask?.taskid;
+            const fetchId = ++activeFetchIdRef.current;
             setIsLoadingComments(true);
+            setShowLoadingIndicator(false);
+            const loadingTimer = setTimeout(() => setShowLoadingIndicator(true), 180);
             try {
                 const taskComment = await taskCommentGetApi(selectedTask);
+                if (fetchId !== activeFetchIdRef.current) return;
                 if (taskComment) {
                     const commentsWithAttachments = taskComment.rd.map(comment => {
                         let attachments = [];
@@ -221,22 +241,27 @@ const CommentMenuPopup = ({
                         };
                     });
                     setComments(commentsWithAttachments);
+                    setCommentsTaskId(taskId ?? null);
+                } else {
+                    setComments([]);
+                    setCommentsTaskId(taskId ?? null);
                 }
             } catch (error) {
                 console.error('Error fetching task comments: ', error);
-                setComments([]);
             } finally {
+                if (fetchId !== activeFetchIdRef.current) return;
+                clearTimeout(loadingTimer);
+                setShowLoadingIndicator(false);
                 setIsLoadingComments(false);
             }
         };
 
         if (open && selectedTask && selectedTask.taskid) {
-            setComments([]);
-            setIsLoadingComments(true);
             fetchTaskComment();
         } else if (!open) {
-            setComments([]);
+            activeFetchIdRef.current += 1;
             setIsLoadingComments(false);
+            setShowLoadingIndicator(false);
         }
     }, [open, selectedTask?.taskid]);
 
@@ -448,7 +473,14 @@ const CommentMenuPopup = ({
         handleClose();
     };
 
-    const latestComments = comments?.slice(-2);
+    const isStaleCommentsForAnotherTask =
+        open &&
+        selectedTask?.taskid &&
+        commentsTaskId &&
+        commentsTaskId !== selectedTask?.taskid;
+
+    const commentsForDisplay = isStaleCommentsForAnotherTask ? [] : comments;
+    const latestComments = commentsForDisplay?.slice(-2);
 
     const handleMenuClose = (event, reason) => {
         if (reason === 'tabKeyDown') {
@@ -474,6 +506,7 @@ const CommentMenuPopup = ({
             disableAutoFocus={true}
             disableEnforceFocus={true}
             disableRestoreFocus={true}
+            keepMounted
             slotProps={{
                 paper: {
                     sx: {
@@ -512,9 +545,9 @@ const CommentMenuPopup = ({
                             <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#333' }}>
                                 Comments
                             </Typography>
-                            {comments?.length > 0 && (
+                            {commentsForDisplay?.length > 0 && (
                                 <Chip
-                                    label={comments?.length}
+                                    label={commentsForDisplay?.length}
                                     size="small"
                                     sx={{
                                         height: '18px',
@@ -534,32 +567,42 @@ const CommentMenuPopup = ({
                 {/* Compact Comments Section */}
                 <Box sx={{
                     maxHeight: '240px',
+                    minHeight: '140px',
                     overflow: 'auto',
-                    padding: (latestComments?.length > 0 || isLoadingComments) ? '8px 12px' : '0'
+                    padding: '8px 12px',
+                    position: 'relative'
                 }}>
-                    {isLoadingComments ? (
+                    {(showLoadingIndicator && latestComments?.length === 0) ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                                <Skeleton variant="circular" width={25} height={25} />
+                                <Box sx={{ flex: 1 }}>
+                                    <Skeleton variant="text" width="40%" height={14} />
+                                    <Skeleton variant="text" width="85%" height={16} />
+                                    <Skeleton variant="text" width="70%" height={16} />
+                                </Box>
+                            </Box>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                                <Skeleton variant="circular" width={25} height={25} />
+                                <Box sx={{ flex: 1 }}>
+                                    <Skeleton variant="text" width="35%" height={14} />
+                                    <Skeleton variant="text" width="80%" height={16} />
+                                    <Skeleton variant="text" width="60%" height={16} />
+                                </Box>
+                            </Box>
+                        </Box>
+                    ) : (
                         <Box sx={{
                             display: 'flex',
                             flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            py: 3,
-                            gap: 1
+                            gap: 1,
+                            opacity: showLoadingIndicator ? 0.65 : 1,
+                            transition: 'opacity 150ms ease'
                         }}>
-                            <CircularProgress
-                                size={24}
-                                sx={{ color: '#7367f0' }}
-                            />
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px' }}>
-                                Loading comments...
-                            </Typography>
-                        </Box>
-                    ) : (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                             {latestComments.map((comment, index) => (
-                                <CompactComment 
-                                    key={index} 
-                                    comment={comment} 
+                                <CompactComment
+                                    key={index}
+                                    comment={comment}
                                     onClose={handleClose}
                                     selectedTask={selectedTask}
                                     onViewAllComments={onViewAllComments}
@@ -567,7 +610,20 @@ const CommentMenuPopup = ({
                                 />
                             ))}
 
-                            {comments?.length > 2 && (
+                            {!isLoadingComments && latestComments?.length === 0 && (
+                                <Box sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    py: 2
+                                }}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px' }}>
+                                        No comments yet
+                                    </Typography>
+                                </Box>
+                            )}
+
+                            {commentsForDisplay?.length > 2 && (
                                 <Box sx={{ textAlign: 'center', mt: 1 }}>
                                     <Button
                                         size="small"
@@ -583,10 +639,27 @@ const CommentMenuPopup = ({
                                             }
                                         }}
                                     >
-                                        + {comments?.length - 2} more comments
+                                        + {commentsForDisplay?.length - 2} more comments
                                     </Button>
                                 </Box>
                             )}
+                        </Box>
+                    )}
+
+                    {showLoadingIndicator && latestComments?.length > 0 && (
+                        <Box sx={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 12,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            pointerEvents: 'none'
+                        }}>
+                            <CircularProgress size={14} sx={{ color: '#7367f0' }} />
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
+                                Updating...
+                            </Typography>
                         </Box>
                     )}
                 </Box>

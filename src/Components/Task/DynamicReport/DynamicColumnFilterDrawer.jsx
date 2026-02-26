@@ -26,6 +26,8 @@ const DynamicColumnFilterDrawer = ({
     const [dynamicFilters, setDynamicFilters] = useState({});
     const taskAssigneeData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
     const taskWorkCategoryData = JSON?.parse(sessionStorage.getItem("taskworkcategoryData"));
+    const taskStatusData = JSON?.parse(sessionStorage.getItem("taskstatusData"));
+    const taskPriorityData = JSON?.parse(sessionStorage.getItem("taskpriorityData"));
 
 
     // Excluded fields that shouldn't appear in dynamic filters
@@ -39,7 +41,10 @@ const DynamicColumnFilterDrawer = ({
         "working_hr",
         "id",
         "workcategoryid",
-        "taskno"
+        "taskno",
+        'statusid',
+        'priorityid',
+        "createdbyid"
     ];
 
     // Get filterable columns (exclude the specified fields and group columns like G1, G2, etc.)
@@ -102,7 +107,13 @@ const DynamicColumnFilterDrawer = ({
     };
 
     const getColumnDisplayName = (columnName) => {
-        return columnName?.replace(/_/g, ' ')?.toUpperCase();
+        const name = (columnName || '').toString();
+        const key = name.toLowerCase();
+        if (key === 'workcategoryid') return 'CATEGORY';
+        if (key === 'statusid') return 'STATUS';
+        if (key === 'priorityid') return 'PRIORITY';
+        if (key === 'createdbyid') return 'CREATED BY';
+        return name?.replace(/_/g, ' ')?.toUpperCase();
     };
 
     const getColumnOptions = (columnName) => {
@@ -110,6 +121,10 @@ const DynamicColumnFilterDrawer = ({
             return taskAssigneeData || [];
         } else if (columnName === 'workcategoryid') {
             return taskWorkCategoryData || [];
+        } else if (columnName === 'statusid') {
+            return taskStatusData || [];
+        } else if (columnName === 'priorityid') {
+            return taskPriorityData || [];
         } else if (masterColNameSet.has(columnName)) {
             // Get structured master data from sessionStorage
             const structuredAdvMasterData = JSON?.parse(sessionStorage.getItem('structuredAdvMasterData')) || [];
@@ -230,11 +245,11 @@ const DynamicColumnFilterDrawer = ({
                                 <Autocomplete
                                     size="small"
                                     value={dynamicFilters[column] || null}
-                                      {...commonTextFieldProps}
+                                    {...commonTextFieldProps}
                                     onChange={(event, newValue) => {
                                         // Handle structured master data selection
-                                        const selectedValue = typeof newValue === 'object' && newValue?.labelname 
-                                            ? newValue.labelname 
+                                        const selectedValue = typeof newValue === 'object' && newValue?.labelname
+                                            ? newValue.labelname
                                             : newValue;
                                         handleFilterChange(column, selectedValue);
                                     }}
@@ -255,34 +270,34 @@ const DynamicColumnFilterDrawer = ({
                                     )}
                                 />
                             )
-                            /* Regular Options Fields */
-                            : options.length > 0 ? (
-                                <Autocomplete
-                                    size="small"
-                                    value={dynamicFilters[column] || null}
-                                    onChange={(event, newValue) => handleFilterChange(column, newValue)}
-                                    options={options.map(option => option.labelname || option.name || String(option))}
-                                    getOptionLabel={(option) => String(option || '')}
-                                    renderInput={(params) => (
+                                /* Regular Options Fields */
+                                : options.length > 0 ? (
+                                    <Autocomplete
+                                        size="small"
+                                        value={dynamicFilters[column] || null}
+                                        onChange={(event, newValue) => handleFilterChange(column, newValue)}
+                                        options={options.map(option => option.labelname || option.name || String(option))}
+                                        getOptionLabel={(option) => String(option || '')}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                placeholder={`Select ${displayName}`}
+                                                variant="outlined"
+                                            />
+                                        )}
+                                    />
+                                )
+                                    /* Text Input Fields */
+                                    : (
                                         <TextField
-                                            {...params}
-                                            placeholder={`Select ${displayName}`}
+                                            size="small"
+                                            fullWidth
+                                            value={dynamicFilters[column] || ''}
+                                            onChange={(e) => handleFilterChange(column, e.target.value)}
+                                            placeholder={`Filter by ${displayName}`}
                                             variant="outlined"
                                         />
                                     )}
-                                />
-                            )
-                            /* Text Input Fields */
-                            : (
-                                <TextField
-                                    size="small"
-                                    fullWidth
-                                    value={dynamicFilters[column] || ''}
-                                    onChange={(e) => handleFilterChange(column, e.target.value)}
-                                    placeholder={`Filter by ${displayName}`}
-                                    variant="outlined"
-                                />
-                            )}
                         </Box>
                     );
                 })}

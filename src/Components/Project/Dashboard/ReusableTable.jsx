@@ -113,7 +113,7 @@ const ReusableTable = ({
                     )}
 
                     <TableRow>
-                        <TableCell colSpan={6}>
+                        <TableCell colSpan={filteredColumns?.length}>
                             {currentData?.length !== 0 && (
                                 <TablePaginationFooter
                                     page={page}

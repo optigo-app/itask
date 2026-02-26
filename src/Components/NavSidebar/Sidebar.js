@@ -21,7 +21,7 @@ import {
     ExpandLess,
     ExpandMore
 } from "@mui/icons-material";
-import { Boxes, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
+import { Boxes, Bug, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
 import logo from "../../Assests/iconLogo.png";
 import itasknewLogo from "../../Assests/tecotask.png"
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -56,7 +56,7 @@ const Sidebar = () => {
         { pagename: "Home", label: "Home", routes: "Home", path: "/", icon: House },
         { pagename: "Task", label: "Task", routes: "Tasks", path: "/tasks", icon: FileCheck },
         { pagename: "Project", label: "Project", routes: "Projects", path: "/projects", icon: SquareChartGantt },
-        { pagename: "Bug Track", label: "Bug Track", routes: "bugTrack", path: "/bugtrack", icon: FileCheck },
+        { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "/bugtrack", icon: Bug },
         { pagename: "Inbox", label: "Inbox", routes: "Inbox", path: "/inbox", icon: Inbox },
         { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
         { pagename: "Calender", label: "My Calendar", routes: "MyCalendar", path: "/myCalendar", icon: CalendarCheck },
@@ -81,8 +81,9 @@ const Sidebar = () => {
             const pageAccess = JSON.parse(sessionStorage.getItem('pageAccess'));
             if (pageAccess && Array.isArray(pageAccess)) {
                 const filteredMenu = allMenuItems.filter(item =>
-                    pageAccess.some(access => access.pagename === item.pagename)
+                    pageAccess.some(access => access.pagename === item.pagename) || item.pagename === "Bug Track"
                 );
+                console.log("filteredMenu", filteredMenu);
                 setPageList(filteredMenu);
                 setLoading(false);
                 clearInterval(intervalId);

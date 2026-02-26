@@ -111,6 +111,8 @@ const HierarchicalTaskTreeTable = memo(({
         const indentLevel = isChild ? depth + 1 : 0;
         const paddingLeft = indentLevel * 24; // 24px per level
 
+        console.log(task);
+
         return (
             <React.Fragment key={task.taskid || `task-${index}`}>
                 <TableRow
@@ -266,16 +268,16 @@ const HierarchicalTaskTreeTable = memo(({
                             minWidth="60px"
                             disable={true}
                         />
-                    </TableCell>
-                    <TableCell>
+                        </TableCell>
+                        <TableCell>
                         <Typography variant="body2">
                             {task?.DeadLineDate && cleanDate(task?.DeadLineDate)
                                 ? formatDate2(cleanDate(task?.DeadLineDate))
                                 : '-'}
                         </Typography>
                     </TableCell>
-                    <TableCell>{task.estimate1_hrsT}</TableCell>
-                    <TableCell>{task.workingHrt}</TableCell>
+                    <TableCell>{task.estimate_hrs}</TableCell>
+                    <TableCell>{task.workinghr}</TableCell>
                 </TableRow>
 
                 {/* Render child tasks when expanded and showMinorTasks is true */}

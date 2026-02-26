@@ -1,4 +1,5 @@
 {
+  "homepage": "/itaskweb",
   "name": "itask",
   "version": "0.1.0",
   "private": true,
@@ -22,6 +23,7 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "@toast-ui/react-image-editor": "^3.15.2",
     "axios": "^1.7.7",
     "bootstrap-icons": "^1.11.3",
     "crypto-js": "^4.2.0",
@@ -55,8 +57,6 @@
     "recoil": "^0.7.7",
     "sass": "^1.81.0",
     "swiper": "^11.2.6",
-    "ua-parser-js": "^2.0.8",
-    "uuid": "^13.0.0",
     "web-vitals": "^2.1.4",
     "xlsx": "^0.18.5",
     "zod": "^3.24.1"

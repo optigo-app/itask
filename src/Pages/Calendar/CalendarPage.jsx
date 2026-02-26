@@ -6,6 +6,7 @@ import CalendarLeftSide from "../../Components/Calendar/CalendarLeftSide";
 import CalendarRightSide from "../../Components/Calendar/CalendarRightSide";
 import CalendarDrawer from "../../Components/Calendar/SideBar/CalendarDrawer";
 import {
+  actualTaskData,
   calendarData,
   calendarM,
   CalformData,
@@ -46,6 +47,7 @@ const Calendar = () => {
   const [selectedAssignee, setSelectedAssignee] = useState({});
   const assigneeData = JSON?.parse(sessionStorage?.getItem("taskAssigneeData")) || [];
   const setTasks = useSetRecoilState(TaskData);
+  const setActualTaskDataValue = useSetRecoilState(actualTaskData);
   const [statusData, setStatusData] = useState([]);
   const [priorityData, setPriorityData] = useState([]);
   const [projectData, setProjectData] = useState([]);
@@ -72,6 +74,7 @@ const Calendar = () => {
   useEffect(() => {
     if (!iswhTLoading) {
       setTasks(taskFinalData?.TaskData);
+      setActualTaskDataValue(taskFinalData?.TaskData);
     }
   }, [iswhTLoading]);
 
@@ -84,7 +87,7 @@ const Calendar = () => {
       JSON?.parse(sessionStorage.getItem("taskworkcategoryData")) || [];
     const colorClasses = [
       "productive",
-      "rnd-tech", 
+      "rnd-tech",
       "creative",
       "sop-correction",
       "leave",
@@ -200,21 +203,26 @@ const Calendar = () => {
     }
   }, [selectedAssignee]);
 
-  const handleCaleFormSubmit = async (formValues) => {
+  const handleCaleFormSubmit = async (formValues, options = {}) => {
     setCalFormData(formValues);
     const apiRes = await AddMeetingApi(formValues);
     if (apiRes && apiRes?.rd[0]?.stat == 1) {
-      if (hasAccess(PERMISSIONS.CALENDAR_VIEW_ALL)) {
-        handleMeetingList();
-      } else {
-        handleMeetingListByLogin();
+      if (!options.skipRefresh) {
+        if (hasAccess(PERMISSIONS.CALENDAR_VIEW_ALL)) {
+          handleMeetingList();
+        } else {
+          handleMeetingListByLogin();
+        }
       }
       if (formValues?.taskid) {
         toast.success("Meeting or Task updated successfully");
       } else {
         toast.success("Meeting added successfully");
       }
+      setFormDrawerOpen(false); // Close the drawer after save to prevent reopening
+      return apiRes;
     }
+    return null;
   };
 
   const handleAssigneeChange = (newValue) => {

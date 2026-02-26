@@ -7,6 +7,7 @@ import {
 import { useRecoilState, useRecoilValue } from "recoil";
 import {
   actualTaskData,
+  archivedTask,
   fetchlistApiCall,
   projectDatasRState,
   TaskData,
@@ -27,7 +28,10 @@ const useFullTaskFormatFile = () => {
   const [taskProject, setTaskProject] = useState([]);
   const [taskCategory, setTaskCategory] = useState([]);
   const [taskAssigneeData, setTaskAssigneeData] = useState([]);
+  const [taskBugStatusData, setTaskBugStatusData] = useState([]);
+  const [taskBugPriorityData, setTaskBugPriorityData] = useState([]);
   const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
+  const archivedFlag = useRecoilValue(archivedTask);
   const tasks = useRecoilValue(TaskData);
   const project = useRecoilValue(projectDatasRState);
   const searchParams = new URLSearchParams(location.search);
@@ -38,6 +42,19 @@ const useFullTaskFormatFile = () => {
     if (data) {
       setter(JSON.parse(data));
     }
+  };
+
+  const parseIsReadonlyString = (readonlyStr) => {
+    const mapping = {};
+    if (readonlyStr) {
+      readonlyStr.split(",").forEach((item) => {
+        const [id, flag] = item.split("#");
+        if (id && flag !== undefined) {
+          mapping[id] = parseInt(flag);
+        }
+      });
+    }
+    return mapping;
   };
 
   const fetchMasterData = async () => {
@@ -62,6 +79,8 @@ const useFullTaskFormatFile = () => {
         retrieveAndSetData("taskprojectData", setTaskProject);
         retrieveAndSetData("taskworkcategoryData", setTaskCategory);
         retrieveAndSetData("taskAssigneeData", setTaskAssigneeData);
+        retrieveAndSetData("taskbugstatusData", setTaskBugStatusData);
+        retrieveAndSetData("taskbugpriorityData", setTaskBugPriorityData);
       }
     } catch (error) {
       console.error("Error fetching master data:", error);
@@ -86,7 +105,10 @@ const useFullTaskFormatFile = () => {
       parsedData = JSON.parse(jsonString);
     }
     try {
-      const taskData = await fetchTaskDataFullApi(parsedData);
+      const taskData = await fetchTaskDataFullApi({
+        ...(parsedData || {}),
+        isarchive: archivedFlag ? 1 : 0,
+      });
       if (taskData?.rd[0]?.stat == 0) {
         setIsWhTLoading(false);
         return toast.error(taskData?.rd[0]?.stat_msg);
@@ -111,9 +133,14 @@ const useFullTaskFormatFile = () => {
         const assigneeIdArray = task?.assigneids
           ?.split(",")
           ?.map((id) => Number(id));
-        const matchedAssignees = taskAssigneeData?.filter((user) =>
-          assigneeIdArray?.includes(user.id)
-        );
+
+        const readonlyMapping = parseIsReadonlyString(task.isreadonly);
+        const matchedAssignees = taskAssigneeData
+          ?.filter((user) => assigneeIdArray?.includes(user.id))
+          ?.map((user) => ({
+            ...user,
+            isreadonly: readonlyMapping[user.id] ?? 0,
+          }));
         return {
           ...task,
           priority: priority ? priority?.labelname : "",
@@ -216,6 +243,33 @@ const useFullTaskFormatFile = () => {
     MINOR: "minor",
   };
 
+  const applyFreezeRulesToSubtree = (task, inheritedFreeze = 0) => {
+    const isNew = task?.isnew == 1;
+    const isSelfFrozen = task?.isFreez == 1;
+    const effectiveFreeze = isNew ? 0 : inheritedFreeze == 1 ? 1 : isSelfFrozen ? 1 : 0;
+
+    task.isFreez = effectiveFreeze;
+    task.subtasks?.forEach((child) => applyFreezeRulesToSubtree(child, effectiveFreeze));
+  };
+
+  const applyReadonlyRulesToSubtree = (task, inheritedMapping = null) => {
+    let currentMapping = inheritedMapping;
+    if (task.parentid === 0) {
+      currentMapping = parseIsReadonlyString(task.isreadonly);
+    }
+
+    if (currentMapping) {
+      task.assignee = task.assignee?.map((member) => ({
+        ...member,
+        isreadonly: currentMapping[member.id] ?? 0,
+      }));
+    }
+
+    task.subtasks?.forEach((child) =>
+      applyReadonlyRulesToSubtree(child, currentMapping)
+    );
+  };
+
   // Chunk 4: Category Tasks Collection with Optimization
   const collectCategoryTasks = (task, categoryMap, category, projectCategoryTasks, path = []) => {
     const categoryKey = categoryMap[task.workcategoryid];
@@ -232,34 +286,24 @@ const useFullTaskFormatFile = () => {
       task.type = hasChildren ? TASK_TYPES.MAJOR : TASK_TYPES.MINOR;
     }
 
-    // Initialize totals
+    // Initialize totals (progress only; hours are API-driven)
     let totals = {
-      estimate_hrsT: task.estimate_hrs || 0,
-      estimate1_hrsT: task.estimate1_hrs || 0,
-      estimate2_hrsT: task.estimate2_hrs || 0,
-      workingHrt: task.workinghr || 0,
       completed: task.status === "Completed" ? 1 : 0,
-      total: 1
+      total: 1,
     };
 
     // Process subtasks recursively
     task.subtasks?.forEach((subtask) => {
       const childTotals = collectCategoryTasks(subtask, categoryMap, category, projectCategoryTasks, currentPath);
 
-      // Aggregate totals
-      Object.keys(totals).forEach(key => {
-        totals[key] += childTotals[key];
-      });
+      totals.completed += childTotals.completed;
+      totals.total += childTotals.total;
     });
 
     // Set calculated values
     Object.assign(task, {
       progress_per: calculateProgress(totals.completed, totals.total),
       isNotShowProgress: !task.subtasks || task.subtasks.length === 0,
-      estimate_hrsT: totals.estimate_hrsT,
-      estimate1_hrsT: totals.estimate1_hrsT,
-      estimate2_hrsT: totals.estimate2_hrsT,
-      workingHrt: totals.workingHrt,
     });
 
     // Category grouping
@@ -406,8 +450,6 @@ const useFullTaskFormatFile = () => {
           ModuleMilestoneData: {},
           ModuleProgress: {},
           ModuleTeamMembers: {},
-          // EmployeeWiseData: [],
-          // ModuleWiseData: [],
         };
       }
 
@@ -426,6 +468,9 @@ const useFullTaskFormatFile = () => {
       } else {
         TaskData = data.filter(task => task.parentid === 0);
       }
+
+      TaskData.forEach((task) => applyFreezeRulesToSubtree(task, task?.isFreez == 1 ? 1 : 0));
+      TaskData.forEach((task) => applyReadonlyRulesToSubtree(task));
 
       // Process tasks and collect category data
       TaskData.forEach(task => {
@@ -488,6 +533,7 @@ const useFullTaskFormatFile = () => {
     taskProject,
     taskCategory,
     taskAssigneeData,
+    archivedFlag,
     callFetchTaskApi,
     location.pathname,
   ]);
@@ -503,6 +549,8 @@ const useFullTaskFormatFile = () => {
     statusData,
     secStatusData,
     taskAssigneeData,
+    taskBugStatusData,
+    taskBugPriorityData,
   };
 };
 

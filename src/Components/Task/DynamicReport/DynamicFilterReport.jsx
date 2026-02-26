@@ -14,6 +14,7 @@ import ReusableAvatar from "../../ShortcutsComponent/ReusableAvatar";
 import DynamicColumnFilterDrawer from "./DynamicColumnFilterDrawer";
 import { useLocation } from "react-router-dom";
 import StatusBadge from "../../ShortcutsComponent/StatusBadge";
+import PriorityBadge from "../../ShortcutsComponent/PriorityBadge";
 
 const normalize = (s) => (s || "").toString().trim().toLowerCase().replace(/\s+/g, "");
 
@@ -21,6 +22,13 @@ const columnColors = {
   status: statusColors,
   priority: priorityColors,
   color: getcolorsData,
+};
+
+const columnHeaderOverrides = {
+  workcategoryid: "CATEGORY",
+  statusid: "STATUS",
+  createdbyid: "CREATED BY",
+  priorityid: "PRIORITY",
 };
 
 const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId = {} }) => {
@@ -42,6 +50,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
   const [finalRowData, setFinalRowData] = useState([]);
   const taskAssigneeData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
   const taskStatusData = JSON?.parse(sessionStorage.getItem("taskstatusData"));
+  const taskPriorityData = JSON?.parse(sessionStorage.getItem("taskpriorityData"));
   const taskWorkCategoryData = JSON?.parse(sessionStorage.getItem("taskworkcategoryData"));
   const taskCategory = JSON?.parse(sessionStorage.getItem("taskworkcategoryData"));
   const searchParams = new URLSearchParams(location.search);
@@ -121,16 +130,13 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
     const dynamicColumns = allColumnNames
       ?.filter((name) => !/^G\d+$/i.test(name) && name !== "taskno" && name !== "id")
       .map((name) => {
+        const isTaskName = name === "taskname";
+        const isHourColumn = name === "estimate_hrs" || name === "working_hr";
         const base = {
           field: name,
-          headerName: name?.replace(/_/g, " ")?.toUpperCase(),
-          width:
-            name === "taskname"
-              ? 350
-              : name === "estimate_hrs" || name === "working_hr"
-                ? 120
-                : 140,
-          flex: name === "taskname" ? "" : "",
+          headerName: (columnHeaderOverrides[name?.toLowerCase()] || name?.replace(/_/g, " "))?.toUpperCase(),
+          minWidth: isTaskName ? 350 : (isHourColumn ? 120 : 140),
+          flex: isTaskName ? 1.2 : 1,
         };
         if (masterColNameSet?.has(name)) {
           return {
@@ -266,6 +272,26 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
             },
           };
         }
+
+        if (name === "priorityid") {
+          return {
+            ...base,
+            renderCell: (params) => {
+              const priority = taskPriorityData?.find(
+                (item) => item?.id == params?.row?.priorityid
+              );
+              return <PriorityBadge
+                task={{ priority: priority?.labelname ?? "" }}
+                priorityColors={priorityColors}
+                onPriorityChange={() => { }}
+                fontSize="13px"
+                padding="0.15rem 0.6rem"
+                minWidth="60px"
+                disable={true}
+              />
+            },
+          };
+        }
         return base;
       });
 
@@ -274,6 +300,8 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
       field: "srNo",
       headerName: "SR#",
       width: 80,
+      minWidth: 80,
+      flex: 0,
       sortable: false,
       filterable: false,
     };
@@ -383,6 +411,30 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
           return false;
         } else if (!filterCategory && filters.workcategoryid !== rowWorkCategoryId) {
           return false;
+        }
+      }
+
+      // Status filtering (filters.status -> row.statusid)
+      if (filters?.status) {
+        const rowStatusId = row?.statusid;
+        const filterStatus = taskStatusData?.find(st => st.labelname === filters.status);
+        if (filterStatus) {
+          if (rowStatusId != filterStatus.id) return false;
+        } else {
+          const rowStatusLabel = taskStatusData?.find(st => st.id == rowStatusId)?.labelname;
+          if (!rowStatusLabel || normalize(rowStatusLabel) !== normalize(filters.status)) return false;
+        }
+      }
+
+      // Priority filtering (filters.priority -> row.priorityid)
+      if (filters?.priority) {
+        const rowPriorityId = row?.priorityid;
+        const filterPriority = taskPriorityData?.find(pr => pr.labelname === filters.priority);
+        if (filterPriority) {
+          if (rowPriorityId != filterPriority.id) return false;
+        } else {
+          const rowPriorityLabel = taskPriorityData?.find(pr => pr.id == rowPriorityId)?.labelname;
+          if (!rowPriorityLabel || normalize(rowPriorityLabel) !== normalize(filters.priority)) return false;
         }
       }
 
@@ -520,7 +572,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
 
     // Add sequential SR NO based on current filtered order (1-based)
     return filtered.map((row, index) => ({ ...row, srNo: index + 1 }));
-  }, [finalRowData, selectedAttrsByGroupId, groupIdToColumnKey, idToAttr, filters, masterColNameSet, taskAssigneeData, taskWorkCategoryData, taskCategory]);
+  }, [finalRowData, selectedAttrsByGroupId, groupIdToColumnKey, idToAttr, filters, masterColNameSet, taskAssigneeData, taskWorkCategoryData, taskCategory, taskStatusData, taskPriorityData]);
 
   // Count active filters
   const activeFiltersCount = Object.keys(filters).filter(key =>

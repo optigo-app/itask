@@ -1,6 +1,3 @@
-import { DeviceInfo } from "../../Utils/globalfun";
-import Cookies from 'js-cookie';
-
 // Environment variables
 const LOCAL_HOSTNAMES = (process.env.REACT_APP_LOCAL_HOSTNAMES || "localhost,nzen").split(',');
 const API_VERSION = process.env.REACT_APP_API_VERSION || "v4";
@@ -36,50 +33,26 @@ export const APIURL = buildApiUrl(REPORT_ENDPOINT);
 export const UPLOAD_URL = buildApiUrl(UPLOAD_ENDPOINT);
 export const REMOVE_FILE_URL = buildApiUrl(REMOVE_FILE_ENDPOINT);
 
-let cachedDeviceInfoPromise = null;
-let cachedDtHeader = "";
-let cachedSessionDeviceToken = null;
-
-const toBase64Utf8 = (value) => {
+// Utility function to get AuthData from both localStorage and sessionStorage
+const getAuthData = () => {
   try {
-    return btoa(unescape(encodeURIComponent(value)));
+    const authData = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
+    return authData ? JSON.parse(authData) : null;
   } catch (error) {
-    console.error("Error encoding base64:", error);
-    return "";
+    console.error("Error parsing AuthData:", error);
+    return null;
   }
 };
 
-export const getHeaders = async (init = {}, options = {}) => {
-  const getsessiondt = sessionStorage.getItem("dt") || "";
+export const getHeaders = (init = {}) => {
+  const { version = API_VERSION, token = "" } = init;
+  const AuthData = getAuthData();
 
-  if (cachedSessionDeviceToken !== getsessiondt || !cachedDtHeader) {
-    cachedSessionDeviceToken = getsessiondt;
-    cachedDeviceInfoPromise = cachedDeviceInfoPromise || DeviceInfo();
-
-    try {
-      const deviceInfo = await cachedDeviceInfoPromise;
-      cachedDtHeader = toBase64Utf8(
-        JSON.stringify({ ...(deviceInfo || {}), DeviceToken: getsessiondt })
-      );
-    } catch (error) {
-      console.error("Error building dt header:", error);
-      cachedDtHeader = "";
-    }
-  }
-  const auth = Cookies.get('auth');
-  const authHeaderValue = auth
-    ? (auth.startsWith('Bearer ') ? auth : `Bearer ${auth}`)
-    : '';
-
-  const { includeSp = true } = options || {};
-  const headers = {
-    Authorization: authHeaderValue,
-    dt: cachedDtHeader ?? "",
+  return {
+    Authorization: `Bearer ${token}`,
+    Yearcode: AuthData?.yc ?? "",
+    Version: version,
+    sv: AuthData?.sv ?? "1",
+    sp: "6",
   };
-
-  if (includeSp) {
-    headers.sp = "itaskpro";
-  }
-
-  return headers;
 };

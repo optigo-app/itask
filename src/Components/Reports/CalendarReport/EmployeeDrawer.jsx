@@ -3,7 +3,7 @@ import { Box, Drawer, IconButton } from '@mui/material';
 import { CircleX } from 'lucide-react';
 import EmployeeList from './EmployeeList';
 
-const EmployeeDrawer = ({ openSideDrawer, setSideDrawer, selectedEmployee, onEmployeeClick }) => {
+const EmployeeDrawer = ({ openSideDrawer, setSideDrawer, selectedEmployee, onEmployeeClick, dailyReportRows }) => {
     const drawerRef = useRef(null);
 
     const handleClickOutside = (event) => {
@@ -19,7 +19,7 @@ const EmployeeDrawer = ({ openSideDrawer, setSideDrawer, selectedEmployee, onEmp
     useEffect(() => {
         if (openSideDrawer) {
             document.addEventListener('mousedown', handleClickOutside);
-        } else {
+        } else {    
             document.removeEventListener('mousedown', handleClickOutside);
         }
         return () => {
@@ -72,6 +72,7 @@ const EmployeeDrawer = ({ openSideDrawer, setSideDrawer, selectedEmployee, onEmp
                 <EmployeeList
                     selectedEmployee={selectedEmployee}
                     onEmployeeClick={onEmployeeClick}
+                    dailyReportRows={dailyReportRows}
                 />
             </Box>
         </Drawer>

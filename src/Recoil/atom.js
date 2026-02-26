@@ -35,6 +35,11 @@ export const completedTask = atom({
   default: false
 })
 
+export const archivedTask = atom({
+  key: 'archivedTask',
+  default: false
+})
+
 export const projectDatasRState = atom({
   key: 'projectDatasRState',
   default: []

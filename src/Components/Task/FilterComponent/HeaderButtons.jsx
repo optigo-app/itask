@@ -14,6 +14,7 @@ import { Add as AddIcon } from "@mui/icons-material";
 import SidebarDrawer from "../../FormComponent/Sidedrawer";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { getRandomAvatarColor, ImageUrl, getUserProfileData, getAuthData } from "../../../Utils/globalfun";
 import {
   fetchlistApiCall,
   formData,
@@ -26,17 +27,20 @@ import {
   viewMode,
   copyRowData,
   completedTask,
+  archivedTask,
 } from "../../../Recoil/atom";
 import { toast } from "react-toastify";
 import {
   Calendar,
   CircleCheck,
   ClipboardPaste,
+  Archive,
   Kanban,
   List,
   ListFilter,
   OctagonAlert,
   SearchIcon,
+  Star,
   TimerIcon,
   User,
   UserPlus,
@@ -65,10 +69,14 @@ const HeaderButtons = ({
   taskAssigneeData,
   CategorySummary,
   handlePasteTask,
-  handleCompletedTaskFilter
+  handleCompletedTaskFilter,
+  handleArchivedTaskFilter,
+  showFavoritesOnly,
+  onToggleFavoritesOnly,
 }) => {
   const { hasAccess } = useAccess();
   const navigate = useSafeRedirect()
+  const profileData = getUserProfileData();
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const isSmallScreen = useMediaQuery("(max-width:600px)");
   const isMediumScreen = useMediaQuery("(min-width:601px) and (max-width:960px)");
@@ -81,12 +89,13 @@ const HeaderButtons = ({
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const rootSubrootflagval = useRecoilValue(rootSubrootflag);
   const [view, setView] = useState('');
+  const [lastNonArchiveView, setLastNonArchiveView] = useState('table');
   const [selectedCategory, setSelectedCategory] = useRecoilState(selectedCategoryAtom);
   const [filterDrawerOpen, setFilterDrawerOpen] = useRecoilState(filterDrawer);
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
   const [viewTaskMode, setViewTaskMode] = useRecoilState(viewMode);
-  const completedFlag = useRecoilValue(completedTask);
+  const archiveFlag = useRecoilValue(archivedTask);
   const encodedData = searchParams.get("data");
   const [parsedData, setParsedData] = useState();
   const [categoryMaster, setCategoryMaster] = useState([]);
@@ -96,7 +105,7 @@ const HeaderButtons = ({
     if (Array.isArray(CategorySummary)) {
       setCategoryMaster(CategorySummary);
     }
-    const viewMode = localStorage?.getItem('activeTaskTab') ?? 'table';
+    const viewMode = 'table';
     setView(viewMode);
   }, [CategorySummary, location, isLoading]);
 
@@ -129,7 +138,6 @@ const HeaderButtons = ({
     setFormDrawerOpen(!formdrawerOpen);
     setFormDataValue({});
     setRootSubroot({ Task: "AddTask" });
-    setOpenChildTask(false);
   };
 
   const handleFormSubmit = async (formValues, mode, module) => {
@@ -137,11 +145,11 @@ const HeaderButtons = ({
       rootSubrootflagval?.Task == "AddTask"
         ? { Task: "subroot" }
         : rootSubrootflagval;
-    setOpenChildTask(false);
     const addTaskApi = await AddTaskDataApi(formValues, rootflag ?? {}, module);
     if (addTaskApi && addTaskApi?.rd[0]?.stat == 1) {
-      setFormDrawerOpen(false);
-      setOpenChildTask(true);
+      // Removed setFormDrawerOpen(false) here to allow Sidedrawer to finish its async work.
+      // Sidedrawer will call onClose() (handleDrawerToggle) which will set formDrawerOpen to false.
+      // setOpenChildTask(true); // Moved to Sidedrawer.jsx to avoid double refresh
       setTimeout(() => {
         let message = "Task Added Successfully...";
         if (rootSubrootflagval?.Task === "SubTask") {
@@ -156,6 +164,7 @@ const HeaderButtons = ({
     } else {
       toast.error("Something went wrong...");
     }
+    return addTaskApi;
   };
 
   const handleViewModeChange = (event, newView) => {
@@ -170,6 +179,9 @@ const HeaderButtons = ({
     if (newView === "calendar") {
       navigate('/myCalendar');
     } else {
+      if (newView !== 'archive') {
+        setLastNonArchiveView(newView);
+      }
       setView(newView);
       onButtonClick(newView);
     }
@@ -214,12 +226,15 @@ const HeaderButtons = ({
         <ToggleButton value="kanban" aria-label="kanban view" sx={{ borderRadius: '8px' }}>
           <Kanban className="iconbtn" size={20} />
         </ToggleButton>
-        {/* <ToggleButton value="bugview" aria-label="Bug View" sx={{ borderRadius: '8px' }}>
+        <ToggleButton value="bugview" aria-label="Bug View" sx={{ borderRadius: '8px' }}>
           <OctagonAlert className="iconbtn" size={20} />
-        </ToggleButton> */}
+        </ToggleButton>
         <ToggleButton value="Dynamic-Filter" aria-label="Dynamic Filter" sx={{ borderRadius: '8px' }}>
           <ListFilter className="iconbtn" size={20} />
         </ToggleButton>
+        {/* <ToggleButton value="archive" aria-label="archive tasks" sx={{ borderRadius: '8px' }}>
+          <Archive className="iconbtn" size={20} />
+        </ToggleButton> */}
         <ToggleButton value="calendar" aria-label="Calendar view" sx={{ borderRadius: '8px' }}>
           <Calendar className="iconbtn" size={20} />
         </ToggleButton>
@@ -257,6 +272,7 @@ const HeaderButtons = ({
               taskCategory={categoryMaster}
               selectedCategory={filters?.category}
               handleFilterChange={handleFilterChange}
+              showArchive={archiveFlag}
             />
           )}
           <Tooltip
@@ -287,20 +303,20 @@ const HeaderButtons = ({
           {location?.pathname?.includes("/tasks") && (
             <Tooltip
               placement="top"
-              title="Completed tasks"
+              title={archiveFlag ? "Exclude Archive tasks" : "Include Archive Task"}
               arrow
               classes={{ tooltip: "custom-tooltip" }}
             >
               <IconButton
-                aria-label="Completed tasks"
-                onClick={handleCompletedTaskFilter}
+                aria-label="archived task"
+                onClick={handleArchivedTaskFilter}
                 sx={{
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
-                  padding: '4px',
+                  padding: '6px',
                   backgroundColor:
-                    completedFlag ? "#dcedc8" : "white",
+                    archiveFlag ? "#ffe0b2" : "white",
                   boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
                   "&:hover": {
                     backgroundColor: "#f5f5f5",
@@ -308,10 +324,43 @@ const HeaderButtons = ({
                   },
                 }}
               >
-                <CircleCheck className="iconbtn"
+                <Archive className="iconbtn"
                   color={
-                    completedFlag ? "#388e3c" : "#0000008a"
-                  } />
+                    archiveFlag ? "#ef6c00" : "#0000008a"
+                  } size={20} />
+              </IconButton>
+            </Tooltip>
+          )}
+
+          {location?.pathname?.includes("/projects") && (
+            <Tooltip
+              placement="top"
+              title={showFavoritesOnly ? "Showing favourites" : "Show favourites first"}
+              arrow
+              classes={{ tooltip: "custom-tooltip" }}
+            >
+              <IconButton
+                aria-label="Favourite modules"
+                onClick={onToggleFavoritesOnly}
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: '4px',
+                  backgroundColor: showFavoritesOnly ? "#FFD700" : "white",
+                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                  "&:hover": {
+                    backgroundColor: "#f5f5f5",
+                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                  },
+                }}
+              >
+                <Star
+                  className="iconbtn"
+                  size={20}
+                  fill={showFavoritesOnly ? "#fff" : "transparent"}
+                  color={showFavoritesOnly ? "#fff" : "#0000008a"}
+                />
               </IconButton>
             </Tooltip>
           )}
@@ -340,6 +389,7 @@ const HeaderButtons = ({
                   className="buttonClassname"
                   onClick={handleDrawerToggle}
                   size={isSmallScreen ? "small" : isMediumScreen ? "medium" : "medium"}
+                  disabled={parsedData?.isreadonly === 1 && profileData?.designation?.toLowerCase() !== "admin"}
                 >
                   New
                 </Button>

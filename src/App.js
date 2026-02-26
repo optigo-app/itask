@@ -7,8 +7,8 @@ import {
     Navigate,
     useNavigate
 } from "react-router-dom";
-import { v4 as uuidv4 } from 'uuid';
 import { Box, useMediaQuery } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { RecoilRoot, useRecoilState, useSetRecoilState } from 'recoil';
 import { ToastContainer } from 'react-toastify';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -17,10 +17,13 @@ import { taskInit } from './Api/InitialApi/TaskInitApi';
 import { fetchMasterGlFunc } from './Utils/globalfun';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
+import { jwtDecode } from "jwt-decode";
 import Cookies from 'js-cookie';
 import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
 import LoginPage from './Components/Auth/LoginForm';
+import TemplateDialog from './Components/Common/TemplateDialog';
+import TestPage from './Components/Examples/testpage';
 // import CalendarComparisonDemo from './Backup/CalendarComparisonDemo';
 // import CalendarViewDemo from './Backup/CalendarViewDemo';
 // import SampleQuickForm from './Backup/sampleQuickForm';
@@ -54,6 +57,8 @@ const PmsReport = lazy(() => import('./Pages/Reports/pmsReport'));
 const PmsReport2 = lazy(() => import('./Pages/Reports/pms-report-2'));
 const CalendarReport = lazy(() => import('./Pages/Reports/CalendarReport/CalendarReport'));
 const ModuleMilestoneReport = lazy(() => import('./Pages/Reports/ModuleMilestoneReport/ModuleMilestoneReport'));
+const BugTracking = lazy(() => import('./Pages/BugTracking/BugTracking'));
+const ImageEditorModal = lazy(() => import('./Image-Editor'));
 
 const Layout = ({ children, pageDataLoaded }) => {
     const isMobile = useMediaQuery('(max-width:712px)');
@@ -111,20 +116,10 @@ const AppWrapper = () => {
     const [pageData, setPageData] = useState([]);
     const [pageDataLoaded, setPageDataLoaded] = useState(false);
     const [isReady, setIsReady] = useState(false);
+    const [cookieData, setCookieData] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const navigate = useNavigate();
     const setRole = useSetRecoilState(userRoleAtom);
-
-    useEffect(() => {
-        if (isReady && !isLoggedIn) {
-            window.location.replace(process.env.React_APP_LOGOUT_URL);
-        }
-    }, [isReady, isLoggedIn]);
-
-    useEffect(() => {
-        let gettok = sessionStorage.getItem("dt");
-        let newtok = (uuidv4());
-        if (!gettok) sessionStorage.setItem("dt", newtok);
-    }, []);
 
     useEffect(() => {
         let timeout;
@@ -153,19 +148,75 @@ const AppWrapper = () => {
         };
     }, []);
 
-    const getQueryParams = () => {
-        const auth = Cookies.get('auth');
-        if (auth) {
-            setIsLoggedIn(true);
-            setIsReady(true);
-            return;
+    const decodeBase64 = (str) => {
+        if (!str) return null;
+        try {
+            return atob(str);
+        } catch (e) {
+            console.error("Error decoding base64:", e);
+            return null;
         }
-        localStorage.clear();
-        sessionStorage.clear();
-        setIsLoggedIn(false);
-        setIsReady(true);
-        setPageDataLoaded(true);
-        return window.location.replace(process.env.React_APP_LOGOUT_URL);
+    };
+
+    const getQueryParams = () => {
+        const isLoggedIn = Cookies.get('isLoggedIn');
+
+        // If isLoggedIn is true, bypass skey token reading
+        if (isLoggedIn === 'true') {
+            // Check both localStorage and sessionStorage for AuthqueryParams
+            const authQueryParams = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
+            if (authQueryParams) {
+                const decodedPayload = JSON.parse(authQueryParams);
+                setCookieData(decodedPayload);
+                setIsReady(true);
+                setPageDataLoaded(true);
+                setIsLoggedIn(true);
+                return decodedPayload;
+            } else {
+                // If no stored auth data but isLoggedIn is true, redirect to login
+                setIsReady(true);
+                setPageDataLoaded(true);
+                return navigate('/login', { replace: true });
+            }
+        }
+
+        // If isLoggedIn is false or not present, read skey token
+        const token = Cookies.get('skey');
+        if (!token) {
+            // Check both localStorage and sessionStorage for AuthqueryParams
+            const authQueryParams = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
+            if (authQueryParams && isLoggedIn) {
+                const decodedPayload = JSON.parse(authQueryParams);
+                setCookieData(decodedPayload);
+                setIsReady(true);
+                setPageDataLoaded(true);
+                setIsLoggedIn(true);
+                return decodedPayload;
+            } else {
+                if (!isLoggedIn) {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                }
+                setIsReady(true);
+                setPageDataLoaded(true);
+                return navigate('/login', { replace: true });
+            }
+        }
+
+        const decoded = jwtDecode(token);
+        const decodedPayload = {
+            ...decoded,
+            uid: decodeBase64(decoded.uid),
+        };
+
+        if (decodedPayload) {
+            localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
+            setCookieData(decodedPayload);
+            setIsReady(true);
+            setPageDataLoaded(true);
+        }
+
+        return decodedPayload;
     };
 
     useEffect(() => {
@@ -203,8 +254,9 @@ const AppWrapper = () => {
             setRole(roleData?.designation);
         };
 
-        const auth = Cookies.get('auth');
-        if (isReady && auth) checkAndInit();
+        if (cookieData) {
+            checkAndInit();
+        }
     }, [isReady]);
 
     const toastStyle = {
@@ -243,7 +295,7 @@ const AppWrapper = () => {
                 <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
                     <Routes>
                         <Route path="/error401" element={<Error401Page />} />
-                        {/* <Route path="/test4324" element={<AppLayout />} /> */}
+                        <Route path="/test4324" element={<TestPage />} />
                         <Route
                             path="/login"
                             element={
@@ -270,9 +322,11 @@ const AppWrapper = () => {
                                         <Route path="/reports/pms-2" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport2 /></ProtectedRoute>} />
                                         <Route path="/teamCalReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1009"><CalendarReport /></ProtectedRoute>} />
                                         <Route path="/milestoneReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1010"><ModuleMilestoneReport /></ProtectedRoute>} />
-                                        <Route path="/bugtrack" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1010"><Bugtask /></ProtectedRoute>} />
+                                        <Route path="/bugtrack" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1010"><BugTracking /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
+                                        <Route path="/image-editor" element={<ImageEditorModal open={true} onClose={() => { }} />} />
+                                        <Route path="/template-manager" element={<TemplateDialog open={true} onClose={() => { }} />} />
                                         {/* <Route path="/test" element={<CalendarComparisonDemo />} /> */}
                                         {/* <Route path="/test1" element={<CalendarViewDemo />} /> */}
                                         {/* <Route path="/test2" element={<SampleQuickForm />} /> */}
@@ -292,12 +346,22 @@ const AppWrapper = () => {
     );
 };
 
+const appTheme = createTheme({
+    palette: {
+        primary: {
+            main: "#7367f0",
+        },
+    },
+});
+
 const App = () => (
     <RecoilRoot>
-        {/* <Router basename="/itaskweb"> */}
-        <Router>
-            <AppWrapper />
-        </Router>
+        <ThemeProvider theme={appTheme}>
+            {/* <Router basename="/itaskweb"> */}
+            <Router>
+                <AppWrapper />
+            </Router>
+        </ThemeProvider>
     </RecoilRoot>
 );
 

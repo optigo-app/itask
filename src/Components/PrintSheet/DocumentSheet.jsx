@@ -18,7 +18,20 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
       <div className='BrderEvry'>
         <div className='CmonCentrEvry TxtDark BrderBtom CmonFntSize'>
           <div className='WdthMost higtT CmonCentrEvry BrderRigt'><span className='label-bold'></span> <span className='valueBind taskname label-bold'>{selectedData?.selectedData && selectedData?.selectedData?.taskname}</span></div>
-          <div className='WdthMIN higtT CmonCentrEvry'><span className='label-bold'>Task No:</span> <span className='valueBind taskno label-bold'>{selectedData?.selectedData && (selectedData?.selectedData?.taskno != 0 ? selectedData?.selectedData?.taskno : "")}</span></div>
+          <div className='WdthMIN higtT CmonCentrEvry' style={{ flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span className='label-bold'>Task No:</span>{' '}
+              <span className='valueBind taskno label-bold'>
+                {selectedData?.selectedData && (selectedData?.selectedData?.taskno != 0 ? selectedData?.selectedData?.taskno : "")}
+              </span>
+            </div>
+            <div style={{ fontSize: '11px', marginTop: '2px' }}>
+              <span className='text-light'>Ticket No:</span>{' '}
+              <span className='valueBind label-bold'>
+                {selectedData?.selectedData && (selectedData?.selectedData?.ticketno ? selectedData?.selectedData?.ticketno : "")}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className='CmonCentrEvry CmonFntSize BrderBtom'>
@@ -369,6 +382,8 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
           <div className='text-light'>Transaction Log</div>
           <input type="checkbox" className='checkbox SpacLft SpacRit text' />
           <div className='text-light'>User Log</div>
+          <input type="checkbox" className='checkbox SpacLft SpacRit text' />
+          <div className='text-light'>Ticket Updated</div>
         </div>
 
         <div className='CmonCentrEvry CmonFntSize higtCmon BrderBtom'>

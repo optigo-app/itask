@@ -1,9 +1,12 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
+import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const AddAdvFilterGroupAttrApi = async (payload) => {
+    const AuthData = getAuthData();
     try {
+        const ipAddress = await getClientIpAddress();
           const body = {
-            con: `{\"id\":\"\",\"mode\":\"addfiltergroupattr\"}`,
+            con: `{\"id\":\"\",\"mode\":\"addfiltergroupattr\",\"appuserid\":\"${AuthData?.uid ?? ""}\",\"IPAddress\":\"${ipAddress}\"}`,
             f: "Task Management (AddAdvFilterGroupAttrApi)",
             p: JSON.stringify(payload ?? []),
         };
@@ -21,9 +24,12 @@ export const AddAdvFilterGroupAttrApi = async (payload) => {
 
 // Main Master Name
 export const AttrMasterNameApi = async () => {
+    const AuthData = getAuthData();
     try {
+        const ipAddress = await getClientIpAddress();
         const body = {
-            con: `{\"id\":\"\",\"mode\":\"filtermaingroup\"}`,
+            con: `{\"id\":\"\",\"mode\":\"filtermaingroup\",\"appuserid\":\"${AuthData?.uid ?? ""
+                }\",\"IPAddress\":\"${ipAddress}\"}`,
             f: "Task Management (filtermaingroup)",
             p: "",
         };
@@ -41,9 +47,12 @@ export const AttrMasterNameApi = async () => {
 
 // Group Name
 export const AttrGroupApi = async () => {
+    const AuthData = getAuthData();
     try {
+        const ipAddress = await getClientIpAddress();
         const body = {
-            con: `{\"id\":\"\",\"mode\":\"filtergroup\"}`,
+            con: `{\"id\":\"\",\"mode\":\"filtergroup\",\"appuserid\":\"${AuthData?.uid ?? ""
+                }\",\"IPAddress\":\"${ipAddress}\"}`,
             f: "Task Management (AttrGroupApi)",
             p: "",
         };
@@ -61,9 +70,12 @@ export const AttrGroupApi = async () => {
 
 //  Master Option list api
 export const AttrListApi = async () => {
+    const AuthData = getAuthData();
     try {
+        const ipAddress = await getClientIpAddress();
         const body = {
-            con: `{\"id\":\"\",\"mode\":\"filterattr\"}`,
+            con: `{\"id\":\"\",\"mode\":\"filterattr\",\"appuserid\":\"${AuthData?.uid ?? ""
+                }\",\"IPAddress\":\"${ipAddress}\"}`,
             f: "Task Management (AttrListApi)",
             p: "",
         };
@@ -81,9 +93,12 @@ export const AttrListApi = async () => {
 
 // merge Group and Attr
 export const BindAttrGroupApi = async () => {
+    const AuthData = getAuthData();
     try {
+        const ipAddress = await getClientIpAddress();
         const body = {
-            con: `{\"id\":\"\",\"mode\":\"filter_group_attr_bind\"}`,
+            con: `{\"id\":\"\",\"mode\":\"filter_group_attr_bind\",\"appuserid\":\"${AuthData?.uid ?? ""
+                }\",\"IPAddress\":\"${ipAddress}\"}`,
             f: "Task Management (BindAttrGroupApi)",
             p: "",
         };
@@ -101,11 +116,14 @@ export const BindAttrGroupApi = async () => {
 
 // delete master
 export const deleteAdvancedMasterApi = async (formAdvData, bindType) => {
+    console.log("deleteAdvancedMasterApi", formAdvData, bindType);
+    const AuthData = getAuthData();
     const bindMode = bindType == "main group" ? "maingroup" : bindType == "group" ? "group" : "attr";
     const bindid = bindType == "main group" ? formAdvData?.id : bindType == "group" ? formAdvData?.subid : formAdvData?.itemid;
     try {
+        const ipAddress = await getClientIpAddress();
         const body = {
-            con: `{\"id\":\"\",\"mode\":\"delfiltergroupattr\"}`,
+            con: `{\"id\":\"\",\"mode\":\"delfiltergroupattr\",\"appuserid\":\"${AuthData?.uid ?? ""}\",\"IPAddress\":\"${ipAddress}\"}`,
             f: "Task Management (deleteAdvancedMasterApi)",
             p: JSON.stringify({ bindtype: bindMode ?? "", bindid: bindid ?? "" }),
         };
@@ -123,11 +141,13 @@ export const deleteAdvancedMasterApi = async (formAdvData, bindType) => {
 
 // Edit master
 export const editAdvancedMasterApi = async (formAdvData, bindType) => {
+    const AuthData = getAuthData();
     const bindMode = bindType == "main group" ? "maingroup" : bindType == "group" ? "group" : "attr";
     const bindid = bindType == "main group" ? formAdvData?.id : bindType == "group" ? formAdvData?.subid : formAdvData?.itemid;
     try {
+        const ipAddress = await getClientIpAddress();
         const body = {
-            con: `{\"id\":\"\",\"mode\":\"editfiltergroupattr\"}`,
+            con: `{\"id\":\"\",\"mode\":\"editfiltergroupattr\",\"appuserid\":\"${AuthData?.uid ?? ""}\",\"IPAddress\":\"${ipAddress}\"}`,
             f: "Task Management (editfiltergroupattr)",
             p: JSON.stringify({
                 bindid: bindid ?? '',

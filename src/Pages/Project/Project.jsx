@@ -12,11 +12,22 @@ import {
   projectDatasRState,
   selectedCategoryAtom,
 } from "../../Recoil/atom";
-import { fetchMasterGlFunc, formatDate, getCategoryTaskSummary, isTaskToday, mapTaskLabels } from "../../Utils/globalfun";
+import {
+  fetchMasterGlFunc,
+  formatDate,
+  getCategoryTaskSummary,
+  handleAddApicall,
+  isTaskToday,
+  mapKeyValuePair,
+  mapTaskLabels,
+} from "../../Utils/globalfun";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
 import { deleteTaskDataApi } from "../../Api/TaskApi/DeleteTaskApi";
+import { fetchTaskDataFullApi } from "../../Api/TaskApi/TaskDataFullApi";
+import { EstimateCalApi } from "../../Api/TaskApi/EstimateCalApi";
+import { buildAncestorSumSplitestimate } from "../../Utils/estimationUtils";
 import { toast } from "react-toastify";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -45,8 +56,10 @@ const Project = () => {
   const [activeButton, setActiveButton] = useState("table");
   const [project, setProject] = useRecoilState(projectDatasRState);
   const [filters, setFilters] = useRecoilState(Advfilters);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(true);
   const showAdvancedFil = useRecoilValue(filterDrawer);
   const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
+  const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
   const [CategoryTSummary, setCategoryTSummary] = useState([]);
   const searchParams = new URLSearchParams(location.search);
@@ -110,7 +123,7 @@ const Project = () => {
     if (priorityData && statusData && taskProject && taskDepartment) {
       fetchModuleData();
     }
-  }, [priorityData, statusData, taskProject, taskDepartment, location,callFetchTaskApi]);
+  }, [priorityData, statusData, taskProject, taskDepartment, location, callFetchTaskApi]);
 
   const fetchModuleData = async () => {
     if (project?.length == 0) {
@@ -145,9 +158,22 @@ const Project = () => {
           ?.split(",")
           ?.map((id) => Number(id));
 
+        const readonlyMapping = {};
+        if (task.isreadonly) {
+          task.isreadonly.split(",").forEach((item) => {
+            const [id, flag] = item.split("#");
+            if (id && flag !== undefined) {
+              readonlyMapping[id] = parseInt(flag);
+            }
+          });
+        }
+
         const matchedAssignees = assigneeData?.filter((user) =>
           assigneeIdArray?.includes(user.id)
-        );
+        ).map((user) => ({
+          ...user,
+          isreadonly: readonlyMapping[user.id] || 0,
+        }));
 
         // Create assignees array with formatted names
         const assignees = Array.isArray(matchedAssignees)
@@ -167,7 +193,7 @@ const Project = () => {
       };
 
       const enhancedTasks = finalTaskData?.map((task) => enhanceTask(task));
-      
+
       setTimeout(() => {
         if (project) {
           const summary = getCategoryTaskSummary(enhancedTasks, taskCategory);
@@ -361,9 +387,37 @@ const Project = () => {
     })
     : [];
 
+  const sortedFilteredData = Array.isArray(filteredData)
+    ? [...filteredData]
+      .filter((t) => (showFavoritesOnly ? Number(t?.isfavourite) === 1 : true))
+      .sort((a, b) => (Number(b?.isfavourite) || 0) - (Number(a?.isfavourite) || 0))
+    : [];
+
   const handleTabBtnClick = (button) => {
     setActiveButton(button);
     localStorage?.setItem("activeTaskTab", button);
+  };
+
+  const handleModuleFavorite = (moduleToUpdate) => {
+    setProject((prevModules) => {
+      if (!Array.isArray(prevModules)) return prevModules;
+      return prevModules.map((m) => {
+        if (m?.taskid === moduleToUpdate?.taskid) {
+          const updatedModule = {
+            ...m,
+            isfavourite: m?.isfavourite ? 0 : 1,
+          };
+          handleAddApicall(updatedModule);
+          return updatedModule;
+        }
+        return m;
+      });
+    });
+  };
+
+  const handleToggleFavoritesOnly = () => {
+    setShowFavoritesOnly((prev) => !prev);
+    setPage(1);
   };
 
   useEffect(() => {
@@ -394,11 +448,43 @@ const Project = () => {
   const handleDeleteModule = async (id) => {
     const taskToDelete = filteredData?.find((task) => task.taskid === id);
     if (!taskToDelete) return;
+
     try {
+      const parentId = taskToDelete?.parentid;
+      let parentSumSplitestimate = '';
+
+      if (parentId && String(parentId) !== '0') {
+        const rootId = taskToDelete?.projectid || parentId;
+        try {
+          const taskData = await fetchTaskDataFullApi({ taskid: rootId, teamid: '1' });
+          if (taskData && taskData.rd1) {
+            const labeledTasks = mapKeyValuePair(taskData);
+            parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
+              parentTaskId: parentId,
+              childTaskId: id,
+              isDelete: true,
+            });
+          }
+        } catch (err) {
+          console.error('Error fetching data for parent estimation before module delete:', err);
+        }
+      }
+
       const response = await deleteTaskDataApi({ taskid: id });
       if (response?.rd[0]?.stat == 1) {
         setProject((prevData) => prevData.filter((task) => task.taskid !== id));
         toast.success("Project Module deleted successfully");
+
+        if (parentSumSplitestimate) {
+          try {
+            await EstimateCalApi(parentSumSplitestimate);
+          } catch (err) {
+            console.error('Error updating parent estimate after module delete:', err);
+          }
+        }
+
+        // Trigger UI refresh
+        setOpenChildTask(Date.now());
       }
     } catch (error) {
       console.error("Error deleting task:", error);
@@ -438,6 +524,8 @@ const Project = () => {
         taskCategory={taskCategory}
         taskAssigneeData={assigneeData}
         CategorySummary={CategoryTSummary}
+        showFavoritesOnly={showFavoritesOnly}
+        onToggleFavoritesOnly={handleToggleFavoritesOnly}
       />
 
       {!isLaptop &&
@@ -518,13 +606,14 @@ const Project = () => {
           >
             <Suspense fallback={<></>}>
               <TaskTable
-                data={filteredData ?? null}
+                data={sortedFilteredData ?? null}
                 page={page}
                 rowsPerPage={rowsPerPage}
                 isLoading={isTaskLoading}
                 masterData={masterData}
                 handleLockProject={handleLockProject}
                 handleDeleteModule={handleDeleteModule}
+                handleModuleFavorite={handleModuleFavorite}
                 handleChangePage={handleChangePage}
                 handlePageSizeChnage={handlePageSizeChnage}
               />

@@ -23,15 +23,15 @@ import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { Eye } from "lucide-react";
 
 const initialColumns = [
-    { id: "taskname", label: "Task Name", width: 280 },
+    { id: "taskname", label: "Bug Title", width: 280 },
     { id: "taskno", label: "Task No", width: 60 },
     { id: "assignee", label: "Assignee", width: 100 },
     { id: "view", label: "View", width: 90 },
     { id: "status", label: "Status", width: 100 },
     { id: "solvedBy", label: "Solved By", width: 100 },
-    { id: "upload", label: "Upload", width: 100 },
+    { id: "upload", label: "Upload", width: 70 },
     { id: "priority", label: "Priority", width: 80 },
-    { id: "recheckStatus", label: "Recheck Status", width: 70 },
+    { id: "recheckStatus", label: "Recheck Status", width: 100 },
     { id: "DeadLineDate", label: "Deadline", width: 90 },
 ];
 
@@ -141,7 +141,7 @@ const BugTask = ({
                         </TableHead>
                         <TableBody>
                             {bugTask?.map((bug) => {
-                                const access = bug?.isparentfreeze == 1;
+                                const access = bug?.isFreez == 1;
                                 return (
                                     <TableRow key={bug.id} hover>
                                         <TableCell>{bug.taskname}</TableCell>

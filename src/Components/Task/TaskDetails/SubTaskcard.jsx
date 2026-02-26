@@ -39,7 +39,7 @@ const SubtaskCard = ({ subtasks, onAddDubTask }) => {
                                 <AddIcon fontSize="small" />
                             </IconButton>
                         </Grid>
-                    </Grid>
+                    </Grid> 
                 </Card>
             ))}
         </>

@@ -205,6 +205,75 @@
     .duplicate-btn {
         display: none !important;
     }
+
+    .calendar-day-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: nowrap;
+
+        .date-text {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        .calendar-day-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: space-between;
+            flex: 1;
+            min-width: 0;
+            flex-wrap: nowrap;
+
+            .calendar-day-header-right-left {
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+
+                .estimate-text {
+                    font-size: 11px;
+                    opacity: 0.8;
+                }
+            }
+
+            .calendar-day-header-right-center {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex: 1;
+            }
+
+            .calendar-day-header-right-right {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                min-width: 42px;
+            }
+        }
+    }
+
+    .attn-attendance-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 6px;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+        border: none !important;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        width: 30px;
+        height: 30px;
+
+        &:hover:not(:disabled) {
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        canvas {
+            display: none; // if any
+        }
+    }
 }
 
 

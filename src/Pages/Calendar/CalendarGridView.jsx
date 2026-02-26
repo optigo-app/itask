@@ -13,7 +13,7 @@ import {
   TableSortLabel,
   Box,
 } from '@mui/material';
-import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate3, getUserProfileData, handleAddApicall, priorityColors, statusColors } from '../../Utils/globalfun';
+import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate3, getUserProfileData, handleAddApicall, mapKeyValuePair, priorityColors, statusColors } from '../../Utils/globalfun';
 import { PERMISSIONS, ROLES } from '../../Components/Auth/Role/permissions';
 import useAccess from '../../Components/Auth/Role/useAccess';
 
@@ -34,7 +34,12 @@ import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import { AddTaskDataApi } from '../../Api/TaskApi/AddTaskApi';
 import { toast } from 'react-toastify';
 import { deleteTaskDataApi } from '../../Api/TaskApi/DeleteTaskApi';
+import { EstimateCalApi } from '../../Api/TaskApi/EstimateCalApi';
+import { buildAncestorSumSplitestimate } from '../../Utils/estimationUtils';
+import { fetchTaskDataFullApi } from '../../Api/TaskApi/TaskDataFullApi';
 import CalendarFilter from './CalendarFilter';
+import { useRecoilValue } from 'recoil';
+import { TaskData } from '../../Recoil/atom';
 
 // Extend dayjs with plugins
 dayjs.extend(duration);
@@ -61,6 +66,18 @@ const isDateEditable = (dateString) => {
 
   const lastEditableDay = startDate.add(6, "day");
   return today.isSameOrBefore(lastEditableDay);
+};
+
+const findModuleRecursively = (tasks, targetId) => {
+  if (!tasks) return null;
+  for (const t of tasks) {
+    if (String(t.taskid) === String(targetId)) return t.moduleid || t.projectid;
+    if (t.subtasks?.length > 0) {
+      const res = findModuleRecursively(t.subtasks, targetId);
+      if (res) return res;
+    }
+  }
+  return null;
 };
 
 const tableHeaders = [
@@ -90,6 +107,7 @@ const CalendarGridView = () => {
   const [selectedAssigneeId, setSelectedAssigneeId] = useState(null);
   const [totalHours, setTotalHours] = useState({ estimate: 0, working: 0 });
   const [localWorkingEdits, setLocalWorkingEdits] = useState({});
+  const actualTaskDataValue = useRecoilValue(TaskData);
   const { hasAccess } = useAccess();
   const {
     iswhTLoading,
@@ -118,6 +136,8 @@ const CalendarGridView = () => {
       const taskType = (task.type || '').toLowerCase();
       return taskType === 'minor';
     });
+    // Filter out milestone tasks
+    nonRootTasks = nonRootTasks.filter(task => task.ismilestone !== 1);
 
     if (selectedAssigneeId != null) {
       nonRootTasks = nonRootTasks.filter(task => {
@@ -293,6 +313,29 @@ const CalendarGridView = () => {
       }
       setTasks(updatedTasks);
       handleCloseSplitModal();
+      // Update parent task estimates in background (async, non-blocking)
+      const parentId = selectedTaskToSplit?.parentid;
+      if (parentId && String(parentId) !== '0') {
+        const rootId = findModuleRecursively(actualTaskDataValue, parentId) || selectedTaskToSplit?.projectid || parentId;
+        fetchTaskDataFullApi({ taskid: rootId, teamid: '1' })
+          .then(taskData => {
+            const labeledTasks = mapKeyValuePair(taskData);
+            const parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
+              parentTaskId: parentId,
+              isNewChild: false,
+            });
+
+            if (parentSumSplitestimate) {
+              EstimateCalApi(parentSumSplitestimate)
+                .catch((err) => {
+                  console.error('Error updating parent estimate after split:', err);
+                });
+            }
+          })
+          .catch((err) => {
+            console.error('Error fetching task data for parent estimation after split:', err);
+          });
+      }
     } catch (error) {
       console.error('Error while splitting tasks:', error);
       toast.error('An error occurred while processing split tasks.');
@@ -347,6 +390,37 @@ const CalendarGridView = () => {
         if (apiRes) {
           toast.success('Task working hrs added successfully!');
           handleTotalHourCalculate(tasks);
+          // Update parent task estimates in background (async, non-blocking)
+          const parentId = task?.parentid;
+          if (parentId && String(parentId) !== '0') {
+            const rootId = findModuleRecursively(actualTaskDataValue, parentId) || task.moduleid || task?.projectid || parentId;
+            fetchTaskDataFullApi({ taskid: rootId, teamid: '1' })
+              .then(taskData => {
+                if (!taskData || !taskData.rd1) return;
+                const labeledTasks = mapKeyValuePair(taskData);
+                const parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
+                  parentTaskId: parentId,
+                  childTaskId: taskId,
+                  childValues: {
+                    estimate_hrs: task.estimate_hrs || 0,
+                    estimate1_hrs: task.estimate1_hrs || 0,
+                    estimate2_hrs: task.estimate2_hrs || 0,
+                    workinghr: task.workinghr || 0,
+                  },
+                  isNewChild: false,
+                });
+
+                if (parentSumSplitestimate) {
+                  EstimateCalApi(parentSumSplitestimate)
+                    .catch((err) => {
+                      console.error('Error updating parent estimate:', err);
+                    });
+                }
+              })
+              .catch((err) => {
+                console.error('Error fetching task data for parent estimation:', err);
+              });
+          }
         }
         const currentInput = estimateTextFieldRefs.current[taskId];
         if (currentInput) currentInput.blur();

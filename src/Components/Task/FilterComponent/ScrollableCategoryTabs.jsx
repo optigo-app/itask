@@ -2,8 +2,14 @@ import React from "react";
 import { Box, Tabs, Tab } from "@mui/material";
 import "./ScrollableCategoryTabs.scss";
 
-const ScrollableCategoryTabs = ({ taskCategory = [], selectedCategory, handleFilterChange }) => {
-  const filteredCategories = taskCategory.filter((category) => category.count > 0);
+const ScrollableCategoryTabs = ({ taskCategory = [], selectedCategory, handleFilterChange, showArchive = false }) => {
+  const filteredCategories = taskCategory
+    .filter((category) => category.count > 0)
+    .filter((category) => {
+      const label = (category?.labelname ?? "").toLowerCase();
+      if (label === "archive" && !showArchive) return false;
+      return true;
+    });
   const shouldScroll = filteredCategories.length > 4;
 
   return (
