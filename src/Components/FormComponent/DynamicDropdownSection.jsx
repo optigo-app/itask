@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, Divider } from '@mui/material';
+import { Grid, Divider, Skeleton } from '@mui/material';
 import CustomAutocomplete from '../ShortcutsComponent/CustomAutocomplete';
 
 const DynamicDropdownSection = ({
@@ -11,7 +11,8 @@ const DynamicDropdownSection = ({
     mdValue = 4,
     taskType = 'single',
     selectedMainGroup,
-    setSelectedMainGroup
+    setSelectedMainGroup,
+    loading = false
 }) => {
     const [availableTeams, setAvailableTeams] = useState([]);
     const [filteredGroupConfigs, setFilteredGroupConfigs] = useState([]);
@@ -43,35 +44,50 @@ const DynamicDropdownSection = ({
             )}
             <Grid item xs={12} md={mainMdValue} sx={{ mt: taskType === 'single' ? 7.3 : 0 }}>
                 <Grid container spacing={1}>
-                    {/* Team Dropdown */}
-                    <Grid item xs={12} md={12}>
-                        <CustomAutocomplete
-                            label="Select Group"
-                            name="mainGroup"
-                            value={selectedMainGroup}
-                            onChange={(e) => setSelectedMainGroup(e.target.value)}
-                            options={availableTeams}
-                            placeholder="Select Group"
-                        />
-                    </Grid>
+                    {loading ? (
+                        <>
+                            <Grid item xs={12} md={12}>
+                                <Skeleton variant="rectangular" height={56} sx={{ borderRadius: 1 }} />
+                            </Grid>
+                            {Array.from({ length: 3 }).map((_, index) => (
+                                <Grid item xs={12} md={mdValue} key={index}>
+                                    <Skeleton variant="rectangular" height={56} sx={{ borderRadius: 1 }} />
+                                </Grid>
+                            ))}
+                        </>
+                    ) : (
+                        <>
+                            {/* Team Dropdown */}
+                            <Grid item xs={12} md={12}>
+                                <CustomAutocomplete
+                                    label="Select Group"
+                                    name="mainGroup"
+                                    value={selectedMainGroup}
+                                    onChange={(e) => setSelectedMainGroup(e.target.value)}
+                                    options={availableTeams}
+                                    placeholder="Select Group"
+                                />
+                            </Grid>
 
-                    {/* Group Dropdowns for selected team */}
-                    {filteredGroupConfigs.map((dropdown, index) => (
-                        <Grid item xs={12} md={mdValue} key={index}>
-                            <CustomAutocomplete
-                                label={`${dropdown.groupName}`}
-                                name={dropdown.groupName}
-                                value={
-                                    formValues.dynamicDropdowns?.find(
-                                        (d) => d?.label === dropdown?.label
-                                    )?.selectedId || ''
-                                }
-                                onChange={(e) => handleDropdownChange(dropdown, e.target.value)}
-                                options={dropdown.options}
-                                placeholder={`Select ${dropdown.groupName}`}
-                            />
-                        </Grid>
-                    ))}
+                            {/* Group Dropdowns for selected team */}
+                            {filteredGroupConfigs.map((dropdown, index) => (
+                                <Grid item xs={12} md={mdValue} key={index}>
+                                    <CustomAutocomplete
+                                        label={`${dropdown.groupName}`}
+                                        name={dropdown.groupName}
+                                        value={
+                                            formValues.dynamicDropdowns?.find(
+                                                (d) => d?.label === dropdown?.label
+                                            )?.selectedId || ''
+                                        }
+                                        onChange={(e) => handleDropdownChange(dropdown, e.target.value)}
+                                        options={dropdown.options}
+                                        placeholder={`Select ${dropdown.groupName}`}
+                                    />
+                                </Grid>
+                            ))}
+                        </>
+                    )}
                 </Grid>
             </Grid>
         </>

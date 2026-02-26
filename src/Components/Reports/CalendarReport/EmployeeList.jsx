@@ -12,7 +12,7 @@ import {
 import { ChevronDown, Users, Search } from 'lucide-react';
 import { background, ImageUrl } from '../../../Utils/globalfun';
 
-const EmployeeList = ({ selectedEmployee, onEmployeeClick }) => {
+const EmployeeList = ({ selectedEmployee, onEmployeeClick, dailyReportRows }) => {
     const [employeeData, setEmployeeData] = useState([]);
     const [expandedDepartments, setExpandedDepartments] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');

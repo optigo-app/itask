@@ -147,8 +147,8 @@ const TaskTable = memo(({
                             : '-'}
                     </Typography>
                 </TableCell>
-                <TableCell>{task.estimate1_hrsT}</TableCell>
-                <TableCell>{task.workingHrt}</TableCell>
+                <TableCell>{task.estimate_hrs}</TableCell>
+                <TableCell>{task.workinghr}</TableCell>
             </TableRow>
         );
     };

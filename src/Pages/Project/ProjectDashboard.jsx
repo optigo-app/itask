@@ -151,6 +151,18 @@ const ProjectDashboard = () => {
     const [selectedTab, setSelectedTab] = useState(tabs[0]?.label || '');
 
     useEffect(() => {
+        if (decodedData?.tab) {
+            let tabLabel = decodedData.tab;
+            if (tabLabel === 'teamMembers') {
+                tabLabel = 'Team Member';
+            }
+            if (tabs.some(t => t.label === tabLabel)) {
+                setSelectedTab(tabLabel);
+            }
+        }
+    }, [decodedData?.tab, tabs]);
+
+    useEffect(() => {
         if (!taskFinalData || Object.keys(taskFinalData).length === 0) return;
 
         const projectTasks = taskFinalData?.ProjectCategoryTasks?.[decodedData?.projectid];

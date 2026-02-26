@@ -912,6 +912,15 @@
 
                         &.fc-timegrid-slot-label {
                             border-right: 0;
+
+                            &.company-start-slot {
+                                background: rgba(115, 103, 240, 0.12) !important;
+
+                                .fc-timegrid-slot-label-cushion {
+                                    color: #7367f0 !important;
+                                    font-weight: 800 !important;
+                                }
+                            }
                         }
 
                         &.fc-timegrid-slot-lane {

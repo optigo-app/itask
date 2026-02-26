@@ -36,7 +36,7 @@ const PmsReport2 = () => {
     const [selectedProject, setSelectedProject] = useState('');
     const [selectedAssignee, setSelectedAssignee] = useState('');
     const [selectedDepartment, setSelectedDepartment] = useState('');
-    const filterOptions = ['Today', 'Tomorrow', 'Week'];
+    const filterOptions = ['All', 'Today', 'Tomorrow', 'Week'];
     const [currentDate, setCurrentDate] = useState(dayjs());
     const [filters, setFilters] = useState({
         timeFilter: 'Week',
@@ -123,7 +123,7 @@ const PmsReport2 = () => {
                 task.assignee.forEach((assignee) => {
                     // Only process assignees who are active (isactive: 1)
                     if (assignee.isactive !== 1) return;
-                    
+
                     const empKey = assignee.userid || assignee.customercode || assignee.firstname;
                     console.log(assignee)
 
@@ -264,7 +264,7 @@ const PmsReport2 = () => {
         });
     };
 
-    
+
     // for calling functions
     useEffect(() => {
         if (viewMode === "EmployeeWiseData") {
@@ -277,7 +277,8 @@ const PmsReport2 = () => {
             setIsLoading(false);
         }
     }, [currentDate, actualData, viewMode, taskCategory, taskFinalData, filters]);
-    console.log("processEmployeeData",pmsReportData)
+
+    console.log("processEmployeeData", pmsReportData)
 
     useEffect(() => {
         const viemodeValue = localStorage.getItem('rpviewMode') ?? 'EmployeeWiseData';
@@ -329,7 +330,7 @@ const PmsReport2 = () => {
 
     const handleTaskChange = (event, newMode) => {
         if (newMode) {
-            setViewMode(newMode);   
+            setViewMode(newMode);
             setSearchText('');
             setSelectedAssignee('');
             setSelectedProject('');
@@ -372,13 +373,14 @@ const PmsReport2 = () => {
 
     const handleToggleChange = (event, newFilter) => {
         if (newFilter !== null) {
-            setFilters({
+            setFilters((prev) => ({
+                ...prev,
                 timeFilter: newFilter,
                 dateRangeFilter: {
                     startDate: '',
                     endDate: ''
                 },
-            });
+            }));
             const today = dayjs();
             setCurrentDate(today);
             updateDatePickerBasedOnFilter(newFilter, today);

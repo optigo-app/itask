@@ -7,22 +7,26 @@ import {
     Button,
     AvatarGroup,
     Tooltip,
+    CircularProgress,
 } from '@mui/material';
 import { CircleX } from 'lucide-react';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import './TaskDetails.scss';
-import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, TaskData } from '../../../Recoil/atom';
 import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
-import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments } from '../../../Utils/globalfun';
+import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments, getUserProfileData, getAuthData } from '../../../Utils/globalfun';
 import useAccess from '../../Auth/Role/useAccess';
 import { PERMISSIONS } from '../../Auth/Role/permissions';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
+import { fetchTaskDataFullApi } from '../../../Api/TaskApi/TaskDataFullApi';
+import { EstimateCalApi } from '../../../Api/TaskApi/EstimateCalApi';
+import { buildAncestorSumSplitestimate } from '../../../Utils/estimationUtils';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
 import CommentSection from '../../ShortcutsComponent/Comment/TaskComment';
 import SubtaskCard from './SubTaskcard';
@@ -34,13 +38,28 @@ import Breadcrumb from '../../BreadCrumbs/Breadcrumb';
 const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const theme = useTheme();
     const { hasAccess } = useAccess();
+
+    // ===== PERMISSION FLAGS =====
+    const profileData = getUserProfileData();
+    const isAdmin = profileData?.designation?.toLowerCase() === "admin";
+    const hasTaskActionAccess = hasAccess(PERMISSIONS.canTaskActions);
+    const isFullAccess = isAdmin || hasTaskActionAccess;
+    const authData = getUserProfileData();
+    const loginUserId = authData?.id;
+    const currentUserAssignee = taskData?.assignee?.find(a => a.id == loginUserId);
+    const isAssignee = !!currentUserAssignee;
+    const isReadOnlyUser = currentUserAssignee?.isreadonly === 1;
+    const isAlowed = !isReadOnlyUser && isAssignee
+    console.log("isAlowed", isAlowed, isReadOnlyUser, isAssignee, isFullAccess);
+
     const [isLoading, setIsLoading] = useState(
         {
             isAtttLoading: false,
         }
     );
+    const [isDeleting, setIsDeleting] = useState(false);
     const [taskArr, setTaskArr] = useRecoilState(TaskData);
-    const setCallTaskApi = useSetRecoilState(fetchlistApiCall);
+    const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const [uploadedFile, setUploadedFile] = useState([]);
     const [taskDesc, setTaskDesc] = useState('');
     const [taskDescEdit, setTaskDescEdit] = useState(false);
@@ -52,7 +71,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const [formDataValue, setFormDataValue] = useRecoilState(formData);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
-
+    const actualTaskDataValue = useRecoilValue(TaskData);
 
     useEffect(() => {
         setIsLoading({ isAtttLoading: true });
@@ -96,12 +115,57 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
 
     const handleConfirmRemoveAll = async () => {
         setCnfDialogOpen(false);
+        setIsDeleting(true);
         try {
+            const parentId = formDataValue?.parentid;
+            let parentSumSplitestimate = '';
+            const parentTaskIdForSum = formDataValue?.parentid;
+            if (parentId && String(parentId) !== '0') {
+                let foundModuleId = null;
+                if (actualTaskDataValue) {
+                    const findModuleRecursively = (tasks, targetId) => {
+                        for (const t of tasks) {
+                            if (String(t.taskid) === String(targetId)) return t.moduleid || t.projectid;
+                            if (t.subtasks?.length > 0) {
+                                const res = findModuleRecursively(t.subtasks, targetId);
+                                if (res) return res;
+                            }
+                        }
+                        return null;
+                    };
+                    foundModuleId = findModuleRecursively(actualTaskDataValue, parentTaskIdForSum);
+                }
+
+                const rootId = foundModuleId || formDataValue?.parentId || parentId;
+                try {
+                    const taskData = await fetchTaskDataFullApi({ taskid: rootId, teamid: '1' });
+                    if (taskData && taskData.rd1) {
+                        const labeledTasks = mapKeyValuePair(taskData);
+                        parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
+                            parentTaskId: parentId,
+                            childTaskId: formDataValue.taskid,
+                            isDelete: true,
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error fetching data for parent estimation before delete:', err);
+                }
+            }
+
             const deleteTaskApi = await deleteTaskDataApi(formDataValue);
             if (deleteTaskApi?.rd[0]?.stat === 1) {
                 const updatedTaskArr = removeTaskRecursively(taskArr, formDataValue.taskid);
                 setTaskArr(updatedTaskArr);
-                setCallTaskApi(true);
+
+                if (parentSumSplitestimate) {
+                    try {
+                        await EstimateCalApi(parentSumSplitestimate);
+                    } catch (err) {
+                        console.error('Error updating parent estimate after delete:', err);
+                    }
+                }
+
+                setOpenChildTask(Date.now());
                 setFormDrawerOpen(false);
                 setFormDataValue(null);
                 onClose();
@@ -111,6 +175,8 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
             }
         } catch (error) {
             console.error("Error while deleting task:", error);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -147,12 +213,12 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                         if (comment?.DocumentName) {
                             const documentUrls = comment.DocumentName.split(',').filter(Boolean);
                             const documentLinks = comment?.DocumentUrl ? comment.DocumentUrl.split(',').filter(Boolean) : [];
-                            
+
                             attachments = documentUrls.map((url, index) => {
                                 const fileName = url.substring(url.lastIndexOf('/') + 1);
                                 const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
                                 const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
-                                
+
                                 return {
                                     url: url,
                                     filename: fileName,
@@ -214,12 +280,12 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                     if (comment?.DocumentName) {
                         const documentUrls = comment.DocumentName.split(',').filter(Boolean);
                         const documentLinks = comment?.DocumentUrl ? comment.DocumentUrl.split(',').filter(Boolean) : [];
-                        
+
                         attachments = documentUrls.map((url, index) => {
                             const fileName = url.substring(url.lastIndexOf('/') + 1);
                             const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
                             const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
-                            
+
                             return {
                                 url: url,
                                 filename: fileName,
@@ -403,17 +469,23 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                 <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>
                                     <Breadcrumb breadcrumbTitles={taskData?.breadcrumbTitles} />
                                 </Typography>
-                                {/* Only show delete button if not a root task (parentid=0) or user has CanModuleDelete permission */}
-                                {(taskData?.parentid !== 0 || hasAccess(PERMISSIONS.CanModuleDelete)) && (
+                                {(isFullAccess || (taskData?.parentid !== 0 && isAlowed)) && (
                                     <Button
                                         size='small'
                                         variant="contained"
                                         onClick={() => handleRemoveEvent()}
                                         sx={{ marginRight: "10px" }}
                                         className="dangerbtnClassname"
-                                    // disabled={isLoading}
+                                        disabled={isDeleting}
                                     >
-                                        Delete
+                                        {isDeleting ? (
+                                            <>
+                                                <CircularProgress size={16} sx={{ mr: 1, color: 'white' }} />
+                                                Deleting...
+                                            </>
+                                        ) : (
+                                            'Delete'
+                                        )}
                                     </Button>
                                 )}
                             </Box>
@@ -458,7 +530,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                     },
                                                 },
                                             }}
-                                        >
+                                        >   
                                             {taskData?.assignee?.map((assignee, teamIdx) => (
                                                 <Tooltip
                                                     placement="top"

@@ -5,7 +5,69 @@ import { fetchMaster } from "../Api/MasterApi/MasterApi";
 import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi"
 import { AddTaskDataApi } from "../Api/TaskApi/AddTaskApi";
 import { Avatar, AvatarGroup, Box, Chip, createTheme, Tooltip } from "@mui/material";
-import { UAParser } from 'ua-parser-js';
+
+// Utility function to get AuthData from both localStorage and sessionStorage
+export const getAuthData = () => {
+    try {
+        const authData = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
+        return authData ? JSON.parse(authData) : null;
+    } catch (error) {
+        console.error("Error parsing AuthData:", error);
+        return null;
+    }
+};
+
+export const getArchiveChipStyles = (archiveInfo) => {
+    try {
+        if (!archiveInfo) return null;
+        if (archiveInfo?.isReady) {
+            return {
+                backgroundColor: 'rgba(245, 124, 0, 0.35)',
+                color: '#9a3412',
+            };
+        }
+
+        const d = Number(archiveInfo?.daysLeft);
+        if (!Number.isFinite(d)) {
+            return {
+                backgroundColor: 'rgba(255, 215, 0, 0.22)',
+                color: '#7a5b00',
+            };
+        }
+
+        if (d <= 1) {
+            return {
+                backgroundColor: 'rgba(211, 47, 47, 0.30)',
+                color: '#b71c1c',
+            };
+        }
+        if (d <= 2) {
+            return {
+                backgroundColor: 'rgba(230, 81, 0, 0.30)',
+                color: '#bf360c',
+            };
+        }
+        if (d <= 3) {
+            return {
+                backgroundColor: 'rgba(245, 124, 0, 0.26)',
+                color: '#b45309',
+            };
+        }
+        if (d <= 5) {
+            return {
+                backgroundColor: 'rgba(255, 193, 7, 0.26)',
+                color: '#7a5b00',
+            };
+        }
+
+        return {
+            backgroundColor: 'rgba(255, 215, 0, 0.22)',
+            color: '#7a5b00',
+        };
+    } catch (e) {
+        return null;
+    }
+};
 
 // Utility function to get UserProfileData from both localStorage and sessionStorage
 export const getUserProfileData = () => {
@@ -72,6 +134,23 @@ export const formatDate4 = (date) => {
         return 'N/A';
     }
 };
+
+export function formatUTCDateTime(dateString) {
+  const date = new Date(dateString);
+
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = date.getUTCFullYear();
+
+  let hours = date.getUTCHours();
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12; // convert to 12-hour format
+  hours = String(hours).padStart(2, "0");
+
+  return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+}
 
 export function formatDueTask(dateStr) {
     const now = new Date();
@@ -578,18 +657,19 @@ export const fetchMasterGlFunc = async () => {
             sessionStorage.setItem('structuredAdvMasterData', JSON.stringify(safeData));
         }
         const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
-        const AuthData = JSON?.parse(sessionStorage.getItem('taskInit'));
+        const AuthUrlData = getAuthData();
         const uniqueDepartments = new Set();
         let UserProfileData
-debugger
+
         // Helper function to determine storage location based on remember me
         const setUserProfileData = (data) => {
-            sessionStorage.setItem('UserProfileData', JSON?.stringify(data));
+            const storageLocation = localStorage.getItem('AuthqueryParams') ? localStorage : sessionStorage;
+            storageLocation.setItem('UserProfileData', JSON?.stringify(data));
         };
 
         if (!AssigneeMasterData) {
             const assigneeRes = await AssigneeMaster();
-            UserProfileData = assigneeRes?.rd?.find(item => item?.userid == AuthData?.appuserid);
+            UserProfileData = assigneeRes?.rd?.find(item => item?.userid == AuthUrlData?.uid);
             setUserProfileData(UserProfileData);
             assigneeRes?.rd?.forEach(item => {
                 if (item.department) {
@@ -597,7 +677,7 @@ debugger
                 }
             });
         } else {
-            UserProfileData = AssigneeMasterData?.find(item => item?.userid == AuthData?.appuserid) ?? {};
+            UserProfileData = AssigneeMasterData?.find(item => item?.userid == AuthUrlData?.uid) ?? {};
             setUserProfileData(UserProfileData);
             AssigneeMasterData?.forEach(item => {
                 if (item.department) {
@@ -1136,6 +1216,11 @@ export const getCategoryTaskSummary = (nestedData = [], taskCategory = []) => {
             count: flatData.filter((task) => isPast(task.DeadLineDate)).length,
         },
         {
+            id: "archive_tasks",
+            labelname: "Archive",
+            count: flatData.filter((task) => task?.isarchive == 1).length,
+        },
+        {
             id: "UnsetDeadline_tasks",
             labelname: "Unset Deadline",
             count: flatData.filter((task) => hasNoDeadline(task.DeadLineDate)).length,
@@ -1294,6 +1379,39 @@ export const handleAddApicall = async (updatedTasks) => {
         toast.success(addTaskApi?.rd[0]?.stat_msg);
     }
 }
+
+export const getArchiveInfoFromEndDate = (task, archiveAfterDays = 7) => {
+    try {
+        const status = (task?.status || "").toString().trim().toLowerCase();
+        if (status !== "completed") return null;
+
+        const endDateRaw = task?.Completion_timestamp ?? task?.EndDate;
+        if (!endDateRaw) return null;
+
+        const completedAt = new Date(endDateRaw);
+        if (Number.isNaN(completedAt.getTime())) return null;
+
+        const archiveAt = new Date(completedAt.getTime() + archiveAfterDays * 24 * 60 * 60 * 1000);
+        const now = new Date();
+        const msLeft = archiveAt.getTime() - now.getTime();
+        const daysLeft = Math.ceil(msLeft / (24 * 60 * 60 * 1000));
+
+        const isReady = daysLeft <= 0;
+        const label = isReady
+            ? "Archived"
+            : `Archive in ${daysLeft} ${daysLeft === 1 ? "day" : "days"}`;
+
+        return {
+            completedAt,
+            archiveAt,
+            daysLeft,
+            isReady,
+            label,
+        };
+    } catch (e) {
+        return null;
+    }
+};
 
 export const background = (assignee) => {
     const avatarBackgroundColor = assignee?.avatar
@@ -1556,55 +1674,6 @@ export const getClientIpAddress = async () => {
         console.error("Error fetching IP address:", error);
         return "";
     }
-};
-
-// Get user location coordinates
-export const getLocation = async () => {
-    return new Promise((resolve) => {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => resolve({
-                Latitude: pos.coords.latitude.toString(),
-                Longitude: pos.coords.longitude.toString(),
-            }),
-            () => resolve({ Latitude: "", Longitude: "" })
-        );
-    });
-};
-
-// Get comprehensive device information
-export const DeviceInfo = async () => {
-    const parser = new UAParser();
-    const ua = parser.getResult();
-
-    let deinfo = {
-        DeviceOS: ua.os.name,
-        DeviceOSVersion: ua.os.version,
-        BrowserName: ua.browser.name,
-        BrowserVersion: ua.browser.version,
-        DeviceType: ua.device.type || 'desktop',
-        CpuCore: navigator.hardwareConcurrency || "",
-        DeviceMemory: navigator.deviceMemory,
-        ScreenHeight: window.screen.height,
-        ScreenWidth: window.screen.width,
-        Language: navigator.language,
-        TimezoneOffset: new Date().getTimezoneOffset(),
-        DoNotTrack: navigator.doNotTrack || "unknown",
-        UserAgent: navigator?.userAgent || "",
-        authtoken: "",
-        UserId: "",
-        RequestToken: "",
-        RefreshToken: "",
-        DeviceToken: "",
-        sv: "",
-        version: "",
-        IPAddress: await getClientIpAddress(),
-        ...(await getLocation())
-    }
-    const deviceString = Object.values(deinfo).join("|");
-    const hash = btoa(deviceString).substring(0, 32);
-    deinfo.FingerPrint = hash;
-
-    return deinfo;
 };
 
 

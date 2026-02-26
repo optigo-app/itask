@@ -4,7 +4,7 @@ import {
     InputAdornment,
     Tooltip,
     styled,
-    IconButton
+    IconButton,
 } from "@mui/material";
 import { Draggable } from "@fullcalendar/interaction";
 import { useRecoilValue } from "recoil";
@@ -15,10 +15,11 @@ import { TaskData, calendarData } from "../../Recoil/atom";
 import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate2, formatDueTask, getUserProfileData, priorityColors, statusColors } from "../../Utils/globalfun";
 import PriorityBadge from "../ShortcutsComponent/PriorityBadge";
 import StatusBadge from "../ShortcutsComponent/StatusBadge";
-import { Info } from "lucide-react";
+import { CircleCheck, Info } from "lucide-react";
 
 // Memoized TaskCard component for better performance
 const TaskCard = memo(({ child, colorClass, isScheduled, calendarsColor }) => {
+    console.log("child", child)
     return (
         <Card
             key={child.taskid}
@@ -49,7 +50,7 @@ const TaskCard = memo(({ child, colorClass, isScheduled, calendarsColor }) => {
                         fontWeight={600}
                         sx={{ flex: 1 }}
                     >
-                        {child.taskname}
+                        {child.taskno}{" "}{child.taskname}
                     </Typography>
                     {isScheduled && (
                         <Tooltip title="Task is scheduled in calendar">
@@ -138,7 +139,15 @@ const TaskCard = memo(({ child, colorClass, isScheduled, calendarsColor }) => {
                     </Box>
 
                     {child?.moduleName && (
-                        <Tooltip title={child.moduleName} arrow>
+                        <Tooltip title={
+                            child.breadcrumbTitles?.map((e, i) => (
+                                <span key={i}>
+                                    {e}
+                                    {i < child.breadcrumbTitles.length - 1 && ' / '}
+                                </span>
+                            ))
+                        }
+                            arrow>
                             <Typography
                                 variant="caption"
                                 color="text.secondary"
@@ -168,6 +177,7 @@ const TasklistForCal = ({ calendarsColor }) => {
     const task = useRecoilValue(TaskData);
     const calEvData = useRecoilValue(calendarData);
     const [calTasksList, setCalTasksList] = useState([]);
+    const [showDraggedTasks, setShowDraggedTasks] = useState(false);
 
     // Default search: show tasks starting today using the existing `start:` date search
     const [searchQuery, setSearchQuery] = useState(() => {
@@ -295,10 +305,10 @@ const TasklistForCal = ({ calendarsColor }) => {
 
     // Memoized filtered tasks list (excluding completed)
     const filteredTasksList = useMemo(() => {
-        return (calTasksList || []).filter(
-            task => task.status?.toLowerCase() !== "completed"
-        );
-    }, [calTasksList]);
+        const tasks = calTasksList || [];
+        if (showDraggedTasks) return tasks;
+        return tasks.filter(t => !isTaskScheduled(t.taskid));
+    }, [calTasksList, isTaskScheduled, showDraggedTasks]);
 
     // Memoized Fuse instance for search
     const fuseInstance = useMemo(() => {
@@ -310,7 +320,8 @@ const TasklistForCal = ({ calendarsColor }) => {
                 { name: 'taskid', weight: 0.3 },
                 { name: 'descr', weight: 0.2 },
                 { name: 'priority', weight: 0.1 },
-                { name: 'status', weight: 0.1 }
+                { name: 'status', weight: 0.1 },
+                { name: "taskno", weight: 0.1 }
             ],
             threshold: 0.4,
             includeScore: true,
@@ -440,8 +451,9 @@ const TasklistForCal = ({ calendarsColor }) => {
         return Array.from(moduleMap.values()).filter(module => module.subtasks.length > 0);
     }, [filteredTasksList, searchQuery, performSearch]);
 
-
     const groupedTasks = getFilteredHierarchy();
+
+    console.log(groupedTasks)
 
     if (task === undefined) {
         return (
@@ -478,35 +490,68 @@ const TasklistForCal = ({ calendarsColor }) => {
     return (
         <>
             <Box sx={{ px: 1.25, my: 1 }}>
-                <TextField
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    placeholder="Search tasks..."
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    {...commonTextFieldProps}
-                    InputProps={{
-                        endAdornment: (
-                            <InputAdornment position="end">
-                                <CustomTooltip
-                                    title={`Enhanced Search Guide:\n
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <TextField
+                        fullWidth
+                        variant="outlined"
+                        size="small"
+                        placeholder="Search tasks..."
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        {...commonTextFieldProps}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <CustomTooltip
+                                        title={`Enhanced Search Guide:\n
 • Normal text: type keywords (e.g., task name, description)\n
 • Exact match: use single quotes 'Task Name' (exact task name)\n
 • Related search: use double quotes "keyword" (name + description)\n
 • Start date: "start:jan", "start:2024", "start:15" (day/month/year)\n
 • Due date: "due:feb", "due:2024", "due:28" (day/month/year)\n
-• Fuzzy search: type partial text for flexible matching`}
-                                    placement="left"
-                                >
-                                    <IconButton edge="end">
-                                        <Info fontSize="small" />
-                                    </IconButton>
-                                </CustomTooltip>
-                            </InputAdornment>
-                        )
-                    }}
-                />
+• Fuzzy search: type partial text for flexible matching\n
+• Toggle: use "Show dragged tasks" to include already scheduled tasks in this list`}
+                                        placement="left"
+                                    >
+                                        <IconButton edge="end">
+                                            <Info fontSize="small" />
+                                        </IconButton>
+                                    </CustomTooltip>
+                                </InputAdornment>
+                            )
+                        }}
+                    />
+                    <Tooltip
+                        arrow
+                        placement="top"
+                        title={showDraggedTasks
+                            ? "Showing scheduled (already dragged) tasks in the list"
+                            : "Hide scheduled tasks from the list (recommended)"}
+                    >
+                        <IconButton
+                            aria-label="Completed tasks"
+                            onClick={() => setShowDraggedTasks(!showDraggedTasks)}
+                            sx={{
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                padding: '4px',
+                                backgroundColor:
+                                    showDraggedTasks ? "#7367f0" : "white",
+                                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                                "&:hover": {
+                                    backgroundColor: "#7367f0",
+                                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                                },
+                            }}
+                        >
+                            <CircleCheck className="iconbtn"
+                                color={
+                                    showDraggedTasks ? "#fff" : "#0000008a"
+                                } />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
             </Box>
             <Box id="external-tasks" sx={{ padding: 1.25, maxHeight: '88vh', overflow: 'auto' }}>
                 {groupedTasks?.map(parent => (
@@ -517,7 +562,7 @@ const TasklistForCal = ({ calendarsColor }) => {
                             color="text.primary"
                             sx={{ ml: 1, mb: 0.5, textTransform: 'capitalize' }}
                         >
-                            {parent.taskname}
+                            {parent.breadcrumbTitles?.[parent.breadcrumbTitles.length - 2]}
                         </Typography>
 
                         {parent?.subtasks?.map(child => {

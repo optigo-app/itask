@@ -202,6 +202,11 @@
     font-weight: 500 !important;
 }
 
+.projectModuleName {
+    display: flex;
+    align-items: center;
+}
+
 @media(max-width: 1550px) {
     .ProjectTVMain {
         .MuiTableCell-root {

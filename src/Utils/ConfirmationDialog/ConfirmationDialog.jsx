@@ -1,4 +1,3 @@
-import React from 'react';
 import "./for_confirmation.scss"
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';

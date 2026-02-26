@@ -30,7 +30,7 @@ const PmsReport = () => {
     const [selectedProject, setSelectedProject] = useState('');
     const [selectedAssignee, setSelectedAssignee] = useState('');
     const [selectedDepartment, setSelectedDepartment] = useState('');
-    const filterOptions = ['Today', 'Tomorrow', 'Week'];
+    const filterOptions = ['All', 'Today', 'Tomorrow', 'Week'];
     const [currentDate, setCurrentDate] = useState(dayjs());
     const [filters, setFilters] = useState({
         timeFilter: 'Week',
@@ -49,7 +49,7 @@ const PmsReport = () => {
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(100);
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
-    
+
     useEffect(() => {
         setIsLoading(iswhTLoading);
     }, [iswhTLoading]);
@@ -116,7 +116,7 @@ const PmsReport = () => {
                 task.assignee.forEach((assignee) => {
                     // Only process assignees who are active (isactive: 1)
                     if (assignee.isactive !== 1) return;
-                    
+
                     const empKey = assignee.userid || assignee.customercode || assignee.firstname;
 
                     if (!EmployeeWiseDataMap.has(empKey)) {
@@ -271,7 +271,7 @@ const PmsReport = () => {
     const departmentOptions = useMemo(() => {
         const data = pmsReportData || [];
         const departments = data.map(d => d.department || 'Unknown').filter(Boolean);
-    
+
         return [...new Set(departments)].sort((a, b) =>
             a.localeCompare(b, undefined, { sensitivity: "base" })
         );
@@ -343,13 +343,14 @@ const PmsReport = () => {
 
     const handleToggleChange = (event, newFilter) => {
         if (newFilter !== null) {
-            setFilters({
+            setFilters((prev) => ({
+                ...prev,
                 timeFilter: newFilter,
                 dateRangeFilter: {
                     startDate: '',
                     endDate: ''
                 },
-            });
+            }));
             const today = dayjs();
             setCurrentDate(today);
             updateDatePickerBasedOnFilter(newFilter, today);

@@ -18,14 +18,13 @@ import {
     Menu,
     MenuItem,
 } from "@mui/material";
-import { CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Timer } from "lucide-react";
+import { Archive, CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Timer, Undo2 } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
-import { useNavigate } from "react-router-dom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, formatDate2, getRandomAvatarColor, getStatusColor, priorityColors, statusColors, getDaysFromDeadline, formatDaysDisplay } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, getArchiveChipStyles, getArchiveInfoFromEndDate, getRandomAvatarColor, getStatusColor, priorityColors, statusColors, getDaysFromDeadline, formatDaysDisplay, getAuthData, getUserProfileData } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 import AssigneeAvatarGroup from "../../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
@@ -50,19 +49,61 @@ import { PERMISSIONS } from "../../Auth/Role/permissions";
 import { taskCommentGetApi } from "../../../Api/TaskApi/TaskCommentGetApi";
 import DocumentSheet from "../../PrintSheet/DocumentSheet";
 import useSafeRedirect from "../../../Utils/useSafeRedirect";
+import { toast } from "react-toastify";
+import { RestoreArchiveTaskApi } from "../../../Api/TaskApi/RestoreArchivedTaskApi";
+import { taskRestoreApi } from "../../../Api/TaskApi/TaskRestoreApi";
+import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
+import { taskArchiveApi } from "../../../Api/TaskApi/TaskArchiveApi";
+
+const collectDescendantIds = (task) => {
+    const ids = [];
+    const visit = (t) => {
+        const id = t?.taskid;
+        if (id != null && id !== '' && !ids.includes(id)) {
+            ids.push(id);
+        }
+        const children = Array.isArray(t?.subtasks) ? t.subtasks : [];
+        children.forEach(visit);
+    };
+    visit(task);
+    return ids;
+};
+
+const findPathToTask = (tasks = [], targetId) => {
+    if (!Array.isArray(tasks) || targetId == null) return null;
+    for (const t of tasks) {
+        if (t?.taskid === targetId) return [t];
+        const childPath = findPathToTask(t?.subtasks || [], targetId);
+        if (childPath) return [t, ...childPath];
+    }
+    return null;
+};
+
+const buildRestoreIds = (task, rootTasks) => {
+    const descendantIds = collectDescendantIds(task);
+
+    const path = findPathToTask(rootTasks, task?.taskid);
+    const ancestorIds = Array.isArray(path)
+        ? path.map((n) => n?.taskid).filter((id) => id != null && id !== '')
+        : [];
+
+    const merged = [...ancestorIds, ...descendantIds];
+    return Array.from(new Set(merged));
+};
 
 const initialColumns = [
-    { id: "taskname", label: "Task Name", width: 280 },
+    { id: "taskname", label: "Task Name", width: 290 },
     { id: "taskPr", label: "Project", width: 110 },
-    { id: "progress", label: "Progress", width: 90 },
+    { id: "progress", label: "Progress", width: 80 },
     { id: "status", label: "Status", width: 100 },
     { id: "secStatus", label: "What Next", width: 100 },
     { id: "assignee", label: "Assignee", width: 100 },
-    { id: "DeadLineDate", label: "Deadline", width: 90 },
+    { id: "DeadLineDate", label: "Deadline", width: 80 },
     { id: "priority", label: "Priority", width: 80 },
     { id: "estimate", label: "Estimate", width: 70 },
-    { id: "actions", label: "Actions", width: 165 },
+    { id: "actions", label: "Actions", width: 170 },
 ];
+
 
 const TableView = ({
     data,
@@ -119,8 +160,15 @@ const TableView = ({
     const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
     const [openAssigneeModal, setOpenAssigneeModal] = useState(false);
     const [timeTrackMOpen, setTimeTrackMOpen] = useState(false);
+    const [confirmUnarchiveOpen, setConfirmUnarchiveOpen] = useState(false);
+    const [selectedUnarchiveTask, setSelectedUnarchiveTask] = useState(null);
+    const [restoringIds, setRestoringIds] = useState(() => new Set());
+    const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
+    const [selectedArchiveTask, setSelectedArchiveTask] = useState(null);
+    const [archivingIds, setArchivingIds] = useState(() => new Set());
     const [taskTimeRunning, setTaskTimeRunning] = useState({});
     const [profileOpen, setProfileOpen] = useState(false);
+    const [profileTaskId, setProfileTaskId] = useState("");
     const [anchorDeadlineEl, setAnchorDeadlineEl] = useState(null);
     const [isHoveredResizable, setIsHoveredResizable] = useState(false);
     const [resizingColumnId, setResizingColumnId] = useState(null);
@@ -346,11 +394,21 @@ const TableView = ({
         handlePriorityChange(task, newPriority);
     };
 
-    const hanldePAvatarClick = (task, id) => {
-        setAssigneeId(id);
-        setSelectedItem(task);
+    const hanldePAvatarClick = (task, clickedAssigneeId, assignees) => {
+        setAssigneeId(clickedAssigneeId);
+        setSelectedItem(Array.isArray(assignees) ? assignees : []);
+        setProfileTaskId(task?.taskid ?? "");
         setProfileOpen(true);
     }
+
+    const handleProfileRemoved = (removedAssigneeId) => {
+        setSelectedItem((prev) =>
+            Array.isArray(prev)
+                ? prev.filter((a) => String(a?.id) !== String(removedAssigneeId))
+                : prev
+        );
+        setOpenChildTask(Date.now());
+    };
 
     const handleAssigneSubmit = (updatedRowData) => {
         handleAssigneeShortcutSubmit(updatedRowData)
@@ -376,15 +434,15 @@ const TableView = ({
         setSelectedItem(null);
     }
 
-    const renderAssigneeAvatars = (assignees, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut) => (
+    const renderAssigneeAvatars = (assignees, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut, showAddButton = true) => (
         <AssigneeAvatarGroup
             assignees={assignees}
             task={task}
             maxVisible={3}
-            showAddButton={true}
+            showAddButton={showAddButton}
             hoveredTaskId={hoveredTaskId}
             hoveredColumnName={hoveredColumnname}
-            onAvatarClick={hanldePAvatarClick}
+            onAvatarClick={(assigneesList, clickedId) => hanldePAvatarClick(task, clickedId, assigneesList)}
             onAddClick={(task) => handleAssigneeShortcut(task, { Task: 'root' })}
             size={30}
             spacing={0.5}
@@ -398,96 +456,149 @@ const TableView = ({
         handleEditTask,
         handleViewTask
     ) => {
-        const access = task?.isparentfreeze == 1
+        // ===== FLAGS =====
+        const isParentFrozen = task?.isFreez == 1;
+        const hasTaskActionAccess = hasAccess(PERMISSIONS.canTaskActions);
+        const isAdmin = getUserProfileData()?.designation?.toLowerCase() === "admin";
+        const isFullAccess = hasTaskActionAccess || isAdmin;
+
+        const isArchived = !!task?.Completion_timestamp;
+        const isCompleted = (task?.status || '').toString().trim().toLowerCase() === 'completed';
+
+        const authData = getAuthData();
+        const loginUserId = authData?.uid;
+        const currentUserAssignee = task?.assignee?.find(a => a.userid == loginUserId || a.id == loginUserId);
+        const isAssignee = !!currentUserAssignee;
+        const isReadOnlyUser = currentUserAssignee?.isreadonly === 1;
+
+        // ===== PERMISSIONS (PRIORITY BASED) =====
+        const canTimeTrack =
+            (isFullAccess
+                ? true
+                : isAssignee && !isParentFrozen && !isReadOnlyUser);
+
+        const canPrint =
+            (isFullAccess
+                ? true
+                : isAssignee && !isParentFrozen && !isReadOnlyUser);
+
+        const canComment =
+            (isFullAccess
+                ? true
+                : isAssignee && !isParentFrozen && !isReadOnlyUser);
+
+        const canUpload =
+            (isFullAccess
+                ? true
+                : isAssignee && !isParentFrozen && !isReadOnlyUser);
+
+        const canEdit =
+            (isFullAccess
+                ? true
+                : isAssignee && !isParentFrozen && !isReadOnlyUser);
+
+        // ===== COLORS =====
+        const disabledColor = "rgba(0, 0, 0, 0.26)";
+        const activeColor = "#808080";
+        const iconColor = (enabled) => (enabled ? activeColor : disabledColor);
+        const isRestoring = restoringIds.has(task?.taskid);
+        const isArchiving = archivingIds.has(task?.taskid);
+
+        if (isArchived) {
+            if (task?.taskno != '') {
+                // Show restore and view if has taskno
+                return (
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <IconButton
+                            onClick={() => {
+                                if (isRestoring) return;
+                                setSelectedUnarchiveTask(task);
+                                setConfirmUnarchiveOpen(true);
+                            }}
+                            disabled={isRestoring}
+                        >
+                            <Undo2 size={20} className="iconbtn" color={isRestoring ? disabledColor : activeColor} />
+                        </IconButton>
+                        <IconButton onClick={() => handleViewTask(task, { Task: "root" })}>
+                            <Eye size={20} className="iconbtn" color={activeColor} />
+                        </IconButton>
+                    </Box>
+                );
+            } else {
+                // Show only view if no taskno
+                return (
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <IconButton onClick={() => handleViewTask(task, { Task: "root" })}>
+                            <Eye size={20} className="iconbtn" color={activeColor} />
+                        </IconButton>
+                    </Box>
+                );
+            }
+        }
+
         return (
             <Box sx={{ display: "flex", alignItems: "center" }}>
-                <IconButton
-                    aria-label="Time Track Task button"
+                {/* Time Track */}
+                {/* <IconButton
                     onClick={() => handleTimeTrackModalOpen(task)}
-                    sx={{
-                        color: taskTimeRunning[task.taskid] ? "#FFD700 !important" : "#7d7f85 !important",
-                        transition: "color 0.3s",
-                        backgroundColor: taskTimeRunning[task.taskid] ? "#6D6B77" : "transparent",
-                        "&:hover": {
-                            color: taskTimeRunning[task.taskid] ? "#FFD700" : "#333",
-                            backgroundColor: taskTimeRunning[task.taskid] ? "#6D6B77" : "transparent",
-                        },
-                    }}
+                    disabled={!canTimeTrack}
                 >
-                    <Timer size={20} className="iconbtn" />
-                </IconButton>
+                    <Timer size={20} className="iconbtn" color={iconColor(canTimeTrack)} />
+                </IconButton> */}
+                {/* Archive */}
+                {task.parentid != 0 && task?.taskno != '' && (
+                    <IconButton
+                        onClick={() => {
+                            if (isArchiving) return;
+                            setSelectedArchiveTask(task);
+                            setConfirmArchiveOpen(true);
+                        }}
+                        disabled={!canEdit || !isCompleted || isArchiving}
+                    >
+                        <Archive size={20} className="iconbtn" color={isArchiving ? disabledColor : iconColor(canEdit)} />
+                    </IconButton>
+                )}
+
+                {/* Print */}
                 <IconButton
-                    aria-label="print mom and maintenance Sheet button"
-                    onClick={(event) => handleOpenPrintMenu(event, task)}
-                    sx={{
-                        '&.Mui-disabled': {
-                            color: 'rgba(0, 0, 0, 0.26)',
-                        },
-                    }}
+                    onClick={(e) => handleOpenPrintMenu(e, task)}
+                    disabled={!canPrint}
                 >
-                    <PrinterCheck size={20} className="iconbtn" />
+                    <PrinterCheck size={20} className="iconbtn" color={iconColor(canPrint)} />
                 </IconButton>
+
+                {/* Comment */}
                 <IconButton
-                    disabled={access}
-                    aria-label="Comment button"
-                    onClick={(event) => handleOpenCommentProver(event, task)}
-                    sx={{
-                        '&.Mui-disabled': {
-                            color: 'rgba(0, 0, 0, 0.26)',
-                        },
-                    }}
+                    onClick={(e) => handleOpenCommentProver(e, task)}
+                    disabled={!canComment}
                 >
-                    <MessageCircleMore
-                        size={20}
-                        color={access ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                        className="iconbtn"
-                    />
+                    <MessageCircleMore size={20} className="iconbtn" color={iconColor(canComment)} />
                 </IconButton>
+
+                {/* Upload */}
                 <IconButton
-                    disabled={access}
-                    aria-label="View Module button"
                     onClick={() => handleOpenFileDrawer(task, { Task: "root" })}
-                    sx={{
-                        '&.Mui-disabled': {
-                            color: 'rgba(0, 0, 0, 0.26)',
-                        },
-                    }}
+                    disabled={!canUpload}
                 >
-                    <CloudUpload
-                        size={20}
-                        color={access ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                        className="iconbtn"
-                    />
+                    <CloudUpload size={20} className="iconbtn" color={iconColor(canUpload)} />
                 </IconButton>
+
+                {/* Edit */}
                 <IconButton
-                    disabled={access || (task?.parentid === 0 && !hasAccess(PERMISSIONS.canEditPrModule))}
                     onClick={() => handleEditTask(task, { Task: "root" })}
-                    sx={{
-                        '&.Mui-disabled': {
-                            color: 'rgba(0, 0, 0, 0.26)',
-                        },
-                    }}
-                    aria-label="Edit-Task button"
+                    disabled={!canEdit}
                 >
-                    <Pencil
-                        size={20}
-                        color={(access || (task?.parentid === 0 && !hasAccess(PERMISSIONS.canEditPrModule))) ? "rgba(0, 0, 0, 0.26)" : "#808080"}
-                        className="iconbtn"
-                    />
+                    <Pencil size={20} className="iconbtn" color={iconColor(canEdit)} />
                 </IconButton>
-                <IconButton
-                    aria-label="view Task button"
-                    onClick={() => handleViewTask(task, { Task: "root" })}
-                >
-                    <Eye
-                        size={20}
-                        color="#808080"
-                        className="iconbtn"
-                    />
+
+                {/* View (ALWAYS ENABLED) */}
+                <IconButton onClick={() => handleViewTask(task, { Task: "root" })}>
+                    <Eye size={20} className="iconbtn" color={activeColor} />
                 </IconButton>
             </Box>
-        )
+        );
     };
+
     const renderTaskNameSection = (
         task,
         expandedTasks,
@@ -496,8 +607,13 @@ const TableView = ({
         hoveredTaskId,
         hoveredColumnname,
         isResizing = false,
-        paddingLeft = 0
+        paddingLeft = 0,
+        parentArchiveInfo = null,
+        parentArchived = false
     ) => {
+        const ownArchiveInfo = task?.Completion_timestamp ? getArchiveInfoFromEndDate(task, 7) : null;
+        const archiveInfo = ownArchiveInfo || parentArchiveInfo;
+        const isCompleted = (task?.status || "").toString().trim().toLowerCase() === 'completed' && task?.Completion_timestamp;
         return (
             <div style={{ paddingLeft: `${paddingLeft}px`, width: '100%' }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -521,31 +637,133 @@ const TableView = ({
                                 }}
                             />
                         </IconButton>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', maxWidth: `${columns[0]?.width}` }} title={`${task?.taskno ? task.taskno + ' - ' : ''}${task?.taskname}`}>
-                            <span
-                                style={{
-                                    display: '-webkit-box',
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: 'vertical',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    lineHeight: '1.2em',
-                                    maxHeight: '2.4em',
-                                    fontSize: '14px',
-                                }}
-                                className={`tasknameCl ${task?.isCopyActive ? 'cut-task-name' : ''}`}
+                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <div
+                                style={{ display: 'flex', alignItems: 'center', gap: '5px', maxWidth: `${columns[0]?.width}` }}
+                                title={`${task?.taskno ? task.taskno + ' - ' : ''}${task?.taskname}`}
                             >
-                                {task?.taskno && task.taskno != 0 && (
-                                    <span style={{ color: '#666', fontWeight: '500', marginRight: '8px' }}>
-                                        {task.taskno}
+                                <span
+                                    style={{
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        lineHeight: '1.2em',
+                                        maxHeight: '2.4em',
+                                        fontSize: '14px',
+                                        textDecoration: isCompleted ? 'line-through' : 'none',
+                                        opacity: isCompleted ? 0.75 : 1,
+                                    }}
+                                    className={`tasknameCl ${task?.isCopyActive ? 'cut-task-name' : ''}`}
+                                >
+                                    {task?.taskno && task.taskno != 0 && (
+                                        <span style={{ color: '#666', fontWeight: '500', marginRight: '8px' }}>
+                                            {task.taskno}
+                                        </span>
+                                    )}
+                                    {task?.taskname}
+                                </span>
+                                {task?.subtasks?.length > 0 && (
+                                    <span className="task-sub_count">
+                                        {task?.subtasks?.length}
                                     </span>
                                 )}
-                                {task?.taskname}
-                            </span>
-                            {task?.subtasks?.length > 0 && (
-                                <span className="task-sub_count">
-                                    {task?.subtasks?.length}
-                                </span>
+                            </div>
+                            {archiveInfo?.label && (
+                                <div style={{ marginTop: '4px' }}>
+                                    <Tooltip
+                                        arrow
+                                        placement="top"
+                                        slotProps={{
+                                            tooltip: {
+                                                sx: {
+                                                    backgroundColor: '#fff',
+                                                    color: '#ffffff',
+                                                    padding: '10px 12px',
+                                                    borderRadius: '10px',
+                                                    boxShadow: '0 12px 28px rgba(0,0,0,0.09)',
+                                                    maxWidth: 340,
+                                                },
+                                            },
+                                            arrow: {
+                                                sx: {
+                                                    color: '#111827',
+                                                },
+                                            },
+                                        }}
+                                        title={(
+                                            <Box
+                                                sx={{
+                                                    minWidth: 230,
+                                                }}
+                                            >
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                                    <Typography sx={{ fontSize: '12px', fontWeight: 800 }}>
+                                                        Archive info
+                                                    </Typography>
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: '11px',
+                                                            fontWeight: 800,
+                                                            color: archiveInfo?.isReady ? '#fb923c' : 'inherit',
+                                                        }}
+                                                    >
+                                                        {archiveInfo?.isReady ? 'Ready' : `${archiveInfo?.daysLeft}d left`}
+                                                    </Typography>
+                                                </Box>
+
+                                                <Box
+                                                    sx={{
+                                                        borderTop: '1px solid rgba(255,255,255,0.18)',
+                                                        paddingTop: '6px',
+                                                        display: 'grid',
+                                                        gridTemplateColumns: '90px 1fr',
+                                                        rowGap: '6px',
+                                                        columnGap: '10px',
+                                                    }}
+                                                >
+                                                    <Typography sx={{ fontSize: '11px' }}>
+                                                        Completed
+                                                    </Typography>
+                                                    <Typography sx={{ fontSize: '11px', fontWeight: 700, color: '#e5e7eb' }}>
+                                                        {archiveInfo?.completedAt ? new Date(archiveInfo.completedAt).toLocaleString() : '-'}
+                                                    </Typography>
+
+                                                    <Typography sx={{ fontSize: '11px' }}>
+                                                        Archive on
+                                                    </Typography>
+                                                    <Typography sx={{ fontSize: '11px', fontWeight: 700, color: '#ffffff' }}>
+                                                        {archiveInfo?.archiveAt ? new Date(archiveInfo.archiveAt).toLocaleString() : '-'}
+                                                    </Typography>
+
+                                                    <Typography sx={{ fontSize: '11px' }}>
+                                                        Status
+                                                    </Typography>
+                                                    <Typography sx={{ fontSize: '11px', fontWeight: 800, color: archiveInfo?.isReady ? '#fb923c !important' : 'inherit' }}>
+                                                        {archiveInfo?.label || '-'}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        )}
+                                    >
+                                        <Chip
+                                            label={archiveInfo.label}
+                                            variant="filled"
+                                            size="small"
+                                            sx={{
+                                                ...(getArchiveChipStyles(archiveInfo) || {}),
+                                                height: '18px',
+                                                fontSize: '10px',
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                                '& .MuiChip-label': {
+                                                    padding: '0 6px',
+                                                },
+                                            }}
+                                        />
+                                    </Tooltip>
+                                </div>
                             )}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -598,8 +816,13 @@ const TableView = ({
                                     ? 'visible'
                                     : 'hidden',
                         }}
+                        disabled={task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 || parentArchived}
                     >
-                        <CirclePlus size={20} color="#7367f0" />
+                        <CirclePlus size={20} color={
+                            (task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1)
+                                ? "#e0e0e0"
+                                : "#7367f0"
+                        } />
                     </IconButton>
                 </div>
             </div>
@@ -633,7 +856,9 @@ const TableView = ({
         );
     };
 
-    const renderSubtasks = (subtasks, parentTaskId, depth = 0) => {
+    const renderSubtasks = (subtasks, parentTask, depth = 0) => {
+        const parentArchiveInfo = parentTask?.Completion_timestamp ? getArchiveInfoFromEndDate(parentTask, 7) : null;
+        const parentArchived = !!parentTask?.Completion_timestamp;
         return subtasks?.map((subtask) => (
             <React.Fragment key={subtask.taskid}>
                 <TableRow
@@ -641,13 +866,16 @@ const TableView = ({
                     sx={{
                         pointerEvents: subtask?.isCopyActive ? 'none' : 'auto',
                         cursor: subtask?.isCopyActive ? 'not-allowed' : 'default',
-                        backgroundColor: !subtask?.isCopyActive && (
-                            hoveredSubtaskId === subtask?.taskid
-                                ? '#f5f5f5'
-                                : expandedTasks[subtask.taskid]
-                                    ? '#f5f5f5'
-                                    : 'inherit'
-                        ),
+                        backgroundColor: (() => {
+                            if (subtask?.isCopyActive) return undefined;
+                            if (hoveredSubtaskId === subtask?.taskid) return '#f5f5f5';
+                            if (expandedTasks[subtask.taskid]) return '#f5f5f5';
+
+                            const ownInfo = subtask?.Completion_timestamp ? getArchiveInfoFromEndDate(subtask, 7) : null;
+                            const info = ownInfo || parentArchiveInfo;
+                            if (!info) return 'inherit';
+                            return info?.isReady ? 'rgba(245, 124, 0, 0.10)' : 'rgba(255, 215, 0, 0.10)';
+                        })(),
                         '&:hover': {
                             backgroundColor: !subtask?.isCopyActive ? '#f8f9fa' : 'inherit'
                         }
@@ -670,7 +898,9 @@ const TableView = ({
                                 hoveredTaskId,
                                 hoveredColumnname,
                                 false,
-                                `${15 * (depth + 1)}`
+                                `${15 * (depth + 1)}`,
+                                parentArchiveInfo,
+                                parentArchived
                             )}
                             <IconButton
                                 id="add-task"
@@ -682,13 +912,20 @@ const TableView = ({
                                     visibility: hoveredSubtaskId === subtask?.taskid ? "visible" : "hidden",
                                 }}
                                 sx={{
+                                    width: '32px',
+                                    height: '32px',
                                     '&:hover': {
                                         backgroundColor: 'transparent',
                                         boxShadow: 'none',
                                     }
                                 }}
+                                disabled={subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 || parentArchived}
                             >
-                                <CirclePlus size={20} color="#7367f0" />
+                                <CirclePlus size={20} color={
+                                    (subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1)
+                                        ? "#e0e0e0"
+                                        : "#7367f0"
+                                } />
                             </IconButton>
                         </div>
                     </TableCell>
@@ -711,23 +948,29 @@ const TableView = ({
                         {renderTaskProgressBar(subtask?.progress_per, subtask?.isNotShowProgress)}
                     </TableCell>
                     <TableCell>
-                        <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange} disable={false} />
+                        <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange}
+                            disable={(subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))} />
                     </TableCell>
                     <TableCell>
-                        <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange} disable={false} flag="secondaryStatus" />
+                        <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange}
+                            disable={(subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))} flag="secondaryStatus" />
                     </TableCell>
                     <TableCell
                         onMouseEnter={() => handleTaskMouseEnter(subtask?.taskid, { Tbcell: 'Assignee' })}
                         onMouseLeave={handleTaskMouseLeave}>
-                        {renderAssigneeAvatars(subtask?.assignee, subtask, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
+                        {renderAssigneeAvatars(subtask?.assignee, subtask, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut, !parentArchived)}
                     </TableCell>
                     <TableCell
                         data-deadline-column="true"
-                        onClick={(e) => handleDeadlineClick(e, subtask)}
+                        onClick={(e) => {
+                            const isReadOnly = subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1;
+                            const isFullAccess = hasAccess(PERMISSIONS.canTaskActions) || getUserProfileData()?.designation?.toLowerCase() === "admin";
+                            if (!isReadOnly || isFullAccess) handleDeadlineClick(e, subtask);
+                        }}
                         sx={{
-                            cursor: 'pointer',
+                            cursor: (subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !(hasAccess(PERMISSIONS.canTaskActions))) ? 'default' : 'pointer',
                             '&:hover': {
-                                backgroundColor: '#e3f2fd',
+                                backgroundColor: (subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !(hasAccess(PERMISSIONS.canTaskActions))) ? 'inherit' : '#e3f2fd',
                                 borderRadius: '4px'
                             },
                             transition: 'background-color 0.2s ease',
@@ -737,7 +980,8 @@ const TableView = ({
                         {formatDaysDisplay(subtask?.DeadLineDate, subtask)}
                     </TableCell>
                     <TableCell>
-                        <PriorityBadge task={subtask} priorityColors={priorityColors} onPriorityChange={onPriorityChange} disable={true} />
+                        <PriorityBadge task={subtask} priorityColors={priorityColors} onPriorityChange={onPriorityChange}
+                            disable={(subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))} />
                     </TableCell>
                     <TableCell>
                         <StatusCircles task={subtask} />
@@ -746,8 +990,8 @@ const TableView = ({
                         {renderTaskActions(subtask, taskTimeRunning, handleTimeTrackModalOpen, handleEditTask, handleViewTask)}
                     </TableCell>
                 </TableRow>
-                {expandedTasks[subtask.taskid] && renderSubtasks(subtask.subtasks, subtask.taskid, depth + 1)}
-            </React.Fragment>
+                {expandedTasks[subtask.taskid] && renderSubtasks(subtask.subtasks, subtask, depth + 1)}
+            </React.Fragment >
         ));
     };
 
@@ -869,21 +1113,23 @@ const TableView = ({
                             {data && data?.length !== 0 ? (
                                 <>
                                     {currentData?.map((task, taskIndex) => {
-                                        const access = task?.isparentfreeze == 1;
+                                        const access = task?.isFreez === 0;
                                         return (
                                             <React.Fragment key={taskIndex}>
-                                                <TableRow key={taskIndex}
+                                                <TableRow
                                                     className={task?.isCopyActive ? 'cut-task-row' : ''}
                                                     sx={{
                                                         pointerEvents: task?.isCopyActive ? 'none' : 'auto',
                                                         cursor: task?.isCopyActive ? 'not-allowed' : 'default',
-                                                        backgroundColor: !task?.isCopyActive && (
-                                                            hoveredTaskId === task?.taskid
-                                                                ? '#f5f5f5'
-                                                                : expandedTasks[task.taskid]
-                                                                    ? '#f5f5f5'
-                                                                    : 'inherit'
-                                                        ),
+                                                        backgroundColor: (() => {
+                                                            if (task?.isCopyActive) return undefined;
+                                                            if (hoveredTaskId === task?.taskid) return '#f5f5f5';
+                                                            if (expandedTasks[task.taskid]) return '#f5f5f5';
+
+                                                            const info = task?.Completion_timestamp ? getArchiveInfoFromEndDate(task, 7) : null;
+                                                            if (!info) return 'inherit';
+                                                            return info?.isReady ? 'rgba(245, 124, 0, 0.10)' : 'rgba(255, 215, 0, 0.10)';
+                                                        })(),
                                                         '&:hover': {
                                                             backgroundColor: !task?.isCopyActive ? '#f8f9fa' : 'inherit'
                                                         }
@@ -928,10 +1174,12 @@ const TableView = ({
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange} disable={access ? true : false} />
+                                                        <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange}
+                                                            disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))) || access} />
                                                     </TableCell>
                                                     <TableCell>
-                                                        <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange} disable={access ? true : false} flag="secondaryStatus" />
+                                                        <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange}
+                                                            disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))) || access} flag="secondaryStatus" />
                                                     </TableCell>
                                                     <TableCell
                                                         onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
@@ -940,11 +1188,15 @@ const TableView = ({
                                                     </TableCell>
                                                     <TableCell
                                                         data-deadline-column="true"
-                                                        onClick={(e) => handleDeadlineClick(e, task, access)}
+                                                        onClick={(e) => {
+                                                            const isReadOnly = task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1;
+                                                            const isFullAccess = hasAccess(PERMISSIONS.canTaskActions) || getUserProfileData()?.designation?.toLowerCase() === "admin";
+                                                            if (!isReadOnly || isFullAccess) handleDeadlineClick(e, task, access);
+                                                        }}
                                                         sx={{
-                                                            cursor: access ? 'default' : 'pointer',
+                                                            cursor: (access || (task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !(hasAccess(PERMISSIONS.canTaskActions)))) ? 'default' : 'pointer',
                                                             '&:hover': {
-                                                                backgroundColor: access ? 'inherit' : '#e3f2fd',
+                                                                backgroundColor: (access || (task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !(hasAccess(PERMISSIONS.canTaskActions)))) ? 'inherit' : '#e3f2fd',
                                                                 borderRadius: '4px'
                                                             },
                                                             transition: 'background-color 0.2s ease',
@@ -954,7 +1206,7 @@ const TableView = ({
                                                         {formatDaysDisplay(task?.DeadLineDate, task)}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <PriorityBadge task={task} priorityColors={priorityColors} onPriorityChange={onPriorityChange} disable={access ? true : false} />
+                                                        <PriorityBadge task={task} priorityColors={priorityColors} onPriorityChange={onPriorityChange} disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))) || access} />
                                                     </TableCell>
                                                     <TableCell>
                                                         <StatusCircles task={task} />
@@ -963,7 +1215,7 @@ const TableView = ({
                                                         {renderTaskActions(task, taskTimeRunning, handleTimeTrackModalOpen, handleEditTask, handleViewTask)}
                                                     </TableCell>
                                                 </TableRow>
-                                                {expandedTasks[task.taskid] && task?.subtasks?.length > 0 && renderSubtasks(task.subtasks, task.taskid)}
+                                                {expandedTasks[task.taskid] && task?.subtasks?.length > 0 && renderSubtasks(task.subtasks, task)}
                                             </React.Fragment>
                                         )
                                     })}
@@ -1028,6 +1280,8 @@ const TableView = ({
                 onClose={() => setProfileOpen(false)}
                 profileData={selectedItem}
                 background={background}
+                taskId={profileTaskId}
+                onRemoved={handleProfileRemoved}
             />
             <SidebarDrawerFile
                 open={openfileDrawerOpen}
@@ -1089,6 +1343,98 @@ const TableView = ({
                 selectedTask={selectedItem}
                 onCommentAdded={handleCommentAdded}
                 onViewAllComments={handleViewAllComments}
+            />
+
+            <ConfirmationDialog
+                open={confirmUnarchiveOpen}
+                onClose={() => {
+                    setConfirmUnarchiveOpen(false);
+                    setSelectedUnarchiveTask(null);
+                }}
+                onConfirm={async () => {
+                    const task = selectedUnarchiveTask;
+                    setConfirmUnarchiveOpen(false);
+                    setSelectedUnarchiveTask(null);
+                    const taskId = task?.taskid;
+                    if (!taskId) {
+                        toast.error('Task id not found');
+                        return;
+                    }
+
+                    setRestoringIds((prev) => {
+                        const next = new Set(prev);
+                        next.add(taskId);
+                        return next;
+                    });
+
+                    try {
+                        const res = await taskRestoreApi(task);
+                        if (res) {
+                            toast.success('Task restored');
+                            setOpenChildTask(Date.now());
+                        } else {
+                            toast.error('Restore failed');
+                        }
+                    } catch (e) {
+                        toast.error('Restore failed');
+                    } finally {
+                        setRestoringIds((prev) => {
+                            const next = new Set(prev);
+                            next.delete(taskId);
+                            return next;
+                        });
+                    }
+                }}
+                title="Restore task"
+                content="Are you sure you want to unarchive this task?"
+                confirmLabel="Unarchive"
+                cancelLabel="Cancel"
+            />
+
+            <ConfirmationDialog
+                open={confirmArchiveOpen}
+                onClose={() => {
+                    setConfirmArchiveOpen(false);
+                    setSelectedArchiveTask(null);
+                }}
+                onConfirm={async () => {
+                    const task = selectedArchiveTask;
+                    setConfirmArchiveOpen(false);
+                    setSelectedArchiveTask(null);
+                    const taskId = task?.taskid;
+                    if (!taskId) {
+                        toast.error('Task id not found');
+                        return;
+                    }
+
+                    setArchivingIds((prev) => {
+                        const next = new Set(prev);
+                        next.add(taskId);
+                        return next;
+                    });
+
+                    try {
+                        const res = await taskArchiveApi(task);
+                        if (res) {
+                            toast.success('Task archived');
+                            setOpenChildTask(Date.now());
+                        } else {
+                            toast.error('Archive failed');
+                        }
+                    } catch (e) {
+                        toast.error('Archive failed');
+                    } finally {
+                        setArchivingIds((prev) => {
+                            const next = new Set(prev);
+                            next.delete(taskId);
+                            return next;
+                        });
+                    }
+                }}
+                title="Complete parent task"
+                content="This task has incomplete sub tasks. Completing it will also archive the task tree. Do you want to proceed?"
+                confirmLabel="Archive"
+                cancelLabel="Cancel"
             />
 
             <div style={{ display: 'none' }}>

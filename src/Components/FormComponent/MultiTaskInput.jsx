@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
-    Box, Button, TextareaAutosize, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField, IconButton, Typography
+    Box, Button, TextareaAutosize, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField, IconButton, Typography, Checkbox, Tooltip
 } from "@mui/material";
 import dayjs from 'dayjs';
 import utc from "dayjs/plugin/utc";
@@ -28,6 +28,8 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
     const [autoDeadline, setAutoDeadline] = useState('');
     const [editingName, setEditingName] = useState("");
     const [showAditionalMaster, setShowAditionalMaster] = useState(false);
+    const [isMilestone, setIsMilestone] = useState(false);
+    const [newTaskMilestone, setNewTaskMilestone] = useState(false);
 
     useEffect(() => {
         estimateRefs.current = estimateRefs.current.slice(0, tasks.length);
@@ -55,7 +57,8 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
         const newTasks = lines.map(line => ({
             taskName: line,
             estimate: "",
-            deadLineDate: null
+            deadLineDate: null,
+            ismilestone: 0
         }));
 
         setTasks([...tasks, ...newTasks]);
@@ -76,7 +79,8 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
         let newTasks = [...tasks, {
             taskName: newTask,
             estimate: newEstimate ?? '',
-            deadLineDate: deadLineDate || null
+            deadLineDate: deadLineDate || null,
+            ismilestone: newTaskMilestone ? 1 : 0
         }];
 
         setTasks(newTasks);
@@ -152,7 +156,8 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
         updatedTasks[editIndex] = {
             ...updatedTasks[editIndex],
             taskName: editingName?.trim(),
-            estimate: tasks?.[editIndex]?.estimate || ""
+            estimate: tasks?.[editIndex]?.estimate || "",
+            ismilestone: tasks?.[editIndex]?.ismilestone ?? 0
         };
 
         setTasks(updatedTasks);
@@ -160,6 +165,26 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
         setEditIndex(null);
         setEditingName("");
         setErrorMessage("");
+    };
+
+    const toggleTaskMilestone = (index) => {
+        const updatedTasks = [...tasks];
+        updatedTasks[index] = {
+            ...updatedTasks[index],
+            ismilestone: updatedTasks[index].ismilestone ? 0 : 1
+        };
+        setTasks(updatedTasks);
+        onSave(updatedTasks);
+    };
+
+    const handleGlobalMilestoneChange = (checked) => {
+        setIsMilestone(checked);
+        const updatedTasks = tasks.map(task => ({
+            ...task,
+            ismilestone: checked ? 1 : 0
+        }));
+        setTasks(updatedTasks);
+        onSave(updatedTasks);
     };
 
     const isValidInput = (value) => {
@@ -222,7 +247,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
         </Button>
     );
 
-    const isValidDecimalInput = (value) => /^\d{0,2}(\.\d{0,2})?$/.test(value);
+    const isValidDecimalInput = (value) => /^\d*(\.\d{0,2})?$/.test(value);
     const handleDecimalInputKeyPress = (e, currentValue = "") => {
         const char = e.key;
         if (['-', '+', 'e'].includes(char) || (char === '.' && currentValue.includes('.'))) {
@@ -231,9 +256,6 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
         }
         const [beforeDecimal, afterDecimal = ""] = currentValue.split('.');
         const cursorAtDecimal = currentValue.includes('.') && e.target.selectionStart > currentValue.indexOf('.');
-        if (!currentValue.includes('.') && beforeDecimal.length >= 2 && char !== '.') {
-            e.preventDefault();
-        }
         if (cursorAtDecimal && afterDecimal.length >= 2) {
             e.preventDefault();
         }
@@ -340,6 +362,59 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                         }}>
                                             {renderDateField('Auto Deadline', 'deadlineDate', autoDeadline['deadlineDate'], handleDateChange)}
                                         </Box>
+                                        <Box sx={{
+                                            marginBottom: '-6px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            padding: '8px 0'
+                                        }}>
+                                            <Tooltip title="Mark this task as a milestone - important deliverable or checkpoint" arrow placement="top">
+                                                <Box 
+                                                    onClick={() => handleGlobalMilestoneChange(!isMilestone)}
+                                                    sx={{ 
+                                                        display: 'flex', 
+                                                        alignItems: 'center', 
+                                                        gap: '6px',
+                                                        padding: '4px 8px',
+                                                        borderRadius: '6px',
+                                                        backgroundColor: isMilestone ? 'rgba(115, 103, 240, 0.08)' : 'transparent',
+                                                        border: isMilestone ? '1px solid rgba(115, 103, 240, 0.3)' : '1px solid transparent',
+                                                        transition: 'all 0.2s ease-in-out',
+                                                        cursor: 'pointer',
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(115, 103, 240, 0.05)',
+                                                            borderColor: 'rgba(115, 103, 240, 0.2)'
+                                                        }
+                                                    }}
+                                                >
+                                                    <Checkbox
+                                                        size="small"
+                                                        checked={isMilestone}
+                                                        onChange={(e) => handleGlobalMilestoneChange(e.target.checked)}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        sx={{ 
+                                                            padding: '2px',
+                                                            color: isMilestone ? '#7367f0' : 'inherit',
+                                                            '&.Mui-checked': {
+                                                                color: '#7367f0'
+                                                            }
+                                                        }}
+                                                    />
+                                                    <Typography 
+                                                        variant="body2" 
+                                                        sx={{ 
+                                                            fontWeight: isMilestone ? 600 : 400,
+                                                            color: isMilestone ? '#7367f0' : 'text.secondary',
+                                                            fontSize: '13px',
+                                                            userSelect: 'none'
+                                                        }}
+                                                    >
+                                                        🏁 Milestone
+                                                    </Typography>
+                                                </Box>
+                                            </Tooltip>
+                                        </Box>
                                     </Box>
                                     <BackButton onClick={handleBack} />
                                 </Box>
@@ -351,9 +426,10 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                     <Table className="Mlt-denseTable">
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell sx={{ width: "40%" }}><b>Task Name</b></TableCell>
+                                                <TableCell sx={{ width: "35%" }}><b>Task Name</b></TableCell>
                                                 <TableCell sx={{ width: "15%" }}><b>Estimate</b></TableCell>
-                                                <TableCell sx={{ width: "25%" }}><b>Deadline</b></TableCell>
+                                                <TableCell sx={{ width: "20%" }}><b>Deadline</b></TableCell>
+                                                <TableCell sx={{ width: "10%", textAlign: "center" }}><b>Milestone</b></TableCell>
                                                 <TableCell sx={{ width: "20%", textAlign: "center" }}><b>Actions</b></TableCell>
                                             </TableRow>
                                         </TableHead>
@@ -361,7 +437,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                             {tasks?.map((task, index) => (
                                                 <>
                                                     <TableRow key={index}>
-                                                        <TableCell sx={{ width: "40%" }}>
+                                                        <TableCell sx={{ width: "35%" }}>
                                                             {editIndex === index ? (
                                                                 <TextField
                                                                     size="small"
@@ -418,6 +494,22 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                                                 )}
                                                                 {...customDatePickerProps}
                                                             />
+                                                        </TableCell>
+                                                        <TableCell sx={{ width: "10%", textAlign: "center" }}>
+                                                            <Tooltip title="Mark as milestone" arrow>
+                                                                <Checkbox
+                                                                    size="small"
+                                                                    checked={task.ismilestone === 1}
+                                                                    onChange={() => toggleTaskMilestone(index)}
+                                                                    sx={{ 
+                                                                        padding: '2px',
+                                                                        color: task.ismilestone === 1 ? '#7367f0' : 'inherit',
+                                                                        '&.Mui-checked': {
+                                                                            color: '#7367f0'
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </Tooltip>
                                                         </TableCell>
                                                         <TableCell sx={{ width: "20%", textAlign: "center" }}>
                                                             {editIndex === index ? (
@@ -524,6 +616,22 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                                         )}
                                                         {...customDatePickerProps}
                                                     />
+                                                </TableCell>
+                                                <TableCell sx={{ textAlign: "center" }}>
+                                                    <Tooltip title="Mark as milestone" arrow>
+                                                        <Checkbox
+                                                            size="small"
+                                                            checked={newTaskMilestone}
+                                                            onChange={(e) => setNewTaskMilestone(e.target.checked)}
+                                                            sx={{ 
+                                                                padding: '2px',
+                                                                color: newTaskMilestone ? '#7367f0' : 'inherit',
+                                                                '&.Mui-checked': {
+                                                                    color: '#7367f0'
+                                                                }
+                                                            }}
+                                                        />
+                                                    </Tooltip>
                                                 </TableCell>
                                                 <TableCell sx={{ textAlign: "center" }}>
                                                     <IconButton onClick={addNewTask}

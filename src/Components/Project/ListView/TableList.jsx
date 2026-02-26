@@ -15,11 +15,12 @@ import {
     IconButton,
     Tooltip,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { cleanDate, formatDate2, formatDaysDisplay, getRandomAvatarColor, getStatusColor, getUserProfileData, priorityColors } from "../../../Utils/globalfun";
-import { Eye, Lock, Paperclip, Pencil, Trash, Unlock } from "lucide-react";
+import { CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, Plus, PrinterCheck, Timer, Undo2, Lock, Paperclip, Star, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { assigneeId, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
@@ -33,14 +34,16 @@ import { PERMISSIONS } from "../../Auth/Role/permissions";
 import { GetPrTeamsApi } from "../../../Api/TaskApi/prTeamListApi";
 import TablePaginationFooter from "../../ShortcutsComponent/Pagination/TablePaginationFooter";
 
-const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit, handlePageSizeChnage }) => {
+const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit, handlePageSizeChnage, handleModuleFavorite }) => {
     const { hasAccess } = useAccess();
     const navigate = useNavigate();
+    const theme = useTheme();
     const [order, setOrder] = useState("asc");
     const [orderBy, setOrderBy] = useState("projectName");
     const [projectData, setProjectData] = useState([]);
     const [selectedRow, setSelectedRow] = useState({});
     const [hoveredTaskId, setHoveredTaskId] = useState(null);
+    const [profileTaskId, setProfileTaskId] = useState("");
     const setFormDrawerOpen = useSetRecoilState(openFormDrawer);
     const setActionMode = useSetRecoilState(taskActionMode);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
@@ -71,25 +74,51 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
     };
 
     const [toggleState, setToggleState] = useState({});
+    const [autoExpandedOnce, setAutoExpandedOnce] = useState(false);
+
     const handleToggle = (projectId) => {
         setToggleState((prevState) => ({
             ...prevState,
             [projectId]: !prevState[projectId],
         }));
     };
+
     const handleMouseEnter = (taskId, value) => {
         setHoveredTaskId(taskId);
         setHoveredColumnName(value?.Tbcell)
     };
+    
     const handleMouseLeave = () => {
         setHoveredTaskId(null);
     };
 
-    const hanldePAvatarClick = (task, id) => {
-        setAssigneeId(id);
-        setSelectedRow(task);
+    const hanldePAvatarClick = (task, assigneeIdValue, assignees) => {
+        setAssigneeId(assigneeIdValue);
+        setSelectedRow(Array.isArray(assignees) ? assignees : []);
+        setProfileTaskId(task?.taskid ?? "");
         setProfileOpen(true);
     }
+
+    const handleProfileRemoved = (removedAssigneeId) => {
+        setProjectData((prev) =>
+            (prev || []).map((proj) => ({
+                ...proj,
+                tasks: (proj.tasks || []).map((t) => {
+                    if (String(t?.taskid) !== String(profileTaskId)) return t;
+                    return {
+                        ...t,
+                        assignee: (t?.assignee || []).filter((a) => String(a?.id) !== String(removedAssigneeId)),
+                    };
+                }),
+            }))
+        );
+
+        setSelectedRow((prev) =>
+            Array.isArray(prev)
+                ? prev.filter((a) => String(a?.id) !== String(removedAssigneeId))
+                : prev
+        );
+    };
 
     const handleAssigneeShortcut = (task, additionalInfo) => {
         setSelectedRow(task);
@@ -138,15 +167,30 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
     useEffect(() => {
         const groupedTasks = groupByProject(data);
         setProjectData(groupedTasks);
+
+        if (!autoExpandedOnce && Array.isArray(groupedTasks) && groupedTasks.length > 0) {
+            const initialToggle = {};
+            groupedTasks.forEach((g) => {
+                if (g?.projectid !== undefined && g?.projectid !== null) {
+                    initialToggle[g.projectid] = true;
+                }
+            });
+            setToggleState((prev) => {
+                if (prev && Object.keys(prev).length > 0) return prev;
+                return initialToggle;
+            });
+            setAutoExpandedOnce(true);
+        }
     }, [data]);
 
-    const handleViewPrDashboard = (task, flag) => {
+    const handleViewPrDashboard = (task, flag, tab = null) => {
         setSelectedRow(task);
         setSelectedTask(task);
         if (flag === "pr") {
             let urlData = {
                 project: task.projectName,
                 projectid: task?.projectid,
+                tab: tab
             }
             const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
             // Format project name for URL (replace spaces with hyphens)
@@ -157,7 +201,8 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                 project: task.taskPr,
                 projectid: task?.projectid,
                 taskid: task?.taskid,
-                taskname: task?.taskname
+                taskname: task?.taskname,
+                tab: tab
             }
             const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
             // Format project name for URL (replace spaces with hyphens)
@@ -244,9 +289,12 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
 
     const handleNavigate = async (task) => {
         const userLoginData = getUserProfileData();
-        const decodedData = task
         const teamApiRes = await GetPrTeamsApi(task, "root")
+        debugger
         const isLimitedAccess = teamApiRes?.rd?.find((item) => item.assigneeid == userLoginData?.id)?.islimitedaccess;
+
+        const isReadOnly = task?.assignee?.find(a => a.id == userLoginData?.id)?.isreadonly == 1;
+
         let urlData = {
             module: task?.taskname,
             project: task.taskPr,
@@ -255,6 +303,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
             moduleid: task?.taskid,
             maingroupids: task?.maingroupids,
             isLimited: isLimitedAccess ?? 0,
+            isreadonly: isReadOnly ? 1 : 0,
             breadcrumbTitles: task?.breadcrumbTitles
         }
         const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
@@ -395,7 +444,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
             showAddButton={true}
             hoveredTaskId={hoveredTaskId}
             hoveredColumnName={hoveredColumnname}
-            onAvatarClick={hanldePAvatarClick}
+            onAvatarClick={(assigneesList, clickedId) => hanldePAvatarClick(task, clickedId, assigneesList)}
             onAddClick={(task) => handleAssigneeShortcut(task, { Task: 'root' })}
             size={35}
             spacing={0.5}
@@ -550,6 +599,30 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                         <TableCell sx={{ paddingLeft: '55px !important' }}>
                                                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                                                 <div className="projectModuleName">
+                                                                    <IconButton
+                                                                        aria-label="Favourite module"
+                                                                        size="small"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            e.preventDefault();
+                                                                            handleModuleFavorite?.(task);
+                                                                        }}
+                                                                        sx={{
+                                                                            padding: '2px',
+                                                                            marginRight: '6px',
+                                                                            color: Number(task?.isfavourite) === 1 ? '#FFD700' : '#7d7f85',
+                                                                            '&:hover': {
+                                                                                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        <Star
+                                                                            size={16}
+                                                                            fill={Number(task?.isfavourite) === 1 ? '#FFD700' : 'transparent'}
+                                                                            color={Number(task?.isfavourite) === 1 ? '#FFD700' : '#808080'}
+                                                                            className="iconbtn"
+                                                                        />
+                                                                    </IconButton>
                                                                     <a
                                                                         href="#"
                                                                         onClick={(e) => {
@@ -591,7 +664,32 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                         <TableCell
                                                             onMouseEnter={() => handleMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
                                                             onMouseLeave={handleMouseLeave}>
-                                                            {renderAssigneeAvatars(task?.assignee, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
+                                                            <Box display="flex" alignItems="center" gap={1}>
+                                                                {renderAssigneeAvatars(task?.assignee, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={() => handleViewPrDashboard(task, null, "teamMembers")}
+                                                                    sx={{
+                                                                        minWidth: '35px',
+                                                                        width: '35px',
+                                                                        height: '35px',
+                                                                        borderRadius: '50%',
+                                                                        backgroundColor: '#f0f0f0',
+                                                                        color: theme.palette.primary.main,
+                                                                        border: '1px solid #e0e0e0',
+                                                                        '&:hover': {
+                                                                            backgroundColor: '#e3f2fd',
+                                                                            borderColor: theme.palette.primary.main,
+                                                                            boxShadow: '0 2px 4px rgba(25, 118, 210, 0.2)',
+                                                                        },
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center',
+                                                                    }}
+                                                                >
+                                                                    <Plus size={16} />
+                                                                </IconButton>
+                                                            </Box>
                                                         </TableCell>
                                                         <TableCell>
                                                             {task?.StartDate && cleanDate(task?.StartDate)
@@ -674,6 +772,8 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                 onClose={() => setProfileOpen(false)}
                 profileData={selectedRow}
                 background={background}
+                taskId={profileTaskId}
+                onRemoved={handleProfileRemoved}
             />
 
             <SidebarDrawerFile

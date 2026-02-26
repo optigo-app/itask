@@ -2,14 +2,18 @@ import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Box, Card, CardContent, Typography, IconButton, Avatar, AvatarGroup, Button, Tooltip } from "@mui/material";
 import { Circle, CircleCheck, CircleDotDashed, CirclePlus, CircleX, Plus, StickyNote, Target, Volleyball, Workflow } from "lucide-react";
-import { cleanDate, formatDate, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors } from "../../../Utils/globalfun";
+import { cleanDate, formatDate, formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors } from "../../../Utils/globalfun";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi"
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
+import { fetchTaskDataFullApi } from "../../../Api/TaskApi/TaskDataFullApi";
+import { EstimateCalApi } from "../../../Api/TaskApi/EstimateCalApi";
+import { buildAncestorSumSplitestimate } from "../../../Utils/estimationUtils";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag } from "../../../Recoil/atom";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import KanbanCardSkeleton from "./KanbanSkelton";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
+import { toast } from "react-toastify";
 
 function KanbanView({
   taskdata,
@@ -43,12 +47,42 @@ function KanbanView({
   const handleConfirmRemoveAll = async () => {
     setCnfDialogOpen(false);
     try {
+      const parentId = selectedTask?.parentid;
+      let parentSumSplitestimate = '';
+
+      if (parentId && String(parentId) !== '0') {
+        const rootId = selectedTask?.projectid || parentId;
+        try {
+          const taskData = await fetchTaskDataFullApi({ taskid: rootId, teamid: '1' });
+          if (taskData && taskData.rd1) {
+            const labeledTasks = mapKeyValuePair(taskData);
+            parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
+              parentTaskId: parentId,
+              childTaskId: selectedTask.taskid,
+              isDelete: true,
+            });
+          }
+        } catch (err) {
+          console.error('Error fetching data for parent estimation before kanban delete:', err);
+        }
+      }
+
       const deleteTaskApi = await deleteTaskDataApi(selectedTask);
-      if (deleteTaskApi) {
-        setOpenChildTask(false);
+      if (deleteTaskApi && deleteTaskApi?.rd[0]?.stat == 1) {
+        if (parentSumSplitestimate) {
+          try {
+            await EstimateCalApi(parentSumSplitestimate);
+          } catch (err) {
+            console.error('Error updating parent estimate after kanban delete:', err);
+          }
+        }
+
+        setOpenChildTask(Date.now());
         setSelectedTask(null);
+        toast.success("Task deleted successfully!");
       } else {
         console.error("Failed to delete task");
+        toast.error("Something went wrong...");
       }
     } catch (error) {
       console.error("Error while deleting task:", error);
@@ -422,7 +456,7 @@ function KanbanView({
                                         {showAll[task.taskid] ? 'Show Less' : 'Show More'}
                                       </Button>
                                     )}
-                                  </Box>                 
+                                  </Box>
                                   {/* <Button
                                     onClick={() => handleAddTask(task, { Task: 'subroot' })}
                                     className="buttonClassname"

@@ -1,4 +1,4 @@
-import { apiClient } from '../InitialApi/CommonApi';
+import axios from 'axios';
 import { UPLOAD_URL } from '../InitialApi/config';
 
 export const filesUploadApi = async ({ attachments, folderName, uniqueNo }) => {
@@ -18,7 +18,7 @@ export const filesUploadApi = async ({ attachments, folderName, uniqueNo }) => {
   formData.append('uniqueNo', uniqueNo);
 
   try {
-    const response = await apiClient.post(UPLOAD_URL, formData, {
+    const response = await axios.post(UPLOAD_URL, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

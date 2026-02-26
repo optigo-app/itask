@@ -4,7 +4,7 @@ import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, Chip, Typography, useMediaQuery } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { Advfilters, completedTask, copyRowData, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
+import { Advfilters, archivedTask, completedTask, copyRowData, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
 import { filterNestedTasksByView, filterTasksByValidTaskNo, flattenTasks, formatDate2, getCategoryTaskSummary, getUserProfileData, handleAddApicall, isTaskDue, isTaskToday } from "../../Utils/globalfun";
 import { useLocation } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
@@ -15,9 +15,12 @@ import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
 import { MoveTaskApi } from "../../Api/TaskApi/MoveTaskApi";
 import CloseIcon from '@mui/icons-material/Close';
 import BugTask from "../../Components/Task/BugView/BugTask";
+import { fetchArchiveTaskDataApi } from "../../Api/TaskApi/ArchiveTasklistApi";
+import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
+const ArchiveTable = React.lazy(() => import("../../Components/Task/ListView/ArchiveTable"));
 const KanbanView = React.lazy(() => import("../../Components/Task/KanbanView/KanbanView"));
 const CardView = React.lazy(() => import("../../Components/Task/CardView/CardView"));
 const DynamicFilterReport = React.lazy(() => import("../../Components/Task/DynamicReport/DynamicFilterReport"))
@@ -43,10 +46,16 @@ const Task = () => {
   const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
   const [copiedData, setCopiedData] = useRecoilState(copyRowData);
   const [completedFlag, setCompletedFlag] = useRecoilState(completedTask);
+  const setArchivedTasks = useSetRecoilState(archivedTask)
   const encodedData = searchParams.get("data");
   const [CategoryTSummary, setCategoryTSummary] = useState([]);
   const [contextMenu, setContextMenu] = useState(null);
   const meTeamView = useRecoilValue(viewMode);
+  const [parsedDataObj, setParsedDataObj] = useState(null);
+  const [archiveTasks, setArchiveTasks] = useState([]);
+  const [archiveLoading, setArchiveLoading] = useState(false);
+  const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
+  const [pendingCompleteChange, setPendingCompleteChange] = useState(null);
   const {
     iswhMLoading,
     iswhTLoading,
@@ -58,17 +67,12 @@ const Task = () => {
     statusData,
     secStatusData,
     taskAssigneeData } = useFullTaskFormatFile();
+
   const [localTaskEdits, setLocalTaskEdits] = useState({});
 
   useEffect(() => {
-    const activeTab = localStorage?.getItem('activeTaskTab');
-    if (activeTab) {
-      setActiveButton(activeTab);
-    }
-  }, []);
-
-  useEffect(() => {
     setTasks([]);
+    setArchivedTasks(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -86,27 +90,8 @@ const Task = () => {
     };
 
     const parsedData = decodeData();
+    setParsedDataObj(parsedData);
     const userId = userProfile?.id;
-
-    const isSameLocalDay = (utcDateString) => {
-      if (!utcDateString) return false;
-      const localDate = new Date(utcDateString);
-      return (
-        localDate.getFullYear() === date.getFullYear() &&
-        localDate.getMonth() === date.getMonth() &&
-        localDate.getDate() === date.getDate()
-      );
-    };
-
-    const filterByStatus = (tasks) =>
-      tasks?.filter((task) => {
-        const status = task?.status?.toLowerCase?.() || '';
-        const endToday = isSameLocalDay(task?.EndDate);
-
-        return completedFlag
-          ? status === 'completed' && !endToday
-          : status !== 'completed' || endToday;
-      });
 
     const applyLocalEditsRecursively = (task) => {
       const edits = localTaskEdits[task.taskid] || {};
@@ -121,7 +106,6 @@ const Task = () => {
       if (activeTab === "bugview") {
         output = filterTasksByValidTaskNo(output);
       }
-      output = filterByStatus(output);
       output = output.map(applyLocalEditsRecursively);
       const summary = getCategoryTaskSummary(output, taskCategory);
       setCategoryTSummary(summary);
@@ -156,7 +140,98 @@ const Task = () => {
     }
     filteredTasks = filterNestedTasksByView(filteredTasks, meTeamView, userId);
     processTasks(filteredTasks);
-  }, [encodedData, taskFinalData, selectedRow, meTeamView, completedFlag, localTaskEdits]);
+  }, [encodedData, taskFinalData, selectedRow, meTeamView, localTaskEdits]);
+
+  const normalizeArchiveApiData = (apiData) => {
+    const dataObj = apiData?.Data ? apiData.Data : apiData;
+    const rd = dataObj?.rd;
+    const rd1 = dataObj?.rd1;
+
+    if (!Array.isArray(rd) || rd.length === 0 || !Array.isArray(rd1)) return [];
+    const header = rd[0] || {};
+
+    const keyToField = Object.keys(header).reduce((acc, k) => {
+      acc[k] = header[k];
+      return acc;
+    }, {});
+
+    return rd1.map((row) => {
+      const out = {};
+      Object.keys(keyToField).forEach((k) => {
+        const fieldName = keyToField[k];
+        out[fieldName] = row?.[k];
+      });
+
+      // keep consistent naming with other task UI
+      if (out?.taskid != null && out?.taskid !== '') out.taskid = Number(out.taskid);
+      if (out?.maintaskid != null && out?.maintaskid !== '') out.maintaskid = Number(out.maintaskid);
+
+      return out;
+    });
+  };
+
+  const parseIsReadonlyString = (readonlyStr) => {
+    const mapping = {};
+    if (readonlyStr) {
+      readonlyStr.split(",").forEach((item) => {
+        const [id, flag] = item.split("#");
+        if (id && flag !== undefined) {
+          mapping[id] = parseInt(flag);
+        }
+      });
+    }
+    return mapping;
+  };
+
+  const enhanceArchiveTask = (task) => {
+    const priority = priorityData?.find((item) => item?.id == task?.priorityid);
+    const department = taskDepartment?.find((item) => item?.id == task?.departmentid);
+    const category = taskCategory?.find((item) => item?.id == task?.workcategoryid);
+    const project = taskProject?.find((item) => item?.id == task?.projectid);
+
+    const assigneeIdsRaw = task?.assigneeids ?? task?.assigneids;
+    const assigneeIdArray = assigneeIdsRaw
+      ? String(assigneeIdsRaw)
+        ?.split(",")
+        ?.map((id) => Number(id))
+        ?.filter((n) => !Number.isNaN(n))
+      : [];
+
+    const readonlyMapping = parseIsReadonlyString(task?.isreadonly);
+    const matchedAssignees = taskAssigneeData
+      ?.filter((user) => assigneeIdArray?.includes(user.id))
+      ?.map((user) => ({
+        ...user,
+        isreadonly: readonlyMapping[user.id] ?? 0,
+      }));
+
+    return {
+      ...task,
+      priority: priority ? priority?.labelname : task?.priority,
+      taskDpt: department ? department?.labelname : task?.taskDpt,
+      taskPr: project ? project?.labelname : task?.taskPr,
+      category: category ? category?.labelname : task?.category,
+      assignee: matchedAssignees ?? task?.assignee ?? [],
+    };
+  };
+
+  useEffect(() => {
+    const fetchArchive = async () => {
+      if (activeButton !== 'archive') return;
+      setArchiveLoading(true);
+      try {
+        const apiData = await fetchArchiveTaskDataApi(parsedDataObj || {});
+        const normalized = normalizeArchiveApiData(apiData);
+        const enriched = (normalized || []).map((t) => enhanceArchiveTask(t));
+        setArchiveTasks(enriched);
+      } catch (e) {
+        setArchiveTasks([]);
+      } finally {
+        setArchiveLoading(false);
+      }
+    };
+    fetchArchive();
+  }, [activeButton, parsedDataObj, priorityData, taskDepartment, taskCategory, taskAssigneeData, taskProject]);
 
   useEffect(() => {
     if (tasks) {
@@ -262,135 +337,6 @@ const Task = () => {
 
   const sortedData = recursiveSort(tasks, getComparator(order, orderBy));
 
-  // const filteredData = sortedData
-  //   ?.map((task) => {
-  //     const {
-  //       status,
-  //       priority,
-  //       assignee,
-  //       searchTerm,
-  //       dueDate,
-  //       startDate,
-  //       department,
-  //       project,
-  //       category,
-  //     } = filters;
-
-  //     const normalizedSearchTerm = searchTerm?.trim()?.toLowerCase();
-  //     const isQuoted =
-  //       (normalizedSearchTerm?.startsWith('"') && normalizedSearchTerm?.endsWith('"')) ||
-  //       (normalizedSearchTerm?.startsWith("'") && normalizedSearchTerm?.endsWith("'"));
-
-  //     const cleanSearchTerm = isQuoted
-  //       ? normalizedSearchTerm.slice(1, -1)
-  //       : normalizedSearchTerm;
-
-  //     const resetInvalidFilters = () => {
-  //       Object.keys(filters).forEach((key) => {
-  //         const value = filters[key];
-  //         if (
-  //           value === "Select Department" ||
-  //           value === "Select Status" ||
-  //           value === "Select Priority" ||
-  //           value === "Select Assignee" ||
-  //           value === "Select Project"
-  //         ) {
-  //           filters[key] = "";
-  //         }
-  //       });
-  //     };
-
-  //     const isUnsetDeadline = (dateStr) => {
-  //       const date = new Date(dateStr);
-  //       return !dateStr || date.toISOString().slice(0, 10) === "1900-01-01";
-  //     };
-
-  //     resetInvalidFilters();
-  //     const matchesFilters = (item) => {
-  //       const matchesCategory =
-  //         !Array.isArray(category) ||
-  //         category.length === 0 ||
-  //         category.some((cat) => {
-  //           const lowerCat = cat.toLowerCase();
-  //           if (lowerCat === "due") {
-  //             return isTaskDue(item?.DeadLineDate) && !isUnsetDeadline(item?.DeadLineDate);
-  //           } else if (lowerCat === "unset deadline") {
-  //             return isUnsetDeadline(item?.DeadLineDate);
-  //           } else if (lowerCat === "today") {
-  //             return isTaskToday(item?.StartDate);
-  //           } else if (lowerCat === "new") {
-  //             return item?.isnew == 1;
-  //           }
-  //           return (item?.category ?? "").toLowerCase() === lowerCat;
-  //         });
-
-  //       const fieldsToCheck = [
-  //         item?.taskname,
-  //         item?.taskno,
-  //         item?.status,
-  //         item?.priority,
-  //         item?.description,
-  //         item?.DeadLineDate,
-  //         item?.taskPr,
-  //         item?.taskDpt,
-  //       ];
-
-  //       const assignees = Array.isArray(item?.assignee)
-  //         ? item.assignee.map((a) => `${a?.firstname} ${a?.lastname}`)
-  //         : [item?.assignee];
-
-  //       const searchMatchFn = (value) => {
-  //         if (!value) return false;
-  //         const val = value.toLowerCase();
-
-  //         if (isQuoted) {
-  //           const exactWordRegex = new RegExp(`\\b${cleanSearchTerm}\\b`, "i");
-  //           return exactWordRegex.test(val);
-  //         } else {
-  //           return val.includes(cleanSearchTerm);
-  //         }
-  //       };
-
-  //       const matchesSearch =
-  //         !searchTerm || [...fieldsToCheck, ...assignees].some(searchMatchFn);
-
-  //       return (
-  //         matchesCategory &&
-  //         (status ? item?.status?.toLowerCase() === status?.toLowerCase() : true) &&
-  //         (priority ? item?.priority?.toLowerCase() === priority?.toLowerCase() : true) &&
-  //         (department ? item?.taskDpt?.toLowerCase() === department?.toLowerCase() : true) &&
-  //         (project ? item?.taskPr?.toLowerCase() === project?.toLowerCase() : true) &&
-  //         (dueDate ? formatDate2(item?.DeadLineDate) === formatDate2(dueDate) : true) &&
-  //         (startDate ? formatDate2(item?.StartDate) === formatDate2(startDate) : true) &&
-  //         (assignee
-  //           ? item?.assignee?.some((a) => {
-  //             const fullName = `${a?.firstname} ${a?.lastname}`?.toLowerCase();
-  //             return fullName?.includes(assignee?.toLowerCase());
-  //           })
-  //           : true) &&
-  //         matchesSearch
-  //       );
-  //     };
-
-  //     const filterRecursive = (item) => {
-  //       const matches = matchesFilters(item);
-  //       const filteredSubtasks = item?.subtasks
-  //         ?.map(filterRecursive)
-  //         .filter(Boolean) || [];
-
-  //       if (matches || filteredSubtasks.length > 0) {
-  //         return {
-  //           ...item,
-  //           subtasks: filteredSubtasks,
-  //         };
-  //       }
-  //       return null;
-  //     };
-
-  //     return filterRecursive(task);
-  //   })
-  //   ?.filter(Boolean);
-
   const filteredData = sortedData
     ?.map((task) => {
       const {
@@ -450,6 +396,8 @@ const Task = () => {
               return isTaskToday(item?.StartDate);
             } else if (lowerCat === "new") {
               return item?.isnew == 1;
+            } else if (lowerCat === "archive") {
+              return item?.isarchive == 1;
             }
             return (item?.category ?? "").toLowerCase() === lowerCat;
           });
@@ -534,7 +482,6 @@ const Task = () => {
 
   const handleTabBtnClick = (button) => {
     setActiveButton(button);
-    localStorage?.setItem('activeTaskTab', button);
   }
 
   const handleTaskFavorite = (taskToUpdates) => {
@@ -569,6 +516,8 @@ const Task = () => {
     });
   };
 
+  console.log("task---", tasks)
+
   const handleFreezeTask = (taskToUpdate) => {
     const updateTasksRecursively = (tasks) => {
       return tasks?.map((task) => {
@@ -600,10 +549,30 @@ const Task = () => {
   }
 
   const handleCompletedTaskFilter = () => {
-    setCompletedFlag(!completedFlag);
+    setActiveButton('table');
+    setCompletedFlag((prev) => !prev);
+    setOpenChildTask(Date.now());
   };
 
-  const handleStatusChange = (taskId, status, flag) => {
+  const handleArchivedTaskFilter = () => {
+    setActiveButton('table');
+    setArchivedTasks((prev) => !prev);
+    setOpenChildTask(Date.now());
+  };
+
+  const hasIncompleteSubtasks = (task) => {
+    const children = Array.isArray(task?.subtasks) ? task.subtasks : [];
+    if (children.length === 0) return false;
+    const isCompleted = (t) => (t?.status || '').toString().trim().toLowerCase() === 'completed';
+    const check = (t) => {
+      const subs = Array.isArray(t?.subtasks) ? t.subtasks : [];
+      if (!isCompleted(t)) return true;
+      return subs.some(check);
+    };
+    return children.some(check);
+  };
+
+  const applyStatusChange = (taskId, status, flag) => {
     setTasks((prevTasks) => {
       const updateTasksRecursively = (tasks) => {
         return tasks?.map((task) => {
@@ -623,13 +592,12 @@ const Task = () => {
                   secStatus: status?.labelname,
                 },
               }));
-
             } else {
               updatedTask = {
                 ...task,
                 statusid: status?.id,
                 status: status?.labelname,
-                EndDate: status?.labelname?.toLowerCase() === "completed" ? date.toISOString() : ""
+                EndDate: status?.labelname?.toLowerCase() === "completed" ? date.toISOString() : "",
               };
               setLocalTaskEdits((prev) => ({
                 ...prev,
@@ -640,11 +608,12 @@ const Task = () => {
                   EndDate: status?.labelname?.toLowerCase() === "completed" ? date.toISOString() : "",
                 },
               }));
-
             }
+
             handleAddApicall(updatedTask);
             return updatedTask;
           }
+
           if (task.subtasks?.length > 0) {
             return {
               ...task,
@@ -656,6 +625,21 @@ const Task = () => {
       };
       return updateTasksRecursively(prevTasks);
     });
+  };
+
+  const handleStatusChange = (taskId, status, flag) => {
+    const isPrimaryStatus = flag !== "secondaryStatus";
+    const isCompleting =
+      isPrimaryStatus &&
+      (status?.labelname || '').toString().trim().toLowerCase() === 'completed';
+
+    if (isCompleting && taskId && hasIncompleteSubtasks(taskId)) {
+      setPendingCompleteChange({ taskId, status, flag });
+      setConfirmCompleteOpen(true);
+      return;
+    }
+
+    applyStatusChange(taskId, status, flag);
   };
 
   const handlePriorityChange = (taskId, priority) => {
@@ -902,6 +886,7 @@ const Task = () => {
         CategorySummary={CategoryTSummary}
         handlePasteTask={handlePasteTask}
         handleCompletedTaskFilter={handleCompletedTaskFilter}
+        handleArchivedTaskFilter={handleArchivedTaskFilter}
       />
 
       {/* Divider */}
@@ -990,6 +975,25 @@ const Task = () => {
         />
       </Box>
 
+      <ConfirmationDialog
+        open={confirmCompleteOpen}
+        onClose={() => {
+          setConfirmCompleteOpen(false);
+          setPendingCompleteChange(null);
+        }}
+        onConfirm={() => {
+          const pending = pendingCompleteChange;
+          setConfirmCompleteOpen(false);
+          setPendingCompleteChange(null);
+          if (!pending) return;
+          applyStatusChange(pending.taskId, pending.status, pending.flag);
+        }}
+        title="Complete parent task"
+        content="This task has incomplete sub tasks. Completing it will also complete the task tree. Do you want to proceed?"
+        confirmLabel="Proceed"
+        cancelLabel="Cancel"
+      />
+
       {/* View Components */}
       <AnimatePresence mode="wait">
         {activeButton && (
@@ -1027,6 +1031,13 @@ const Task = () => {
                   handleChangePage={handleChangePage}
                   handleDeadlineDateChange={handleDeadlineDateChange}
                   handlePageSizeChnage={handlePageSizeChnage}
+                />
+              )}
+
+              {activeButton === "archive" && (
+                <ArchiveTable
+                  data={archiveTasks ?? []}
+                  isLoading={archiveLoading}
                 />
               )}
 

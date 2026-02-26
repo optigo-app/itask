@@ -7,7 +7,9 @@ import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData, FullSidebar, rootSubrootflag } from '../../Recoil/atom';
+import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData, FullSidebar, rootSubrootflag, TaskData } from '../../Recoil/atom';
+import { EstimateCalApi } from '../../Api/TaskApi/EstimateCalApi';
+import { buildAncestorSumSplitestimate } from '../../Utils/estimationUtils';
 import { Box, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Divider } from '@mui/material';
 import { AddMeetingApi } from '../../Api/MeetingApi/AddMeetingApi';
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
@@ -35,7 +37,38 @@ const Calendar = ({
     const selectedEventfilter = useRecoilValue(CalEventsFilter)
     const [calEvData, setCalEvData] = useRecoilState(calendarData);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
+    const actualTaskDataValue = useRecoilValue(TaskData);
     const [duplicateDialog, setDuplicateDialog] = useState({ open: false, event: null });
+
+    const findModuleRecursively = (tasks, targetId) => {
+        if (!tasks) return null;
+        for (const t of tasks) {
+            if (String(t.taskid) === String(targetId)) return t.moduleid || t.projectid;
+            if (t.subtasks?.length > 0) {
+                const res = findModuleRecursively(t.subtasks, targetId);
+                if (res) return res;
+            }
+        }
+        return null;
+    };
+
+    const SNAP_MINUTES = 15;
+
+    const getSnappedEndAndHours = (start, end) => {
+        const safeStart = start instanceof Date ? start : new Date(start);
+        const safeEnd = end instanceof Date ? end : new Date(end ?? start);
+        const diffMs = safeEnd.getTime() - safeStart.getTime();
+        const diffMinutes = diffMs / (1000 * 60);
+        const snappedMinutes = Math.max(
+            SNAP_MINUTES,
+            Math.round(diffMinutes / SNAP_MINUTES) * SNAP_MINUTES
+        );
+        const snappedEnd = new Date(safeStart.getTime() + snappedMinutes * 60 * 1000);
+        return {
+            snappedEnd,
+            snappedHours: snappedMinutes / 60,
+        };
+    };
 
     // Smooth scroll to 9:15 AM function with throttling
     const smoothScrollToTime = (timeString = '09:15:00') => {
@@ -159,7 +192,7 @@ const Calendar = ({
             description: event?.extendedProps?.description ?? event?.Desc ?? '',
         };
     };
-    debugger
+
     const calendarOptions = {
         firstDay: 1,
         events: filteredEvents?.map(event => ({
@@ -210,14 +243,28 @@ const Calendar = ({
         })),
         plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
         initialView: 'timeGridWeek',
+        scrollTime: '09:15:00',
+        scrollTimeReset: false,
         slotMinTime: "07:00:00",
         slotMaxTime: "22:00:00",
         slotDuration: "00:15:00",
         slotLabelInterval: "00:15:00",
+        slotLaneClassNames: (arg) => {
+            const d = arg?.date;
+            if (!d) return [];
+            const isCompanyStart = d.getHours() === 9 && d.getMinutes() === 15;
+            return isCompanyStart ? ['company-start-slot'] : [];
+        },
+        slotLabelClassNames: (arg) => {
+            const d = arg?.date;
+            if (!d) return [];
+            const isCompanyStart = d.getHours() === 9 && d.getMinutes() === 15;
+            return isCompanyStart ? ['company-start-slot'] : [];
+        },
         headerToolbar: {
             start: 'sidebarToggle, prev, next, title',
             center: '',
-            end: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
+            end: 'timeGridWeek,timeGridDay,dayGridMonth,listMonth'
         },
         views: {
             week: {
@@ -466,29 +513,16 @@ const Calendar = ({
 
         eventDrop({ event }) {
             if (event.extendedProps?.isMeeting) return;
-
-            const eventDetails = mapEventDetails(event);
-            const updatedData = calEvData?.map(ev =>
-                ev?.meetingid == eventDetails?.meetingid
-                    ? { ...ev, StartDate: eventDetails?.start, EndDate: eventDetails?.end }
-                    : ev
-            );
-
-            setCalEvData(updatedData);
-            setCalFormData(eventDetails);
-            setFormDataValue(eventDetails);
-            handleCaleFormSubmit(eventDetails);
-        },
-
-        eventResize({ event }) {
-            if (event.extendedProps?.isMeeting) return;
             const start = event.start;
             const end = event.end ?? start;
-            const diffInMs = end.getTime() - start.getTime();
-            const diffInHours = diffInMs / (1000 * 60 * 60);
+            const { snappedEnd, snappedHours } = getSnappedEndAndHours(start, end);
+            event.setEnd(snappedEnd);
+
             const eventDetails = {
                 ...mapEventDetails(event),
-                estimate_hrs: diffInHours || 1,
+                start: start.toISOString(),
+                end: snappedEnd.toISOString(),
+                estimate_hrs: snappedHours || 1,
             };
             const updatedData = calEvData?.map(ev =>
                 ev?.meetingid == eventDetails?.meetingid
@@ -500,26 +534,34 @@ const Calendar = ({
                     }
                     : ev
             );
+
             setCalEvData(updatedData);
             setCalFormData(eventDetails);
             setFormDataValue(eventDetails);
-            handleCaleFormSubmit(eventDetails);
+
+            // Save the meeting/task update
+            handleCaleFormSubmit(eventDetails, { skipRefresh: true });
+
         },
-        eventReceive({ event }) {
-            if (!event?.title) return;
-            const eventDetails = mapEventDetails(event);
-            const startDate = new Date(eventDetails.start);
-            const estimateHours = eventDetails.estimate_hrs || eventDetails.estimate || 1;
-            const endDate = new Date(startDate.getTime() + estimateHours * 60 * 60 * 1000);
-            eventDetails.end = endDate.toISOString();
-            eventDetails.estimate_hrs = estimateHours;
+
+        eventResize({ event }) {
+            if (event.extendedProps?.isMeeting) return;
+            const start = event.start;
+            const end = event.end ?? start;
+            const { snappedEnd, snappedHours } = getSnappedEndAndHours(start, end);
+            event.setEnd(snappedEnd);
+            const eventDetails = {
+                ...mapEventDetails(event),
+                end: snappedEnd.toISOString(),
+                estimate_hrs: snappedHours || 1,
+            };
             const updatedData = calEvData?.map(ev =>
                 ev?.meetingid == eventDetails?.meetingid
                     ? {
                         ...ev,
                         StartDate: eventDetails.start,
                         EndDate: eventDetails.end,
-                        estimate_hrs: estimateHours
+                        estimate_hrs: eventDetails.estimate_hrs
                     }
                     : ev
             );
@@ -527,10 +569,91 @@ const Calendar = ({
             setCalEvData(updatedData);
             setCalFormData(eventDetails);
             setFormDataValue(eventDetails);
-            handleCaleFormSubmit(eventDetails);
+            handleCaleFormSubmit(eventDetails, { skipRefresh: true, context: { end: eventDetails.end } });
+
+            // Update parent task estimates in background (async, non-blocking)
+            const parentId = eventDetails?.parentid;
+            if (parentId && String(parentId) !== '0') {
+                const foundModuleId = findModuleRecursively(actualTaskDataValue, parentId);
+                const rootId = foundModuleId || eventDetails.moduleid || eventDetails.projectid || parentId;
+
+                // Import dynamically to avoid circular dependencies
+                import('../../Api/TaskApi/TaskDataFullApi').then(({ fetchTaskDataFullApi }) => {
+                    import('../../Utils/globalfun').then(({ mapKeyValuePair }) => {
+                        // Fetch fresh task data using treelist API
+                        fetchTaskDataFullApi({ taskid: rootId })
+                            .then(taskData => {
+                                if (!taskData || !taskData.rd1) {
+                                    console.warn('No task data returned from treelist API');
+                                    return;
+                                }
+
+                                const labeledTasks = mapKeyValuePair(taskData);
+                                console.log('labeledTasks', labeledTasks);
+                                console.log('📅 Calendar Resize - Fetched task hierarchy:', {
+                                    taskid: eventDetails?.taskid,
+                                    parentid: parentId,
+                                    newEstimate: snappedHours,
+                                    fetchedTasks: labeledTasks?.length
+                                });
+
+                                // Calculate parent estimates using fresh data
+                                const parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
+                                    parentTaskId: parentId,
+                                    childTaskId: eventDetails?.taskid,
+                                    childValues: {
+                                        estimate_hrs: eventDetails.estimate_hrs,
+                                        estimate1_hrs: eventDetails.estimate1_hrs || 0,
+                                        estimate2_hrs: eventDetails.estimate2_hrs || 0,
+                                        workinghr: eventDetails.workinghr || 0,
+                                    },
+                                    isNewChild: false,
+                                });
+
+                                if (parentSumSplitestimate) {
+                                    console.log('📊 Parent Sum Splitestimate:', parentSumSplitestimate);
+                                    EstimateCalApi(parentSumSplitestimate)
+                                        .catch((err) => console.error('Error updating parent estimate:', err));
+                                }
+                            })
+                            .catch((err) => {
+                                console.error('Error fetching task data for parent estimation:', err);
+                            });
+                    });
+                });
+            }
+        },
+        eventReceive({ event }) {
+            if (!event?.title) return;
+            const eventDetails = mapEventDetails(event);
+            const startDate = new Date(eventDetails.start);
+            const estimateHours = eventDetails.estimate_hrs || eventDetails.estimate || 1;
+            const estimatedEnd = new Date(startDate.getTime() + estimateHours * 60 * 60 * 1000);
+            const { snappedEnd, snappedHours } = getSnappedEndAndHours(startDate, estimatedEnd);
+            event.setEnd(snappedEnd);
+            eventDetails.end = snappedEnd.toISOString();
+            eventDetails.estimate_hrs = snappedHours;
+            const updatedData = calEvData?.map(ev =>
+                ev?.meetingid == eventDetails?.meetingid
+                    ? {
+                        ...ev,
+                        StartDate: eventDetails.start,
+                        EndDate: eventDetails.end,
+                        estimate_hrs: eventDetails.estimate_hrs
+                    }
+                    : ev
+            );
+
+            setCalEvData(updatedData);
+            setCalFormData(eventDetails);
+            setFormDataValue(eventDetails);
+
+            // Save the meeting/task update
+            handleCaleFormSubmit(eventDetails, { skipRefresh: true });
+
         },
     };
-    
+
 
 
     const handleDuplicateEdit = () => {
@@ -554,14 +677,57 @@ const Calendar = ({
             title: eventDetails.title,
             entrydate: new Date().toISOString(),
             repeatflag: "repeat",
+            statusid: "",
+            workinghr: 0,
+            duplicated: true,
         };
 
-        try {
-            await handleCaleFormSubmit(duplicatedEvent);
+        const apiRes = await handleCaleFormSubmit(duplicatedEvent);
+        if (apiRes && apiRes?.rd[0]?.stat == 1) {
             setDuplicateDialog({ open: false, event: null });
             toast.success("Event repeated successfully");
-        } catch (error) {
-            console.error("Error repeating event:", error);
+
+            // Call estimateTaskSave for new task
+            const newTaskId = apiRes.rd[0].taskid;
+            const parentId = duplicatedEvent?.parentid;
+            if (parentId && String(parentId) !== '0') {
+                const foundModuleId = findModuleRecursively(actualTaskDataValue, parentId);
+                const rootId = foundModuleId || duplicatedEvent.moduleid || duplicatedEvent.projectid || parentId;
+
+                import('../../Api/TaskApi/TaskDataFullApi').then(({ fetchTaskDataFullApi }) => {
+                    import('../../Utils/globalfun').then(({ mapKeyValuePair }) => {
+                        fetchTaskDataFullApi({ taskid: rootId })
+                            .then(taskData => {
+                                if (!taskData || !taskData.rd1) {
+                                    console.warn('No task data returned from treelist API');
+                                    return;
+                                }
+
+                                const labeledTasks = mapKeyValuePair(taskData);
+                                const parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
+                                    parentTaskId: parentId,
+                                    childTaskId: newTaskId,
+                                    childValues: {
+                                        estimate_hrs: duplicatedEvent.estimate_hrs,
+                                        estimate1_hrs: duplicatedEvent.estimate1_hrs || 0,
+                                        estimate2_hrs: duplicatedEvent.estimate2_hrs || 0,
+                                        workinghr: duplicatedEvent.workinghr || 0,
+                                    },
+                                    isNewChild: true,
+                                });
+
+                                if (parentSumSplitestimate) {
+                                    EstimateCalApi(parentSumSplitestimate)
+                                        .catch((err) => console.error('Error updating parent estimate:', err));
+                                }
+                            })
+                            .catch((err) => {
+                                console.error('Error fetching task data for parent estimation:', err);
+                            });
+                    });
+                });
+            }
+        } else {
             toast.error("Error repeating event");
         }
     };

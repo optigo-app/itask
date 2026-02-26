@@ -3,12 +3,14 @@ import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const GetTokenByCompanyCodeApi = async (data) => {
     try {
+        const ipAddress = await getClientIpAddress();
+
         const combinedValue = JSON.stringify({
             companycode: data?.companycode ?? '',
         });
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"gettokenbycompanycode\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"gettokenbycompanycode\",\"appuserid\":\"${data?.userId ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
             "f": "Task Management (gettokenbycompanycode)",
             "p": combinedValue,
         };

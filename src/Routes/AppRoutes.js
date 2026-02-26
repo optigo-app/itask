@@ -21,6 +21,7 @@ const Inbox = lazy(() => import('../Pages/Inbox/Inbox'));
 const Masters = lazy(() => import('../Pages/Master/Masters'));
 const Profile = lazy(() => import('../Pages/ProfilePage/Profile'));
 const Reports = lazy(() => import('../Pages/Reports/Reports'));
+const BugTracking = lazy(() => import('../Pages/BugTracking/BugTracking'));
 const PagenotFound = lazy(() => import('../Pages/404Page/PagenotFound'));
 
 const AppRoutes = () => (
@@ -42,6 +43,7 @@ const AppRoutes = () => (
                 <Route path="/masters" element={<ProtectedRoute pageId="-1007"><Masters /></ProtectedRoute>} />
                 <Route path="/account-profile" element={<ProtectedRoute pageId=""><Profile /></ProtectedRoute>} />
                 <Route path="/reports/*" element={<ProtectedRoute pageId="-1008"><Reports /></ProtectedRoute>} />
+                <Route path="/bugtrack" element={<ProtectedRoute pageId="-1002"><BugTracking /></ProtectedRoute>} />
                 <Route path="/notification" element={<NotificationTable />} />
                 <Route path="*" element={<PagenotFound />} />
             </Route>

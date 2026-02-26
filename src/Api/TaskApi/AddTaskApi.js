@@ -1,8 +1,10 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import {getUserProfileData } from "../../Utils/globalfun";
+import { getAuthData, getUserProfileData, getClientIpAddress } from "../../Utils/globalfun";
 
 export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => {
+    const AuthData = getAuthData();
     const userProfile = getUserProfileData();
+    const ipAddress = await getClientIpAddress();
     try {
         let taskid;
         let parentid;
@@ -23,7 +25,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
             dropdowns[key] = String(val);
         });
         if (formValues?.bulkTask?.length > 0) {
-            const formattedString = formValues?.bulkTask?.map(task => `${task.taskName}#${task.estimate}#${task.deadLineDate ?? ''}`).join(", ");
+            const formattedString = formValues?.bulkTask?.map(task => `${task.taskName}#${task.estimate}#${task.deadLineDate ?? ''}#${task.ismilestone ?? 0}`).join(", ");
             combinedValue = JSON.stringify({
                 "ismodule": 2,
                 "maintaskid": formValues?.moduleid ?? formValues?.taskid ?? '',
@@ -69,7 +71,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
         }
 
         const body = {
-            "con": `{\"id\":\"\",\"mode\":\"tasksave\"}`,
+            "con": `{\"id\":\"\",\"mode\":\"tasksave\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
             "f": "Task Management (tasklist)",
             "p": combinedValue,
         };

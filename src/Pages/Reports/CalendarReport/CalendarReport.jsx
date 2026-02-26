@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, useMediaQuery } from '@mui/material';
 import '../../Calendar/Calendar.scss';
 import './CalendarReport.scss';
@@ -16,6 +16,8 @@ const CalendarReport = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [calendarsColor, setCalendarsColor] = useState({});
     const [openSideDrawer, setSideDrawer] = useState(false);
+    const [dailyReportRows, setDailyReportRows] = useState([]);
+    const lastRequestIdRef = useRef(0);
 
     useEffect(() => {
         const taskCategories = JSON?.parse(sessionStorage.getItem('taskworkcategoryData')) || [];
@@ -40,10 +42,13 @@ const CalendarReport = () => {
     }, []);
 
     const handleEmployeeClick = async (employee) => {
+        const requestId = Date.now();
+        lastRequestIdRef.current = requestId;
         setSelectedEmployee(employee);
         setIsLoading(true);
         try {
             const meetingApiRes = await fetchMettingListByLoginApi(employee);
+            if (lastRequestIdRef.current !== requestId) return;
             const data = (meetingApiRes && meetingApiRes?.rd) || [];
             if (data) {
                 const taskAssigneeData = JSON.parse(
@@ -51,6 +56,12 @@ const CalendarReport = () => {
                 );
                 const taskCategory = JSON.parse(
                     sessionStorage.getItem('taskworkcategoryData') || '[]'
+                );
+                const statusData = JSON.parse(
+                    sessionStorage.getItem('taskstatusData') || '[]'
+                );
+                const priorityData = JSON.parse(
+                    sessionStorage.getItem('taskpriorityData') || '[]'
                 );
                 const enhancedMeetings = data.map((meeting) => ({
                     ...meeting,
@@ -62,6 +73,14 @@ const CalendarReport = () => {
                     category:
                         taskCategory?.find((item) => item?.id == meeting?.workcategoryid)
                             ?.labelname || '',
+                    status:
+                        statusData?.find((item) => item?.id == meeting?.statusid)?.labelname ||
+                        meeting?.status ||
+                        '',
+                    priority:
+                        priorityData?.find((item) => item?.id == meeting?.priorityid)?.labelname ||
+                        meeting?.priority ||
+                        '',
                     prModule: {
                         projectid: meeting?.projectid,
                         taskid: meeting?.taskid,
@@ -96,6 +115,7 @@ const CalendarReport = () => {
                     setSideDrawer={setSideDrawer}
                     selectedEmployee={selectedEmployee}
                     onEmployeeClick={handleEmployeeClick}
+                    dailyReportRows={dailyReportRows}
                 />
             ) : (
                 <Box
@@ -111,6 +131,7 @@ const CalendarReport = () => {
                     <EmployeeList
                         selectedEmployee={selectedEmployee}
                         onEmployeeClick={handleEmployeeClick}
+                        dailyReportRows={dailyReportRows}
                     />
                 </Box>
             )}
@@ -132,6 +153,7 @@ const CalendarReport = () => {
                     isLoading={isLoading}
                     selectedEmployee={selectedEmployee}
                     setSideDrawer={setSideDrawer}
+                    onDailyReportRowsChange={setDailyReportRows}
                 />
             </Box>
         </Box>

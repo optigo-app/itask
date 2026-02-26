@@ -10,6 +10,13 @@ import {
     ToggleButtonGroup,
     ToggleButton,
     Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Alert,
+    AlertTitle,
+    Stack,
 } from "@mui/material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import "./Styles/MasterBind.scss"
@@ -17,6 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { AdvancedMasterApiFunc } from "../../../Utils/globalfun";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
@@ -42,6 +50,12 @@ export default function MasterBind({ taskModuleList }) {
         onConfirm: null,
         groupId: null
     });
+    const [errorDialog, setErrorDialog] = useState({
+        open: false,
+        title: '',
+        content: ''
+    });
+    const errorDialogTimeoutRef = React.useRef(null);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
 
@@ -126,6 +140,7 @@ export default function MasterBind({ taskModuleList }) {
     const handleConfirmClose = () => {
         setConfirmDialog(prev => ({ ...prev, open: false }));
     };
+    console.log("hjdjshj", rightGroups)
 
     const handleDragEnd = async (result) => {
         const { destination, draggableId } = result;
@@ -136,7 +151,40 @@ export default function MasterBind({ taskModuleList }) {
         if (!draggedGroup) return;
         const alreadyExists = rightGroups.find((g) => g.id === draggedGroup.id);
         if (alreadyExists) return;
+
+        const currentNestedGroupsCount = rightGroups.reduce(
+            (sum, g) => sum + (g?.groups?.length || 0),
+            0
+        );
+        const draggedNestedGroupsCount = draggedGroup?.groups?.length || 0;
+        if (currentNestedGroupsCount + draggedNestedGroupsCount > 25) {
+            if (errorDialogTimeoutRef.current) clearTimeout(errorDialogTimeoutRef.current);
+            setErrorDialog({
+                open: true,
+                title: 'Group Limit Reached',
+                content: `You can bind up to 25 groups per module. You currently have ${currentNestedGroupsCount} and tried to add ${draggedNestedGroupsCount} more.`
+            });
+            errorDialogTimeoutRef.current = setTimeout(() => setErrorDialog(prev => ({ ...prev, open: false })), 4000);
+            return;
+        }
+
         const updatedRightGroups = [...rightGroups, draggedGroup];
+
+        const updatedNestedGroupsCount = updatedRightGroups.reduce(
+            (sum, g) => sum + (g?.groups?.length || 0),
+            0
+        );
+        if (updatedNestedGroupsCount > 25) {
+            if (errorDialogTimeoutRef.current) clearTimeout(errorDialogTimeoutRef.current);
+            setErrorDialog({
+                open: true,
+                title: 'Group Limit Reached',
+                content: `You can bind up to 25 groups per module. This operation would exceed the limit.`
+            });
+            errorDialogTimeoutRef.current = setTimeout(() => setErrorDialog(prev => ({ ...prev, open: false })), 4000);
+            return;
+        }
+
         setRightGroups(updatedRightGroups);
         const updatedIds = updatedRightGroups.map((g) => g.id);
         const task = taskModuleList[0];
@@ -443,6 +491,54 @@ export default function MasterBind({ taskModuleList }) {
                 confirmLabel="Remove"
                 cancelLabel="Cancel"
             />
+
+            {/* Error Dialog */}
+            <Dialog 
+                open={errorDialog.open} 
+                onClose={() => {
+                    if (errorDialogTimeoutRef.current) clearTimeout(errorDialogTimeoutRef.current);
+                    setErrorDialog(prev => ({ ...prev, open: false }));
+                }}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: 12,
+                        animation: 'shake 0.5s ease-in-out',
+                        '@keyframes shake': {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '25%': { transform: 'translateX(-8px)' },
+                            '75%': { transform: 'translateX(8px)' },
+                        },
+                    },
+                }}
+            >
+                <DialogTitle sx={{ pb: 1 }}>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                        <ErrorOutlineIcon color="error" />
+                        <Typography variant="h6" color="error">{errorDialog.title}</Typography>
+                    </Stack>
+                </DialogTitle>
+                <DialogContent sx={{ pt: 0 }}>
+                    <Alert severity="error" icon={false}>
+                        <AlertTitle sx={{ mb: 1 }}>Cannot bind more groups</AlertTitle>
+                        <Typography variant="body2">{errorDialog.content}</Typography>
+                    </Alert>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button 
+                        variant="contained" 
+                        onClick={() => {
+                            if (errorDialogTimeoutRef.current) clearTimeout(errorDialogTimeoutRef.current);
+                            setErrorDialog(prev => ({ ...prev, open: false }));
+                        }}
+                        autoFocus
+                    >
+                        Got it
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }
