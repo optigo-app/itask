@@ -15,6 +15,7 @@ import { AddMeetingApi } from '../../Api/MeetingApi/AddMeetingApi';
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 import { PERMISSIONS } from '../Auth/Role/permissions';
 import { toast } from 'react-toastify';
+import { getDynamicStatusColor, statusColors } from '../../Utils/globalfun';
 
 const Calendar = ({
     isLoding,
@@ -39,6 +40,7 @@ const Calendar = ({
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const actualTaskDataValue = useRecoilValue(TaskData);
     const [duplicateDialog, setDuplicateDialog] = useState({ open: false, event: null });
+    const processingEventRef = useRef(new Set());
 
     const findModuleRecursively = (tasks, targetId) => {
         if (!tasks) return null;
@@ -356,6 +358,17 @@ const Calendar = ({
             const { event } = arg;
             const currentView = arg.view.type;
             const estimateHrs = event.extendedProps?.estimate_hrs || 0;
+            const statusText = (event.extendedProps?.status || event.extendedProps?.statusid || '').toString();
+            const statusKey = (statusText || '').toString().trim().toLowerCase();
+            const dynamicStatus = getDynamicStatusColor?.(statusKey);
+            const fallbackStatus = statusColors?.[statusKey];
+
+            const statusPillBg = dynamicStatus?.backgroundColor || fallbackStatus?.backgroundColor || 'rgba(255,255,255,0.22)';
+            const statusPillText = dynamicStatus?.color || fallbackStatus?.color || '#ffffff';
+
+            const statusPillHtml = statusText
+                ? `<span class="fc-event-status-pill" title="${statusText}" style="display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:2px 8px;border-radius:999px;background:${statusPillBg};color:${statusPillText};font-size:10px;line-height:1;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${statusText}</span>`
+                : '';
 
             const formatEstimate = (hours) => {
                 if (hours === 0) return '';
@@ -373,6 +386,7 @@ const Calendar = ({
                             <div class="fc-event-content">
                                 <span class="fc-event-title">${event.title || ''}</span>
                                 ${estimateText ? `<span class="fc-event-estimate">${estimateText}</span>` : ''}
+                                ${statusPillHtml}
                             </div>
                             <style>
                                 .month-event {
@@ -411,10 +425,13 @@ const Calendar = ({
             return {
                 html: `
                     <div class="fc-event-main-frame calendar-event-container">
-                        <div class="fc-event-time">${arg.timeText}</div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                            <div class="fc-event-time">${arg.timeText}</div>
+                            ${statusPillHtml ? `<div style="flex-shrink:0;">${statusPillHtml}</div>` : ''}
+                        </div>
                         <div class="fc-event-title-container">
                             <div class="fc-event-title fc-sticky">
-                                ${event.title || ''} ${estimateText}
+                                <span>${event.title || ''} ${estimateText}</span>
                             </div>
                         </div>
                         <button class="duplicate-btn" data-event-id="${event.id}" title="Duplicate Event">
@@ -513,6 +530,16 @@ const Calendar = ({
 
         eventDrop({ event }) {
             if (event.extendedProps?.isMeeting) return;
+
+            // Create a unique key for this event
+            const eventKey = `${event.id || event.extendedProps?.taskid}-${event.start?.getTime()}`;
+
+            // Skip if this was just processed by eventReceive
+            if (processingEventRef.current.has(eventKey)) {
+                console.log('Skipping eventDrop - already processed by eventReceive:', eventKey);
+                return;
+            }
+
             const start = event.start;
             const end = event.end ?? start;
             const { snappedEnd, snappedHours } = getSnappedEndAndHours(start, end);
@@ -625,6 +652,19 @@ const Calendar = ({
         },
         eventReceive({ event }) {
             if (!event?.title) return;
+
+            // Create a unique key for this event to prevent duplicate processing
+            const eventKey = `${event.id || event.extendedProps?.taskid}-${event.start?.getTime()}`;
+
+            // Check if we're already processing this event
+            if (processingEventRef.current.has(eventKey)) {
+                console.log('Skipping duplicate eventReceive for:', eventKey);
+                return;
+            }
+
+            // Mark this event as being processed
+            processingEventRef.current.add(eventKey);
+
             const eventDetails = mapEventDetails(event);
             const startDate = new Date(eventDetails.start);
             const estimateHours = eventDetails.estimate_hrs || eventDetails.estimate || 1;
@@ -649,7 +689,12 @@ const Calendar = ({
             setFormDataValue(eventDetails);
 
             // Save the meeting/task update
-            handleCaleFormSubmit(eventDetails, { skipRefresh: true });
+            handleCaleFormSubmit(eventDetails, { skipRefresh: false });
+
+            // Clear the processing flag after a short delay
+            setTimeout(() => {
+                processingEventRef.current.delete(eventKey);
+            }, 1000);
 
         },
     };

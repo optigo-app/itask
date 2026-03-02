@@ -5,6 +5,7 @@ import { fetchMaster } from "../Api/MasterApi/MasterApi";
 import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi"
 import { AddTaskDataApi } from "../Api/TaskApi/AddTaskApi";
 import { Avatar, AvatarGroup, Box, Chip, createTheme, Tooltip } from "@mui/material";
+import imageCompression from 'browser-image-compression';
 
 // Utility function to get AuthData from both localStorage and sessionStorage
 export const getAuthData = () => {
@@ -136,20 +137,20 @@ export const formatDate4 = (date) => {
 };
 
 export function formatUTCDateTime(dateString) {
-  const date = new Date(dateString);
+    const date = new Date(dateString);
 
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const year = date.getUTCFullYear();
+    const day = String(date.getUTCDate()).padStart(2, "0");
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const year = date.getUTCFullYear();
 
-  let hours = date.getUTCHours();
-  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+    let hours = date.getUTCHours();
+    const minutes = String(date.getUTCMinutes()).padStart(2, "0");
 
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12 || 12; // convert to 12-hour format
-  hours = String(hours).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12; // convert to 12-hour format
+    hours = String(hours).padStart(2, "0");
 
-  return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+    return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
 }
 
 export function formatDueTask(dateStr) {
@@ -1675,6 +1676,41 @@ export const getClientIpAddress = async () => {
         return "";
     }
 };
+
+
+export async function compressImagesToWebP(files, customOptions = {}) {
+    const inputFiles = Array.isArray(files) ? files : [files];
+
+    const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+        fileType: "image/webp",
+        initialQuality: 0.8,
+        ...customOptions,
+    };
+
+    const results = [];
+
+    for (const file of inputFiles) {
+        if (!file?.type?.startsWith("image/")) continue;
+
+        const compressedFile = await imageCompression(file, options);
+
+        results.push({
+            id: `${file.name}-${Date.now()}`,
+            originalName: file.name,
+            originalSize: file.size,
+            compressedName:
+                file.name.replace(/\.[^/.]+$/, "") + ".webp",
+            compressedSize: compressedFile.size,
+            blob: compressedFile,
+            previewUrl: URL.createObjectURL(compressedFile),
+        });
+    }
+
+    return results;
+}
 
 
 

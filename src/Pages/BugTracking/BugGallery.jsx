@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, IconButton, Typography, Tooltip, Badge } from '@mui/material';
-import { Image as ImageIcon, Trash2, X, Upload, Plus } from 'lucide-react';
+import { Image as ImageIcon, Trash2, X, Plus, Pencil, Edit } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Keyboard, Navigation, Thumbs } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/thumbs';
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
+import BugUploadBox from './BugUploadBox';
+import ImageEditorModal from '../../Image-Editor/ImageEditor';
 
 // Custom styles for Swiper navigation buttons
 const swiperButtonStyles = `
@@ -46,10 +48,14 @@ const BugGallery = ({
   onCancelNew,
   onDragOver,
   onDrop,
+  onImageUpdate,
 }) => {
   const mainSwiperRef = useRef(null);
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [imageEditorOpen, setImageEditorOpen] = useState(false);
+  const [editingImageUrl, setEditingImageUrl] = useState(null);
+  const [editingBug, setEditingBug] = useState(null);
 
   const bugArray = useMemo(() => (Array.isArray(bugs) ? bugs : []), [bugs]);
   const selectedIndex = useMemo(() => {
@@ -77,10 +83,70 @@ const BugGallery = ({
     onDeleteSelected();
   };
 
+  const handleEditClick = () => {
+    if (selectedBugId) {
+      const bug = bugArray.find(b => String(b.bugId) === String(selectedBugId));
+      if (bug) {
+        onSelectBug(bug);
+      }
+    }
+  };
+
+  const handleImageEditClick = (bug) => {
+    if (bug?.imageDataUrl) {
+      setEditingBug(bug);
+      setEditingImageUrl(bug.imageDataUrl);
+      setImageEditorOpen(true);
+    }
+  };
+
+  const handleImageEditorClose = () => {
+    setImageEditorOpen(false);
+    setEditingImageUrl(null);
+    setEditingBug(null);
+  };
+
+  const handleImageSave = (editedImageDataUrl) => {
+    if (editingBug && onImageUpdate) {
+      // Call parent callback to update the bug's image
+      onImageUpdate(editingBug.bugId, editedImageDataUrl);
+    }
+    handleImageEditorClose();
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
       <style>{swiperButtonStyles}</style>
-      <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
+      <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 10, display: 'flex', gap: 1 }}>
+        <Tooltip title="Edit Bug Report" arrow>
+          <IconButton
+            size="small"
+            onClick={handleEditClick}
+            disabled={!selectedTask || !selectedBugId || isCreatingNew}
+            sx={{
+              borderRadius: '12px',
+              bgcolor: 'rgba(255,255,255,0.8)',
+              backdropFilter: 'blur(4px)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+              border: '1px solid rgba(0,0,0,0.05)',
+              color: '#7367f0',
+              padding: '8px',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                bgcolor: '#7367f0',
+                color: '#fff',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 4px 12px rgba(115, 103, 240, 0.4)'
+              },
+              '&.Mui-disabled': {
+                bgcolor: 'rgba(255,255,255,0.5)',
+                color: '#ccc'
+              }
+            }}
+          >
+            <Pencil size={20} />
+          </IconButton>
+        </Tooltip>
         <Tooltip title="Delete Bug Report" arrow>
           <IconButton
             size="small"
@@ -132,15 +198,6 @@ const BugGallery = ({
               onSwiper={(swiper) => {
                 mainSwiperRef.current = swiper;
               }}
-              onSlideChange={(swiper) => {
-                if (isCreatingNew && swiper.activeIndex === 0) {
-                  // New bug slide, do nothing
-                } else {
-                  const bugIndex = isCreatingNew ? swiper.activeIndex - 1 : swiper.activeIndex;
-                  const bug = bugArray[bugIndex];
-                  if (bug) onSelectBug(bug);
-                }
-              }}
               style={{ width: '100%', height: '100%' }}
             >
               {isCreatingNew && (
@@ -154,7 +211,10 @@ const BugGallery = ({
                       justifyContent: 'center',
                       backgroundColor: '#f8f9fa',
                       p: 2,
-                      position: 'relative'
+                      position: 'relative',
+                      '&:hover .image-edit-overlay': {
+                        opacity: 1
+                      }
                     }}
                   >
                     <IconButton
@@ -170,49 +230,15 @@ const BugGallery = ({
                     >
                       <X size={20} />
                     </IconButton>
-                    <Box
-                      sx={{
-                        border: '2px dashed #e0e0e0',
-                        borderRadius: 2,
-                        p: 4,
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        bgcolor: '#fafafa',
-                        '&:hover': { borderColor: '#7367f0', bgcolor: '#f5f5f9' },
-                        position: 'relative',
-                        minHeight: '200px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center'
-                      }}
+                    <BugUploadBox
                       onDragOver={onDragOver}
                       onDrop={onDrop}
-                      onClick={() => document.getElementById('gallery-upload').click()}
-                    >
-                      <input
-                        type="file"
-                        id="gallery-upload"
-                        hidden
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            onNewBugClick(file);
-                            onCancelNew();
-                            e.target.value = null; // reset
-                          }
-                        }}
-                      />
-                      <Upload size={48} color="#999" />
-                      <Typography variant="h6" sx={{ mt: 2, color: '#666' }}>
-                        Drop Image or Click to Upload
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        Drag and drop an image here or click to browse files
-                      </Typography>
-                    </Box>
+                      onFileSelect={(file) => {
+                        onNewBugClick(file);
+                        onCancelNew();
+                      }}
+                      inputId="gallery-upload"
+                    />
                   </Box>
                 </SwiperSlide>
               )}
@@ -229,37 +255,84 @@ const BugGallery = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      cursor: 'pointer',
+                      '&:hover .image-edit-overlay': {
+                        opacity: 1
+                      }
                     }}
-                    onClick={() => onSelectBug(bug)}
                   >
                     {bug?.imageDataUrl ? (
-                      <img
-                        src={bug.imageDataUrl}
-                        alt={bug?.bugtitle || 'Bug'}
-                        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
-                      />
+                      <>
+                        <img
+                          src={bug.imageDataUrl}
+                          alt={bug?.bugtitle || 'Bug'}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', position: 'relative', zIndex: 1 }}
+                        />
+                        {bug.isDraft && (
+                          <Typography variant="caption" sx={{ position: 'absolute', top: 8, left: 8, backgroundColor: 'rgba(255,255,255,0.8)', color: '#333', padding: '2px 6px', borderRadius: 1, fontSize: '0.7rem', zIndex: 7 }}>
+                            Draft
+                          </Typography>
+                        )}
+                        <Box
+                          className="image-edit-overlay"
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                            opacity: 0,
+                            transition: 'opacity 0.2s ease',
+                            zIndex: 5,
+                            pointerEvents: 'none'
+                          }}
+                        >
+                          <Tooltip title="Edit Image" arrow>
+                            <IconButton
+                              onClick={() => handleImageEditClick(bug)}
+                              sx={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                color: '#7367f0',
+                                pointerEvents: 'auto',
+                                '&:hover': {
+                                  backgroundColor: '#fff',
+                                  transform: 'scale(1.1)'
+                                },
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+                              }}
+                            >
+                              <Edit size={24} />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </>
                     ) : (
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#999' }}>
                         <ImageIcon size={64} />
                         <Typography variant="body2" sx={{ mt: 1 }}>No Image</Typography>
                       </Box>
                     )}
-                    {bug.isDraft && (
-                      <Typography variant="caption" sx={{ position: 'absolute', top: 8, left: 8, backgroundColor: 'rgba(255,255,255,0.8)', color: '#333', padding: '2px 6px', borderRadius: 1, fontSize: '0.7rem' }}>
-                        Draft
-                      </Typography>
-                    )}
                   </Box>
                 </SwiperSlide>
               ))}
             </Swiper>
           </Box>
+        ) : selectedTask ? (
+          <BugUploadBox
+            onDragOver={onDragOver}
+            onDrop={onDrop}
+            onFileSelect={onNewBugClick}
+            inputId="gallery-upload-empty"
+          />
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: 0.4 }}>
             <ImageIcon size={64} strokeWidth={1.5} />
             <Typography variant="body1" sx={{ mt: 2, fontWeight: 500 }}>
-              {selectedTask ? 'No bugs reported yet' : 'Select a task to view bugs'}
+              Select a task to view bugs
             </Typography>
           </Box>
         )}
@@ -380,6 +453,14 @@ const BugGallery = ({
         content="Are you sure you want to delete this bug report? This action cannot be undone."
         confirmLabel="Delete"
         cancelLabel="Cancel"
+      />
+
+      {/* Image Editor Modal */}
+      <ImageEditorModal
+        open={imageEditorOpen}
+        onClose={handleImageEditorClose}
+        initialImage={editingImageUrl}
+        onSave={handleImageSave}
       />
     </Box>
   );

@@ -546,7 +546,7 @@ const TableView = ({
                     <Timer size={20} className="iconbtn" color={iconColor(canTimeTrack)} />
                 </IconButton> */}
                 {/* Archive */}
-                {task.parentid != 0 && task?.taskno != '' && (
+                {/* {task.parentid != 0 && task?.taskno != '' && (
                     <IconButton
                         onClick={() => {
                             if (isArchiving) return;
@@ -557,7 +557,7 @@ const TableView = ({
                     >
                         <Archive size={20} className="iconbtn" color={isArchiving ? disabledColor : iconColor(canEdit)} />
                     </IconButton>
-                )}
+                )} */}
 
                 {/* Print */}
                 <IconButton

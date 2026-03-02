@@ -115,33 +115,52 @@ const Calendar = () => {
     setFormDrawerOpen(!formdrawerOpen);
   };
 
+  const processMeetingData = (data) => {
+    const taskAssigneeData = JSON.parse(
+      sessionStorage.getItem("taskAssigneeData") || "[]"
+    );
+    const taskCategory = JSON.parse(
+      sessionStorage.getItem("taskworkcategoryData") || "[]"
+    );
+    const statusData = JSON.parse(
+      sessionStorage.getItem("taskstatusData") || "[]"
+    );
+    const priorityData = JSON.parse(
+      sessionStorage.getItem("taskpriorityData") || "[]"
+    );
+
+    return data.map((meeting) => ({
+      ...meeting,
+      guests:
+        taskAssigneeData.filter((user) =>
+          meeting?.assigneids?.split(",").map(Number).includes(user.id)
+        ) || [],
+      prModule: [],
+      category:
+        taskCategory?.find((item) => item?.id == meeting?.workcategoryid)
+          ?.labelname || "",
+      status:
+        statusData?.find((item) => item?.id == meeting?.statusid)?.labelname ||
+        meeting?.status ||
+        '',
+      priority:
+        priorityData?.find((item) => item?.id == meeting?.priorityid)?.labelname ||
+        meeting?.priority ||
+        '',
+      prModule: {
+        projectid: meeting?.projectid,
+        taskid: meeting?.taskid,
+      },
+    }));
+  };
+
   const handleMeetingListByLogin = async () => {
     setIsLoding(true);
     try {
       const meetingApiRes = await fetchMettingListByLoginApi(selectedAssignee);
       const data = (meetingApiRes && meetingApiRes?.rd) || [];
       if (data) {
-        const taskAssigneeData = JSON.parse(
-          sessionStorage.getItem("taskAssigneeData") || "[]"
-        );
-        const taskCategory = JSON.parse(
-          sessionStorage.getItem("taskworkcategoryData") || "[]"
-        );
-        const enhancedMeetings = data.map((meeting) => ({
-          ...meeting,
-          guests:
-            taskAssigneeData.filter((user) =>
-              meeting?.assigneids?.split(",").map(Number).includes(user.id)
-            ) || [],
-          prModule: [],
-          category:
-            taskCategory?.find((item) => item?.id == meeting?.workcategoryid)
-              ?.labelname || "",
-          prModule: {
-            projectid: meeting?.projectid,
-            taskid: meeting?.taskid,
-          },
-        }));
+        const enhancedMeetings = processMeetingData(data);
         setCalEvData(enhancedMeetings);
       } else {
         setCalEvData([]);
@@ -159,27 +178,7 @@ const Calendar = () => {
       const meetingApiRes = await fetchMettingListApi();
       const data = (meetingApiRes && meetingApiRes?.rd) || [];
       if (data) {
-        const taskAssigneeData = JSON.parse(
-          sessionStorage.getItem("taskAssigneeData") || "[]"
-        );
-        const taskCategory = JSON.parse(
-          sessionStorage.getItem("taskworkcategoryData") || "[]"
-        );
-        const enhancedMeetings = data.map((meeting) => ({
-          ...meeting,
-          guests:
-            taskAssigneeData.filter((user) =>
-              meeting?.assigneids?.split(",").map(Number).includes(user.id)
-            ) || [],
-          prModule: [],
-          category:
-            taskCategory?.find((item) => item?.id == meeting?.workcategoryid)
-              ?.labelname || "",
-          prModule: {
-            projectid: meeting?.projectid,
-            taskid: meeting?.taskid,
-          },
-        }));
+        const enhancedMeetings = processMeetingData(data);
         setCalEvData(enhancedMeetings);
       } else {
         setCalEvData([]);

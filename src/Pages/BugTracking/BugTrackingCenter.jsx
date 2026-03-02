@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Typography, Button, IconButton, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, TextField, InputAdornment, ToggleButtonGroup, ToggleButton } from '@mui/material';
-import { List, LayoutGrid, Bug, X, Filter, Pencil, Trash2, Search, Upload } from 'lucide-react';
+import { List, LayoutGrid, Bug, X, Filter, Pencil, Trash2, Search } from 'lucide-react';
 import BugGallery from './BugGallery';
+import BugUploadBox from './BugUploadBox';
 import AssigneeAvatarGroup from '../../Components/ShortcutsComponent/Assignee/AssigneeAvatarGroup';
 import BugTrackingBugFiltersPopover from './BugTrackingBugFiltersPopover';
 import dayjs from 'dayjs';
@@ -22,7 +23,8 @@ const BugTrackingCenter = ({
     handleDeleteBug,
     onUploadClick,
     bugFilters,
-    setBugFilters
+    setBugFilters,
+    onImageUpdate
 }) => {
     const [anchorElBug, setAnchorElBug] = useState(null);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -149,15 +151,17 @@ const BugTrackingCenter = ({
                                         <Filter size={20} />
                                     </IconButton>
                                 </Tooltip>
-                                <Button
-                                    variant="contained"
-                                    size="small"
-                                    startIcon={<Bug size={16} />}
-                                    onClick={() => { setViewMode('gallery'); setIsCreatingNew(true); }}
-                                    className='buttonClassname'
-                                >
-                                    New
-                                </Button>
+                                {searchedBugList.length > 0 && (
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        startIcon={<Bug size={16} />}
+                                        onClick={() => { setViewMode('gallery'); setIsCreatingNew(true); }}
+                                        className='buttonClassname'
+                                    >
+                                        New
+                                    </Button>
+                                )}
                             </Box>
                         </Box>
 
@@ -177,37 +181,18 @@ const BugTrackingCenter = ({
                                         onCancelNew={() => setIsCreatingNew(false)}
                                         onDragOver={handleGalleryDragOver}
                                         onDrop={handleGalleryDrop}
+                                        onImageUpdate={onImageUpdate}
                                     />
                                 </Box>
                             ) : (
                                 searchedBugList.length === 0 ? (
                                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                                        <Box
-                                            sx={{
-                                                border: '2px dashed #e0e0e0',
-                                                borderRadius: 2,
-                                                p: 4,
-                                                textAlign: 'center',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s',
-                                                bgcolor: '#fafafa',
-                                                '&:hover': { borderColor: '#7367f0', bgcolor: '#f5f5f9' },
-                                                position: 'relative',
-                                                minHeight: '200px',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                justifyContent: 'center',
-                                                alignItems: 'center'
-                                            }}
+                                        <BugUploadBox
                                             onDragOver={handleGalleryDragOver}
                                             onDrop={handleGalleryDrop}
-                                            onClick={() => document.getElementById('list-upload').click()}
-                                        >
-                                            <input type="file" id="list-upload" hidden accept="image/*" onChange={e => { handleNewBugClick(e.target.files[0]); e.target.value = null; }} />
-                                            <Upload size={48} color="#999" />
-                                            <Typography variant="h6" sx={{ mt: 2, color: '#666' }}>Drop Image or Click to Upload New Bug</Typography>
-                                            <Typography variant="body2" color="textSecondary">Drag and drop an image here or click to browse files</Typography>
-                                        </Box>
+                                            onFileSelect={handleNewBugClick}
+                                            inputId="list-upload"
+                                        />
                                     </Box>
                                 ) : (
                                     <Box sx={{ p: 2 }}>
@@ -258,12 +243,12 @@ const BugTrackingCenter = ({
                                                                             />
                                                                         )}
                                                                         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                                                            <Typography sx={{ fontWeight: 600, fontSize: '0.95rem', lineHeight: 1.2 }}>
+                                                                            <Typography>
                                                                                 {bug.bugtitle || '(No Title)'}
                                                                             </Typography>
                                                                             {!!bug.description && (
                                                                                 <Typography
-                                                                                    variant="body2"
+                                                                                    variant="caption"
                                                                                     sx={{
                                                                                         color: 'text.secondary',
                                                                                         overflow: 'hidden',
@@ -380,4 +365,4 @@ const BugTrackingCenter = ({
     );
 };
 
-export default BugTrackingCenter;
+export default BugTrackingCenter;   
