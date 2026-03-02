@@ -14,6 +14,7 @@ export const useImageEditor = (initialImage, open) => {
     // State
     const [currentImage, setCurrentImage] = useState(initialImage || '');
     const [isImageReady, setIsImageReady] = useState(false);
+    const [isLoadingImage, setIsLoadingImage] = useState(false);
     const [tab, setTab] = useState('ctrl');
     const [drawMode, setDrawMode] = useState(false);
     const [textMode, setTextMode] = useState(false);
@@ -581,6 +582,7 @@ export const useImageEditor = (initialImage, open) => {
         // Auto-bake existing selection before importing new one
         if (selCut) bakeCut(selCut);
 
+        setIsLoadingImage(true);
         const url = URL.createObjectURL(file);
         const img = new Image();
         img.onload = () => {
@@ -592,6 +594,7 @@ export const useImageEditor = (initialImage, open) => {
                 setCuts(next);
                 setSelCut(newId);
                 pushHistory('Import Image', { cuts: next });
+                setIsLoadingImage(false);
             } else {
                 // Initial load — bake image into permanent base canvas
                 setRotation(0); setFlipH(false); setFlipV(false);
@@ -621,11 +624,87 @@ export const useImageEditor = (initialImage, open) => {
                 hIdxRef.current = 0;
 
                 setIsImageReady(true);
+                setIsLoadingImage(false);
             }
         };
-        img.onerror = () => { URL.revokeObjectURL(url); console.error('Failed to load image'); };
+        img.onerror = () => { 
+            URL.revokeObjectURL(url); 
+            console.error('Failed to load image');
+            setIsLoadingImage(false);
+        };
         img.src = url;
-    }, [isImageReady, cuts, pushHistory]);
+    }, [isImageReady, cuts, pushHistory, selCut, bakeCut]);
+
+    // Auto-load initialImage when modal opens
+    useEffect(() => {
+        if (open && initialImage && !isImageReady && loadedSrcRef.current !== initialImage) {
+            loadedSrcRef.current = initialImage;
+            setIsLoadingImage(true);
+            
+            // Convert URL to Blob/File
+            fetch(initialImage)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], 'bug-image.png', { type: blob.type || 'image/png' });
+                    loadFile(file);
+                })
+                .catch(err => {
+                    console.error('Failed to load initial image:', err);
+                    setIsLoadingImage(false);
+                });
+        }
+        
+        // Reset canvas when modal closes - with delay for smooth animation
+        if (!open && isImageReady) {
+            // Delay reset to allow modal close animation to complete
+            const resetTimer = setTimeout(() => {
+                // Clear all states
+                setIsImageReady(false);
+                setIsLoadingImage(false);
+                setHistory([]);
+                setHistIdx(-1);
+                hIdxRef.current = -1;
+                loadedSrcRef.current = null;
+                setCurrentImage('');
+                setDrawings([]);
+                setTexts([]);
+                setShapes([]);
+                setAdj({ br: 0, co: 0, sa: 0, sh: 0 });
+                setActiveFx(null);
+                setRotation(0);
+                setFlipH(false);
+                setFlipV(false);
+                setCuts([]);
+                setHoles([]);
+                setSelTxt(null);
+                setSelShape(null);
+                setSelCut(null);
+                setEditTxt(null);
+                setDrawMode(false);
+                setTextMode(false);
+                setCropMode(false);
+                setCutMode(false);
+                setShapeMode(false);
+                setCanvasW(800);
+                setCanvasH(600);
+                
+                // Clear canvas
+                if (ctx.current && canvasRef.current) {
+                    ctx.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+                }
+                
+                // Clear base canvas
+                if (baseCanvasRef.current) {
+                    const bctx = baseCanvasRef.current.getContext('2d');
+                    if (bctx) {
+                        bctx.clearRect(0, 0, baseCanvasRef.current.width, baseCanvasRef.current.height);
+                    }
+                }
+            }, 300); // Delay matches MUI Dialog transition duration
+            
+            return () => clearTimeout(resetTimer);
+        }
+    }, [open, initialImage, isImageReady, loadFile]);
 
     const handleMouseDown = (e, dir = null) => {
         if (!canvasRef.current) return;
@@ -1257,7 +1336,7 @@ export const useImageEditor = (initialImage, open) => {
     }, [undo, redo, cropMode, crop, cutMode, cut, handleApplyCrop, handleApplyCut, handleKeyCut, handleKeyPaste, isImageReady, loadFile, handleZoom]);
 
     return {
-        canvasRef, txtEditorRef, cwRef, currentImage, isImageReady, tab, setTab, drawMode, setDrawMode, textMode, setTextMode, cropMode, setCropMode,
+        canvasRef, txtEditorRef, cwRef, currentImage, isImageReady, isLoadingImage, tab, setTab, drawMode, setDrawMode, textMode, setTextMode, cropMode, setCropMode,
         adj, setAdj, activeFx, setActiveFx, brushColor, setBrushColor, brushSize, setBrushSize, brushOpacity, setBrushOpacity,
         rotation, setRotation, flipH, setFlipH, flipV, setFlipV,
         crop, setCrop, texts, setTexts, selTxt, setSelTxt, editTxt, setEditTxt, history, setHistory, histIdx, setHistIdx, drawings, setDrawings,

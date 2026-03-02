@@ -27,14 +27,16 @@ import {
     AddPhotoAlternate,
     Add,
     Remove,
+    Download,
 } from '@mui/icons-material';
 
 import { useImageEditor } from './useImageEditor';
 import { TextProperties, BrushProperties, ShapeProperties } from './EditorComponents';
+import { compressImagesToWebP } from '../Utils/globalfun';
 
-const ImageEditorModal = ({ open, onClose, initialImage }) => {
+const ImageEditorModal = ({ open, onClose, initialImage, onSave }) => {
     const {
-        canvasRef, txtEditorRef, cwRef, isImageReady, tab, setTab, drawMode, setDrawMode, textMode, setTextMode, cropMode, setCropMode,
+        canvasRef, txtEditorRef, cwRef, isImageReady, isLoadingImage, tab, setTab, drawMode, setDrawMode, textMode, setTextMode, cropMode, setCropMode,
         adj, setAdj, activeFx, setActiveFx, brushColor, setBrushColor, brushSize, setBrushSize, brushOpacity, setBrushOpacity,
         rotation, setRotation, flipH, setFlipH, flipV, setFlipV,
         crop, setCrop, texts, setTexts, selTxt, setSelTxt, editTxt, setEditTxt, history, histIdx, setHistIdx, setDrawings,
@@ -79,10 +81,31 @@ const ImageEditorModal = ({ open, onClose, initialImage }) => {
 
     return (
         <Dialog
-            open={open} onClose={onClose} maxWidth={false} fullWidth
+            open={open} 
+            onClose={onClose} 
+            maxWidth={false} 
+            fullWidth
+            TransitionProps={{
+                timeout: 300
+            }}
             sx={{
-                '& .MuiDialog-paper': { m: 0, width: '97vw', height: '95vh', maxWidth: '97vw', maxHeight: '95vh', borderRadius: '12px', backgroundColor: '#fff', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', overflow: 'hidden' },
-                '& .MuiBackdrop-root': { backgroundColor: 'rgba(47, 43, 61, 0.4)', backdropFilter: 'blur(4px)' },
+                '& .MuiDialog-paper': { 
+                    m: 0, 
+                    width: '97vw', 
+                    height: '95vh', 
+                    maxWidth: '97vw', 
+                    maxHeight: '95vh', 
+                    borderRadius: '12px', 
+                    backgroundColor: '#fff', 
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)', 
+                    overflow: 'hidden',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                },
+                '& .MuiBackdrop-root': { 
+                    backgroundColor: 'rgba(47, 43, 61, 0.4)', 
+                    backdropFilter: 'blur(4px)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                },
             }}
         >
             <DialogContent sx={{ p: 0, height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -116,22 +139,79 @@ const ImageEditorModal = ({ open, onClose, initialImage }) => {
                         >
                             Reset
                         </Button>
-                        {isImageReady && (
-                            <Button
-                                onClick={removeImage}
-                                sx={{ textTransform: 'none', color: '#ea5455', fontSize: 13, borderRadius: '6px', px: 1.5, '&:hover': { backgroundColor: 'rgba(234,84,85,0.08)' } }}
-                                startIcon={<CloseIcon sx={{ fontSize: 18 }} />}
+                        
+                        {/* Divider */}
+                        <Box sx={{ width: '1px', height: 24, backgroundColor: 'rgba(47, 43, 61, 0.12)', mx: 1 }} />
+                        
+                        {/* Undo/Redo Group */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 0.5 }}>
+                            <IconButton onClick={undo} size="small" sx={{ color: '#6d6b77', '&:hover': { backgroundColor: 'rgba(47, 43, 61, 0.08)', color: '#2f2b3d' } }} title="Undo">
+                                <Undo sx={{ fontSize: 20 }} />
+                            </IconButton>
+                            <IconButton onClick={redo} size="small" sx={{ color: '#6d6b77', '&:hover': { backgroundColor: 'rgba(47, 43, 61, 0.08)', color: '#2f2b3d' } }} title="Redo">
+                                <Redo sx={{ fontSize: 20 }} />
+                            </IconButton>
+                        </Box>
+                        
+                        {/* Divider */}
+                        <Box sx={{ width: '1px', height: 24, backgroundColor: 'rgba(47, 43, 61, 0.12)', mx: 1 }} />
+                        
+                        {/* Actions Group */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 0.5 }}>
+                            <IconButton 
+                                onClick={async () => { 
+                                    if (!canvasRef.current) return;
+                                    
+                                    try {
+                                        // Convert canvas to blob
+                                        const blob = await new Promise(resolve => {
+                                            canvasRef.current.toBlob(resolve, 'image/png');
+                                        });
+                                        
+                                        // Create a File from blob
+                                        const file = new File([blob], 'edited_image.png', { type: 'image/png' });
+                                        
+                                        // Compress to WebP
+                                        const compressed = await compressImagesToWebP(file);
+                                        
+                                        if (compressed && compressed.length > 0) {
+                                            // Download compressed image
+                                            const link = document.createElement('a');
+                                            link.download = compressed[0].compressedName;
+                                            link.href = compressed[0].previewUrl;
+                                            link.click();
+                                            
+                                            // Clean up
+                                            setTimeout(() => URL.revokeObjectURL(compressed[0].previewUrl), 100);
+                                        }
+                                    } catch (error) {
+                                        console.error('Error compressing image:', error);
+                                        // Fallback to regular download
+                                        const link = document.createElement('a');
+                                        link.download = 'edited_image.png';
+                                        link.href = canvasRef.current.toDataURL('image/png');
+                                        link.click();
+                                    }
+                                }}
+                                size="small" 
+                                sx={{ color: '#6d6b77', '&:hover': { backgroundColor: 'rgba(47, 43, 61, 0.08)', color: '#2f2b3d' } }} 
+                                title="Download"
                             >
-                                Remove
-                            </Button>
-                        )}
-                        <IconButton onClick={undo} size="small" sx={{ color: '#6d6b77', '&:hover': { backgroundColor: 'rgba(47, 43, 61, 0.08)', color: '#2f2b3d' } }} title="Undo"><Undo sx={{ fontSize: 20 }} /></IconButton>
-                        <IconButton onClick={redo} size="small" sx={{ color: '#6d6b77', '&:hover': { backgroundColor: 'rgba(47, 43, 61, 0.08)', color: '#2f2b3d' } }} title="Redo"><Redo sx={{ fontSize: 20 }} /></IconButton>
-                        <IconButton component="label" size="small" sx={{ color: '#6d6b77', '&:hover': { backgroundColor: 'rgba(47, 43, 61, 0.08)', color: '#2f2b3d' } }} title="Add Image">
-                            <AddPhotoAlternate sx={{ fontSize: 22 }} />
-                            <input hidden type="file" accept="image/*" onChange={e => handleFileFunc(e.target.files?.[0])} />
+                                <Download sx={{ fontSize: 20 }} />
+                            </IconButton>
+                            <IconButton component="label" size="small" sx={{ color: '#6d6b77', '&:hover': { backgroundColor: 'rgba(47, 43, 61, 0.08)', color: '#2f2b3d' } }} title="Add Image">
+                                <AddPhotoAlternate sx={{ fontSize: 22 }} />
+                                <input hidden type="file" accept="image/*" onChange={e => handleFileFunc(e.target.files?.[0])} />
+                            </IconButton>
+                        </Box>
+                        
+                        {/* Divider */}
+                        <Box sx={{ width: '1px', height: 24, backgroundColor: 'rgba(47, 43, 61, 0.12)', mx: 1 }} />
+                        
+                        {/* Close Button */}
+                        <IconButton onClick={onClose} size="small" sx={{ color: '#6d6b77', '&:hover': { backgroundColor: 'rgba(47, 43, 61, 0.08)', color: '#2f2b3d' } }} title="Close">
+                            <CloseIcon sx={{ fontSize: 20 }} />
                         </IconButton>
-                        <IconButton onClick={onClose} size="small" sx={{ color: '#6d6b77', '&:hover': { backgroundColor: 'rgba(47, 43, 61, 0.08)', color: '#2f2b3d' } }} title="Close"><CloseIcon sx={{ fontSize: 20 }} /></IconButton>
                     </Box>
                 </Box>
 
@@ -173,6 +253,42 @@ const ImageEditorModal = ({ open, onClose, initialImage }) => {
                         {isDragging && !isImageReady && (
                             <Box sx={{ position: 'absolute', inset: 16, zIndex: 60, borderRadius: '16px', border: '3px dashed #7367f0', backgroundColor: 'rgba(115,103,240,0.08)', pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pulse 1.5s infinite ease-in-out', '@keyframes pulse': { '0%': { opacity: 0.6, transform: 'scale(1)' }, '50%': { opacity: 1, transform: 'scale(0.99)' }, '100%': { opacity: 0.6, transform: 'scale(1)' } } }}>
                                 <Typography sx={{ color: '#7367f0', fontWeight: 700, fontSize: 24, letterSpacing: 1 }}>DROP TO IMPORT</Typography>
+                            </Box>
+                        )}
+
+                        {isLoadingImage && (
+                            <Box sx={{ 
+                                position: 'absolute', 
+                                inset: 0, 
+                                zIndex: 70, 
+                                backgroundColor: 'rgba(235, 235, 235, 0.9)', 
+                                backdropFilter: 'blur(4px)',
+                                display: 'flex', 
+                                flexDirection: 'column',
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                gap: 3
+                            }}>
+                                <Box sx={{ 
+                                    width: 80, 
+                                    height: 80, 
+                                    borderRadius: '50%', 
+                                    border: '6px solid rgba(115, 103, 240, 0.2)',
+                                    borderTopColor: '#7367f0',
+                                    animation: 'spin 1s linear infinite',
+                                    '@keyframes spin': {
+                                        '0%': { transform: 'rotate(0deg)' },
+                                        '100%': { transform: 'rotate(360deg)' }
+                                    }
+                                }} />
+                                <Typography sx={{ 
+                                    color: '#7367f0', 
+                                    fontWeight: 700, 
+                                    fontSize: 18, 
+                                    letterSpacing: 0.5 
+                                }}>
+                                    Loading Image...
+                                </Typography>
                             </Box>
                         )}
 
@@ -589,11 +705,68 @@ const ImageEditorModal = ({ open, onClose, initialImage }) => {
 
                                             <Box sx={{ px: 2, py: 3, mt: 'auto' }}>
                                                 <Button
-                                                    onClick={() => { if (!canvasRef.current) return; const link = document.createElement('a'); link.download = 'edited_image.png'; link.href = canvasRef.current.toDataURL('image/png'); link.click(); }}
-                                                    fullWidth variant="contained" startIcon={<Save />}
-                                                    sx={{ height: 48, borderRadius: '12px', backgroundColor: '#7367f0', boxShadow: '0 8px 16px rgba(115,103,240,0.3)', textTransform: 'none', fontWeight: 700, fontSize: 15, '&:hover': { backgroundColor: '#6459d8', transform: 'translateY(-2px)' }, transition: 'all 0.2s' }}
+                                                    onClick={async () => { 
+                                                        if (!canvasRef.current) return;
+                                                        
+                                                        try {
+                                                            // Convert canvas to blob
+                                                            const blob = await new Promise(resolve => {
+                                                                canvasRef.current.toBlob(resolve, 'image/png');
+                                                            });
+                                                            
+                                                            // Create a File from blob
+                                                            const file = new File([blob], 'edited_image.png', { type: 'image/png' });
+                                                            
+                                                            // Compress to WebP
+                                                            const compressed = await compressImagesToWebP(file);
+                                                            
+                                                            if (compressed && compressed.length > 0) {
+                                                                // Save to app with compressed image
+                                                                if (onSave) {
+                                                                    onSave(compressed[0].previewUrl);
+                                                                }
+                                                                
+                                                                // Also download compressed image
+                                                                const link = document.createElement('a');
+                                                                link.download = compressed[0].compressedName;
+                                                                link.href = compressed[0].previewUrl;
+                                                                link.click();
+                                                                
+                                                                // Clean up after a short delay
+                                                                setTimeout(() => URL.revokeObjectURL(compressed[0].previewUrl), 100);
+                                                            }
+                                                        } catch (error) {
+                                                            console.error('Error compressing image:', error);
+                                                            // Fallback to regular save/download
+                                                            const dataUrl = canvasRef.current.toDataURL('image/png');
+                                                            if (onSave) {
+                                                                onSave(dataUrl);
+                                                            }
+                                                            const link = document.createElement('a');
+                                                            link.download = 'edited_image.png';
+                                                            link.href = dataUrl;
+                                                            link.click();
+                                                        }
+                                                    }}
+                                                    fullWidth 
+                                                    variant="contained" 
+                                                    startIcon={<Save />}
+                                                    sx={{ 
+                                                        height: 48, 
+                                                        borderRadius: '12px', 
+                                                        backgroundColor: '#7367f0', 
+                                                        boxShadow: '0 8px 16px rgba(115,103,240,0.3)', 
+                                                        textTransform: 'none', 
+                                                        fontWeight: 700, 
+                                                        fontSize: 15, 
+                                                        '&:hover': { 
+                                                            backgroundColor: '#6459d8', 
+                                                            transform: 'translateY(-2px)' 
+                                                        }, 
+                                                        transition: 'all 0.2s' 
+                                                    }}
                                                 >
-                                                    Save Export
+                                                    Save Changes
                                                 </Button>
                                             </Box>
                                         </>

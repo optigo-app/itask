@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { Box, Typography, Button, IconButton, TextField } from '@mui/material';
 import { X, Upload } from 'lucide-react';
 import DepartmentAssigneeAutocomplete from '../../Components/ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
@@ -8,7 +8,7 @@ import dayjs from 'dayjs';
 import utc from "dayjs/plugin/utc";
 import timezone from 'dayjs/plugin/timezone';
 
-const BugTrackingForm = ({
+const BugTrackingForm = memo(({
     isFormOpen,
     selectedTask,
     selectedBugId,
@@ -17,6 +17,7 @@ const BugTrackingForm = ({
     handleAttributeChange,
     handleSolvedByChange,
     handleTestedByChange,
+    handleDateChange,
     handleSubmit,
     handleImageUpload,
     handleDragOver,
@@ -24,11 +25,70 @@ const BugTrackingForm = ({
     taskBugStatusData,
     taskBugPriorityData,
     taskAssigneeData,
-    setFormOpen
+    setFormOpen,
+    handleRemoveImage,
+    isSubmitting
 }) => {
     dayjs.extend(utc);
     dayjs.extend(timezone);
+
+    const [titleError, setTitleError] = useState(false);
+    const [titleHelperText, setTitleHelperText] = useState('');
+    const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+
+    // Reset error state when form opens or bug changes
+    useEffect(() => {
+        setTitleError(false);
+        setTitleHelperText('');
+        setHasAttemptedSubmit(false);
+    }, [isFormOpen, selectedBugId]);
+
     if (!isFormOpen || !selectedTask) return null;
+
+    const handleTitleChange = (e) => {
+        handleChange(e);
+
+        // Only validate if user has already attempted to submit
+        if (hasAttemptedSubmit) {
+            const value = e.target.value.trim();
+
+            if (!value) {
+                setTitleError(true);
+                setTitleHelperText('Bug title is required');
+            } else if (value.length < 3) {
+                setTitleError(true);
+                setTitleHelperText('Bug title must be at least 3 characters');
+            } else {
+                setTitleError(false);
+                setTitleHelperText('');
+            }
+        }
+    };
+
+    const handleFormSubmit = (e) => {
+        e.preventDefault();
+        setHasAttemptedSubmit(true);
+
+        // Validate bug title before submit
+        const titleValue = formData.bugtitle?.trim();
+        if (!titleValue) {
+            setTitleError(true);
+            setTitleHelperText('Bug title is required');
+            return;
+        } else if (titleValue.length < 3) {
+            setTitleError(true);
+            setTitleHelperText('Bug title must be at least 3 characters');
+            return;
+        }
+
+        // If validation passes, call the original handleSubmit
+        handleSubmit(e);
+
+        // Reset error state after successful submit
+        setTitleError(false);
+        setTitleHelperText('');
+        setHasAttemptedSubmit(false);
+    };
 
     const renderAutocomplete = (label, name, value, placeholder, options, onChange, error = false, helperText = '', disabled) => (
         <CustomAutocomplete
@@ -48,24 +108,27 @@ const BugTrackingForm = ({
     return (
         <Box className="column right-column" sx={{ width: '400px', borderLeft: '1px solid #eee', bgcolor: '#fff', display: 'flex', flexDirection: 'column', height: '100%' }}>
             <Box className="form-header" sx={{ p: 2, borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6">{selectedBugId && !selectedBugId.startsWith('temp') ? 'Edit Bug' : 'New Bug'}</Typography>
+                <Typography variant="h6">{selectedBugId && String(selectedBugId).startsWith('temp') ? 'New Bug' : selectedBugId ? 'Edit Bug' : 'New Bug'}</Typography>
                 <IconButton size="small" onClick={() => setFormOpen(false)}><X size={20} /></IconButton>
             </Box>
 
             <Box className="bug-form-container" sx={{ p: 3, overflowY: 'auto', flex: 1 }}>
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleFormSubmit}>
 
                     {/* Bug Title */}
                     <Box sx={{ mb: 2.5 }}>
-                        <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600 }}>Bug Title</Typography>
+                        <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600 }}>
+                            Bug Title <span style={{ color: '#d32f2f', fontSize: '1.1em' }}>*</span>
+                        </Typography>
                         <TextField
                             name="bugtitle"
                             value={formData.bugtitle}
-                            onChange={handleChange}
+                            onChange={handleTitleChange}
                             placeholder="e.g. Button not clicking..."
                             fullWidth
                             size="small"
-                            required
+                            error={titleError}
+                            helperText={titleHelperText}
                             {...commonTextFieldProps}
                         />
                     </Box>
@@ -155,7 +218,14 @@ const BugTrackingForm = ({
                             />
                             <label htmlFor="bug-upload" style={{ cursor: 'pointer', width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                 {formData.imagePreview ? (
-                                    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => { e.preventDefault(); handleRemoveImage(); }}
+                                            sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(255,255,255,0.8)', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                                        >
+                                            <X size={16} />
+                                        </IconButton>
                                         <img src={formData.imagePreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: '130px', borderRadius: 8, display: 'block', marginBottom: '8px' }} />
                                         <Typography variant="caption" sx={{ color: '#7367f0', fontWeight: 600 }}>Change Image</Typography>
                                     </Box>
@@ -175,16 +245,16 @@ const BugTrackingForm = ({
                         type="submit"
                         variant="contained"
                         fullWidth
-                        disabled={!selectedTask?.taskid}
+                        disabled={!selectedTask?.taskid || isSubmitting}
                         sx={{ py: 1.5, borderRadius: 2, fontWeight: 600, textTransform: 'none', fontSize: '1rem', boxShadow: '0 4px 14px 0 rgba(115, 103, 240, 0.3)' }}
                     >
-                        {selectedBugId && !selectedBugId.startsWith('temp') ? 'Update Bug' : 'Add Bug'}
+                        {isSubmitting ? 'Saving...' : (selectedBugId && !String(selectedBugId).startsWith('temp') ? 'Update Bug' : 'Add Bug')}
                     </Button>
 
                 </form>
             </Box>
         </Box>
     );
-};
+});
 
 export default BugTrackingForm;
