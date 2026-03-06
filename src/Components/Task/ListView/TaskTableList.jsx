@@ -18,7 +18,7 @@ import {
     Menu,
     MenuItem,
 } from "@mui/material";
-import { Archive, CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Timer, Undo2 } from "lucide-react";
+import { Archive, CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Star, Timer, Undo2 } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -92,7 +92,7 @@ const buildRestoreIds = (task, rootTasks) => {
 };
 
 const initialColumns = [
-    { id: "taskname", label: "Task Name", width: 290 },
+    { id: "taskname", label: "Task Name", width: 310 },
     { id: "taskPr", label: "Project", width: 110 },
     { id: "progress", label: "Progress", width: 80 },
     { id: "status", label: "Status", width: 100 },
@@ -101,7 +101,7 @@ const initialColumns = [
     { id: "DeadLineDate", label: "Deadline", width: 80 },
     { id: "priority", label: "Priority", width: 80 },
     { id: "estimate", label: "Estimate", width: 70 },
-    { id: "actions", label: "Actions", width: 170 },
+    { id: "actions", label: "Actions", width: 150 },
 ];
 
 
@@ -609,7 +609,8 @@ const TableView = ({
         isResizing = false,
         paddingLeft = 0,
         parentArchiveInfo = null,
-        parentArchived = false
+        parentArchived = false,
+        handleTaskFavorite = null
     ) => {
         const ownArchiveInfo = task?.Completion_timestamp ? getArchiveInfoFromEndDate(task, 7) : null;
         const archiveInfo = ownArchiveInfo || parentArchiveInfo;
@@ -642,6 +643,38 @@ const TableView = ({
                                 style={{ display: 'flex', alignItems: 'center', gap: '5px', maxWidth: `${columns[0]?.width}` }}
                                 title={`${task?.taskno ? task.taskno + ' - ' : ''}${task?.taskname}`}
                             >
+                                {/* Favorite Button at Start */}
+                                <Tooltip title={task?.isfavourite === 1 ? "Remove from favorites" : "Add to favorites"} arrow placement="top">
+                                    <IconButton
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleTaskFavorite(task);
+                                        }}
+                                        sx={{
+                                            display: "flex",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            padding: '3px',
+                                            minWidth: '18px',
+                                            minHeight: '18px',
+                                            width: '18px',
+                                            height: '18px',
+                                            borderRadius: '50% !important',
+                                            backgroundColor: task?.isfavourite === 1 ? "#FFD700" : "white",
+                                            boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                                            "&:hover": {
+                                                backgroundColor: task?.isfavourite === 1 ? "#FFC700" : "#f5f5f5",
+                                                boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                                            },
+                                        }}
+                                    >
+                                        <Star
+                                            size={14}
+                                            fill={task?.isfavourite === 1 ? "#fff" : "transparent"}
+                                            color={task?.isfavourite === 1 ? "#fff" : "#0000008a"}
+                                        />
+                                    </IconButton>
+                                </Tooltip>
                                 <span
                                     style={{
                                         display: '-webkit-box',
@@ -670,6 +703,37 @@ const TableView = ({
                                     </span>
                                 )}
                             </div>
+                            {/* <Tooltip title={task?.isfavourite === 1 ? "Remove from favorites" : "Add to favorites"} arrow placement="top">
+                                    <IconButton
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleTaskFavorite(task);
+                                        }}
+                                        sx={{
+                                            display: "flex",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            padding: '3px',
+                                            minWidth: '20px',
+                                            minHeight: '20px',
+                                            width: '20px',
+                                            height: '20px',
+                                            borderRadius: '50% !important',
+                                            backgroundColor: task?.isfavourite === 1 ? "#FFD700" : "white",
+                                            boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                                            "&:hover": {
+                                                backgroundColor: task?.isfavourite === 1 ? "#FFC700" : "#f5f5f5",
+                                                boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                                            },
+                                        }}
+                                    >
+                                        <Star
+                                            size={14}
+                                            fill={task?.isfavourite === 1 ? "#fff" : "transparent"}
+                                            color={task?.isfavourite === 1 ? "#fff" : "#0000008a"}
+                                        />
+                                    </IconButton>
+                                </Tooltip> */}
                             {archiveInfo?.label && (
                                 <div style={{ marginTop: '4px' }}>
                                     <Tooltip
@@ -766,7 +830,7 @@ const TableView = ({
                                 </div>
                             )}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div className="second_row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {task?.isburning === 1 && (
                                 <img
                                     src={BurningImage}
@@ -900,7 +964,8 @@ const TableView = ({
                                 false,
                                 `${15 * (depth + 1)}`,
                                 parentArchiveInfo,
-                                parentArchived
+                                parentArchived,
+                                handleTaskFavorite
                             )}
                             <IconButton
                                 id="add-task"
@@ -1149,7 +1214,11 @@ const TableView = ({
                                                             handleAddTask,
                                                             hoveredTaskId,
                                                             hoveredColumnname,
-                                                            resizingColumnId === 'task'
+                                                            resizingColumnId === 'task',
+                                                            0,
+                                                            null,
+                                                            false,
+                                                            handleTaskFavorite
                                                         )}
                                                     </TableCell>
                                                     <TableCell

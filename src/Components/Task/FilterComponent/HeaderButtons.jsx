@@ -14,7 +14,7 @@ import { Add as AddIcon } from "@mui/icons-material";
 import SidebarDrawer from "../../FormComponent/Sidedrawer";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { getRandomAvatarColor, ImageUrl, getUserProfileData, getAuthData } from "../../../Utils/globalfun";
+import { getUserProfileData } from "../../../Utils/globalfun";
 import {
   fetchlistApiCall,
   formData,
@@ -297,7 +297,7 @@ const HeaderButtons = ({
                 },
               }}
             >
-              <FilterAltIcon className="iconbtn" color="#0000008a" />
+              <FilterAltIcon className="iconbtn" color="#0000008a" size={20}/>
             </IconButton>
           </Tooltip>
           {location?.pathname?.includes("/tasks") && (
@@ -307,16 +307,49 @@ const HeaderButtons = ({
               arrow
               classes={{ tooltip: "custom-tooltip" }}
             >
+              {hasAccess(PERMISSIONS.canTaskActions) ? (
+                <IconButton
+                  aria-label="archived task"
+                  onClick={handleArchivedTaskFilter}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    padding: '6px',
+                    backgroundColor:
+                      archiveFlag ? "#ffe0b2" : "white",
+                    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                    },
+                  }}
+                >
+                  <Archive className="iconbtn"
+                    color={
+                      archiveFlag ? "#ef6c00" : "#0000008a"
+                    } size={20} />
+                </IconButton>
+              ) : null}
+            </Tooltip>
+          )}
+
+          {location?.pathname?.includes("/tasks") && (
+            <Tooltip
+              placement="top"
+              title={showFavoritesOnly ? "Show all tasks" : "Show favorite tasks only"}
+              arrow
+              classes={{ tooltip: "custom-tooltip" }}
+            >
               <IconButton
-                aria-label="archived task"
-                onClick={handleArchivedTaskFilter}
+                aria-label="Favorite tasks"
+                onClick={onToggleFavoritesOnly}
                 sx={{
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
-                  padding: '6px',
-                  backgroundColor:
-                    archiveFlag ? "#ffe0b2" : "white",
+                  padding: '4px',
+                  backgroundColor: showFavoritesOnly ? "#FFD700" : "white",
                   boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
                   "&:hover": {
                     backgroundColor: "#f5f5f5",
@@ -324,10 +357,12 @@ const HeaderButtons = ({
                   },
                 }}
               >
-                <Archive className="iconbtn"
-                  color={
-                    archiveFlag ? "#ef6c00" : "#0000008a"
-                  } size={20} />
+                <Star
+                  className="iconbtn"
+                  size={20}
+                  fill={showFavoritesOnly ? "#fff" : "transparent"}
+                  color={showFavoritesOnly ? "#fff" : "#0000008a"}
+                />
               </IconButton>
             </Tooltip>
           )}
@@ -351,7 +386,7 @@ const HeaderButtons = ({
                   boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
                   "&:hover": {
                     backgroundColor: "#f5f5f5",
-                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.0.15)",
                   },
                 }}
               >
