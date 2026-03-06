@@ -16,6 +16,7 @@ import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/Depar
 import { PERMISSIONS } from '../Auth/Role/permissions';
 import { toast } from 'react-toastify';
 import { getDynamicStatusColor, statusColors } from '../../Utils/globalfun';
+import { Star } from 'lucide-react';
 
 const Calendar = ({
     isLoding,
@@ -37,6 +38,7 @@ const Calendar = ({
     const setCalFormData = useSetRecoilState(CalformData);
     const selectedEventfilter = useRecoilValue(CalEventsFilter)
     const [calEvData, setCalEvData] = useRecoilState(calendarData);
+    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const actualTaskDataValue = useRecoilValue(TaskData);
     const [duplicateDialog, setDuplicateDialog] = useState({ open: false, event: null });
@@ -118,10 +120,29 @@ const Calendar = ({
         setDuplicateDialog({ open: true, event });
     };
 
+    const isTaskFavorite = (taskId) => {
+        if (!taskId) return false;
+        const findTaskFavorite = (tasks) => {
+            for (const task of tasks) {
+                if (String(task.taskid) === String(taskId)) {
+                    return task.isfavourite === 1;
+                }
+                if (task.subtasks?.length > 0) {
+                    const found = findTaskFavorite(task.subtasks);
+                    if (found !== undefined) return found;
+                }
+            }
+            return false;
+        };
+        return findTaskFavorite(actualTaskDataValue || []);
+    };
+
     const filterEvents = (events, selectedCalendars) => {
-        return events?.filter(event =>
-            !event?.category || selectedCalendars?.includes(event.category)
-        ) || [];
+        return events?.filter(event => {
+            // Filter by category only
+            const categoryMatch = !event?.category || selectedCalendars?.includes(event.category);
+            return categoryMatch;
+        }) || [];
     };
 
     const filteredEvents = filterEvents(calEvData, selectedEventfilter);
@@ -153,7 +174,7 @@ const Calendar = ({
                 );
             }
         }
-    }, []);
+    }, []); // Remove showFavoritesOnly dependency
 
     const mapEventDetails = (event) => {
         const start = event?.start ?? event?.StartDate;
@@ -266,7 +287,7 @@ const Calendar = ({
         headerToolbar: {
             start: 'sidebarToggle, prev, next, title',
             center: '',
-            end: 'timeGridWeek,timeGridDay,dayGridMonth,listMonth'
+            end: 'favoritesToggle | timeGridWeek,timeGridDay,dayGridMonth,listMonth'
         },
         views: {
             week: {
@@ -288,12 +309,33 @@ const Calendar = ({
                 click() {
                     setSidebarToggle(prev => !prev);
                 }
+            },
+            favoritesToggle: {
+                icon: showFavoritesOnly ? 'fc-icon-star-filled' : 'fc-icon-star-outline',
+                hint: showFavoritesOnly ? 'Show all events' : 'Show favorite events only',
+                className: 'fc-favoritesToggle-button',
+                click() {
+                    setShowFavoritesOnly(prev => !prev);
+                }
             }
         },
         eventClassNames({ event }) {
             const category = event.extendedProps.category || 'ETC';
             const colorClass = calendarsColor[category] || 'primary';
-            return [`bg-${colorClass}`];
+            const classes = [`bg-${colorClass}`];
+            
+            // Add favorite class if the event is a favorite
+            const taskId = event.extendedProps?.taskid;
+            if (taskId && isTaskFavorite(taskId)) {
+                classes.push('favorite-event');
+            }
+            
+            // Add highlight class if favorites filter is active
+            if (showFavoritesOnly && taskId && isTaskFavorite(taskId)) {
+                classes.push('favorite-highlighted');
+            }
+            
+            return classes;
         },
 
         dayHeaderContent(arg) {
@@ -378,13 +420,18 @@ const Calendar = ({
 
             const estimateText = formatEstimate(estimateHrs);
 
+            // Check if this event is a favorite
+            const taskId = event.extendedProps?.taskid;
+            const isFavorite = taskId && isTaskFavorite(taskId);
+            const starIcon = isFavorite ? '<span style="color:#f57c00;font-size:14px;margin-left:4px;">★</span>' : '';
+
             // For month view, use simpler layout
             if (currentView === 'dayGridMonth') {
                 return {
                     html: `
                         <div class="fc-event-main-frame calendar-event-container month-event">
                             <div class="fc-event-content">
-                                <span class="fc-event-title">${event.title || ''}</span>
+                                <span class="fc-event-title">${event.title || ''}${starIcon}</span>
                                 ${estimateText ? `<span class="fc-event-estimate">${estimateText}</span>` : ''}
                                 ${statusPillHtml}
                             </div>
@@ -431,7 +478,7 @@ const Calendar = ({
                         </div>
                         <div class="fc-event-title-container">
                             <div class="fc-event-title fc-sticky">
-                                <span>${event.title || ''} ${estimateText}</span>
+                                <span>${event.title || ''} ${estimateText}${starIcon}</span>
                             </div>
                         </div>
                         <button class="duplicate-btn" data-event-id="${event.id}" title="Duplicate Event">
@@ -699,7 +746,12 @@ const Calendar = ({
         },
     };
 
-
+    useEffect(() => {
+        const button = document.querySelector('.fc-favoritesToggle-button');
+        if (button) {
+            button.setAttribute('data-active', showFavoritesOnly.toString());
+        }
+    }, [showFavoritesOnly]);
 
     const handleDuplicateEdit = () => {
         const { event } = duplicateDialog;

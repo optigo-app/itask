@@ -13,7 +13,11 @@ import {
     Divider,
     MenuItem,
     Menu,
-    Chip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
 } from "@mui/material";
 import {
     Menu as MenuIcon,
@@ -21,7 +25,7 @@ import {
     ExpandLess,
     ExpandMore
 } from "@mui/icons-material";
-import { Boxes, Bug, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
+import { Boxes, Bug, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt, AlertTriangle, ExternalLink, CheckCircle, X } from 'lucide-react';
 import logo from "../../Assests/iconLogo.png";
 import itasknewLogo from "../../Assests/tecotask.png"
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -49,6 +53,7 @@ const Sidebar = () => {
     const [reportsAnchorEl, setReportsAnchorEl] = React.useState(null);
     const setFilters = useSetRecoilState(Advfilters);
     const taskInit = JSON?.parse(sessionStorage?.getItem('taskInit'));
+    const [bugTrackDialogOpen, setBugTrackDialogOpen] = useState(false);
 
 
     // All possible menu items with additional info
@@ -56,7 +61,7 @@ const Sidebar = () => {
         { pagename: "Home", label: "Home", routes: "Home", path: "/", icon: House },
         { pagename: "Task", label: "Task", routes: "Tasks", path: "/tasks", icon: FileCheck },
         { pagename: "Project", label: "Project", routes: "Projects", path: "/projects", icon: SquareChartGantt },
-        { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "/bugtrack", icon: Bug },
+        { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "external-bug-track", icon: Bug },
         { pagename: "Inbox", label: "Inbox", routes: "Inbox", path: "/inbox", icon: Inbox },
         { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
         { pagename: "Calender", label: "My Calendar", routes: "MyCalendar", path: "/myCalendar", icon: CalendarCheck },
@@ -112,9 +117,62 @@ const Sidebar = () => {
     const handleItemClick = (pathname, routes) => {
         setFilters({})
         setActiveItem(routes);
+
+        // Handle external redirect for bug tracking
+        if (pathname === 'external-bug-track') {
+            setBugTrackDialogOpen(true);
+            return;
+        }
+
         navigate(pathname);
         if (isMobile) {
             setDrawerOpen(false);
+        }
+    };
+
+    const handleBugTrackRedirect = () => {
+        try {
+            // Collect authentication data
+            const taskInit = JSON.parse(sessionStorage.getItem('taskInit'));
+            const authParams = JSON.parse(localStorage.getItem('AuthqueryParams') || sessionStorage.getItem('AuthqueryParams'));
+            const pageAccess = JSON.parse(sessionStorage.getItem('pageAccess'));
+            const userProfile = JSON.parse(localStorage.getItem('UserProfileData') || sessionStorage.getItem('UserProfileData'));
+
+            // Collect master data
+            const taskstatusData = JSON.parse(sessionStorage.getItem('taskstatusData'));
+            const taskpriorityData = JSON.parse(sessionStorage.getItem('taskpriorityData'));
+            const taskworkcategoryData = JSON.parse(sessionStorage.getItem('taskworkcategoryData'));
+            const taskAssigneeData = JSON.parse(sessionStorage.getItem('taskAssigneeData'));
+            const taskprojectData = JSON.parse(sessionStorage.getItem('taskprojectData'));
+
+            // Prepare authentication payload
+            const authData = {
+                taskInit,
+                authParams,
+                pageAccess,
+                userProfile,
+                masterData: {
+                    taskstatusData,
+                    taskpriorityData,
+                    taskworkcategoryData,
+                    taskAssigneeData,
+                    taskprojectData
+                },
+                timestamp: Date.now(),
+                source: 'itask'
+            };
+
+            // Store in localStorage for cross-project access
+            localStorage.setItem('crossProjectAuth', JSON.stringify(authData));
+
+            // Redirect to bug tracking module
+            const redirectUrl = 'http://localhost:3002/auto-login';
+            window.open(redirectUrl, '_blank');
+
+        } catch (error) {
+            console.error('Error preparing bug track redirect:', error);
+            // Fallback: redirect without auth data
+            window.open('http://localhost:3002', '_blank');
         }
     };
 
@@ -124,6 +182,15 @@ const Sidebar = () => {
         } else {
             toggleReportsMenu();
         }
+    };
+
+    const handleBugTrackDialogClose = () => {
+        setBugTrackDialogOpen(false);
+    };
+
+    const handleBugTrackDialogConfirm = () => {
+        setBugTrackDialogOpen(false);
+        handleBugTrackRedirect();
     };
 
     const handleReportsClose = () => {
@@ -350,6 +417,83 @@ const Sidebar = () => {
                     }
                 </Box>
             </Drawer>
+
+            {/* Bug Track Redirect Confirmation Dialog */}
+            <Dialog
+                open={bugTrackDialogOpen}
+                onClose={handleBugTrackDialogClose}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: '12px',
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        overflow: 'hidden'
+                    }
+                }}
+            >
+                <DialogTitle
+                    sx={{
+                        color: '#374151',
+                        textAlign: 'center',
+                        py: 2.5,
+                        borderBottom: '1px solid #e5e7eb'
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                        <ExternalLink size={20} />
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            Redirect to Bug Tracking
+                        </Typography>
+                    </Box>
+                </DialogTitle>
+
+                <DialogContent sx={{ p: 3, textAlign: 'center' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <Box
+                            sx={{
+                                backgroundColor: '#f3f4f6',
+                                borderRadius: '50%',
+                                p: 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            <Bug size={24} color="#6366f1" />
+                        </Box>
+                        <Typography variant="body1" sx={{ color: '#374151', fontWeight: 500 }}>
+                            You are about to open the Bug Tracking module in a new tab.
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                            Your authentication will be transferred automatically.
+                        </Typography>
+                    </Box>
+                </DialogContent>
+
+                <DialogActions sx={{
+                    gap: 2,
+                    justifyContent: 'end'
+                }}>
+                    <Button
+                        onClick={handleBugTrackDialogClose}
+                        variant="outlined"
+                        startIcon={<X size={16} />}
+                        className="secondaryBtnClassname"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleBugTrackDialogConfirm}
+                        variant="contained"
+                        startIcon={<ExternalLink size={16} />}
+                        className="buttonClassname"
+                        autoFocus
+                    >
+                        Open Bug Tracking
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </motion.div>
     );
 };

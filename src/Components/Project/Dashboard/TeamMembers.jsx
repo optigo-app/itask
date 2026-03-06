@@ -13,9 +13,12 @@ import { Pencil, Trash2, Users, ShieldAlert, Eye, UserX, SearchIcon } from "luci
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { DelPrTeamsApi } from "../../../Api/TaskApi/DelPrTeamsApi";
 import TeamTemplateInfoButton from "../../ShortcutsComponent/TeamTemplate/TeamTemplateInfoButton";
+import useAccess from "../../Auth/Role/useAccess";
+import { PERMISSIONS } from "../../Auth/Role/permissions";
 
 const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
     const theme = useTheme();
+    const { hasAccess } = useAccess();
     const [open, setOpen] = React.useState(false);
     const [isLoading, setIsLoading] = React.useState(null);
     const [selectedTeamMember, setSelectedTeamMember] = React.useState({});
@@ -316,14 +319,26 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
                             </Tooltip>
                             <Box sx={{ ml: 1, display: "flex", alignItems: "center", gap: 1.5 }}>
                                 <TeamTemplateInfoButton />
-                                <Button
-                                    variant="contained"
-                                    startIcon={<AddIcon />}
-                                    className="buttonClassname"
-                                    onClick={handleSidebarOpen}
-                                >
-                                    Add Team
-                                </Button>
+                                {hasAccess(PERMISSIONS.canEditTeamMember) ? (
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<AddIcon />}
+                                        className="buttonClassname"
+                                        onClick={handleSidebarOpen}
+                                    >
+                                        Add Team
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<AddIcon />}
+                                        className="buttonClassname"
+                                        disabled
+                                        sx={{ opacity: 0.5 }}
+                                    >
+                                        Add Team
+                                    </Button>
+                                )}
                             </Box>
                         </Box>
                     </Box>
@@ -362,7 +377,7 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
                             }
 
                             if (columnId === "islimitedaccess") {
-                                return (
+                                return hasAccess(PERMISSIONS.canChangeTeamMemberFlags) ? (
                                     <Checkbox
                                         checked={row?.islimitedaccess === 1}
                                         sx={permissionCheckboxSx}
@@ -373,11 +388,17 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
                                             })
                                         }
                                     />
+                                ) : (
+                                    <Checkbox
+                                        checked={row?.islimitedaccess === 1}
+                                        disabled
+                                        sx={{ opacity: 0.5 }}
+                                    />
                                 );
                             }
 
                             if (columnId === "isreadonly") {
-                                return (
+                                return hasAccess(PERMISSIONS.canChangeTeamMemberFlags) ? (
                                     <Checkbox
                                         checked={row?.isreadonly === 1}
                                         sx={permissionCheckboxSx}
@@ -388,16 +409,31 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
                                             })
                                         }
                                     />
+                                ) : (
+                                    <Checkbox
+                                        checked={row?.isreadonly === 1}
+                                        disabled
+                                        sx={{ opacity: 0.5 }}
+                                    />
                                 );
                             }
 
                             if (columnId === "action") {
-                                return (
+                                return hasAccess(PERMISSIONS.canEditTeamMember) ? (
                                     <div>
                                         <IconButton onClick={() => handleEdit(row)}>
                                             <Pencil size={18} />
                                         </IconButton>
                                         <IconButton onClick={() => handleDeleteDialog(row)}>
+                                            <Trash2 size={18} color="red" />
+                                        </IconButton>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <IconButton disabled>
+                                            <Pencil size={18} />
+                                        </IconButton>
+                                        <IconButton disabled>
                                             <Trash2 size={18} color="red" />
                                         </IconButton>
                                     </div>

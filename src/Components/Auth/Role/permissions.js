@@ -20,4 +20,6 @@ export const PERMISSIONS = {
   canWorkinghrEdit: [ROLES.ADMIN],
   canTaskActions: [ROLES.ADMIN],
   teammemberremove: [ROLES.ADMIN],
+  canEditTeamMember: [ROLES.ADMIN],
+  canChangeTeamMemberFlags: [ROLES.ADMIN],
 };

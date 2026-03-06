@@ -221,6 +221,8 @@ const TasklistForCal = ({ calendarsColor }) => {
                 const taskType = (task.type || '').toLowerCase();
                 return taskType === 'minor';
             });
+            // Filter to hide milestone tasks
+            nonRootTasks = nonRootTasks.filter(task => task.ismilestone !== 1);
             setCalTasksList(nonRootTasks);
         }
     }, [task]);

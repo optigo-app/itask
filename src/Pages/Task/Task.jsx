@@ -67,6 +67,7 @@ const Task = () => {
     statusData,
     secStatusData,
     taskAssigneeData } = useFullTaskFormatFile();
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   const [localTaskEdits, setLocalTaskEdits] = useState({});
 
@@ -458,7 +459,22 @@ const Task = () => {
       };
 
       const filterRecursive = (item, parentMatchedByTaskNo = false) => {
+        // Check favorites filter first (same as other filters)
+        if (showFavoritesOnly) {
+          const isTaskOrSubtaskFavorite = (taskItem) => {
+            if (taskItem.isfavourite === 1) return true;
+            if (taskItem.subtasks && taskItem.subtasks.length > 0) {
+              return taskItem.subtasks.some(isTaskOrSubtaskFavorite);
+            }
+            return false;
+          };
+
+          const isFavorite = isTaskOrSubtaskFavorite(item);
+          if (!isFavorite) return null;
+        }
+
         const selfTaskNoMatchesSearch = searchTerm && item?.taskno && searchMatchFn(item.taskno);
+
         const matches = matchesFilters(item, parentMatchedByTaskNo);
         const nextParentMatchedByTaskNo = parentMatchedByTaskNo || selfTaskNoMatchesSearch;
 
@@ -516,8 +532,6 @@ const Task = () => {
     });
   };
 
-  console.log("task---", tasks)
-
   const handleFreezeTask = (taskToUpdate) => {
     const updateTasksRecursively = (tasks) => {
       return tasks?.map((task) => {
@@ -558,6 +572,10 @@ const Task = () => {
     setActiveButton('table');
     setArchivedTasks((prev) => !prev);
     setOpenChildTask(Date.now());
+  };
+
+  const handleToggleFavoritesOnly = () => {
+    setShowFavoritesOnly((prev) => !prev);
   };
 
   const hasIncompleteSubtasks = (task) => {
@@ -887,6 +905,8 @@ const Task = () => {
         handlePasteTask={handlePasteTask}
         handleCompletedTaskFilter={handleCompletedTaskFilter}
         handleArchivedTaskFilter={handleArchivedTaskFilter}
+        showFavoritesOnly={showFavoritesOnly}
+        onToggleFavoritesOnly={handleToggleFavoritesOnly}
       />
 
       {/* Divider */}
