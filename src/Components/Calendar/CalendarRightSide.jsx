@@ -43,6 +43,8 @@ const Calendar = ({
     const actualTaskDataValue = useRecoilValue(TaskData);
     const [duplicateDialog, setDuplicateDialog] = useState({ open: false, event: null });
     const processingEventRef = useRef(new Set());
+    const [holidayDates, setHolidayDates] = useState([]);
+    const [holidayData, setHolidayData] = useState([]);
 
     const findModuleRecursively = (tasks, targetId) => {
         if (!tasks) return null;
@@ -54,6 +56,56 @@ const Calendar = ({
             }
         }
         return null;
+    };
+
+    // Load holiday dates from session storage
+    useEffect(() => {
+        try {
+            const holidayDataRaw = JSON.parse(sessionStorage.getItem('taskholidayData') || '[]');
+
+            const holidays = holidayDataRaw
+                .filter(holiday => holiday.isdelete !== 1 && holiday.holidaydate)
+                .map(holiday => ({
+                    date: holiday.holidaydate.split('T')[0],
+                    labelname: holiday.labelname || 'Holiday'
+                }));
+
+            const dates = holidays.map(h => h.date);
+            setHolidayDates(dates);
+            setHolidayData(holidays);
+
+        } catch (error) {
+            console.error('Error loading holiday dates:', error);
+            setHolidayDates([]);
+            setHolidayData([]);
+        }
+    }, []);
+
+    console.log('kdsi', holidayDates)
+
+    // Helper function to check if a date is a holiday
+    const isHolidayDate = (date) => {
+        const d = new Date(date);
+        const dateStr =
+            d.getFullYear() +
+            "-" +
+            String(d.getMonth() + 1).padStart(2, "0") +
+            "-" +
+            String(d.getDate()).padStart(2, "0");
+        return holidayDates.includes(dateStr);
+    };
+
+    // Helper function to get holiday labelname for a date
+    const getHolidayLabel = (date) => {
+        const d = new Date(date);
+        const dateStr =
+            d.getFullYear() +
+            "-" +
+            String(d.getMonth() + 1).padStart(2, "0") +
+            "-" +
+            String(d.getDate()).padStart(2, "0");
+        const holiday = holidayData.find(h => h.date === dateStr);
+        return holiday?.labelname || '';
     };
 
     const SNAP_MINUTES = 15;
@@ -272,11 +324,36 @@ const Calendar = ({
         slotMaxTime: "22:00:00",
         slotDuration: "00:15:00",
         slotLabelInterval: "00:15:00",
+        dayCellContent(arg) {
+            const holidayLabel = getHolidayLabel(arg.date);
+            if (holidayLabel) {
+                return {
+                    html: `
+                        <div style="position:relative;width:100%;height:100%;">
+                            <div class="fc-daygrid-day-top">
+                                <span class="fc-daygrid-day-number">${arg.dayNumberText}</span>
+                            </div>
+                            <div class="holiday-label-overlay" style="position:absolute;top:18px;left:2px;right:2px;z-index:1;max-width:100%;box-sizing:border-box;">
+                                <div class="holiday-label">${holidayLabel}</div>
+                            </div>
+                        </div>
+                    `
+                };
+            }
+            return arg.dayNumberText;
+        },
+        dayCellClassNames: (arg) => {
+            return isHolidayDate(arg.date) ? ['holiday-date'] : [];
+        },
         slotLaneClassNames: (arg) => {
             const d = arg?.date;
             if (!d) return [];
             const isCompanyStart = d.getHours() === 9 && d.getMinutes() === 15;
-            return isCompanyStart ? ['company-start-slot'] : [];
+            const classes = isCompanyStart ? ['company-start-slot'] : [];
+            if (isHolidayDate(d)) {
+                classes.push('holiday-slot');
+            }
+            return classes;
         },
         slotLabelClassNames: (arg) => {
             const d = arg?.date;
@@ -323,18 +400,18 @@ const Calendar = ({
             const category = event.extendedProps.category || 'ETC';
             const colorClass = calendarsColor[category] || 'primary';
             const classes = [`bg-${colorClass}`];
-            
+
             // Add favorite class if the event is a favorite
             const taskId = event.extendedProps?.taskid;
             if (taskId && isTaskFavorite(taskId)) {
                 classes.push('favorite-event');
             }
-            
+
             // Add highlight class if favorites filter is active
             if (showFavoritesOnly && taskId && isTaskFavorite(taskId)) {
                 classes.push('favorite-highlighted');
             }
-            
+
             return classes;
         },
 
@@ -548,11 +625,21 @@ const Calendar = ({
         },
 
         eventAllow(dropInfo, draggedEvent) {
+            // Prevent dropping on holidays
+            if (isHolidayDate(dropInfo.start)) {
+                return false;
+            }
             return !draggedEvent.extendedProps?.isMeeting;
         },
 
 
         dateClick(info) {
+            // Prevent creating events on holidays
+            if (isHolidayDate(info.date)) {
+                toast.warning('Cannot create events on holidays');
+                return;
+            }
+
             const startDate = new Date(info.dateStr);
             const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // Default 1 hour duration
 
@@ -567,7 +654,29 @@ const Calendar = ({
             setFormDrawerOpen(true);
         },
 
+        selectAllow(selectInfo) {
+            // Prevent selecting time slots on holidays
+            const start = selectInfo.start;
+            const end = selectInfo.end;
+
+            // Check if any part of the selection includes a holiday
+            const currentDate = new Date(start);
+            while (currentDate < end) {
+                if (isHolidayDate(currentDate)) {
+                    return false;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            return true;
+        },
+
         eventClick({ event }) {
+            // Prevent opening events on holidays
+            if (isHolidayDate(event.start)) {
+                toast.warning('Cannot edit events on holidays');
+                return;
+            }
+
             const eventDetails = mapEventDetails(event);
             setCalFormData(eventDetails);
             setFormDataValue(eventDetails);
@@ -575,8 +684,15 @@ const Calendar = ({
             setFormDrawerOpen(true);
         },
 
-        eventDrop({ event }) {
+        eventDrop({ event, revert }) {
             if (event.extendedProps?.isMeeting) return;
+
+            // Prevent dropping on holidays
+            if (isHolidayDate(event.start)) {
+                toast.warning('Cannot move events to holidays');
+                revert();
+                return;
+            }
 
             // Create a unique key for this event
             const eventKey = `${event.id || event.extendedProps?.taskid}-${event.start?.getTime()}`;
@@ -618,8 +734,16 @@ const Calendar = ({
 
         },
 
-        eventResize({ event }) {
+        eventResize({ event, revert }) {
             if (event.extendedProps?.isMeeting) return;
+
+            // Prevent resizing into holidays
+            if (isHolidayDate(event.end || event.start)) {
+                toast.warning('Cannot resize events into holidays');
+                revert();
+                return;
+            }
+
             const start = event.start;
             const end = event.end ?? start;
             const { snappedEnd, snappedHours } = getSnappedEndAndHours(start, end);

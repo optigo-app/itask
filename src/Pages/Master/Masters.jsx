@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { ToggleButton, ToggleButtonGroup, Box, Typography, TextField, Button } from '@mui/material';
+import React, { useEffect, useMemo, useState } from "react";
+import { Box, Typography, TextField, Button } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import './Master.scss';
 import { AdvancedMasterApiFunc, commonTextFieldProps } from '../../Utils/globalfun';
@@ -11,7 +11,8 @@ import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import { Add as AddIcon } from "@mui/icons-material";
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
 import { toast } from 'react-toastify';
-import MasterAdvFormDrawer from './MasterAdvFormDrawer';
+import MasterAdvFormDrawer from "./MasterAdvFormDrawer";
+import ScrollableToggleGroup from "../../Components/Common/ScrollableToggleGroup";
 import DynamicMasterDrawer from './DynamicMasterDrawer';
 import AdvancedMasterTable from './AdvancedMasterTable';
 import { AddAdvFilterGroupAttrApi, deleteAdvancedMasterApi, editAdvancedMasterApi } from '../../Api/MasterApi/AddAdvFilterGroupAttrApi';
@@ -33,7 +34,8 @@ const MasterToggle = () => {
     const [formData, setFormData] = useState({
         name: '',
         displayorder: '',
-        colorKey: null
+        colorKey: null,
+        date: null
     });
     const [formAdvData, setFormAdvData] = useState({
         masterName: '',
@@ -50,6 +52,8 @@ const MasterToggle = () => {
     const [editType, setEditType] = useState('');
     const [masterType, setMasterType] = useState("single");
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+
+    const isHolidayTab = String(categoryStates?.table_name || '').toLowerCase() === 'task_holiday';
 
     const fetchAdvMasterData = async (forceRefresh = false) => {
         if (!forceRefresh) {
@@ -79,9 +83,9 @@ const MasterToggle = () => {
 
     const getDeleteMessage = () => {
         const itemName = deleteType === 'attribute' ? formAdvData.masterValue :
-                        deleteType === 'group' ? formAdvData.subMasterName :
-                        deleteType === 'main group' ? formAdvData.masterName :
-                        selectedRow?.labelname || 'this item';
+            deleteType === 'group' ? formAdvData.subMasterName :
+                deleteType === 'main group' ? formAdvData.masterName :
+                    selectedRow?.labelname || 'this item';
 
         return `Are you sure you want to remove this ${deleteType}${itemName ? ` "${itemName}"` : ''}?`;
     };
@@ -91,7 +95,8 @@ const MasterToggle = () => {
         setFormData({
             name: '',
             displayorder: '',
-            colorKey: null
+            colorKey: null,
+            date: null
         });
         setMode('add');
         setDrawerOpen(true)
@@ -103,7 +108,8 @@ const MasterToggle = () => {
         setFormData({
             name: '',
             displayorder: '',
-            colorKey: null
+            colorKey: null,
+            date: null
         });
         setMode('');
         setEditType('');
@@ -206,7 +212,7 @@ const MasterToggle = () => {
                 : { ...formData, tabData: categoryStates, mode: 'add' };
 
             const response = await addEditDelMaster(payload);
-            if (response[0]?.stat == 1) {
+            if (response?.[0]?.stat == 1) {
                 // Save color mapping if it's a priority or status master
                 if (formData.colorKey && (categoryStates?.title?.toLowerCase().includes('priority') || categoryStates?.title?.toLowerCase().includes('status'))) {
                     const colorType = categoryStates?.title?.toLowerCase().includes('priority') ? 'priorityMasterColors' : 'statusMasterColors';
@@ -215,11 +221,14 @@ const MasterToggle = () => {
                     sessionStorage.setItem(colorType, JSON.stringify(existingColors));
                 }
                 handleTaskApicall();
+                handleCloseDrawer();
+            } else {
+                toast.error(response?.[0]?.msg || 'Operation failed');
             }
         } catch (error) {
             console.error('Error in handleAddOrSaveRow:', error);
+            toast.error('Operation failed');
         } finally {
-            handleCloseDrawer();
         }
     };
 
@@ -258,28 +267,28 @@ const MasterToggle = () => {
             if (mode === 'edit') {
                 // Handle edit operation
                 const response = await editAdvancedMasterApi(formAdvData, editType);
-                
+
                 if (response?.rd?.[0]?.stat == 1) {
                     toast.success("Data Updated Successfully");
-                    
+
                     // Update the local state to reflect changes immediately
                     setStructuredAdvMasterData(prev =>
                         prev.map(master => {
                             if (editType === 'main group' && master.id === formAdvData.id) {
                                 return { ...master, name: formAdvData.updatedValue };
                             }
-                            
+
                             if (master.id !== formAdvData.id) return master;
-                            
+
                             return {
                                 ...master,
                                 groups: master.groups.map(group => {
                                     if (editType === 'group' && group.id === formAdvData.subid) {
                                         return { ...group, name: formAdvData.updatedValue };
                                     }
-                                    
+
                                     if (group.id !== formAdvData.subid) return group;
-                                    
+
                                     return {
                                         ...group,
                                         attributes: group.attributes.map(attr => {
@@ -336,14 +345,15 @@ const MasterToggle = () => {
     };
 
     const handleEditRow = (row) => {
-        setDrawerOpen(true);
         setSelectedRow(row);
         setMode('edit');
         setFormData({
             name: row?.labelname,
             displayorder: row?.displayorder || '',
-            colorKey: row?.colorkey || null
+            colorKey: row?.colorkey || null,
+            date: row?.holidaydate || row?.date || row?.master_date || null
         });
+        setDrawerOpen(true);
     };
 
     const handleEditAdvRow = (master, sub, item) => {
@@ -394,8 +404,6 @@ const MasterToggle = () => {
         }
     }
 
-    console.log(formAdvData,"formAdvData");
-
     const handleAdvDeleteRow = (master, sub, item) => {
         setFormAdvData({
             masterName: master?.name,
@@ -406,7 +414,7 @@ const MasterToggle = () => {
             itemid: item?.id,
             bindid: item?.bindid,
         });
-        
+
         // Determine delete type based on parameters
         if (item) {
             setDeleteType('attribute');
@@ -415,7 +423,7 @@ const MasterToggle = () => {
         } else {
             setDeleteType('main group');
         }
-        
+
         setCnfDelDialogOpen(true);
     }
 
@@ -472,9 +480,9 @@ const MasterToggle = () => {
                         if (deleteType === 'main group' && master.id === formAdvData.id) {
                             return null;
                         }
-                        
+
                         if (master.id !== formAdvData.id) return master;
-                        
+
                         return {
                             ...master,
                             groups: master.groups.map(group => {
@@ -482,7 +490,7 @@ const MasterToggle = () => {
                                 if (deleteType === 'group' && group.id === formAdvData.subid) {
                                     return null;
                                 }
-                                
+
                                 // If deleting an attribute, filter it from the group
                                 if (deleteType === 'attribute' && group.id === formAdvData.subid) {
                                     return {
@@ -490,7 +498,7 @@ const MasterToggle = () => {
                                         attributes: group.attributes.filter(attr => attr.id !== formAdvData.itemid)
                                     };
                                 }
-                                
+
                                 return group;
                             }).filter(group => group !== null && group.attributes.length > 0)
                         };
@@ -500,16 +508,26 @@ const MasterToggle = () => {
             }
         } else {
             try {
-                const result = await addEditDelMaster({ ...selectedRow, isdelete: 2 });
-                if (result?.rd) {
-                    const updatedData = formattedData.filter(item => item.id !== selectedRow.id);
+                const payload = {
+                    ...selectedRow,
+                    ...formData,
+                    mode: 'trash',
+                };
+                const response = await addEditDelMaster(payload);
+                console.log("hdjsh", response, selectedRow, formattedData);
+                if (response?.[0]?.stat == 1 || response?.rd?.[0]?.stat == 1) {
+                    const updatedData = formattedData.filter(item => item.id != selectedRow.id);
                     setFormattedData(updatedData);
                     toast.success('Record permanently deleted successfully!');
+                    handleCloseCnfDialog();
+                } else {
+                    toast.error(response?.[0]?.msg || response?.rd?.[0]?.msg || 'Failed to delete record');
+                    handleCloseCnfDialog();
                 }
-                handleCloseCnfDialog();
             } catch (error) {
                 console.error('Error in handleRemoveMasterData:', error);
                 toast.error('Failed to delete record');
+                handleCloseCnfDialog();
             }
         }
     };
@@ -518,9 +536,9 @@ const MasterToggle = () => {
         try {
             const updatedRow = { ...row, colorkey: colorKey };
             const result = await addEditDelMaster(updatedRow);
-            
+
             if (result?.rd) {
-                const updatedData = formattedData.map(item => 
+                const updatedData = formattedData.map(item =>
                     item.id === row.id ? { ...item, colorkey: colorKey } : item
                 );
                 setFormattedData(updatedData);
@@ -528,7 +546,7 @@ const MasterToggle = () => {
                 const existingColors = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
                 existingColors[row.labelname.toLowerCase()] = colorKey;
                 sessionStorage.setItem(storageKey, JSON.stringify(existingColors));
-                
+
                 toast.success(`Color updated for ${row.labelname}!`);
             } else {
                 toast.error('Failed to update color');
@@ -601,19 +619,18 @@ const MasterToggle = () => {
                         }}
                     >
                         <Box className="masterToggleBox">
-                            <ToggleButtonGroup
+                            <ScrollableToggleGroup
+                                items={
+                                    tableTabData?.map((item) => ({
+                                        value: item?.title,
+                                        label: item?.title,
+                                    })) || []
+                                }
                                 value={value}
-                                exclusive
                                 onChange={handleChange}
-                                aria-label="master toggles"
-                                className="toggle-group"
-                            >
-                                {tableTabData?.map((item, index) => (
-                                    <ToggleButton className="toggle-button" key={item?.id} value={item.title}>
-                                        {item?.title}
-                                    </ToggleButton>
-                                ))}
-                            </ToggleButtonGroup>
+                                minButtonWidth="180px"
+                                scrollAmount={192}
+                            />
                         </Box>
                         <div style={{
                             margin: "20px 0",
@@ -633,7 +650,7 @@ const MasterToggle = () => {
                                         endAdornment: <SearchIcon />,
                                     }}
                                 />
-                                
+
                                 {isPriorityOrStatus && (
                                     <ViewToggle
                                         view={viewMode}
@@ -644,7 +661,7 @@ const MasterToggle = () => {
                                         sx={{ ml: 1 }}
                                     />
                                 )}
-                                
+
                                 <Button
                                     variant="contained"
                                     startIcon={<AddIcon />}

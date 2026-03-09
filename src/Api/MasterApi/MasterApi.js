@@ -31,12 +31,29 @@ export const addEditDelMaster = async (payload) => {
         let masterName = payload?.tabData?.table_name;
         let editMode = payload?.id;
 
+        const isHolidayMaster = String(masterName || '').toLowerCase() === 'task_holiday';
+
+        const getIsoDate = (value) => {
+            if (!value) return '';
+            if (value instanceof Date) {
+                return Number.isNaN(value.getTime()) ? '' : value.toISOString().split('T')[0];
+            }
+            // dayjs objects often expose toDate
+            if (typeof value?.toDate === 'function') {
+                const d = value.toDate();
+                return d instanceof Date && !Number.isNaN(d.getTime()) ? d.toISOString().split('T')[0] : '';
+            }
+            // If already string, assume backend can accept it
+            return String(value);
+        };
+
         const combinedValue = JSON.stringify({
             master_table: `${masterName ?? ''}`,
             master_mode: `${mode ?? ''}`,
             master_id: `${editMode ?? ''}`,
             master_labelvalue: `${payload?.name ?? ''}`,
             master_displayorder: `${payload?.displayorder ?? ''}`,
+            ...(isHolidayMaster ? { holidaydate: getIsoDate(payload?.date) } : {}),
         });
 
         const body = {

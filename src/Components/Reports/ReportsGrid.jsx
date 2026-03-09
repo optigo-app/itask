@@ -48,6 +48,60 @@ const ReportsGrid = ({
 
   const paginatedData = data || [];
 
+  // Helper function to check if a week contains a holiday
+  const weekHasHoliday = (row) => {
+    try {
+      const holidayData = JSON.parse(sessionStorage.getItem('taskholidayData') || '[]');
+      if (!holidayData || holidayData.length === 0) return false;
+
+      // Get the tasks for this row
+      const tasks = row?.Tasks || [];
+      if (tasks.length === 0) return false;
+
+      // Get the date range from tasks
+      const dates = tasks
+        .map(task => task.DeadLineDate)
+        .filter(date => date && date !== '1900-01-01T00:00:00.000Z')
+        .map(date => new Date(date));
+
+      if (dates.length === 0) return false;
+
+      // Find the earliest and latest dates
+      const minDate = new Date(Math.min(...dates));
+      const maxDate = new Date(Math.max(...dates));
+
+      // Get Monday of the week containing minDate
+      const startOfWeek = new Date(minDate);
+      const dayOfWeek = startOfWeek.getDay();
+      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      startOfWeek.setDate(startOfWeek.getDate() - daysFromMonday);
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      // Get Sunday of the week containing maxDate
+      const endOfWeek = new Date(maxDate);
+      const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+      endOfWeek.setDate(endOfWeek.getDate() + daysToSunday);
+      endOfWeek.setHours(23, 59, 59, 999);
+
+      // Check if any holiday falls within this week range
+      const hasHoliday = holidayData.some(holiday => {
+        if (holiday.isdelete === 1) return false;
+        const holidayDate = new Date(holiday.holidaydate);
+        return holidayDate >= startOfWeek && holidayDate <= endOfWeek;
+      });
+
+      return hasHoliday;
+    } catch (error) {
+      console.error('Error checking week for holidays:', error);
+      return false;
+    }
+  };
+
+  // Helper function to get the threshold based on whether week has holiday
+  const getHourThreshold = (row) => {
+    return weekHasHoliday(row) ? 37 : 45; // 45 - 8 = 37
+  };
+
   const handleRowClick = (row) => {
     setSelectedTaskRow(row);
     setOpenModal(true);
@@ -407,58 +461,58 @@ const ReportsGrid = ({
           <TableBody>
             {paginatedData?.length > 0 ? (
               <>
-                {paginatedData?.map((row, rowIndex) => (
-                  <TableRow
-                    key={rowIndex}
-                    hover
-                    onClick={() => handleRowClick(row)}
-                    sx={{
-                      cursor: "pointer",
-                      backgroundColor:
-                        isPmsReportType &&
-                        viewMode === "EmployeeWiseData" &&
-                        Number.isFinite(parseFloat(row?.TotalEstimate)) &&
-                        parseFloat(row?.TotalEstimate) < 45
+                {paginatedData?.map((row, rowIndex) => {
+                  const hourThreshold = getHourThreshold(row);
+                  const shouldHighlight = isPmsReportType &&
+                    viewMode === "EmployeeWiseData" &&
+                    Number.isFinite(parseFloat(row?.TotalEstimate)) &&
+                    parseFloat(row?.TotalEstimate) < hourThreshold;
+
+                  return (
+                    <TableRow
+                      key={rowIndex}
+                      hover
+                      onClick={() => handleRowClick(row)}
+                      sx={{
+                        cursor: "pointer",
+                        backgroundColor: shouldHighlight
                           ? "rgba(244, 67, 54, 0.08)"
                           : undefined,
-                      "&:hover": {
-                        backgroundColor:
-                          isPmsReportType &&
-                          viewMode === "EmployeeWiseData" &&
-                          Number.isFinite(parseFloat(row?.TotalEstimate)) &&
-                          parseFloat(row?.TotalEstimate) < 45
+                        "&:hover": {
+                          backgroundColor: shouldHighlight
                             ? "rgba(244, 67, 54, 0.12)"
                             : undefined,
-                      },
-                    }}
-                  >
-                    {columns?.map(({ key }) => {
-                      const lowerKey = key.toLowerCase();
-                      const value = row[key];
-                      const isStatusColumn = lowerKey.includes("taskstatus");
-                      const statusStyles = isStatusColumn
-                        ? {
-                          color: statusColors[value]?.color || "#000",
-                          backgroundColor: statusColors[value]?.backgroundColor || "#ddd",
-                          padding: "0.2rem 0.8rem",
-                          borderRadius: "5px",
-                          fontSize: "13.5px",
-                          fontWeight: "500",
-                        }
-                        : null;
+                        },
+                      }}
+                    >
+                      {columns?.map(({ key }) => {
+                        const lowerKey = key.toLowerCase();
+                        const value = row[key];
+                        const isStatusColumn = lowerKey.includes("taskstatus");
+                        const statusStyles = isStatusColumn
+                          ? {
+                            color: statusColors[value]?.color || "#000",
+                            backgroundColor: statusColors[value]?.backgroundColor || "#ddd",
+                            padding: "0.2rem 0.8rem",
+                            borderRadius: "5px",
+                            fontSize: "13.5px",
+                            fontWeight: "500",
+                          }
+                          : null;
 
-                      return (
-                        <TableCell key={key}>
-                          {isStatusColumn ? (
-                            <span style={statusStyles}>{value}</span>
-                          ) : (
-                            getFormattedValue(key, value, row)
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))}
+                        return (
+                          <TableCell key={key}>
+                            {isStatusColumn ? (
+                              <span style={statusStyles}>{value}</span>
+                            ) : (
+                              getFormattedValue(key, value, row)
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })}
               </>
             ) : (
               <TableRow>
