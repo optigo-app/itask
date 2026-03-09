@@ -120,12 +120,16 @@ const PmsReport2 = () => {
             const status = (task.status || "").toLowerCase();
 
             if (Array.isArray(task.assignee)) {
-                task.assignee.forEach((assignee) => {
-                    // Only process assignees who are active (isactive: 1)
-                    if (assignee.isactive !== 1) return;
+                // Get active assignees count to divide estimates properly
+                const activeAssignees = task.assignee.filter(a => a.isactive === 1);
+                const assigneeCount = activeAssignees.length || 1;
 
+                // Divide estimate and actual hours by number of active assignees
+                const estimatePerAssignee = estimate / assigneeCount;
+                const actualPerAssignee = actual / assigneeCount;
+
+                activeAssignees.forEach((assignee) => {
                     const empKey = assignee.userid || assignee.customercode || assignee.firstname;
-                    console.log(assignee)
 
                     if (!EmployeeWiseDataMap.has(empKey)) {
                         EmployeeWiseDataMap.set(empKey, {
@@ -146,8 +150,8 @@ const PmsReport2 = () => {
 
                     const emp = EmployeeWiseDataMap.get(empKey);
                     emp.TotalTasks += 1;
-                    emp.TotalEstimate += estimate;
-                    emp.TotalActual += actual;
+                    emp.TotalEstimate += estimatePerAssignee;
+                    emp.TotalActual += actualPerAssignee;
                     emp.Tasks.push(task);
 
                     if (status === "completed") emp.Completed += 1;

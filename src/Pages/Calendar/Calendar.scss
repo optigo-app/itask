@@ -1433,3 +1433,77 @@
     }
 
 }
+
+// Holiday date styling
+.fc-day.holiday-date {
+    background-color: #FFE5E5 !important;
+    opacity: 0.8;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+}
+
+.fc-day.holiday-date .fc-daygrid-day-frame {
+    background-color: #FFE5E5 !important;
+    opacity: 0.8;
+    pointer-events: none !important;
+}
+
+.fc-timegrid-col.holiday-date {
+    background-color: #FFE5E5 !important;
+    opacity: 0.8;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+}
+
+.fc-timegrid-col.holiday-date .fc-timegrid-col-frame {
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+}
+
+.fc-timegrid-slot.holiday-slot {
+    opacity: 0.8;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+}
+
+// Holiday label styling
+.holiday-label {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #B3261E !important;
+    text-align: center;
+    line-height: 1.1;
+    padding: 1px 2px;
+    margin: 0;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+// Holiday label overlay container
+.holiday-label-overlay {
+    overflow: visible !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+// Disable all interactions on holiday dates
+.fc-day.holiday-date * {
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+}
+
+.fc-timegrid-col.holiday-date * {
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+}
+
+// Prevent events from being displayed on holiday dates
+.fc-day.holiday-date .fc-event,
+.fc-timegrid-col.holiday-date .fc-event {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+}
+

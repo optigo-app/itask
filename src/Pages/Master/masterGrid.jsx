@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Pagination, IconButton, TableSortLabel, Chip, Popover } from '@mui/material';
 import { Pencil, Trash, ArchiveRestore, Trash2, Palette } from 'lucide-react';
-import { getDynamicPriorityColor, getDynamicStatusColor } from '../../Utils/globalfun';
+import { cleanDate, formatDate2, getDynamicPriorityColor, getDynamicStatusColor } from '../../Utils/globalfun';
 import ColorPicker from '../../Components/Common/ColorPicker';
 import './Master.scss';
 
@@ -95,6 +95,9 @@ const Mastergrid = ({
                             <TableCell width={80}>Sr#</TableCell>
                             <TableCell width={120}>Display Order</TableCell>
                             <TableCell >{renderSortCell("Name", "labelname")}</TableCell>
+                            {masterType === 'task_holiday' && (
+                                <TableCell width={160}>Holiday Date</TableCell>
+                            )}
                             {(masterType === "task_priority" || masterType === "task_status") && (
                                 <TableCell width={120}>Color</TableCell>
                             )}
@@ -121,12 +124,17 @@ const Mastergrid = ({
                                     }}>
                                         {row.labelname}
                                     </TableCell>
+                                    {masterType === 'task_holiday' && (
+                                        <TableCell>
+                                            {row?.holidaydate ? cleanDate(formatDate2(row?.holidaydate)) : ''}
+                                        </TableCell>
+                                    )}
                                     {(masterType === "task_priority" || masterType === "task_status") && (
                                         <TableCell>
-                                            <Box 
-                                                sx={{ 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
                                                     gap: 1,
                                                     cursor: 'pointer',
                                                     padding: '4px 8px',
@@ -233,7 +241,7 @@ const Mastergrid = ({
                     </TableBody>
                 </Table>
             </TableContainer>
-            
+
             {/* Color Picker Popover */}
             <Popover
                 open={Boolean(colorPickerAnchor)}
@@ -278,7 +286,7 @@ const Mastergrid = ({
                     }
                 }}
             >
-                <Box sx={{ 
+                <Box sx={{
                     p: 3,
                     background: 'transparent'
                 }}>

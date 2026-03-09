@@ -3,6 +3,8 @@ import { Drawer, Box, Typography, TextField, Button, IconButton } from "@mui/mat
 import CloseIcon from "@mui/icons-material/Close";
 import { commonTextFieldProps } from "../../Utils/globalfun";
 import ColorPicker from "../../Components/Common/ColorPicker";
+import dayjs from 'dayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, formattedData, setFormData, selectedRow }) => {
 
@@ -20,6 +22,7 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, format
 
     const isPriorityMaster = activeTab?.toLowerCase().includes('priority');
     const isStatusMaster = activeTab?.toLowerCase().includes('status');
+    const isHolidayMaster = activeTab === 'Holiday';
 
     return (
         <Drawer anchor="right" open={open} onClose={onClose}>
@@ -47,6 +50,31 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, format
                         {...commonTextFieldProps}
                         sx={{ marginTop: .5 }}
                     />
+
+                    {isHolidayMaster && (
+                        <Box className="form-group" sx={{ mt: 1 }}>
+                            <Typography variant="body2" sx={{ mb: 1 }}>Holiday Date</Typography>
+                            <DatePicker
+                                name="date"
+                                value={formData?.date ? dayjs(formData.date) : null}
+                                onChange={(date) => {
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        date: date ? date.toDate?.() ?? date : null
+                                    }));
+                                }}
+                                format="DD/MM/YYYY"
+                                slotProps={{
+                                    textField: {
+                                        size: "small",
+                                        fullWidth: true,
+                                        ...commonTextFieldProps
+                                    }
+                                }}
+                            />
+                        </Box>
+                    )}
+
                     <Typography variant="body2">Display Order</Typography>
                     <TextField
                         fullWidth
