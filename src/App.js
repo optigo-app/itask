@@ -24,6 +24,7 @@ import { userRoleAtom, webReload } from './Recoil/atom';
 import LoginPage from './Components/Auth/LoginForm';
 import TemplateDialog from './Components/Common/TemplateDialog';
 import TestPage from './Components/Examples/testpage';
+import DocumentSheet from './Components/PrintSheet/DocumentSheet';
 // import CalendarComparisonDemo from './Backup/CalendarComparisonDemo';
 // import CalendarViewDemo from './Backup/CalendarViewDemo';
 // import SampleQuickForm from './Backup/sampleQuickForm';
@@ -296,6 +297,7 @@ const AppWrapper = () => {
                     <Routes>
                         <Route path="/error401" element={<Error401Page />} />
                         <Route path="/test4324" element={<TestPage />} />
+                        <Route path="/test" element={<DocumentSheet />} />
                         <Route
                             path="/login"
                             element={

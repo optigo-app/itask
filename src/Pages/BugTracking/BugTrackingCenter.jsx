@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Box, Typography, Button, IconButton, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, TextField, InputAdornment, ToggleButtonGroup, ToggleButton } from '@mui/material';
+import { Box, Typography, Button, IconButton, Chip, Tooltip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, InputAdornment, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import { List, LayoutGrid, Bug, X, Filter, Pencil, Trash2, Search } from 'lucide-react';
 import BugGallery from './BugGallery';
 import BugUploadBox from './BugUploadBox';
@@ -7,6 +7,8 @@ import AssigneeAvatarGroup from '../../Components/ShortcutsComponent/Assignee/As
 import BugTrackingBugFiltersPopover from './BugTrackingBugFiltersPopover';
 import dayjs from 'dayjs';
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
+import StatusBadge from '../../Components/ShortcutsComponent/StatusBadge';
+import PriorityBadge from '../../Components/ShortcutsComponent/PriorityBadge';
 
 const BugTrackingCenter = ({
     selectedTask,
@@ -76,6 +78,35 @@ const BugTrackingCenter = ({
             return fields.some((field) => String(field || '').toLowerCase().includes(q));
         });
     }, [bugList, searchTerm, taskBugStatusData, taskBugPriorityData, taskAssigneeData]);
+
+    // Create color mappings for badges
+    const statusColors = useMemo(() => {
+        const colors = {};
+        taskBugStatusData?.forEach(status => {
+            const statusKey = (status.labelname || '').toLowerCase().trim();
+            if (statusKey) {
+                colors[statusKey] = {
+                    color: '#fff',
+                    backgroundColor: status.color || '#eee'
+                };
+            }
+        });
+        return colors;
+    }, [taskBugStatusData]);
+
+    const priorityColors = useMemo(() => {
+        const colors = {};
+        taskBugPriorityData?.forEach(priority => {
+            const priorityKey = (priority.labelname || '').toLowerCase().trim();
+            if (priorityKey) {
+                colors[priorityKey] = {
+                    color: priority.color || '#666',
+                    backgroundColor: priority.color ? `${priority.color}20` : '#f5f5f5'
+                };
+            }
+        });
+        return colors;
+    }, [taskBugPriorityData]);
 
     return (
         <>
@@ -196,140 +227,220 @@ const BugTrackingCenter = ({
                                     </Box>
                                 ) : (
                                     <Box sx={{ p: 2 }}>
-                                        <TableContainer sx={{ maxHeight: '100%', overflowY: 'auto' }} className="bug-table-container">
+                                        <TableContainer
+                                            sx={{
+                                                maxHeight: 'calc(100vh - 280px)',
+                                                overflowY: 'auto',
+                                                '&::-webkit-scrollbar': {
+                                                    width: '8px',
+                                                },
+                                                '&::-webkit-scrollbar-track': {
+                                                    background: '#f1f1f1',
+                                                    borderRadius: '10px',
+                                                },
+                                                '&::-webkit-scrollbar-thumb': {
+                                                    background: '#c1c1c1',
+                                                    borderRadius: '10px',
+                                                    '&:hover': {
+                                                        background: '#a8a8a8',
+                                                    },
+                                                },
+                                            }}
+                                            className="bug-table-container"
+                                        >
                                             <Table stickyHeader>
                                                 <TableHead>
                                                     <TableRow>
-                                                        <TableCell sx={{ fontWeight: 600 }}>Title</TableCell>
-                                                        <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                                                        <TableCell sx={{ fontWeight: 600 }}>Priority</TableCell>
-                                                        <TableCell sx={{ fontWeight: 600 }}>Assignee</TableCell>
-                                                        <TableCell sx={{ fontWeight: 600 }}>Created Date</TableCell>
-                                                        <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700, minWidth: 250 }}>Title</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700, minWidth: 120 }}>Status</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700, minWidth: 120 }}>Priority</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700, minWidth: 140 }}>Assignee</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700, minWidth: 120 }}>Created Date</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700, minWidth: 100, textAlign: 'center' }}>Actions</TableCell>
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
-                                                    {searchedBugList.map((bug) => {
-                                                        const status = taskBugStatusData?.find(s => String(s.id) === String(bug.busstatusid));
-                                                        const priority = taskBugPriorityData?.find(p => String(p.id) === String(bug.bugpriorityid));
-                                                        const solvedByRaw = bug?.bugsolvedby ?? bug?.solvedby;
-                                                        const solvedByIDs = solvedByRaw != null && String(solvedByRaw).trim() !== ''
-                                                            ? String(solvedByRaw).split(',').map((x) => x.trim()).filter(Boolean)
-                                                            : [];
-                                                        const solvedByUsers = taskAssigneeData?.filter((u) => solvedByIDs.includes(String(u?.userid ?? u?.id))) || [];
+                                                    {searchedBugList.length === 0 ? (
+                                                        <TableRow>
+                                                            <TableCell colSpan={6} sx={{ textAlign: 'center', py: 8 }}>
+                                                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                                                    <Bug size={48} style={{ opacity: 0.2, color: '#adb5bd' }} />
+                                                                    <Typography variant="body1" sx={{ color: '#adb5bd', fontWeight: 500 }}>
+                                                                        No bugs found
+                                                                    </Typography>
+                                                                    <Typography variant="caption" sx={{ color: '#ced4da' }}>
+                                                                        Try adjusting your search or filters
+                                                                    </Typography>
+                                                                </Box>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ) : (
+                                                        searchedBugList.map((bug) => {
+                                                            const status = taskBugStatusData?.find(s => String(s.id) === String(bug.busstatusid));
+                                                            const priority = taskBugPriorityData?.find(p => String(p.id) === String(bug.bugpriorityid));
+                                                            const solvedByRaw = bug?.bugsolvedby ?? bug?.solvedby;
+                                                            const solvedByIDs = solvedByRaw != null && String(solvedByRaw).trim() !== ''
+                                                                ? String(solvedByRaw).split(',').map((x) => x.trim()).filter(Boolean)
+                                                                : [];
+                                                            const solvedByUsers = taskAssigneeData?.filter((u) => solvedByIDs.includes(String(u?.userid ?? u?.id))) || [];
 
-                                                        return (
-                                                            <TableRow
-                                                                key={bug.bugId}
-                                                                onClick={() => handleSelectBug(bug)}
-                                                                sx={{
-                                                                    cursor: 'pointer',
-                                                                    '&:hover': { bgcolor: '#f5f5f5' }
-                                                                }}
-                                                            >
-                                                                <TableCell>
-                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                                        {bug.imageDataUrl && (
-                                                                            <img
-                                                                                src={bug.imageDataUrl}
-                                                                                alt="Bug thumbnail"
-                                                                                style={{
-                                                                                    width: 40,
-                                                                                    height: 40,
-                                                                                    borderRadius: 4,
-                                                                                    objectFit: 'cover',
-                                                                                    border: '1px solid #ddd'
-                                                                                }}
-                                                                            />
-                                                                        )}
-                                                                        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                                                            <Typography>
-                                                                                {bug.bugtitle || '(No Title)'}
-                                                                            </Typography>
-                                                                            {!!bug.description && (
-                                                                                <Typography
-                                                                                    variant="caption"
+                                                            return (
+                                                                <TableRow
+                                                                    key={bug.bugId}
+                                                                    onClick={() => handleSelectBug(bug)}
+                                                                    sx={{
+                                                                        cursor: 'pointer',
+                                                                        '&:hover': { bgcolor: '#f8f9ff' }
+                                                                    }}
+                                                                >
+                                                                    <TableCell>
+                                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                                            {bug.imageDataUrl && (
+                                                                                <Box
                                                                                     sx={{
-                                                                                        color: 'text.secondary',
+                                                                                        width: 48,
+                                                                                        height: 48,
+                                                                                        borderRadius: '8px',
                                                                                         overflow: 'hidden',
-                                                                                        textOverflow: 'ellipsis',
-                                                                                        display: '-webkit-box',
-                                                                                        WebkitLineClamp: 1,
-                                                                                        WebkitBoxOrient: 'vertical'
+                                                                                        flexShrink: 0,
+                                                                                        border: '2px solid #e9ecef',
+                                                                                        position: 'relative',
+                                                                                        '&::after': {
+                                                                                            content: '""',
+                                                                                            position: 'absolute',
+                                                                                            inset: 0,
+                                                                                            background: 'linear-gradient(135deg, transparent 60%, rgba(115, 103, 240, 0.1))',
+                                                                                        }
                                                                                     }}
                                                                                 >
-                                                                                    {bug.description}
-                                                                                </Typography>
+                                                                                    <img
+                                                                                        src={bug.imageDataUrl}
+                                                                                        alt="Bug thumbnail"
+                                                                                        style={{
+                                                                                            width: '100%',
+                                                                                            height: '100%',
+                                                                                            objectFit: 'cover',
+                                                                                        }}
+                                                                                    />
+                                                                                </Box>
                                                                             )}
+                                                                            <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                                                                                <Typography
+                                                                                    sx={{
+                                                                                        fontWeight: 600,
+                                                                                        fontSize: '0.9rem',
+                                                                                        color: '#2d3748',
+                                                                                        mb: 0.3,
+                                                                                        overflow: 'hidden',
+                                                                                        textOverflow: 'ellipsis',
+                                                                                        whiteSpace: 'nowrap'
+                                                                                    }}
+                                                                                >
+                                                                                    {bug.bugtitle || '(No Title)'}
+                                                                                </Typography>
+                                                                                {!!bug.description && (
+                                                                                    <Typography
+                                                                                        variant="caption"
+                                                                                        sx={{
+                                                                                            color: '#718096',
+                                                                                            fontSize: '0.75rem',
+                                                                                            overflow: 'hidden',
+                                                                                            textOverflow: 'ellipsis',
+                                                                                            display: '-webkit-box',
+                                                                                            WebkitLineClamp: 1,
+                                                                                            WebkitBoxOrient: 'vertical',
+                                                                                            lineHeight: 1.4
+                                                                                        }}
+                                                                                    >
+                                                                                        {bug.description}
+                                                                                    </Typography>
+                                                                                )}
+                                                                            </Box>
                                                                         </Box>
-                                                                    </Box>
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    {status && (
-                                                                        <Chip
-                                                                            label={status.labelname}
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                        {status && (
+                                                                            <StatusBadge
+                                                                                task={{ status: status.labelname }}
+                                                                                statusColors={statusColors}
+                                                                                onStatusChange={() => { }}
+                                                                                disable={true}
+                                                                                fontSize="11px"
+                                                                                padding="0.2rem 0.4rem"
+                                                                                minWidth="80px"
+                                                                            />
+                                                                        )}
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                        {priority && (
+                                                                            <PriorityBadge
+                                                                                task={{ priority: priority.labelname }}
+                                                                                priorityColors={priorityColors}
+                                                                                onPriorityChange={() => { }}
+                                                                                disable={true}
+                                                                                fontSize="11px"
+                                                                                padding="0.2rem 0.4rem"
+                                                                                minWidth="80px"
+                                                                            />
+                                                                        )}
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                            <AssigneeAvatarGroup
+                                                                                assignees={solvedByUsers}
+                                                                                size={28}
+                                                                                maxVisible={3}
+                                                                            />
+                                                                        </Box>
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                        <Typography
                                                                             sx={{
-                                                                                bgcolor: status.color || '#eee',
-                                                                                color: '#fff',
-                                                                                fontSize: '0.7rem',
-                                                                                fontWeight: 600,
-                                                                                height: '24px'
-                                                                            }}
-                                                                        />
-                                                                    )}
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    {priority && (
-                                                                        <Chip
-                                                                            label={priority.labelname}
-                                                                            sx={{
-                                                                                border: `1px solid ${priority.color || '#ccc'}`,
-                                                                                color: priority.color || '#666',
-                                                                                fontSize: '0.7rem',
-                                                                                fontWeight: 600,
-                                                                                height: '24px',
-                                                                                bgcolor: 'transparent'
-                                                                            }}
-                                                                        />
-                                                                    )}
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <AssigneeAvatarGroup
-                                                                        assignees={solvedByUsers}
-                                                                        size={24}
-                                                                        maxVisible={3}
-                                                                    />
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    {bug.createddate ? dayjs(bug.createddate).format('DD/MM/YYYY') : ''}
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <Box sx={{ display: 'flex', gap: 1 }}>
-                                                                        <IconButton
-                                                                            size="small"
-                                                                            onClick={(e) => { e.stopPropagation(); handleSelectBug(bug); }}
-                                                                            sx={{
-                                                                                color: 'text.secondary',
-                                                                                '&:hover': { color: 'primary.main' }
+                                                                                fontSize: '0.8rem',
+                                                                                color: '#718096',
+                                                                                fontWeight: 500
                                                                             }}
                                                                         >
-                                                                            <Pencil size={16} />
-                                                                        </IconButton>
-                                                                        <IconButton
-                                                                            size="small"
-                                                                            onClick={(e) => { e.stopPropagation(); setSelectedDeleteBug(bug); setConfirmDeleteOpen(true); }}
-                                                                            sx={{
-                                                                                color: 'text.secondary',
-                                                                                '&:hover': { color: 'error.main' }
-                                                                            }}
-                                                                        >
-                                                                            <Trash2 size={16} />
-                                                                        </IconButton>
-                                                                    </Box>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        );
-                                                    })}
+                                                                            {bug.createddate ? dayjs(bug.createddate).format('DD/MM/YYYY') : '-'}
+                                                                        </Typography>
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                        <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                                                                            <Tooltip title="Edit Bug" arrow placement="top">
+                                                                                <IconButton
+                                                                                    size="small"
+                                                                                    onClick={(e) => { e.stopPropagation(); handleSelectBug(bug); }}
+                                                                                    sx={{
+                                                                                        color: '#6c757d',
+                                                                                        '&:hover': {
+                                                                                            color: '#7367f0',
+                                                                                            bgcolor: 'rgba(115, 103, 240, 0.1)'
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    <Pencil size={16} />
+                                                                                </IconButton>
+                                                                            </Tooltip>
+                                                                            <Tooltip title="Delete Bug" arrow placement="top">
+                                                                                <IconButton
+                                                                                    size="small"
+                                                                                    onClick={(e) => { e.stopPropagation(); setSelectedDeleteBug(bug); setConfirmDeleteOpen(true); }}
+                                                                                    sx={{
+                                                                                        color: '#6c757d',
+                                                                                        '&:hover': {
+                                                                                            color: '#dc3545',
+                                                                                            bgcolor: 'rgba(220, 53, 69, 0.1)'
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    <Trash2 size={16} />
+                                                                                </IconButton>
+                                                                            </Tooltip>
+                                                                        </Box>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            );
+                                                        }))}
                                                 </TableBody>
                                             </Table>
                                         </TableContainer>

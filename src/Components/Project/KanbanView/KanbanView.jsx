@@ -40,6 +40,11 @@ function KanbanView({
     setSelectedTask(task)
   }
 
+  const formatEstimate = (val) => {
+    const num = Number(val ?? 0);
+    return num % 1 === 0 ? num : Number(num.toFixed(2));
+  };
+
   const handleConfirmRemoveAll = async () => {
     setCnfDialogOpen(false);
     try {
@@ -56,6 +61,12 @@ function KanbanView({
               parentTaskId: parentId,
               childTaskId: selectedTask.taskid,
               isDelete: true,
+              childValues: {
+                estimate_hrs: formatEstimate(selectedTask.estimate_hrs),
+                estimate1_hrs: formatEstimate(selectedTask.estimate1_hrs),
+                estimate2_hrs: formatEstimate(selectedTask.estimate2_hrs),
+                workinghr: formatEstimate(selectedTask.workinghr),
+              }
             });
           }
         } catch (err) {

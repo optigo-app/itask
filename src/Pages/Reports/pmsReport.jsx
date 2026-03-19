@@ -116,7 +116,7 @@ const PmsReport = () => {
                 // Get active assignees count to divide estimates properly
                 const activeAssignees = task.assignee.filter(a => a.isactive === 1);
                 const assigneeCount = activeAssignees.length || 1;
-                
+
                 // Divide estimate and actual hours by number of active assignees
                 const estimatePerAssignee = estimate / assigneeCount;
                 const actualPerAssignee = actual / assigneeCount;

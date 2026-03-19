@@ -48,9 +48,17 @@ const AssigneeAvatarGroup = memo(({
         setOverflowAssignees([]);
     };
 
-    const handleAvatarClick = (assignee) => {
+    const handleAvatarClick = (assignee, event) => {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            // Deep propagation stop
+            if (event.nativeEvent) {
+                event.nativeEvent.stopImmediatePropagation();
+            }
+        }
         if (onAvatarClick) {
-            onAvatarClick(assignees, assignee?.id);
+            onAvatarClick(assignees, assignee?.id, event);
         }
         handleCloseAssigneeOverflow();
     };
@@ -84,7 +92,7 @@ const AssigneeAvatarGroup = memo(({
                                         zIndex: 10,
                                     },
                                 }}
-                                onClick={() => handleAvatarClick(assignee)}
+                                onClick={(e) => handleAvatarClick(assignee, e)}
                             >
                                 {!assignee.avatar && assignee?.firstname?.charAt(0)}
                             </Avatar>
@@ -170,7 +178,7 @@ const AssigneeAvatarGroup = memo(({
                 {overflowAssignees?.map((assignee, index) => (
                     <MenuItem
                         key={assignee?.id || index}
-                        onClick={() => handleAvatarClick(assignee)}
+                        onClick={(e) => handleAvatarClick(assignee, e)}
                         sx={{
                             margin: "2px 8px !important",
                             borderRadius: "6px !important",

@@ -1,3 +1,5 @@
+@import "../../theme/variable.scss";
+
 .dContainer_main {
   box-sizing: border-box;
   word-break: break-all;
@@ -107,6 +109,8 @@
     width: 35%;
   }
 
+  
+
   .checkbox {
     display: inline-block;
     width: 11px;
@@ -118,8 +122,9 @@
     margin-right: 10px;
   }
 
-  .SpacRitDPL {
-    margin-right: 60px;
+  .checklist_date {
+    display: flex !important;
+    gap: 10px !important;
   }
 
   .SpacRit {
@@ -131,7 +136,7 @@
   }
 
   .MostWd {
-    width: 23%;
+    width: 34%;
     white-space: nowrap;
   }
 
@@ -222,8 +227,12 @@
     }
 
     .taskname {
-      font-size: 20px !important;
+      font-size: 16px !important;
       word-break: break-word !important;
+    }
+
+    .module-project-name {
+      color: $placeholderColor !important;
     }
 
     .taskno {

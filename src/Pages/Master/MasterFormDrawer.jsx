@@ -87,7 +87,7 @@ const MasterFormDrawer = ({ open, onClose, activeTab, onSubmit, formData, format
                         {...commonTextFieldProps}
                         sx={{ marginTop: .5 }}
                     />
-                    
+
                     {(isPriorityMaster || isStatusMaster) && (
                         <Box sx={{ mt: 2 }}>
                             <ColorPicker

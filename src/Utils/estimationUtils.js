@@ -114,14 +114,19 @@ export const buildAncestorSumSplitestimate = (actualTaskDataValue, { parentTaskI
         overridesById[String(node?.taskid ?? '')] = summed;
     }
 
+    const formatEstimate = (val) => {
+        const num = Number(val ?? 0);
+        return num % 1 === 0 ? num : Number(num.toFixed(2));
+    };
+
     const entries = [];
     // Only include child in update string if it's not being deleted
     if (targetChildId && !isDelete) {
         const childHrs = overridesById[targetChildId];
-        const est = Number(childHrs?.estimate_hrs ?? 0) || 0;
-        const est1 = Number(childHrs?.estimate1_hrs ?? 0) || 0;
-        const est2 = Number(childHrs?.estimate2_hrs ?? 0) || 0;
-        const work = Number(childHrs?.workinghr ?? 0) || 0;
+        const est = formatEstimate(childHrs?.estimate_hrs);
+        const est1 = formatEstimate(childHrs?.estimate1_hrs);
+        const est2 = formatEstimate(childHrs?.estimate2_hrs);
+        const work = formatEstimate(childHrs?.workinghr);
         entries.push(`${targetChildId}#${est}#${est1}#${est2}#${work}`);
     }
 
@@ -129,10 +134,10 @@ export const buildAncestorSumSplitestimate = (actualTaskDataValue, { parentTaskI
         const nodeId = String(parentPath[i]?.taskid ?? '');
         const hrs = overridesById[nodeId];
         if (!nodeId) continue;
-        const est = Number(hrs?.estimate_hrs ?? 0) || 0;
-        const est1 = Number(hrs?.estimate1_hrs ?? 0) || 0;
-        const est2 = Number(hrs?.estimate2_hrs ?? 0) || 0;
-        const work = Number(hrs?.workinghr ?? 0) || 0;
+        const est = formatEstimate(hrs?.estimate_hrs);
+        const est1 = formatEstimate(hrs?.estimate1_hrs);
+        const est2 = formatEstimate(hrs?.estimate2_hrs);
+        const work = formatEstimate(hrs?.workinghr);
         entries.push(`${nodeId}#${est}#${est1}#${est2}#${work}`);
     }
 

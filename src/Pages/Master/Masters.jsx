@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Typography, TextField, Button } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import './Master.scss';
@@ -13,7 +13,6 @@ import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialo
 import { toast } from 'react-toastify';
 import MasterAdvFormDrawer from "./MasterAdvFormDrawer";
 import ScrollableToggleGroup from "../../Components/Common/ScrollableToggleGroup";
-import DynamicMasterDrawer from './DynamicMasterDrawer';
 import AdvancedMasterTable from './AdvancedMasterTable';
 import { AddAdvFilterGroupAttrApi, deleteAdvancedMasterApi, editAdvancedMasterApi } from '../../Api/MasterApi/AddAdvFilterGroupAttrApi';
 import { useLocation } from 'react-router-dom';
@@ -52,8 +51,6 @@ const MasterToggle = () => {
     const [editType, setEditType] = useState('');
     const [masterType, setMasterType] = useState("single");
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
-
-    const isHolidayTab = String(categoryStates?.table_name || '').toLowerCase() === 'task_holiday';
 
     const fetchAdvMasterData = async (forceRefresh = false) => {
         if (!forceRefresh) {
@@ -432,7 +429,7 @@ const MasterToggle = () => {
             const payload = {
                 ...row,
                 ...formData,
-                mode: 'del',
+                mode: 'trash',
             };
             const response = await addEditDelMaster(payload);
             if (response[0]?.stat == 1) {
@@ -511,7 +508,7 @@ const MasterToggle = () => {
                 const payload = {
                     ...selectedRow,
                     ...formData,
-                    mode: 'trash',
+                    mode: 'del',
                 };
                 const response = await addEditDelMaster(payload);
                 console.log("hdjsh", response, selectedRow, formattedData);

@@ -42,8 +42,7 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, curren
               name="assignee"
               minWidth={250}
               value={selectedAssigneeId}
-              options={taskAssigneeData}
-              // label="Assignees"
+              options={taskAssigneeData?.filter((emp) => emp.isactive === 1)}
               placeholder="Select assignees"
               limitTags={2}
               onChange={handleAssigneeChange}
@@ -55,27 +54,27 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, curren
       <Box className="filter-box">
         <CustomDateRangePicker value={customRange} onChange={handleDateChange} />
         <Box className="navigation-container">
-          <IconButton 
-            onClick={() => onNavigate('prev')} 
+          <IconButton
+            onClick={() => onNavigate('prev')}
             size="small"
             className="nav-button"
           >
             <ChevronLeft fontSize="small" />
           </IconButton>
-          
+
           <Box className="date-display">
-            {selectedFilter === 'Week' 
+            {selectedFilter === 'Week'
               ? `Week ${dayjs(currentDate).week()}`
               : selectedFilter === 'Today'
-              ? dayjs(currentDate).format('MMM DD, YYYY')
-              : selectedFilter === 'Tomorrow'
-              ? dayjs(currentDate).add(1, 'day').format('MMM DD, YYYY')
-              : 'Custom Range'
+                ? dayjs(currentDate).format('MMM DD, YYYY')
+                : selectedFilter === 'Tomorrow'
+                  ? dayjs(currentDate).add(1, 'day').format('MMM DD, YYYY')
+                  : 'Custom Range'
             }
           </Box>
-          
-          <IconButton 
-            onClick={() => onNavigate('next')} 
+
+          <IconButton
+            onClick={() => onNavigate('next')}
             size="small"
             className="nav-button"
           >

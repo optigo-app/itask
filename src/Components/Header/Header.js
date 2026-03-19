@@ -6,7 +6,7 @@ import { Bell, MailOpen, User, LogOut, House, FileCheck } from "lucide-react";
 import { getRandomAvatarColor, ImageUrl, getUserProfileData } from "../../Utils/globalfun";
 import "./header.scss";
 import NotificationCard from "../Notification/NotificationCard";
-import { taskLength, userRoleAtom, webReload } from "../../Recoil/atom";
+import { projectDatasRState, taskLength, userRoleAtom, webReload } from "../../Recoil/atom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import PendingAcceptanceDrawer from "../ShortcutsComponent/Notification/PendingAcceptanceDrawer";
 import useSafeRedirect from "../../Utils/useSafeRedirect";
@@ -443,6 +443,7 @@ const ToggleGroup = ({ options, selectedValue, onRedirection, className }) => (
 const Header = ({ avatarSrc = "" }) => {
     const location = useLocation();
     const taskDataLength = useRecoilValue(taskLength);
+    const projects = useRecoilValue(projectDatasRState);
     const [pendingAcceptanceOpen, setPendingAcceptanceOpen] = useState(false);
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
     // Custom hooks
@@ -459,6 +460,14 @@ const Header = ({ avatarSrc = "" }) => {
     const handleAvatarClick = (event) => setProfileAnchorEl(event.currentTarget);
     const handleCloseProfileMenu = () => setProfileAnchorEl(null);
 
+    const projectCounts = React.useMemo(() => {
+        if (!projects || !Array.isArray(projects)) return { totalProjects: 0, totalModules: 0 };
+        const totalModules = projects.length;
+        const uniqueProjects = new Set(projects.map(task => task.taskPr).filter(Boolean));
+        const totalProjects = uniqueProjects.size;
+        return { totalProjects, totalModules };
+    }, [projects]);
+
     if (!matchedKey) return null;
 
     const { title, subtitle } = dataMap[matchedKey];
@@ -473,7 +482,7 @@ const Header = ({ avatarSrc = "" }) => {
     };
 
     return (
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px" }} className="headerContainer">
+        <Box sx={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px" }} className="headerContainer">
             {/* Left Section - Title and Breadcrumbs */}
             <Box>
                 <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -486,6 +495,16 @@ const Header = ({ avatarSrc = "" }) => {
                     <Typography variant={(decodedData?.isLimited == 1 || decodedData?.isreadonly == 1) ? "caption" : "subtitle1"} component="div" className="headerSubtitle">
                         {subtitle}
                     </Typography>
+                    {location?.pathname === "/projects" && (
+                        <Box sx={{ position: "absolute", left: 250, bottom: 12, display: "flex", gap: 1, alignItems: "center", ml: 2 }}>
+                            <Typography variant="caption" sx={{ backgroundColor: "rgba(162, 162, 162, 0.20)", borderRadius: "8px", padding: "4px 10px", fontSize: "0.8rem" }}>
+                                Projects: <span style={{ fontSize: "16px", fontWeight: 'bold' }}>{projectCounts?.totalProjects ?? ''}</span>
+                            </Typography>
+                            <Typography variant="caption" sx={{ backgroundColor: "rgba(162, 162, 162, 0.20)", borderRadius: "8px", padding: "4px 10px", fontSize: "0.8rem" }}>
+                                Modules: <span style={{ fontSize: "16px", fontWeight: 'bold' }}>{projectCounts?.totalModules ?? ''}</span>
+                            </Typography>
+                        </Box>
+                    )}
                     {decodedData?.isLimited === 1 && location?.pathname?.includes("/tasks/") && (
                         <Typography variant="caption" sx={{ backgroundColor: "#ff9800", color: "#fff", borderRadius: "8px", padding: "2px 6px", fontSize: "0.7rem" }}>
                             Limited Access

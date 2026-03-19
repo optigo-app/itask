@@ -29,10 +29,9 @@
                     // Favorites button styles
                     .fc-favoritesToggle-button {
                         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-                        min-width: 40px !important;
-                        min-height: 39px !important;
-                        padding: 6px 12px !important;
-                        border-radius: 6px !important;
+                        min-width: 35px !important;
+                        min-height: 35px !important;
+                        border-radius: 50% !important;
                         font-size: 14px !important;
                         display: inline-flex !important;
                         align-items: center !important;
@@ -41,8 +40,8 @@
                         // Icon styles
                         .fc-icon-star-filled,
                         .fc-icon-star-outline {
-                            width: 18px !important;
-                            height: 18px !important;
+                            width: 20px !important;
+                            height: 20px !important;
                             display: inline-block !important;
                             background-size: contain !important;
                             background-repeat: no-repeat !important;
@@ -50,25 +49,25 @@
                         }
 
                         .fc-icon-star-filled {
-                            background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='currentColor' stroke='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26'/%3E%3C/svg%3E") !important;
+                            background-image: url("data:image/svg+xml,%3Csvg width='22' height='22' viewBox='0 0 24 24' fill='%23FFFFFF' stroke='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26'/%3E%3C/svg%3E") !important;
                         }
 
                         .fc-icon-star-outline {
-                            background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26'/%3E%3C/svg%3E") !important;
+                            background-image: url("data:image/svg+xml,%3Csvg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23BDBDBD' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26'/%3E%3C/svg%3E") !important;
                         }
 
                         // Active state (when showFavoritesOnly is true)
                         &[data-active="true"] {
-                            background-color: #f57c00 !important;
+                            background-color: $maintenance-main !important;
                             color: #fff !important;
-                            border: 1px solid #f57c00 !important;
+                            border: 1px solid $maintenance-main !important;
                             font-weight: 600 !important;
                             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
                         }
 
                         &[data-active="true"]:hover {
-                            background-color: #e65100 !important;
-                            border-color: #e65100 !important;
+                            background-color: $maintenance-main !important;
+                            border-color: $maintenance-main !important;
                             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25) !important;
                         }
 
@@ -437,53 +436,28 @@
                         }
                     }
 
-                    // Favorite event styles
+                    // Favorite event styles (kept for potential future use)
                     &.favorite-event {
                         position: relative;
-
-                        // Add star icon to favorite events
-                        &::before {
-                            content: '★';
-                            position: absolute;
-                            top: 2px;
-                            right: 2px;
-                            font-size: 14px;
-                            color: #f57c00;
-                            z-index: 5;
-                            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-                        }
                     }
 
-                    // Highlighted favorite events when filter is active
+                    // Highlighted favorite events when filter is active (kept for potential future use)
                     &.favorite-highlighted {
                         box-shadow: 0 0 0 3px #f57c00 inset !important;
                         border: 2px solid #f57c00 !important;
                         animation: pulse-favorite 2s ease-in-out infinite;
-
-                        &::before {
-                            font-size: 16px;
-                            animation: star-glow 2s ease-in-out infinite;
-                        }
                     }
                 }
 
                 @keyframes pulse-favorite {
-                    0%, 100% {
+
+                    0%,
+                    100% {
                         box-shadow: 0 0 0 3px #f57c00 inset !important;
                     }
+
                     50% {
                         box-shadow: 0 0 0 3px #ff9800 inset !important;
-                    }
-                }
-
-                @keyframes star-glow {
-                    0%, 100% {
-                        color: #f57c00;
-                        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-                    }
-                    50% {
-                        color: #ff9800;
-                        text-shadow: 0 0 8px rgba(245, 124, 0, 0.8);
                     }
                 }
 
@@ -1506,4 +1480,3 @@
     opacity: 0.5 !important;
     pointer-events: none !important;
 }
-

@@ -14,7 +14,7 @@ import {
   Box,
 } from '@mui/material';
 import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate3, getUserProfileData, handleAddApicall, mapKeyValuePair, priorityColors, statusColors } from '../../Utils/globalfun';
-import { PERMISSIONS, ROLES } from '../../Components/Auth/Role/permissions';
+import { PERMISSIONS } from '../../Components/Auth/Role/permissions';
 import useAccess from '../../Components/Auth/Role/useAccess';
 
 // Import dayjs and plugins for date calculations
@@ -119,9 +119,6 @@ const CalendarGridView = () => {
     if (!taskFinalData?.TaskData) return [];
     const today = currentDate.startOf('day');
     const tomorrow = today.add(1, 'day');
-    // Set Monday as start of week, Sunday as end of week
-    const weekEnd = today.startOf('week').add(1, 'day').endOf('week');
-
     const userProfile = getUserProfileData();
     const isAdmin = userProfile.designation?.toLowerCase() === 'admin';
 
@@ -272,8 +269,12 @@ const CalendarGridView = () => {
     setSplitParts(newSplitParts);
   }, [splitParts]);
 
+  const formatEstimate = (val) => {
+    const num = Number(val ?? 0);
+    return num % 1 === 0 ? num : Number(num.toFixed(2));
+  };
+
   const handleConfirmSplit = async () => {
-    // ✅ Validate all split parts
     for (let i = 0; i < splitParts.length; i++) {
       const part = splitParts[i];
       if (!part.startDate) {
@@ -323,6 +324,12 @@ const CalendarGridView = () => {
             const parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
               parentTaskId: parentId,
               isNewChild: false,
+              childValues: {
+                estimate_hrs: formatEstimate(selectedTaskToSplit.estimate_hrs),
+                estimate1_hrs: formatEstimate(selectedTaskToSplit.estimate1_hrs),
+                estimate2_hrs: formatEstimate(selectedTaskToSplit.estimate2_hrs),
+                workinghr: formatEstimate(selectedTaskToSplit.workinghr),
+              }
             });
 
             if (parentSumSplitestimate) {
@@ -402,10 +409,10 @@ const CalendarGridView = () => {
                   parentTaskId: parentId,
                   childTaskId: taskId,
                   childValues: {
-                    estimate_hrs: task.estimate_hrs || 0,
-                    estimate1_hrs: task.estimate1_hrs || 0,
-                    estimate2_hrs: task.estimate2_hrs || 0,
-                    workinghr: task.workinghr || 0,
+                    estimate_hrs: formatEstimate(task.estimate_hrs),
+                    estimate1_hrs: formatEstimate(task.estimate1_hrs),
+                    estimate2_hrs: formatEstimate(task.estimate2_hrs),
+                    workinghr: formatEstimate(task.workinghr),
                   },
                   isNewChild: false,
                 });

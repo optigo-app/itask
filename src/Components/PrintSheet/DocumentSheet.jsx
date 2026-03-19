@@ -10,6 +10,7 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
       .filter(name => name)
       .join(', ');
   };
+  console.log("hdshj", selectedData)
 
   return (
     <div ref={ref} className="dContainer_main">
@@ -17,7 +18,12 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
 
       <div className='BrderEvry'>
         <div className='CmonCentrEvry TxtDark BrderBtom CmonFntSize'>
-          <div className='WdthMost higtT CmonCentrEvry BrderRigt'><span className='label-bold'></span> <span className='valueBind taskname label-bold'>{selectedData?.selectedData && selectedData?.selectedData?.taskname}</span></div>
+          <div className='WdthMost higtT CmonCentrEvry BrderRigt' style={{ flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
+            <span className='valueBind taskname label-bold'>{selectedData?.selectedData && selectedData?.selectedData?.taskname}</span>
+            <span className='valueBind module-project-name'>
+              {selectedData?.selectedData && (selectedData?.selectedData?.taskPr + "/" + selectedData?.selectedData?.moduleName)}
+            </span>
+          </div>
           <div className='WdthMIN higtT CmonCentrEvry' style={{ flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span className='label-bold'>Task No:</span>{' '}
@@ -221,7 +227,7 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
           <div className='MostWd higtCmon CmonCentrEvry'>
             <div className='w-50 text-light'>UI | Name :</div>
             <div className='w-50 CmonCentrEvry justify-content-end'>
-              <div className='text-light' style={{ width: "35px" }}></div>
+              <div className='text-light' style={{ width: "100px" }}></div>
               <div className='text-light'>+Hrs:</div>
             </div>
           </div>
@@ -238,7 +244,7 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
           <div className='MostWd higtCmon CmonCentrEvry'>
             <div className='w-50 text-light'>API | Name :</div>
             <div className='w-50 CmonCentrEvry justify-content-end'>
-              <div className='text-light' style={{ width: "27px" }}></div>
+              <div className='text-light' style={{ width: "90px" }}></div>
               <div className='text-light'>+Hrs:</div>
             </div>
           </div>
@@ -255,7 +261,7 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
           <div className='MostWd higtCmon CmonCentrEvry'>
             <div className='w-50 text-light'>DB | Name :</div>
             <div className='w-50 CmonCentrEvry justify-content-end'>
-              <div className='text-light' style={{ width: "31px" }}></div>
+              <div className='text-light' style={{ width: "95px" }}></div>
               <div className='text-light'>+Hrs:</div>
             </div>
           </div>
@@ -386,7 +392,7 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
           <div className='text-light'>Ticket Updated</div>
         </div>
 
-        <div className='CmonCentrEvry CmonFntSize higtCmon BrderBtom'>
+        <div className='CmonCentrEvry CmonFntSize higtCmon BrderBtom checklist_date'>
           <div className='SpacRitDPL text-light'>Data Loading: Yes/No</div>
           <div className='SpacRitDPL text-light'>Performance:</div>
           <div className='SpacRitDPL text-light'>Data Cleanup Required?</div>

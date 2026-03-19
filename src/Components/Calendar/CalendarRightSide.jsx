@@ -11,12 +11,13 @@ import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformD
 import { EstimateCalApi } from '../../Api/TaskApi/EstimateCalApi';
 import { buildAncestorSumSplitestimate } from '../../Utils/estimationUtils';
 import { Box, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Divider } from '@mui/material';
-import { AddMeetingApi } from '../../Api/MeetingApi/AddMeetingApi';
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 import { PERMISSIONS } from '../Auth/Role/permissions';
 import { toast } from 'react-toastify';
-import { getDynamicStatusColor, statusColors } from '../../Utils/globalfun';
-import { Star } from 'lucide-react';
+import { getDynamicStatusColor, statusColors, getUserProfileData, formatUTCDateTime, toAttendanceDateKey } from '../../Utils/globalfun';
+import DailyReportAttendance from '../Reports/CalendarReport/DailyReportAttendance';
+import { GetDailyReportApi } from '../../Api/TaskApi/GetDailyReportApi';
+import DailyReportAttendanceList from '../Reports/CalendarReport/DailyReportAttendanceList';
 
 const Calendar = ({
     isLoding,
@@ -41,7 +42,107 @@ const Calendar = ({
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const actualTaskDataValue = useRecoilValue(TaskData);
+    const [attendanceByDate, setAttendanceByDate] = useState({});
+    const [assigneesByDate, setAssigneesByDate] = useState({});
+    const [dailyReportRows, setDailyReportRows] = useState([]);
+    const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
+    const [attendanceDialogRows, setAttendanceDialogRows] = useState([]);
+    const [activeAssignee, setActiveAssignee] = useState(null);
     const [duplicateDialog, setDuplicateDialog] = useState({ open: false, event: null });
+
+    const toDateKey = (date, useUTC = true) => {
+        const d = date instanceof Date ? date : new Date(date);
+        if (Number.isNaN(d.getTime())) return '';
+        if (useUTC) {
+            const y = d.getUTCFullYear();
+            const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        } else {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+    };
+
+    const sortAssigneesLoggedInFirst = (list) => {
+        const loggedInId = getUserProfileData()?.id;
+        const arr = Array.isArray(list) ? list : [];
+        const seen = new Set();
+        const uniq = [];
+        for (const a of arr) {
+            const id = a?.id;
+            const key = id == null ? '' : String(id);
+            if (!key || seen.has(key)) continue;
+            seen.add(key);
+            uniq.push(a);
+        }
+        if (!loggedInId) return uniq;
+        const meIdx = uniq.findIndex((x) => String(x?.id) === String(loggedInId));
+        if (meIdx <= 0) return uniq;
+        const me = uniq[meIdx];
+        return [me, ...uniq.slice(0, meIdx), ...uniq.slice(meIdx + 1)];
+    };
+
+    const hydrateAttendanceFromApi = async () => {
+        try {
+            const userProfile = getUserProfileData();
+            const loggedInId = userProfile?.id;
+            if (!loggedInId) return;
+
+            const res = await GetDailyReportApi();
+            const rows = res?.rd || [];
+            const assigneeMaster = JSON.parse(sessionStorage.getItem('taskAssigneeData') || '[]');
+            const masterById = new Map(assigneeMaster.map((e) => [String(e?.id), e]));
+
+            const byDateAssignees = new Map();
+            rows.filter((r) => String(r?.GivenByEmpID) === String(loggedInId))
+                .forEach((r) => {
+                    const dk = toAttendanceDateKey(new Date(r?.entrydate));
+                    const idStr = String(r?.TakenByEmpID);
+                    const emp = masterById.get(idStr);
+                    if (dk && emp) {
+                        const list = byDateAssignees.get(dk) || [];
+                        if (!list.some((x) => String(x?.id) === idStr)) list.push(emp);
+                        byDateAssignees.set(dk, list);
+                    }
+                });
+
+            const nextAssigneesByDate = {};
+            byDateAssignees.forEach((list, dk) => {
+                nextAssigneesByDate[dk] = sortAssigneesLoggedInFirst(list);
+            });
+            setAssigneesByDate(nextAssigneesByDate);
+
+            const nextDailyReportRows = rows.filter((r) => String(r?.GivenByEmpID) === String(loggedInId))
+                .map((r) => ({
+                    ...r,
+                    entrydate: formatUTCDateTime(r?.entrydate),
+                    __dateKey: toAttendanceDateKey(new Date(r?.entrydate)),
+                    __employee: masterById.get(String(r?.TakenByEmpID)) || null,
+                }));
+            setDailyReportRows(nextDailyReportRows);
+
+            const nextAttendance = {};
+            rows.filter(r => String(r.GivenByEmpID) === String(loggedInId)).forEach(r => {
+                const dk = toAttendanceDateKey(new Date(r.entrydate));
+                if (dk) {
+                    nextAttendance[dk] = {
+                        checked: r.isdone === 1 || String(r.isdone) === '1',
+                        remark: r.remarks || ''
+                    };
+                }
+            });
+            setAttendanceByDate(nextAttendance);
+        } catch (e) {
+            console.error('Error fetching daily reports:', e);
+        }
+    };
+
+    useEffect(() => {
+        hydrateAttendanceFromApi();
+    }, []);
     const processingEventRef = useRef(new Set());
     const [holidayDates, setHolidayDates] = useState([]);
     const [holidayData, setHolidayData] = useState([]);
@@ -172,28 +273,15 @@ const Calendar = ({
         setDuplicateDialog({ open: true, event });
     };
 
-    const isTaskFavorite = (taskId) => {
-        if (!taskId) return false;
-        const findTaskFavorite = (tasks) => {
-            for (const task of tasks) {
-                if (String(task.taskid) === String(taskId)) {
-                    return task.isfavourite === 1;
-                }
-                if (task.subtasks?.length > 0) {
-                    const found = findTaskFavorite(task.subtasks);
-                    if (found !== undefined) return found;
-                }
-            }
-            return false;
-        };
-        return findTaskFavorite(actualTaskDataValue || []);
-    };
-
     const filterEvents = (events, selectedCalendars) => {
         return events?.filter(event => {
-            // Filter by category only
+            // Filter by category
             const categoryMatch = !event?.category || selectedCalendars?.includes(event.category);
-            return categoryMatch;
+
+            // Filter by favorites if showFavoritesOnly is true
+            const favoriteMatch = showFavoritesOnly ? Number(event?.isfavourite) === 1 : true;
+
+            return categoryMatch && favoriteMatch;
         }) || [];
     };
 
@@ -227,6 +315,11 @@ const Calendar = ({
             }
         }
     }, []); // Remove showFavoritesOnly dependency
+
+    const formatEstimate = (val) => {
+        const num = Number(val ?? 0);
+        return num % 1 === 0 ? num : Number(num.toFixed(2));
+    };
 
     const mapEventDetails = (event) => {
         const start = event?.start ?? event?.StartDate;
@@ -378,7 +471,7 @@ const Calendar = ({
         dragScroll: true,
         dayMaxEvents: 4, // Limit events per day in month view to prevent overflow
         moreLinkClick: 'popover', // Show popover when clicking "more" link
-        navLinks: true,
+        navLinks: false, // Changed from true to false to prevent header clicks from triggering view changes
         weekNumbers: true, // Enable week numbers (controlled by CSS per view)
         customButtons: {
             sidebarToggle: {
@@ -399,25 +492,13 @@ const Calendar = ({
         eventClassNames({ event }) {
             const category = event.extendedProps.category || 'ETC';
             const colorClass = calendarsColor[category] || 'primary';
-            const classes = [`bg-${colorClass}`];
-
-            // Add favorite class if the event is a favorite
-            const taskId = event.extendedProps?.taskid;
-            if (taskId && isTaskFavorite(taskId)) {
-                classes.push('favorite-event');
-            }
-
-            // Add highlight class if favorites filter is active
-            if (showFavoritesOnly && taskId && isTaskFavorite(taskId)) {
-                classes.push('favorite-highlighted');
-            }
-
-            return classes;
+            return [`bg-${colorClass}`];
         },
 
         dayHeaderContent(arg) {
             const calendarApi = arg.view.calendar;
             const currentView = arg.view.type;
+            const dateKey = toAttendanceDateKey(arg.date, false);
 
             const dayEvents = calendarApi.getEvents().filter(event => {
                 const eventDate = new Date(event.start).toDateString();
@@ -437,10 +518,8 @@ const Calendar = ({
 
             const formatForView = (date, viewType) => {
                 if (viewType === 'dayGridMonth') {
-                    // Month view: show only day name
                     return date.toLocaleDateString('en-US', { weekday: 'long' });
                 } else {
-                    // Week/Day view: show day name with date
                     const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                     const day = date.getDate();
                     const month = date.toLocaleDateString('en-US', { month: 'short' });
@@ -451,7 +530,6 @@ const Calendar = ({
             const formattedDate = formatForView(arg.date, currentView);
             const totalText = formatTotalHours(totalHours);
 
-            // For month view, don't show hours in header
             if (currentView === 'dayGridMonth') {
                 return {
                     html: `
@@ -462,15 +540,36 @@ const Calendar = ({
                 };
             }
 
-            // For week/day view, show hours
-            return {
-                html: `
-                    <div class="calendar-day-header">
-                        <div class="date-text">${formattedDate}</div>
-                        <div class="estimate-text">(${totalText})</div>
+            const attendance = attendanceByDate[dateKey] || {};
+            const checked = !!attendance.checked;
+            const isToday = dateKey === toDateKey(new Date());
+            const assignees = sortAssigneesLoggedInFirst(assigneesByDate[dateKey] || []);
+
+            return (
+                <div className="calendar-day-header">
+                    <div className="date-text">{formattedDate}</div>
+                    <div className="calendar-day-header-right-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div className="estimate-text">({totalText})</div>
+                        <DailyReportAttendance
+                            checked={checked}
+                            isToday={isToday}
+                            showCheckbox={true}
+                            disabled={true}
+                            assignees={assignees}
+                            iconSize={20}
+                            avatarSize={30}
+                            onAvatarClick={(all, clickedId) => {
+                                const dateRows = dailyReportRows.filter(r => r.__dateKey === dateKey);
+                                const picked = (all || []).find((a) => String(a?.id) === String(clickedId));
+                                if (!picked) return;
+                                setActiveAssignee(picked);
+                                setAttendanceDialogRows(dateRows);
+                                setAttendanceDialogOpen(true);
+                            }}
+                        />
                     </div>
-                `
-            };
+                </div>
+            );
         },
 
         eventContent(arg) {
@@ -497,18 +596,13 @@ const Calendar = ({
 
             const estimateText = formatEstimate(estimateHrs);
 
-            // Check if this event is a favorite
-            const taskId = event.extendedProps?.taskid;
-            const isFavorite = taskId && isTaskFavorite(taskId);
-            const starIcon = isFavorite ? '<span style="color:#f57c00;font-size:14px;margin-left:4px;">★</span>' : '';
-
             // For month view, use simpler layout
             if (currentView === 'dayGridMonth') {
                 return {
                     html: `
                         <div class="fc-event-main-frame calendar-event-container month-event">
                             <div class="fc-event-content">
-                                <span class="fc-event-title">${event.title || ''}${starIcon}</span>
+                                <span class="fc-event-title">${event.title || ''}</span>
                                 ${estimateText ? `<span class="fc-event-estimate">${estimateText}</span>` : ''}
                                 ${statusPillHtml}
                             </div>
@@ -555,7 +649,7 @@ const Calendar = ({
                         </div>
                         <div class="fc-event-title-container">
                             <div class="fc-event-title fc-sticky">
-                                <span>${event.title || ''} ${estimateText}${starIcon}</span>
+                                <span>${event.title || ''} ${estimateText}</span>
                             </div>
                         </div>
                         <button class="duplicate-btn" data-event-id="${event.id}" title="Duplicate Event">
@@ -800,10 +894,10 @@ const Calendar = ({
                                     parentTaskId: parentId,
                                     childTaskId: eventDetails?.taskid,
                                     childValues: {
-                                        estimate_hrs: eventDetails.estimate_hrs,
-                                        estimate1_hrs: eventDetails.estimate1_hrs || 0,
-                                        estimate2_hrs: eventDetails.estimate2_hrs || 0,
-                                        workinghr: eventDetails.workinghr || 0,
+                                        estimate_hrs: formatEstimate(eventDetails.estimate_hrs),
+                                        estimate1_hrs: formatEstimate(eventDetails.estimate1_hrs),
+                                        estimate2_hrs: formatEstimate(eventDetails.estimate2_hrs),
+                                        workinghr: formatEstimate(eventDetails.workinghr),
                                     },
                                     isNewChild: false,
                                 });
@@ -897,6 +991,9 @@ const Calendar = ({
             meetingid: "",
             title: eventDetails.title,
             entrydate: new Date().toISOString(),
+            start: new Date().toISOString(),
+            end: new Date(new Date().getTime() + (Number(eventDetails.estimate_hrs || 1) * 60 * 60 * 1000)).toISOString(),
+            DeadLineDate: new Date().toISOString(),
             repeatflag: "repeat",
             statusid: "",
             workinghr: 0,
@@ -929,10 +1026,10 @@ const Calendar = ({
                                     parentTaskId: parentId,
                                     childTaskId: newTaskId,
                                     childValues: {
-                                        estimate_hrs: duplicatedEvent.estimate_hrs,
-                                        estimate1_hrs: duplicatedEvent.estimate1_hrs || 0,
-                                        estimate2_hrs: duplicatedEvent.estimate2_hrs || 0,
-                                        workinghr: duplicatedEvent.workinghr || 0,
+                                        estimate_hrs: formatEstimate(duplicatedEvent.estimate_hrs),
+                                        estimate1_hrs: formatEstimate(duplicatedEvent.estimate1_hrs),
+                                        estimate2_hrs: formatEstimate(duplicatedEvent.estimate2_hrs),
+                                        workinghr: formatEstimate(duplicatedEvent.workinghr),
                                     },
                                     isNewChild: true,
                                 });
@@ -966,6 +1063,34 @@ const Calendar = ({
     return (
         <>
             <FullCalendar ref={calendarRef} {...calendarOptions} />
+
+            <Dialog
+                open={attendanceDialogOpen}
+                onClose={() => {
+                    setAttendanceDialogOpen(false);
+                    setActiveAssignee(null);
+                    setAttendanceDialogRows([]);
+                }}
+                maxWidth="sm"
+                fullWidth
+                sx={{ '& .MuiDialog-paper': { borderRadius: '8px' } }}
+            >
+                <DialogTitle>Daily Report Attendance</DialogTitle>
+                <DialogContent>
+                    <DailyReportAttendanceList
+                        rows={attendanceDialogRows}
+                        attendanceByDate={attendanceByDate}
+                        loggedInUserId={getUserProfileData()?.id}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => {
+                        setAttendanceDialogOpen(false);
+                        setActiveAssignee(null);
+                        setAttendanceDialogRows([]);
+                    }} className='secondaryBtnClassname'>Close</Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Duplicate Dialog */}
             <Dialog
