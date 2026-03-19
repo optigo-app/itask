@@ -8,7 +8,7 @@ export const fetchTaskDataFullApi = async (parsedData) => {
         const combinedValue = JSON.stringify({
             taskid: `${parsedData?.taskid ?? ''}`,
             teamid: `${parsedData?.teamid ?? '1'}`,
-            isarchive: `${parsedData?.isarchive ?? ''}`,
+            // isarchive: `${parsedData?.isarchive ?? ''}`,
         });
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"treelist\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,

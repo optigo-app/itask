@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import "./Project.scss";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
@@ -207,6 +207,19 @@ const Project = () => {
       setIsTaskLoading(false);
     }
   };
+
+  const projectCounts = useMemo(() => {
+    if (!project || !Array.isArray(project)) return { totalProjects: 0, totalModules: 0 };
+    
+    // Total modules is the length of the project array (since it contains all modules)
+    const totalModules = project.length;
+    
+    // Total projects is the number of unique projectnames
+    const uniqueProjects = new Set(project.map(task => task.taskPr).filter(Boolean));
+    const totalProjects = uniqueProjects.size;
+    
+    return { totalProjects, totalModules };
+  }, [project]);
 
   const handleFilterChange = (key, value) => {
     if (key === "clearFilter" && value == null) {
@@ -445,6 +458,11 @@ const Project = () => {
     }
   };
 
+  const formatEstimate = (val) => {
+    const num = Number(val ?? 0);
+    return num % 1 === 0 ? num : Number(num.toFixed(2));
+  };
+
   const handleDeleteModule = async (id) => {
     const taskToDelete = filteredData?.find((task) => task.taskid === id);
     if (!taskToDelete) return;
@@ -463,6 +481,12 @@ const Project = () => {
               parentTaskId: parentId,
               childTaskId: id,
               isDelete: true,
+              childValues: {
+                estimate_hrs: formatEstimate(taskToDelete.estimate_hrs),
+                estimate1_hrs: formatEstimate(taskToDelete.estimate1_hrs),
+                estimate2_hrs: formatEstimate(taskToDelete.estimate2_hrs),
+                workinghr: formatEstimate(taskToDelete.workinghr),
+              }
             });
           }
         } catch (err) {
@@ -526,6 +550,7 @@ const Project = () => {
         CategorySummary={CategoryTSummary}
         showFavoritesOnly={showFavoritesOnly}
         onToggleFavoritesOnly={handleToggleFavoritesOnly}
+        projectCounts={projectCounts}
       />
 
       {!isLaptop &&
@@ -587,7 +612,6 @@ const Project = () => {
           opacity: 0.3,
         }}
       />
-
       <FilterChips
         filters={filters}
         onClearFilter={handleClearFilter}

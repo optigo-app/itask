@@ -24,8 +24,13 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
         Object.entries(formValues?.dynamicDropdowns ?? {}).forEach(([key, val]) => {
             dropdowns[key] = String(val);
         });
+        const formatEstimate = (val) => {
+            const num = Number(val ?? 0);
+            return num % 1 === 0 ? num : Number(num.toFixed(2));
+        };
+
         if (formValues?.bulkTask?.length > 0) {
-            const formattedString = formValues?.bulkTask?.map(task => `${task.taskName}#${task.estimate}#${task.deadLineDate ?? ''}#${task.ismilestone ?? 0}`).join(", ");
+            const formattedString = formValues?.bulkTask?.map(task => `${task.taskName}#${formatEstimate(task.estimate)}#${task.deadLineDate ?? ''}#${task.ismilestone ?? 0}`).join(", ");
             combinedValue = JSON.stringify({
                 "ismodule": 2,
                 "maintaskid": formValues?.moduleid ?? formValues?.taskid ?? '',
@@ -47,10 +52,10 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "taskname": formValues?.taskname ?? "",
                 "StartDate": formValues?.StartDate ?? '',
                 "EndDate": formValues?.EndDate ?? '',
-                "estimate_hrs": (formValues?.estimate_hrs != "" ? formValues?.estimate_hrs : 0) ?? 0,
-                "estimate1_hrs": (formValues?.estimate1_hrs != "" ? formValues?.estimate1_hrs : 0) ?? 0,
-                "estimate2_hrs": (formValues?.estimate2_hrs != "" ? formValues?.estimate2_hrs : 0) ?? 0,
-                "workinghr": formValues?.workinghr ?? 0,
+                "estimate_hrs": formatEstimate(formValues?.estimate_hrs),
+                "estimate1_hrs": formatEstimate(formValues?.estimate1_hrs),
+                "estimate2_hrs": formatEstimate(formValues?.estimate2_hrs),
+                "workinghr": formatEstimate(formValues?.workinghr),
                 "DeadLineDate": formValues?.DeadLineDate ?? '',
                 "priorityid": formValues?.priorityid ?? 0,
                 "statusid": formValues?.statusid ?? 0,

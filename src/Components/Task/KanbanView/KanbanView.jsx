@@ -11,7 +11,6 @@ import { EstimateCalApi } from "../../../Api/TaskApi/EstimateCalApi";
 import { buildAncestorSumSplitestimate } from "../../../Utils/estimationUtils";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag } from "../../../Recoil/atom";
 import { useRecoilState, useSetRecoilState } from "recoil";
-import KanbanCardSkeleton from "./KanbanSkelton";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { toast } from "react-toastify";
 
@@ -44,6 +43,11 @@ function KanbanView({
     setSelectedTask(task)
   }
 
+  const formatEstimate = (val) => {
+    const num = Number(val ?? 0);
+    return num % 1 === 0 ? num : Number(num.toFixed(2));
+  };
+
   const handleConfirmRemoveAll = async () => {
     setCnfDialogOpen(false);
     try {
@@ -60,6 +64,12 @@ function KanbanView({
               parentTaskId: parentId,
               childTaskId: selectedTask.taskid,
               isDelete: true,
+              childValues: {
+                estimate_hrs: formatEstimate(selectedTask.estimate_hrs),
+                estimate1_hrs: formatEstimate(selectedTask.estimate1_hrs),
+                estimate2_hrs: formatEstimate(selectedTask.estimate2_hrs),
+                workinghr: formatEstimate(selectedTask.workinghr),
+              }
             });
           }
         } catch (err) {

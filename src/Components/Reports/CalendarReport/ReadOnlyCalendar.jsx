@@ -10,10 +10,11 @@ import { Box, Typography, CircularProgress, IconButton, Dialog, DialogTitle, Dia
 import { Calendar as CalendarIcon, List, CheckCircle, Circle } from 'lucide-react';
 import { useRecoilValue } from 'recoil';
 import { FullSidebar } from '../../../Recoil/atom';
-import { getDynamicStatusColor, getUserProfileData, statusColors, formatUTCDateTime } from '../../../Utils/globalfun';
+import { getDynamicStatusColor, getUserProfileData, statusColors, formatUTCDateTime, toAttendanceDateKey, sortAssigneesLoggedInFirst } from '../../../Utils/globalfun';
 import { DailyReportSaveApi } from '../../../Api/TaskApi/DailyReportSaveApi';
 import { GetDailyReportApi } from '../../../Api/TaskApi/GetDailyReportApi';
 import AssigneeAvatarGroup from '../../ShortcutsComponent/Assignee/AssigneeAvatarGroup';
+import DailyReportAttendance from './DailyReportAttendance';
 import DailyReportAttendanceList from './DailyReportAttendanceList';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
@@ -45,25 +46,6 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
     const [uncheckDialogOpen, setUncheckDialogOpen] = useState(false);
     const [pendingUncheckDateKey, setPendingUncheckDateKey] = useState(null);
     const lastRequestIdRef = useRef(0);
-
-    const sortAssigneesLoggedInFirst = (list) => {
-        const loggedInId = getUserProfileData()?.id;
-        const arr = Array.isArray(list) ? list : [];
-        const seen = new Set();
-        const uniq = [];
-        for (const a of arr) {
-            const id = a?.id;
-            const key = id == null ? '' : String(id);
-            if (!key || seen.has(key)) continue;
-            seen.add(key);
-            uniq.push(a);
-        }
-        if (!loggedInId) return uniq;
-        const meIdx = uniq.findIndex((x) => String(x?.id) === String(loggedInId));
-        if (meIdx <= 0) return uniq;
-        const me = uniq[meIdx];
-        return [me, ...uniq.slice(0, meIdx), ...uniq.slice(meIdx + 1)];
-    };
 
     const cancelRemarkFlow = () => {
         const dateKey = activeRemarkDateKey;
@@ -161,7 +143,7 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
             rows
                 .filter((r) => String(r?.GivenByEmpID) === String(givenByEmpId))
                 .forEach((r) => {
-                    const dk = toDateKey(new Date(r?.entrydate));
+                    const dk = toAttendanceDateKey(new Date(r?.entrydate));
                     if (!dk) return;
                     const idStr = String(r?.TakenByEmpID);
                     if (!idStr) return;
@@ -186,7 +168,7 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                 .filter((r) => String(r?.GivenByEmpID) === String(givenByEmpId))
                 .map((r) => {
                     const emp = masterById.get(String(r?.TakenByEmpID));
-                    const dk = toDateKey(new Date(r?.entrydate));
+                    const dk = toAttendanceDateKey(new Date(r?.entrydate));
                     return {
                         ...r,
                         entrydate: formatUTCDateTime(r?.entrydate),
@@ -212,7 +194,7 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
 
             const byDate = new Map();
             filtered.forEach((r) => {
-                const dk = toDateKey(new Date(r?.entrydate));
+                const dk = toAttendanceDateKey(new Date(r?.entrydate));
                 if (!dk) return;
                 const prev = byDate.get(dk);
                 const currTime = new Date(r?.entrydate || 0).getTime();
@@ -358,7 +340,7 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
         dayHeaderContent(arg) {
             const calendarApi = arg.view.calendar;
             const currentView = arg.view.type;
-            const dateKey = toDateKey(arg.date, false);
+            const dateKey = toAttendanceDateKey(arg.date, false);
 
             if (currentView === 'dayGridMonth') {
                 const formattedDate = arg.date.toLocaleDateString('en-US', { weekday: 'long' });
@@ -385,77 +367,43 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
 
             const attendance = attendanceByDate[dateKey] || {};
             const checked = !!attendance.checked;
-            const isToday = dateKey === toDateKey(new Date());
+            const isToday = dateKey === toAttendanceDateKey(new Date());
             const assignees = sortAssigneesLoggedInFirst(assigneesByDate[dateKey] || []);
             console.log('assignees', assigneesByDate, dateKey);
 
             return (
                 <div className="calendar-day-header">
                     <div className="date-text">{formattedDate}</div>
-                    <div className="calendar-day-header-right">
-                        <div className="calendar-day-header-right-left">
-                            <div className="estimate-text">({totalText})</div>
-                        </div>
-                        <div className="calendar-day-header-right-center">
-                            <IconButton
-                                disabled={!isToday}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (!isToday || isHydratingAttendanceRef.current) return;
-                                    const isAlreadyChecked = attendance.checked;
-                                    if (isAlreadyChecked) {
-                                        setPendingUncheckDateKey(dateKey);
-                                        setUncheckDialogOpen(true);
-                                    } else {
-                                        updateAttendanceState((prev) => ({
-                                            ...prev,
-                                            [dateKey]: { ...(prev?.[dateKey] || {}), checked: true },
-                                        }));
-
-                                        setActiveRemarkDateKey(dateKey);
-                                        setRemarkDraft(attendance.remark || '');
-                                        setRemarkDialogOpen(true);
-                                    }
-                                }}
-                                className={`attn-attendance-btn ${checked ? 'is-checked' : 'not-checked'}`}
-                                sx={{
-                                    padding: '4px',
-                                    width: '32px',
-                                    height: '32px',
-                                    backgroundColor: checked ? '#7367f0 !important' : '#fff !important',
-                                    color: checked ? '#fff !important' : '#9e9e9e !important',
-                                    border: checked ? 'none !important' : '1px solid #e0e0e0 !important',
-                                    '&:hover': {
-                                        backgroundColor: checked ? '#5a52d5 !important' : 'rgba(115, 103, 240, 0.1) !important',
-                                    },
-                                    '&.Mui-disabled': {
-                                        opacity: 0.5,
-                                    }
-                                }}
-                                title="Mark attendance (optional remark)"
-                            >
-                                {checked ? <CheckCircle size={18} /> : <Circle size={18} />}
-                            </IconButton>
-                        </div>
-                        <div className="calendar-day-header-right-right">
-                            <AssigneeAvatarGroup
-                                assignees={assignees}
-                                task={{ parentid: 0 }}
-                                maxVisible={1}
-                                showAddButton={false}
-                                onAvatarClick={(all, clickedId) => {
-                                    const dateRows = dailyReportRows.filter(r => r.__dateKey === dateKey);
-                                    const picked = (all || []).find((a) => String(a?.id) === String(clickedId));
-                                    if (!picked) return;
-                                    setActiveAssignee(picked);
-                                    setAttendanceDialogRows(dateRows);
-                                    setAttendanceDialogOpen(true);
-                                }}
-                                size={26}
-                                spacing={0.25}
-                            />
-                        </div>
+                    <div className="calendar-day-header-right-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div className="estimate-text">({totalText})</div>
+                        <DailyReportAttendance
+                            checked={checked}
+                            isToday={isToday}
+                            disabled={isHydratingAttendanceRef.current}
+                            onCheckClick={(e) => {
+                                if (checked) {
+                                    setPendingUncheckDateKey(dateKey);
+                                    setUncheckDialogOpen(true);
+                                } else {
+                                    updateAttendanceState((prev) => ({
+                                        ...prev,
+                                        [dateKey]: { ...(prev?.[dateKey] || {}), checked: true },
+                                    }));
+                                    setActiveRemarkDateKey(dateKey);
+                                    setRemarkDraft(attendance.remark || '');
+                                    setRemarkDialogOpen(true);
+                                }
+                            }}
+                            assignees={assignees}
+                            onAvatarClick={(all, clickedId) => {
+                                const dateRows = dailyReportRows.filter(r => r.__dateKey === dateKey);
+                                const picked = (all || []).find((a) => String(a?.id) === String(clickedId));
+                                if (!picked) return;
+                                setActiveAssignee(picked);
+                                setAttendanceDialogRows(dateRows);
+                                setAttendanceDialogOpen(true);
+                            }}
+                        />
                     </div>
                 </div>
             );

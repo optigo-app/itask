@@ -113,6 +113,11 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
             .filter(task => task.taskid !== taskIdToRemove);
     };
 
+    const formatEstimate = (val) => {
+        const num = Number(val ?? 0);
+        return num % 1 === 0 ? num : Number(num.toFixed(2));
+    };
+
     const handleConfirmRemoveAll = async () => {
         setCnfDialogOpen(false);
         setIsDeleting(true);
@@ -145,6 +150,12 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                             parentTaskId: parentId,
                             childTaskId: formDataValue.taskid,
                             isDelete: true,
+                            childValues: {
+                                estimate_hrs: formatEstimate(formDataValue.estimate_hrs),
+                                estimate1_hrs: formatEstimate(formDataValue.estimate1_hrs),
+                                estimate2_hrs: formatEstimate(formDataValue.estimate2_hrs),
+                                workinghr: formatEstimate(formDataValue.workinghr),
+                            }
                         });
                     }
                 } catch (err) {

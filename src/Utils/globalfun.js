@@ -136,6 +136,43 @@ export const formatDate4 = (date) => {
     }
 };
 
+export const normalizeAttendanceBoolean = (value) => value === 1 || value === "1" || value === true;
+
+export const toAttendanceDateKey = (date, useUTC = true) => {
+    const d = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(d.getTime())) return '';
+    if (useUTC) {
+        const y = d.getUTCFullYear();
+        const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(d.getUTCDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    } else {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+};
+
+export const sortAssigneesLoggedInFirst = (list) => {
+    const loggedInId = getUserProfileData()?.id;
+    const arr = Array.isArray(list) ? list : [];
+    const seen = new Set();
+    const uniq = [];
+    for (const a of arr) {
+        const id = a?.id;
+        const key = id == null ? '' : String(id);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        uniq.push(a);
+    }
+    if (!loggedInId) return uniq;
+    const meIdx = uniq.findIndex((x) => String(x?.id) === String(loggedInId));
+    if (meIdx <= 0) return uniq;
+    const me = uniq[meIdx];
+    return [me, ...uniq.slice(0, meIdx), ...uniq.slice(meIdx + 1)];
+};
+
 export function formatUTCDateTime(dateString) {
     const date = new Date(dateString);
 

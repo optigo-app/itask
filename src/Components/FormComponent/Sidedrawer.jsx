@@ -295,6 +295,7 @@ const SidebarDrawer = ({
                 estimate_hrs: Number(formDataValue?.estimate_hrs ?? 0),
                 estimate1_hrs: Number(formDataValue?.estimate1_hrs ?? 0),
                 estimate2_hrs: Number(formDataValue?.estimate2_hrs ?? 0),
+                workinghr: Number(formDataValue?.workinghr ?? 0),
             });
             setSplitSelectionActive(false);
             setSplitSelectionMeta(null);
@@ -421,11 +422,21 @@ const SidebarDrawer = ({
             subtasks,
         };
 
+        const formatEstimate = (val) => {
+            const num = Number(val ?? 0);
+            return num % 1 === 0 ? num : Number(num.toFixed(2));
+        };
+
         const buildEntriesRecursive = (node, totals) => {
             const nodeId = String(node?.taskid ?? '');
             if (!nodeId) return [];
 
-            const currentEntry = `${nodeId}#${Number(totals?.estimate ?? 0) || 0}#${Number(totals?.actual ?? 0) || 0}#${Number(totals?.final ?? 0) || 0}#${Number(totals?.working ?? 0) || 0}`;
+            const est = formatEstimate(totals?.estimate);
+            const act = formatEstimate(totals?.actual);
+            const fin = formatEstimate(totals?.final);
+            const work = formatEstimate(totals?.working);
+
+            const currentEntry = `${nodeId}#${est}#${act}#${fin}#${work}`;
 
             // Use actualTaskDataValue to find all children, ignoring any UI filtering
             const children = actualTaskDataValue.filter(t => String(t.parentid) === nodeId);
@@ -460,6 +471,14 @@ const SidebarDrawer = ({
 
     const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);
 
+    const data = useMemo(() => flattenTasks(taskDataValue), [taskDataValue]);
+    const flattenedTasks = useMemo(() => {
+        if (location?.pathname?.includes("/projects")) {
+            return prModuleMaster ? flattenTasks(taskDataValue) : [];
+        }
+        return flattenTasks(taskDataValue);
+    }, [location?.pathname, prModuleMaster, taskDataValue]);
+
     const selectedId = useMemo(() => {
         const isProjectPath = location?.pathname?.includes("/projects");
 
@@ -485,22 +504,53 @@ const SidebarDrawer = ({
 
     useEffect(() => {
         if (!rootSubrootflagval?.Task) return;
+
+        const isProjectPath = location?.pathname?.includes("/projects");
+        const dynamicKey = isProjectPath ? "projectid" : "moduleid";
+        const isRoot = rootSubrootflagval?.Task === "root";
+        const isAddOrSub = rootSubrootflagval?.Task === "AddTask" || rootSubrootflagval?.Task === "subroot";
+
         if (selectedId) {
             setIsTaskNameEmpty(taskName === "");
             setIsCategoryEmpty(!formValues?.category);
         }
+
         if (!selectedId || !taskName) {
+            setIsDuplicateTask(false);
             return;
         }
-        setIsTaskNameEmpty(taskName.trim() === "");
-        setIsCategoryEmpty(!formValues?.category);
-        setIsDuplicateTask(false);
+
+        if (isAddOrSub) {
+            const match = flattenedTasks.find(
+                task =>
+                    task?.[dynamicKey] === selectedId &&
+                    task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
+            );
+            setIsDuplicateTask(!!match);
+        } else if (isRoot) {
+            if (formDataValue?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()) {
+                setIsDuplicateTask(false);
+            } else {
+                const match = data.find(
+                    task =>
+                        task?.[dynamicKey] === selectedId &&
+                        task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
+                );
+                setIsDuplicateTask(!!match);
+            }
+        } else {
+            setIsDuplicateTask(false);
+            setIsTaskNameEmpty(false);
+        }
     }, [
         open,
         taskName,
         selectedId,
+        flattenedTasks,
+        data,
         formValues?.category,
         rootSubrootflagval?.Task,
+        formDataValue?.taskname,
         location?.pathname
     ]);
 
