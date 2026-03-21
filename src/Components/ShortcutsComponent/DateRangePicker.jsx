@@ -23,33 +23,44 @@ const CustomDateRangePicker = ({ value = {}, onChange }) => {
 	});
 
 	useEffect(() => {
-		setTempRange({
-			startDate: toDate(value?.startDate),
-			endDate: toDate(value?.endDate),
-		});
-	}, [value]);
+		const newStart = toDate(value?.startDate);
+		const newEnd = toDate(value?.endDate);
+		
+		const currentStart = tempRange.startDate instanceof Date ? tempRange.startDate : null;
+		const currentEnd = tempRange.endDate instanceof Date ? tempRange.endDate : null;
+
+		if (
+			(newStart?.getTime() !== currentStart?.getTime()) ||
+			(newEnd?.getTime() !== currentEnd?.getTime())
+		) {
+			setTempRange({
+				startDate: newStart,
+				endDate: newEnd,
+			});
+		}
+	}, [value?.startDate, value?.endDate]);
 
 	const handleOpen = (event) => setAnchorEl(event.currentTarget);
 	const handleClose = () => setAnchorEl(null);
 
 	const handleDateChange = (range) => {
 		setTempRange({
-			startDate: range.startDate || "",
-			endDate: range.endDate || "",
+			startDate: range.startDate || null,
+			endDate: range.endDate || null,
 		});
 	};
 
 	const handleApply = () => {
 		onChange({
-			startDate: tempRange.startDate ? tempRange.startDate.toISOString() : "",
-			endDate: tempRange.endDate ? tempRange.endDate.toISOString() : "",
+			startDate: tempRange.startDate instanceof Date ? tempRange.startDate.toISOString() : "",
+			endDate: tempRange.endDate instanceof Date ? tempRange.endDate.toISOString() : "",
 		});
 		handleClose();
 	};
 
 	const handleClear = (e) => {
 		e.stopPropagation();
-		setTempRange({ startDate: "", endDate: "" });
+		setTempRange({ startDate: null, endDate: null });
 		onChange({ startDate: "", endDate: "" });
 		handleClose();
 	};

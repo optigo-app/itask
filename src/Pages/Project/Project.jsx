@@ -243,7 +243,13 @@ const Project = () => {
       setPage(1);
       return;
     }
-    setFilters((prevFilters) => ({ ...prevFilters, [key]: value }));
+
+    // Check if it's a date range object and handle it
+    if ((key === 'startDate' || key === 'dueDate') && value && typeof value === 'object' && value.startDate && value.endDate) {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+    } else {
+      setFilters((prevFilters) => ({ ...prevFilters, [key]: value }));
+    }
     setPage(1);
   };
 
@@ -264,16 +270,17 @@ const Project = () => {
   };
 
   const handleClearAllFilters = () => {
-    setFilters({
-      category: [],
-      searchTerm: '',
-      status: '',
-      priority: '',
-      department: '',
-      assignee: '',
-      project: '',
-      dueDate: null,
-    });
+      setFilters({
+        category: [],
+        searchTerm: '',
+        status: '',
+        priority: '',
+        department: '',
+        assignee: '',
+        project: '',
+        dueDate: null,
+        startDate: null,
+      });
     setSelectedCategory([])
     if (searchParams.get('filter')) {
       navigate('/projects')
@@ -359,6 +366,20 @@ const Project = () => {
             return (task?.category ?? "").toLowerCase() === catLower;
           });
 
+        const isWithinRange = (targetDate, range) => {
+          if (!targetDate || !range || typeof range !== 'object' || !range.startDate || !range.endDate) return true;
+          const date = new Date(targetDate);
+          const start = new Date(range.startDate);
+          const end = new Date(range.endDate);
+
+          // Normalize to start/end of day for accurate comparison
+          date.setHours(0, 0, 0, 0);
+          start.setHours(0, 0, 0, 0);
+          end.setHours(23, 59, 59, 999);
+
+          return date >= start && date <= end;
+        };
+
         const matchesSearch =
           !searchTerm ||
           matchText(task?.taskname) ||
@@ -382,10 +403,8 @@ const Project = () => {
             (task?.taskDpt ?? "").toLowerCase() === department.toLowerCase()) &&
           (!isValidFilter(projectFilter) ||
             (task?.taskPr ?? "").toLowerCase() === projectFilter.toLowerCase()) &&
-          (!isValidFilter(dueDate) ||
-            formatDate(task?.DeadLineDate) === formatDate(dueDate)) &&
-          (!isValidFilter(startDate) ||
-            formatDate(task?.StartDate) === formatDate(startDate)) &&
+          (dueDate ? isWithinRange(task?.DeadLineDate, dueDate) : true) &&
+          (startDate ? isWithinRange(task?.StartDate, startDate) : true) &&
           (!isValidFilter(assignee) ||
             (Array.isArray(task?.assignee)
               ? task.assignee.some(

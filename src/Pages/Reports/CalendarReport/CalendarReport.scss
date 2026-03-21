@@ -200,6 +200,30 @@
 
     .fc-event {
         cursor: default !important;
+
+        // Favorite event styles
+        &.favorite-event {
+            position: relative;
+        }
+
+        // Highlighted favorite events when filter is active
+        &.favorite-highlighted {
+            box-shadow: 0 0 0 3px #f57c00 inset !important;
+            border: 2px solid #f57c00 !important;
+            animation: pulse-favorite 2s ease-in-out infinite;
+        }
+    }
+
+    @keyframes pulse-favorite {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 3px #f57c00 inset !important;
+        }
+
+        50% {
+            box-shadow: 0 0 0 3px #ff9800 inset !important;
+        }
     }
 
     .duplicate-btn {

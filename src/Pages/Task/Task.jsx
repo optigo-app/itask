@@ -67,7 +67,7 @@ const Task = () => {
     statusData,
     secStatusData,
     taskAssigneeData } = useFullTaskFormatFile();
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(true);
 
   const [localTaskEdits, setLocalTaskEdits] = useState({});
 
@@ -278,6 +278,11 @@ const Task = () => {
       setFilters((prev) => ({ ...prev, dueDate: null }));
     } else if (filterKey === 'startDate') {
       setFilters((prev) => ({ ...prev, startDate: null }));
+    } else if (filterKey === 'assignee') {
+      setFilters((prev) => ({ ...prev, assignee: '' }));
+      // We also need to clear the 'guest' state in Filters.jsx if we were using it there, 
+      // but since it's local to Filters.jsx, we might need a way to sync it.
+      // For now, clearing the filter in the atom will update the UI via Recoil.
     } else {
       setFilters((prev) => ({ ...prev, [filterKey]: '' }));
     }
@@ -403,14 +408,28 @@ const Task = () => {
             return (item?.category ?? "").toLowerCase() === lowerCat;
           });
 
+        const isWithinRange = (targetDate, range) => {
+          if (!targetDate || !range || typeof range !== 'object' || !range.startDate || !range.endDate) return true;
+          const date = new Date(targetDate);
+          const start = new Date(range.startDate);
+          const end = new Date(range.endDate);
+          
+          // Normalize to start/end of day for accurate comparison
+          date.setHours(0, 0, 0, 0);
+          start.setHours(0, 0, 0, 0);
+          end.setHours(23, 59, 59, 999);
+          
+          return date >= start && date <= end;
+        };
+
         return (
           matchesCategory &&
           (status ? item?.status?.toLowerCase() === status?.toLowerCase() : true) &&
           (priority ? item?.priority?.toLowerCase() === priority?.toLowerCase() : true) &&
           (department ? item?.taskDpt?.toLowerCase() === department?.toLowerCase() : true) &&
           (project ? item?.taskPr?.toLowerCase() === project?.toLowerCase() : true) &&
-          (dueDate ? formatDate2(item?.DeadLineDate) === formatDate2(dueDate) : true) &&
-          (startDate ? formatDate2(item?.StartDate) === formatDate2(startDate) : true) &&
+          (dueDate ? isWithinRange(item?.DeadLineDate, dueDate) : true) &&
+          (startDate ? isWithinRange(item?.StartDate, startDate) : true) &&
           (assignee
             ? item?.assignee?.some((a) => {
               const fullName = `${a?.firstname} ${a?.lastname}`?.toLowerCase();

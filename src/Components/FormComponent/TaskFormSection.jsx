@@ -173,7 +173,8 @@ const TaskFormSection = ({
                     : isDuplicateTask
                       ? 'This taskname already exists for the selected module.'
                       : '',
-                  handleChange
+                  handleChange,
+                  location?.pathname?.includes('/myCalendar')
                 )}
               </Grid>
             )}
@@ -194,7 +195,7 @@ const TaskFormSection = ({
                     options={prModuleMaster}
                     getOptionLabel={(option) => `${option?.taskPr}/${option?.taskname}`}
                     {...commonTextFieldProps}
-                    disabled={prModule !== true}
+                    disabled={prModule !== true || location?.pathname?.includes('/myCalendar')}
                     onChange={(_, newValue) =>
                       handleChange({
                         target: {

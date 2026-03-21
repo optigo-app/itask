@@ -18,13 +18,13 @@ import {
     Menu,
     MenuItem,
 } from "@mui/material";
-import { Archive, CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Star, Timer, Undo2 } from "lucide-react";
+import {CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Star, Undo2 } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, formatDate2, getArchiveChipStyles, getArchiveInfoFromEndDate, getRandomAvatarColor, getStatusColor, priorityColors, statusColors, getDaysFromDeadline, formatDaysDisplay, getAuthData, getUserProfileData } from "../../../Utils/globalfun";
+import {getArchiveChipStyles, getArchiveInfoFromEndDate, getRandomAvatarColor, getStatusColor, priorityColors, statusColors, formatDaysDisplay, getAuthData, getUserProfileData } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 import AssigneeAvatarGroup from "../../ShortcutsComponent/Assignee/AssigneeAvatarGroup";

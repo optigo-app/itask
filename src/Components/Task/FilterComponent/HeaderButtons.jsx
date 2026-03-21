@@ -148,9 +148,6 @@ const HeaderButtons = ({
         : rootSubrootflagval;
     const addTaskApi = await AddTaskDataApi(formValues, rootflag ?? {}, module);
     if (addTaskApi && addTaskApi?.rd[0]?.stat == 1) {
-      // Removed setFormDrawerOpen(false) here to allow Sidedrawer to finish its async work.
-      // Sidedrawer will call onClose() (handleDrawerToggle) which will set formDrawerOpen to false.
-      // setOpenChildTask(true); // Moved to Sidedrawer.jsx to avoid double refresh
       setTimeout(() => {
         let message = "Task Added Successfully...";
         if (rootSubrootflagval?.Task === "SubTask") {
@@ -298,7 +295,7 @@ const HeaderButtons = ({
                 },
               }}
             >
-              <FilterAltIcon className="iconbtn" color="#0000008a" size={20}/>
+              <FilterAltIcon className="iconbtn" color="#0000008a" size={20} />
             </IconButton>
           </Tooltip>
           {location?.pathname?.includes("/tasks") && (
