@@ -150,7 +150,7 @@ const CalendarLeftSide = ({ calendarsColor }) => {
             <Divider sx={{ width: '100%', m: '0 !important' }} />
             {view === 'filter' ? (
                 <>
-                    <Box
+                    {/* <Box
                         sx={{
                             display: 'flex',
                             justifyContent: 'center',
@@ -170,8 +170,8 @@ const CalendarLeftSide = ({ calendarsColor }) => {
                             <Plus style={{ marginRight: '5px', opacity: '.9' }} size={20} />
                             Add Event
                         </Button>
-                    </Box>
-                    <Divider sx={{ width: '100%', m: '0 !important' }} />
+                    </Box> */}
+                    {/* <Divider sx={{ width: '100%', m: '0 !important' }} /> */}
                     <div>
                         <LocalizationProvider dateAdapter={AdapterDayjs}>
                             <StaticDatePicker

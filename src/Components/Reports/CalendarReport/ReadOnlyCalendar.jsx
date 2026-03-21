@@ -5,21 +5,17 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
-import ReactDOM from 'react-dom/client';
 import { Box, Typography, CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Avatar } from '@mui/material';
-import { Calendar as CalendarIcon, List, CheckCircle, Circle } from 'lucide-react';
+import { Calendar as CalendarIcon, List } from 'lucide-react';
 import { useRecoilValue } from 'recoil';
 import { FullSidebar } from '../../../Recoil/atom';
 import { getDynamicStatusColor, getUserProfileData, statusColors, formatUTCDateTime, toAttendanceDateKey, sortAssigneesLoggedInFirst } from '../../../Utils/globalfun';
 import { DailyReportSaveApi } from '../../../Api/TaskApi/DailyReportSaveApi';
 import { GetDailyReportApi } from '../../../Api/TaskApi/GetDailyReportApi';
-import AssigneeAvatarGroup from '../../ShortcutsComponent/Assignee/AssigneeAvatarGroup';
 import DailyReportAttendance from './DailyReportAttendance';
 import DailyReportAttendanceList from './DailyReportAttendanceList';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
-
-const MuiAvatar = Avatar;
 
 const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedEmployee, setSideDrawer, onDailyReportRowsChange }) => {
     const calendarRef = useRef();
@@ -29,8 +25,7 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
 
     const hoverTooltipRef = useRef(null);
     const hoverTooltipHandlersRef = useRef(new Map());
-    console.log(calendarEvents, 'calendarEvents');
-
+    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
     const [attendanceByDate, setAttendanceByDate] = useState({});
     const attendanceByDateRef = useRef(attendanceByDate);
     const isHydratingAttendanceRef = useRef(false);
@@ -243,42 +238,24 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
         hydrateAttendanceFromApi();
     }, [selectedEmployee?.id]);
 
-    const calendarOptions = React.useMemo(() => ({
-        firstDay: 1,
-        events: calendarEvents?.map((event) => ({
-            id: event?.meetingid?.toString(),
-            title: event?.meetingtitle || '',
-            start: event?.StartDate,
-            end: event?.EndDate,
-            isAllDay: event?.isAllDay ? 1 : 0,
-            ismilestone: event?.ismilestone,
-            descr: event?.Desc,
-            category: event?.category || '',
-            workcategoryid: event?.workcategoryid,
-            statusid: event?.statusid,
-            status: event?.status,
-            priorityid: event?.priorityid,
-            priority: event?.priority,
-            estimate_hrs: event?.estimate_hrs || 0,
-            estimate1_hrs: event?.estimate1_hrs || 0,
-            estimate2_hrs: event?.estimate2_hrs || 0,
-            workinghr: event?.workinghr || 0,
-            DeadLineDate: event?.DeadLineDate,
-            extendedProps: {
-                guests: event?.guests,
-                estimate: 1,
-                prModule: {
-                    taskid: event?.taskid,
-                    projectid: event?.projectid,
-                    taskname: event?.taskname,
-                    projectname: event?.ProjectName,
-                    taskPr: event?.ProjectName,
-                },
-                taskid: event?.taskid,
-                parentid: event?.parentid,
-                projectid: event?.projectid,
-                workcategoryid: event?.workcategoryid,
+    const calendarOptions = React.useMemo(() => {
+        const filteredEvents = calendarEvents?.filter(event => {
+            if (!showFavoritesOnly) return true;
+            return event?.isfavourite === 1 || event?.isfavourite === true;
+        }) || [];
+
+        return {
+            firstDay: 1,
+            events: filteredEvents.map((event) => ({
+                id: event?.meetingid?.toString(),
+                title: event?.meetingtitle || '',
+                start: event?.StartDate,
+                end: event?.EndDate,
+                isAllDay: event?.isAllDay ? 1 : 0,
+                ismilestone: event?.ismilestone,
+                descr: event?.Desc,
                 category: event?.category || '',
+                workcategoryid: event?.workcategoryid,
                 statusid: event?.statusid,
                 status: event?.status,
                 priorityid: event?.priorityid,
@@ -286,248 +263,298 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                 estimate_hrs: event?.estimate_hrs || 0,
                 estimate1_hrs: event?.estimate1_hrs || 0,
                 estimate2_hrs: event?.estimate2_hrs || 0,
+                workinghr: event?.workinghr || 0,
                 DeadLineDate: event?.DeadLineDate,
-                descr: event?.Desc,
-                ismilestone: event?.ismilestone,
+                extendedProps: {
+                    guests: event?.guests,
+                    estimate: 1,
+                    prModule: {
+                        taskid: event?.taskid,
+                        projectid: event?.projectid,
+                        taskname: event?.taskname,
+                        projectname: event?.ProjectName,
+                        taskPr: event?.ProjectName,
+                    },
+                    taskid: event?.taskid,
+                    parentid: event?.parentid,
+                    projectid: event?.projectid,
+                    workcategoryid: event?.workcategoryid,
+                    category: event?.category || '',
+                    statusid: event?.statusid,
+                    status: event?.status,
+                    priorityid: event?.priorityid,
+                    priority: event?.priority,
+                    estimate_hrs: event?.estimate_hrs || 0,
+                    estimate1_hrs: event?.estimate1_hrs || 0,
+                    estimate2_hrs: event?.estimate2_hrs || 0,
+                    DeadLineDate: event?.DeadLineDate,
+                    descr: event?.Desc,
+                    ismilestone: event?.ismilestone,
+                },
+            })),
+            plugins: [dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
+            initialView: 'timeGridWeek',
+            scrollTime: '09:15:00',
+            scrollTimeReset: false,
+            slotMinTime: '07:00:00',
+            slotMaxTime: '22:00:00',
+            slotDuration: '00:15:00',
+            slotLabelInterval: '00:15:00',
+            headerToolbar: {
+                start: 'employeeSidebarToggle,prev,next title',
+                center: '',
+                end: 'favoritesToggle | dayGridMonth,timeGridWeek,timeGridDay,listMonth',
             },
-        })),
-        plugins: [dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
-        initialView: 'timeGridWeek',
-        scrollTime: '09:15:00',
-        scrollTimeReset: false,
-        slotMinTime: '07:00:00',
-        slotMaxTime: '22:00:00',
-        slotDuration: '00:15:00',
-        slotLabelInterval: '00:15:00',
-        headerToolbar: {
-            start: 'employeeSidebarToggle,prev,next title',
-            center: '',
-            end: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
-        },
-        customButtons: {
-            employeeSidebarToggle: {
-                text: '☰',
-                click() {
-                    setSideDrawer(prev => !prev);
+            customButtons: {
+                employeeSidebarToggle: {
+                    text: '☰',
+                    click() {
+                        setSideDrawer(prev => !prev);
+                    }
+                },
+                favoritesToggle: {
+                    icon: showFavoritesOnly ? 'fc-icon-star-filled' : 'fc-icon-star-outline',
+                    hint: showFavoritesOnly ? 'Show all events' : 'Show favorite events only',
+                    className: 'fc-favoritesToggle-button',
+                    click() {
+                        setShowFavoritesOnly(prev => !prev);
+                    }
                 }
-            }
-        },
-        views: {
-            week: {
-                titleFormat: { year: 'numeric', month: 'long', day: 'numeric' },
             },
-        },
-        // Make calendar read-only
-        editable: false,
-        droppable: false,
-        eventResizableFromStart: false,
-        resizable: false,
-        dragScroll: false,
-        selectable: false,
-        selectMirror: false,
-        dayMaxEvents: 4,
-        moreLinkClick: 'popover',
-        navLinks: false,
-        weekNumbers: true,
-        datesSet() {
-            // state changes handle header updates automatically now
-        },
-        eventClassNames({ event }) {
-            const category = event.extendedProps.category || 'ETC';
-            const colorClass = calendarsColor[category] || 'primary';
-            return [`bg-${colorClass}`];
-        },
-        dayHeaderContent(arg) {
-            const calendarApi = arg.view.calendar;
-            const currentView = arg.view.type;
-            const dateKey = toAttendanceDateKey(arg.date, false);
+            views: {
+                week: {
+                    titleFormat: { year: 'numeric', month: 'long', day: 'numeric' },
+                },
+            },
+            // Make calendar read-only
+            editable: false,
+            droppable: false,
+            eventResizableFromStart: false,
+            resizable: false,
+            dragScroll: false,
+            selectable: false,
+            selectMirror: false,
+            dayMaxEvents: 4,
+            moreLinkClick: 'popover',
+            navLinks: false,
+            weekNumbers: true,
+            datesSet() {
+                // state changes handle header updates automatically now
+                // Update button attribute for styling
+                const btn = document.querySelector('.fc-favoritesToggle-button');
+                if (btn) {
+                    btn.setAttribute('data-active', showFavoritesOnly);
+                }
+            },
+            eventClassNames({ event }) {
+                const category = event.extendedProps.category || 'ETC';
+                const colorClass = calendarsColor[category] || 'primary';
+                const classes = [`bg-${colorClass}`];
 
-            if (currentView === 'dayGridMonth') {
-                const formattedDate = arg.date.toLocaleDateString('en-US', { weekday: 'long' });
+                if (event.extendedProps?.ismilestone === 1) {
+                    classes.push('milestone-event');
+                }
+
+                if (event.extendedProps?.isfavourite === 1 || event.extendedProps?.isfavourite === true) {
+                    classes.push('favorite-event');
+                    if (showFavoritesOnly) {
+                        classes.push('favorite-highlighted');
+                    }
+                }
+
+                return classes;
+            },
+            dayHeaderContent(arg) {
+                const calendarApi = arg.view.calendar;
+                const currentView = arg.view.type;
+                const dateKey = toAttendanceDateKey(arg.date, false);
+
+                if (currentView === 'dayGridMonth') {
+                    const formattedDate = arg.date.toLocaleDateString('en-US', { weekday: 'long' });
+                    return (
+                        <div className="calendar-day-header">
+                            <div className="date-text">{formattedDate}</div>
+                        </div>
+                    );
+                }
+
+                const dayEvents = calendarApi.getEvents().filter((event) => {
+                    const eventDate = new Date(event.start).toDateString();
+                    const headerDate = arg.date.toDateString();
+                    return eventDate === headerDate;
+                });
+
+                const totalHours = dayEvents.reduce((sum, event) => sum + (event.extendedProps?.estimate_hrs || 0), 0);
+                const totalText = totalHours === 0 ? '0 hrs' : `${totalHours} ${totalHours <= 1 ? 'hr' : 'hrs'}`;
+
+                const dayName = arg.date.toLocaleDateString('en-US', { weekday: 'short' });
+                const day = arg.date.getDate();
+                const month = arg.date.toLocaleDateString('en-US', { month: 'short' });
+                const formattedDate = `${dayName} ${day}-${month}`;
+
+                const attendance = attendanceByDate[dateKey] || {};
+                const checked = !!attendance.checked;
+                const isToday = dateKey === toAttendanceDateKey(new Date());
+                const assignees = sortAssigneesLoggedInFirst(assigneesByDate[dateKey] || []);
+                console.log('assignees', assigneesByDate, dateKey);
+
                 return (
                     <div className="calendar-day-header">
                         <div className="date-text">{formattedDate}</div>
+                        <div className="calendar-day-header-right-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div className="estimate-text">({totalText})</div>
+                            <DailyReportAttendance
+                                checked={checked}
+                                isToday={isToday}
+                                disabled={isHydratingAttendanceRef.current}
+                                onCheckClick={(e) => {
+                                    if (checked) {
+                                        setPendingUncheckDateKey(dateKey);
+                                        setUncheckDialogOpen(true);
+                                    } else {
+                                        updateAttendanceState((prev) => ({
+                                            ...prev,
+                                            [dateKey]: { ...(prev?.[dateKey] || {}), checked: true },
+                                        }));
+                                        setActiveRemarkDateKey(dateKey);
+                                        setRemarkDraft(attendance.remark || '');
+                                        setRemarkDialogOpen(true);
+                                    }
+                                }}
+                                assignees={assignees}
+                                onAvatarClick={(all, clickedId) => {
+                                    const dateRows = dailyReportRows.filter(r => r.__dateKey === dateKey);
+                                    const picked = (all || []).find((a) => String(a?.id) === String(clickedId));
+                                    if (!picked) return;
+                                    setActiveAssignee(picked);
+                                    setAttendanceDialogRows(dateRows);
+                                    setAttendanceDialogOpen(true);
+                                }}
+                            />
+                        </div>
                     </div>
                 );
-            }
+            },
+            eventDidMount(arg) {
+                try {
+                    const props = arg.event.extendedProps;
+                    const statusText = (props?.status || props?.statusid || '').toString();
+                    const estimateHrs = Number(props?.estimate_hrs || 0);
+                    const workingHr = Number(props?.workinghr ?? props?.workingHr ?? 0);
+                    const diff = Number((estimateHrs - workingHr).toFixed(2));
+                    const isCompleted = statusText.toLowerCase() === 'completed' || String(props?.statusid) === '3';
+                    const endDateText = (arg.event.end || props?.EndDate) ? new Date(arg.event.end || props?.EndDate).toLocaleString() : '';
 
-            const dayEvents = calendarApi.getEvents().filter((event) => {
-                const eventDate = new Date(event.start).toDateString();
-                const headerDate = arg.date.toDateString();
-                return eventDate === headerDate;
-            });
+                    const ensureTooltip = () => {
+                        if (hoverTooltipRef.current) return hoverTooltipRef.current;
+                        const el = document.createElement('div');
+                        el.className = 'optigo-calendar-hover-tooltip';
+                        Object.assign(el.style, {
+                            position: 'fixed',
+                            zIndex: '99999',
+                            display: 'none',
+                            pointerEvents: 'none',
+                            maxWidth: '280px',
+                            padding: '10px 12px',
+                            borderRadius: '10px',
+                            background: 'rgba(17, 24, 39, 0.95)',
+                            color: '#fff',
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
+                            backdropFilter: 'blur(6px)',
+                            fontSize: '12px',
+                            lineHeight: '1.35',
+                        });
+                        document.body.appendChild(el);
+                        hoverTooltipRef.current = el;
+                        return el;
+                    };
 
-            const totalHours = dayEvents.reduce((sum, event) => sum + (event.extendedProps?.estimate_hrs || 0), 0);
-            const totalText = totalHours === 0 ? '0 hrs' : `${totalHours} ${totalHours <= 1 ? 'hr' : 'hrs'}`;
+                    const renderTooltipHtml = () => {
+                        const diffColor = diff < 0 ? '#f87171' : diff > 0 ? '#34d399' : '#e5e7eb';
+                        const diffPrefix = diff > 0 ? '+' : '';
+                        return [
+                            statusText ? `<div style="display:flex;justify-content:space-between;gap:10px;"><div style="opacity:.8;">Status</div><div style="font-weight:700;">${statusText}</div></div>` : '',
+                            `<div style="display:flex;justify-content:space-between;gap:10px;"><div style="opacity:.8;">Estimate</div><div style="font-weight:700;">${estimateHrs}</div></div>`,
+                            `<div style="display:flex;justify-content:space-between;gap:10px;"><div style="opacity:.8;">WorkingHr</div><div style="font-weight:700;">${workingHr}</div></div>`,
+                            `<div style="display:flex;justify-content:space-between;gap:10px;"><div style="opacity:.8;">Diff</div><div style="font-weight:800;color:${diffColor};">${diffPrefix}${diff}</div></div>`,
+                            isCompleted && endDateText ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.15);display:flex;justify-content:space-between;gap:10px;"><div style="opacity:.8;">Completed</div><div style="font-weight:700;">${endDateText}</div></div>` : ''
+                        ].filter(Boolean).join('');
+                    };
 
-            const dayName = arg.date.toLocaleDateString('en-US', { weekday: 'short' });
-            const day = arg.date.getDate();
-            const month = arg.date.toLocaleDateString('en-US', { month: 'short' });
-            const formattedDate = `${dayName} ${day}-${month}`;
+                    const move = (e) => {
+                        const tooltip = hoverTooltipRef.current;
+                        if (!tooltip) return;
+                        const offset = 14;
+                        let x = e.clientX + offset;
+                        let y = e.clientY + offset;
+                        const rect = tooltip.getBoundingClientRect();
+                        if (x + rect.width + 8 > window.innerWidth) x = window.innerWidth - rect.width - 8;
+                        if (y + rect.height + 8 > window.innerHeight) y = window.innerHeight - rect.height - 8;
+                        tooltip.style.left = `${Math.max(8, x)}px`;
+                        tooltip.style.top = `${Math.max(8, y)}px`;
+                    };
 
-            const attendance = attendanceByDate[dateKey] || {};
-            const checked = !!attendance.checked;
-            const isToday = dateKey === toAttendanceDateKey(new Date());
-            const assignees = sortAssigneesLoggedInFirst(assigneesByDate[dateKey] || []);
-            console.log('assignees', assigneesByDate, dateKey);
+                    const show = (e) => {
+                        const tooltip = ensureTooltip();
+                        tooltip.innerHTML = renderTooltipHtml();
+                        tooltip.style.display = 'block';
+                        move(e);
+                    };
 
-            return (
-                <div className="calendar-day-header">
-                    <div className="date-text">{formattedDate}</div>
-                    <div className="calendar-day-header-right-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div className="estimate-text">({totalText})</div>
-                        <DailyReportAttendance
-                            checked={checked}
-                            isToday={isToday}
-                            disabled={isHydratingAttendanceRef.current}
-                            onCheckClick={(e) => {
-                                if (checked) {
-                                    setPendingUncheckDateKey(dateKey);
-                                    setUncheckDialogOpen(true);
-                                } else {
-                                    updateAttendanceState((prev) => ({
-                                        ...prev,
-                                        [dateKey]: { ...(prev?.[dateKey] || {}), checked: true },
-                                    }));
-                                    setActiveRemarkDateKey(dateKey);
-                                    setRemarkDraft(attendance.remark || '');
-                                    setRemarkDialogOpen(true);
-                                }
-                            }}
-                            assignees={assignees}
-                            onAvatarClick={(all, clickedId) => {
-                                const dateRows = dailyReportRows.filter(r => r.__dateKey === dateKey);
-                                const picked = (all || []).find((a) => String(a?.id) === String(clickedId));
-                                if (!picked) return;
-                                setActiveAssignee(picked);
-                                setAttendanceDialogRows(dateRows);
-                                setAttendanceDialogOpen(true);
-                            }}
-                        />
-                    </div>
-                </div>
-            );
-        },
-        eventDidMount(arg) {
-            try {
-                const props = arg.event.extendedProps;
-                const statusText = (props?.status || props?.statusid || '').toString();
-                const estimateHrs = Number(props?.estimate_hrs || 0);
-                const workingHr = Number(props?.workinghr ?? props?.workingHr ?? 0);
-                const diff = Number((estimateHrs - workingHr).toFixed(2));
-                const isCompleted = statusText.toLowerCase() === 'completed' || String(props?.statusid) === '3';
-                const endDateText = (arg.event.end || props?.EndDate) ? new Date(arg.event.end || props?.EndDate).toLocaleString() : '';
+                    const hide = () => {
+                        if (hoverTooltipRef.current) hoverTooltipRef.current.style.display = 'none';
+                    };
 
-                const ensureTooltip = () => {
-                    if (hoverTooltipRef.current) return hoverTooltipRef.current;
-                    const el = document.createElement('div');
-                    el.className = 'optigo-calendar-hover-tooltip';
-                    Object.assign(el.style, {
-                        position: 'fixed',
-                        zIndex: '99999',
-                        display: 'none',
-                        pointerEvents: 'none',
-                        maxWidth: '280px',
-                        padding: '10px 12px',
-                        borderRadius: '10px',
-                        background: 'rgba(17, 24, 39, 0.95)',
-                        color: '#fff',
-                        boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
-                        backdropFilter: 'blur(6px)',
-                        fontSize: '12px',
-                        lineHeight: '1.35',
-                    });
-                    document.body.appendChild(el);
-                    hoverTooltipRef.current = el;
-                    return el;
-                };
+                    arg.el.style.cursor = 'default';
+                    arg.el.addEventListener('mouseenter', show);
+                    arg.el.addEventListener('mousemove', move);
+                    arg.el.addEventListener('mouseleave', hide);
 
-                const renderTooltipHtml = () => {
-                    const diffColor = diff < 0 ? '#f87171' : diff > 0 ? '#34d399' : '#e5e7eb';
-                    const diffPrefix = diff > 0 ? '+' : '';
-                    return [
-                        statusText ? `<div style="display:flex;justify-content:space-between;gap:10px;"><div style="opacity:.8;">Status</div><div style="font-weight:700;">${statusText}</div></div>` : '',
-                        `<div style="display:flex;justify-content:space-between;gap:10px;"><div style="opacity:.8;">Estimate</div><div style="font-weight:700;">${estimateHrs}</div></div>`,
-                        `<div style="display:flex;justify-content:space-between;gap:10px;"><div style="opacity:.8;">WorkingHr</div><div style="font-weight:700;">${workingHr}</div></div>`,
-                        `<div style="display:flex;justify-content:space-between;gap:10px;"><div style="opacity:.8;">Diff</div><div style="font-weight:800;color:${diffColor};">${diffPrefix}${diff}</div></div>`,
-                        isCompleted && endDateText ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.15);display:flex;justify-content:space-between;gap:10px;"><div style="opacity:.8;">Completed</div><div style="font-weight:700;">${endDateText}</div></div>` : ''
-                    ].filter(Boolean).join('');
-                };
-
-                const move = (e) => {
-                    const tooltip = hoverTooltipRef.current;
-                    if (!tooltip) return;
-                    const offset = 14;
-                    let x = e.clientX + offset;
-                    let y = e.clientY + offset;
-                    const rect = tooltip.getBoundingClientRect();
-                    if (x + rect.width + 8 > window.innerWidth) x = window.innerWidth - rect.width - 8;
-                    if (y + rect.height + 8 > window.innerHeight) y = window.innerHeight - rect.height - 8;
-                    tooltip.style.left = `${Math.max(8, x)}px`;
-                    tooltip.style.top = `${Math.max(8, y)}px`;
-                };
-
-                const show = (e) => {
-                    const tooltip = ensureTooltip();
-                    tooltip.innerHTML = renderTooltipHtml();
-                    tooltip.style.display = 'block';
-                    move(e);
-                };
-
-                const hide = () => {
-                    if (hoverTooltipRef.current) hoverTooltipRef.current.style.display = 'none';
-                };
-
-                arg.el.style.cursor = 'default';
-                arg.el.addEventListener('mouseenter', show);
-                arg.el.addEventListener('mousemove', move);
-                arg.el.addEventListener('mouseleave', hide);
-
-                hoverTooltipHandlersRef.current.set(arg.el, { show, move, hide });
-            } catch (e) {
-                console.error('eventDidMount error:', e);
-            }
-        },
-        eventWillUnmount(arg) {
-            try {
-                const handlers = hoverTooltipHandlersRef.current.get(arg.el);
-                if (handlers) {
-                    arg.el.removeEventListener('mouseenter', handlers.show);
-                    arg.el.removeEventListener('mousemove', handlers.move);
-                    arg.el.removeEventListener('mouseleave', handlers.hide);
-                    hoverTooltipHandlersRef.current.delete(arg.el);
+                    hoverTooltipHandlersRef.current.set(arg.el, { show, move, hide });
+                } catch (e) {
+                    console.error('eventDidMount error:', e);
                 }
-            } catch (e) {
-                console.error('eventWillUnmount error:', e);
-            }
-        },
-        eventContent(arg) {
-            const { event } = arg;
-            const currentView = arg.view.type;
-            const estimateHrs = event.extendedProps?.estimate_hrs || 0;
-            const statusText = (event.extendedProps?.status || event.extendedProps?.statusid || '').toString();
-            const statusKey = (statusText || '').toString().trim().toLowerCase();
-            const dynamicStatus = getDynamicStatusColor?.(statusKey);
-            const fallbackStatus = statusColors?.[statusKey];
+            },
+            eventWillUnmount(arg) {
+                try {
+                    const handlers = hoverTooltipHandlersRef.current.get(arg.el);
+                    if (handlers) {
+                        arg.el.removeEventListener('mouseenter', handlers.show);
+                        arg.el.removeEventListener('mousemove', handlers.move);
+                        arg.el.removeEventListener('mouseleave', handlers.hide);
+                        hoverTooltipHandlersRef.current.delete(arg.el);
+                    }
+                } catch (e) {
+                    console.error('eventWillUnmount error:', e);
+                }
+            },
+            eventContent(arg) {
+                const { event } = arg;
+                const currentView = arg.view.type;
+                const estimateHrs = event.extendedProps?.estimate_hrs || 0;
+                const statusText = (event.extendedProps?.status || event.extendedProps?.statusid || '').toString();
+                const statusKey = (statusText || '').toString().trim().toLowerCase();
+                const dynamicStatus = getDynamicStatusColor?.(statusKey);
+                const fallbackStatus = statusColors?.[statusKey];
 
-            const statusPillBg = dynamicStatus?.backgroundColor || fallbackStatus?.backgroundColor || 'rgba(255,255,255,0.22)';
-            const statusPillText = dynamicStatus?.color || fallbackStatus?.color || '#ffffff';
+                const statusPillBg = dynamicStatus?.backgroundColor || fallbackStatus?.backgroundColor || 'rgba(255,255,255,0.22)';
+                const statusPillText = dynamicStatus?.color || fallbackStatus?.color || '#ffffff';
 
-            const statusPillHtml = statusText
-                ? `<span class="fc-event-status-pill" title="${statusText}" style="display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:2px 8px;border-radius:999px;background:${statusPillBg};color:${statusPillText};font-size:10px;line-height:1;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${statusText}</span>`
-                : '';
+                const statusPillHtml = statusText
+                    ? `<span class="fc-event-status-pill" title="${statusText}" style="display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:2px 8px;border-radius:999px;background:${statusPillBg};color:${statusPillText};font-size:10px;line-height:1;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${statusText}</span>`
+                    : '';
 
-            const formatEstimate = (hours) => {
-                if (hours === 0) return '';
-                const unit = hours <= 1 ? 'hr' : 'hrs';
-                return `(${hours} ${unit})`;
-            };
+                const formatEstimate = (hours) => {
+                    if (hours === 0) return '';
+                    const unit = hours <= 1 ? 'hr' : 'hrs';
+                    return `(${hours} ${unit})`;
+                };
 
-            const estimateText = formatEstimate(estimateHrs);
+                const estimateText = formatEstimate(estimateHrs);
 
-            if (currentView === 'dayGridMonth') {
-                return {
-                    html: `
+                if (currentView === 'dayGridMonth') {
+                    return {
+                        html: `
                         <div class="fc-event-main-frame calendar-event-container month-event">
                             <div class="fc-event-content">
                                 <span class="fc-event-title">${event.title || ''}</span>
@@ -564,11 +591,11 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                             </style>
                         </div>
                     `,
-                };
-            }
+                    };
+                }
 
-            return {
-                html: `
+                return {
+                    html: `
                     <div class="fc-event-main-frame calendar-event-container">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
                             <div class="fc-event-time">${arg.timeText}</div>
@@ -581,15 +608,16 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                         </div>
                     </div>
                 `,
-            };
-        },
-        eventClick() {
-            return false;
-        },
-        dateClick() {
-            return false;
-        },
-    }), [calendarEvents, calendarsColor, attendanceByDate, assigneesByDate]);
+                };
+            },
+            eventClick() {
+                return false;
+            },
+            dateClick() {
+                return false;
+            },
+        };
+    }, [calendarEvents, calendarsColor, attendanceByDate, assigneesByDate, showFavoritesOnly]);
 
     useEffect(() => {
         if (calendarRef?.current) {
@@ -624,6 +652,16 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
             smoothScrollToTime();
         }
     }, [calendarApi, selectedEmployee]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const btn = document.querySelector('.fc-favoritesToggle-button');
+            if (btn) {
+                btn.setAttribute('data-active', showFavoritesOnly);
+            }
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [showFavoritesOnly]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -723,6 +761,13 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
     return (
         <Box className="readOnlyCalendar">
             <FullCalendar ref={calendarRef} {...calendarOptions} />
+            <Box
+                sx={{
+                    display: 'none'
+                }}
+            >
+                <div id="favoritesToggle-state" data-active={showFavoritesOnly}></div>
+            </Box>
 
 
             <Dialog

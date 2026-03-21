@@ -557,7 +557,8 @@ const Calendar = ({
                             disabled={true}
                             assignees={assignees}
                             iconSize={20}
-                            avatarSize={30}
+                            avatarSize={28}
+                            buttonSize={28}
                             onAvatarClick={(all, clickedId) => {
                                 const dateRows = dailyReportRows.filter(r => r.__dateKey === dateKey);
                                 const picked = (all || []).find((a) => String(a?.id) === String(clickedId));
@@ -602,7 +603,6 @@ const Calendar = ({
                     html: `
                         <div class="fc-event-main-frame calendar-event-container month-event">
                             <div class="fc-event-content">
-                                <span class="fc-event-title">${event.title || ''}</span>
                                 ${estimateText ? `<span class="fc-event-estimate">${estimateText}</span>` : ''}
                                 ${statusPillHtml}
                             </div>
@@ -620,13 +620,6 @@ const Calendar = ({
                                     align-items: center;
                                     gap: 4px;
                                     overflow: hidden;
-                                }
-                                .month-event .fc-event-title {
-                                    flex: 1;
-                                    overflow: hidden;
-                                    text-overflow: ellipsis;
-                                    white-space: nowrap;
-                                    font-size: inherit;
                                 }
                                 .month-event .fc-event-estimate {
                                     flex-shrink: 0;
@@ -649,7 +642,7 @@ const Calendar = ({
                         </div>
                         <div class="fc-event-title-container">
                             <div class="fc-event-title fc-sticky">
-                                <span>${event.title || ''} ${estimateText}</span>
+                                <span>${estimateText}</span>
                             </div>
                         </div>
                         <button class="duplicate-btn" data-event-id="${event.id}" title="Duplicate Event">
@@ -726,26 +719,10 @@ const Calendar = ({
             return !draggedEvent.extendedProps?.isMeeting;
         },
 
-
         dateClick(info) {
-            // Prevent creating events on holidays
-            if (isHolidayDate(info.date)) {
-                toast.warning('Cannot create events on holidays');
-                return;
-            }
-
-            const startDate = new Date(info.dateStr);
-            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // Default 1 hour duration
-
-            const eventDetails = {
-                start: startDate.toISOString(),
-                end: endDate.toISOString(),
-                estimate_hrs: 1, // Default 1 hour estimate
-            };
-            setCalFormData(eventDetails);
-            setFormDataValue(eventDetails);
-            setRootSubroot({ Task: "meeting" });
-            setFormDrawerOpen(true);
+            // Prevent SideDrawer from opening on empty date clicks.
+            // We only want to handle clicks on existing events, which are handled by eventClick or other handlers.
+            return;
         },
 
         selectAllow(selectInfo) {

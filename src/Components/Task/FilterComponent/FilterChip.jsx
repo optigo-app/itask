@@ -31,12 +31,22 @@ const FilterChips = ({ filters, onClearFilter, onClearAll, hideClearBtn = false 
 
         // ISO date fields like startDate or dueDate
         else if (['startDate', 'dueDate'].includes(key)) {
-            const formatted = formatDate2(value);
-            activeFilters.push({
-                key: key === 'startDate' ? 'Start Date' : 'Due Date',
-                value: formatted,
-                rawKey: key,
-            });
+            if (value && typeof value === 'object' && value.startDate && value.endDate) {
+                activeFilters.push({
+                    key: key === 'startDate' ? 'Start Date' : 'Due Date',
+                    value: `${formatDate2(value.startDate)} - ${formatDate2(value.endDate)}`,
+                    rawKey: key,
+                });
+            } else if (value && typeof value === 'string' && value !== "") {
+                const formatted = formatDate2(value);
+                if (formatted && formatted !== "null" && formatted !== "Invalid Date") {
+                    activeFilters.push({
+                        key: key === 'startDate' ? 'Start Date' : 'Due Date',
+                        value: formatted,
+                        rawKey: key,
+                    });
+                }
+            }
         }
 
         // other fields

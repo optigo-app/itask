@@ -52,7 +52,6 @@ const Sidebar = () => {
     const drawerWidth = isFullSidebar || isDrawerOpen ? 220 : 80;
     const [reportsAnchorEl, setReportsAnchorEl] = React.useState(null);
     const setFilters = useSetRecoilState(Advfilters);
-    const taskInit = JSON?.parse(sessionStorage?.getItem('taskInit'));
     const [bugTrackDialogOpen, setBugTrackDialogOpen] = useState(false);
 
 
@@ -62,7 +61,7 @@ const Sidebar = () => {
         { pagename: "Task", label: "Task", routes: "Tasks", path: "/tasks", icon: FileCheck },
         { pagename: "Project", label: "Project", routes: "Projects", path: "/projects", icon: SquareChartGantt },
         // { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "external-bug-track", icon: Bug },
-        { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "/bugtrack", icon: Bug },
+        // { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "/bugtrack", icon: Bug },
         { pagename: "Inbox", label: "Inbox", routes: "Inbox", path: "/inbox", icon: Inbox },
         { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
         { pagename: "Calender", label: "My Calendar", routes: "MyCalendar", path: "/myCalendar", icon: CalendarCheck },

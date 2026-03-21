@@ -19,8 +19,8 @@ import { useTheme } from "@mui/material/styles";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, formatDate2, formatDaysDisplay, getRandomAvatarColor, getStatusColor, getUserProfileData, priorityColors } from "../../../Utils/globalfun";
-import { CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, Plus, PrinterCheck, Timer, Undo2, Lock, Paperclip, Star, Trash, Unlock } from "lucide-react";
+import { cleanDate, formatDate2, formatDaysDisplay, getRandomAvatarColor, getStatusColor, getUserProfileData, priorityColors, statusColors, } from "../../../Utils/globalfun";
+import { Eye, Pencil, Plus, Lock, Paperclip, Star, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { assigneeId, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
@@ -33,6 +33,8 @@ import useAccess from "../../Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
 import { GetPrTeamsApi } from "../../../Api/TaskApi/prTeamListApi";
 import TablePaginationFooter from "../../ShortcutsComponent/Pagination/TablePaginationFooter";
+import StatusBadge from "../../ShortcutsComponent/StatusBadge";
+import PriorityBadge from "../../ShortcutsComponent/PriorityBadge";
 
 const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, isLoading, handleLockProject, handleDeleteModule, handleAssigneeShortcutSubmit, handlePageSizeChnage, handleModuleFavorite }) => {
     const { hasAccess } = useAccess();
@@ -59,10 +61,11 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
     const columns = [
         { id: "projectName", label: "Project/Module", width: 350 },
         { id: "progress", label: "Progress", width: 180 },
+        { id: "status", label: "Status", width: 100 },
+        { id: "priority", label: "Priority", width: 100 },
         { id: "assignee", label: "Assignee", width: 100 },
         { id: "StartDate", label: "Start Date", width: 100 },
         { id: "DeadLineDate", label: "Deadline", width: 100 },
-        { id: "priority", label: "Priority", width: 100 },
         { id: "actions", label: "Actions", width: 150 },
     ];
 
@@ -87,7 +90,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
         setHoveredTaskId(taskId);
         setHoveredColumnName(value?.Tbcell)
     };
-    
+
     const handleMouseLeave = () => {
         setHoveredTaskId(null);
     };
@@ -567,7 +570,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                 </TableCell>
                                                 <TableCell colSpan={1}>
                                                 </TableCell>
-                                                <TableCell colSpan={4} />
+                                                <TableCell colSpan={5} />
                                                 <TableCell colSpan={1} sx={{ textAlign: "right" }}>
                                                     <IconButton
                                                         aria-label="View Module button"
@@ -661,6 +664,13 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                                 </Typography>
                                                             </Box>
                                                         </TableCell>
+                                                        <TableCell>
+                                                            <StatusBadge task={task} statusColors={statusColors} onStatusChange={() => { }}
+                                                                disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions)))} />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <PriorityBadge task={task} priorityColors={priorityColors} onPriorityChange={() => { }} disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions)))} />
+                                                        </TableCell>
                                                         <TableCell
                                                             onMouseEnter={() => handleMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
                                                             onMouseLeave={handleMouseLeave}>
@@ -698,9 +708,6 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                         </TableCell>
                                                         <TableCell>
                                                             {formatDaysDisplay(task?.DeadLineDate, task)}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            {renderPriorityLabel(task)}
                                                         </TableCell>
                                                         <TableCell className="sticky-last-col">
                                                             {renderTaskButtons(task)}

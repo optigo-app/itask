@@ -894,16 +894,21 @@ const SidebarDrawer = ({
         setSelectedMainGroup('');
     }
 
-    const renderTextField = (label, name, value, placeholder, error, helperText, onChange) => (
+    const renderTextField = (label, name, value, placeholder, error = false, helperText = '', onChange, disabled = false) => (
         <Box className="form-group">
-            <Typography variant="subtitle1" className="form-label">{label}</Typography>
+            <Typography variant="subtitle1" className="form-label" htmlFor={name}>
+                {label}
+            </Typography>
             <TextField
+                fullWidth
+                size="small"
                 name={name}
                 value={value}
-                placeholder={placeholder}
                 onChange={onChange}
+                placeholder={placeholder}
                 error={error}
                 helperText={helperText}
+                disabled={disabled}
                 {...commonTextFieldProps}
             />
         </Box>

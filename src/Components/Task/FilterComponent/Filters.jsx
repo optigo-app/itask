@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Box, TextField, Typography, MenuItem, Menu, Checkbox, ListItemText, Button, Autocomplete } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { Advfilters, dynamicFilterDrawer, selectedCategoryAtom } from "../../../Recoil/atom";
-import { commonTextFieldProps, customDatePickerProps } from "../../../Utils/globalfun";
+import { commonTextFieldProps } from "../../../Utils/globalfun";
 import DepartmentAssigneeAutocomplete from "../../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete";
 import { useLocation } from "react-router-dom";
+import CustomDateRangePicker from "../../ShortcutsComponent/DateRangePicker";
 
 const Filters = ({
   onFilterChange,
@@ -55,8 +55,15 @@ const Filters = ({
       }));
       newValue = `${value.firstname} ${value.lastname}`;
     }
-    setFilters((prev) => ({ ...prev, [key]: newValue }));
-    onFilterChange(key, newValue);
+
+    // Check if it's a date range object and handle it
+    if ((key === 'startDate' || key === 'dueDate') && value && typeof value === 'object' && value.startDate && value.endDate) {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+      onFilterChange(key, value);
+    } else {
+      setFilters((prev) => ({ ...prev, [key]: newValue }));
+      onFilterChange(key, newValue);
+    }
   };
 
   const handleMenuOpen = (event) => {
@@ -141,44 +148,28 @@ const Filters = ({
 
         {/* start Date Filter */}
         {startDateVisible && (
-          <Box className="form-group" sx={{ maxWidth: 180 }}>
+          <Box className="form-group" sx={{ minWidth: 250, maxWidth: 250 }}>
             <Typography variant="subtitle1" className="filterLabletxt">Start Date</Typography>
-            <DatePicker
-              name="startDate"
+            <CustomDateRangePicker
               value={filters.startDate}
-              onChange={(newDate) => handleFilterChange("startDate", newDate)}
-              className="textfieldsClass"
-              sx={{ padding: "0", minWidth: 180 }}
-              {...customDatePickerProps}
-              format="DD/MM/YYYY"
-              textField={(params) => (
-                <TextField {...params} size="small" fullWidth className="textfieldsClass" sx={{ padding: "0" }} />
-              )}
+              onChange={(newRange) => handleFilterChange("startDate", newRange)}
             />
           </Box>
         )}
 
         {/* Due Date Filter */}
         {dueDateVisible && (
-          <Box className="form-group" sx={{ maxWidth: 180 }}>
+          <Box className="form-group" sx={{ minWidth: 250, maxWidth: 250 }}>
             <Typography variant="subtitle1" className="filterLabletxt">Due Date</Typography>
-            <DatePicker
-              name="dueDate"
+            <CustomDateRangePicker
               value={filters.dueDate}
-              onChange={(newDate) => handleFilterChange("dueDate", newDate)}
-              className="textfieldsClass"
-              sx={{ padding: "0", minWidth: 180 }}
-              {...customDatePickerProps}
-              format="DD/MM/YYYY"
-              textField={(params) => (
-                <TextField {...params} size="small" fullWidth className="textfieldsClass" sx={{ padding: "0" }} />
-              )}
+              onChange={(newRange) => handleFilterChange("dueDate", newRange)}
             />
           </Box>
         )}
       </Box>
 
-      <Box>
+      {/* <Box>
         {(location?.pathname?.includes("/tasks") && activetaskView == "Dynamic-Filter") ? (
           <Button size='medium' className="buttonClassname" variant="contained" onClick={handleDynamicFilterOpen} sx={{ marginRight: '10px' }}>More Filter</Button>
         ) :
@@ -212,7 +203,7 @@ const Filters = ({
             <ListItemText primary="Due Date" />
           </MenuItem>
         </Menu>
-      </Box>
+      </Box> */}
     </Box>
   );
 };

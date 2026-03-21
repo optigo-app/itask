@@ -12,7 +12,8 @@ const DailyReportAttendance = ({
     onAvatarClick,
     showCheckbox = true,
     iconSize = 18,
-    avatarSize = 26
+    avatarSize = 26,
+    buttonSize = 32
 }) => {
     return (
         <Box 
@@ -41,8 +42,8 @@ const DailyReportAttendance = ({
                         className={`attn-attendance-btn ${checked ? 'is-checked' : 'not-checked'}`}
                         sx={{
                             padding: '4px',
-                            width: '32px',
-                            height: '32px',
+                            width: `${buttonSize}px`,
+                            height: `${buttonSize}px`,
                             backgroundColor: checked ? '#7367f0 !important' : '#fff !important',
                             color: checked ? '#fff !important' : '#9e9e9e !important',
                             border: checked ? 'none !important' : '1px solid #e0e0e0 !important',
