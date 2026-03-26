@@ -18,13 +18,13 @@ import {
     Menu,
     MenuItem,
 } from "@mui/material";
-import {CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Star, Undo2 } from "lucide-react";
+import { CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Star, Undo2 } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import {getArchiveChipStyles, getArchiveInfoFromEndDate, getRandomAvatarColor, getStatusColor, priorityColors, statusColors, formatDaysDisplay, getAuthData, getUserProfileData } from "../../../Utils/globalfun";
+import { getArchiveChipStyles, getArchiveInfoFromEndDate, getRandomAvatarColor, getStatusColor, priorityColors, statusColors, formatDaysDisplay, getAuthData, getUserProfileData } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 import AssigneeAvatarGroup from "../../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
@@ -127,6 +127,7 @@ const TableView = ({
     handleAssigneeShortcutSubmit,
     handleDeadlineDateChange,
     handlePageSizeChnage,
+    handlePrintCount,
     isLoading }) => {
     const { hasAccess } = useAccess();
     const navigate = useSafeRedirect();
@@ -353,16 +354,31 @@ const TableView = ({
     const handlePrintA = useReactToPrint({
         contentRef: printRef1,
         documentTitle: "MOMSheet",
+        onAfterPrint: async () => {
+            if (selectedItem && selectedItem.taskid) {
+                await handlePrintCount(selectedItem);
+            }
+        }
     });
 
     const handlePrintB = useReactToPrint({
         contentRef: printRef2,
         documentTitle: "MaintenanceSheet",
+        onAfterPrint: async () => {
+            if (selectedItem && selectedItem.taskid) {
+                await handlePrintCount(selectedItem);
+            }
+        }
     });
 
     const handlePrintC = useReactToPrint({
         contentRef: printRef3,
         documentTitle: "DocumentSheet",
+        onAfterPrint: async () => {
+            if (selectedItem && selectedItem.taskid) {
+                await handlePrintCount(selectedItem);
+            }
+        }
     });
 
     const printOptions = [
@@ -504,6 +520,8 @@ const TableView = ({
         const isRestoring = restoringIds.has(task?.taskid);
         const isArchiving = archivingIds.has(task?.taskid);
 
+        console.log("jsdsj-----", task)
+
         if (isArchived) {
             if (task?.taskno != '') {
                 // Show restore and view if has taskno
@@ -560,12 +578,22 @@ const TableView = ({
                 )} */}
 
                 {/* Print */}
-                <IconButton
-                    onClick={(e) => handleOpenPrintMenu(e, task)}
-                    disabled={!canPrint}
-                >
-                    <PrinterCheck size={20} className="iconbtn" color={iconColor(canPrint)} />
-                </IconButton>
+                <div className="print-btn-wrapper">
+                    <IconButton
+                        onClick={(e) => handleOpenPrintMenu(e, task)}
+                        disabled={!canPrint}
+                        className={task?.print_count > 0 ? 'print-highlighted' : ''}
+                    >
+                        <PrinterCheck
+                            size={20}
+                            className="iconbtn"
+                            color={task?.print_count > 0 ? "#388e3c" : iconColor(canPrint)}
+                        />
+                    </IconButton>
+                    {task?.print_count > 0 && (
+                        <span className="print-count-outside">{task.print_count}</span>
+                    )}
+                </div>
 
                 {/* Comment */}
                 <IconButton
@@ -1475,7 +1503,6 @@ const TableView = ({
                         toast.error('Task id not found');
                         return;
                     }
-
                     setArchivingIds((prev) => {
                         const next = new Set(prev);
                         next.add(taskId);

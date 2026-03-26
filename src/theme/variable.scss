@@ -211,6 +211,10 @@ div {
         border-color: #ccc;
     }
 
+    .MuiOutlinedInput-root.Mui-error fieldset {
+        border-color: $error-main !important;
+    }
+
     .MuiOutlinedInput-root:hover fieldset {
         border-color: $button-Bordercolor;
     }

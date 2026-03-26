@@ -11,6 +11,7 @@ export const DailyReportSaveApi = async (payload) => {
             givenbyempid: payload?.givenbyempid ?? "",
             remarks: payload?.remarks ?? "",
             isdone: payload?.isdone ?? "0",
+            ReportingDate: payload?.entrydate ?? ""
         });
 
         const body = {

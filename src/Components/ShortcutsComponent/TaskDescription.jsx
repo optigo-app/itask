@@ -16,7 +16,16 @@ const TaskDescription = ({ taskDesc, taskDescEdit, handleShowEditDesc, handleDes
                 <Box sx={{ position: 'relative' }}>
                     {!taskDescEdit ? (
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography>{typeof taskDesc === 'string' ? taskDesc : taskDesc?.descr}</Typography>
+                            <Typography>
+                                {(typeof taskDesc === 'string' ? taskDesc : taskDesc?.descr)
+                                    ?.split('\n')
+                                    .map((line, i) => (
+                                        <span key={i}>
+                                            {line}
+                                            <br />
+                                        </span>
+                                    ))}
+                            </Typography>
                         </Box>
                     ) : (
                         <Box sx={{

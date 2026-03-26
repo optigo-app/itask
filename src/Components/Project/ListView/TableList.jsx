@@ -666,10 +666,10 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                                                         </TableCell>
                                                         <TableCell>
                                                             <StatusBadge task={task} statusColors={statusColors} onStatusChange={() => { }}
-                                                                disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions)))} />
+                                                                disable={true} />
                                                         </TableCell>
                                                         <TableCell>
-                                                            <PriorityBadge task={task} priorityColors={priorityColors} onPriorityChange={() => { }} disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions)))} />
+                                                            <PriorityBadge task={task} priorityColors={priorityColors} onPriorityChange={() => { }} disable={true} />
                                                         </TableCell>
                                                         <TableCell
                                                             onMouseEnter={() => handleMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}

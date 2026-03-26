@@ -3,21 +3,35 @@ import { IconButton, Box } from '@mui/material';
 import { CheckCircle, Circle } from 'lucide-react';
 import AssigneeAvatarGroup from '../../ShortcutsComponent/Assignee/AssigneeAvatarGroup';
 
-const DailyReportAttendance = ({ 
-    checked, 
-    isToday, 
-    disabled, 
-    onCheckClick, 
-    assignees = [], 
+const DailyReportAttendance = ({
+    checked,
+    isToday,
+    disabled,
+    onCheckClick,
+    assignees = [],
     onAvatarClick,
     showCheckbox = true,
     iconSize = 18,
     avatarSize = 26,
-    buttonSize = 32
+    buttonSize = 32,
+    dateKey
 }) => {
+    const isWithinOneWeek = React.useMemo(() => {
+        if (!dateKey) return isToday;
+        const targetDate = new Date(dateKey);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        targetDate.setHours(0, 0, 0, 0);
+        const diffTime = today.getTime() - targetDate.getTime();
+        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+        return diffDays >= 0 && diffDays <= 7;
+    }, [dateKey, isToday]);
+
+    const canMarkAttendance = isWithinOneWeek && !disabled;
+
     return (
-        <Box 
-            className="calendar-day-header-right" 
+        <Box
+            className="calendar-day-header-right"
             sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}
             onClick={(e) => {
                 e.stopPropagation();
@@ -33,7 +47,7 @@ const DailyReportAttendance = ({
             {showCheckbox && (
                 <div className="calendar-day-header-right-center">
                     <IconButton
-                        disabled={disabled || !isToday}
+                        disabled={disabled || !isWithinOneWeek}
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -54,7 +68,7 @@ const DailyReportAttendance = ({
                                 opacity: 0.5,
                             }
                         }}
-                        title={isToday ? "Mark attendance (optional remark)" : ""}
+                        title={disabled ? "Holiday - Attendance disabled" : canMarkAttendance ? "Mark attendance (optional remark)" : "Attendance limited to past 7 days"}
                     >
                         {checked ? <CheckCircle size={iconSize} /> : <Circle size={iconSize} />}
                     </IconButton>

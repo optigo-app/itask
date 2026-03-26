@@ -11,7 +11,7 @@ import { DatePicker } from "@mui/x-date-pickers";
 import { customDatePickerProps } from "../../Utils/globalfun";
 import DynamicDropdownSection from "./DynamicDropdownSection";
 
-const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownChange, renderDateField, selectedMainGroup, setSelectedMainGroup }) => {
+const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownChange, renderDateField, selectedMainGroup, setSelectedMainGroup, showValidationErrors }) => {
     dayjs.extend(utc);
     dayjs.extend(timezone);
     const [tasks, setTasks] = useState([]);
@@ -22,6 +22,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
     const [newEstimate, setNewEstimate] = useState("");
     const [deadLineDate, setDeadLineDate] = useState(null);
     const [errorMessage, setErrorMessage] = useState("");
+    const [deadlineError, setDeadlineError] = useState(false);
     const inputRef = useRef(null);
     const estimateRefs = useRef([]);
     const [totalEstimate, setTotalEstimate] = useState('');
@@ -74,6 +75,13 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
             setErrorMessage("Task name cannot contain ',' or '#'.");
             return;
         }
+
+        if (!deadLineDate) {
+            setDeadlineError(true);
+            return;
+        }
+
+        setDeadlineError(false);
         setErrorMessage("");
 
         let newTasks = [...tasks, {
@@ -88,6 +96,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
         updateTotalEstimate(newTasks);
         setNewTask("");
         setNewEstimate("");
+        setDeadLineDate(null); // Reset date after adding
         inputRef.current?.focus();
     };
 
@@ -281,6 +290,8 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
         }
     };
 
+    console.log("kjdsk", tasks)
+
     return (
         <Box className="mltMainBox">
             <Stack spacing={2}>
@@ -370,11 +381,11 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                             padding: '8px 0'
                                         }}>
                                             <Tooltip title="Mark this task as a milestone - important deliverable or checkpoint" arrow placement="top">
-                                                <Box 
+                                                <Box
                                                     onClick={() => handleGlobalMilestoneChange(!isMilestone)}
-                                                    sx={{ 
-                                                        display: 'flex', 
-                                                        alignItems: 'center', 
+                                                    sx={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
                                                         gap: '6px',
                                                         padding: '4px 8px',
                                                         borderRadius: '6px',
@@ -393,7 +404,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                                         checked={isMilestone}
                                                         onChange={(e) => handleGlobalMilestoneChange(e.target.checked)}
                                                         onClick={(e) => e.stopPropagation()}
-                                                        sx={{ 
+                                                        sx={{
                                                             padding: '2px',
                                                             color: isMilestone ? '#7367f0' : 'inherit',
                                                             '&.Mui-checked': {
@@ -401,9 +412,9 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                                             }
                                                         }}
                                                     />
-                                                    <Typography 
-                                                        variant="body2" 
-                                                        sx={{ 
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{
                                                             fontWeight: isMilestone ? 600 : 400,
                                                             color: isMilestone ? '#7367f0' : 'text.secondary',
                                                             fontSize: '13px',
@@ -479,19 +490,24 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                                         <TableCell sx={{ width: '25%' }}>
                                                             <DatePicker
                                                                 name="deadLineDate"
-                                                                value={task?.deadLineDate ? dayjs(task?.deadLineDate).tz("Asia/Kolkata", true).local() : null}
+                                                                value={
+                                                                    task?.deadLineDate
+                                                                        ? dayjs(task?.deadLineDate).tz("Asia/Kolkata", true).local()
+                                                                        : null
+                                                                }
                                                                 className="textfieldsClass"
                                                                 onChange={(date) => handleTaskChange(index, "deadLineDate", date)}
                                                                 sx={{ width: "100%" }}
                                                                 format="DD/MM/YYYY"
-                                                                textField={(params) => (
-                                                                    <TextField
-                                                                        {...params}
-                                                                        size="small"
-                                                                        className="textfieldsClass"
-                                                                        sx={{ padding: "0" }}
-                                                                    />
-                                                                )}
+                                                                slotProps={{
+                                                                    textField: {
+                                                                        size: "small",
+                                                                        className: "textfieldsClass",
+                                                                        sx: { padding: 0 },
+                                                                        error: !task?.deadLineDate,
+                                                                        helperText: !task?.deadLineDate ? "Required" : ""
+                                                                    }
+                                                                }}
                                                                 {...customDatePickerProps}
                                                             />
                                                         </TableCell>
@@ -501,7 +517,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                                                     size="small"
                                                                     checked={task.ismilestone === 1}
                                                                     onChange={() => toggleTaskMilestone(index)}
-                                                                    sx={{ 
+                                                                    sx={{
                                                                         padding: '2px',
                                                                         color: task.ismilestone === 1 ? '#7367f0' : 'inherit',
                                                                         '&.Mui-checked': {
@@ -623,7 +639,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                                             size="small"
                                                             checked={newTaskMilestone}
                                                             onChange={(e) => setNewTaskMilestone(e.target.checked)}
-                                                            sx={{ 
+                                                            sx={{
                                                                 padding: '2px',
                                                                 color: newTaskMilestone ? '#7367f0' : 'inherit',
                                                                 '&.Mui-checked': {
@@ -680,7 +696,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                     </>
                 )}
             </Stack>
-        </Box>
+        </Box >
     );
 };
 

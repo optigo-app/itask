@@ -7,8 +7,10 @@ import listPlugin from '@fullcalendar/list';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import { Box, Typography, CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Avatar } from '@mui/material';
 import { Calendar as CalendarIcon, List } from 'lucide-react';
-import { useRecoilValue } from 'recoil';
-import { FullSidebar } from '../../../Recoil/atom';
+import TaskDetail from '../../Task/TaskDetails/TaskDetails';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { FullSidebar, openFormDrawer, formData, rootSubrootflag, TaskData, actualTaskData } from '../../../Recoil/atom';
+import useFullTaskFormatFile from '../../../Utils/TaskList/FullTasKFromatfile';
 import { getDynamicStatusColor, getUserProfileData, statusColors, formatUTCDateTime, toAttendanceDateKey, sortAssigneesLoggedInFirst } from '../../../Utils/globalfun';
 import { DailyReportSaveApi } from '../../../Api/TaskApi/DailyReportSaveApi';
 import { GetDailyReportApi } from '../../../Api/TaskApi/GetDailyReportApi';
@@ -22,6 +24,13 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
     const [calendarApi, setCalendarApi] = useState(null);
     const lastScrollTime = useRef(0);
     const isFullSidebar = useRecoilValue(FullSidebar);
+    const [taskDetailOpen, setTaskDetailOpen] = useState(false);
+    const [selectedTaskData, setSelectedTaskData] = useState(null);
+
+    const handleTaskDetailClose = () => {
+        setTaskDetailOpen(false);
+        setSelectedTaskData(null);
+    };
 
     const hoverTooltipRef = useRef(null);
     const hoverTooltipHandlersRef = useRef(new Map());
@@ -30,7 +39,6 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
     const attendanceByDateRef = useRef(attendanceByDate);
     const isHydratingAttendanceRef = useRef(false);
     const [assigneesByDate, setAssigneesByDate] = useState({});
-    const assigneesByDateRef = useRef(assigneesByDate);
     const [dailyReportRows, setDailyReportRows] = useState([]);
     const [remarkDialogOpen, setRemarkDialogOpen] = useState(false);
     const [activeRemarkDateKey, setActiveRemarkDateKey] = useState(null);
@@ -40,7 +48,51 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
     const [attendanceDialogRows, setAttendanceDialogRows] = useState([]);
     const [uncheckDialogOpen, setUncheckDialogOpen] = useState(false);
     const [pendingUncheckDateKey, setPendingUncheckDateKey] = useState(null);
+    const [holidayDates, setHolidayDates] = useState([]);
+    const [holidayData, setHolidayData] = useState([]);
     const lastRequestIdRef = useRef(0);
+
+    // Load holiday dates from session storage
+    useEffect(() => {
+        try {
+            const holidayDataRaw = JSON.parse(sessionStorage.getItem('taskholidayData') || '[]');
+            const holidays = holidayDataRaw
+                .filter(holiday => holiday.isdelete !== 1 && holiday.holidaydate)
+                .map(holiday => ({
+                    date: holiday.holidaydate.split('T')[0],
+                    labelname: holiday.labelname || 'Holiday'
+                }));
+            setHolidayDates(holidays.map(h => h.date));
+            setHolidayData(holidays);
+        } catch (error) {
+            console.error('Error loading holiday dates:', error);
+            setHolidayDates([]);
+            setHolidayData([]);
+        }
+    }, []);
+
+    const isHolidayDate = (date) => {
+        const d = date instanceof Date ? date : new Date(date);
+        const dateStr =
+            d.getFullYear() +
+            "-" +
+            String(d.getMonth() + 1).padStart(2, "0") +
+            "-" +
+            String(d.getDate()).padStart(2, "0");
+        return holidayDates.includes(dateStr);
+    };
+
+    const getHolidayLabel = (date) => {
+        const d = date instanceof Date ? date : new Date(date);
+        const dateStr =
+            d.getFullYear() +
+            "-" +
+            String(d.getMonth() + 1).padStart(2, "0") +
+            "-" +
+            String(d.getDate()).padStart(2, "0");
+        const holiday = holidayData.find(h => h.date === dateStr);
+        return holiday?.labelname || '';
+    };
 
     const cancelRemarkFlow = () => {
         const dateKey = activeRemarkDateKey;
@@ -86,11 +138,15 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
 
             if (!takenByEmpId || !givenByEmpId) return;
 
+            // Format entrydate to match SideDrawer (ISO string without milliseconds)
+            const entryDate = dateKey ? new Date(dateKey).toISOString().replace('Z', '') : new Date().toISOString().replace('Z', '');
+
             await DailyReportSaveApi({
                 takenbyempid: takenByEmpId,
                 givenbyempid: givenByEmpId,
                 remarks: remarks ?? '',
                 isdone: String(isdone ? 1 : 0),
+                entrydate: entryDate
             });
 
             if (dateKey) {
@@ -110,7 +166,6 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
     };
 
     const hydrateAttendanceFromApi = async () => {
-        debugger;
         try {
             const userProfile = getUserProfileData();
             const takenByEmpId = userProfile?.id;
@@ -176,7 +231,6 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                     const bt = new Date(b?.entrydate || 0).getTime();
                     return bt - at;
                 });
-            console.log('nextDailyReportRows', nextDailyReportRows);
             setDailyReportRows(nextDailyReportRows);
             onDailyReportRowsChange?.(nextDailyReportRows);
 
@@ -216,23 +270,6 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
             isHydratingAttendanceRef.current = false;
         }
     };
-
-    function toDateKey(date, useUTC = true) {
-        const d = date instanceof Date ? date : new Date(date);
-        if (Number.isNaN(d.getTime())) return '';
-
-        if (useUTC) {
-            const y = d.getUTCFullYear();
-            const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-            const day = String(d.getUTCDate()).padStart(2, '0');
-            return `${y}-${m}-${day}`;
-        } else {
-            const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${y}-${m}-${day}`;
-        }
-    }
 
     useEffect(() => {
         hydrateAttendanceFromApi();
@@ -338,9 +375,22 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
             moreLinkClick: 'popover',
             navLinks: false,
             weekNumbers: true,
+            dayCellContent(arg) {
+                return arg.dayNumberText;
+            },
+            dayCellClassNames: (arg) => {
+                return isHolidayDate(arg.date) ? ['holiday-date'] : [];
+            },
+            slotLaneClassNames: (arg) => {
+                const d = arg?.date;
+                if (!d) return [];
+                const classes = [];
+                if (isHolidayDate(d)) {
+                    classes.push('holiday-slot');
+                }
+                return classes;
+            },
             datesSet() {
-                // state changes handle header updates automatically now
-                // Update button attribute for styling
                 const btn = document.querySelector('.fc-favoritesToggle-button');
                 if (btn) {
                     btn.setAttribute('data-active', showFavoritesOnly);
@@ -392,46 +442,70 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                 const month = arg.date.toLocaleDateString('en-US', { month: 'short' });
                 const formattedDate = `${dayName} ${day}-${month}`;
 
+                const holidayLabel = getHolidayLabel(arg.date);
+
                 const attendance = attendanceByDate[dateKey] || {};
                 const checked = !!attendance.checked;
                 const isToday = dateKey === toAttendanceDateKey(new Date());
+                const isHoliday = isHolidayDate(arg.date);
                 const assignees = sortAssigneesLoggedInFirst(assigneesByDate[dateKey] || []);
-                console.log('assignees', assigneesByDate, dateKey);
 
                 return (
                     <div className="calendar-day-header">
-                        <div className="date-text">{formattedDate}</div>
-                        <div className="calendar-day-header-right-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div className="estimate-text">({totalText})</div>
-                            <DailyReportAttendance
-                                checked={checked}
-                                isToday={isToday}
-                                disabled={isHydratingAttendanceRef.current}
-                                onCheckClick={(e) => {
-                                    if (checked) {
-                                        setPendingUncheckDateKey(dateKey);
-                                        setUncheckDialogOpen(true);
-                                    } else {
-                                        updateAttendanceState((prev) => ({
-                                            ...prev,
-                                            [dateKey]: { ...(prev?.[dateKey] || {}), checked: true },
-                                        }));
-                                        setActiveRemarkDateKey(dateKey);
-                                        setRemarkDraft(attendance.remark || '');
-                                        setRemarkDialogOpen(true);
-                                    }
-                                }}
-                                assignees={assignees}
-                                onAvatarClick={(all, clickedId) => {
-                                    const dateRows = dailyReportRows.filter(r => r.__dateKey === dateKey);
-                                    const picked = (all || []).find((a) => String(a?.id) === String(clickedId));
-                                    if (!picked) return;
-                                    setActiveAssignee(picked);
-                                    setAttendanceDialogRows(dateRows);
-                                    setAttendanceDialogOpen(true);
-                                }}
-                            />
+                        <div className="date-text" style={{ position: 'relative' }}>
+                            {formattedDate}
+                            {holidayLabel && (
+                                <div className="holiday-label-header" style={{
+                                    fontSize: '12px',
+                                    backgroundColor: '#fee2e2',
+                                    color: '#b91c1c',
+                                    padding: '2px 10px',
+                                    borderRadius: '12px',
+                                    fontWeight: 'bold',
+                                    marginTop: '4px',
+                                    display: 'inline-block',
+                                    border: '1px solid #fecaca',
+                                    whiteSpace: 'nowrap',
+                                    zIndex: 1
+                                }}>
+                                    {holidayLabel}
+                                </div>
+                            )}
                         </div>
+                        {!isHoliday && (
+                            <div className="calendar-day-header-right-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div className="estimate-text">({totalText})</div>
+                                <DailyReportAttendance
+                                    checked={checked}
+                                    isToday={isToday}
+                                    disabled={isHydratingAttendanceRef.current}
+                                    dateKey={dateKey}
+                                    onCheckClick={(e) => {
+                                        if (checked) {
+                                            setPendingUncheckDateKey(dateKey);
+                                            setUncheckDialogOpen(true);
+                                        } else {
+                                            updateAttendanceState((prev) => ({
+                                                ...prev,
+                                                [dateKey]: { ...(prev?.[dateKey] || {}), checked: true },
+                                            }));
+                                            setActiveRemarkDateKey(dateKey);
+                                            setRemarkDraft(attendance.remark || '');
+                                            setRemarkDialogOpen(true);
+                                        }
+                                    }}
+                                    assignees={assignees}
+                                    onAvatarClick={(all, clickedId) => {
+                                        const dateRows = dailyReportRows.filter(r => r.__dateKey === dateKey);
+                                        const picked = (all || []).find((a) => String(a?.id) === String(clickedId));
+                                        if (!picked) return;
+                                        setActiveAssignee(picked);
+                                        setAttendanceDialogRows(dateRows);
+                                        setAttendanceDialogOpen(true);
+                                    }}
+                                />
+                            </div>
+                        )}
                     </div>
                 );
             },
@@ -610,8 +684,19 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                 `,
                 };
             },
-            eventClick() {
-                return false;
+            eventClick({ event }) {
+                const props = event.extendedProps;
+                const eventDetails = {
+                    ...props,
+                    meetingid: event.id,
+                    title: event.title,
+                    start: event.start.toISOString(),
+                    end: event.end ? event.end.toISOString() : event.start.toISOString(),
+                    isAllDay: event.allDay ? 1 : 0,
+                    assignee: props.guests || []
+                };
+                setSelectedTaskData(eventDetails);
+                setTaskDetailOpen(true);
             },
             dateClick() {
                 return false;
@@ -761,6 +846,12 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
     return (
         <Box className="readOnlyCalendar">
             <FullCalendar ref={calendarRef} {...calendarOptions} />
+            <TaskDetail
+                open={taskDetailOpen}
+                onClose={handleTaskDetailClose}
+                taskData={selectedTaskData}
+                handleTaskFavorite={() => { }} // Read-only view
+            />
             <Box
                 sx={{
                     display: 'none'
@@ -772,7 +863,12 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
 
             <Dialog
                 open={remarkDialogOpen}
-                onClose={cancelRemarkFlow}
+                onClose={(event, reason) => {
+                    if (reason === "backdropClick") {
+                        return;
+                    }
+                    cancelRemarkFlow();
+                }}
                 maxWidth="xs"
                 fullWidth
                 sx={{
