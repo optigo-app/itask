@@ -30,17 +30,17 @@
         position: relative;
         background: linear-gradient(135deg, #F1EDFE 0%, #E8E0FF 100%) !important;
         opacity: 0.75 !important;
-        
+
         .MuiTableCell-root {
             position: relative;
             z-index: 3;
         }
-        
+
         &:hover {
             background: linear-gradient(135deg, #E8E0FF 0%, #DDD4FF 100%) !important;
         }
     }
-    
+
     .cut-task-row-before {
         content: '';
         position: absolute;
@@ -48,17 +48,15 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 5px,
-            rgba(115, 103, 240, 0.1) 5px,
-            rgba(115, 103, 240, 0.1) 10px
-        );
+        background: repeating-linear-gradient(45deg,
+                transparent,
+                transparent 5px,
+                rgba(115, 103, 240, 0.1) 5px,
+                rgba(115, 103, 240, 0.1) 10px);
         pointer-events: none;
         z-index: 1;
     }
-    
+
     .cut-task-row-after {
         content: '';
         position: absolute;
@@ -68,6 +66,32 @@
         height: 100%;
         background: #7367f0;
         z-index: 2;
+    }
+
+    // Print highlight styling
+    .print-btn-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+
+        .print-highlighted {
+            border-radius: 50% !important;
+            background: #dcedc8 !important;
+        }
+
+        .print-count-outside {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            background: $support-light;
+            color: $titleColor;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 50%;
+            padding: 2px 5px;
+            z-index: 10;
+        }
     }
 
     .MuiTableHead-root {
@@ -132,7 +156,7 @@
             max-height: 2.4em;
             font-size: 14px;
             word-break: break-word;
-            
+
             &.cut-task-name {
                 color: #7367f0;
                 font-weight: 500;
@@ -186,26 +210,26 @@
         padding: 8px 16px;
         font-weight: 500;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        
+
         &:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(115, 103, 240, 0.25);
         }
-        
+
         &.MuiButton-contained {
             background: linear-gradient(135deg, #7367f0 0%, #9c88ff 100%);
             box-shadow: 0 2px 8px rgba(115, 103, 240, 0.3);
-            
+
             &:hover {
                 background: linear-gradient(135deg, #5e57d9 0%, #8b7aff 100%);
                 box-shadow: 0 6px 20px rgba(115, 103, 240, 0.4);
             }
         }
-        
+
         &.MuiButton-outlined {
             border: 2px solid rgba(115, 103, 240, 0.2);
             background: rgba(115, 103, 240, 0.05);
-            
+
             &:hover {
                 border-color: #7367f0;
                 background: rgba(115, 103, 240, 0.1);
@@ -219,7 +243,7 @@
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
-        
+
         &::before {
             content: '';
             position: absolute;
@@ -232,17 +256,17 @@
             transform: translate(-50%, -50%);
             transition: all 0.3s ease;
         }
-        
+
         &:hover {
             background: rgba(115, 103, 240, 0.08);
             transform: scale(1.05);
-            
+
             &::before {
                 width: 100%;
                 height: 100%;
             }
         }
-        
+
         &:active {
             transform: scale(0.95);
         }
@@ -327,7 +351,7 @@
             width: 16px !important;
             height: 16px !important;
             transition: all 0.2s ease;
-            
+
             &:hover {
                 transform: scale(1.1);
             }

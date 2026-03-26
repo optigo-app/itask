@@ -17,6 +17,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import BugTask from "../../Components/Task/BugView/BugTask";
 import { fetchArchiveTaskDataApi } from "../../Api/TaskApi/ArchiveTasklistApi";
 import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
+import { AddPrintSheetCountApi } from "../../Api/TaskApi/PrintSheetApi";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
@@ -413,12 +414,12 @@ const Task = () => {
           const date = new Date(targetDate);
           const start = new Date(range.startDate);
           const end = new Date(range.endDate);
-          
+
           // Normalize to start/end of day for accurate comparison
           date.setHours(0, 0, 0, 0);
           start.setHours(0, 0, 0, 0);
           end.setHours(23, 59, 59, 999);
-          
+
           return date >= start && date <= end;
         };
 
@@ -799,6 +800,39 @@ const Task = () => {
     });
   }
 
+  const handlePrintCount = (selectedRow) => {
+    setTasks((prevTasks) => {
+      const updateTasksRecursively = (tasks) => {
+        return tasks?.map((task) => {
+          if (task.taskid === selectedRow.taskid) {
+            const newCount = (task.print_count ?? 0) + 1;
+            const updatedTask = {
+              ...task,
+              print_count: newCount,
+            };
+            setLocalTaskEdits((prev) => ({
+              ...prev,
+              [task.taskid]: {
+                ...(prev[task.taskid] || {}),
+                print_count: newCount,
+              },
+            }));
+            AddPrintSheetCountApi(selectedRow);
+            return updatedTask;
+          }
+          if (task.subtasks?.length > 0) {
+            return {
+              ...task,
+              subtasks: updateTasksRecursively(task.subtasks),
+            };
+          }
+          return task;
+        });
+      };
+      return updateTasksRecursively(prevTasks);
+    });
+  };
+
   const handleChangePage = (event, newPage) => {
     setPage(event);
   };
@@ -1070,6 +1104,7 @@ const Task = () => {
                   handleChangePage={handleChangePage}
                   handleDeadlineDateChange={handleDeadlineDateChange}
                   handlePageSizeChnage={handlePageSizeChnage}
+                  handlePrintCount={handlePrintCount}
                 />
               )}
 

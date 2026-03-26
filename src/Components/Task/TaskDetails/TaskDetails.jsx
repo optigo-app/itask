@@ -34,10 +34,14 @@ import { TaskDescription } from '../../ShortcutsComponent/TaskDescription';
 import { getAttachmentApi } from '../../../Api/UploadApi/GetAttachmentApi';
 import AttachmentSidebar from './AttachmentSidebar';
 import Breadcrumb from '../../BreadCrumbs/Breadcrumb';
+import { useLocation } from 'react-router-dom';
 
 const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
+    const location = useLocation();
     const theme = useTheme();
     const { hasAccess } = useAccess();
+
+    console.log("jhdsjh", taskData)
 
     // ===== PERMISSION FLAGS =====
     const profileData = getUserProfileData();
@@ -50,6 +54,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const isAssignee = !!currentUserAssignee;
     const isReadOnlyUser = currentUserAssignee?.isreadonly === 1;
     const isAlowed = !isReadOnlyUser && isAssignee
+
     console.log("isAlowed", isAlowed, isReadOnlyUser, isAssignee, isFullAccess);
 
     const [isLoading, setIsLoading] = useState(
@@ -360,7 +365,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
         try {
             const updateDescResponse = await taskDescAddApi(taskData, desc);
             if (updateDescResponse) {
-                // Update the state with the new description
                 setTaskDesc(desc);  // This line is crucial
                 setTaskDescEdit(false);
             } else {
@@ -462,7 +466,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                         <StarBorderIcon sx={{ fontSize: '20px', color: '#7d7f85' }} />
                                     )}
                                 </IconButton>
-                                <Typography variant="h6">{taskData?.taskname}</Typography>
+                                <Typography variant="h6">{taskData?.taskname ?? taskData?.title}</Typography>
                             </div>
                             <IconButton onClick={handleClose}>
                                 <CircleX />
@@ -480,7 +484,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                 <Typography variant="caption" sx={{ color: '#7D7f85 !important' }}>
                                     <Breadcrumb breadcrumbTitles={taskData?.breadcrumbTitles} />
                                 </Typography>
-                                {(isFullAccess || (taskData?.parentid !== 0 && isAlowed)) && (
+                                {(isFullAccess || (taskData?.parentid !== 0 && isAlowed)) && location.pathname != "/teamCalReport" && (
                                     <Button
                                         size='small'
                                         variant="contained"
@@ -541,7 +545,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                                     },
                                                 },
                                             }}
-                                        >   
+                                        >
                                             {taskData?.assignee?.map((assignee, teamIdx) => (
                                                 <Tooltip
                                                     placement="top"
@@ -586,7 +590,9 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                     <Tabs value={activeTab} onChange={handleTabChange} className='muiTaskTabs'>
                                         <Tab label={`Comments (${comments?.length})`} />
                                         <Tab label={`Attachment (${totalCount})`} />
-                                        <Tab label={`Subtasks`} />
+                                        {location.pathname != "/teamCalReport" &&
+                                            <Tab label={`Subtasks`} />
+                                        }
                                     </Tabs>
                                     <Box
                                         className="tab-content"

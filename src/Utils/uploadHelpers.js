@@ -1,8 +1,6 @@
 import { filesUploadApi } from "../Api/UploadApi/filesUploadApi";
 import { filesUploadSaveApi } from "../Api/UploadApi/filesUploadSaveApi";
 
-// Upload multiple files for comments and return structured data like SidebarDrawerFile
-// Usage: await uploadFilesForComment({ folderName, files })
 export const uploadFilesForComment = async ({
   folderName = "Comments",
   files = [],
@@ -42,8 +40,6 @@ export const uploadFilesForComment = async ({
   }
 };
 
-// Upload files via upload API, then save them against a task via save API
-// Usage: await uploadAndSaveTaskAttachments({ taskId, folderName, files, urls })
 export const uploadAndSaveTaskAttachments = async ({
   taskId,
   folderName = "Comments",
@@ -52,7 +48,6 @@ export const uploadAndSaveTaskAttachments = async ({
 }) => {
   try {
     const uploadedResults = [];
-
     for (const file of files) {
       const res = await filesUploadApi({
         attachments: [{ file }],
@@ -63,7 +58,6 @@ export const uploadAndSaveTaskAttachments = async ({
         uploadedResults.push(...res.files);
       }
     }
-
     const attachmentsPayload = [
       {
         folderName,
@@ -75,10 +69,8 @@ export const uploadAndSaveTaskAttachments = async ({
         ],
       },
     ];
-
     const saveRes = await filesUploadSaveApi(attachmentsPayload, taskId);
     const success = saveRes?.rd?.[0]?.stat == 1;
-
     return {
       success,
       saveResponse: saveRes,

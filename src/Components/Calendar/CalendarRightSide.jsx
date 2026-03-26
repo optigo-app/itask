@@ -182,8 +182,6 @@ const Calendar = ({
         }
     }, []);
 
-    console.log('kdsi', holidayDates)
-
     // Helper function to check if a date is a holiday
     const isHolidayDate = (date) => {
         const d = new Date(date);
@@ -427,7 +425,6 @@ const Calendar = ({
                                 <span class="fc-daygrid-day-number">${arg.dayNumberText}</span>
                             </div>
                             <div class="holiday-label-overlay" style="position:absolute;top:18px;left:2px;right:2px;z-index:1;max-width:100%;box-sizing:border-box;">
-                                <div class="holiday-label">${holidayLabel}</div>
                             </div>
                         </div>
                     `
@@ -529,14 +526,16 @@ const Calendar = ({
 
             const formattedDate = formatForView(arg.date, currentView);
             const totalText = formatTotalHours(totalHours);
+            const holidayLabel = getHolidayLabel(arg.date);
+            const isHoliday = isHolidayDate(arg.date);
 
             if (currentView === 'dayGridMonth') {
                 return {
                     html: `
-                        <div class="calendar-day-header">
-                            <div class="date-text">${formattedDate}</div>
-                        </div>
-                    `
+                            <div class="calendar-day-header">
+                                <div class="date-text">${formattedDate}</div>
+                            </div>
+                        `
                 };
             }
 
@@ -547,28 +546,48 @@ const Calendar = ({
 
             return (
                 <div className="calendar-day-header">
-                    <div className="date-text">{formattedDate}</div>
-                    <div className="calendar-day-header-right-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div className="estimate-text">({totalText})</div>
-                        <DailyReportAttendance
-                            checked={checked}
-                            isToday={isToday}
-                            showCheckbox={true}
-                            disabled={true}
-                            assignees={assignees}
-                            iconSize={20}
-                            avatarSize={28}
-                            buttonSize={28}
-                            onAvatarClick={(all, clickedId) => {
-                                const dateRows = dailyReportRows.filter(r => r.__dateKey === dateKey);
-                                const picked = (all || []).find((a) => String(a?.id) === String(clickedId));
-                                if (!picked) return;
-                                setActiveAssignee(picked);
-                                setAttendanceDialogRows(dateRows);
-                                setAttendanceDialogOpen(true);
-                            }}
-                        />
+                    <div className="date-text" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <span>{formattedDate}</span>
+                        {holidayLabel && (
+                            <span className="holiday-label-chip" style={{
+                                fontSize: '12px',
+                                backgroundColor: '#fee2e2',
+                                color: '#b91c1c',
+                                padding: '2px 10px',
+                                borderRadius: '12px',
+                                fontWeight: 'bold',
+                                marginTop: '4px',
+                                display: 'inline-block',
+                                border: '1px solid #fecaca',
+                                whiteSpace: 'nowrap',
+                            }}>
+                                {holidayLabel}
+                            </span>
+                        )}
                     </div>
+                    {!isHoliday && (
+                        <div className="calendar-day-header-right-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div className="estimate-text">({totalText})</div>
+                            <DailyReportAttendance
+                                checked={checked}
+                                isToday={isToday}
+                                showCheckbox={true}
+                                disabled={true}
+                                assignees={assignees}
+                                iconSize={20}
+                                avatarSize={28}
+                                buttonSize={28}
+                                onAvatarClick={(all, clickedId) => {
+                                    const dateRows = dailyReportRows.filter(r => r.__dateKey === dateKey);
+                                    const picked = (all || []).find((a) => String(a?.id) === String(clickedId));
+                                    if (!picked) return;
+                                    setActiveAssignee(picked);
+                                    setAttendanceDialogRows(dateRows);
+                                    setAttendanceDialogOpen(true);
+                                }}
+                            />
+                        </div>
+                    )}
                 </div>
             );
         },
@@ -603,6 +622,7 @@ const Calendar = ({
                     html: `
                         <div class="fc-event-main-frame calendar-event-container month-event">
                             <div class="fc-event-content">
+                             <span class="fc-event-title">${event.title || ''}</span>
                                 ${estimateText ? `<span class="fc-event-estimate">${estimateText}</span>` : ''}
                                 ${statusPillHtml}
                             </div>
@@ -642,7 +662,7 @@ const Calendar = ({
                         </div>
                         <div class="fc-event-title-container">
                             <div class="fc-event-title fc-sticky">
-                                <span>${estimateText}</span>
+                                 <span>${event.title || ''} ${estimateText}</span>
                             </div>
                         </div>
                         <button class="duplicate-btn" data-event-id="${event.id}" title="Duplicate Event">
@@ -963,17 +983,37 @@ const Calendar = ({
         const { event } = duplicateDialog;
         const eventDetails = mapEventDetails(event);
 
+        // Get current date
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const day = now.getDate();
+
+        // Helper to merge today's date with a given ISO time string
+        const mergeDateWithTime = (isoString) => {
+            if (!isoString) return now.toISOString();
+            const originalTime = new Date(isoString);
+            return new Date(
+                year,
+                month,
+                day,
+                originalTime.getHours(),
+                originalTime.getMinutes(),
+                originalTime.getSeconds(),
+                originalTime.getMilliseconds()
+            ).toISOString();
+        };
+
         const duplicatedEvent = {
             ...eventDetails,
             meetingid: "",
             title: eventDetails.title,
-            entrydate: new Date().toISOString(),
-            start: new Date().toISOString(),
-            end: new Date(new Date().getTime() + (Number(eventDetails.estimate_hrs || 1) * 60 * 60 * 1000)).toISOString(),
-            DeadLineDate: new Date().toISOString(),
+            entrydate: now.toISOString(),
+            start: mergeDateWithTime(eventDetails.start),
+            end: mergeDateWithTime(eventDetails.end),
+            DeadLineDate: mergeDateWithTime(eventDetails.DeadLineDate || eventDetails.end),
             repeatflag: "repeat",
             statusid: "",
-            workinghr: 0,
             duplicated: true,
         };
 

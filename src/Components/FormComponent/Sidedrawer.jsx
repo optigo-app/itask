@@ -101,6 +101,7 @@ const SidebarDrawer = ({
     const [selectedMainGroup, setSelectedMainGroup] = useState('');
     const [deadlineCleared, setDeadlineCleared] = useState(false);
     const [isDeadlineEmpty, setIsDeadlineEmpty] = useState(false);
+    const [showBulkErrors, setShowBulkErrors] = useState(false);
     const [deadlineMenuSignal, setDeadlineMenuSignal] = useState(0);
     const [hoursBaseline, setHoursBaseline] = useState({
         estimate_hrs: 0,
@@ -801,6 +802,15 @@ const SidebarDrawer = ({
                     setDeadlineMenuSignal((prev) => prev + 1);
                     return;
                 }
+            } else {
+                // Bulk task validation
+                const isAnyDeadlineMissing = formValues.bulkTask.some(task => !task.deadLineDate);
+                if (isAnyDeadlineMissing) {
+                    setShowBulkErrors(true);
+                    toast.error("Please fill all deadline dates for bulk tasks.");
+                    return;
+                }
+                setShowBulkErrors(false);
             }
             const subtaskCount = getSubtaskCountForSplit();
             const isAddingSubtask = rootSubrootflagval?.Task === 'subroot';
@@ -891,6 +901,7 @@ const SidebarDrawer = ({
         });
         setIsTaskNameEmpty(false);
         setIsCategoryEmpty(false);
+        setShowBulkErrors(false);
         setSelectedMainGroup('');
     }
 
@@ -944,10 +955,11 @@ const SidebarDrawer = ({
     );
 
     const renderTaskActionButtons = () => {
-        const isDisabled =
-            formValues.bulkTask.length > 0
-                ? false
-                : isLoading || isSubmitting || isTaskNameEmpty || isDuplicateTask || isCategoryEmpty;
+        const hasBulkTasks = formValues.bulkTask.length > 0;
+
+        const isDisabled = hasBulkTasks
+            ? (isLoading || isSubmitting)
+            : (isLoading || isSubmitting || isTaskNameEmpty || isDuplicateTask || isCategoryEmpty);
 
         return (
             (taskType !== 'multi_input' || (taskType === 'multi_input' && formValues.bulkTask.length > 0)) && (
@@ -1232,6 +1244,7 @@ const SidebarDrawer = ({
                                                     setSelectedMainGroup={setSelectedMainGroup}
                                                     handleDropdownChange={handleDropdownChange}
                                                     renderDateField={renderDateTimeField}
+                                                    showValidationErrors={showBulkErrors}
                                                     divider={true}
                                                     mdValue={12}
                                                     mainMdValue={4}
