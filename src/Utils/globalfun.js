@@ -293,6 +293,25 @@ export function getISOWeekInfo(inputDate) {
     };
 }
 
+// Helper to merge today's date with a given ISO time string
+export const mergeDateWithTime = (isoString) => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const day = now.getDate();
+    if (!isoString) return now.toISOString();
+    const originalTime = new Date(isoString);
+    return new Date(
+        year,
+        month,
+        day,
+        originalTime.getHours(),
+        originalTime.getMinutes(),
+        originalTime.getSeconds(),
+        originalTime.getMilliseconds()
+    ).toISOString();
+};
+
 export const ImageUrl = (data) => {
     const init = JSON.parse(sessionStorage.getItem('taskInit'));
     if (data && init) {

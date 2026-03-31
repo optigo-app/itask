@@ -14,7 +14,7 @@ import { Box, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActio
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 import { PERMISSIONS } from '../Auth/Role/permissions';
 import { toast } from 'react-toastify';
-import { getDynamicStatusColor, statusColors, getUserProfileData, formatUTCDateTime, toAttendanceDateKey } from '../../Utils/globalfun';
+import { getDynamicStatusColor, statusColors, getUserProfileData, formatUTCDateTime, toAttendanceDateKey, mergeDateWithTime } from '../../Utils/globalfun';
 import DailyReportAttendance from '../Reports/CalendarReport/DailyReportAttendance';
 import { GetDailyReportApi } from '../../Api/TaskApi/GetDailyReportApi';
 import DailyReportAttendanceList from '../Reports/CalendarReport/DailyReportAttendanceList';
@@ -985,32 +985,14 @@ const Calendar = ({
 
         // Get current date
         const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        const day = now.getDate();
-
-        // Helper to merge today's date with a given ISO time string
-        const mergeDateWithTime = (isoString) => {
-            if (!isoString) return now.toISOString();
-            const originalTime = new Date(isoString);
-            return new Date(
-                year,
-                month,
-                day,
-                originalTime.getHours(),
-                originalTime.getMinutes(),
-                originalTime.getSeconds(),
-                originalTime.getMilliseconds()
-            ).toISOString();
-        };
 
         const duplicatedEvent = {
             ...eventDetails,
             meetingid: "",
             title: eventDetails.title,
             entrydate: now.toISOString(),
-            start: mergeDateWithTime(eventDetails.start),
-            end: mergeDateWithTime(eventDetails.end),
+            // start: mergeDateWithTime(eventDetails.start),
+            // end: mergeDateWithTime(eventDetails.end),
             DeadLineDate: mergeDateWithTime(eventDetails.DeadLineDate || eventDetails.end),
             repeatflag: "repeat",
             statusid: "",
