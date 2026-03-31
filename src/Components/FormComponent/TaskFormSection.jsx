@@ -51,7 +51,7 @@ const TaskFormSection = ({
   const location = useLocation();
   const quickBtnRef = useRef(null);
   const [deadlineMenuAnchorEl, setDeadlineMenuAnchorEl] = useState(null);
-
+  const isTaskRoute = location?.pathname?.includes('/task');
   const isDeadlineMenuOpen = Boolean(deadlineMenuAnchorEl);
 
   const openDeadlineMenu = (event) => {
@@ -117,6 +117,7 @@ const TaskFormSection = ({
                   className="milestone-label"
                 />
               )}
+
               {allDayShow && !hiddenFields.includes('isAllDay') &&
                 <Box className="form-group">
                   <Typography
@@ -148,7 +149,7 @@ const TaskFormSection = ({
             </Box>
             {formValues?.taskName && location?.pathname?.includes("/myCalendar") && !hiddenFields.includes('meetingDetail') &&
               <Box>
-                {formValues.title != "" &&
+                {formValues?.title != "" &&
                   <Grid item xs={12}>
                     <Button size='small' className="meetingDtBtn" variant="text" onClick={() => handleMeetingDt(formValues)}>
                       Meeting Detail
@@ -167,10 +168,10 @@ const TaskFormSection = ({
                   'taskName',
                   formValues.taskName,
                   'Enter task name',
-                  isTaskNameEmpty || isDuplicateTask,
+                  isTaskNameEmpty || (!isTaskRoute && isDuplicateTask),
                   isTaskNameEmpty
                     ? 'Task name is required.'
-                    : isDuplicateTask
+                    : !isTaskRoute && isDuplicateTask
                       ? 'This taskname already exists for the selected module.'
                       : '',
                   handleChange,
