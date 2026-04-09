@@ -522,7 +522,9 @@ const SidebarDrawer = ({
         }
 
         if (isAddOrSub) {
-            const match = flattenedTasks.find(
+            // Ignore duplicate task check on /tasks route
+            const isTaskRoute = location?.pathname?.includes("/tasks");
+            const match = !isTaskRoute && flattenedTasks.find(
                 task =>
                     task?.[dynamicKey] === selectedId &&
                     task?.taskname?.trim()?.toLowerCase() === taskName.toLowerCase()
@@ -1201,6 +1203,7 @@ const SidebarDrawer = ({
                                             isTaskNameEmpty={isTaskNameEmpty}
                                             isDuplicateTask={isDuplicateTask}
                                             isCategoryEmpty={isCategoryEmpty}
+                                            isTaskRoute={location?.pathname?.includes("/tasks")}
                                             taskCategory={taskCategory}
                                             statusData={statusData}
                                             secStatusData={secStatusData}

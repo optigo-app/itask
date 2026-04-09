@@ -61,7 +61,7 @@ const Sidebar = () => {
         { pagename: "Home", label: "Home", routes: "Home", path: "/", icon: House },
         { pagename: "Task", label: "Task", routes: "Tasks", path: "/tasks", icon: FileCheck },
         { pagename: "Project", label: "Project", routes: "Projects", path: "/projects", icon: SquareChartGantt },
-        // { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "external-bug-track", icon: Bug },
+        { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "external-bug-track", icon: Bug },
         // { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "/bugtrack", icon: Bug },
         { pagename: "Inbox", label: "Inbox", routes: "Inbox", path: "/inbox", icon: Inbox },
         { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
@@ -137,11 +137,13 @@ const Sidebar = () => {
                 uid: authParams?.uid,
                 yc: authParams?.yc
             }));
-            const redirectUrl = `http://localhost:5004/auto-login?data=${encodeURIComponent(encodedAuthData)}`;
+            const redirectUrl = window.location.hostname?.includes('localhost')
+                ? `http://localhost:5004/auto-login?data=${encodeURIComponent(encodedAuthData)}`
+                : `http://bugtracker.web/auto-login?data=${encodeURIComponent(encodedAuthData)}`;
             window.open(redirectUrl, '_blank');
         } catch (error) {
             console.error('Error preparing bug track redirect:', error);
-            window.open('http://localhost:5004', '_blank');
+            window.open('http://bugtracker.web', '_blank');
         }
     };
 

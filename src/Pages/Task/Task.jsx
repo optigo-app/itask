@@ -664,6 +664,7 @@ const Task = () => {
       return updateTasksRecursively(prevTasks);
     });
   };
+  console.log("tasks", tasks);
 
   const handleStatusChange = (taskId, status, flag) => {
     const isPrimaryStatus = flag !== "secondaryStatus";
@@ -832,6 +833,7 @@ const Task = () => {
       return updateTasksRecursively(prevTasks);
     });
   };
+
 
   const handleChangePage = (event, newPage) => {
     setPage(event);

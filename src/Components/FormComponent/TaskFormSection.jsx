@@ -47,11 +47,11 @@ const TaskFormSection = ({
   commonTextFieldProps,
   handleMeetingDt,
   hiddenFields = [],
+  isTaskRoute,
 }) => {
   const location = useLocation();
   const quickBtnRef = useRef(null);
   const [deadlineMenuAnchorEl, setDeadlineMenuAnchorEl] = useState(null);
-  const isTaskRoute = location?.pathname?.includes('/task');
   const isDeadlineMenuOpen = Boolean(deadlineMenuAnchorEl);
 
   const openDeadlineMenu = (event) => {

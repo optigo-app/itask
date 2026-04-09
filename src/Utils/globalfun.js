@@ -1442,7 +1442,7 @@ export const getArchiveInfoFromEndDate = (task, archiveAfterDays = 7) => {
         const status = (task?.status || "").toString().trim().toLowerCase();
         if (status !== "completed") return null;
 
-        const endDateRaw = task?.Completion_timestamp ?? task?.EndDate;
+        const endDateRaw = task?.Completion_timestamp;
         if (!endDateRaw) return null;
 
         const completedAt = new Date(endDateRaw);
