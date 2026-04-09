@@ -22,4 +22,5 @@ export const PERMISSIONS = {
   teammemberremove: [ROLES.ADMIN],
   canEditTeamMember: [ROLES.ADMIN],
   canChangeTeamMemberFlags: [ROLES.ADMIN],
+  canArchive: [ROLES.ADMIN],
 };

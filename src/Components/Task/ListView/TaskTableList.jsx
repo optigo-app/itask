@@ -18,7 +18,7 @@ import {
     Menu,
     MenuItem,
 } from "@mui/material";
-import { CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Star, Undo2 } from "lucide-react";
+import { Archive, ArchiveRestore, CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Star, Undo2 } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -50,7 +50,6 @@ import { taskCommentGetApi } from "../../../Api/TaskApi/TaskCommentGetApi";
 import DocumentSheet from "../../PrintSheet/DocumentSheet";
 import useSafeRedirect from "../../../Utils/useSafeRedirect";
 import { toast } from "react-toastify";
-import { RestoreArchiveTaskApi } from "../../../Api/TaskApi/RestoreArchivedTaskApi";
 import { taskRestoreApi } from "../../../Api/TaskApi/TaskRestoreApi";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { taskArchiveApi } from "../../../Api/TaskApi/TaskArchiveApi";
@@ -69,6 +68,42 @@ const collectDescendantIds = (task) => {
     return ids;
 };
 
+const ArchiveRestoreButton = ({ task, setSelectedArchiveTask, setConfirmArchiveOpen, setArchivingIds, setSelectedUnarchiveTask, setConfirmUnarchiveOpen, setRestoringIds, hasAccess, PERMISSIONS }) => {
+    const isCompleted = (task?.status || '').toString().trim().toLowerCase() === 'completed';
+    const isArchived = !!task?.Completion_timestamp;
+
+    if (isArchived) {
+        return (
+            <Tooltip title="Unarchive" arrow placement="top">
+                <IconButton
+                    onClick={() => {
+                        setSelectedUnarchiveTask(task);
+                        setConfirmUnarchiveOpen(true);
+                        setRestoringIds(new Set(collectDescendantIds(task)));
+                    }}
+                >
+                    <ArchiveRestore size={20} className="iconbtn" />
+                </IconButton>
+            </Tooltip>
+        );
+    } else if (isCompleted) {
+        return (
+            <Tooltip title="Archive" arrow placement="top">
+                <IconButton
+                    onClick={() => {
+                        setSelectedArchiveTask(task);
+                        setConfirmArchiveOpen(true);
+                        setArchivingIds(new Set(collectDescendantIds(task)));
+                    }}
+                >
+                    <Archive size={20} className="iconbtn" />
+                </IconButton>
+            </Tooltip>
+        );
+    }
+    return null;
+};
+
 const findPathToTask = (tasks = [], targetId) => {
     if (!Array.isArray(tasks) || targetId == null) return null;
     for (const t of tasks) {
@@ -77,18 +112,6 @@ const findPathToTask = (tasks = [], targetId) => {
         if (childPath) return [t, ...childPath];
     }
     return null;
-};
-
-const buildRestoreIds = (task, rootTasks) => {
-    const descendantIds = collectDescendantIds(task);
-
-    const path = findPathToTask(rootTasks, task?.taskid);
-    const ancestorIds = Array.isArray(path)
-        ? path.map((n) => n?.taskid).filter((id) => id != null && id !== '')
-        : [];
-
-    const merged = [...ancestorIds, ...descendantIds];
-    return Array.from(new Set(merged));
 };
 
 const initialColumns = [
@@ -478,7 +501,7 @@ const TableView = ({
         const isAdmin = getUserProfileData()?.designation?.toLowerCase() === "admin";
         const isFullAccess = hasTaskActionAccess || isAdmin;
 
-        const isArchived = !!task?.Completion_timestamp;
+        const isArchived = (task?.status || '').toString().trim().toLowerCase() === 'completed' && task?.Completion_timestamp != null;
         const isCompleted = (task?.status || '').toString().trim().toLowerCase() === 'completed';
 
         const authData = getAuthData();
@@ -520,11 +543,8 @@ const TableView = ({
         const isRestoring = restoringIds.has(task?.taskid);
         const isArchiving = archivingIds.has(task?.taskid);
 
-        console.log("jsdsj-----", task)
-
         if (isArchived) {
             if (task?.taskno != '') {
-                // Show restore and view if has taskno
                 return (
                     <Box sx={{ display: "flex", alignItems: "center" }}>
                         <IconButton
@@ -535,7 +555,7 @@ const TableView = ({
                             }}
                             disabled={isRestoring}
                         >
-                            <Undo2 size={20} className="iconbtn" color={isRestoring ? disabledColor : activeColor} />
+                            <ArchiveRestore size={20} className="iconbtn" color={isRestoring ? disabledColor : activeColor} />
                         </IconButton>
                         <IconButton onClick={() => handleViewTask(task, { Task: "root" })}>
                             <Eye size={20} className="iconbtn" color={activeColor} />
@@ -543,7 +563,6 @@ const TableView = ({
                     </Box>
                 );
             } else {
-                // Show only view if no taskno
                 return (
                     <Box sx={{ display: "flex", alignItems: "center" }}>
                         <IconButton onClick={() => handleViewTask(task, { Task: "root" })}>
@@ -563,19 +582,7 @@ const TableView = ({
                 >
                     <Timer size={20} className="iconbtn" color={iconColor(canTimeTrack)} />
                 </IconButton> */}
-                {/* Archive */}
-                {/* {task.parentid != 0 && task?.taskno != '' && (
-                    <IconButton
-                        onClick={() => {
-                            if (isArchiving) return;
-                            setSelectedArchiveTask(task);
-                            setConfirmArchiveOpen(true);
-                        }}
-                        disabled={!canEdit || !isCompleted || isArchiving}
-                    >
-                        <Archive size={20} className="iconbtn" color={isArchiving ? disabledColor : iconColor(canEdit)} />
-                    </IconButton>
-                )} */}
+
 
                 {/* Print */}
                 <div className="print-btn-wrapper">
@@ -1041,8 +1048,21 @@ const TableView = ({
                         {renderTaskProgressBar(subtask?.progress_per, subtask?.isNotShowProgress)}
                     </TableCell>
                     <TableCell>
-                        <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange}
-                            disable={(subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))} />
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange}
+                                disable={(subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))} />
+                            <ArchiveRestoreButton
+                                task={subtask}
+                                setSelectedArchiveTask={setSelectedArchiveTask}
+                                setConfirmArchiveOpen={setConfirmArchiveOpen}
+                                setArchivingIds={setArchivingIds}
+                                setSelectedUnarchiveTask={setSelectedUnarchiveTask}
+                                setConfirmUnarchiveOpen={setConfirmUnarchiveOpen}
+                                setRestoringIds={setRestoringIds}
+                                hasAccess={hasAccess}
+                                PERMISSIONS={PERMISSIONS}
+                            />
+                        </Box>
                     </TableCell>
                     <TableCell>
                         <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange}
@@ -1271,8 +1291,21 @@ const TableView = ({
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange}
-                                                            disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))) || access} />
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                            <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange}
+                                                                disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))) || access} />
+                                                            <ArchiveRestoreButton
+                                                                task={task}
+                                                                setSelectedArchiveTask={setSelectedArchiveTask}
+                                                                setConfirmArchiveOpen={setConfirmArchiveOpen}
+                                                                setArchivingIds={setArchivingIds}
+                                                                setSelectedUnarchiveTask={setSelectedUnarchiveTask}
+                                                                setConfirmUnarchiveOpen={setConfirmUnarchiveOpen}
+                                                                setRestoringIds={setRestoringIds}
+                                                                hasAccess={hasAccess}
+                                                                PERMISSIONS={PERMISSIONS}
+                                                            />
+                                                        </Box>
                                                     </TableCell>
                                                     <TableCell>
                                                         <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange}
