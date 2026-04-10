@@ -19,7 +19,6 @@ import { CircleCheck, Info } from "lucide-react";
 
 // Memoized TaskCard component for better performance
 const TaskCard = memo(({ child, colorClass, isScheduled, calendarsColor }) => {
-    console.log("child", child)
     return (
         <Card
             key={child.taskid}
@@ -454,8 +453,6 @@ const TasklistForCal = ({ calendarsColor }) => {
     }, [filteredTasksList, searchQuery, performSearch]);
 
     const groupedTasks = getFilteredHierarchy();
-
-    console.log(groupedTasks)
 
     if (task === undefined) {
         return (

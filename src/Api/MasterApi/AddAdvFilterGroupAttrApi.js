@@ -116,7 +116,6 @@ export const BindAttrGroupApi = async () => {
 
 // delete master
 export const deleteAdvancedMasterApi = async (formAdvData, bindType) => {
-    console.log("deleteAdvancedMasterApi", formAdvData, bindType);
     const AuthData = getAuthData();
     const bindMode = bindType == "main group" ? "maingroup" : bindType == "group" ? "group" : "attr";
     const bindid = bindType == "main group" ? formAdvData?.id : bindType == "group" ? formAdvData?.subid : formAdvData?.itemid;

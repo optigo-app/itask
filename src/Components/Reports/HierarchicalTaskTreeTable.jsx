@@ -111,8 +111,6 @@ const HierarchicalTaskTreeTable = memo(({
         const indentLevel = isChild ? depth + 1 : 0;
         const paddingLeft = indentLevel * 24; // 24px per level
 
-        console.log(task);
-
         return (
             <React.Fragment key={task.taskid || `task-${index}`}>
                 <TableRow

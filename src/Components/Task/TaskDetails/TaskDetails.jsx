@@ -19,7 +19,7 @@ import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
-import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments, getUserProfileData, getAuthData } from '../../../Utils/globalfun';
+import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments, getUserProfileData, getAuthData, processCommentData, getAssigneeMaster } from '../../../Utils/globalfun';
 import useAccess from '../../Auth/Role/useAccess';
 import { PERMISSIONS } from '../../Auth/Role/permissions';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
@@ -41,8 +41,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const theme = useTheme();
     const { hasAccess } = useAccess();
 
-    console.log("jhdsjh", taskData)
-
     // ===== PERMISSION FLAGS =====
     const profileData = getUserProfileData();
     const isAdmin = profileData?.designation?.toLowerCase() === "admin";
@@ -55,7 +53,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const isReadOnlyUser = currentUserAssignee?.isreadonly === 1;
     const isAlowed = !isReadOnlyUser && isAssignee
 
-    console.log("isAlowed", isAlowed, isReadOnlyUser, isAssignee, isFullAccess);
 
     const [isLoading, setIsLoading] = useState(
         {
@@ -213,7 +210,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     const handleTabChange = (event, newValue) => setActiveTab(newValue);
 
     useEffect(() => {
-        const assigneesMaster = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"))
+        const assigneesMaster = getAssigneeMaster();
         const fetchTaskDesc = async () => {
             try {
                 const taskdesc = await taskDescGetApi(taskData);
@@ -223,46 +220,8 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
 
                 const taskComment = await taskCommentGetApi(taskData);
                 if (taskComment) {
-                    const commentsWithAttachments = taskComment.rd.map(comment => {
-                        // Process attachments from new format
-                        let attachments = [];
-                        if (comment?.DocumentName) {
-                            const documentUrls = comment.DocumentName.split(',').filter(Boolean);
-                            const documentLinks = comment?.DocumentUrl ? comment.DocumentUrl.split(',').filter(Boolean) : [];
-
-                            attachments = documentUrls.map((url, index) => {
-                                const fileName = url.substring(url.lastIndexOf('/') + 1);
-                                const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
-                                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
-
-                                return {
-                                    url: url,
-                                    filename: fileName,
-                                    extension: ext,
-                                    isImage: isImage,
-                                    folderName: comment?.foldername || 'Comments'
-                                };
-                            });
-
-                            // Add document URLs if any
-                            documentLinks.forEach((link, index) => {
-                                attachments.push({
-                                    url: link,
-                                    filename: `Link ${index + 1}`,
-                                    extension: 'url',
-                                    isImage: false,
-                                    folderName: comment?.foldername || 'Comments'
-                                });
-                            });
-                        }
-
-                        return {
-                            ...comment,
-                            assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
-                            attachments: attachments
-                        };
-                    });
-                    setComments(commentsWithAttachments);
+                    const processedComments = processCommentData(taskComment.rd, assigneesMaster);
+                    setComments(processedComments);
                 }
             } catch (error) {
                 console.error('Error fetching task description: ', error);
@@ -279,7 +238,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     };
 
     const handleSendComment = async (attachments = []) => {
-        const assigneesMaster = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"))
+        const assigneesMaster = getAssigneeMaster();
         if (!newComment.trim()) return;
 
         try {
@@ -290,49 +249,8 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
             const taskComment = await taskCommentGetApi(taskData);
 
             if (taskComment) {
-                const cleanedComments = taskComment.rd.map(comment => {
-                    // Process attachments from new format
-                    let attachments = [];
-                    if (comment?.DocumentName) {
-                        const documentUrls = comment.DocumentName.split(',').filter(Boolean);
-                        const documentLinks = comment?.DocumentUrl ? comment.DocumentUrl.split(',').filter(Boolean) : [];
-
-                        attachments = documentUrls.map((url, index) => {
-                            const fileName = url.substring(url.lastIndexOf('/') + 1);
-                            const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
-                            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
-
-                            return {
-                                url: url,
-                                filename: fileName,
-                                extension: ext,
-                                isImage: isImage,
-                                folderName: comment?.foldername || 'Comments'
-                            };
-                        });
-
-                        // Add document URLs if any
-                        documentLinks.forEach((link, index) => {
-                            attachments.push({
-                                url: link,
-                                filename: `Link ${index + 1}`,
-                                extension: 'url',
-                                isImage: false,
-                                folderName: comment?.foldername || 'Comments'
-                            });
-                        });
-                    }
-
-                    return {
-                        ...comment,
-                        id: comment?.id,
-                        user: comment?.user,
-                        assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
-                        attachments: attachments
-                    };
-                });
-
-                setComments(cleanedComments);
+                const processedComments = processCommentData(taskComment.rd, assigneesMaster);
+                setComments(processedComments);
             }
         } catch (error) {
             console.error('Error adding comment:', error);

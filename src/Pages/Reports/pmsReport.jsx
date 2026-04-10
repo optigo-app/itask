@@ -254,8 +254,6 @@ const PmsReport = () => {
         }
     }, [currentDate, actualData, viewMode, taskCategory, taskFinalData, filters]);
 
-    console.log("adsadas", pmsReportData);
-
     useEffect(() => {
         const viemodeValue = localStorage.getItem('rpviewMode') ?? 'EmployeeWiseData';
         const viewTypeValue = localStorage.getItem('rpviewType') ?? 'table';

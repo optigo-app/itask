@@ -140,8 +140,7 @@ export default function MasterBind({ taskModuleList }) {
     const handleConfirmClose = () => {
         setConfirmDialog(prev => ({ ...prev, open: false }));
     };
-    console.log("hjdjshj", rightGroups)
-
+    
     const handleDragEnd = async (result) => {
         const { destination, draggableId } = result;
         if (!destination || destination.droppableId !== "right") return;

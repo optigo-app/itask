@@ -290,8 +290,6 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
         }
     };
 
-    console.log("kjdsk", tasks)
-
     return (
         <Box className="mltMainBox">
             <Stack spacing={2}>

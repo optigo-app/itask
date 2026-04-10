@@ -17,7 +17,7 @@ import { taskCommentGetApi } from '../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../Api/TaskApi/TaskDescAddApi';
 import AttachmentImg from "../../Assests/Attachment.webp";
-import { getRandomAvatarColor, ImageUrl } from '../../Utils/globalfun';
+import { getRandomAvatarColor, ImageUrl, processCommentData, getAssigneeMaster } from '../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
@@ -98,6 +98,7 @@ const MeetingDetail = ({ open, onClose, taskData, handleMeetingEdit }) => {
     const handleTabChange = (event, newValue) => setActiveTab(newValue);
 
     useEffect(() => {
+        const assigneesMaster = getAssigneeMaster();
         const fetchTaskDesc = async () => {
             try {
                 const taskdesc = await taskDescGetApi(taskData);
@@ -111,12 +112,8 @@ const MeetingDetail = ({ open, onClose, taskData, handleMeetingEdit }) => {
 
                 const taskComment = await taskCommentGetApi(taskData);
                 if (taskComment) {
-                    const commentsWithAttachments = taskComment.rd.map(comment => ({
-                        ...comment,
-                        user: { name: 'John Doe', avatar: null },
-                        attachments: dummyAttachments.slice(0, Math.floor(Math.random() * 3))
-                    }));
-                    setComments(commentsWithAttachments);
+                    const processedComments = processCommentData(taskComment.rd, assigneesMaster);
+                    setComments(processedComments);
                 }
             } catch (error) {
                 console.error('Error fetching task description: ', error);
@@ -132,25 +129,20 @@ const MeetingDetail = ({ open, onClose, taskData, handleMeetingEdit }) => {
         setNewComment(event.target.value);
     };
 
-    const handleSendComment = async () => {
+    const handleSendComment = async (attachments = []) => {
+        const assigneesMaster = getAssigneeMaster();
         if (!newComment.trim()) return;
 
         try {
-            await taskCommentAddApi(taskData, newComment);
+            await taskCommentAddApi(taskData, newComment, attachments);
 
             setNewComment('');
 
             const taskComment = await taskCommentGetApi(taskData);
 
             if (taskComment) {
-                const cleanedComments = taskComment.rd.map(comment => ({
-                    ...comment,
-                    id: comment?.id,
-                    user: comment?.user,
-                    attachments: comment?.attachments || []
-                }));
-
-                setComments(cleanedComments);
+                const processedComments = processCommentData(taskComment.rd, assigneesMaster);
+                setComments(processedComments);
             }
         } catch (error) {
             console.error('Error adding comment:', error);
