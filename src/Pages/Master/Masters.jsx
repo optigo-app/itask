@@ -511,7 +511,6 @@ const MasterToggle = () => {
                     mode: 'del',
                 };
                 const response = await addEditDelMaster(payload);
-                console.log("hdjsh", response, selectedRow, formattedData);
                 if (response?.[0]?.stat == 1 || response?.rd?.[0]?.stat == 1) {
                     const updatedData = formattedData.filter(item => item.id != selectedRow.id);
                     setFormattedData(updatedData);

@@ -253,8 +253,6 @@ const BugTracking = () => {
         });
     }, [taskBugStatusData, taskBugPriorityData]);
 
-    console.log(formData);
-
     const handleDateChange = useCallback((date, name) => {
         setFormData(prev => ({ ...prev, [name]: date ? date.toISOString() : '' }));
     }, []);

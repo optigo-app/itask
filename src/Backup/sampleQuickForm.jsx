@@ -106,8 +106,6 @@ const SampleQuickForm = () => {
 
   const handleSubmit = () => {
     if (validateForm()) {
-      console.log('Form submitted:', formData);
-      // Here you would typically call your API
       alert('Task created successfully!');
       handleClear();
     }

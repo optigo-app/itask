@@ -44,7 +44,6 @@ const DashboardContent = ({ isCommentLoading, isAttLoding, selectedTab, decodedD
       props: {
         handleDtopen,
         taskAssigneeData: taskAssigneeData?.filter((emp) => emp.isactive === 1),
-        teamMemberData: decodedData?.taskid ? taskFinalData?.ModuleTeamMembers : taskFinalData?.TeamMembers,
         decodedData,
         background
       }

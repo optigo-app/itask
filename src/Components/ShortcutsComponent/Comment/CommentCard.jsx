@@ -285,14 +285,14 @@ const CommentCard = ({ comment }) => {
                                             width: '100%',
                                             marginBottom: '1px'
                                         }}>
-                                            {attachment.filename}
+                                            {attachment?.filename}
                                         </Typography>
                                         <Typography variant="caption" sx={{ 
                                             fontSize: '5px',
                                             color: '#7f8c8d',
                                             fontWeight: '500'
                                         }}>
-                                            {attachment.extension.toUpperCase()}
+                                            {attachment?.extension?.toUpperCase()}
                                         </Typography>
                                         {/* Download button */}
                                         <IconButton 

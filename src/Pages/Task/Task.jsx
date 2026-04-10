@@ -69,7 +69,6 @@ const Task = () => {
     secStatusData,
     taskAssigneeData } = useFullTaskFormatFile();
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(true);
-
   const [localTaskEdits, setLocalTaskEdits] = useState({});
 
   useEffect(() => {
@@ -664,7 +663,6 @@ const Task = () => {
       return updateTasksRecursively(prevTasks);
     });
   };
-  console.log("tasks", tasks);
 
   const handleStatusChange = (taskId, status, flag) => {
     const isPrimaryStatus = flag !== "secondaryStatus";

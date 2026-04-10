@@ -14,7 +14,7 @@ import {
 import { Send, Paperclip, MessageCircle } from 'lucide-react';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
-import { background, formatDate4, ImageUrl } from '../../../Utils/globalfun';
+import { background, formatDate4, ImageUrl, processCommentData, getAssigneeMaster } from '../../../Utils/globalfun';
 import { uploadFilesForComment } from '../../../Utils/uploadHelpers';
 import { toast } from 'react-toastify';
 import DocsViewerModal from '../../DocumentViewer/DocsViewerModal';
@@ -193,7 +193,7 @@ const CommentMenuPopup = ({
     }, [open, selectedTask?.taskid]);
 
     useEffect(() => {
-        const assigneesMaster = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"));
+        const assigneesMaster = getAssigneeMaster();
         const fetchTaskComment = async () => {
             const taskId = selectedTask?.taskid;
             const fetchId = ++activeFetchIdRef.current;
@@ -204,43 +204,8 @@ const CommentMenuPopup = ({
                 const taskComment = await taskCommentGetApi(selectedTask);
                 if (fetchId !== activeFetchIdRef.current) return;
                 if (taskComment) {
-                    const commentsWithAttachments = taskComment.rd.map(comment => {
-                        let attachments = [];
-                        if (comment?.DocumentName) {
-                            const documentUrls = comment.DocumentName.split(',').filter(Boolean);
-                            const documentLinks = comment?.DocumentUrl ? comment.DocumentUrl.split(',').filter(Boolean) : [];
-
-                            attachments = documentUrls.map((url, index) => {
-                                const fileName = url.substring(url.lastIndexOf('/') + 1);
-                                const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
-                                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
-
-                                return {
-                                    url: url,
-                                    filename: fileName,
-                                    extension: ext,
-                                    isImage: isImage,
-                                    folderName: comment?.foldername || 'Comments'
-                                };
-                            });
-                            documentLinks.forEach((link, index) => {
-                                attachments.push({
-                                    url: link,
-                                    filename: `Link ${index + 1}`,
-                                    extension: 'url',
-                                    isImage: false,
-                                    folderName: comment?.foldername || 'Comments'
-                                });
-                            });
-                        }
-
-                        return {
-                            ...comment,
-                            assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
-                            attachments: attachments
-                        };
-                    });
-                    setComments(commentsWithAttachments);
+                    const processedComments = processCommentData(taskComment.rd, assigneesMaster);
+                    setComments(processedComments);
                     setCommentsTaskId(taskId ?? null);
                 } else {
                     setComments([]);
@@ -280,7 +245,7 @@ const CommentMenuPopup = ({
         if (!newComment.trim() || !selectedTask || isSubmitting) return;
 
         setIsSubmitting(true);
-        const assigneesMaster = JSON?.parse(sessionStorage?.getItem("taskAssigneeData"));
+        const assigneesMaster = getAssigneeMaster();
 
         try {
             let attachments = [];
@@ -305,50 +270,10 @@ const CommentMenuPopup = ({
             const taskComment = await taskCommentGetApi(selectedTask);
 
             if (taskComment) {
-                const cleanedComments = taskComment.rd.map(comment => {
-                    // Process attachments from new format
-                    let attachments = [];
-                    if (comment?.DocumentName) {
-                        const documentUrls = comment.DocumentName.split(',').filter(Boolean);
-                        const documentLinks = comment?.DocumentUrl ? comment.DocumentUrl.split(',').filter(Boolean) : [];
-
-                        attachments = documentUrls.map((url, index) => {
-                            const fileName = url.substring(url.lastIndexOf('/') + 1);
-                            const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
-                            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
-
-                            return {
-                                url: url,
-                                filename: fileName,
-                                extension: ext,
-                                isImage: isImage,
-                                folderName: comment?.foldername || 'Comments'
-                            };
-                        });
-
-                        // Add document URLs if any
-                        documentLinks.forEach((link, index) => {
-                            attachments.push({
-                                url: link,
-                                filename: `Link ${index + 1}`,
-                                extension: 'url',
-                                isImage: false,
-                                folderName: comment?.foldername || 'Comments'
-                            });
-                        });
-                    }
-
-                    return {
-                        ...comment,
-                        id: comment?.id,
-                        user: comment?.user,
-                        assignee: assigneesMaster?.find(assignee => assignee?.userid == comment?.appuserid) ?? [],
-                        attachments: attachments
-                    };
-                });
-                setComments(cleanedComments);
+                const processedComments = processCommentData(taskComment.rd, assigneesMaster);
+                setComments(processedComments);
                 if (onCommentAdded) {
-                    onCommentAdded(cleanedComments);
+                    onCommentAdded(processedComments);
                 }
             }
             setNewComment('');

@@ -1477,6 +1477,76 @@ export const background = (assignee) => {
     return avatarBackgroundColor;
 };
 
+/**
+ * Reusable comment processing utility for taskCommentGetApi responses
+ * Handles attachment parsing, user mapping, and consistent comment formatting
+ * @param {Array} comments - Raw comments array from API response (rd property)
+ * @param {Array} assigneesMaster - Assignee master list from sessionStorage (taskAssigneeData)
+ * @returns {Array} Processed comments with attachments and user data
+ */
+export const processCommentData = (comments, assigneesMaster = []) => {
+    if (!Array.isArray(comments)) return [];
+
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
+
+    return comments.map(comment => {
+        let attachments = [];
+
+        // Process document attachments
+        if (comment?.DocumentName) {
+            const documentUrls = comment.DocumentName.split(',').filter(Boolean);
+            const documentLinks = comment?.DocumentUrl ? comment.DocumentUrl.split(',').filter(Boolean) : [];
+
+            // Process file attachments
+            documentUrls.forEach(url => {
+                const fileName = url.substring(url.lastIndexOf('/') + 1);
+                const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+                const isImage = imageExtensions.includes(ext);
+
+                attachments.push({
+                    url,
+                    filename: fileName,
+                    extension: ext,
+                    isImage,
+                    folderName: comment?.foldername || 'Comments'
+                });
+            });
+
+            // Process URL links
+            documentLinks.forEach((link, index) => {
+                attachments.push({
+                    url: link,
+                    filename: `Link ${index + 1}`,
+                    extension: 'url',
+                    isImage: false,
+                    folderName: comment?.foldername || 'Comments'
+                });
+            });
+        }
+
+        // Map user from assignee master list
+        const assignee = assigneesMaster?.find(a => a?.userid == comment?.appuserid) || null;
+
+        return {
+            ...comment,
+            assignee,
+            attachments
+        };
+    });
+};
+
+/**
+ * Helper to get and parse assignee master data from sessionStorage
+ * @returns {Array} Parsed assignee master list
+ */
+export const getAssigneeMaster = () => {
+    try {
+        return JSON.parse(sessionStorage.getItem("taskAssigneeData")) || [];
+    } catch (e) {
+        return [];
+    }
+};
+
 export const Datetheme = createTheme({
     palette: {
         primary: {

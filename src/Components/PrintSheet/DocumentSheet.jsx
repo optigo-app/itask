@@ -10,7 +10,6 @@ const DocumentSheet = forwardRef((selectedData, ref) => {
       .filter(name => name)
       .join(', ');
   };
-  console.log("hdshj", selectedData)
 
   return (
     <div ref={ref} className="dContainer_main">

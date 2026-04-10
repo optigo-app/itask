@@ -583,8 +583,6 @@ const SidebarDrawer = ({
         });
     }
 
-    console.log(formValues);
-
     // for advanced master
     const handleDropdownChange = (dropdownItem, selectedId) => {
         setFormValues((prev) => {

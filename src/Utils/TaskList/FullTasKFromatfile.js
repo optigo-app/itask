@@ -177,27 +177,13 @@ const useFullTaskFormatFile = () => {
     return { categoryMap, category };
   };
 
-  // Chunk 2: Task Map and Team Members Processing
-  const buildTaskMapAndTeamMembers = (data) => {
+  // Chunk 2: Task Map Processing
+  const buildTaskMap = (data) => {
     const taskMap = new Map();
-    const teamMembersMap = new Map();
 
     data?.forEach((task) => {
       task.subtasks = [];
       taskMap.set(task.taskid, task);
-
-      if (task.assignee?.length > 0) {
-        if (!teamMembersMap.has(task.projectid)) {
-          teamMembersMap.set(task.projectid, new Map());
-        }
-        const projectMembers = teamMembersMap.get(task.projectid);
-
-        task.assignee.forEach((member) => {
-          if (member.id && member.firstname) {
-            projectMembers.set(member.id, member);
-          }
-        });
-      }
     });
 
     // Build subtask relationships
@@ -208,7 +194,7 @@ const useFullTaskFormatFile = () => {
       }
     });
 
-    return { taskMap, teamMembersMap };
+    return { taskMap };
   };
 
   // Chunk 3: Progress Calculation Utilities
@@ -339,39 +325,15 @@ const useFullTaskFormatFile = () => {
     return projectMilestoneData;
   };
 
-  // Chunk 6: Team Members Conversion
-  const convertTeamMembers = (teamMembersMap) => {
-    const TeamMembers = {};
-    for (const [projectid, membersMap] of teamMembersMap.entries()) {
-      TeamMembers[projectid] = Array.from(membersMap.values());
-    }
-    return TeamMembers;
-  };
 
-  // Chunk 7: Project Progress Calculation
-  const calculateProjectProgress = (projectMilestoneData) => {
-    const ProjectProgress = {};
 
-    Object.entries(projectMilestoneData).forEach(([projectId, milestones]) => {
-      const totalProgress = milestones.reduce((sum, m) => sum + (m.progress_per || 0), 0);
-      ProjectProgress[projectId] = milestones.length > 0
-        ? Math.round(totalProgress / milestones.length)
-        : 0;
-    });
 
-    return ProjectProgress;
-  };
 
   // Chunk 8: Module List Generation
-  const generateModuleList = (TaskData, ProjectProgress) => {
+  const generateModuleList = (TaskData) => {
     return TaskData?.map((module) => {
-      const projectProgress = ProjectProgress[module.projectid] || 0;
       const { subtasks, ...moduleWithoutSubtasks } = module;
-
-      return {
-        ...moduleWithoutSubtasks,
-        projectProgress,
-      };
+      return { ...moduleWithoutSubtasks };
     }) || [];
   };
 
@@ -380,7 +342,6 @@ const useFullTaskFormatFile = () => {
     const ModuleCategoryTasks = {};
     const ModuleMilestoneData = {};
     const ModuleProgress = {};
-    const ModuleTeamMembers = {};
 
     TaskData?.forEach((module) => {
       const moduleId = module.taskid;
@@ -419,18 +380,9 @@ const useFullTaskFormatFile = () => {
       ModuleProgress[moduleId] = milestones.length > 0
         ? Math.round(totalProgress / milestones.length)
         : 0;
-
-      // Process team members
-      const memberMap = new Map();
-      moduleTasks.forEach((task) => {
-        task.assignee?.forEach((member) => {
-          if (member.id) memberMap.set(member.id, member);
-        });
-      });
-      ModuleTeamMembers[moduleId] = Array.from(memberMap.values());
     });
 
-    return { ModuleCategoryTasks, ModuleMilestoneData, ModuleProgress, ModuleTeamMembers };
+    return { ModuleCategoryTasks, ModuleMilestoneData, ModuleProgress };
   };
 
   // Main optimized function
@@ -442,20 +394,17 @@ const useFullTaskFormatFile = () => {
         return {
           TaskData: [],
           ProjectMilestoneData: {},
-          TeamMembers: {},
           ProjectCategoryTasks: {},
           ModuleList: [],
-          ProjectProgress: {},
           ModuleCategoryTasks: {},
           ModuleMilestoneData: {},
           ModuleProgress: {},
-          ModuleTeamMembers: {},
         };
       }
 
       // Initialize maps and categories
       const { categoryMap, category } = initializeMapsAndCategories(taskCategory);
-      const { taskMap, teamMembersMap } = buildTaskMapAndTeamMembers(data);
+      const { taskMap } = buildTaskMap(data);
 
       // Initialize data structures
       const projectCategoryTasks = {};
@@ -477,20 +426,17 @@ const useFullTaskFormatFile = () => {
         collectCategoryTasks(task, categoryMap, category, projectCategoryTasks);
       });
 
-      // Process milestones and calculate project progress
+      // Process milestones
       const projectMilestoneData = processMilestones(data);
-      const TeamMembers = convertTeamMembers(teamMembersMap);
-      const ProjectProgress = calculateProjectProgress(projectMilestoneData);
 
       // Generate module list
-      const ModuleList = generateModuleList(TaskData, ProjectProgress);
+      const ModuleList = generateModuleList(TaskData);
 
       // Process module-specific data
       const {
         ModuleCategoryTasks,
         ModuleMilestoneData,
-        ModuleProgress,
-        ModuleTeamMembers
+        ModuleProgress
       } = processModuleData(TaskData, categoryMap, taskCategory);
 
       // Set loading state
@@ -499,14 +445,11 @@ const useFullTaskFormatFile = () => {
       return {
         TaskData,
         ProjectMilestoneData: projectMilestoneData,
-        TeamMembers,
         ProjectCategoryTasks: projectCategoryTasks,
         ModuleList,
-        ProjectProgress,
         ModuleCategoryTasks,
         ModuleMilestoneData,
         ModuleProgress,
-        ModuleTeamMembers,
       };
     };
   }, [taskCategory, location.pathname]);
