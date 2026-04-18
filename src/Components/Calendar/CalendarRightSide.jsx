@@ -7,9 +7,7 @@ import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData, FullSidebar, rootSubrootflag, TaskData } from '../../Recoil/atom';
-import { EstimateCalApi } from '../../Api/TaskApi/EstimateCalApi';
-import { buildAncestorSumSplitestimate } from '../../Utils/estimationUtils';
+import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData, FullSidebar, rootSubrootflag, TaskData, fetchlistApiCall } from '../../Recoil/atom';
 import { Box, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Divider } from '@mui/material';
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 import { PERMISSIONS } from '../Auth/Role/permissions';
@@ -41,6 +39,7 @@ const Calendar = ({
     const [calEvData, setCalEvData] = useRecoilState(calendarData);
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
+    const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const actualTaskDataValue = useRecoilValue(TaskData);
     const [attendanceByDate, setAttendanceByDate] = useState({});
     const [assigneesByDate, setAssigneesByDate] = useState({});
@@ -869,45 +868,8 @@ const Calendar = ({
                 // Import dynamically to avoid circular dependencies
                 import('../../Api/TaskApi/TaskDataFullApi').then(({ fetchTaskDataFullApi }) => {
                     import('../../Utils/globalfun').then(({ mapKeyValuePair }) => {
-                        // Fetch fresh task data using treelist API
-                        fetchTaskDataFullApi({ taskid: rootId })
-                            .then(taskData => {
-                                if (!taskData || !taskData.rd1) {
-                                    console.warn('No task data returned from treelist API');
-                                    return;
-                                }
-
-                                const labeledTasks = mapKeyValuePair(taskData);
-                                console.log('labeledTasks', labeledTasks);
-                                console.log('📅 Calendar Resize - Fetched task hierarchy:', {
-                                    taskid: eventDetails?.taskid,
-                                    parentid: parentId,
-                                    newEstimate: snappedHours,
-                                    fetchedTasks: labeledTasks?.length
-                                });
-
-                                // Calculate parent estimates using fresh data
-                                const parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
-                                    parentTaskId: parentId,
-                                    childTaskId: eventDetails?.taskid,
-                                    childValues: {
-                                        estimate_hrs: formatEstimate(eventDetails.estimate_hrs),
-                                        estimate1_hrs: formatEstimate(eventDetails.estimate1_hrs),
-                                        estimate2_hrs: formatEstimate(eventDetails.estimate2_hrs),
-                                        workinghr: formatEstimate(eventDetails.workinghr),
-                                    },
-                                    isNewChild: false,
-                                });
-
-                                if (parentSumSplitestimate) {
-                                    console.log('📊 Parent Sum Splitestimate:', parentSumSplitestimate);
-                                    EstimateCalApi(parentSumSplitestimate)
-                                        .catch((err) => console.error('Error updating parent estimate:', err));
-                                }
-                            })
-                            .catch((err) => {
-                                console.error('Error fetching task data for parent estimation:', err);
-                            });
+                        // Trigger UI refresh
+                        setOpenChildTask(Date.now());
                     });
                 });
             }
@@ -1011,38 +973,8 @@ const Calendar = ({
                 const foundModuleId = findModuleRecursively(actualTaskDataValue, parentId);
                 const rootId = foundModuleId || duplicatedEvent.moduleid || duplicatedEvent.projectid || parentId;
 
-                import('../../Api/TaskApi/TaskDataFullApi').then(({ fetchTaskDataFullApi }) => {
-                    import('../../Utils/globalfun').then(({ mapKeyValuePair }) => {
-                        fetchTaskDataFullApi({ taskid: rootId })
-                            .then(taskData => {
-                                if (!taskData || !taskData.rd1) {
-                                    console.warn('No task data returned from treelist API');
-                                    return;
-                                }
-
-                                const labeledTasks = mapKeyValuePair(taskData);
-                                const parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
-                                    parentTaskId: parentId,
-                                    childTaskId: newTaskId,
-                                    childValues: {
-                                        estimate_hrs: formatEstimate(duplicatedEvent.estimate_hrs),
-                                        estimate1_hrs: formatEstimate(duplicatedEvent.estimate1_hrs),
-                                        estimate2_hrs: formatEstimate(duplicatedEvent.estimate2_hrs),
-                                        workinghr: formatEstimate(duplicatedEvent.workinghr),
-                                    },
-                                    isNewChild: true,
-                                });
-
-                                if (parentSumSplitestimate) {
-                                    EstimateCalApi(parentSumSplitestimate)
-                                        .catch((err) => console.error('Error updating parent estimate:', err));
-                                }
-                            })
-                            .catch((err) => {
-                                console.error('Error fetching task data for parent estimation:', err);
-                            });
-                    });
-                });
+                // Trigger UI refresh
+                setOpenChildTask(Date.now());
             }
         } else {
             toast.error("Error repeating event");

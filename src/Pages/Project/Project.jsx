@@ -26,8 +26,6 @@ import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
 import { deleteTaskDataApi } from "../../Api/TaskApi/DeleteTaskApi";
 import { fetchTaskDataFullApi } from "../../Api/TaskApi/TaskDataFullApi";
-import { EstimateCalApi } from "../../Api/TaskApi/EstimateCalApi";
-import { buildAncestorSumSplitestimate } from "../../Utils/estimationUtils";
 import { toast } from "react-toastify";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -487,44 +485,10 @@ const Project = () => {
     if (!taskToDelete) return;
 
     try {
-      const parentId = taskToDelete?.parentid;
-      let parentSumSplitestimate = '';
-
-      if (parentId && String(parentId) !== '0') {
-        const rootId = taskToDelete?.projectid || parentId;
-        try {
-          const taskData = await fetchTaskDataFullApi({ taskid: rootId, teamid: '1' });
-          if (taskData && taskData.rd1) {
-            const labeledTasks = mapKeyValuePair(taskData);
-            parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
-              parentTaskId: parentId,
-              childTaskId: id,
-              isDelete: true,
-              childValues: {
-                estimate_hrs: formatEstimate(taskToDelete.estimate_hrs),
-                estimate1_hrs: formatEstimate(taskToDelete.estimate1_hrs),
-                estimate2_hrs: formatEstimate(taskToDelete.estimate2_hrs),
-                workinghr: formatEstimate(taskToDelete.workinghr),
-              }
-            });
-          }
-        } catch (err) {
-          console.error('Error fetching data for parent estimation before module delete:', err);
-        }
-      }
-
       const response = await deleteTaskDataApi({ taskid: id });
       if (response?.rd[0]?.stat == 1) {
         setProject((prevData) => prevData.filter((task) => task.taskid !== id));
         toast.success("Project Module deleted successfully");
-
-        if (parentSumSplitestimate) {
-          try {
-            await EstimateCalApi(parentSumSplitestimate);
-          } catch (err) {
-            console.error('Error updating parent estimate after module delete:', err);
-          }
-        }
 
         // Trigger UI refresh
         setOpenChildTask(Date.now());

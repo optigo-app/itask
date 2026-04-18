@@ -7,8 +7,6 @@ import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi"
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
 import { fetchTaskDataFullApi } from "../../../Api/TaskApi/TaskDataFullApi";
-import { EstimateCalApi } from "../../../Api/TaskApi/EstimateCalApi";
-import { buildAncestorSumSplitestimate } from "../../../Utils/estimationUtils";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag } from "../../../Recoil/atom";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
@@ -51,42 +49,8 @@ function KanbanView({
   const handleConfirmRemoveAll = async () => {
     setCnfDialogOpen(false);
     try {
-      const parentId = selectedTask?.parentid;
-      let parentSumSplitestimate = '';
-
-      if (parentId && String(parentId) !== '0') {
-        const rootId = selectedTask?.projectid || parentId;
-        try {
-          const taskData = await fetchTaskDataFullApi({ taskid: rootId, teamid: '1' });
-          if (taskData && taskData.rd1) {
-            const labeledTasks = mapKeyValuePair(taskData);
-            parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
-              parentTaskId: parentId,
-              childTaskId: selectedTask.taskid,
-              isDelete: true,
-              childValues: {
-                estimate_hrs: formatEstimate(selectedTask.estimate_hrs),
-                estimate1_hrs: formatEstimate(selectedTask.estimate1_hrs),
-                estimate2_hrs: formatEstimate(selectedTask.estimate2_hrs),
-                workinghr: formatEstimate(selectedTask.workinghr),
-              }
-            });
-          }
-        } catch (err) {
-          console.error('Error fetching data for parent estimation before kanban delete:', err);
-        }
-      }
-
       const deleteTaskApi = await deleteTaskDataApi(selectedTask);
       if (deleteTaskApi && deleteTaskApi?.rd[0]?.stat == 1) {
-        if (parentSumSplitestimate) {
-          try {
-            await EstimateCalApi(parentSumSplitestimate);
-          } catch (err) {
-            console.error('Error updating parent estimate after kanban delete:', err);
-          }
-        }
-
         setOpenChildTask(Date.now());
         setSelectedTask(null);
         toast.success("Task deleted successfully!");
