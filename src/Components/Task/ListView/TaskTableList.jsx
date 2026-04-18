@@ -1051,7 +1051,7 @@ const TableView = ({
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange}
                                 disable={(subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))} />
-                            <ArchiveRestoreButton
+                            {/* <ArchiveRestoreButton
                                 task={subtask}
                                 setSelectedArchiveTask={setSelectedArchiveTask}
                                 setConfirmArchiveOpen={setConfirmArchiveOpen}
@@ -1061,7 +1061,7 @@ const TableView = ({
                                 setRestoringIds={setRestoringIds}
                                 hasAccess={hasAccess}
                                 PERMISSIONS={PERMISSIONS}
-                            />
+                            /> */}
                         </Box>
                     </TableCell>
                     <TableCell>
@@ -1294,7 +1294,7 @@ const TableView = ({
                                                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                             <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange}
                                                                 disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))) || access} />
-                                                            <ArchiveRestoreButton
+                                                            {/* <ArchiveRestoreButton
                                                                 task={task}
                                                                 setSelectedArchiveTask={setSelectedArchiveTask}
                                                                 setConfirmArchiveOpen={setConfirmArchiveOpen}
@@ -1304,7 +1304,7 @@ const TableView = ({
                                                                 setRestoringIds={setRestoringIds}
                                                                 hasAccess={hasAccess}
                                                                 PERMISSIONS={PERMISSIONS}
-                                                            />
+                                                            /> */}
                                                         </Box>
                                                     </TableCell>
                                                     <TableCell>

@@ -34,12 +34,10 @@ import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import { AddTaskDataApi } from '../../Api/TaskApi/AddTaskApi';
 import { toast } from 'react-toastify';
 import { deleteTaskDataApi } from '../../Api/TaskApi/DeleteTaskApi';
-import { EstimateCalApi } from '../../Api/TaskApi/EstimateCalApi';
-import { buildAncestorSumSplitestimate } from '../../Utils/estimationUtils';
 import { fetchTaskDataFullApi } from '../../Api/TaskApi/TaskDataFullApi';
 import CalendarFilter from './CalendarFilter';
-import { useRecoilValue } from 'recoil';
-import { TaskData } from '../../Recoil/atom';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { TaskData, fetchlistApiCall } from '../../Recoil/atom';
 
 // Extend dayjs with plugins
 dayjs.extend(duration);
@@ -108,6 +106,7 @@ const CalendarGridView = () => {
   const [totalHours, setTotalHours] = useState({ estimate: 0, working: 0 });
   const [localWorkingEdits, setLocalWorkingEdits] = useState({});
   const actualTaskDataValue = useRecoilValue(TaskData);
+  const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const { hasAccess } = useAccess();
   const {
     iswhTLoading,
@@ -314,35 +313,8 @@ const CalendarGridView = () => {
       }
       setTasks(updatedTasks);
       handleCloseSplitModal();
-      // Update parent task estimates in background (async, non-blocking)
-      const parentId = selectedTaskToSplit?.parentid;
-      if (parentId && String(parentId) !== '0') {
-        const rootId = findModuleRecursively(actualTaskDataValue, parentId) || selectedTaskToSplit?.projectid || parentId;
-        fetchTaskDataFullApi({ taskid: rootId, teamid: '1' })
-          .then(taskData => {
-            const labeledTasks = mapKeyValuePair(taskData);
-            const parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
-              parentTaskId: parentId,
-              isNewChild: false,
-              childValues: {
-                estimate_hrs: formatEstimate(selectedTaskToSplit.estimate_hrs),
-                estimate1_hrs: formatEstimate(selectedTaskToSplit.estimate1_hrs),
-                estimate2_hrs: formatEstimate(selectedTaskToSplit.estimate2_hrs),
-                workinghr: formatEstimate(selectedTaskToSplit.workinghr),
-              }
-            });
-
-            if (parentSumSplitestimate) {
-              EstimateCalApi(parentSumSplitestimate)
-                .catch((err) => {
-                  console.error('Error updating parent estimate after split:', err);
-                });
-            }
-          })
-          .catch((err) => {
-            console.error('Error fetching task data for parent estimation after split:', err);
-          });
-      }
+      // Trigger UI refresh
+      setOpenChildTask(Date.now());
     } catch (error) {
       console.error('Error while splitting tasks:', error);
       toast.error('An error occurred while processing split tasks.');
@@ -397,37 +369,8 @@ const CalendarGridView = () => {
         if (apiRes) {
           toast.success('Task working hrs added successfully!');
           handleTotalHourCalculate(tasks);
-          // Update parent task estimates in background (async, non-blocking)
-          const parentId = task?.parentid;
-          if (parentId && String(parentId) !== '0') {
-            const rootId = findModuleRecursively(actualTaskDataValue, parentId) || task.moduleid || task?.projectid || parentId;
-            fetchTaskDataFullApi({ taskid: rootId, teamid: '1' })
-              .then(taskData => {
-                if (!taskData || !taskData.rd1) return;
-                const labeledTasks = mapKeyValuePair(taskData);
-                const parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
-                  parentTaskId: parentId,
-                  childTaskId: taskId,
-                  childValues: {
-                    estimate_hrs: formatEstimate(task.estimate_hrs),
-                    estimate1_hrs: formatEstimate(task.estimate1_hrs),
-                    estimate2_hrs: formatEstimate(task.estimate2_hrs),
-                    workinghr: formatEstimate(task.workinghr),
-                  },
-                  isNewChild: false,
-                });
-
-                if (parentSumSplitestimate) {
-                  EstimateCalApi(parentSumSplitestimate)
-                    .catch((err) => {
-                      console.error('Error updating parent estimate:', err);
-                    });
-                }
-              })
-              .catch((err) => {
-                console.error('Error fetching task data for parent estimation:', err);
-              });
-          }
+          // Trigger UI refresh
+          setOpenChildTask(Date.now());
         }
         const currentInput = estimateTextFieldRefs.current[taskId];
         if (currentInput) currentInput.blur();

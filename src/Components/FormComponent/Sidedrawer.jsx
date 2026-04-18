@@ -7,13 +7,6 @@ import {
     Typography,
     IconButton,
     Grid,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    List,
-    ListItem,
-    ListItemText,
     useTheme,
     ToggleButtonGroup,
     ToggleButton,
@@ -21,8 +14,8 @@ import {
 } from "@mui/material";
 import { CircleX, Grid2x2, ListTodo, NotepadTextDashed } from "lucide-react";
 import "./SidebarDrawer.scss";
-import { useRecoilValue, useSetRecoilState } from "recoil";
-import { actualTaskData, fetchlistApiCall, formData, projectDatasRState, rootSubrootflag, TaskData } from "../../Recoil/atom";
+import { useRecoilValue, useRecoilState } from "recoil";
+import { formData, rootSubrootflag, TaskData } from "../../Recoil/atom";
 import dayjs from 'dayjs';
 import utc from "dayjs/plugin/utc";
 import { useLocation } from "react-router-dom";
@@ -40,20 +33,40 @@ import CustomDateTimePicker from "../../Utils/DateComponent/CustomDateTimePicker
 import TemplateDialog from "../Common/TemplateDialog"; // Import TemplateDialog component
 import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
 import { getAdvancedtaseditApi } from "../../Api/MasterApi/AssigneeMaster";
-import { EstimateCalApi } from "../../Api/TaskApi/EstimateCalApi";
-import { fetchTaskDataFullApi } from "../../Api/TaskApi/TaskDataFullApi";
-import { buildAncestorSumSplitestimate } from "../../Utils/estimationUtils";
 
-const findModuleRecursively = (tasks, targetId) => {
-    if (!tasks) return null;
-    for (const t of tasks) {
-        if (String(t.taskid) === String(targetId)) return t.moduleid || t.projectid;
-        if (t.subtasks?.length > 0) {
-            const res = findModuleRecursively(t.subtasks, targetId);
-            if (res) return res;
+const addTaskToParent = (tasks, parentId, newTask) => {
+    if (!tasks) return tasks;
+    return tasks.map(task => {
+        if (String(task.taskid) === String(parentId)) {
+            return {
+                ...task,
+                subtasks: [...(task.subtasks || []), newTask]
+            };
         }
-    }
-    return null;
+        if (task.subtasks?.length > 0) {
+            return {
+                ...task,
+                subtasks: addTaskToParent(task.subtasks, parentId, newTask)
+            };
+        }
+        return task;
+    });
+};
+
+const updateTaskInArray = (tasks, taskId, updatedTask) => {
+    if (!tasks) return tasks;
+    return tasks.map(task => {
+        if (String(task.taskid) === String(taskId)) {
+            return { ...task, ...updatedTask };
+        }
+        if (task.subtasks?.length > 0) {
+            return {
+                ...task,
+                subtasks: updateTaskInArray(task.subtasks, taskId, updatedTask)
+            };
+        }
+        return task;
+    });
 };
 
 const TASK_OPTIONS = [
@@ -84,10 +97,8 @@ const SidebarDrawer = ({
     dayjs.extend(utc);
     dayjs.extend(timezone);
     const formDataValue = useRecoilValue(formData);
-    const taskDataValue = useRecoilValue(TaskData);
-    const actualTaskDataValue = useRecoilValue(actualTaskData);
+    const [taskDataValue, setTaskDataValue] = useRecoilState(TaskData);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
-    const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const [taskType, setTaskType] = useState("single");
     const [decodedData, setDecodedData] = useState(null);
     const [isDuplicateTask, setIsDuplicateTask] = useState(false);
@@ -103,17 +114,6 @@ const SidebarDrawer = ({
     const [isDeadlineEmpty, setIsDeadlineEmpty] = useState(false);
     const [showBulkErrors, setShowBulkErrors] = useState(false);
     const [deadlineMenuSignal, setDeadlineMenuSignal] = useState(0);
-    const [hoursBaseline, setHoursBaseline] = useState({
-        estimate_hrs: 0,
-        estimate1_hrs: 0,
-        estimate2_hrs: 0,
-        workinghr: 0,
-    });
-    const [splitSelectionActive, setSplitSelectionActive] = useState(false);
-    const [splitSelectionMeta, setSplitSelectionMeta] = useState(null);
-    const [splitConfirmOpen, setSplitConfirmOpen] = useState(false);
-    const [pendingSubmitModule, setPendingSubmitModule] = useState(null);
-    const [pendingSplitMeta, setPendingSplitMeta] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false); // TemplateDialog modal state
     const [formValues, setFormValues] = React.useState({
@@ -292,14 +292,6 @@ const SidebarDrawer = ({
         const isAddMode = ["AddTask", "root", "meeting"].includes(rootSubrootflagval?.Task);
         if (open && isAddMode) {
             setDeadlineCleared(false);
-            setHoursBaseline({
-                estimate_hrs: Number(formDataValue?.estimate_hrs ?? 0),
-                estimate1_hrs: Number(formDataValue?.estimate1_hrs ?? 0),
-                estimate2_hrs: Number(formDataValue?.estimate2_hrs ?? 0),
-                workinghr: Number(formDataValue?.workinghr ?? 0),
-            });
-            setSplitSelectionActive(false);
-            setSplitSelectionMeta(null);
             setFormValues(prev => ({
                 ...prev,
                 taskName: formDataValue?.taskname || formDataValue?.title || formDataValue?.meetingtitle || "",
@@ -334,14 +326,6 @@ const SidebarDrawer = ({
             }));
         } else if (rootSubrootflagval?.Task === "subroot") {
             setDeadlineCleared(false);
-            setHoursBaseline({
-                estimate_hrs: Number(formDataValue?.estimate_hrs ?? 0),
-                estimate1_hrs: Number(formDataValue?.estimate1_hrs ?? 0),
-                estimate2_hrs: Number(formDataValue?.estimate2_hrs ?? 0),
-                workinghr: Number(formDataValue?.workinghr ?? 0),
-            });
-            setSplitSelectionActive(false);
-            setSplitSelectionMeta(null);
             setFormValues(prev => ({
                 ...prev,
                 guests: matchedAssignees.length ? matchedAssignees : [loggedAssignee],
@@ -351,124 +335,6 @@ const SidebarDrawer = ({
             }));
         }
     }, [open, formDataValue, rootSubrootflagval, dynamicFilterData]);
-
-    const getSubtaskCountForSplit = () => {
-        const rootTaskId = formDataValue?.taskid;
-        if (!rootTaskId) return 0;
-        const subtasks = actualTaskDataValue.filter(t => String(t.parentid) === String(rootTaskId));
-        return subtasks.length;
-    };
-
-    const getChangedHourFields = () => {
-        const fields = ['estimate_hrs', 'estimate1_hrs', 'estimate2_hrs', 'workinghr'];
-        return fields.filter((field) => {
-            const current = Number(formValues?.[field] ?? 0);
-            const baseline = Number(hoursBaseline?.[field] ?? 0);
-            return current !== baseline;
-        });
-    };
-
-    const buildSplitMeta = () => {
-        const subtaskCount = getSubtaskCountForSplit();
-        const changedFields = getChangedHourFields();
-        if (!subtaskCount || changedFields.length === 0) return null;
-        const perSubtask = changedFields.reduce((acc, field) => {
-            const total = Number(formValues?.[field] ?? 0);
-            const raw = total / subtaskCount;
-            const rounded = Number.isFinite(raw) ? Math.round(raw * 100) / 100 : 0;
-            acc[field] = rounded;
-            return acc;
-        }, {});
-        return { subtaskCount, changedFields, perSubtask };
-    };
-
-    const buildSplitMetaForAllFields = (valuesOverride) => {
-        const subtaskCount = getSubtaskCountForSplit();
-        if (!subtaskCount) return null;
-        const fields = ['estimate_hrs', 'estimate1_hrs', 'estimate2_hrs', 'workinghr'];
-        const source = valuesOverride || formValues;
-        const perSubtask = fields.reduce((acc, field) => {
-            const total = Number(source?.[field] ?? 0);
-            const raw = total / subtaskCount;
-            const rounded = Number.isFinite(raw) ? Math.round(raw * 100) / 100 : 0;
-            acc[field] = rounded;
-            return acc;
-        }, {});
-        return { subtaskCount, changedFields: fields, perSubtask };
-    };
-
-    const splitAndAdjust = (total, count) => {
-        const safeCount = Number(count) || 0;
-        if (safeCount <= 0) return [];
-        const safeTotal = Number(total) || 0;
-        const raw = safeTotal / safeCount;
-        const rounded = Number.isFinite(raw) ? Math.round(raw * 100) / 100 : 0;
-        const out = Array(safeCount).fill(rounded);
-        const sum = Math.round(out.reduce((a, b) => a + b, 0) * 100) / 100;
-        const diff = Math.round((safeTotal - sum) * 100) / 100;
-        out[out.length - 1] = Math.round((out[out.length - 1] + diff) * 100) / 100;
-        return out;
-    };
-
-    const buildSplitEstimateString = (valuesOverride) => {
-        const source = valuesOverride || formValues;
-        const rootTaskId = formDataValue?.taskid ?? source?.taskid ?? "";
-        if (!rootTaskId) return '';
-
-        // Use actualTaskDataValue to get all real subtasks
-        const subtasks = actualTaskDataValue.filter(t => String(t.parentid) === String(rootTaskId));
-
-        const rootNode = {
-            taskid: rootTaskId,
-            subtasks,
-        };
-
-        const formatEstimate = (val) => {
-            const num = Number(val ?? 0);
-            return num % 1 === 0 ? num : Number(num.toFixed(2));
-        };
-
-        const buildEntriesRecursive = (node, totals) => {
-            const nodeId = String(node?.taskid ?? '');
-            if (!nodeId) return [];
-
-            const est = formatEstimate(totals?.estimate);
-            const act = formatEstimate(totals?.actual);
-            const fin = formatEstimate(totals?.final);
-            const work = formatEstimate(totals?.working);
-
-            const currentEntry = `${nodeId}#${est}#${act}#${fin}#${work}`;
-
-            // Use actualTaskDataValue to find all children, ignoring any UI filtering
-            const children = actualTaskDataValue.filter(t => String(t.parentid) === nodeId);
-
-            if (!children.length) return [currentEntry];
-
-            const estSplits = splitAndAdjust(totals?.estimate, children.length);
-            const actSplits = splitAndAdjust(totals?.actual, children.length);
-            const finSplits = splitAndAdjust(totals?.final, children.length);
-            const workSplits = splitAndAdjust(totals?.working, children.length);
-
-            const childEntries = children.flatMap((child, idx) =>
-                buildEntriesRecursive(child, {
-                    estimate: estSplits[idx] ?? 0,
-                    actual: actSplits[idx] ?? 0,
-                    final: finSplits[idx] ?? 0,
-                    working: workSplits[idx] ?? 0,
-                })
-            );
-
-            return [currentEntry, ...childEntries];
-        };
-
-        const entries = buildEntriesRecursive(rootNode, {
-            estimate: Number(source?.estimate_hrs ?? 0) || 0,
-            actual: Number(source?.estimate1_hrs ?? 0) || 0,
-            final: Number(source?.estimate2_hrs ?? 0) || 0,
-            working: Number(source?.workinghr ?? 0) || 0,
-        });
-        return entries.join(',');
-    };
 
     const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);
 
@@ -633,15 +499,10 @@ const SidebarDrawer = ({
     // Handle estimate form value changes
     const handleEstimateChange = (field, newValue) => {
         setFormValues((prev) => {
-            const next = {
+            return {
                 ...prev,
                 [field]: newValue.toString(),
             };
-            if (splitSelectionActive) {
-                const nextMeta = buildSplitMetaForAllFields(next);
-                setSplitSelectionMeta(nextMeta);
-            }
-            return next;
         });
     };
 
@@ -651,6 +512,7 @@ const SidebarDrawer = ({
             bulkTask: updatedTasks,
         }));
     }
+
 
     const getSubmitDeadlineValue = (deadlineOverride) => {
         if (deadlineOverride) return deadlineOverride;
@@ -667,7 +529,7 @@ const SidebarDrawer = ({
         return parsed.isValid() ? parsed.toDate().toISOString() : localValue;
     };
 
-    const submitTask = async (module, deadlineOverride, splitMeta) => {
+    const submitTask = async (module, deadlineOverride) => {
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const assigneeIds = formValues.guests?.map(user => user.id)?.join(",") ?? "";
 
@@ -688,7 +550,6 @@ const SidebarDrawer = ({
         const selectedMainGroupId = structuredAdvData?.find(d => d?.name === selectedMainGroup)?.id;
         const selectedMainGroupid = advMasterData?.find(d => d?.name === selectedMainGroup)?.id;
         const statusValue = statusData?.find(d => d.id === formValues.status);
-
         const updatedFormDataValue = {
             taskid: moduleData?.taskid || formDataValue?.taskid || formValues?.prModule?.taskid || "",
             meetingid: formDataValue?.meetingid ?? "",
@@ -721,60 +582,55 @@ const SidebarDrawer = ({
             bindedMainGroupid: selectedMainGroupId ?? '',
             repeatflag: module?.repeat ? "Repeat" : "",
             parentid: formValues.parentid ?? formDataValue?.parentid,
-            ...(splitMeta && { splitAcrossSubtasks: true, splitMeta })
         };
-
-        const isAddSubtaskMode = rootSubrootflagval?.Task === 'subroot';
-        const isAddTaskMode = rootSubrootflagval?.Task === 'AddTask';
-
-        // If adding a root task, estimation parent is the module/project (from decodedData or prModule)
-        let parentTaskIdForSum = isAddSubtaskMode
-            ? updatedFormDataValue?.taskid
-            : (updatedFormDataValue?.parentid && String(updatedFormDataValue?.parentid) !== '0')
-                ? updatedFormDataValue.parentid
-                : (isAddTaskMode ? (decodedData?.moduleid || decodedData?.projectid || updatedFormDataValue?.moduleid || updatedFormDataValue?.projectid) : null);
-
-        const shouldSumToParent = Boolean(parentTaskIdForSum) && String(parentTaskIdForSum) !== '0';
-
-        let sumChildValues = {
-            estimate_hrs: updatedFormDataValue?.estimate_hrs,
-            estimate1_hrs: updatedFormDataValue?.estimate1_hrs,
-            estimate2_hrs: updatedFormDataValue?.estimate2_hrs,
-            workinghr: updatedFormDataValue?.workinghr,
-        };
-
-        if (taskType === 'multi_input' && updatedFormDataValue.bulkTask?.length > 0) {
-            const bulkTotal = updatedFormDataValue.bulkTask.reduce((acc, t) => {
-                acc.estimate_hrs += parseFloat(t.estimate || 0);
-                return acc;
-            }, { estimate_hrs: 0, estimate1_hrs: 0, estimate2_hrs: 0, workinghr: 0 });
-            sumChildValues = bulkTotal;
-        }
-
+       
         try {
-            let parentSumSplitestimate = '';
-            if (shouldSumToParent) {
-                const foundModuleId = findModuleRecursively(actualTaskDataValue, parentTaskIdForSum);
-                const rootId = foundModuleId || updatedFormDataValue?.projectid || decodedData?.taskid || updatedFormDataValue?.parentid || parentTaskIdForSum;
-
-                const taskData = await fetchTaskDataFullApi({ taskid: rootId, teamid: '1' });
-                if (taskData && taskData.rd1) {
-                    const labeledTasks = mapKeyValuePair(taskData);
-                    parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
-                        parentTaskId: parentTaskIdForSum,
-                        childTaskId: isAddSubtaskMode ? '' : updatedFormDataValue?.taskid,
-                        childValues: sumChildValues,
-                        isNewChild: isAddSubtaskMode || isAddTaskMode || taskType === 'multi_input',
-                    });
-                }
-            }
-
             const submitResult = await onSubmit(updatedFormDataValue, { mode: taskType }, module);
             if (submitResult?.rd?.[0]?.stat === 1) {
-                if (parentSumSplitestimate) {
-                    await EstimateCalApi(parentSumSplitestimate).catch(err => console.error('Error updating parent estimate:', err));
+                const responseTaskId = submitResult?.rd?.[0]?.taskid;
+                const responseParentId = submitResult?.rd?.[0]?.parentid;
+
+                if (responseTaskId) {
+                    // Handle bulk task creation (comma-separated values)
+                    const taskIds = responseTaskId.toString().split(',').map(id => id.trim());
+                    const taskNos = submitResult?.rd?.[0]?.taskno ? submitResult.rd[0].taskno.toString().split(',').map(no => no.trim()) : [];
+
+                    let updatedTasks = taskDataValue;
+
+                    taskIds.forEach((taskId, index) => {
+                        // For bulk tasks, use individual task data from bulkTask array
+                        const individualTaskData = taskType === 'multi_input' && updatedFormDataValue?.bulkTask?.[index]
+                            ? {
+                                taskname: updatedFormDataValue.bulkTask[index].taskName,
+                                DeadLineDate: updatedFormDataValue.bulkTask[index].deadLineDate,
+                                estimate_hrs: updatedFormDataValue.bulkTask[index].estimate,
+                                ismilestone: updatedFormDataValue.bulkTask[index].milestone,
+                            }
+                            : updatedFormDataValue;
+
+                        console.log("individualTaskData", individualTaskData)
+
+                        const taskWithId = {
+                            ...individualTaskData,
+                            taskid: taskId,
+                            parentid: responseParentId || individualTaskData?.parentid || 0,
+                            ...(taskNos[index] && taskNos[index] !== null && taskNos[index] !== undefined ? { taskno: taskNos[index] } : {})
+                        };
+
+                        if (responseParentId && responseParentId !== 0) {
+                            // New task added as subtask - add to parent's subtasks
+                            updatedTasks = addTaskToParent(updatedTasks, responseParentId, taskWithId);
+                        } else if (individualTaskData?.taskid) {
+                            // Existing task update - update in place
+                            updatedTasks = updateTaskInArray(updatedTasks, individualTaskData.taskid, taskWithId);
+                        } else {
+                            // New root task - add to top level
+                            updatedTasks = [...updatedTasks, taskWithId];
+                        }
+                    });
+
+                    setTaskDataValue(updatedTasks);
                 }
-                setOpenChildTask(Date.now());
                 handleClear();
             } else {
                 console.error("Sidedrawer: Task submit failed", submitResult);
@@ -812,61 +668,10 @@ const SidebarDrawer = ({
                 }
                 setShowBulkErrors(false);
             }
-            const subtaskCount = getSubtaskCountForSplit();
-            const isAddingSubtask = rootSubrootflagval?.Task === 'subroot';
-
-            // Skip split dialog when adding a new subtask - just sum to parent
-            if (isAddingSubtask) {
-                await submitTask(module);
-                return;
-            }
-
-            if (taskType === 'single' && splitSelectionActive && subtaskCount > 0) {
-                const splitestimate = buildSplitEstimateString();
-                EstimateCalApi(splitestimate).catch((err) => console.error(err));
-                // Removed redundant setOpenChildTask(true) here as submitTask handles it
-                const splitMeta = buildSplitMetaForAllFields();
-                await submitTask(module, undefined, splitMeta);
-                return;
-            }
-            const changedFields = getChangedHourFields();
-            if (taskType === 'single' && subtaskCount > 0 && changedFields.length > 0) {
-                const splitestimate = buildSplitEstimateString();
-                const splitMeta = buildSplitMeta();
-                setPendingSplitMeta(splitMeta);
-                setPendingSubmitModule(module ?? null);
-                setSplitConfirmOpen(true);
-                return;
-            }
             await submitTask(module);
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const handleSplitConfirmClose = () => {
-        setSplitConfirmOpen(false);
-        setPendingSubmitModule(null);
-        setPendingSplitMeta(null);
-    };
-
-    const handleSplitConfirmCancel = () => {
-        setFormValues((prev) => ({
-            ...prev,
-            estimate_hrs: hoursBaseline?.estimate_hrs ?? 0,
-            estimate1_hrs: hoursBaseline?.estimate1_hrs ?? 0,
-            estimate2_hrs: hoursBaseline?.estimate2_hrs ?? 0,
-        }));
-        setSplitSelectionActive(false);
-        setSplitSelectionMeta(null);
-        handleSplitConfirmClose();
-    };
-
-    const handleSplitConfirmSplitEqually = () => {
-        const splitMeta = buildSplitMetaForAllFields();
-        setSplitSelectionActive(true);
-        setSplitSelectionMeta(splitMeta);
-        handleSplitConfirmClose();
     };
 
     const handleClear = () => {
@@ -879,8 +684,6 @@ const SidebarDrawer = ({
         const logedAssignee = getUserProfileData()
         setDeadlineCleared(false);
         setIsDeadlineEmpty(false);
-        setSplitSelectionActive(false);
-        setSplitSelectionMeta(null);
         setFormValues({
             taskName: "",
             bulkTask: [],
@@ -1194,8 +997,6 @@ const SidebarDrawer = ({
                                             handleChange={handleChange}
                                             handleDateChange={handleDateChange}
                                             handleEstimateChange={handleEstimateChange}
-                                            splitHintMeta={splitSelectionMeta}
-                                            showSplitHint={splitSelectionActive && getSubtaskCountForSplit() > 0}
                                             handlebulkTaskSave={handlebulkTaskSave}
                                             openDeadlineMenuSignal={deadlineMenuSignal}
                                             isTaskNameEmpty={isTaskNameEmpty}
@@ -1284,121 +1085,6 @@ const SidebarDrawer = ({
                     </>
                 )}
             </Drawer>
-
-            <Dialog
-                open={splitConfirmOpen}
-                onClose={handleSplitConfirmCancel}
-                maxWidth="sm"
-                fullWidth
-                sx={{ '& .MuiDialog-paper': { borderRadius: 3 } }}
-            >
-                <DialogTitle sx={{ fontWeight: 600 }}>
-                    Split Hours Across Subtasks
-                </DialogTitle>
-
-                <DialogContent dividers>
-                    {/* Info Box */}
-                    <Box
-                        sx={{
-                            mb: 2,
-                            p: 1.5,
-                            borderRadius: 2,
-                            bgcolor: theme.palette.action.hover,
-                        }}
-                    >
-                        <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
-                            This task has {pendingSplitMeta?.subtaskCount ?? 0} subtasks
-                        </Typography>
-
-                        <Typography variant="body2" color="text.secondary">
-                            You changed the parent task hours. Choose how you want to apply
-                            these changes to subtasks.
-                        </Typography>
-                    </Box>
-
-                    {/* Changed Fields */}
-                    {!!pendingSplitMeta?.changedFields?.length && (
-                        <Box sx={{ mt: 0.5 }}>
-                            <Grid container spacing={1}>
-                                {[
-                                    { label: 'Estimate', field: 'estimate_hrs' },
-                                    { label: 'Actual Estimate', field: 'estimate1_hrs' },
-                                    { label: 'Final Estimate', field: 'estimate2_hrs' },
-                                ].map(({ label, field }) => {
-                                    const subtaskCount = Number(pendingSplitMeta?.subtaskCount || 0);
-                                    const total = Number(formValues?.[field] || 0);
-                                    const perSubtaskRaw = pendingSplitMeta?.perSubtask?.[field];
-                                    const perSubtask = Number(
-                                        perSubtaskRaw ?? (subtaskCount ? total / subtaskCount : 0)
-                                    );
-                                    const isChanged = Boolean(pendingSplitMeta?.changedFields?.includes(field));
-
-                                    return (
-                                        <Grid item xs={4} key={field}>
-                                            <Box
-                                                sx={{
-                                                    p: 1,
-                                                    borderRadius: 2,
-                                                    border: `1px solid ${theme.palette.divider}`,
-                                                    bgcolor: theme.palette.background.paper,
-                                                    opacity: isChanged ? 1 : 0.55,
-                                                }}
-                                            >
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        display: 'block',
-                                                        fontWeight: 600,
-                                                        color: 'text.secondary',
-                                                        mb: 0.25,
-                                                    }}
-                                                >
-                                                    {label}
-                                                </Typography>
-
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{ fontWeight: 600, lineHeight: 1.25 }}
-                                                >
-                                                    {total} hrs
-                                                </Typography>
-
-                                                <Typography
-                                                    variant="caption"
-                                                    color="text.secondary"
-                                                    sx={{ display: 'block', lineHeight: 1.2, mt: 0.25 }}
-                                                >
-                                                    Per subtask: <span style={{ fontWeight: 600 }}>{perSubtask} hrs</span>
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                    );
-                                })}
-                            </Grid>
-                        </Box>
-                    )}
-                </DialogContent>
-
-                <DialogActions sx={{ px: 3, py: 2 }}>
-                    <Button
-                        onClick={handleSplitConfirmCancel}
-                        variant="outlined"
-                        className="secondaryBtnClassname"
-                        sx={{ minWidth: 140 }}
-                    >
-                        Cancel & Revert
-                    </Button>
-
-                    <Button
-                        onClick={handleSplitConfirmSplitEqually}
-                        variant="contained"
-                        className="buttonClassname"
-                        sx={{ minWidth: 160 }}
-                    >
-                        Split Equally
-                    </Button>
-                </DialogActions>
-            </Dialog>
 
             <TemplateDialog
                 open={templateDialogOpen}

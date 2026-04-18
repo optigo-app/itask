@@ -298,7 +298,7 @@ const HeaderButtons = ({
               <FilterAltIcon className="iconbtn" color="#0000008a" size={20} />
             </IconButton>
           </Tooltip>
-          {location?.pathname?.includes("/tasks") && (
+          {/* {location?.pathname?.includes("/tasks") && (
             <Tooltip
               placement="top"
               title={archiveFlag ? "Exclude Archive tasks" : "Include Archive Task"}
@@ -330,7 +330,7 @@ const HeaderButtons = ({
                 </IconButton>
               ) : null}
             </Tooltip>
-          )}
+          )} */}
 
           {location?.pathname?.includes("/tasks") && (
             <Tooltip

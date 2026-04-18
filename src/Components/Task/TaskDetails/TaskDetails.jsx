@@ -25,8 +25,6 @@ import { PERMISSIONS } from '../../Auth/Role/permissions';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
 import { fetchTaskDataFullApi } from '../../../Api/TaskApi/TaskDataFullApi';
-import { EstimateCalApi } from '../../../Api/TaskApi/EstimateCalApi';
-import { buildAncestorSumSplitestimate } from '../../../Utils/estimationUtils';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
 import CommentSection from '../../ShortcutsComponent/Comment/TaskComment';
 import SubtaskCard from './SubTaskcard';
@@ -124,59 +122,10 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
         setCnfDialogOpen(false);
         setIsDeleting(true);
         try {
-            const parentId = formDataValue?.parentid;
-            let parentSumSplitestimate = '';
-            const parentTaskIdForSum = formDataValue?.parentid;
-            if (parentId && String(parentId) !== '0') {
-                let foundModuleId = null;
-                if (actualTaskDataValue) {
-                    const findModuleRecursively = (tasks, targetId) => {
-                        for (const t of tasks) {
-                            if (String(t.taskid) === String(targetId)) return t.moduleid || t.projectid;
-                            if (t.subtasks?.length > 0) {
-                                const res = findModuleRecursively(t.subtasks, targetId);
-                                if (res) return res;
-                            }
-                        }
-                        return null;
-                    };
-                    foundModuleId = findModuleRecursively(actualTaskDataValue, parentTaskIdForSum);
-                }
-
-                const rootId = foundModuleId || formDataValue?.parentId || parentId;
-                try {
-                    const taskData = await fetchTaskDataFullApi({ taskid: rootId, teamid: '1' });
-                    if (taskData && taskData.rd1) {
-                        const labeledTasks = mapKeyValuePair(taskData);
-                        parentSumSplitestimate = buildAncestorSumSplitestimate(labeledTasks, {
-                            parentTaskId: parentId,
-                            childTaskId: formDataValue.taskid,
-                            isDelete: true,
-                            childValues: {
-                                estimate_hrs: formatEstimate(formDataValue.estimate_hrs),
-                                estimate1_hrs: formatEstimate(formDataValue.estimate1_hrs),
-                                estimate2_hrs: formatEstimate(formDataValue.estimate2_hrs),
-                                workinghr: formatEstimate(formDataValue.workinghr),
-                            }
-                        });
-                    }
-                } catch (err) {
-                    console.error('Error fetching data for parent estimation before delete:', err);
-                }
-            }
-
             const deleteTaskApi = await deleteTaskDataApi(formDataValue);
             if (deleteTaskApi?.rd[0]?.stat === 1) {
                 const updatedTaskArr = removeTaskRecursively(taskArr, formDataValue.taskid);
                 setTaskArr(updatedTaskArr);
-
-                if (parentSumSplitestimate) {
-                    try {
-                        await EstimateCalApi(parentSumSplitestimate);
-                    } catch (err) {
-                        console.error('Error updating parent estimate after delete:', err);
-                    }
-                }
 
                 setOpenChildTask(Date.now());
                 setFormDrawerOpen(false);
