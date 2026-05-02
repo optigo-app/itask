@@ -97,6 +97,7 @@ const HeaderButtons = ({
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
   const [viewTaskMode, setViewTaskMode] = useRecoilState(viewMode);
   const archiveFlag = useRecoilValue(archivedTask);
+  const completedFlag = useRecoilValue(completedTask);
   const encodedData = searchParams.get("data");
   const [parsedData, setParsedData] = useState();
   const [categoryMaster, setCategoryMaster] = useState([]);
@@ -295,7 +296,7 @@ const HeaderButtons = ({
                 },
               }}
             >
-              <FilterAltIcon className="iconbtn" color="#0000008a" size={20} />
+              <FilterAltIcon className="iconbtn" color="#0000008a" fontSize="20px" />
             </IconButton>
           </Tooltip>
           {/* {location?.pathname?.includes("/tasks") && (
@@ -331,6 +332,34 @@ const HeaderButtons = ({
               ) : null}
             </Tooltip>
           )} */}
+
+          {location?.pathname?.includes("/tasks") && (
+            <Tooltip
+              placement="top"
+              title={completedFlag ? "Hide completed tasks" : "Show completed tasks"}
+              arrow
+              classes={{ tooltip: "custom-tooltip" }}
+            >
+              <IconButton
+                aria-label="Completed tasks"
+                onClick={handleCompletedTaskFilter}
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: '4px',
+                  backgroundColor: completedFlag ? "#28C76F" : "white",
+                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                  "&:hover": {
+                    backgroundColor: "#f5f5f5",
+                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                  },
+                }}
+              >
+                <CircleCheck className="iconbtn" color={completedFlag ? "#ffff" : "#0000008a"} size={22} />
+              </IconButton>
+            </Tooltip>
+          )}
 
           {location?.pathname?.includes("/tasks") && (
             <Tooltip

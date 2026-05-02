@@ -8,6 +8,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import {
   actualTaskData,
   archivedTask,
+  completedTask,
   fetchlistApiCall,
   projectDatasRState,
   TaskData,
@@ -32,10 +33,40 @@ const useFullTaskFormatFile = () => {
   const [taskBugPriorityData, setTaskBugPriorityData] = useState([]);
   const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
   const archivedFlag = useRecoilValue(archivedTask);
+  const completedFlag = useRecoilValue(completedTask);
   const tasks = useRecoilValue(TaskData);
   const project = useRecoilValue(projectDatasRState);
   const searchParams = new URLSearchParams(location.search);
   const encodedData = searchParams.get("data");
+
+  const statusById = useMemo(
+    () => new Map((statusData || []).map((item) => [Number(item?.id), item?.labelname || ""])),
+    [statusData]
+  );
+  const secStatusById = useMemo(
+    () => new Map((secStatusData || []).map((item) => [Number(item?.id), item?.labelname || ""])),
+    [secStatusData]
+  );
+  const priorityById = useMemo(
+    () => new Map((priorityData || []).map((item) => [Number(item?.id), item?.labelname || ""])),
+    [priorityData]
+  );
+  const projectById = useMemo(
+    () => new Map((taskProject || []).map((item) => [Number(item?.id), item?.labelname || ""])),
+    [taskProject]
+  );
+  const departmentById = useMemo(
+    () => new Map((taskDepartment || []).map((item) => [Number(item?.id), item?.labelname || ""])),
+    [taskDepartment]
+  );
+  const categoryById = useMemo(
+    () => new Map((taskCategory || []).map((item) => [Number(item?.id), item?.labelname || ""])),
+    [taskCategory]
+  );
+  const assigneeById = useMemo(
+    () => new Map((taskAssigneeData || []).map((item) => [Number(item?.id), item])),
+    [taskAssigneeData]
+  );
 
   const retrieveAndSetData = (key, setter) => {
     const data = sessionStorage.getItem(key);
@@ -108,6 +139,7 @@ const useFullTaskFormatFile = () => {
       const taskData = await fetchTaskDataFullApi({
         ...(parsedData || {}),
         isarchive: archivedFlag ? 1 : 0,
+        isCompleted: completedFlag ? 1 : 0,
       });
       if (taskData?.rd[0]?.stat == 0) {
         setIsWhTLoading(false);
@@ -115,45 +147,39 @@ const useFullTaskFormatFile = () => {
       }
       const labeledTasks = mapKeyValuePair(taskData);
       const enhanceTask = (task) => {
-        const priority = priorityData?.find(
-          (item) => item?.id == task?.priorityid
-        );
-        const status = statusData?.find((item) => item?.id == task?.statusid);
-        const secstatus = secStatusData?.find((item) => item?.id == task?.secstatusid);
-
-        const project = taskProject?.find(
-          (item) => item?.id == task?.projectid
-        );
-        const department = taskDepartment?.find(
-          (item) => item?.id == task?.departmentid
-        );
-        const category = taskCategory?.find(
-          (item) => item?.id == task?.workcategoryid
-        );
+        const priority = priorityById.get(Number(task?.priorityid));
+        const status = statusById.get(Number(task?.statusid));
+        const secstatus = secStatusById.get(Number(task?.secstatusid));
+        const project = projectById.get(Number(task?.projectid));
+        const department = departmentById.get(Number(task?.departmentid));
+        const category = categoryById.get(Number(task?.workcategoryid));
         const assigneeIdArray = task?.assigneids
+          ?.toString()
           ?.split(",")
           ?.map((id) => Number(id));
 
         const readonlyMapping = parseIsReadonlyString(task.isreadonly);
-        const matchedAssignees = taskAssigneeData
-          ?.filter((user) => assigneeIdArray?.includes(user.id))
-          ?.map((user) => ({
+        const matchedAssignees = (assigneeIdArray || [])
+          .map((id) => assigneeById.get(id))
+          .filter(Boolean)
+          .map((user) => ({
             ...user,
             isreadonly: readonlyMapping[user.id] ?? 0,
           }));
         return {
           ...task,
-          priority: priority ? priority?.labelname : "",
-          status: status ? status?.labelname : "",
-          secStatus: secstatus ? secstatus?.labelname : "",
-          taskPr: project ? project?.labelname : "",
-          taskDpt: department ? department?.labelname : "",
+          priority: priority || "",
+          status: status || "",
+          secStatus: secstatus || "",
+          taskPr: project || "",
+          taskDpt: department || "",
           assignee: matchedAssignees ?? [],
-          category: category?.labelname,
+          category: category,
         };
       };
       const data = labeledTasks?.map((task) => enhanceTask(task));
       const finalTaskData = formatDataToTree(data, parsedData, 'Today');
+
       setTaskFinalData(finalTaskData);
       setActualData(data);
     } catch (error) {
@@ -183,13 +209,18 @@ const useFullTaskFormatFile = () => {
 
     data?.forEach((task) => {
       task.subtasks = [];
-      taskMap.set(task.taskid, task);
+      const taskId = Number(task.taskid);
+      if (!Number.isNaN(taskId)) {
+        taskMap.set(taskId, task);
+      }
+      taskMap.set(String(task.taskid), task);
     });
 
     // Build subtask relationships
     data?.forEach((task) => {
-      if (task.parentid !== 0) {
-        const parent = taskMap.get(task.parentid);
+      const parentIdNum = Number(task.parentid);
+      if (!Number.isNaN(parentIdNum) && parentIdNum !== 0) {
+        const parent = taskMap.get(parentIdNum) || taskMap.get(String(task.parentid));
         if (parent) parent.subtasks.push(task);
       }
     });
@@ -411,11 +442,33 @@ const useFullTaskFormatFile = () => {
 
       // Determine TaskData based on parsedData
       let TaskData;
-      if (parsedData?.taskid) {
-        const matchedTask = data.find(task => task.taskid === parsedData.taskid);
+      if (parsedData?.fromFullTaskView && parsedData?.taskid) {
+        const rootTaskId = Number(parsedData?.roottaskid || parsedData?.moduleid);
+        const rootFromUrl = rootTaskId
+          ? taskMap.get(rootTaskId) || taskMap.get(String(parsedData?.roottaskid || parsedData?.moduleid))
+          : null;
+        if (rootFromUrl) {
+          TaskData = [rootFromUrl];
+        } else {
+          const selectedTask = taskMap.get(Number(parsedData.taskid)) || taskMap.get(String(parsedData.taskid));
+          if (selectedTask) {
+            let rootTask = selectedTask;
+            while (rootTask?.parentid && Number(rootTask.parentid) !== 0) {
+              const parentTask = taskMap.get(Number(rootTask.parentid)) || taskMap.get(String(rootTask.parentid));
+              if (!parentTask) break;
+              rootTask = parentTask;
+            }
+            TaskData = [rootTask];
+          } else {
+            TaskData = data.filter(task => Number(task.parentid) === 0);
+          }
+        }
+      } else if (parsedData?.taskid) {
+        const selectedTaskId = Number(parsedData.taskid);
+        const matchedTask = taskMap.get(selectedTaskId) || taskMap.get(String(parsedData.taskid));
         TaskData = matchedTask ? [matchedTask] : [];
       } else {
-        TaskData = data.filter(task => task.parentid === 0);
+        TaskData = data.filter(task => Number(task.parentid) === 0);
       }
 
       TaskData.forEach((task) => applyFreezeRulesToSubtree(task, task?.isFreez == 1 ? 1 : 0));
@@ -459,6 +512,9 @@ const useFullTaskFormatFile = () => {
   }, []);
 
   useEffect(() => {
+    if (callFetchTaskApi === false) {
+      return;
+    }
     if (
       priorityData &&
       statusData &&
@@ -477,6 +533,7 @@ const useFullTaskFormatFile = () => {
     taskCategory,
     taskAssigneeData,
     archivedFlag,
+    completedFlag,
     callFetchTaskApi,
     location.pathname,
   ]);

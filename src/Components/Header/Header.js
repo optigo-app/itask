@@ -271,6 +271,7 @@ const useDataMap = (location, decodedData) => {
         "/teamCalReport": { title: "Team Calendar Report", subtitle: "View All your Team Calendar Reports here" },
         "/notification": { title: "Notification", subtitle: "View All your notification here" },
         "/taskView": { title: "Today Tasks", subtitle: "View All your Today Tasks here" },
+        "/fullTask": { title: "Full Task View", subtitle: "View All your Full Task View here" },
     };
 
     const decodedPathname = decodeURIComponent(location?.pathname);

@@ -43,6 +43,7 @@ const Calendar = lazy(() => import('./Pages/Calendar/CalendarPage'));
 const CalendarGridView = lazy(() => import('./Pages/Calendar/CalendarGridView'));
 const Meeting = lazy(() => import('./Pages/Meeting/Meeting'));
 const Task = lazy(() => import('./Pages/Task/Task'));
+const FullTaskView = lazy(() => import('./Components/Task/FullTaskView/FullTaskView'));
 const Project = lazy(() => import('./Pages/Project/Project'));
 const Masters = lazy(() => import('./Pages/Master/Masters'));
 const TaskDetails = lazy(() => import('./Components/Task/TaskDetails/TaskDetails'));
@@ -321,6 +322,7 @@ const AppWrapper = () => {
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
                                         <Route path="/reports/pms" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport /></ProtectedRoute>} />
                                         <Route path="/reports/pms-2" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport2 /></ProtectedRoute>} />
+                                        <Route path="/fullTask" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><FullTaskView /></ProtectedRoute>} />
                                         <Route path="/teamCalReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1009"><CalendarReport /></ProtectedRoute>} />
                                         <Route path="/milestoneReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1010"><ModuleMilestoneReport /></ProtectedRoute>} />
                                         <Route path="/bugtrack" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1010"><BugTracking /></ProtectedRoute>} />
@@ -358,8 +360,8 @@ const appTheme = createTheme({
 const App = () => (
     <RecoilRoot>
         <ThemeProvider theme={appTheme}>
-            {/* <Router basename="/itaskweb"> */}
-            <Router>
+            <Router basename="/itaskweb">
+            {/* <Router> */}
                 <AppWrapper />
             </Router>
         </ThemeProvider>

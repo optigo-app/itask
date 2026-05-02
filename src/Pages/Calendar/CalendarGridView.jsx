@@ -189,8 +189,8 @@ const CalendarGridView = () => {
   const handleTotalHourCalculate = (tasks) => {
     const total = tasks?.reduce(
       (acc, task) => {
-        acc.estimate += parseFloat(task.estimate_hrs) || 0;
-        acc.working += parseFloat(task.workinghr) || 0;
+        acc.estimate += parseFloat(task?.estimate_hrs) || 0;
+        acc.working += parseFloat(task?.workinghr) || 0;
         return acc;
       },
       { estimate: 0, working: 0 }
@@ -369,8 +369,6 @@ const CalendarGridView = () => {
         if (apiRes) {
           toast.success('Task working hrs added successfully!');
           handleTotalHourCalculate(tasks);
-          // Trigger UI refresh
-          setOpenChildTask(Date.now());
         }
         const currentInput = estimateTextFieldRefs.current[taskId];
         if (currentInput) currentInput.blur();

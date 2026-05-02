@@ -5,7 +5,7 @@ export default function useSafeRedirect() {
   const controllerRef = useRef(null);
   const navigate = useNavigate();
 
-  const safeRedirect = (path) => {
+  const safeRedirect = (path, options = {}) => {
     // Abort previous redirect if any
     if (controllerRef.current) {
       controllerRef.current.abort();
@@ -15,12 +15,15 @@ export default function useSafeRedirect() {
     controllerRef.current = new AbortController();
     const signal = controllerRef.current.signal;
 
-    // Very small delay to ensure async cleanup (optional)
-    setTimeout(() => {
-      if (!signal.aborted) {
-        navigate(path);
-      }
-    }, 10);
+    window.dispatchEvent(
+      new CustomEvent("app:route-change-start", {
+        detail: { path },
+      })
+    );
+
+    if (!signal.aborted) {
+      navigate(path, options);
+    }
   };
 
   return safeRedirect;
