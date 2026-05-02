@@ -1,0 +1,263 @@
+@import '../../../theme/variable.scss';
+
+.fullTaskReportMain {
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px;
+    padding: 20px;
+    border-radius: 8px;
+    overflow: hidden !important;
+
+    .muiTableTaContainer {
+        box-shadow: $box-shadow-value !important;
+        border-radius: 8px !important;
+        max-height: calc(100vh - 270px);
+        overflow-y: auto;
+
+        .muiTable {
+            .muiTableHead {
+                background: #f5f5f5;
+                position: sticky;
+                top: 0;
+                z-index: 2;
+            }
+
+            .MuiTableCell-root {
+                padding: 8px;
+                font-family: $font-family !important;
+                color: $text2ndColor !important;
+            }
+
+            .fullPathCell {
+                max-width: 520px;
+            }
+
+            .fullPathText {
+                display: flex;
+                align-items: center;
+                max-width: 100%;
+
+                .fullPathPrefix {
+                    min-width: 0;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    font-weight: 400;
+                }
+
+                .fullPathEllipsis {
+                    margin: 0 4px;
+                    font-weight: 400;
+                    flex-shrink: 0;
+                }
+
+                .fullPathLast {
+                    font-weight: 700;
+                    white-space: nowrap;
+                    flex-shrink: 0;
+                    color: $primary-main;
+                    cursor: pointer;
+                    transition: text-decoration 0.15s ease;
+
+                    &:hover {
+                        text-decoration: underline;
+                        color: $primary-main !important;
+                    }
+                }
+            }
+
+            .taskMetaRow {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-top: 4px;
+                flex-wrap: wrap;
+
+                .taskMetaCategory {
+                    color: #6b7280;
+                    font-size: 11px;
+                    background: #f3f4f6;
+                    padding: 1px 6px;
+                    border-radius: 3px;
+                }
+
+                .status-badge,
+                .priority-badge {
+                    font-size: 10px;
+                    padding: 2px 6px;
+                }
+            }
+
+            .MuiTypography-root {
+                color: $text2ndColor !important;
+                font-size: 14px;
+            }
+        }
+    }
+
+    .calendar-filter {
+        margin-bottom: 12px;
+
+        .filter-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            flex-wrap: wrap;
+            overflow: visible;
+            padding-bottom: 0;
+        }
+
+        .form-group {
+            margin-bottom: 0px !important;
+            flex-shrink: 1;
+        }
+
+        .filterAutocomplete {
+            .MuiAutocomplete-endAdornment {
+                right: 8px;
+            }
+        }
+
+        .presetMenuTrigger {
+            width: fit-content;
+            min-height: 38px;
+            border-radius: 999px !important;
+            border: 1px solid #e5e7eb !important;
+            justify-content: space-between;
+            text-transform: none;
+            font-size: 13px;
+            font-weight: 500;
+
+            &:hover {
+                border-color: #7367f0 !important;
+                background: #fff !important;
+            }
+        }
+
+        .dueDateActionWrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px;
+
+            .dueDateToggleBtn {
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                border: 1px solid #d1d5db;
+                color: #6b7280;
+                background: #fff;
+
+                &:hover {
+                    border-color: #7367f0;
+                    color: #7367f0;
+                    background: #f5f3ff;
+                }
+
+                &.active {
+                    border-color: #7367f0;
+                    color: #fff;
+                    background: #7367f0;
+                }
+            }
+        }
+
+        .dueDateFilterWrap {
+
+            .custom-date-range-trigger,
+            .custom-date-range-value {
+                min-height: 38px;
+                border-radius: 999px;
+            }
+        }
+
+        .summaryCard {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+
+            .summaryBox {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                min-width: 150px;
+                padding: 6px 10px;
+                background-color: #f9fafb;
+                border-radius: 8px;
+                border: 1px solid #e5e7eb;
+                line-height: 1;
+
+                .label {
+                    color: #6b7280;
+                    font-size: 13px;
+                    font-weight: 500;
+                    white-space: nowrap;
+                    margin-left: 0px;
+                }
+
+                .value {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: $titleColor;
+                    white-space: nowrap;
+                }
+            }
+
+        }
+
+        .meetingAssigneBox {
+            input {
+                height: 22px;
+            }
+        }
+
+        button {
+            text-transform: none;
+        }
+
+        // Navigation container styles
+        .navigation-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        // Navigation button styles
+        .nav-button {
+            padding: 2px;
+            background-color: #fff !important;
+            border: 1px solid #ddd !important;
+            border-radius: 6px !important;
+            transition: all 0.2s ease !important;
+
+            &:hover {
+                background-color: #7367f0 !important;
+                color: #fff !important;
+                border-color: #7367f0 !important;
+            }
+
+            .MuiSvgIcon-root {
+                font-size: 1.15rem;
+            }
+        }
+
+        // Date display styles
+        .date-display {
+            min-width: 120px;
+            text-align: center;
+            padding: 5px 8px;
+            background-color: #fff;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+
+    }
+
+}

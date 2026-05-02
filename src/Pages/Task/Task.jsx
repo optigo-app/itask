@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import "./Task.scss";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
@@ -70,6 +70,8 @@ const Task = () => {
     taskAssigneeData } = useFullTaskFormatFile();
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(true);
   const [localTaskEdits, setLocalTaskEdits] = useState({});
+  const processingCancelledRef = useRef(false);
+  const processingTimerRef = useRef(null);
 
   useEffect(() => {
     setTasks([]);
@@ -77,6 +79,29 @@ const Task = () => {
   }, [location.pathname]);
 
   useEffect(() => {
+    const cancelCurrentProcessing = () => {
+      processingCancelledRef.current = true;
+      if (processingTimerRef.current) {
+        clearTimeout(processingTimerRef.current);
+        processingTimerRef.current = null;
+      }
+      setTasks([]);
+      setCategoryTSummary([]);
+      setArchiveTasks([]);
+    };
+
+    window.addEventListener("app:route-change-start", cancelCurrentProcessing);
+    return () => {
+      window.removeEventListener("app:route-change-start", cancelCurrentProcessing);
+    };
+  }, [setTasks]);
+
+  useEffect(() => {
+    processingCancelledRef.current = false;
+    if (processingTimerRef.current) {
+      clearTimeout(processingTimerRef.current);
+      processingTimerRef.current = null;
+    }
     const activeTab = localStorage?.getItem('activeTaskTab');
 
     const decodeData = () => {
@@ -93,24 +118,48 @@ const Task = () => {
     const parsedData = decodeData();
     setParsedDataObj(parsedData);
     const userId = userProfile?.id;
+    const hasLocalEdits = Object.keys(localTaskEdits || {}).length > 0;
 
     const applyLocalEditsRecursively = (task) => {
       const edits = localTaskEdits[task.taskid] || {};
+      const nextSubtasks = task.subtasks?.map(applyLocalEditsRecursively) || [];
+      const hasSubtaskChanges = nextSubtasks.some((sub, idx) => sub !== task.subtasks?.[idx]);
+      if (!hasSubtaskChanges && Object.keys(edits).length === 0) {
+        return task;
+      }
       return {
         ...task,
         ...edits,
-        subtasks: task.subtasks?.map(applyLocalEditsRecursively) || [],
+        subtasks: nextSubtasks,
       };
     };
+
     const processTasks = (tasks) => {
-      let output = tasks || [];
-      if (activeTab === "bugview") {
-        output = filterTasksByValidTaskNo(output);
+      const run = () => {
+        if (processingCancelledRef.current) return;
+
+        let output = tasks || [];
+        if (activeTab === "bugview") {
+          output = filterTasksByValidTaskNo(output);
+        }
+
+        if (hasLocalEdits) {
+          output = output.map(applyLocalEditsRecursively);
+        }
+
+        const summary = getCategoryTaskSummary(output, taskCategory);
+        if (processingCancelledRef.current) return;
+
+        setCategoryTSummary(summary);
+        setTasks(activeTab === "bugview" ? flattenTasks(output) : output);
+      };
+
+      const shouldDefer = (tasks?.length || 0) > 300;
+      if (shouldDefer) {
+        processingTimerRef.current = setTimeout(run, 0);
+      } else {
+        run();
       }
-      output = output.map(applyLocalEditsRecursively);
-      const summary = getCategoryTaskSummary(output, taskCategory);
-      setCategoryTSummary(summary);
-      setTasks(activeTab === "bugview" ? flattenTasks(output) : output);
     };
 
     const rawTaskData = activeTab !== "bugview"
@@ -119,29 +168,42 @@ const Task = () => {
 
     if (!parsedData) {
       processTasks(rawTaskData);
-      return;
-    }
-
-    if (parsedData?.taskid) {
+    } else if (parsedData?.taskid) {
       const matchedTask = rawTaskData?.find(t => t.taskid === parsedData.taskid);
 
       if (matchedTask) {
         let subtasks = matchedTask.subtasks || [];
         subtasks = filterNestedTasksByView(subtasks, meTeamView, userId);
         processTasks(subtasks);
-        return;
+      } else {
+        let filteredTasks = rawTaskData || [];
+        if (parsedData?.projectid) {
+          filteredTasks = filteredTasks.filter(
+            t => t.projectid === parsedData.projectid
+          );
+        }
+        filteredTasks = filterNestedTasksByView(filteredTasks, meTeamView, userId);
+        processTasks(filteredTasks);
       }
+    } else {
+      let filteredTasks = rawTaskData || [];
+      if (parsedData?.projectid) {
+        filteredTasks = filteredTasks.filter(
+          t => t.projectid === parsedData.projectid
+        );
+      }
+      filteredTasks = filterNestedTasksByView(filteredTasks, meTeamView, userId);
+      processTasks(filteredTasks);
     }
 
-    let filteredTasks = rawTaskData || [];
-    if (parsedData?.projectid) {
-      filteredTasks = filteredTasks.filter(
-        t => t.projectid === parsedData.projectid
-      );
-    }
-    filteredTasks = filterNestedTasksByView(filteredTasks, meTeamView, userId);
-    processTasks(filteredTasks);
-  }, [encodedData, taskFinalData, selectedRow, meTeamView, localTaskEdits]);
+    return () => {
+      processingCancelledRef.current = true;
+      if (processingTimerRef.current) {
+        clearTimeout(processingTimerRef.current);
+        processingTimerRef.current = null;
+      }
+    };
+  }, [encodedData, taskFinalData, meTeamView, localTaskEdits]);
 
   const normalizeArchiveApiData = (apiData) => {
     const dataObj = apiData?.Data ? apiData.Data : apiData;

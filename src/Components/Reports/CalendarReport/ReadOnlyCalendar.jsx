@@ -621,7 +621,7 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                 const formatEstimate = (hours) => {
                     if (hours === 0) return '';
                     const unit = hours <= 1 ? 'hr' : 'hrs';
-                    return `(${hours} ${unit})`;
+                    return `(${parseFloat(hours)?.toFixed(2)} ${unit})`;
                 };
 
                 const estimateText = formatEstimate(estimateHrs);

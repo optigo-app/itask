@@ -14,8 +14,8 @@ import {
 } from "@mui/material";
 import { CircleX, Grid2x2, ListTodo, NotepadTextDashed } from "lucide-react";
 import "./SidebarDrawer.scss";
-import { useRecoilValue, useRecoilState } from "recoil";
-import { formData, rootSubrootflag, TaskData } from "../../Recoil/atom";
+import { useRecoilValue, useRecoilState, useSetRecoilState } from "recoil";
+import { fetchlistApiCall, formData, rootSubrootflag, TaskData } from "../../Recoil/atom";
 import dayjs from 'dayjs';
 import utc from "dayjs/plugin/utc";
 import { useLocation } from "react-router-dom";
@@ -98,6 +98,7 @@ const SidebarDrawer = ({
     dayjs.extend(timezone);
     const formDataValue = useRecoilValue(formData);
     const [taskDataValue, setTaskDataValue] = useRecoilState(TaskData);
+    const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
     const [taskType, setTaskType] = useState("single");
     const [decodedData, setDecodedData] = useState(null);
@@ -583,7 +584,7 @@ const SidebarDrawer = ({
             repeatflag: module?.repeat ? "Repeat" : "",
             parentid: formValues.parentid ?? formDataValue?.parentid,
         };
-       
+
         try {
             const submitResult = await onSubmit(updatedFormDataValue, { mode: taskType }, module);
             if (submitResult?.rd?.[0]?.stat === 1) {
@@ -608,7 +609,6 @@ const SidebarDrawer = ({
                             }
                             : updatedFormDataValue;
 
-                        console.log("individualTaskData", individualTaskData)
 
                         const taskWithId = {
                             ...individualTaskData,
@@ -631,6 +631,7 @@ const SidebarDrawer = ({
 
                     setTaskDataValue(updatedTasks);
                 }
+                setOpenChildTask(Date.now());
                 handleClear();
             } else {
                 console.error("Sidedrawer: Task submit failed", submitResult);
@@ -975,7 +976,7 @@ const SidebarDrawer = ({
                     </Box>
                 ) : (
                     <>
-                        {['/tasks', '/meetings', '/myCalendar']?.some(path => location?.pathname?.includes(path)) &&
+                        {['/tasks', '/fullTask', '/meetings', '/myCalendar']?.some(path => location?.pathname?.includes(path)) &&
                             <Box className="drawer-container">
                                 <TaskDrawerHeader
                                     taskType={taskType}

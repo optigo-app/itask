@@ -282,7 +282,6 @@ const PmsReport2 = () => {
         }
     }, [currentDate, actualData, viewMode, taskCategory, taskFinalData, filters]);
 
-    console.log("processEmployeeData", pmsReportData)
 
     useEffect(() => {
         const viemodeValue = localStorage.getItem('rpviewMode') ?? 'EmployeeWiseData';

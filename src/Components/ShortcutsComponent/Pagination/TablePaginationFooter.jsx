@@ -8,6 +8,7 @@ const TablePaginationFooter = ({
     totalPages,
     onPageChange,
     onPageSizeChange,
+    rowsPerPageOptions = [10, 15, 20, 50, 100],
 }) => {
     const start = (page - 1) * rowsPerPage + 1;
     const end = Math.min(page * rowsPerPage, totalCount);
@@ -33,7 +34,7 @@ const TablePaginationFooter = ({
                         onChange={(e) => onPageSizeChange(e.target.value)}
                         className="custom-select"
                     >
-                        {[10, 15, 20, 50, 100].map((size) => (
+                        {rowsPerPageOptions.map((size) => (
                             <MenuItem key={size} value={size} className="custom-menu-item">
                                 {size}
                             </MenuItem>

@@ -59,9 +59,10 @@ const Sidebar = () => {
     // All possible menu items with additional info
     const allMenuItems = [
         { pagename: "Home", label: "Home", routes: "Home", path: "/", icon: House },
-        { pagename: "Task", label: "Task", routes: "Tasks", path: "/tasks", icon: FileCheck },
+        { pagename: "Task", label: "Full Task", routes: "FullTask", path: "/fullTask", icon: FileCheck },
         { pagename: "Project", label: "Project", routes: "Projects", path: "/projects", icon: SquareChartGantt },
-        // { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "external-bug-track", icon: Bug },
+        { pagename: "Task", label: "Task", routes: "Tasks", path: "/tasks", icon: FileCheck },
+        { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "external-bug-track", icon: Bug },
         // { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "/bugtrack", icon: Bug },
         { pagename: "Inbox", label: "Inbox", routes: "Inbox", path: "/inbox", icon: Inbox },
         { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
@@ -76,6 +77,7 @@ const Sidebar = () => {
     const reportSubItems = [
         { label: 'PMS Report', path: '/reports/pms' },
         { label: 'PMS Report 2', path: '/reports/pms-2' },
+        // { label: 'Full Task Report', path: '/fullTaskReport' },
         // { label: 'Team Cal View', path: '/reports/teamCalReport' },
         // { label: 'Milestone Report', path: '/reports/milestoneReport' },
     ];
@@ -139,11 +141,12 @@ const Sidebar = () => {
             }));
             const redirectUrl = window.location.hostname?.includes('localhost')
                 ? `http://localhost:5004/auto-login?data=${encodeURIComponent(encodedAuthData)}`
-                : `http://bugtracker.web/auto-login?data=${encodeURIComponent(encodedAuthData)}`;
+                : window.location.hostname?.includes('nzen') ? `http://bugtracker.web/auto-login?data=${encodeURIComponent(encodedAuthData)}`
+                    : `http://tecoqa.optigoapps.com/auto-login?data=${encodeURIComponent(encodedAuthData)}`;
             window.open(redirectUrl, '_blank');
         } catch (error) {
             console.error('Error preparing bug track redirect:', error);
-            window.open('http://bugtracker.web', '_blank');
+            window.open('http://tecoqa.optigoapps.com/', '_blank');
         }
     };
 

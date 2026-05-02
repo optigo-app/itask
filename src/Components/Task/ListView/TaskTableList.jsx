@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "./TaskTable.scss";
 import {
     Table,
@@ -15,6 +15,7 @@ import {
     Chip,
     Tooltip,
     LinearProgress,
+    Skeleton,
     Menu,
     MenuItem,
 } from "@mui/material";
@@ -127,6 +128,10 @@ const initialColumns = [
     { id: "actions", label: "Actions", width: 150 },
 ];
 
+const INITIAL_SUBTASK_BATCH = 220;
+const SUBTASK_BATCH_STEP = 320;
+const MAX_SKELETON_ROWS = 6;
+
 
 const TableView = ({
     data,
@@ -196,6 +201,8 @@ const TableView = ({
     const [anchorDeadlineEl, setAnchorDeadlineEl] = useState(null);
     const [isHoveredResizable, setIsHoveredResizable] = useState(false);
     const [resizingColumnId, setResizingColumnId] = useState(null);
+    const [subtaskRenderLimits, setSubtaskRenderLimits] = useState({});
+    const [subtaskLoadingByRoot, setSubtaskLoadingByRoot] = useState({});
 
     const handleDeadlineClick = (e, task, access) => {
         if (access) return;
@@ -454,13 +461,164 @@ const TableView = ({
     }
 
     const toggleSubtasks = (taskId, task) => {
-        setExpandedTasks((prev) => {
-            const isCurrentlyExpanded = prev[taskId];
-            const newState = { ...prev, [taskId]: !isCurrentlyExpanded };
-            setOpenChildTask(false);
-            return newState;
+        setExpandedTasks((prevExpanded) => {
+            const isCurrentlyExpanded = !!prevExpanded[taskId];
+
+            setSubtaskRenderLimits((prevLimits) => {
+                const next = { ...prevLimits };
+                if (!isCurrentlyExpanded) {
+                    next[taskId] = INITIAL_SUBTASK_BATCH;
+                } else {
+                    delete next[taskId];
+                }
+                return next;
+            });
+
+            return { ...prevExpanded, [taskId]: !isCurrentlyExpanded };
+        });
+
+        setSubtaskLoadingByRoot((prev) => {
+            const next = { ...prev };
+            const isCurrentlyExpanded = !!expandedTasks[taskId];
+            if (!isCurrentlyExpanded) {
+                const totalSubtasks = Array.isArray(task?.subtasks) ? task.subtasks.length : 0;
+                next[taskId] = totalSubtasks > INITIAL_SUBTASK_BATCH;
+            } else {
+                delete next[taskId];
+            }
+            return next;
         });
     };
+
+    const visibleSubtasksByRoot = useMemo(() => {
+        const map = new Map();
+
+        const collectVisibleSubtasks = (subtasks, parentTask, depth = 0, acc = []) => {
+            const parentArchiveInfo = parentTask?.Completion_timestamp ? getArchiveInfoFromEndDate(parentTask, 7) : null;
+            const parentArchived = !!parentTask?.Completion_timestamp;
+
+            (subtasks || []).forEach((subtask) => {
+                acc.push({
+                    subtask,
+                    depth,
+                    parentArchiveInfo,
+                    parentArchived,
+                });
+
+                if (expandedTasks[subtask.taskid] && subtask?.subtasks?.length > 0) {
+                    collectVisibleSubtasks(subtask.subtasks, subtask, depth + 1, acc);
+                }
+            });
+
+            return acc;
+        };
+
+        (currentData || []).forEach((task) => {
+            if (expandedTasks[task.taskid] && task?.subtasks?.length > 0) {
+                map.set(task.taskid, collectVisibleSubtasks(task.subtasks, task));
+            } else {
+                map.set(task.taskid, []);
+            }
+        });
+
+        return map;
+    }, [currentData, expandedTasks]);
+
+    useEffect(() => {
+        setSubtaskRenderLimits((prev) => {
+            const activeExpandedIds = new Set(
+                Object.keys(expandedTasks || {}).filter((id) => expandedTasks[id])
+            );
+            const next = {};
+            let changed = false;
+
+            Object.entries(prev).forEach(([taskId, limit]) => {
+                if (activeExpandedIds.has(taskId)) {
+                    next[taskId] = limit;
+                } else {
+                    changed = true;
+                }
+            });
+
+            return changed ? next : prev;
+        });
+    }, [expandedTasks]);
+
+    useEffect(() => {
+        setSubtaskLoadingByRoot((prev) => {
+            const next = {};
+            let changed = false;
+
+            (currentData || []).forEach((task) => {
+                if (!expandedTasks?.[task.taskid]) return;
+                const taskId = task.taskid;
+                const totalVisibleRows = (visibleSubtasksByRoot.get(taskId) || []).length;
+                const currentLimit = subtaskRenderLimits[taskId] || INITIAL_SUBTASK_BATCH;
+                const isLoading = currentLimit < totalVisibleRows;
+                next[taskId] = isLoading;
+
+                if (prev[taskId] !== isLoading) {
+                    changed = true;
+                }
+            });
+
+            if (Object.keys(prev).length !== Object.keys(next).length) {
+                changed = true;
+            }
+
+            return changed ? next : prev;
+        });
+    }, [expandedTasks, subtaskRenderLimits, visibleSubtasksByRoot, currentData]);
+
+    useEffect(() => {
+        if (!currentData?.length) return;
+
+        const expandedRootTasks = currentData.filter((task) => expandedTasks[task.taskid]);
+        if (expandedRootTasks.length === 0) return;
+
+        let cancelled = false;
+        let frameId = null;
+
+        const growVisibleRows = () => {
+            if (cancelled) return;
+
+            let hasPendingRows = false;
+
+            setSubtaskRenderLimits((prev) => {
+                let next = prev;
+
+                expandedRootTasks.forEach((task) => {
+                    const taskId = task.taskid;
+                    const totalVisibleRows = (visibleSubtasksByRoot.get(taskId) || []).length;
+                    if (!totalVisibleRows) return;
+
+                    const currentLimit = prev[taskId] || INITIAL_SUBTASK_BATCH;
+                    if (currentLimit < totalVisibleRows) {
+                        hasPendingRows = true;
+                        if (next === prev) {
+                            next = { ...prev };
+                        }
+                        next[taskId] = Math.min(totalVisibleRows, currentLimit + SUBTASK_BATCH_STEP);
+                    }
+                });
+
+                return next;
+            });
+
+            if (hasPendingRows && !cancelled) {
+                frameId = requestAnimationFrame(growVisibleRows);
+            }
+        };
+
+        frameId = requestAnimationFrame(growVisibleRows);
+
+        return () => {
+            cancelled = true;
+            if (frameId) {
+                cancelAnimationFrame(frameId);
+            }
+        };
+    }, [currentData, expandedTasks, visibleSubtasksByRoot]);
 
     const handleAssigneeShortcut = (task, additionalInfo) => {
         setSelectedItem(task);
@@ -632,6 +790,30 @@ const TableView = ({
                 </IconButton>
             </Box>
         );
+    };
+
+    const renderSubtaskSkeletonRows = (taskId) => {
+        const totalVisibleRows = (visibleSubtasksByRoot.get(taskId) || []).length;
+        const currentLimit = subtaskRenderLimits[taskId] || INITIAL_SUBTASK_BATCH;
+        const remainingRows = Math.max(totalVisibleRows - currentLimit, 0);
+        const skeletonRows = Math.min(remainingRows, MAX_SKELETON_ROWS);
+
+        if (!subtaskLoadingByRoot[taskId] || skeletonRows <= 0) return null;
+
+        return Array.from({ length: skeletonRows }).map((_, idx) => (
+            <TableRow key={`subtask-skeleton-${taskId}-${idx}`}>
+                <TableCell><Skeleton variant="text" width="85%" /></TableCell>
+                <TableCell><Skeleton variant="text" width="70%" /></TableCell>
+                <TableCell><Skeleton variant="rounded" height={8} width="90%" /></TableCell>
+                <TableCell><Skeleton variant="rounded" height={24} width="85%" /></TableCell>
+                <TableCell><Skeleton variant="rounded" height={24} width="85%" /></TableCell>
+                <TableCell><Skeleton variant="circular" width={24} height={24} /></TableCell>
+                <TableCell><Skeleton variant="text" width="80%" /></TableCell>
+                <TableCell><Skeleton variant="rounded" height={24} width="75%" /></TableCell>
+                <TableCell><Skeleton variant="rounded" height={14} width="65%" /></TableCell>
+                <TableCell><Skeleton variant="rounded" height={24} width="90%" /></TableCell>
+            </TableRow>
+        ));
     };
 
     const renderTaskNameSection = (
@@ -955,11 +1137,9 @@ const TableView = ({
         );
     };
 
-    const renderSubtasks = (subtasks, parentTask, depth = 0) => {
-        const parentArchiveInfo = parentTask?.Completion_timestamp ? getArchiveInfoFromEndDate(parentTask, 7) : null;
-        const parentArchived = !!parentTask?.Completion_timestamp;
-        return subtasks?.map((subtask) => (
-            <React.Fragment key={subtask.taskid}>
+    const renderSubtaskRow = ({ subtask, parentArchiveInfo, parentArchived, depth }) => {
+        return (
+            <React.Fragment key={`${subtask.taskid}-${depth}`}>
                 <TableRow
                     className={subtask?.isCopyActive ? 'cut-task-row' : ''}
                     sx={{
@@ -1103,9 +1283,8 @@ const TableView = ({
                         {renderTaskActions(subtask, taskTimeRunning, handleTimeTrackModalOpen, handleEditTask, handleViewTask)}
                     </TableCell>
                 </TableRow>
-                {expandedTasks[subtask.taskid] && renderSubtasks(subtask.subtasks, subtask, depth + 1)}
             </React.Fragment >
-        ));
+        );
     };
 
     const debouncedHandleResize = useCallback(
@@ -1345,7 +1524,10 @@ const TableView = ({
                                                         {renderTaskActions(task, taskTimeRunning, handleTimeTrackModalOpen, handleEditTask, handleViewTask)}
                                                     </TableCell>
                                                 </TableRow>
-                                                {expandedTasks[task.taskid] && task?.subtasks?.length > 0 && renderSubtasks(task.subtasks, task)}
+                                                {(visibleSubtasksByRoot.get(task.taskid) || [])
+                                                    .slice(0, subtaskRenderLimits[task.taskid] || INITIAL_SUBTASK_BATCH)
+                                                    .map((row) => renderSubtaskRow(row))}
+                                                {renderSubtaskSkeletonRows(task.taskid)}
                                             </React.Fragment>
                                         )
                                     })}
