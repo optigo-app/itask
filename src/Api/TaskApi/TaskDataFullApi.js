@@ -9,6 +9,15 @@ export const fetchTaskDataFullApi = async (parsedData) => {
             taskid: `${parsedData?.taskid ?? ''}`,
             teamid: `${parsedData?.teamid ?? '1'}`,
             isCompleted: `${parsedData?.isCompleted ?? 0}`,
+            search: `${parsedData?.search ?? ''}`,
+            priorityid: `${parsedData?.priorityid ?? ''}`,
+            assigneeid: `${parsedData?.assigneeid ?? ''}`,
+            statusid: `${parsedData?.statusid ?? ''}`,
+            workcategoryid: `${parsedData?.workcategoryid ?? ''}`,
+            startdatefrom: `${parsedData?.startdatefrom ?? ''}`,
+            startdateto: `${parsedData?.startdateto ?? ''}`,
+            duedatefrom: `${parsedData?.duedatefrom ?? ''}`,
+            duedateto: `${parsedData?.duedateto ?? ''}`,
         });
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"treelist\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,

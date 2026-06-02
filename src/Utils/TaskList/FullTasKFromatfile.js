@@ -16,7 +16,7 @@ import {
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
-const useFullTaskFormatFile = () => {
+const useFullTaskFormatFile = (externalFilters = {}) => {
   const location = useLocation();
   const [iswhTLoading, setIsWhTLoading] = useState(null);
   const [iswhMLoading, setIsWhMLoading] = useState(null);
@@ -138,6 +138,7 @@ const useFullTaskFormatFile = () => {
     try {
       const taskData = await fetchTaskDataFullApi({
         ...(parsedData || {}),
+        ...externalFilters,
         isarchive: archivedFlag ? 1 : 0,
         isCompleted: completedFlag ? 1 : 0,
       });
@@ -179,6 +180,7 @@ const useFullTaskFormatFile = () => {
       };
       const data = labeledTasks?.map((task) => enhanceTask(task));
       const finalTaskData = formatDataToTree(data, parsedData, 'Today');
+      console.log("finalTaskData", finalTaskData)
 
       setTaskFinalData(finalTaskData);
       setActualData(data);
@@ -287,6 +289,11 @@ const useFullTaskFormatFile = () => {
     );
   };
 
+  const applyTreeLabelToSubtree = (task, depth = 0) => {
+    task.tree_lable = depth;
+    task.subtasks?.forEach((child) => applyTreeLabelToSubtree(child, depth + 1));
+  };
+
   // Chunk 4: Category Tasks Collection with Optimization
   const collectCategoryTasks = (task, categoryMap, category, projectCategoryTasks, path = []) => {
     const categoryKey = categoryMap[task.workcategoryid];
@@ -294,6 +301,7 @@ const useFullTaskFormatFile = () => {
     const currentPath = [...path, task.taskname];
 
     task.breadcrumbTitles = currentPath;
+    task.tree_lable = currentPath.length - 1;
 
     // ✅ Decide type based on parentId and children
     if (task.parentid === 0) {
@@ -473,6 +481,7 @@ const useFullTaskFormatFile = () => {
 
       TaskData.forEach((task) => applyFreezeRulesToSubtree(task, task?.isFreez == 1 ? 1 : 0));
       TaskData.forEach((task) => applyReadonlyRulesToSubtree(task));
+      TaskData.forEach((task) => applyTreeLabelToSubtree(task));
 
       // Process tasks and collect category data
       TaskData.forEach(task => {
@@ -536,6 +545,7 @@ const useFullTaskFormatFile = () => {
     completedFlag,
     callFetchTaskApi,
     location.pathname,
+    JSON.stringify(externalFilters),
   ]);
 
   return {

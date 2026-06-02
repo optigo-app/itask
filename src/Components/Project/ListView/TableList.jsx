@@ -293,7 +293,6 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
     const handleNavigate = async (task) => {
         const userLoginData = getUserProfileData();
         const teamApiRes = await GetPrTeamsApi(task, "root")
-        debugger
         const isLimitedAccess = teamApiRes?.rd?.find((item) => item.assigneeid == userLoginData?.id)?.islimitedaccess;
 
         const isReadOnly = task?.assignee?.find(a => a.id == userLoginData?.id)?.isreadonly == 1;

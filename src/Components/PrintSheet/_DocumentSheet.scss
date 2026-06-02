@@ -1,0 +1,294 @@
+@import "../../theme/variable.scss";
+
+.dContainer_main {
+  box-sizing: border-box;
+  word-break: break-all;
+  max-width: 850px;
+  margin: 0 auto;
+  padding-bottom: 150px;
+  font-family: Calibri;
+  letter-spacing: 0.3px;
+
+  .TxtCentr {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .CmonFntSize {
+    font-size: 14px;
+  }
+
+  .WdthMost {
+    width: 70%;
+    white-space: nowrap;
+  }
+
+  .WdthMIN {
+    width: 30%;
+  }
+
+  .WdMost {
+    width: 40%;
+    white-space: nowrap;
+  }
+
+  .valueBind {
+    margin-left: 2px;
+    font-weight: normal !important;
+    text-transform: capitalize;
+  }
+
+  .teamWrapCell {
+    height: auto !important;
+    white-space: normal !important;
+    align-items: flex-start;
+    display: flex;
+    gap: 4px;
+  }
+
+  .teamLabel {
+    white-space: nowrap;
+    flex: 0 0 auto;
+    display: flex;
+    justify-self: unset;
+    align-self: flex-start;
+  }
+
+  .teamWrapText {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .taskname {
+    margin-left: 2px;
+    font-weight: normal !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2;
+    /* Show only 2 lines */
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: normal !important;
+    max-width: 100%;
+  }
+
+  // Bold and dark labels
+  .label-bold {
+    font-weight: 600 !important;
+    color: #000 !important;
+  }
+
+  // Light colored text for other content
+  .text-light {
+    color: #666 !important;
+    font-weight: 400 !important;
+  }
+
+  .WdAvg {
+    width: 30%;
+  }
+
+  .WdMIN {
+    width: 30%;
+  }
+
+  .ScndryWdMost {
+    width: 35%;
+  }
+
+  .ScndryWdMdle {
+    width: 30%;
+  }
+
+  .ScndryWdMIN {
+    width: 35%;
+  }
+
+  
+
+  .checkbox {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    box-sizing: border-box;
+    border: 1px solid #bdbdbd !important;
+    margin-top: 0px;
+    margin-left: 4px;
+    margin-right: 10px;
+  }
+
+  .checklist_date {
+    display: flex !important;
+    gap: 10px !important;
+  }
+
+  .SpacRit {
+    margin-right: 4px;
+  }
+
+  .SpacLft {
+    margin-left: 25px;
+  }
+
+  .MostWd {
+    width: 34%;
+    white-space: nowrap;
+  }
+
+  .AvgWd1 {
+    width: 23%;
+    white-space: nowrap;
+  }
+
+  .AvgWd2 {
+    width: 24%;
+    white-space: nowrap;
+  }
+
+  .MINWd {
+    width: 30%;
+  }
+
+  .higtCmon {
+    height: 25px;
+    box-sizing: border-box;
+  }
+
+  .CmonCentrEvry {
+    display: flex;
+    align-items: center;
+    padding-left: 2px;
+    white-space: nowrap;
+  }
+
+  .TxtDark {
+    font-weight: 600;
+  }
+
+  .BrderEvry {
+    border: 1px solid #bdbdbd;
+  }
+
+  .BrderTop {
+    border-top: 1px solid #bdbdbd;
+  }
+
+  .BrderRigt {
+    border-right: 1px solid #bdbdbd;
+  }
+
+  .BrderBtom {
+    border-bottom: 1px solid #bdbdbd;
+  }
+
+  .BrderLft {
+    border-left: 1px solid #bdbdbd;
+  }
+}
+
+@media print {
+  @page {
+    margin: 0.3in 0.4in !important;
+    size: A4;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .dContainer_main {
+    padding-bottom: 0px;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    overflow: visible !important;
+    line-height: 1.2 !important;
+
+    .TxtCentr {
+      text-align: center;
+      margin-bottom: 10px !important;
+    }
+
+    .CmonFntSize {
+      font-size: 10px !important;
+    }
+
+    .taskname {
+      font-size: 16px !important;
+      word-break: break-word !important;
+    }
+
+    .module-project-name {
+      color: $placeholderColor !important;
+    }
+
+    .taskno {
+      margin-left: 5px !important;
+      font-size: 20px !important;
+    }
+
+    .higtCmon {
+      height: 20px;
+    }
+
+    .higtT {
+      height: 50px !important;
+    }
+
+    .SpacRit {
+      margin-right: 3px;
+    }
+
+    .SpacLft {
+      margin-left: 18px;
+    }
+
+    // Prevent page breaks in table rows and important elements
+    table,
+    tr,
+    td,
+    th {
+      page-break-inside: avoid !important;
+    }
+
+    // Prevent orphaned content
+    .higtCmon {
+      page-break-inside: avoid;
+    }
+
+    // Reduce padding for compact layout
+    .CmonCentrEvry {
+      padding-left: 1px !important;
+      padding-top: 1px !important;
+      padding-bottom: 1px !important;
+    }
+
+    // Compact text elements
+    * {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+    }
+
+    // Reduce spacing between elements
+    div,
+    p,
+    span {
+      margin: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+  }
+}

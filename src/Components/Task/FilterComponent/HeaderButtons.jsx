@@ -15,7 +15,7 @@ import { Add as AddIcon } from "@mui/icons-material";
 import SidebarDrawer from "../../FormComponent/Sidedrawer";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { getUserProfileData } from "../../../Utils/globalfun";
+import { getUserProfileData, handleBugTrackRedirect } from "../../../Utils/globalfun";
 import {
   fetchlistApiCall,
   formData,
@@ -36,6 +36,7 @@ import {
   CircleCheck,
   ClipboardPaste,
   Archive,
+  Bug,
   Kanban,
   List,
   ListFilter,
@@ -393,7 +394,6 @@ const HeaderButtons = ({
               </IconButton>
             </Tooltip>
           )}
-
           {location?.pathname?.includes("/projects") && (
             <Tooltip
               placement="top"

@@ -113,11 +113,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
             .filter(task => task.taskid !== taskIdToRemove);
     };
 
-    const formatEstimate = (val) => {
-        const num = Number(val ?? 0);
-        return num % 1 === 0 ? num : Number(num.toFixed(2));
-    };
-
     const handleConfirmRemoveAll = async () => {
         setCnfDialogOpen(false);
         setIsDeleting(true);
@@ -457,8 +452,8 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
                                     <Tabs value={activeTab} onChange={handleTabChange} className='muiTaskTabs'>
                                         <Tab label={`Comments (${comments?.length})`} />
                                         <Tab label={`Attachment (${totalCount})`} />
-                                        {location.pathname != "/teamCalReport" &&
-                                            <Tab label={`Subtasks`} />
+                                        {(location.pathname != "/teamCalReport" && location.pathname != "/myTasks") &&
+                                            < Tab label={`Subtasks`} />
                                         }
                                     </Tabs>
                                     <Box

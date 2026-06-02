@@ -27,6 +27,7 @@ const Calendar = ({
     handleAssigneeChange,
     setFormDrawerOpen,
     setFormDataValue,
+    onCalendarRangeChange,
 }) => {
     const isFullSidebar = useRecoilValue(FullSidebar);
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
@@ -149,7 +150,7 @@ const Calendar = ({
     const findModuleRecursively = (tasks, targetId) => {
         if (!tasks) return null;
         for (const t of tasks) {
-            if (String(t.taskid) === String(targetId)) return t.moduleid || t.projectid;
+            if (String(t.taskid) === String(targetId)) return t.RootTaskId || t.projectid;
             if (t.subtasks?.length > 0) {
                 const res = findModuleRecursively(t.subtasks, targetId);
                 if (res) return res;
@@ -272,12 +273,8 @@ const Calendar = ({
 
     const filterEvents = (events, selectedCalendars) => {
         return events?.filter(event => {
-            // Filter by category
             const categoryMatch = !event?.category || selectedCalendars?.includes(event.category);
-
-            // Filter by favorites if showFavoritesOnly is true
             const favoriteMatch = showFavoritesOnly ? Number(event?.isfavourite) === 1 : true;
-
             return categoryMatch && favoriteMatch;
         }) || [];
     };
@@ -311,12 +308,7 @@ const Calendar = ({
                 );
             }
         }
-    }, []); // Remove showFavoritesOnly dependency
-
-    const formatEstimate = (val) => {
-        const num = Number(val ?? 0);
-        return num % 1 === 0 ? num : Number(num.toFixed(2));
-    };
+    }, []);
 
     const mapEventDetails = (event) => {
         const start = event?.start ?? event?.StartDate;
@@ -343,6 +335,7 @@ const Calendar = ({
             taskid: event?.extendedProps?.taskid ?? event?.taskid,
             parentid: event?.extendedProps?.parentid ?? event?.parentid,
             projectid: event?.extendedProps?.projectid ?? event?.projectid,
+            moduleid: event?.extendedProps?.RootTaskId ?? event?.RootTaskId,
             prModule: event?.extendedProps?.prModule ?? {
                 taskid: event?.taskid,
                 parentid: event?.parentid,
@@ -392,6 +385,7 @@ const Calendar = ({
                 taskid: event?.taskid,
                 parentid: event?.parentid,
                 projectid: event?.projectid,
+                moduleid: event?.RootTaskId,
                 workcategoryid: event?.workcategoryid,
                 category: event?.category || '',
                 statusid: event?.statusid,
@@ -408,6 +402,14 @@ const Calendar = ({
         })),
         plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
         initialView: 'timeGridWeek',
+        datesSet: (dateInfo) => {
+            if (typeof onCalendarRangeChange !== 'function') return;
+            onCalendarRangeChange({
+                viewType: dateInfo?.view?.type || '',
+                startDate: dateInfo?.view?.currentStart || dateInfo?.start || null,
+                endDate: dateInfo?.view?.currentEnd || dateInfo?.end || null,
+            });
+        },
         scrollTime: '09:15:00',
         scrollTimeReset: false,
         slotMinTime: "07:00:00",
@@ -854,28 +856,20 @@ const Calendar = ({
                     : ev
             );
 
+            console.log('updatedData',updatedData)
+
             setCalEvData(updatedData);
             setCalFormData(eventDetails);
             setFormDataValue(eventDetails);
             handleCaleFormSubmit(eventDetails, { skipRefresh: true, context: { end: eventDetails.end } });
 
-            // Update parent task estimates in background (async, non-blocking)
-            const parentId = eventDetails?.parentid;
-            if (parentId && String(parentId) !== '0') {
-                const foundModuleId = findModuleRecursively(actualTaskDataValue, parentId);
-                const rootId = foundModuleId || eventDetails.moduleid || eventDetails.projectid || parentId;
-
-                // Import dynamically to avoid circular dependencies
-                import('../../Api/TaskApi/TaskDataFullApi').then(({ fetchTaskDataFullApi }) => {
-                    import('../../Utils/globalfun').then(({ mapKeyValuePair }) => {
-                        // Trigger UI refresh
-                        setOpenChildTask(Date.now());
-                    });
-                });
-            }
+            // Trigger UI refresh
+            setOpenChildTask(Date.now());
         },
+
         eventReceive({ event }) {
-            if (!event?.title) return;
+            debugger
+            if (!event) return;
 
             // Create a unique key for this event to prevent duplicate processing
             const eventKey = `${event.id || event.extendedProps?.taskid}-${event.start?.getTime()}`;
@@ -897,6 +891,7 @@ const Calendar = ({
             event.setEnd(snappedEnd);
             eventDetails.end = snappedEnd.toISOString();
             eventDetails.estimate_hrs = snappedHours;
+            debugger
             const updatedData = calEvData?.map(ev =>
                 ev?.meetingid == eventDetails?.meetingid
                     ? {
@@ -944,21 +939,24 @@ const Calendar = ({
     const handleDuplicateRepeat = async () => {
         const { event } = duplicateDialog;
         const eventDetails = mapEventDetails(event);
-
-        // Get current date
         const now = new Date();
+        const parentId = eventDetails?.parentid || eventDetails?.taskid || eventDetails?.meetingid;
+        let moduleid = eventDetails?.RootTaskId;
+        if (parentId && String(parentId) !== '0') {
+            const foundModuleId = findModuleRecursively(actualTaskDataValue, parentId);
+            moduleid = foundModuleId || eventDetails?.RootTaskId || eventDetails?.projectid || parentId;
+        }
 
         const duplicatedEvent = {
             ...eventDetails,
             meetingid: "",
             title: eventDetails.title,
             entrydate: now.toISOString(),
-            // start: mergeDateWithTime(eventDetails.start),
-            // end: mergeDateWithTime(eventDetails.end),
             DeadLineDate: mergeDateWithTime(eventDetails.DeadLineDate || eventDetails.end),
             repeatflag: "repeat",
             statusid: "",
             duplicated: true,
+            moduleid: moduleid,
         };
 
         const apiRes = await handleCaleFormSubmit(duplicatedEvent);
@@ -966,16 +964,8 @@ const Calendar = ({
             setDuplicateDialog({ open: false, event: null });
             toast.success("Event repeated successfully");
 
-            // Call estimateTaskSave for new task
-            const newTaskId = apiRes.rd[0].taskid;
-            const parentId = duplicatedEvent?.parentid;
-            if (parentId && String(parentId) !== '0') {
-                const foundModuleId = findModuleRecursively(actualTaskDataValue, parentId);
-                const rootId = foundModuleId || duplicatedEvent.moduleid || duplicatedEvent.projectid || parentId;
-
-                // Trigger UI refresh
-                setOpenChildTask(Date.now());
-            }
+            // Trigger UI refresh
+            setOpenChildTask(Date.now());
         } else {
             toast.error("Error repeating event");
         }

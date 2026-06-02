@@ -54,7 +54,8 @@ const CompactComment = memo(({ comment, onClose, selectedTask, onViewAllComments
                 fontSize: '13px',
                 lineHeight: 1.4,
                 color: '#555',
-                wordBreak: 'break-word'
+                wordBreak: 'break-word',
+                whiteSpace: 'pre-line'
             }}>
                 {comment?.comment}
             </Typography>

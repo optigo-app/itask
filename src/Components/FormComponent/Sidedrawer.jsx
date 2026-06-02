@@ -19,8 +19,9 @@ import { fetchlistApiCall, formData, rootSubrootflag, TaskData } from "../../Rec
 import dayjs from 'dayjs';
 import utc from "dayjs/plugin/utc";
 import { useLocation } from "react-router-dom";
-import { cleanDate, commonTextFieldProps, customDatePickerProps, flattenTasks, getUserProfileData, mapKeyValuePair, mapTaskLabels } from "../../Utils/globalfun";
+import { cleanDate, commonTextFieldProps, customDatePickerProps, flattenTasks, getUserProfileData, isFormFieldLocked, isDeadlineLockedForLevelOneTask, isSrEstimateLocked, mapKeyValuePair, mapTaskLabels } from "../../Utils/globalfun";
 import timezone from 'dayjs/plugin/timezone';
+import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
 import CustomAutocomplete from "../ShortcutsComponent/CustomAutocomplete";
 import { GetPrTeamsApi } from "../../Api/TaskApi/prTeamListApi";
 import { toast } from "react-toastify";
@@ -97,6 +98,7 @@ const SidebarDrawer = ({
     dayjs.extend(utc);
     dayjs.extend(timezone);
     const formDataValue = useRecoilValue(formData);
+    console.log("formDataValue",formDataValue)
     const [taskDataValue, setTaskDataValue] = useRecoilState(TaskData);
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const rootSubrootflagval = useRecoilValue(rootSubrootflag)
@@ -117,6 +119,29 @@ const SidebarDrawer = ({
     const [deadlineMenuSignal, setDeadlineMenuSignal] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false); // TemplateDialog modal state
+    const [deadlineConfirmDialogOpen, setDeadlineConfirmDialogOpen] = useState(false); // Deadline final confirmation dialog
+    const [pendingSubmitData, setPendingSubmitData] = useState(null); // Store pending submit data for confirmation
+
+    // Field lock logic
+    const userProfile = getUserProfileData();
+    const isDeadlineFieldLocked = useMemo(() => {
+        return isFormFieldLocked({
+            task: formDataValue,
+            fieldName: 'dueDate',
+            designation: userProfile?.designation,
+            lockCondition: isDeadlineLockedForLevelOneTask
+        });
+    }, [formDataValue, userProfile?.designation]);
+
+    const isSrEstimateFieldLocked = useMemo(() => {
+        return isFormFieldLocked({
+            task: formDataValue,
+            fieldName: 'estimate2_hrs',
+            designation: userProfile?.designation,
+            lockCondition: isSrEstimateLocked
+        });
+    }, [formDataValue, userProfile?.designation]);
+
     const [formValues, setFormValues] = React.useState({
         taskName: "",
         bulkTask: [],
@@ -530,6 +555,8 @@ const SidebarDrawer = ({
         return parsed.isValid() ? parsed.toDate().toISOString() : localValue;
     };
 
+    console.log("djskjk",rootSubrootflagval)
+
     const submitTask = async (module, deadlineOverride) => {
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const assigneeIds = formValues.guests?.map(user => user.id)?.join(",") ?? "";
@@ -659,6 +686,17 @@ const SidebarDrawer = ({
                     setDeadlineMenuSignal((prev) => prev + 1);
                     return;
                 }
+                // Check if task is tree_lable == 1 and deadline is being set for the first time
+                const isLevelOneTask = rootSubrootflagval.Task === 'AddTask';
+                const hasNoExistingDeadline = !formDataValue?.DeadLineDate || String(formDataValue.DeadLineDate).trim() === '';
+                const isAdmin = userProfile?.designation?.toLowerCase() === 'admin';
+
+                if (isLevelOneTask && hasNoExistingDeadline && !isAdmin) {
+                    setPendingSubmitData(module);
+                    setDeadlineConfirmDialogOpen(true);
+                    setIsSubmitting(false);
+                    return;
+                }
             } else {
                 // Bulk task validation
                 const isAnyDeadlineMissing = formValues.bulkTask.some(task => !task.deadLineDate);
@@ -679,6 +717,22 @@ const SidebarDrawer = ({
         onClose();
         setTaskType("single");
         handleResetState();
+    };
+
+    const handleDeadlineConfirm = async () => {
+        setDeadlineConfirmDialogOpen(false);
+        setIsSubmitting(true);
+        try {
+            await submitTask(pendingSubmitData);
+        } finally {
+            setIsSubmitting(false);
+            setPendingSubmitData(null);
+        }
+    };
+
+    const handleDeadlineCancel = () => {
+        setDeadlineConfirmDialogOpen(false);
+        setPendingSubmitData(null);
     };
 
     const handleResetState = () => {
@@ -743,7 +797,7 @@ const SidebarDrawer = ({
         />
     );
 
-    const renderDateTimeField = (label, name, value, onChange) => (
+    const renderDateTimeField = (label, name, value, onChange, disabled = false) => (
         <Box className="form-group">
             <CustomDateTimePicker
                 label={label}
@@ -754,6 +808,7 @@ const SidebarDrawer = ({
                 onChange={(date) => onChange(date, name)}
                 error={name === 'dueDate' ? isDeadlineEmpty : false}
                 helperText={name === 'dueDate' && isDeadlineEmpty ? 'Deadline is required' : ''}
+                disabled={disabled}
             />
         </Box>
     );
@@ -1015,6 +1070,8 @@ const SidebarDrawer = ({
                                             renderTextField={renderTextField}
                                             commonTextFieldProps={commonTextFieldProps}
                                             handleMeetingDt={handleMeetingDt}
+                                            deadlineFieldDisabled={isDeadlineFieldLocked}
+                                            srEstimateFieldDisabled={isSrEstimateFieldLocked}
                                         />
                                     </Grid>
                                     {taskType == "single" && dropdownConfigs?.length > 0 &&
@@ -1090,6 +1147,16 @@ const SidebarDrawer = ({
             <TemplateDialog
                 open={templateDialogOpen}
                 onClose={() => setTemplateDialogOpen(false)}
+            />
+
+            <ConfirmationDialog
+                open={deadlineConfirmDialogOpen}
+                onClose={handleDeadlineCancel}
+                onConfirm={handleDeadlineConfirm}
+                title="Confirm Deadline"
+                content="Once the deadline is set for this task, it cannot be changed. Are you sure you want to proceed?"
+                confirmLabel="Confirm"
+                cancelLabel="Cancel"
             />
 
         </>

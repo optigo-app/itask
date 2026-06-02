@@ -18,6 +18,33 @@ export const getAuthData = () => {
     }
 };
 
+// Utility function to redirect to bug tracker with auto-login
+export const handleBugTrackRedirect = (taskParams = null) => {
+    try {
+        const authParams = JSON.parse(localStorage.getItem('AuthqueryParams') || sessionStorage.getItem('AuthqueryParams'));
+        const encodedAuthData = btoa(JSON.stringify({
+            uid: authParams?.uid,
+            yc: authParams?.yc
+        }));
+        
+        let url = window.location.hostname?.includes('localhost')
+            ? `http://localhost:5004/auto-login?data=${encodeURIComponent(encodedAuthData)}`
+            : window.location.hostname?.includes('nzen') ? `http://bugtracker.web/auto-login?data=${encodeURIComponent(encodedAuthData)}`
+                : `http://tecoqa.optigoapps.com/auto-login?data=${encodeURIComponent(encodedAuthData)}`;
+        
+        // Add task parameters if provided
+        if (taskParams) {
+            const encodedTaskData = encodeURIComponent(btoa(JSON.stringify(taskParams)));
+            url += `&taskData=${encodedTaskData}`;
+        }
+        console.log("bug tracker url", url)
+        window.open(url, '_blank');
+    } catch (error) {
+        console.error('Error preparing bug track redirect:', error);
+        window.open('http://tecoqa.optigoapps.com/', '_blank');
+    }
+};
+
 export const getArchiveChipStyles = (archiveInfo) => {
     try {
         if (!archiveInfo) return null;
@@ -79,6 +106,31 @@ export const getUserProfileData = () => {
         console.error("Error parsing UserProfileData:", error);
         return null;
     }
+};
+// other filed lock function
+export const isFormFieldLocked = ({ task, fieldName, designation, lockCondition }) => {
+    if (!task) return false;
+    const isAdmin = designation?.toLowerCase() === 'admin';
+    if (isAdmin) return false;
+    if (lockCondition && typeof lockCondition === 'function') {
+        return lockCondition(task, fieldName);
+    }
+    return false;
+};
+// deadline lock function
+export const isDeadlineLockedForLevelOneTask = (task, fieldName) => {
+    if (fieldName !== 'DeadLineDate' && fieldName !== 'dueDate') return false;
+    const hasExistingDeadline = Boolean(task?.DeadLineDate && String(task.DeadLineDate).trim() !== '');
+    const isLevelOneTask = task?.tree_lable == 1;
+    return isLevelOneTask && hasExistingDeadline;
+};
+
+// Sr. Estimate lock function
+export const isSrEstimateLocked = (task, fieldName) => {
+    if (fieldName !== 'estimate2_hrs') return false;
+    const hasExistingEstimate = task?.estimate2_hrs != null && task?.estimate2_hrs !== '';
+    const isLevelOneOrTwoTask = task?.tree_lable == 1 || task?.tree_lable == 2;
+    return isLevelOneOrTwoTask && hasExistingEstimate;
 };
 
 // output like 01/01/2023

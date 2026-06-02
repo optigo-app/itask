@@ -12,6 +12,7 @@ const CustomAutocomplete = ({
   getOptionLabel = (option) => option?.labelname || '',
   disabled = false,
   refProp,
+  width = '100%',
   error = false,
   helperText = '',
 }) => {
@@ -37,6 +38,7 @@ const CustomAutocomplete = ({
             placeholder={placeholder}
             inputRef={refProp}
             variant="outlined"
+            sx={{ width: width}}
             fullWidth
             error={error}
             helperText={helperText}

@@ -5,12 +5,11 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
-import { Box, Typography, CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Avatar } from '@mui/material';
-import { Calendar as CalendarIcon, List } from 'lucide-react';
+import { Box, Typography, CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Avatar, Tooltip } from '@mui/material';
+import { Calendar as CalendarIcon, List, Plus } from 'lucide-react';
 import TaskDetail from '../../Task/TaskDetails/TaskDetails';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { FullSidebar, openFormDrawer, formData, rootSubrootflag, TaskData, actualTaskData } from '../../../Recoil/atom';
-import useFullTaskFormatFile from '../../../Utils/TaskList/FullTasKFromatfile';
+import { useRecoilValue } from 'recoil';
+import { FullSidebar } from '../../../Recoil/atom';
 import { getDynamicStatusColor, getUserProfileData, statusColors, formatUTCDateTime, toAttendanceDateKey, sortAssigneesLoggedInFirst } from '../../../Utils/globalfun';
 import { DailyReportSaveApi } from '../../../Api/TaskApi/DailyReportSaveApi';
 import { GetDailyReportApi } from '../../../Api/TaskApi/GetDailyReportApi';
@@ -43,6 +42,7 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
     const [remarkDialogOpen, setRemarkDialogOpen] = useState(false);
     const [activeRemarkDateKey, setActiveRemarkDateKey] = useState(null);
     const [remarkDraft, setRemarkDraft] = useState('');
+    const [includeTasksInRemark, setIncludeTasksInRemark] = useState(false);
     const [activeAssignee, setActiveAssignee] = useState(null);
     const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
     const [attendanceDialogRows, setAttendanceDialogRows] = useState([]);
@@ -51,6 +51,28 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
     const [holidayDates, setHolidayDates] = useState([]);
     const [holidayData, setHolidayData] = useState([]);
     const lastRequestIdRef = useRef(0);
+
+    const getEventsForDate = (dateKey) => {
+        if (!dateKey) return [];
+        const date = new Date(dateKey);
+        const events = calendarEvents?.filter((event) => {
+            const eventDate = new Date(event.StartDate).toDateString();
+            const targetDate = date.toDateString();
+            return eventDate === targetDate;
+        }) || [];
+        return events;
+    };
+
+    const formatTasksForRemark = (events) => {
+        if (!events || events.length === 0) return '';
+        const tasksText = events.map(event => {
+            const title = event.meetingtitle || event.taskname || '';
+            const estimateHrs = event.estimate_hrs || 0;
+            const estimateText = estimateHrs > 0 ? ` (${estimateHrs}hrs)` : '';
+            return `${title}${estimateText}`;
+        }).join('\n');
+        return tasksText + '\n----------------------------------------------';
+    };
 
     // Load holiday dates from session storage
     useEffect(() => {
@@ -101,7 +123,6 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                 ...prev,
                 [dateKey]: { ...(prev?.[dateKey] || {}), checked: false },
             }));
-
             const loggedInId = getUserProfileData()?.id;
             setAssigneesByDate((prev) => {
                 const next = { ...(prev || {}) };
@@ -121,8 +142,6 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
         setActiveRemarkDateKey(null);
         setRemarkDraft('');
     };
-
-
 
     const updateAttendanceState = (newAttendance) => {
         const next = typeof newAttendance === 'function' ? newAttendance(attendanceByDateRef.current) : newAttendance;
@@ -435,7 +454,12 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                 });
 
                 const totalHours = dayEvents.reduce((sum, event) => sum + (event.extendedProps?.estimate_hrs || 0), 0);
-                const totalText = totalHours === 0 ? '0 hrs' : `${totalHours} ${totalHours <= 1 ? 'hr' : 'hrs'}`;
+                const hours = Number(totalHours);
+                const totalText =
+                    hours === 0
+                        ? '0.00 hrs'
+                        : `${hours.toFixed(2)} ${hours <= 1 ? 'hr' : 'hrs'}`;
+
 
                 const dayName = arg.date.toLocaleDateString('en-US', { weekday: 'short' });
                 const day = arg.date.getDate();
@@ -490,7 +514,8 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                                                 [dateKey]: { ...(prev?.[dateKey] || {}), checked: true },
                                             }));
                                             setActiveRemarkDateKey(dateKey);
-                                            setRemarkDraft(attendance.remark || '');
+                                            setRemarkDraft(attendanceByDate[dateKey]?.remark || '');
+                                            setIncludeTasksInRemark(false);
                                             setRemarkDialogOpen(true);
                                         }
                                     }}
@@ -869,7 +894,7 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                     }
                     cancelRemarkFlow();
                 }}
-                maxWidth="xs"
+                maxWidth="sm"
                 fullWidth
                 sx={{
                     '& .MuiDialog-paper': {
@@ -877,8 +902,55 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                     },
                 }}
             >
-                <DialogTitle>Add Remark (Optional)</DialogTitle>
+                <DialogTitle>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Typography variant="body" color="text.secondary">
+                            Add Remark (Optional)
+                        </Typography>
+                        <Tooltip
+                            arrow
+                            placement="top"
+                            title={includeTasksInRemark ? "Remove tasks from remark" : "Add tasks to remark"}
+                        >
+                            <IconButton
+                                onClick={() => {
+                                    const newValue = !includeTasksInRemark;
+                                    setIncludeTasksInRemark(newValue);
+
+                                    if (newValue) {
+                                        const events = getEventsForDate(activeRemarkDateKey);
+                                        const tasksText = formatTasksForRemark(events);
+                                        setRemarkDraft(prev => prev ? prev + '\n' + tasksText : tasksText);
+                                    } else {
+                                        const events = getEventsForDate(activeRemarkDateKey);
+                                        const tasksText = formatTasksForRemark(events);
+                                        setRemarkDraft(prev => prev.replace(tasksText, '').trim());
+                                    }
+                                }}
+                                sx={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    padding: '4px',
+                                    backgroundColor:
+                                        includeTasksInRemark ? "#7367f0" : "white",
+                                    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                                    "&:hover": {
+                                        backgroundColor: "#7367f0",
+                                        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                                    },
+                                }}
+                            >
+                                <Plus
+                                    size={20}
+                                    color={includeTasksInRemark ? "#fff" : "#0000008a"}
+                                />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+                </DialogTitle>
                 <DialogContent>
+
                     <TextField
                         value={remarkDraft}
                         onChange={(e) => setRemarkDraft(e.target.value)}

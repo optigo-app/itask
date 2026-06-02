@@ -2,11 +2,11 @@ import React, { Suspense, useEffect, useRef, useState } from "react";
 import "./Task.scss";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
-import { Box, Chip, Typography, useMediaQuery } from "@mui/material";
+import { Box, Chip, Typography, useMediaQuery, Dialog, DialogContent, CircularProgress } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { Advfilters, archivedTask, completedTask, copyRowData, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
 import { filterNestedTasksByView, filterTasksByValidTaskNo, flattenTasks, formatDate2, getCategoryTaskSummary, getUserProfileData, handleAddApicall, isTaskDue, isTaskToday } from "../../Utils/globalfun";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,10 +14,10 @@ import { toast } from "react-toastify";
 import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
 import { MoveTaskApi } from "../../Api/TaskApi/MoveTaskApi";
 import CloseIcon from '@mui/icons-material/Close';
-import BugTask from "../../Components/Task/BugView/BugTask";
 import { fetchArchiveTaskDataApi } from "../../Api/TaskApi/ArchiveTasklistApi";
 import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { AddPrintSheetCountApi } from "../../Api/TaskApi/PrintSheetApi";
+import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
@@ -30,7 +30,11 @@ const Task = () => {
   const date = new Date();
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const location = useLocation();
+  const navigate = useNavigate();
   const userProfile = getUserProfileData();
+
+  // Check if the path is exactly /tasks
+  const isRedirectPath = location.pathname === '/tasks';
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("entrydate");
   const [page, setPage] = useState(1);
@@ -57,6 +61,7 @@ const Task = () => {
   const [archiveLoading, setArchiveLoading] = useState(false);
   const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
   const [pendingCompleteChange, setPendingCompleteChange] = useState(null);
+  const [completedFilterLoading, setCompletedFilterLoading] = useState(false);
   const {
     iswhMLoading,
     iswhTLoading,
@@ -68,7 +73,8 @@ const Task = () => {
     statusData,
     secStatusData,
     taskAssigneeData } = useFullTaskFormatFile();
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(true);
+  // console.log("taskFinalData", taskFinalData)
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [localTaskEdits, setLocalTaskEdits] = useState({});
   const processingCancelledRef = useRef(false);
   const processingTimerRef = useRef(null);
@@ -76,7 +82,20 @@ const Task = () => {
   useEffect(() => {
     setTasks([]);
     setArchivedTasks(false);
+    if (isRedirectPath) {
+      setOpenChildTask(false)
+    } else {
+      setOpenChildTask(true)
+    }
   }, [location.pathname]);
+
+  useEffect(() => {
+    // Don't load any data if on redirect path
+    if (isRedirectPath) {
+      setTasks([]);
+      setArchivedTasks(false);
+    }
+  }, [isRedirectPath]);
 
   useEffect(() => {
     const cancelCurrentProcessing = () => {
@@ -89,7 +108,6 @@ const Task = () => {
       setCategoryTSummary([]);
       setArchiveTasks([]);
     };
-
     window.addEventListener("app:route-change-start", cancelCurrentProcessing);
     return () => {
       window.removeEventListener("app:route-change-start", cancelCurrentProcessing);
@@ -613,40 +631,78 @@ const Task = () => {
     });
   };
 
-  const handleFreezeTask = (taskToUpdate) => {
-    const updateTasksRecursively = (tasks) => {
-      return tasks?.map((task) => {
-        if (task.taskid === taskToUpdate.taskid) {
-          return {
-            ...task,
-            isFreezed: !task.isFreezed,
-          };
-        }
-        setLocalTaskEdits((prev) => ({
-          ...prev,
-          [task.taskid]: {
-            ...(prev[task.taskid] || {}),
-            isFreezed: !task.isFreezed,
-          },
-        }));
-        if (task.subtasks && task.subtasks.length > 0) {
-          return {
-            ...task,
-            subtasks: updateTasksRecursively(task.subtasks),
-          };
-        }
+  const handleFreezeTask = async (taskToUpdate) => {
+    const taskId = taskToUpdate?.taskid;
+    if (!taskId) return;
 
+    const currentIsFreez = Number(taskToUpdate?.isFreez) === 1 ? 1 : 0;
+    const nextIsFreez = currentIsFreez === 1 ? 0 : 1;
+
+    const applyFreezeToSubtree = (subtasks = [], freezeValue) => {
+      return subtasks?.map((subtask) => ({
+        ...subtask,
+        isFreez: freezeValue,
+        subtasks: applyFreezeToSubtree(subtask.subtasks || [], freezeValue),
+      }));
+    };
+
+    const updateTaskFreezeRecursively = (tasks, targetTaskId, freezeValue) => {
+      return tasks?.map((task) => {
+        if (task.taskid === targetTaskId) {
+          return {
+            ...task,
+            isFreez: freezeValue,
+            subtasks: applyFreezeToSubtree(task.subtasks || [], freezeValue),
+          };
+        }
+        if (task.subtasks?.length > 0) {
+          return {
+            ...task,
+            subtasks: updateTaskFreezeRecursively(task.subtasks, targetTaskId, freezeValue),
+          };
+        }
         return task;
       });
     };
 
-    setTasks((prevTasks) => updateTasksRecursively(prevTasks));
+    setTasks((prevTasks) => updateTaskFreezeRecursively(prevTasks, taskId, nextIsFreez));
+    setLocalTaskEdits((prev) => ({
+      ...prev,
+      [taskId]: {
+        ...(prev[taskId] || {}),
+        isFreez: nextIsFreez,
+      },
+    }));
+
+    try {
+      const response = await TaskFrezzeApi({ taskid: taskId, isFreez: nextIsFreez });
+      if (response?.rd?.[0]?.stat != 1) {
+        throw new Error("Failed to update freeze state");
+      }
+      setOpenChildTask(Date.now());
+    } catch (error) {
+      setTasks((prevTasks) => updateTaskFreezeRecursively(prevTasks, taskId, currentIsFreez));
+      setLocalTaskEdits((prev) => ({
+        ...prev,
+        [taskId]: {
+          ...(prev[taskId] || {}),
+          isFreez: currentIsFreez,
+        },
+      }));
+      toast.error("Unable to update freeze state");
+      console.error("Error freezing task:", error);
+    }
   }
 
   const handleCompletedTaskFilter = () => {
     setActiveButton('table');
+    setCompletedFilterLoading(true);
     setCompletedFlag((prev) => !prev);
     setOpenChildTask(Date.now());
+    // Hide loader after a short delay to allow API call to complete
+    setTimeout(() => {
+      setCompletedFilterLoading(false);
+    }, 1500);
   };
 
   const handleArchivedTaskFilter = () => {
@@ -1002,236 +1058,300 @@ const Task = () => {
 
   return (
     <Box className="task-container">
-      {/* Header Buttons */}
-      <HeaderButtons
-        activeButton={activeButton}
-        onButtonClick={handleTabBtnClick}
-        onFilterChange={handleFilterChange}
-        isLoading={iswhTLoading}
-        masterData={masterData}
-        priorityData={priorityData}
-        projectData={taskProject}
-        statusData={statusData}
-        secStatusData={secStatusData}
-        taskCategory={taskCategory}
-        taskDepartment={taskDepartment}
-        taskAssigneeData={taskAssigneeData}
-        CategorySummary={CategoryTSummary}
-        handlePasteTask={handlePasteTask}
-        handleCompletedTaskFilter={handleCompletedTaskFilter}
-        handleArchivedTaskFilter={handleArchivedTaskFilter}
-        showFavoritesOnly={showFavoritesOnly}
-        onToggleFavoritesOnly={handleToggleFavoritesOnly}
-      />
-
-      {/* Divider */}
-      {!isLaptop &&
-        <AnimatePresence mode="wait">
-          {showAdvancedFil && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-            >
-              <div
-                style={{
-                  margin: "20px 0",
-                  border: "1px dashed #7d7f85",
-                  opacity: 0.3,
-                }}
-              />
-
-              {/* Filters Component */}
-              <Filters
-                {...filters}
-                onFilterChange={handleFilterChange}
-                isLoading={iswhMLoading}
-                masterData={masterData}
-                priorityData={priorityData}
-                statusData={statusData}
-                assigneeData={taskAssigneeData}
-                taskDepartment={taskDepartment}
-                taskProject={taskProject}
-                taskCategory={taskCategory}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      }
-
-      {isLaptop &&
-        <FiltersDrawer {...filters}
-          filters={filters}
-          setFilters={setFilters}
-          onFilterChange={handleFilterChange}
-          onClearAll={handleClearAllFilters}
-          isLoading={iswhMLoading}
-          masterData={masterData}
-          priorityData={priorityData}
-          statusData={statusData}
-          assigneeData={taskAssigneeData}
-          taskDepartment={taskDepartment}
-          taskProject={taskProject}
-          taskCategory={taskCategory}
-        />
-      }
-
-      {/* Divider */}
-      <div
-        style={{
-          margin: "20px 0",
-          border: "1px dashed #7d7f85",
-          opacity: 0.3,
-        }}
-      />
-      <Box sx={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-        {copiedData && Object.keys(copiedData).length > 0 && (
-          <Box className="filterCheckedBox">
-            <Chip
-              size="small"
-              key={`category-`}
-              label={
-                <Typography>
-                  <span className="filterKey">Cut Task:</span>{' '}
-                  <span className="filterValue">{copiedData?.taskname}</span>
-                </Typography>
+      {/* Show redirect UI when on /task or /task/ path */}
+      {isRedirectPath ? (
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          minHeight: '80vh',
+          pt: 25
+        }}>
+          <Typography variant="h4" fontWeight={600} sx={{ mb: 3, textAlign: 'center' }}>
+            Choose Your Task View
+          </Typography>
+          <Typography variant="body1" sx={{ color: 'text.secondary', mb: 4, textAlign: 'center', maxWidth: '600px' }}>
+            This page has been updated. Please select how you would like to view your tasks:
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, maxWidth: '800px' }}>
+            <Box sx={{
+              flex: 1,
+              p: 3,
+              border: '1px solid #e0e0e0',
+              borderRadius: '12px',
+              backgroundColor: '#f5f5f5',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                transform: 'translateY(-2px)'
               }
-              onDelete={handleRemoveCopiedData}
-              deleteIcon={<CloseIcon className="closeIcon" />}
-              className="filterChip"
+            }}
+              onClick={() => navigate('/projects')}
+            >
+              <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
+                Project Module
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '14px' }}>
+                View tasks organized by project with detailed project management features
+              </Typography>
+            </Box>
+            <Box sx={{
+              flex: 1,
+              p: 3,
+              border: '2px solid #7367f0',
+              borderRadius: '12px',
+              backgroundColor: '#f0eeff',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(115, 103, 240, 0.3)',
+                transform: 'translateY(-2px)'
+              }
+            }}
+              onClick={() => navigate('/myTasks')}
+            >
+              <Typography variant="h6" fontWeight={600} sx={{ mb: 1, color: '#7367f0' }}>
+                My Task
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '14px' }}>
+                View all your assigned tasks in a comprehensive task list view
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      ) : (
+        <>
+          {/* Header Buttons */}
+          <HeaderButtons
+            activeButton={activeButton}
+            onButtonClick={handleTabBtnClick}
+            onFilterChange={handleFilterChange}
+            isLoading={iswhTLoading}
+            masterData={masterData}
+            priorityData={priorityData}
+            projectData={taskProject}
+            statusData={statusData}
+            secStatusData={secStatusData}
+            taskCategory={taskCategory}
+            taskDepartment={taskDepartment}
+            taskAssigneeData={taskAssigneeData}
+            CategorySummary={CategoryTSummary}
+            handlePasteTask={handlePasteTask}
+            handleCompletedTaskFilter={handleCompletedTaskFilter}
+            handleArchivedTaskFilter={handleArchivedTaskFilter}
+            showFavoritesOnly={showFavoritesOnly}
+            onToggleFavoritesOnly={handleToggleFavoritesOnly}
+          />
+
+          {/* Divider */}
+          {!isLaptop &&
+            <AnimatePresence mode="wait">
+              {showAdvancedFil && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                >
+                  <div
+                    style={{
+                      margin: "20px 0",
+                      border: "1px dashed #7d7f85",
+                      opacity: 0.3,
+                    }}
+                  />
+
+                  {/* Filters Component */}
+                  <Filters
+                    {...filters}
+                    onFilterChange={handleFilterChange}
+                    isLoading={iswhMLoading}
+                    masterData={masterData}
+                    priorityData={priorityData}
+                    statusData={statusData}
+                    assigneeData={taskAssigneeData}
+                    taskDepartment={taskDepartment}
+                    taskProject={taskProject}
+                    taskCategory={taskCategory}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          }
+
+          {isLaptop &&
+            <FiltersDrawer {...filters}
+              filters={filters}
+              setFilters={setFilters}
+              onFilterChange={handleFilterChange}
+              onClearAll={handleClearAllFilters}
+              isLoading={iswhMLoading}
+              masterData={masterData}
+              priorityData={priorityData}
+              statusData={statusData}
+              assigneeData={taskAssigneeData}
+              taskDepartment={taskDepartment}
+              taskProject={taskProject}
+              taskCategory={taskCategory}
+            />
+          }
+
+          {/* Divider */}
+          <div
+            style={{
+              margin: "20px 0",
+              border: "1px dashed #7d7f85",
+              opacity: 0.3,
+            }}
+          />
+          <Box sx={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+            {copiedData && Object.keys(copiedData).length > 0 && (
+              <Box className="filterCheckedBox">
+                <Chip
+                  size="small"
+                  key={`category-`}
+                  label={
+                    <Typography>
+                      <span className="filterKey">Cut Task:</span>{' '}
+                      <span className="filterValue">{copiedData?.taskname}</span>
+                    </Typography>
+                  }
+                  onDelete={handleRemoveCopiedData}
+                  deleteIcon={<CloseIcon className="closeIcon" />}
+                  className="filterChip"
+                />
+              </Box>
+            )}
+            <FilterChips
+              filters={filters}
+              onClearFilter={handleClearFilter}
+              onClearAll={handleClearAllFilters}
             />
           </Box>
-        )}
-        <FilterChips
-          filters={filters}
-          onClearFilter={handleClearFilter}
-          onClearAll={handleClearAllFilters}
-        />
-      </Box>
 
-      <ConfirmationDialog
-        open={confirmCompleteOpen}
-        onClose={() => {
-          setConfirmCompleteOpen(false);
-          setPendingCompleteChange(null);
+          <ConfirmationDialog
+            open={confirmCompleteOpen}
+            onClose={() => {
+              setConfirmCompleteOpen(false);
+              setPendingCompleteChange(null);
+            }}
+            onConfirm={() => {
+              const pending = pendingCompleteChange;
+              setConfirmCompleteOpen(false);
+              setPendingCompleteChange(null);
+              if (!pending) return;
+              applyStatusChange(pending.taskId, pending.status, pending.flag);
+            }}
+            title="Complete parent task"
+            content="This task has incomplete sub tasks. Completing it will also complete the task tree. Do you want to proceed?"
+            confirmLabel="Proceed"
+            cancelLabel="Cancel"
+          />
+
+          {/* View Components */}
+          <AnimatePresence mode="wait">
+            {activeButton && (
+              <motion.div
+                key={activeButton}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: showAdvancedFil ? 0 : 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+              >
+                <Suspense fallback={<></>}>
+                  {activeButton === "table" && (
+                    <TaskTable
+                      data={filteredData ?? null}
+                      currentData={currentData}
+                      page={page}
+                      order={order}
+                      orderBy={orderBy}
+                      rowsPerPage={rowsPerPage}
+                      totalPages={totalPages}
+                      isLoading={iswhTLoading}
+                      masterData={masterData}
+                      copiedData={copiedData}
+                      contextMenu={contextMenu}
+                      handleCopy={handleCopyTask}
+                      handlePaste={handlePasteTask}
+                      handleContextMenu={handleOpenRightMenu}
+                      handleCloseContextMenu={handleOpenRightMenu}
+                      handleTaskFavorite={handleTaskFavorite}
+                      handleFreezeTask={handleFreezeTask}
+                      handleStatusChange={handleStatusChange}
+                      handlePriorityChange={handlePriorityChange}
+                      handleAssigneeShortcutSubmit={handleAssigneeShortcutSubmit}
+                      handleRequestSort={handleRequestSort}
+                      handleChangePage={handleChangePage}
+                      handleDeadlineDateChange={handleDeadlineDateChange}
+                      handlePageSizeChnage={handlePageSizeChnage}
+                      handlePrintCount={handlePrintCount}
+                    />
+                  )}
+
+                  {activeButton === "archive" && (
+                    <ArchiveTable
+                      data={archiveTasks ?? []}
+                      isLoading={archiveLoading}
+                    />
+                  )}
+
+                  {activeButton === "kanban" && (
+                    <KanbanView
+                      taskdata={filteredData ?? null}
+                      isLoading={iswhTLoading}
+                      masterData={masterData}
+                      statusData={statusData}
+                      handleTaskFavorite={handleTaskFavorite}
+                      handleFreezeTask={handleFreezeTask}
+                    />
+                  )}
+
+                  {activeButton === "card" && (
+                    <CardView
+                      isLoading={iswhTLoading}
+                      masterData={masterData}
+                      handleTaskFavorite={handleTaskFavorite}
+                      handleFreezeTask={handleFreezeTask}
+                    />
+                  )}
+                  {activeButton === "Dynamic-Filter" && (
+                    <DynamicFilterReport />
+                  )}
+                </Suspense>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+        </>
+      )}
+
+      {/* Loading dialog for completed task filter */}
+      <Dialog
+        open={completedFilterLoading}
+        PaperProps={{
+          sx: {
+            backgroundColor: '#fff',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+          },
         }}
-        onConfirm={() => {
-          const pending = pendingCompleteChange;
-          setConfirmCompleteOpen(false);
-          setPendingCompleteChange(null);
-          if (!pending) return;
-          applyStatusChange(pending.taskId, pending.status, pending.flag);
-        }}
-        title="Complete parent task"
-        content="This task has incomplete sub tasks. Completing it will also complete the task tree. Do you want to proceed?"
-        confirmLabel="Proceed"
-        cancelLabel="Cancel"
-      />
-
-      {/* View Components */}
-      <AnimatePresence mode="wait">
-        {activeButton && (
-          <motion.div
-            key={activeButton}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: showAdvancedFil ? 0 : 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-          >
-            <Suspense fallback={<></>}>
-              {activeButton === "table" && (
-                <TaskTable
-                  data={filteredData ?? null}
-                  currentData={currentData}
-                  page={page}
-                  order={order}
-                  orderBy={orderBy}
-                  rowsPerPage={rowsPerPage}
-                  totalPages={totalPages}
-                  isLoading={iswhTLoading}
-                  masterData={masterData}
-                  copiedData={copiedData}
-                  contextMenu={contextMenu}
-                  handleCopy={handleCopyTask}
-                  handlePaste={handlePasteTask}
-                  handleContextMenu={handleOpenRightMenu}
-                  handleCloseContextMenu={handleOpenRightMenu}
-                  handleTaskFavorite={handleTaskFavorite}
-                  handleFreezeTask={handleFreezeTask}
-                  handleStatusChange={handleStatusChange}
-                  handlePriorityChange={handlePriorityChange}
-                  handleAssigneeShortcutSubmit={handleAssigneeShortcutSubmit}
-                  handleRequestSort={handleRequestSort}
-                  handleChangePage={handleChangePage}
-                  handleDeadlineDateChange={handleDeadlineDateChange}
-                  handlePageSizeChnage={handlePageSizeChnage}
-                  handlePrintCount={handlePrintCount}
-                />
-              )}
-
-              {activeButton === "archive" && (
-                <ArchiveTable
-                  data={archiveTasks ?? []}
-                  isLoading={archiveLoading}
-                />
-              )}
-
-              {activeButton === "kanban" && (
-                <KanbanView
-                  taskdata={filteredData ?? null}
-                  isLoading={iswhTLoading}
-                  masterData={masterData}
-                  statusData={statusData}
-                  handleTaskFavorite={handleTaskFavorite}
-                  handleFreezeTask={handleFreezeTask}
-                />
-              )}
-
-              {activeButton === "card" && (
-                <CardView
-                  isLoading={iswhTLoading}
-                  masterData={masterData}
-                  handleTaskFavorite={handleTaskFavorite}
-                  handleFreezeTask={handleFreezeTask}
-                />
-              )}
-              {activeButton === "bugview" && (
-                <BugTask
-                  data={filteredData ?? null}
-                  currentData={currentData}
-                  page={page}
-                  order={order}
-                  orderBy={orderBy}
-                  rowsPerPage={rowsPerPage}
-                  totalPages={totalPages}
-                  isLoading={iswhTLoading}
-                  masterData={masterData}
-                  copiedData={copiedData}
-                  contextMenu={contextMenu}
-                  handleCopy={handleCopyTask}
-                  handlePaste={handlePasteTask}
-                  handleContextMenu={handleOpenRightMenu}
-                  handleCloseContextMenu={handleOpenRightMenu}
-                  handleTaskFavorite={handleTaskFavorite}
-                  handleFreezeTask={handleFreezeTask}
-                  handleStatusChange={handleStatusChange}
-                  handlePriorityChange={handlePriorityChange}
-                  handleAssigneeShortcutSubmit={handleAssigneeShortcutSubmit}
-                  handleRequestSort={handleRequestSort}
-                  handleChangePage={handleChangePage}
-                  handleDeadlineDateChange={handleDeadlineDateChange}
-                  handlePageSizeChnage={handlePageSizeChnage}
-                />
-              )}
-              {activeButton === "Dynamic-Filter" && (
-                <DynamicFilterReport />
-              )}
-            </Suspense>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+      >
+        <DialogContent sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 4,
+          minWidth: '300px'
+        }}>
+          <CircularProgress size={60} sx={{ color: '#7367f0', mb: 2 }} />
+          <Typography variant="body1" sx={{ color: '#333', fontWeight: 500, textAlign: 'center' }}>
+            {completedFlag ? 'Hiding completed tasks...' : 'Loading completed tasks...'}
+          </Typography>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };

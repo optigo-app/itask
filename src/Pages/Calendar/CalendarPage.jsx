@@ -10,6 +10,7 @@ import {
   calendarData,
   calendarM,
   CalformData,
+  fetchlistApiCall,
   formData,
   FullSidebar,
   openFormDrawer,
@@ -26,10 +27,79 @@ import { deleteMeetingApi } from "../../Api/MeetingApi/DeleteMeetingApi";
 import { toast } from "react-toastify";
 import useAccess from "../../Components/Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Components/Auth/Role/permissions";
-import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
 import SidebarDrawer from "../../Components/FormComponent/Sidedrawer";
 import MeetingDetail from "../../Components/Meeting/MeetingDetails";
 import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
+import dayjs from "dayjs";
+import { getUserProfileData } from "../../Utils/globalfun";
+import { fetchTodayTaskApi } from "../../Api/TaskApi/fetchTodayTaskApi";
+
+const getSessionList = (key) => {
+  try {
+    return JSON.parse(sessionStorage.getItem(key) || "[]");
+  } catch {
+    return [];
+  }
+};
+
+const normalizeCalendarTasks = (rows = []) => {
+  const statusData = getSessionList("taskstatusData");
+  const priorityData = getSessionList("taskpriorityData");
+  const taskCategory = getSessionList("taskworkcategoryData");
+  const taskProject = getSessionList("taskprojectData");
+  const taskAssigneeData = getSessionList("taskAssigneeData");
+
+  const statusById = new Map(statusData.map((item) => [Number(item?.id), item?.labelname || ""]));
+  const priorityById = new Map(priorityData.map((item) => [Number(item?.id), item?.labelname || ""]));
+  const categoryById = new Map(taskCategory.map((item) => [Number(item?.id), item?.labelname || ""]));
+  const projectById = new Map(taskProject.map((item) => [Number(item?.id), item?.labelname || ""]));
+  const assigneeById = new Map(taskAssigneeData.map((item) => [Number(item?.id), item]));
+
+  const taskById = new Map();
+  const parentWithChildren = new Set();
+
+  rows.forEach((task) => {
+    const taskId = Number(task?.taskid);
+    if (!Number.isNaN(taskId)) taskById.set(taskId, task);
+    if (task?.taskid !== undefined && task?.taskid !== null) taskById.set(String(task.taskid), task);
+
+    const parentId = Number(task?.parentid);
+    if (!Number.isNaN(parentId) && parentId !== 0) {
+      parentWithChildren.add(parentId);
+      parentWithChildren.add(String(parentId));
+    }
+  });
+
+  return rows.map((task) => {
+    const assigneeIdArray = task?.assigneids
+      ?.toString()
+      ?.split(",")
+      ?.map((id) => Number(id));
+    const matchedAssignees = (assigneeIdArray || [])
+      .map((id) => assigneeById.get(id))
+      .filter(Boolean);
+
+    const parentTask = taskById.get(Number(task?.parentid)) || taskById.get(String(task?.parentid));
+    const fullPathParts = String(task?.FullPath || "")
+      .split("-->")
+      .map((part) => part.trim())
+      .filter(Boolean);
+    const inferredModuleName = fullPathParts[0] || "-";
+    const hasChildren = parentWithChildren.has(Number(task?.taskid)) || parentWithChildren.has(String(task?.taskid));
+    const inferredType = Number(task?.parentid) === 0 ? "module" : hasChildren ? "major" : "minor";
+
+    return {
+      ...task,
+      status: task?.status || statusById.get(Number(task?.statusid)) || "",
+      priority: task?.priority || priorityById.get(Number(task?.priorityid)) || "",
+      category: task?.category || categoryById.get(Number(task?.workcategoryid)) || "",
+      taskPr: task?.taskPr || projectById.get(Number(task?.projectid)) || task?.project || "",
+      assignee: task?.assignee || matchedAssignees,
+      moduleName: task?.moduleName || task.Parenttaskname || parentTask?.moduleName || parentTask?.taskname || inferredModuleName,
+      type: task?.type || inferredType,
+    };
+  });
+};
 
 const Calendar = () => {
   const { hasAccess } = useAccess();
@@ -46,6 +116,7 @@ const Calendar = () => {
   const [isLoding, setIsLoding] = useState(false);
   const [selectedAssignee, setSelectedAssignee] = useState({});
   const assigneeData = JSON?.parse(sessionStorage?.getItem("taskAssigneeData")) || [];
+  const fetchTaskTrigger = useRecoilValue(fetchlistApiCall);
   const setTasks = useSetRecoilState(TaskData);
   const setActualTaskDataValue = useSetRecoilState(actualTaskData);
   const [statusData, setStatusData] = useState([]);
@@ -53,7 +124,34 @@ const Calendar = () => {
   const [projectData, setProjectData] = useState([]);
   const [taskCategory, setTaskCategory] = useState([]);
   const [taskAssigneeData, setTaskAssigneeData] = useState([]);
-  const { iswhTLoading, taskFinalData } = useFullTaskFormatFile();
+  const auth = getUserProfileData();
+  const [calendarViewRange, setCalendarViewRange] = useState({
+    viewType: 'timeGridWeek',
+    startDate: null,
+    endDate: null,
+  });
+  const [tasklistDateRange, setTasklistDateRange] = useState({
+    startDate: "",
+    endDate: "",
+  });
+  const [tasklistAssigneeId, setTasklistAssigneeId] = useState(null);
+
+  const taskFilters = React.useMemo(() => {
+    const startDate = calendarViewRange?.startDate;
+    const endDate = calendarViewRange?.endDate;
+
+    const tasklistStartDate = tasklistDateRange?.startDate;
+    const tasklistEndDate = tasklistDateRange?.endDate;
+
+    return {
+      startdatefrom: tasklistStartDate ? dayjs(tasklistStartDate).format('YYYY-MM-DD') : (startDate ? dayjs(startDate).format('YYYY-MM-DD') : ''),
+      startdateto: tasklistEndDate ? dayjs(tasklistEndDate).format('YYYY-MM-DD') : (endDate ? dayjs(endDate).subtract(1, 'day').format('YYYY-MM-DD') : ''),
+      assigneeid: tasklistAssigneeId ?? ((selectedAssignee?.id || auth?.id) ?? '')
+    };
+  }, [calendarViewRange, selectedAssignee, tasklistDateRange, tasklistAssigneeId]);
+  
+  const hasValidDateRange = Boolean(taskFilters?.startdatefrom && taskFilters?.startdateto);
+
   const [meetingDetailModalOpen, setMeetingDetailModalOpen] = useState(false);
   const [opencnfDialogOpen, setCnfDialogOpen] = useState(false);
 
@@ -72,11 +170,29 @@ const Calendar = () => {
   }, [])
 
   useEffect(() => {
-    if (!iswhTLoading) {
-      setTasks(taskFinalData?.TaskData);
-      setActualTaskDataValue(taskFinalData?.TaskData);
-    }
-  }, [iswhTLoading]);
+    if (!hasValidDateRange) return;
+
+    const fetchCalendarTasks = async () => {
+      try {
+        const taskRes = await fetchTodayTaskApi(
+          "order by StartDate asc",
+          "5000",
+          "1",
+          taskFilters
+        );
+        const rows = taskRes?.rd || [];
+        const normalizedRows = normalizeCalendarTasks(rows);
+        setTasks(normalizedRows);
+        setActualTaskDataValue(normalizedRows);
+      } catch (error) {
+        console.error("Error fetching calendar task list:", error);
+        setTasks([]);
+        setActualTaskDataValue([]);
+      }
+    };
+
+    fetchCalendarTasks();
+  }, [taskFilters, fetchTaskTrigger, hasValidDateRange]);
 
   useEffect(() => {
     setSelectedMon(new Date());
@@ -228,6 +344,22 @@ const Calendar = () => {
     setSelectedAssignee(newValue);
   };
 
+  const handleCalendarRangeChange = ({ viewType, startDate, endDate }) => {
+    setCalendarViewRange({
+      viewType: viewType || 'timeGridWeek',
+      startDate: startDate || null,
+      endDate: endDate || null,
+    });
+  };
+
+  const handleTasklistDateRangeChange = (dateRange) => {
+    setTasklistDateRange(dateRange);
+  };
+
+  const handleTasklistAssigneeChange = (assigneeId) => {
+    setTasklistAssigneeId(assigneeId);
+  };
+
   const handleMeetingEdit = (meeting) => {
     setFormDrawerOpen(true);
     setFormDataValue(meeting);
@@ -300,6 +432,8 @@ const Calendar = () => {
             setFormDrawerOpen={setFormDrawerOpen}
             setFormDataValue={setFormDataValue}
             setRootSubroot={setRootSubroot}
+            onTasklistDateRangeChange={handleTasklistDateRangeChange}
+            onTasklistAssigneeChange={handleTasklistAssigneeChange}
           />
         </Box>
       )}
@@ -327,6 +461,7 @@ const Calendar = () => {
           setFormDrawerOpen={setFormDrawerOpen}
           setFormDataValue={setFormDataValue}
           handleMeetingEdit={handleMeetingEdit}
+          onCalendarRangeChange={handleCalendarRangeChange}
         />
       </Box>
       <SidebarDrawer

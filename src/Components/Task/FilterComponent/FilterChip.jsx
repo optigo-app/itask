@@ -50,6 +50,23 @@ const FilterChips = ({ filters, onClearFilter, onClearAll, hideClearBtn = false 
         }
 
         // other fields
+        else if (value && typeof value === 'object') {
+            const label = key.charAt(0).toUpperCase() + key.slice(1);
+            let displayValue = "";
+
+            if (['assignee', 'seniour', 'employee'].includes(key)) {
+                const fullName = `${value.firstname || ''} ${value.lastname || ''}`.trim();
+                displayValue = fullName ? fullName : (value.userid || value.labelname || value.taskname);
+            } else if (key === 'module') {
+                displayValue = value.taskname || value.labelname || value.projectname;
+            } else {
+                displayValue = value.labelname || value.taskname || JSON.stringify(value);
+            }
+
+            if (displayValue) {
+                activeFilters.push({ key: label, value: displayValue, rawKey: key });
+            }
+        }
         else if (typeof value === 'string') {
             const label = key.charAt(0).toUpperCase() + key.slice(1);
             activeFilters.push({ key: label, value: value.trim(), rawKey: key });
