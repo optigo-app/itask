@@ -8,7 +8,6 @@ export const LogoutApi = async () => {
             "p": "",
         };
         const response = await CommonAPI(body, { includeSp: false, skipTokenUpdate: true });
-        debugger;
         if (response?.Data?.rd?.[0]?.stat === 1) {
             return response?.Data;
         } else {

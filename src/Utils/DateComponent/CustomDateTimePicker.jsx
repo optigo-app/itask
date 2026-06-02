@@ -12,6 +12,7 @@
      error = false,
      helperText = "",
      onChange,
+     disabled,
      customProps = {},
      sx = {},
      textFieldProps = {},
@@ -83,6 +84,7 @@
                  onChange={onChange}
                  ampm={true}
                  format="DD/MM/YYYY hh:mm A"
+                 disabled={disabled}
                  sx={{ minWidth: width, ...sx }}
                  {...customDateTimePickerProps}
                  {...customProps}

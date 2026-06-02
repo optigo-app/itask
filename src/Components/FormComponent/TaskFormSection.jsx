@@ -48,6 +48,8 @@ const TaskFormSection = ({
   handleMeetingDt,
   hiddenFields = [],
   isTaskRoute,
+  deadlineFieldDisabled = false,
+  srEstimateFieldDisabled = false,
 }) => {
   const location = useLocation();
   const quickBtnRef = useRef(null);
@@ -313,9 +315,21 @@ const TaskFormSection = ({
                           justifyContent: 'space-between',
                         }}
                       >
-                        <Typography className="form-label" variant="subtitle1">
-                          {label}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Typography className="form-label" variant="subtitle1">
+                            {label}
+                          </Typography>
+                          {deadlineFieldDisabled && (
+                            <Tooltip
+                              title="Deadline cannot be changed once set for this task. Only admin can modify it."
+                              arrow
+                            >
+                              <IconButton size="small" sx={{ color: '#7367f0' }}>
+                                <Info size={16} />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </Box>
                         <Button
                           ref={quickBtnRef}
                           size="small"
@@ -323,12 +337,13 @@ const TaskFormSection = ({
                           className="varientTextBtn"
                           onClick={openDeadlineMenu}
                           sx={{ color: '#685dd8 !important' }}
+                          disabled={deadlineFieldDisabled}
                         >
                           Quick
                         </Button>
                       </Box>
 
-                      {renderDateField('', name, formValues[name], handleDateChange)}
+                      {renderDateField('', name, formValues[name], handleDateChange, name === 'dueDate' ? deadlineFieldDisabled : false)}
 
                       <Menu
                         anchorEl={deadlineMenuAnchorEl}
@@ -372,11 +387,23 @@ const TaskFormSection = ({
               )
             ))}
 
-            {!hiddenFields.includes('estimates') && [{ label: 'Estimate', field: 'estimate_hrs' }, { label: 'Actual Estimate', field: 'estimate1_hrs' }, { label: 'Final Estimate', field: 'estimate2_hrs' }].map(({ label, field }) => (
+            {!hiddenFields.includes('estimates') && [{ label: 'Estimate', field: 'estimate_hrs' }, { label: 'Actual Estimate', field: 'estimate1_hrs' }, { label: 'Sr. Estimate', field: 'estimate2_hrs' }].map(({ label, field }) => (
               <Grid item xs={12} md={4} key={field}>
                 <Box className="form-group">
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography className="form-label" variant="subtitle1">{label}</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Typography className="form-label" variant="subtitle1">{label}</Typography>
+                      {field == 'estimate2_hrs' && (srEstimateFieldDisabled || formValues?.tree_lable == 2) && (
+                        <Tooltip
+                          title="Sr. Estimate cannot be changed once set for this task. Only admin can modify it."
+                          arrow
+                        >
+                          <IconButton size="small" sx={{ color: '#7367f0' }}>
+                            <Info size={16} />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Box>
                     {Boolean(showSplitHint) && (
                       <Tooltip
                         arrow
@@ -391,6 +418,7 @@ const TaskFormSection = ({
                   <EstimateInput
                     value={formValues[field]}
                     onChange={(val) => handleEstimateChange(field, val)}
+                    disabled={field === 'estimate2_hrs' ? srEstimateFieldDisabled : false}
                   />
                 </Box>
               </Grid>

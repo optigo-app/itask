@@ -2,6 +2,7 @@ import React from 'react';
 import { IconButton, Box } from '@mui/material';
 import { CheckCircle, Circle } from 'lucide-react';
 import AssigneeAvatarGroup from '../../ShortcutsComponent/Assignee/AssigneeAvatarGroup';
+import { getUserProfileData } from '../../../Utils/globalfun';
 
 const DailyReportAttendance = ({
     checked,
@@ -16,6 +17,8 @@ const DailyReportAttendance = ({
     buttonSize = 32,
     dateKey
 }) => {
+    const isAdmin = getUserProfileData()?.designation?.toLowerCase() === 'admin';
+
     const isWithinOneWeek = React.useMemo(() => {
         if (!dateKey) return isToday;
         const targetDate = new Date(dateKey);
@@ -27,7 +30,7 @@ const DailyReportAttendance = ({
         return diffDays >= 0 && diffDays <= 7;
     }, [dateKey, isToday]);
 
-    const canMarkAttendance = isWithinOneWeek && !disabled;
+    const canMarkAttendance = (isAdmin || isWithinOneWeek) && !disabled;
 
     return (
         <Box
@@ -47,7 +50,7 @@ const DailyReportAttendance = ({
             {showCheckbox && (
                 <div className="calendar-day-header-right-center">
                     <IconButton
-                        disabled={disabled || !isWithinOneWeek}
+                        disabled={disabled || (!isAdmin && !isWithinOneWeek)}
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -68,7 +71,13 @@ const DailyReportAttendance = ({
                                 opacity: 0.5,
                             }
                         }}
-                        title={disabled ? "Holiday - Attendance disabled" : canMarkAttendance ? "Mark attendance (optional remark)" : "Attendance limited to past 7 days"}
+                        title={
+                            disabled
+                                ? "Holiday - Attendance disabled"
+                                : canMarkAttendance
+                                    ? "Mark attendance (optional remark)"
+                                    : "Attendance limited to past 7 days"
+                        }
                     >
                         {checked ? <CheckCircle size={iconSize} /> : <Circle size={iconSize} />}
                     </IconButton>

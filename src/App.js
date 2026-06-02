@@ -24,7 +24,6 @@ import { userRoleAtom, webReload } from './Recoil/atom';
 import LoginPage from './Components/Auth/LoginForm';
 import TemplateDialog from './Components/Common/TemplateDialog';
 import TestPage from './Components/Examples/testpage';
-import DocumentSheet from './Components/PrintSheet/DocumentSheet';
 // import CalendarComparisonDemo from './Backup/CalendarComparisonDemo';
 // import CalendarViewDemo from './Backup/CalendarViewDemo';
 // import SampleQuickForm from './Backup/sampleQuickForm';
@@ -38,7 +37,6 @@ const Sidebar = lazy(() => import('./Components/NavSidebar/Sidebar'));
 const Header = lazy(() => import('./Components/Header/Header'));
 const Home = lazy(() => import('./Pages/Home/Home'));
 const Inbox = lazy(() => import('./Pages/Inbox/Inbox'));
-const Bugtask = lazy(() => import('./Components/Task/BugView/BugTask'));
 const Calendar = lazy(() => import('./Pages/Calendar/CalendarPage'));
 const CalendarGridView = lazy(() => import('./Pages/Calendar/CalendarGridView'));
 const Meeting = lazy(() => import('./Pages/Meeting/Meeting'));
@@ -59,8 +57,8 @@ const PmsReport = lazy(() => import('./Pages/Reports/pmsReport'));
 const PmsReport2 = lazy(() => import('./Pages/Reports/pms-report-2'));
 const CalendarReport = lazy(() => import('./Pages/Reports/CalendarReport/CalendarReport'));
 const ModuleMilestoneReport = lazy(() => import('./Pages/Reports/ModuleMilestoneReport/ModuleMilestoneReport'));
-const BugTracking = lazy(() => import('./Pages/BugTracking/BugTracking'));
 const ImageEditorModal = lazy(() => import('./Image-Editor'));
+const DocsEstimateReport = lazy(() => import('./Pages/DocsEstimateReport/DocsEstimateReport'));
 
 const Layout = ({ children, pageDataLoaded }) => {
     const isMobile = useMediaQuery('(max-width:712px)');
@@ -72,7 +70,7 @@ const Layout = ({ children, pageDataLoaded }) => {
                 flexGrow: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: isMobile ? '20px 5px' : '10px 20px',
+                padding: isMobile ? '20px 5px' : '10px',
                 position: 'relative',
                 width: isMobile ? '97%' : '80%',
                 overflow: "auto"
@@ -80,26 +78,6 @@ const Layout = ({ children, pageDataLoaded }) => {
                 {!pageDataLoaded && <Suspense fallback={<LoadingBackdrop />}><Header /></Suspense>}
                 <Suspense fallback={<LoadingBackdrop />}><MetaDataSet /></Suspense>
                 {children}
-                {["localhost", "nzen"]?.includes(window.location.hostname) &&
-                    <Box
-                        sx={{
-                            position: "fixed",
-                            top: "25px",
-                            right: "35px",
-                            transform: "translateX(50%) rotate(45deg)",
-                            background: "linear-gradient(to right, #ff7e5f, #feb47b)",
-                            color: "white",
-                            padding: "6px 40px",
-                            fontWeight: "bold",
-                            fontSize: "10px",
-                            zIndex: 10,
-                            whiteSpace: "nowrap",
-                            boxShadow: "2px 2px 10px rgba(0,0,0,0.2)",
-                        }}
-                    >
-                        In Development
-                    </Box>
-                }
             </Box>
         </Box>
     );
@@ -120,6 +98,7 @@ const AppWrapper = () => {
     const [isReady, setIsReady] = useState(false);
     const [cookieData, setCookieData] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [masterSynced, setMasterSynced] = useState(false);
     const navigate = useNavigate();
     const setRole = useSetRecoilState(userRoleAtom);
 
@@ -222,23 +201,9 @@ const AppWrapper = () => {
     };
 
     useEffect(() => {
-        const masterFuncCall = async () => {
-            if (reload) {
-                sessionStorage.clear();
-                window.location.reload();
-                const roleData = await fetchMasterGlFunc();
-                setRole(roleData?.designation);
-                setReload(false);
-            }
-        }
-        masterFuncCall();
-    }, [reload]);
-
-    useEffect(() => {
         const checkAndInit = async () => {
             const taskInitToken = sessionStorage.getItem("taskInit");
             let roleData;
-
             if (!taskInitToken) {
                 const result = await taskInit();
                 if (result?.Data?.rd1) {
@@ -255,7 +220,6 @@ const AppWrapper = () => {
             roleData = await fetchMasterGlFunc();
             setRole(roleData?.designation);
         };
-
         if (cookieData) {
             checkAndInit();
         }
@@ -322,10 +286,10 @@ const AppWrapper = () => {
                                         <Route path="/account-profile" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId=""><Profile /></ProtectedRoute>} />
                                         <Route path="/reports/pms" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport /></ProtectedRoute>} />
                                         <Route path="/reports/pms-2" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1008"><PmsReport2 /></ProtectedRoute>} />
-                                        <Route path="/fullTask" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><FullTaskView /></ProtectedRoute>} />
+                                        <Route path="/myTasks" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><FullTaskView /></ProtectedRoute>} />
                                         <Route path="/teamCalReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1009"><CalendarReport /></ProtectedRoute>} />
                                         <Route path="/milestoneReport" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1010"><ModuleMilestoneReport /></ProtectedRoute>} />
-                                        <Route path="/bugtrack" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1010"><BugTracking /></ProtectedRoute>} />
+                                        <Route path="/docs-estimate-report" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1033"><DocsEstimateReport /></ProtectedRoute>} />
                                         <Route path="/notification" element={<NotificationTable />} />
                                         <Route path="/taskView" element={<CalendarGridView />} />
                                         <Route path="/image-editor" element={<ImageEditorModal open={true} onClose={() => { }} />} />
@@ -360,8 +324,8 @@ const appTheme = createTheme({
 const App = () => (
     <RecoilRoot>
         <ThemeProvider theme={appTheme}>
-            <Router basename="/itaskweb">
-            {/* <Router> */}
+            {/* <Router basename="/itaskweb"> */}
+            <Router>
                 <AppWrapper />
             </Router>
         </ThemeProvider>

@@ -9,6 +9,7 @@ export const fetchModuleDataApi = async (selectedRow) => {
 
         const combinedValue = JSON.stringify({
             taskid: `${selectedRow?.taskid ?? ''}`,
+            moduleid: `${selectedRow?.moduleid ?? ''}`,
         });
 
         const body = {

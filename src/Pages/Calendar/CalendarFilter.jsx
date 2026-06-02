@@ -1,16 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, IconButton, Typography, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import DepartmentAssigneeAutocomplete from '../../Components/ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
+import CustomAutocomplete from '../../Components/ShortcutsComponent/CustomAutocomplete';
 import { PERMISSIONS } from '../../Components/Auth/Role/permissions';
 import useAccess from '../../Components/Auth/Role/useAccess';
 import CustomDateRangePicker from '../../Components/ShortcutsComponent/DateRangePicker';
+import { fetchModuleDataApi } from '../../Api/TaskApi/ModuleDataApi';
+import { mapKeyValuePair } from '../../Utils/globalfun';
 
 const filterOptions = ['Today', 'Tomorrow', 'Week'];
 
-const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, currentDate, customRange, onNavigate, onFilterChange, handleAssigneeChange, handleDateChange, taskAssigneeData }) => {
+const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, selectedModuleId, currentDate, customRange, onNavigate, onFilterChange, handleAssigneeChange, handleModuleChange, handleDateChange, taskAssigneeData }) => {
   const { hasAccess } = useAccess();
+  const [moduleData, setModuleData] = useState([]);
+
+  useEffect(() => {
+    const fetchModuleData = async () => {
+      try {
+        const response = await fetchModuleDataApi({});
+        if (response?.rd) {
+          const mappedData = mapKeyValuePair(response);
+          const dataWithId = mappedData.map(item => ({
+            ...item,
+            id: String(item.taskid)
+          }));
+          setModuleData(dataWithId);
+        }
+      } catch (error) {
+        console.error('Error fetching module data:', error);
+        setModuleData([]);
+      }
+    };
+    fetchModuleData();
+  }, []);
+
   const handleToggleChange = (event, newFilter) => {
     if (newFilter !== null) {
       onFilterChange(newFilter);
@@ -50,6 +75,17 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, curren
             />
           </Box>
         }
+        <Box className="meetingAssigneBox" sx={{ minWidth: 200 }}>
+          <CustomAutocomplete
+            name="module"
+            value={selectedModuleId}
+            options={moduleData}
+            placeholder="Select module"
+            onChange={handleModuleChange}
+            width="250px"
+            getOptionLabel={(option) => option?.taskname || ''}
+          />
+        </Box>
       </Box>
       <Box className="filter-box">
         <CustomDateRangePicker value={customRange} onChange={handleDateChange} />
@@ -62,7 +98,7 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, curren
             <ChevronLeft fontSize="small" />
           </IconButton>
 
-          <Box className="date-display">
+          {/* <Box className="date-display">
             {selectedFilter === 'Week'
               ? `Week ${dayjs(currentDate).week()}`
               : selectedFilter === 'Today'
@@ -71,7 +107,7 @@ const CalendarFilter = ({ totalHours, selectedFilter, selectedAssigneeId, curren
                   ? dayjs(currentDate).add(1, 'day').format('MMM DD, YYYY')
                   : 'Custom Range'
             }
-          </Box>
+          </Box> */}
 
           <IconButton
             onClick={() => onNavigate('next')}

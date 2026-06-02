@@ -13,12 +13,6 @@ import {
     Divider,
     MenuItem,
     Menu,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-    IconButton,
 } from "@mui/material";
 import {
     Menu as MenuIcon,
@@ -26,7 +20,7 @@ import {
     ExpandLess,
     ExpandMore
 } from "@mui/icons-material";
-import { Boxes, Bug, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt, ExternalLink, X } from 'lucide-react';
+import { Boxes, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
 import logo from "../../Assests/iconLogo.png";
 import itasknewLogo from "../../Assests/tecotask.png"
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -50,26 +44,24 @@ const Sidebar = () => {
     const [isFullSidebar, setFullSidebar] = useRecoilState(FullSidebar);
     const [activeItem, setActiveItem] = useState('Home');
     const [openReports, setOpenReports] = useState(false);
-    const drawerWidth = isFullSidebar || isDrawerOpen ? 220 : 80;
+    const drawerWidth = isFullSidebar || isDrawerOpen ? 200 : 80;
     const [reportsAnchorEl, setReportsAnchorEl] = React.useState(null);
     const setFilters = useSetRecoilState(Advfilters);
-    const [bugTrackDialogOpen, setBugTrackDialogOpen] = useState(false);
 
 
     // All possible menu items with additional info
     const allMenuItems = [
         { pagename: "Home", label: "Home", routes: "Home", path: "/", icon: House },
-        { pagename: "Task", label: "Full Task", routes: "FullTask", path: "/fullTask", icon: FileCheck },
+        { pagename: "Task", label: "My Tasks", routes: "MyTasks", path: "/myTasks", icon: FileCheck },
         { pagename: "Project", label: "Project", routes: "Projects", path: "/projects", icon: SquareChartGantt },
         { pagename: "Task", label: "Task", routes: "Tasks", path: "/tasks", icon: FileCheck },
-        { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "external-bug-track", icon: Bug },
-        // { pagename: "Bug Track", label: "Bug Track", routes: "Bugtrack", path: "/bugtrack", icon: Bug },
         { pagename: "Inbox", label: "Inbox", routes: "Inbox", path: "/inbox", icon: Inbox },
         { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
         { pagename: "Calender", label: "My Calendar", routes: "MyCalendar", path: "/myCalendar", icon: CalendarCheck },
         { pagename: "Maters", label: "Masters", routes: "Masters", path: "/masters", icon: Boxes },
         { pagename: "Team Cal View", label: "Team Cal View", routes: "TeamCalReport", path: "/teamCalReport", icon: Ratio },
-        { pagename: "Milestone Report", label: "Milestone Report", routes: "MilestoneReport", path: "/milestoneReport", icon: Ratio },
+        // { pagename: "Milestone Report", label: "Milestone Report", routes: "MilestoneReport", path: "/milestoneReport", icon: Ratio },
+        { pagename: "Doc Estimate", label: "Doc Estimate", routes: "DocsEstimateReport", path: "/docs-estimate-report", icon: FileCheck },
         { pagename: "Reports", label: "Reports", routes: "Reports", path: "/reports", icon: Ratio },
     ];
 
@@ -77,9 +69,6 @@ const Sidebar = () => {
     const reportSubItems = [
         { label: 'PMS Report', path: '/reports/pms' },
         { label: 'PMS Report 2', path: '/reports/pms-2' },
-        // { label: 'Full Task Report', path: '/fullTaskReport' },
-        // { label: 'Team Cal View', path: '/reports/teamCalReport' },
-        // { label: 'Milestone Report', path: '/reports/milestoneReport' },
     ];
 
     useEffect(() => {
@@ -89,7 +78,7 @@ const Sidebar = () => {
             const pageAccess = JSON.parse(sessionStorage.getItem('pageAccess'));
             if (pageAccess && Array.isArray(pageAccess)) {
                 const filteredMenu = allMenuItems.filter(item =>
-                    pageAccess.some(access => access.pagename === item.pagename) || item.pagename === "Bug Track"
+                    pageAccess.some(access => access.pagename === item.pagename)
                 );
                 setPageList(filteredMenu);
                 setLoading(false);
@@ -119,34 +108,9 @@ const Sidebar = () => {
     const handleItemClick = (pathname, routes) => {
         setFilters({})
         setActiveItem(routes);
-
-        // Handle external redirect for bug tracking
-        if (pathname === 'external-bug-track') {
-            setBugTrackDialogOpen(true);
-            return;
-        }
-
         navigate(pathname);
         if (isMobile) {
             setDrawerOpen(false);
-        }
-    };
-
-    const handleBugTrackRedirect = () => {
-        try {
-            const authParams = JSON.parse(localStorage.getItem('AuthqueryParams') || sessionStorage.getItem('AuthqueryParams'));
-            const encodedAuthData = btoa(JSON.stringify({
-                uid: authParams?.uid,
-                yc: authParams?.yc
-            }));
-            const redirectUrl = window.location.hostname?.includes('localhost')
-                ? `http://localhost:5004/auto-login?data=${encodeURIComponent(encodedAuthData)}`
-                : window.location.hostname?.includes('nzen') ? `http://bugtracker.web/auto-login?data=${encodeURIComponent(encodedAuthData)}`
-                    : `http://tecoqa.optigoapps.com/auto-login?data=${encodeURIComponent(encodedAuthData)}`;
-            window.open(redirectUrl, '_blank');
-        } catch (error) {
-            console.error('Error preparing bug track redirect:', error);
-            window.open('http://tecoqa.optigoapps.com/', '_blank');
         }
     };
 
@@ -156,15 +120,6 @@ const Sidebar = () => {
         } else {
             toggleReportsMenu();
         }
-    };
-
-    const handleBugTrackDialogClose = () => {
-        setBugTrackDialogOpen(false);
-    };
-
-    const handleBugTrackDialogConfirm = () => {
-        setBugTrackDialogOpen(false);
-        handleBugTrackRedirect();
     };
 
     const handleReportsClose = () => {
@@ -226,17 +181,6 @@ const Sidebar = () => {
                                     onMouseEnter={handleMouseEnter}
                                     onMouseLeave={handleMouseLeave}
                                 >
-                                    {/* <div className="itask_logoWrapper" onClick={() => navigate("/")}>
-                                        <motion.img
-                                            src={logo}
-                                            alt="Itask Logo"
-                                            className="itask_logo"
-                                            initial={{ opacity: 0, scale: 0.5 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            transition={{ duration: 0.5 }}
-                                        />
-                                        {isDrawerOpen && <ListItemText primary="iTask" className="itask_logoTxt" />}
-                                    </div> */}
                                     <div className="itask_logoWrapper" onClick={() => navigate("/")}>
                                         <motion.img
                                             src={isDrawerOpen ? itasknewLogo : logo}
@@ -263,21 +207,6 @@ const Sidebar = () => {
                                 </Box>
                             </ListItemButton>
                         </ListItem>
-                        {/* <Chip
-                            label={taskInit?.companycode || '--'}
-                            size={isDrawerOpen ? 'medium' : 'small'}
-                            sx={{
-                                mt: 0.5,
-                                mx: isDrawerOpen ? 2.75 : 1,
-                                fontSize: isDrawerOpen ? '16px' : '12px',
-                                height: isDrawerOpen ? 32 : 24,
-                                borderRadius: '8px',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                            }}
-                            className="itask_drawerText"
-                        /> */}
                         <div className="itask_separator" />
                         {pageList.length > 0 ? (
                             <>
@@ -391,142 +320,6 @@ const Sidebar = () => {
                     }
                 </Box>
             </Drawer>
-
-            {/* Bug Track Redirect Confirmation Dialog */}
-            <Dialog
-                open={bugTrackDialogOpen}
-                onClose={handleBugTrackDialogClose}
-                maxWidth="xs"
-                fullWidth
-                PaperProps={{
-                    sx: {
-                        borderRadius: "20px",
-                        p: 4,
-                        textAlign: "center",
-                        position: "relative",
-                        background: "#fff",
-                        boxShadow:
-                            "0 25px 50px -12px rgba(0,0,0,0.15)",
-                    },
-                }}
-            >
-                {/* Close Button */}
-                <IconButton
-                    onClick={handleBugTrackDialogClose}
-                    sx={{
-                        position: "absolute",
-                        right: 12,
-                        top: 12,
-                        bgcolor: "#f3f4f6",
-                        "&:hover": { bgcolor: "#e5e7eb" },
-                    }}
-                >
-                    <X size={16} />
-                </IconButton>
-
-                <DialogContent sx={{ p: 0 }}>
-
-                    {/* Top Icons Section */}
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            mb: 3,
-                            gap: 2,
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                width: 64,
-                                height: 64,
-                                borderRadius: "16px",
-                                bgcolor: "#f9fafb",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                            }}
-                        >
-                            <Bug size={28} color="#6366f1" />
-                        </Box>
-
-                        {/* Connector */}
-                        <Box
-                            sx={{
-                                width: 40,
-                                height: 2,
-                                bgcolor: "#c4b5fd",
-                            }}
-                        />
-
-                        <Box
-                            sx={{
-                                width: 64,
-                                height: 64,
-                                borderRadius: "16px",
-                                bgcolor: "#f9fafb",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                            }}
-                        >
-                            <ExternalLink size={28} color="#3b82f6" />
-                        </Box>
-                    </Box>
-
-                    {/* Title */}
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            fontWeight: 600,
-                            mb: 1,
-                            color: "#111827",
-                        }}
-                    >
-                        Redirect to Bug Tracking
-                    </Typography>
-
-                    {/* Description */}
-                    <Typography
-                        variant="body2"
-                        sx={{
-                            color: "#6b7280",
-                            mb: 4,
-                            maxWidth: 320,
-                            mx: "auto",
-                        }}
-                    >
-                        You are about to open the Bug Tracking module in a new tab.
-                        Your authentication will be transferred automatically.
-                    </Typography>
-
-                    {/* CTA Button */}
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        onClick={handleBugTrackDialogConfirm}
-                        className="buttonClassname"
-                    >
-                        Open Bug Tracking
-                    </Button>
-
-                    {/* Secondary Button */}
-                    <Button
-                        fullWidth
-                        onClick={handleBugTrackDialogClose}
-                        sx={{
-                            mt: 1,
-                            textTransform: "none",
-                            color: "#6b7280",
-                        }}
-                    >
-                        Cancel
-                    </Button>
-
-                </DialogContent>
-            </Dialog>
         </motion.div>
     );
 };

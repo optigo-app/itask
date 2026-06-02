@@ -1,294 +1,328 @@
-@import "../../theme/variable.scss";
-
-.dContainer_main {
-  box-sizing: border-box;
-  word-break: break-all;
-  max-width: 850px;
-  margin: 0 auto;
-  padding-bottom: 150px;
-  font-family: Calibri;
-  letter-spacing: 0.3px;
-
-  .TxtCentr {
-    text-align: center;
-    margin-bottom: 10px;
+body {
+    margin: 0;
+ 
+    font-family: Arial, Helvetica, sans-serif;
   }
-
-  .CmonFntSize {
-    font-size: 14px;
-  }
-
-  .WdthMost {
-    width: 70%;
-    white-space: nowrap;
-  }
-
-  .WdthMIN {
-    width: 30%;
-  }
-
-  .WdMost {
-    width: 40%;
-    white-space: nowrap;
-  }
-
-  .valueBind {
-    margin-left: 2px;
-    font-weight: normal !important;
-    text-transform: capitalize;
-  }
-
-  .teamWrapCell {
-    height: auto !important;
-    white-space: normal !important;
-    align-items: flex-start;
-    display: flex;
-    gap: 4px;
-  }
-
-  .teamLabel {
-    white-space: nowrap;
-    flex: 0 0 auto;
-    display: flex;
-    justify-self: unset;
-    align-self: flex-start;
-  }
-
-  .teamWrapText {
-    white-space: normal !important;
-    word-break: break-word !important;
-    overflow-wrap: anywhere;
-    line-height: 1.2;
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .taskname {
-    margin-left: 2px;
-    font-weight: normal !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    line-clamp: 2;
-    /* Show only 2 lines */
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: normal !important;
-    max-width: 100%;
-  }
-
-  // Bold and dark labels
-  .label-bold {
-    font-weight: 600 !important;
-    color: #000 !important;
-  }
-
-  // Light colored text for other content
-  .text-light {
-    color: #666 !important;
-    font-weight: 400 !important;
-  }
-
-  .WdAvg {
-    width: 30%;
-  }
-
-  .WdMIN {
-    width: 30%;
-  }
-
-  .ScndryWdMost {
-    width: 35%;
-  }
-
-  .ScndryWdMdle {
-    width: 30%;
-  }
-
-  .ScndryWdMIN {
-    width: 35%;
-  }
-
   
-
-  .checkbox {
-    display: inline-block;
-    width: 11px;
-    height: 11px;
+  .page {
+    width: 210mm;
+    height: 297mm;
+    background: white;
+    margin: 0 auto;
+    padding: 6mm;
     box-sizing: border-box;
-    border: 1px solid #bdbdbd !important;
-    margin-top: 0px;
-    margin-left: 4px;
-    margin-right: 10px;
+    color: black;
+    overflow: hidden;
+    font-size: 13px;
   }
-
-  .checklist_date {
-    display: flex !important;
-    gap: 10px !important;
+  
+  .topHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
   }
-
-  .SpacRit {
-    margin-right: 4px;
+  
+  .title {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
   }
-
-  .SpacLft {
-    margin-left: 25px;
+  
+  .subTitle {
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 3px;
   }
-
-  .MostWd {
-    width: 34%;
-    white-space: nowrap;
+  
+  .planningText {
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 2px;
   }
-
-  .AvgWd1 {
-    width: 23%;
-    white-space: nowrap;
+  
+  .infoSection {
+    margin-top: 6px;
   }
-
-  .AvgWd2 {
-    width: 24%;
-    white-space: nowrap;
-  }
-
-  .MINWd {
-    width: 30%;
-  }
-
-  .higtCmon {
-    height: 25px;
-    box-sizing: border-box;
-  }
-
-  .CmonCentrEvry {
+  
+  .infoRow {
     display: flex;
     align-items: center;
-    padding-left: 2px;
+    gap: 5px;
+    margin-bottom: 4px;
+  }
+  
+  .spaceBetween {
+    justify-content: space-between;
+  }
+  
+  .compactWrap {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .bold {
+    font-weight: 700;
+  }
+  
+  .line {
+    display: inline-block;
+    border-bottom: 1px solid #bdbdbd;
+    height: 8px;
+  }
+  
+  .large {
+    width: 300px;
+  }
+  
+  .medium {
+    width: 140px;
+  }
+  
+  .small {
+    width: 70px;
+  }
+  
+  .clientText {
+    margin-left: 30px;
+  }
+  
+  .tagGroup {
     white-space: nowrap;
   }
-
-  .TxtDark {
-    font-weight: 600;
+  
+  .docBrief {
+    border: 1px solid #bdbdbd;
+    height: 36px;
+    padding: 3px;
+    margin-top: 4px;
+  }
+  
+  .sectionHeader {
+    border: 1px solid #bdbdbd;
+    border-bottom: none;
+    padding: 3px 5px;
+    font-size: 11px;
+    font-weight: 700;
+    border-top: none;
+    
+    text-align: center;
+ 
+  }
+  
+  .inner {
+    margin-top: 0;
+  }
+  
+  .mainTable,
+  .previewTable {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  
+  .mainTable th,
+  .mainTable td,
+  .previewTable th,
+  .previewTable td {
+    border: 1px solid #bdbdbd;
+    padding: 3px;
+    vertical-align: top;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+  
+  .mainTable th,
+  .previewTable th {
+    text-align: center;
+    font-weight: 700;
+  }
+  
+  .processCol {
+    width: 180px;
+  }
+  
+  .tallRow td {
+    height: 36px;
+  }
+  
+  .mediumRow td {
+    height: 40px;
+  }
+  
+  .previewRow td {
+    height: 55px;
+  }
+  
+  .bottomSection {
+    display: flex;
+  }
+  
+  .leftBox,
+  .rightBox {
+    width: 50%;
+    border: 1px solid #bdbdbd;
+    min-height: 170px;
+  }
+  
+  .rightBox {
+    border-left: none;
+  }
+  
+  .innerContent {
+    padding: 5px;
+  }
+  
+  .innerContent p {
+    margin: 5px 0;
+    line-height: 1.2;
+  }
+  
+  .subHeading {
+    font-weight: 700;
+    margin-top: 8px;
+    margin-bottom: 4px;
+  }
+  
+  .checklist {
+    margin-bottom: 8px;
+    line-height: 1.4;
   }
 
-  .BrderEvry {
+  .headerBox {
     border: 1px solid #bdbdbd;
   }
-
-  .BrderTop {
-    border-top: 1px solid #bdbdbd;
-  }
-
-  .BrderRigt {
-    border-right: 1px solid #bdbdbd;
-  }
-
-  .BrderBtom {
+  
+  .docheaderTitle {
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 4px 0;
     border-bottom: 1px solid #bdbdbd;
   }
-
-  .BrderLft {
-    border-left: 1px solid #bdbdbd;
+  
+  .headerRow {
+    display: flex;
+    border-bottom: 1px solid #bdbdbd;
+    min-height: 22px;
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
   }
-}
-
-@media print {
-  @page {
-    margin: 0.3in 0.4in !important;
-    size: A4;
+  .headerRow > div {
+    padding: 3px 4px;
+    border-right: 1px solid #bdbdbd;
+    box-sizing: border-box;
   }
-
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  
+  .headerRow > div:last-child {
+    border-right: none;
   }
-
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
+  
+  .mainInfo {
+    /* min-height: 50px; */
+    min-height: 59px;
   }
-
-  .dContainer_main {
-    padding-bottom: 0px;
-    margin: 0 !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    box-shadow: none !important;
-    page-break-inside: avoid;
-    overflow: visible !important;
-    line-height: 1.2 !important;
-
-    .TxtCentr {
-      text-align: center;
-      margin-bottom: 10px !important;
+  
+  .left {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  
+  .right {
+    width: 224px;
+    flex-shrink: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  
+  .deadline {
+    width: 30%;
+  }
+  
+  .projectName {
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 1.2;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  .smallText {
+    font-size: 13px;
+ 
+  }
+  
+  .split4 > div {
+    flex: 1;
+  }
+  
+  .tagRow {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  
+  .docBriefLabel {
+    border-bottom: 1px solid #bdbdbd;
+    padding: 3px 4px;
+    font-size: 10px;
+  }
+  
+  .docLines {
+    height: 17px;
+    border-bottom: 1px solid #bdbdbd;
+  }
+  
+  .docLines:last-child {
+    border-bottom: none;
+  }
+  .bodo{
+    display: flex;
+  }
+  .bodo .bodoItem{
+    width: 33.33%;
+ 
+  }
+  .bodoHeade{
+    text-align: center;
+    padding: 2px;
+    border: 1px solid #bdbdbd;
+    border-top: none;
+    font-weight: 700;
+    border-right: none;
+  }
+  .SRDItem{
+    display: flex;
+ 
+    align-items: center;
+  }
+  .SRDItem .bodo-m{
+     width: 50%;
+  }
+  .bodoContent{
+    border: 1px solid #bdbdbd;
+    border-top: none;
+    padding: 3px;
+    min-height: 65px;
+    border-right: none;
+    border-bottom: none;
+  }
+  .bod-bot-gray{
+    /* border-bottom: 0.5px solid #dddddd; */
+    border-bottom: 0.4px solid #ededed
+  }
+  
+  @media print {
+    body {
+      background: white;
     }
-
-    .CmonFntSize {
-      font-size: 10px !important;
-    }
-
-    .taskname {
-      font-size: 16px !important;
-      word-break: break-word !important;
-    }
-
-    .module-project-name {
-      color: $placeholderColor !important;
-    }
-
-    .taskno {
-      margin-left: 5px !important;
-      font-size: 20px !important;
-    }
-
-    .higtCmon {
-      height: 20px;
-    }
-
-    .higtT {
-      height: 50px !important;
-    }
-
-    .SpacRit {
-      margin-right: 3px;
-    }
-
-    .SpacLft {
-      margin-left: 18px;
-    }
-
-    // Prevent page breaks in table rows and important elements
-    table,
-    tr,
-    td,
-    th {
-      page-break-inside: avoid !important;
-    }
-
-    // Prevent orphaned content
-    .higtCmon {
-      page-break-inside: avoid;
-    }
-
-    // Reduce padding for compact layout
-    .CmonCentrEvry {
-      padding-left: 1px !important;
-      padding-top: 1px !important;
-      padding-bottom: 1px !important;
-    }
-
-    // Compact text elements
-    * {
-      margin-top: 0 !important;
-      margin-bottom: 0 !important;
-    }
-
-    // Reduce spacing between elements
-    div,
-    p,
-    span {
-      margin: 0 !important;
-      padding-top: 0 !important;
-      padding-bottom: 0 !important;
+  
+    .page {
+      margin: 0;
+      width: 210mm;
+      height: 297mm;
+      page-break-after: avoid;
     }
   }
-}

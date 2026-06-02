@@ -17,10 +17,11 @@ import {
 
 import { fetchFullTaskReportApi } from '../../../Api/TaskApi/fetchFullTaskReportApi';
 import { GetPrTeamsApi } from '../../../Api/TaskApi/prTeamListApi';
+import { fetchModuleDataApi } from '../../../Api/TaskApi/ModuleDataApi';
 import LoadingBackdrop from '../../../Utils/Common/LoadingBackdrop';
 import StatusBadge from '../../ShortcutsComponent/StatusBadge';
 import TablePaginationFooter from '../../ShortcutsComponent/Pagination/TablePaginationFooter';
-import { background, formatDaysDisplay, getUserProfileData, priorityColors, statusColors } from '../../../Utils/globalfun';
+import { background, formatDate2, formatDaysDisplay, getUserProfileData, mapTaskLabels, priorityColors, statusColors } from '../../../Utils/globalfun';
 import PriorityBadge from '../../ShortcutsComponent/PriorityBadge';
 import AssigneeAvatarGroup from '../../ShortcutsComponent/Assignee/AssigneeAvatarGroup';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
@@ -32,42 +33,7 @@ import SidebarDrawer from '../../FormComponent/Sidedrawer';
 import { toast } from 'react-toastify';
 import { AddTaskDataApi } from '../../../Api/TaskApi/AddTaskApi';
 import FullTaskViewFilters from './FullTaskViewFilters';
-
-const DATE_RANGE_OPTIONS = [
-    { id: 'today', label: 'Today' },
-    { id: 'week', label: 'Week' },
-    { id: 'month', label: 'Month' },
-];
-
-const getDateRangeByPreset = (preset) => {
-    const now = new Date();
-    const startDate = new Date(now);
-    const endDate = new Date(now);
-
-    if (preset === 'today') {
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setHours(23, 59, 59, 999);
-    } else if (preset === 'week') {
-        const currentDay = now.getDay();
-        const diffToMonday = (currentDay + 6) % 7;
-        startDate.setDate(now.getDate() - diffToMonday);
-        startDate.setHours(0, 0, 0, 0);
-
-        endDate.setDate(startDate.getDate() + 6);
-        endDate.setHours(23, 59, 59, 999);
-    } else {
-        startDate.setDate(1);
-        startDate.setHours(0, 0, 0, 0);
-
-        endDate.setMonth(now.getMonth() + 1, 0);
-        endDate.setHours(23, 59, 59, 999);
-    }
-
-    return {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-    };
-};
+import FilterChips from '../FilterComponent/FilterChip';
 
 const FullTaskView = () => {
     const navigate = useNavigate();
@@ -87,6 +53,8 @@ const FullTaskView = () => {
     const [taskProject, setTaskProject] = useState([]);
     const [taskCategory, setTaskCategory] = useState([]);
     const [taskAssigneeData, setTaskAssigneeData] = useState([]);
+    const [moduleData, setModuleData] = useState([]);
+    const [showCompleted, setShowCompleted] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
     const [profileTaskId, setProfileTaskId] = useState("");
     const [profileOpen, setProfileOpen] = useState(false);
@@ -100,15 +68,17 @@ const FullTaskView = () => {
     const rootSubrootflagval = useRecoilValue(rootSubrootflag);
     const [searchInput, setSearchInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [dateRangePreset, setDateRangePreset] = useState('month');
-    const defaultStartDateRange = useMemo(() => getDateRangeByPreset('month'), []);
     const [filters, setFilters] = useState({
         status: null,
         priority: null,
         category: null,
         assignee: null,
-        startDate: defaultStartDateRange,
+        startDate: {
+            startDate: new Date().toISOString(),
+            endDate: new Date().toISOString()
+        },
         dueDate: null,
+        module: null,
     });
 
     // Custom tooltip refs
@@ -129,6 +99,19 @@ const FullTaskView = () => {
         retrieveData("taskprojectData", setTaskProject);
         retrieveData("taskworkcategoryData", setTaskCategory);
         retrieveData("taskAssigneeData", setTaskAssigneeData);
+    }, []);
+
+    // Fetch module data
+    useEffect(() => {
+        const fetchModules = async () => {
+            const modulesResponse = await fetchModuleDataApi({ taskid: 0, moduleid: 0 });
+            if (modulesResponse) {
+                const normalizedModules = mapTaskLabels(modulesResponse);
+                console.log('normalizedModules', normalizedModules);
+                setModuleData(normalizedModules);
+            }
+        };
+        fetchModules();
     }, []);
 
     useEffect(() => {
@@ -274,6 +257,9 @@ const FullTaskView = () => {
             assigneeid: isAdmin ? (filters?.assignee?.id ?? "") : (profileData?.id ?? ""),
             statusid: filters?.status?.id ?? "",
             workcategoryid: filters?.category?.id ?? "",
+            projectid: filters?.module?.projectid ?? "",
+            moduleid: filters?.module?.taskid ?? "",
+            isCompleted: showCompleted ? 1 : 0,
             startdatefrom: filters?.startDate?.startDate ? filters.startDate.startDate.split('T')[0] : '',
             startdateto: filters?.startDate?.endDate ? filters.startDate.endDate.split('T')[0] : '',
             duedatefrom: filters?.dueDate?.startDate ? filters.dueDate.startDate.split('T')[0] : '',
@@ -294,13 +280,6 @@ const FullTaskView = () => {
                 const normalizedRows = normalizeData(response.rd || []);
                 setData(normalizedRows);
                 setTotalCount(response?.rd[0]?.icount || 0);
-
-                if (!isPageSizeManuallyChanged && page === 1) {
-                    const apiPageSize = getPageSizeFromResponse(response, rowsPerPage);
-                    if (apiPageSize !== rowsPerPage) {
-                        setRowsPerPage(apiPageSize);
-                    }
-                }
             } else {
                 setData([]);
                 setTotalCount(0);
@@ -316,7 +295,7 @@ const FullTaskView = () => {
 
     useEffect(() => {
         fetchData();
-    }, [page, rowsPerPage, sortConfig, searchQuery, filters?.status, filters?.priority, filters?.category, filters?.assignee, filters?.startDate, filters?.dueDate]);
+    }, [page, rowsPerPage, sortConfig, searchQuery, filters?.status, filters?.priority, filters?.category, filters?.assignee, filters?.startDate, filters?.dueDate, filters?.module, showCompleted]);
 
     const handleChangePage = (newPage) => {
         setPage(newPage);
@@ -333,8 +312,40 @@ const FullTaskView = () => {
         setPage(1);
     };
 
-    const handleDateRangePresetChange = (presetId) => {
-        setDateRangePreset(presetId);
+    const handleClearFilter = (key) => {
+        if (key === 'search') {
+            setSearchInput('');
+            setSearchQuery('');
+            setPage(1);
+            return;
+        }
+        setFilters((prev) => {
+            const next = { ...prev };
+            if (key === 'startDate') {
+                next.startDate = null;
+            } else {
+                next[key] = null;
+            }
+            return next;
+        });
+        setPage(1);
+    };
+
+    const handleClearAllFilters = () => {
+        setFilters({
+            status: null,
+            priority: null,
+            category: null,
+            assignee: null,
+            startDate: {
+                startDate: new Date().toISOString(),
+                endDate: new Date().toISOString()
+            },
+            dueDate: null,
+            module: null,
+        });
+        setSearchInput('');
+        setSearchQuery('');
         setPage(1);
     };
 
@@ -401,22 +412,18 @@ const FullTaskView = () => {
         navigate(url);
     };
 
-    const presetRange = useMemo(() => getDateRangeByPreset(dateRangePreset), [dateRangePreset]);
-
     const filteredRows = useMemo(() => {
         return data.filter((row) => {
-            const matchesPresetStartDate = isInDateRange(row?.StartDate, presetRange);
             const matchesStartDate = isInDateRange(row?.StartDate, filters?.startDate);
             const matchesDueDate = isInDateRange(row?.DeadLineDate, filters?.dueDate);
 
-            return matchesPresetStartDate && matchesStartDate && matchesDueDate;
+            return matchesStartDate && matchesDueDate;
         });
-    }, [data, filters, presetRange]);
+    }, [data, filters?.startDate, filters?.dueDate]);
 
     const hasFrontendFilters = Boolean(
         filters?.startDate?.startDate ||
-        filters?.dueDate?.startDate ||
-        dateRangePreset
+        filters?.dueDate?.startDate
     );
 
     const displayRows = filteredRows;
@@ -492,15 +499,28 @@ const FullTaskView = () => {
                     setSearchInput(value);
                 }}
                 onSearchEnter={handleSearchEnter}
-                dateRangePreset={dateRangePreset}
-                onDateRangePresetChange={handleDateRangePresetChange}
-                dateRangeOptions={DATE_RANGE_OPTIONS}
                 filters={filters}
                 onFilterChange={handleFilterChange}
                 taskAssigneeData={taskAssigneeData}
                 statusData={statusData}
                 priorityData={priorityData}
                 taskCategory={taskCategory}
+                moduleData={moduleData}
+                showCompleted={showCompleted}
+                onCompletedToggle={() => setShowCompleted(!showCompleted)}
+            />
+            <div
+                style={{
+                    margin: "20px 0",
+                    border: "1px dashed #7d7f85",
+                    opacity: 0.3,
+                }}
+            />
+
+            <FilterChips
+                filters={{ ...filters, search: searchQuery }}
+                onClearFilter={handleClearFilter}
+                onClearAll={handleClearAllFilters}
             />
 
             <TableContainer component={Paper} className='muiTableTaContainer'>
@@ -605,7 +625,7 @@ const FullTaskView = () => {
                                     <TableCell>
                                         {renderAssigneeAvatars(row.assignees, row, null, null, hanldePAvatarClick, null, false)}
                                     </TableCell>
-                                    <TableCell>{row.StartDate ? new Date(row.StartDate).toLocaleDateString() : '-'}</TableCell>
+                                    <TableCell>{row.StartDate ? formatDate2(row.StartDate) : '-'}</TableCell>
                                     <TableCell>{row.DeadLineDate ? formatDaysDisplay(row?.DeadLineDate, row) : '-'}</TableCell>
                                     <TableCell>{row.estimate_hrs}</TableCell>
                                     <TableCell>

@@ -99,7 +99,7 @@ const CommentCard = ({ comment }) => {
             </Grid>
 
             {/* Comment Text */}
-            <Typography variant="body1" sx={{ marginTop: 1, color: "#444" }}>
+            <Typography variant="body1" sx={{ marginTop: 1, color: "#444", whiteSpace: 'pre-line' }}>
                 {comment?.comment}
             </Typography>
 

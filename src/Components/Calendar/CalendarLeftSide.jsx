@@ -10,7 +10,7 @@ import { calendarM, CalEventsFilter, CalformData, formData, openFormDrawer, root
 import { customDatePickerStyles } from '../../Utils/globalfun';
 import TasklistForCal from './TasklistForCal';
 
-const CalendarLeftSide = ({ calendarsColor }) => {
+const CalendarLeftSide = ({ calendarsColor, onTasklistDateRangeChange, onTasklistAssigneeChange }) => {
 
     const [selectedCalendars, setSelectedCalendars] = useState([]);
     const setSelectedCaleFilters = useSetRecoilState(CalEventsFilter);
@@ -129,7 +129,7 @@ const CalendarLeftSide = ({ calendarsColor }) => {
 
     return (
         <div className="calendarLeftMain">
-            <Box className="cal_leftSidetgBox">
+            {/* <Box className="cal_leftSidetgBox">
                 <ToggleButtonGroup
                     value={view}
                     exclusive
@@ -147,7 +147,7 @@ const CalendarLeftSide = ({ calendarsColor }) => {
                     </ToggleButton>
                 </ToggleButtonGroup>
             </Box>
-            <Divider sx={{ width: '100%', m: '0 !important' }} />
+            <Divider sx={{ width: '100%', m: '0 !important' }} /> */}
             {view === 'filter' ? (
                 <>
                     {/* <Box
@@ -223,7 +223,11 @@ const CalendarLeftSide = ({ calendarsColor }) => {
                     /> */}
                 </>
             ) :
-                <TasklistForCal calendarsColor={calendarsColor} />
+                <TasklistForCal
+                    calendarsColor={calendarsColor}
+                    onDateRangeChange={onTasklistDateRangeChange}
+                    onAssigneeChange={onTasklistAssigneeChange}
+                />
             }
         </div >
     );

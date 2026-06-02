@@ -19,13 +19,13 @@ import {
     Menu,
     MenuItem,
 } from "@mui/material";
-import { Archive, ArchiveRestore, CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Star, Undo2 } from "lucide-react";
+import { Archive, ArchiveRestore, Bug, CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Star, Undo2 } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { getArchiveChipStyles, getArchiveInfoFromEndDate, getRandomAvatarColor, getStatusColor, priorityColors, statusColors, formatDaysDisplay, getAuthData, getUserProfileData } from "../../../Utils/globalfun";
+import { getArchiveChipStyles, getArchiveInfoFromEndDate, getRandomAvatarColor, getStatusColor, priorityColors, statusColors, formatDaysDisplay, getAuthData, getUserProfileData, handleBugTrackRedirect } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 import AssigneeAvatarGroup from "../../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
@@ -116,16 +116,16 @@ const findPathToTask = (tasks = [], targetId) => {
 };
 
 const initialColumns = [
-    { id: "taskname", label: "Task Name", width: 310 },
+    { id: "taskname", label: "Task Name", width: 285 },
     { id: "taskPr", label: "Project", width: 110 },
-    { id: "progress", label: "Progress", width: 80 },
+    { id: "progress", label: "Progress", width: 75 },
     { id: "status", label: "Status", width: 100 },
     { id: "secStatus", label: "What Next", width: 100 },
     { id: "assignee", label: "Assignee", width: 100 },
     { id: "DeadLineDate", label: "Deadline", width: 80 },
     { id: "priority", label: "Priority", width: 80 },
     { id: "estimate", label: "Estimate", width: 70 },
-    { id: "actions", label: "Actions", width: 150 },
+    { id: "actions", label: "Actions", width: 165 },
 ];
 
 const INITIAL_SUBTASK_BATCH = 220;
@@ -783,6 +783,23 @@ const TableView = ({
                 >
                     <Pencil size={20} className="iconbtn" color={iconColor(canEdit)} />
                 </IconButton>
+
+                {/* Bug Tracker - only for tree_lable == 1 */}
+                {task?.tree_lable == 1 && (
+                    <Tooltip title="Bug Tracker" arrow placement="top">
+                        <IconButton
+                            onClick={() => handleBugTrackRedirect({
+                                taskno: task.taskno,
+                                taskname: task.taskname || '',
+                                taskid: task.taskid || task.id || '',
+                                assigneeids: task.assigneids || '',
+                                dueDate: task.DeadLineDate || ''
+                            })}
+                        >
+                            <Bug size={20} className="iconbtn" color={activeColor} />
+                        </IconButton>
+                    </Tooltip>
+                )}
 
                 {/* View (ALWAYS ENABLED) */}
                 <IconButton onClick={() => handleViewTask(task, { Task: "root" })}>

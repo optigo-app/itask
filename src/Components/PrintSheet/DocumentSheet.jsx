@@ -2,408 +2,491 @@ import { forwardRef } from 'react';
 import './DocumentSheet.scss';
 import { formatDate3 } from '../../Utils/globalfun';
 
+
 const DocumentSheet = forwardRef((selectedData, ref) => {
-  const getAssigneeNames = (assignees) => {
-    if (!assignees || !Array.isArray(assignees)) return '';
-    return assignees
-      .map(assignee => `${assignee.firstname} ${assignee.lastname}`.trim())
-      .filter(name => name)
-      .join(', ');
-  };
+    const getAssigneeNames = (assignees) => {
+      if (!assignees || !Array.isArray(assignees)) return '';
+      return assignees
+        .map(assignee => `${assignee.firstname} ${assignee.lastname}`.trim())
+        .filter(name => name)
+        .join(', ');
+    };
+  
+    return (
+        <div ref={ref} className="page">
+            {/* HEADER */}
+            <div className="headerBox">
 
-  return (
-    <div ref={ref} className="dContainer_main">
-      <div className='TxtCentr TxtDark' style={{ fontSize: "20px" }}>Document Sheet</div>
+                <div className="docheaderTitle">
+                    DOCUMENT SHEET
+                </div>
 
-      <div className='BrderEvry'>
-        <div className='CmonCentrEvry TxtDark BrderBtom CmonFntSize'>
-          <div className='WdthMost higtT CmonCentrEvry BrderRigt' style={{ flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
-            <span className='valueBind taskname label-bold'>{selectedData?.selectedData && selectedData?.selectedData?.taskname}</span>
-            <span className='valueBind module-project-name'>
-              {selectedData?.selectedData && (selectedData?.selectedData?.taskPr + "/" + selectedData?.selectedData?.moduleName)}
-            </span>
-          </div>
-          <div className='WdthMIN higtT CmonCentrEvry' style={{ flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span className='label-bold'>Task No:</span>{' '}
-              <span className='valueBind taskno label-bold'>
-                {selectedData?.selectedData && (selectedData?.selectedData?.taskno != 0 ? selectedData?.selectedData?.taskno : "")}
-              </span>
+                <div className="headerRow mainInfo" style={{ borderBottom: "none",}}>
+                    <div className="left" style={{padding:" 0px"}}>
+                        <div  style={{ minHeight: "40px" }}>
+                        <div className="projectName" style={{padding:"0px 4px" }}>
+                        {selectedData?.selectedData && selectedData?.selectedData?.taskname}
+                        </div>
+
+                        <div className="smallText"  style={{padding:"0px 4px"}}>
+                        {selectedData?.selectedData && (selectedData?.selectedData?.taskPr + "/" + selectedData?.selectedData?.moduleName)}
+                        </div>
+                        </div>
+
+                        
+                        <div className="smallText" style={{ fontWeight: "700",borderTop: "1px solid #bdbdbd", padding: "1px 4px" }}>
+                            Team: <span>{getAssigneeNames(selectedData?.selectedData?.assignee)}</span>
+                        </div>
+                    </div>
+
+                    <div className="right" style={{ position: "relative" }}>
+                        <div style={{display: "flex"}}>
+                           <div> Task No:  <b style={{fontSize:"16px",marginLeft:"4px"}}>    {selectedData?.selectedData && (selectedData?.selectedData?.taskno != 0 ? selectedData?.selectedData?.taskno : "")}</b></div>
+                           <div style={{color:"#dbdbdb",textDecoration:"underline",marginLeft:"25px",fontSize:"16px",fontWeight:"bold"}}> Priority  </div>
+                        </div>
+                        <div>
+                            Deadline: <b style={{fontSize:"16px",marginLeft:"4px"}}> dsd</b>
+                        </div>
+
+                        <div>
+                            Ticket No:  <span>   {selectedData?.selectedData && (selectedData?.selectedData?.ticketno ? selectedData?.selectedData?.ticketno : "")}</span>
+                        </div>
+
+                        
+                        <div   >
+                         Incharge: 
+
+                         </div>
+
+
+                    </div>
+
+                    {/* <div className="deadline">
+                        <b>Deadline:</b> Apr 23, 2030
+                    </div> */}
+                </div>
+
+                <div className="headerRow">
+                    <div style={{ width: "20%", borderTop: "1px solid #bdbdbd" }}>
+                        Printed On:  sas
+                    </div>
+
+                    <div style={{ width: "50%", borderRight: "1px solid #bdbdbd", borderTop: "1px solid #bdbdbd",display:"flex" }}>
+                         
+                         <div style={{width:"50%"}}>Client:</div>
+                         <div style={{width:"50%"}}>By:</div>
+                         
+                    </div>
+                  
+                </div>
+
+                <div className="headerRow   ">
+                    <div style={{width:"20%"}}>
+                        Version: 
+                    </div>
+
+                    <div style={{width:"50%"}}>
+                       Release:
+                    </div>
+                    <div style={{width:"20%"}}>
+                    Upload Dt:
+                    </div>
+ 
+                </div>
+
+                <div className="headerRow">
+            
+
+                    <div className="tagRow" style={{ width: "50%" }}>
+                        
+                       <div style={{display:"flex",gap:"15px",alignItems:"center"}}> 
+                        <div> <span style={{fontSize:"15px"}}>□</span> Tag</div>
+                        <div> <span style={{fontSize:"15px"}}>□</span> Print</div>
+                        <div> <span style={{fontSize:"15px"}}>□</span> Excel</div>
+                        <div> <span style={{fontSize:"15px"}}>□</span> Report</div>
+                        <div> <span style={{fontSize:"15px"}}>□</span> Dashboard</div>
+                        <div> <span style={{fontSize:"15px"}}>□</span> Add On</div>
+
+                        </div>
+                    </div>
+
+                    <div className="tagRow">
+                       
+                        <span style={{marginRight:"3px"}}> Technology:  </span>
+                       <div style={{display:"flex",gap:"10px",alignItems:"center"}} >
+                       <div>  <span style={{fontSize:"15px"}}>□</span> .Net</div>
+                       <div> <span style={{fontSize:"15px"}}>□</span> React</div>
+                     <div>   <span style={{fontSize:"15px"}}>□</span> NextJs</div>
+                       <div> <span style={{fontSize:"15px"}}>□</span> SQL</div>
+                       <div> <span style={{fontSize:"15px"}}>□</span> Postman</div>
+                       <div> <span style={{fontSize:"15px"}}>□</span> API</div>
+                       </div>
+                    </div>
+                </div>
+
+                <div className="docBriefLabel">
+                   Doc Brief: 
+                </div>
+
+                <div className="docLines"></div>
+                <div className="docLines"></div>
+                <div className="docLines"></div>
+                <div className="docLines"></div>
+
             </div>
-            <div style={{ fontSize: '11px', marginTop: '2px' }}>
-              <span className='text-light'>Ticket No:</span>{' '}
-              <span className='valueBind label-bold'>
-                {selectedData?.selectedData && (selectedData?.selectedData?.ticketno ? selectedData?.selectedData?.ticketno : "")}
-              </span>
+
+            <div className="bodo">
+                <div className="bodoItem">
+                    <div className="bodoHeade">
+                        BRD Details
+                    </div>
+                    <div className="bodoContent">
+                        <div> Team:  </div>
+                        <div style={{margin :"5px 0px"}}> M1:   </div>
+                        <div> M2:   </div>
+                    </div>
+
+                </div>
+                <div className="bodoItem">
+                    <div className="bodoHeade">
+                        SRD / Brainstorming
+                    </div>
+                    <div className="bodoContent">
+
+                        <div className="SRDItem">  <div className="bodo-m">M1:</div>  <span>Sign: </span> </div>
+                        <div className="SRDItem">  <div className="bodo-m">M2:</div>  <span>Sign: </span> </div>
+                        <div className="SRDItem">  <div className="bodo-m" >M3:</div>  <span>Sign: </span> </div>
+                        <div className="SRDItem">  <div className="bodo-m">M4:</div>  <span>Sign: </span> </div>
+
+
+                    </div>
+
+                </div>
+                <div className="bodoItem">
+                    <div className="bodoHeade" style={{ borderRight: "1px solid #bdbdbd" }}>
+                        Estimate
+                    </div>
+                    <div className="bodoContent" style={{ borderRight: "1px solid #bdbdbd" }}>
+                        <div className="SRDItem"> <span style={{width:"40px"}}> UI </span> <span style={{width:"10px"}}>|</span> <div className="bodo-m" style={{width: "30%"}}>Hrs:</div>  <span>By: </span> </div>
+                        <div className="SRDItem"> <span style={{width:"40px"}}> CODE </span>  <span style={{width:"10px"}}>|</span>  <div className="bodo-m" style={{width: "30%"}}>Hrs:</div>  <span>By:</span> </div>
+                        <div className="SRDItem"> <span style={{width:"40px"}}> API </span>  <span style={{width:"10px"}}>|</span>  <div className="bodo-m" style={{width: "30%"}}>Hrs:</div>  <span>By:</span> </div>
+                        <div className="SRDItem"> <span style={{width:"40px"}}> DB </span> <span style={{width:"10px"}}>|</span>  <div className="bodo-m" style={{width: "30%"}}>Hrs:</div>  <span>By:</span> </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
 
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='WdthMost higtCmon CmonCentrEvry BrderRigt teamWrapCell'>
-            <span className='label-bold teamLabel'>Team:</span>
-            <span className='valueBind label-bold teamWrapText'>{getAssigneeNames(selectedData?.selectedData?.assignee)}</span>
-          </div>
-          <div className='WdthMIN higtCmon CmonCentrEvry text-light'>Help File:</div>
-        </div>
 
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='WdMost higtCmon BrderRigt CmonCentrEvry text-light'>Date: <span className='valueBind label-bold'>{selectedData?.selectedData && formatDate3(selectedData?.selectedData?.StartDate)}</span></div>
-          <div className='WdAvg BrderRigt higtCmon CmonCentrEvry text-light'>Version:</div>
-          <div className='WdMIN higtCmon CmonCentrEvry text-light'>Upload Dt:</div>
-        </div>
 
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='WdMost higtCmon BrderRigt CmonCentrEvry text-light'>Stack Holder</div>
-          <div className='WdAvg higtCmon BrderRigt CmonCentrEvry text-light'>Priority: <span className='valueBind label-bold'>{selectedData?.selectedData && selectedData?.selectedData?.priority}</span></div>
-          <div className='WdMIN higtCmon CmonCentrEvry text-light'>Feedback Dt:</div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='WdMost higtCmon BrderRigt CmonCentrEvry text-light'>Deadline: <span className='valueBind label-bold'>{selectedData?.selectedData && formatDate3(selectedData?.selectedData?.DeadLineDate)}</span></div>
-          <div className='WdAvg BrderRigt higtCmon CmonCentrEvry text-light'>Release:</div>
-          <div className='WdMIN higtCmon CmonCentrEvry text-light'>Lead By:</div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize'>
-          <div className='WdMost higtCmon BrderRigt CmonCentrEvry'>
-            <div className='text-light'>Tag</div>
-            <input type="checkbox" className='checkbox' />
-            <div className='text-light'>Print</div>
-            <input type="checkbox" className='checkbox' />
-            <div className='text-light'>Excel</div>
-            <input type="checkbox" className='checkbox' />
-            <div className='text-light'>Report</div>
-            <input type="checkbox" className='checkbox' />
-            <div className='text-light'>Dashboard</div>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "0px" }} />
-          </div>
-          <div className='WdAvg BrderRigt BrderBtom higtCmon CmonCentrEvry text-light'>Sow By:</div>
-          <div className='WdMIN higtCmon CmonCentrEvry BrderBtom text-light'>Delivery By:</div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='WdMost higtCmon BrderRigt CmonCentrEvry'>
-            <div className='text-light'>Add On</div>
-            <input type="checkbox" className='checkbox' />
-          </div>
-          <div className='WdAvg BrderRigt higtCmon CmonCentrEvry text-light'>Final Approval:</div>
-          <div className='WdMIN higtCmon CmonCentrEvry text-light'>Support Person:</div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize higtCmon BrderBtom'>
-          <div className='label-bold'>Technology</div>
-          <input type="checkbox" className='checkbox SpacLft SpacRit' />
-          <div className='text-light'>.Net</div>
-          <input type="checkbox" className='checkbox SpacLft SpacRit' />
-          <div className='text-light'>React</div>
-          <input type="checkbox" className='checkbox SpacLft SpacRit' />
-          <div className='text-light'>Nextjs</div>
-          <input type="checkbox" className='checkbox SpacLft SpacRit' />
-          <div className='text-light'>SQL</div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize higtCmon BrderBtom text-light'>Doc Brief:</div>
-        <div>
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className='higtCmon BrderBtom'></div>
-          ))}
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='MostWd higtCmon BrderRigt text-light'>Preview Points</div>
-          <div className='AvgWd1 higtCmon BrderRigt text-light' style={{ paddingLeft: "2px" }}>Person</div>
-          <div className='label-bold higtCmon' style={{ paddingLeft: "2px" }}>Remark:</div>
-        </div>
-        <div>
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-              <div className='MostWd higtCmon BrderRigt' />
-              <div className='AvgWd1 higtCmon BrderRigt' />
-              <div className='higtCmon' />
+            {/* WORKFLOW TITLE */}
+            <div className="sectionHeader" style={{ textAlign: "center",borderTop:"1px solid #bdbdbd",fontWeight:400 }}>  
+                WORKFLOW STATUS & TIMELINE (TRACKING)
             </div>
-          ))}
-        </div>
 
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='MostWd higtCmon BrderRigt label-bold CmonCentrEvry' style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd" }}>SRD</div>
-          <div className='AvgWd1 BrderRigt higtCmon CmonCentrEvry text-light'>Checklist</div>
-          <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry text-light'>Checklist</div>
-          <div className='MINWd higtCmon CmonCentrEvry label-bold'>Remark:</div>
-        </div>
+            {/* MAIN TABLE */}
+            <table className="mainTable">
+                <thead>
+                    <tr>
+                        <th className="processCol" style={{fontWeight:400}}>
+                            Process Stage
+                        </th>
+                        <th style={{ padding: "0px" }}> <div className="bod-bot-gray">Assign Date</div>  <div>Assignee</div> </th>
 
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='MostWd higtCmon BrderRigt CmonCentrEvry'>
-            <div className='text-light' style={{ marginRight: "5px" }}>M1:</div>
-            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <th style={{ padding: "0px" }}> <div className="bod-bot-gray">Start Date</div>  <div>End Date</div> </th>
+                        {/* <th></th> */}
+                        <th style={{fontWeight:400}}>Approved By</th>
+                        <th style={{fontWeight:400}}>Checklist</th>
+                        <th style={{fontWeight:400}}>Delay Remark (If any)</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr className="tallRow">
+                        <td>
+                            <b>1. BRD </b>
+
+                        </td>
+
+                        <td style={{ padding: "0px" }}>
+                            <div className="bod-bot-gray" style={{ height: "50%" }}> </div>  <div> </div>
+                        </td>
+                        <td style={{ padding: "0px"}}> 
+                        <div  className="bod-bot-gray" style={{ height:"50%"}}> </div>  <div> </div>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+
+                    </tr>
+
+                    <tr className="tallRow">
+                        <td>
+                            <b>2. SRD</b>
+                        </td>
+
+                        <td style={{ padding: "0px" }}>
+                            <div className="bod-bot-gray" style={{ height: "50%" }}> </div>  <div> </div>
+                        </td>
+                        <td style={{ padding: "0px"}}> 
+                        <div  className="bod-bot-gray" style={{ height:"50%"}}> </div>  <div> </div>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+
+                    </tr>
+
+                    <tr>
+                        <td style={{ height: "36px" }}> <b> 3. SOW </b></td>
+                        <td style={{ padding: "0px", height: "30px" }}>
+                            <div className="bod-bot-gray" style={{ height: "50%" }}> </div>  <div> </div>
+                        </td>
+                        <td style={{ padding: "0px", height: "30px" }}> 
+                        <div  className="bod-bot-gray" style={{ height:"50%"}}> </div>  <div> </div>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+
+                    </tr>
+
+                    <tr>
+                    <td style={{ height: "36px" }}> <b> 4. SRS</b></td>
+                        <td style={{ padding: "0px", height: "30px" }}>
+                            <div className="bod-bot-gray" style={{ height: "50%" }}> </div>  <div> </div>
+                        </td>
+                        <td style={{ padding: "0px", height: "30px" }}> 
+                        <div  className="bod-bot-gray" style={{ height:"50%"}}> </div>  <div> </div>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+
+                    </tr>
+
+                    <tr className="tallRow">
+                        <td>
+                            <b>5. BODO</b>
+                            <br />
+                            BODO By: 
+                            <br />
+                            BODO Appr:  
+                             
+                        </td>
+
+                        <td style={{ padding: "0px" }}>
+                            <div className="bod-bot-gray" style={{ height: "50%" }}> </div>  <div> </div>
+                        </td>
+                        <td style={{ padding: "0px" }}> 
+                        <div  className="bod-bot-gray" style={{ height:"50%"}}> </div>  <div> </div>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+
+                    </tr>
+
+                    <tr className="mediumRow">
+                        <td>
+                            <b>6. Code</b>
+                            <br />
+                            Senior Approval:  
+                            <br />
+                            Dev By: 
+                        </td>
+
+                        <td style={{ padding: "0px" }}>
+                            <div className="bod-bot-gray" style={{ height: "50%" }}> </div>  <div> </div>
+                        </td>
+                        <td style={{ padding: "0px" }}> 
+                        <div  className="bod-bot-gray" style={{ height:"50%"}}> </div>  <div> </div>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+
+                    </tr>
+
+                    <tr className="tallRow">
+                        
+
+                        <td style={{ height: "36px" }}> <b> 7. Test</b></td>
+                        <td style={{ padding: "0px", height: "30px" }}>
+                            <div className="bod-bot-gray" style={{ height: "50%" }}> </div>  <div> </div>
+                        </td>
+                        <td style={{ padding: "0px", height: "30px" }}> 
+                        <div  className="bod-bot-gray" style={{ height:"50%"}}> </div>  <div> </div>
+                        </td>
+
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        
+
+                    </tr>
+
+                    <tr>
+                      
+                        <td style={{ height: "36px" }}>  <b> 8. Final Delivery</b> <br />
+                        <div style={{marginTop:"2px"}}>Feedback Dt:</div> </td>
+                        <td style={{ padding: "0px", height: "30px" }}>
+                            <div className="bod-bot-gray" style={{ height: "50%" }}> </div>  <div> </div>
+                        </td>
+                        <td style={{ padding: "0px", height: "30px" }}> 
+                        <div  className="bod-bot-gray" style={{ height:"50%"}}> </div>  <div> </div>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    
+
+                    </tr>
+                </tbody>
+            </table>
+
+            {/* PREVIEW */}
+            <div className="sectionHeader " style={{  fontWeight:400 }}>
+                DOCUMENTATION PREVIEW (POST-DEVELOPMENT)
             </div>
-            <div className='text-light' style={{ marginRight: "5px" }}>Sign:</div>
-            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+            <table className="previewTable">
+                <thead>
+                    <tr>
+                        <th style={{fontWeight:400}}>Preview Points</th>
+                        <th style={{fontWeight:400}}>Assign Date</th>
+                        <th style={{fontWeight:400}}>Person</th>
+                        <th style={{fontWeight:400}}>Complete Date</th>
+                        <th style={{fontWeight:400}}>Remarks</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr className="previewRow" >
+                        <td style={{ padding: 0 }}>
+                            <div style={{  borderBottom: "1px solid #bdbdbd",height:"33%",padding:"3px" }}>P1:</div>
+                            <div style={{  borderBottom: "1px solid #bdbdbd",height:"33%",padding:"3px" }}>P2:</div>
+                            <div style={{  height:"33%",padding:"3px" }}>P3:</div>
+                            
+                        </td>
+                        <td style={{ padding: 0 }}>
+                            <div style={{  borderBottom: "1px solid #bdbdbd",height:"33%" }}></div>
+                            <div style={{  borderBottom: "1px solid #bdbdbd",height:"33%" }}></div>
+                            <div style={{   height:"33%" }}></div>
+                            
+                        </td>
+                        <td style={{ padding: 0 }}>
+                            <div style={{  borderBottom: "1px solid #bdbdbd",height:"33%" }}></div>
+                            <div style={{  borderBottom: "1px solid #bdbdbd",height:"33%" }}></div>
+                            <div style={{  height:"33%" }}></div>
+                            
+                        </td>
+                        <td style={{ padding: 0 }}>
+                            <div style={{  borderBottom: "1px solid #bdbdbd",height:"33%" }}></div>
+                            <div style={{  borderBottom: "1px solid #bdbdbd",height:"33%" }}></div>
+                            <div style={{   height:"33%" }}></div>
+                            
+                        </td>
+                        <td style={{ padding: 0 }}>
+                            <div style={{  borderBottom: "1px solid #bdbdbd",height:"33%" }}></div>
+                            <div style={{  borderBottom: "1px solid #bdbdbd",height:"33%" }}></div>
+                            <div style={{  height:"33%" }}></div>
+                            
+                        </td>
+                       
+                    </tr>
+                </tbody>
+            </table>
+
+            <div className="bodo">
+                <div className="bodoItem">
+                    <div className="bodoHeade" style={{ fontWeight: "400" }}>
+                        Test Info
+                    </div>
+                    <div className="bodoContent" style={{minHeight: "93px"}}>
+                        <div style={{fontSize:"10px"}}>Test By:
+                              </div>
+                        <div style={{margin :"15px 0px",fontSize:"10px"}}>Prior Dev Approval:
+                              </div>
+                        <div style={{fontSize:"10px"}}>Estimate:
+                              </div>
+                    </div>
+
+                </div>
+                <div className="bodoItem">
+                    <div className="bodoHeade" style={{   fontWeight: "400" }}>
+                     Release Info
+                    </div>
+ 
+                    <div className="bodoContent" style={{minHeight: "93px",padding: "0px"}}>
+                        <div style={{marginBottom:"2px",borderBottom:"1px solid #bdbdbd",padding:"0px 3px"}}>Local:   </div>
+                        <div style={{marginBottom:"2px",borderBottom:"1px solid #bdbdbd",padding:"0px 3px"}}>Alpha:   </div>
+                        <div style={{marginBottom:"2px",borderBottom:"1px solid #bdbdbd",padding:"0px 3px"}}>Beta:   </div>
+                        <div style={{marginBottom:"2px",borderBottom:"1px solid #bdbdbd",padding:"0px 3px"}}>Live:   </div>
+                        <div style={{ padding:"0px 3px" }}>Back Version:   </div>
+                    </div>
+                    
+
+                </div>
+                <div className="bodoItem">
+                    <div className="bodoHeade" style={{ borderRight: "1px solid #bdbdbd" , fontWeight: "400" }}>
+                        Release Checklist
+                    </div>
+                    <div className="bodoContent" style={{ borderRight: "1px solid #bdbdbd", minHeight: "93px",lineHeight:"0.9" }}>
+                        <div className="SRDItem">  <div style={{width: "50%",marginBottom:"3px"}}><span style={{fontSize:"15px"}}>□</span> Helpfile</div>  <span><span style={{fontSize:"15px"}}>□</span> Security </span> </div>
+                        <div className="SRDItem">  <div style={{width: "50%",marginBottom:"3px"}}><span style={{fontSize:"15px"}}>□</span> Video</div>  <span><span style={{fontSize:"15px"}}>□</span> Flag Based </span> </div>
+                        <div className="SRDItem">  <div style={{width: "50%",marginBottom:"3px"}}><span style={{fontSize:"15px"}}>□</span> Welcome Banner</div>  <span><span style={{fontSize:"15px"}}>□</span> WA/Email Promo </span> </div>
+                        <div className="SRDItem">  <div style={{width: "50%",marginBottom:"3px"}}><span style={{fontSize:"15px"}}>□</span> Ticket Update</div>   <span><span style={{fontSize:"15px"}}>□</span> Backup </span> </div>
+                        
+ 
+                    </div>
+                </div>
             </div>
-          </div>
-          <div className='AvgWd1 BrderRigt higtCmon CmonCentrEvry'>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
-            <div className='text-light'>Purpose:</div>
-          </div>
-          <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry'>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
-            <div className='text-light'>WireFram/FlowChart</div>
-          </div>
-          <div className='MINWd higtCmon CmonCentrEvry TxtDark'></div>
-        </div>
 
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='MostWd higtCmon BrderRigt CmonCentrEvry'>
-            <div className='text-light' style={{ marginRight: "5px" }}>M2:</div>
-            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <div className="bodo" style={{ borderTop: "1px solid #bdbdbd"  }}>
+                <div className="bodoItem" style={{  width:"33.5%" }}>
+                    <div className="bodoHeade" style={{  fontWeight: "400" }}>
+                       Support training
+                    </div>
+                    <div className="bodoContent" style={{height: "45px"}}>
+                        <div style={{fontSize:"10px"}}> Date:  </div>
+                        <div style={{margin :"7px 0px",fontSize:"10px"}}> By:  </div>
+                        <div style={{fontSize:"10px"}}> Attendees:  </div>
+                    </div>
+
+                </div>
+                <div className="bodoItem" style={{ borderRight: "1px solid #bdbdbd" ,width:"67%" }}>
+                    <div className="bodoHeade" style={{   fontWeight: "400" }}>
+                     Remarks
+                    </div>
+                    
+
+                    <div className="bodoContent" style={{height: "45px",padding: "0px"}}>
+                         <div style={{  borderBottom: "1px solid #bdbdbd",height:"33%" }}></div>
+                         <div style={{  borderBottom: "1px solid #bdbdbd",height:"33%" }}></div>
+                         <div style={{   height:"33%" }}></div>
+                    </div>
+                    
+
+                </div>
+              
             </div>
-            <div className='text-light' style={{ marginRight: "5px" }}>Sign:</div>
-            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              
+
+            <div   style={{ border: "1px solid #bdbdbd",display:"flex" ,height:"30px" }}>
+                <div style={{width:"40%", display:"flex" ,padding: "5px" }}> <span style={{width: "50%"}}>Data Loading: Yes/no </span> <span> Performance:</span> </div>
+                <div style={{width:"30%",   display:"flex" ,padding: "5px" }}> Data Cleanup Required?</div>
+                <div style={{width:"30%",   display:"flex" ,padding: "5px" }}>  <span><span style={{fontSize:"15px"}}>□</span> User log </span> <span style={{marginLeft:"10px"}}><span style={{fontSize:"15px"}}>□</span> Transaction log </span></div>
+                {/* <div style={{  display:"flex" , padding: "5px" }}>Setting/setup Document:</div> */}
             </div>
-          </div>
-          <div className='AvgWd1 BrderRigt higtCmon CmonCentrEvry'>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
-            <div className='text-light'>Scope:</div>
-          </div>
-          <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry'>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
-            <div className='text-light'>UI Guidelines</div>
-          </div>
-          <div className='MINWd higtCmon CmonCentrEvry TxtDark'></div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='MostWd higtCmon BrderRigt CmonCentrEvry'>
-            <div className='text-light' style={{ marginRight: "5px" }}>M3:</div>
-            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            
+            <div   style={{ border: "1px solid #bdbdbd",display:"flex",borderTop: "none" ,height:"55px" }}>
+                
+                <div style={{ width:"100%" ,display:"flex"  ,padding: "5px" }}> Closing Statement By Stackholder / Final Remarks:</div>
+                 
             </div>
-            <div className='text-light' style={{ marginRight: "5px" }}>Sign:</div>
-            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </div>
-          </div>
-          <div className='AvgWd1 BrderRigt higtCmon CmonCentrEvry'>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
-            <div className='text-light'>Fun. Require:</div>
-          </div>
-          <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry'>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
-            <div className='text-light'>3rd Party API</div>
-          </div>
-          <div className='MINWd higtCmon CmonCentrEvry TxtDark'></div>
+            
         </div>
-
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='MostWd higtCmon BrderRigt CmonCentrEvry'>
-            <div className='text-light' style={{ marginRight: "5px" }}>M4:</div>
-            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </div>
-            <div className='text-light' style={{ marginRight: "5px" }}>Sign:</div>
-            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </div>
-          </div>
-          <div className='AvgWd1 BrderRigt higtCmon CmonCentrEvry'>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
-            <div className='text-light'>Non Funct. Req.</div>
-          </div>
-          <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry'>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
-            <div className='text-light'>Client Approval</div>
-          </div>
-          <div className='MINWd higtCmon CmonCentrEvry TxtDark'></div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize higtCmon BrderBtom label-bold' style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd" }}>SRS-Estimate</div>
-
-        <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry'>
-            <div className='w-50 text-light'>UI | Name :</div>
-            <div className='w-50 CmonCentrEvry justify-content-end'>
-              <div className='text-light' style={{ width: "100px" }}></div>
-              <div className='text-light'>+Hrs:</div>
-            </div>
-          </div>
-          <div className='AvgWd1 higtCmon CmonCentrEvry justify-content-center'>
-            <span className='text-light'>+ Date</span>
-          </div>
-          <div className='AvgWd2 BrderRigt higtCmon label-bold CmonCentrEvry justify-content-center'>
-            Start date:
-          </div>
-          <div className='MINWd higtCmon CmonCentrEvry label-bold BrderBtom'>Remark:</div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry'>
-            <div className='w-50 text-light'>API | Name :</div>
-            <div className='w-50 CmonCentrEvry justify-content-end'>
-              <div className='text-light' style={{ width: "90px" }}></div>
-              <div className='text-light'>+Hrs:</div>
-            </div>
-          </div>
-          <div className='AvgWd1 higtCmon CmonCentrEvry justify-content-center'>
-            <span className='text-light'>+ Date</span>
-          </div>
-          <div className='AvgWd2 BrderRigt higtCmon label-bold CmonCentrEvry justify-content-center'>
-            End date:
-          </div>
-          <div className='MINWd higtCmon CmonCentrEvry TxtDark BrderBtom'></div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='MostWd higtCmon CmonCentrEvry'>
-            <div className='w-50 text-light'>DB | Name :</div>
-            <div className='w-50 CmonCentrEvry justify-content-end'>
-              <div className='text-light' style={{ width: "95px" }}></div>
-              <div className='text-light'>+Hrs:</div>
-            </div>
-          </div>
-          <div className='AvgWd1 higtCmon CmonCentrEvry justify-content-center'>
-            <span className='text-light'>+ Date</span>
-          </div>
-          <div className='AvgWd2 BrderRigt higtCmon TxtDark CmonCentrEvry justify-content-center'></div>
-          <div className='MINWd higtCmon CmonCentrEvry TxtDark'></div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry label-bold' style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd" }}>Development</div>
-          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry'></div>
-          <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry BrderBtom'>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
-            <div className='text-light'>Security Requirements</div>
-          </div>
-          <div className='MINWd higtCmon CmonCentrEvry label-bold BrderBtom'>Remark:</div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry text-light'>BODO By:</div>
-          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry text-light'>Development By:</div>
-          <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry BrderBtom'>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
-            <div className='text-light'>Speed, Load Time</div>
-          </div>
-          <div className='MINWd higtCmon CmonCentrEvry BrderBtom'></div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry text-light'>BODO Approval:</div>
-          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry'></div>
-          <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry BrderBtom'>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
-            <div className='text-light'>Error Handling</div>
-          </div>
-          <div className='MINWd higtCmon CmonCentrEvry BrderBtom'></div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry'>Estimate:</div>
-          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry'></div>
-          <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry'>
-            <input type="checkbox" className='checkbox' style={{ marginRight: "4px" }} />
-            <div className='text-light'>Guidelines On Branding</div>
-          </div>
-          <div className='MINWd higtCmon CmonCentrEvry BrderBtom'></div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry text-light'>BODO Date:</div>
-          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry label-bold'>Start Date:</div>
-          <div className='AvgWd2 BrderRigt higtCmon BrderBtom text-light' style={{ paddingLeft: "5px", }}>(Colors, Fonts, Logos)</div>
-          <div className='MINWd higtCmon CmonCentrEvry BrderBtom'></div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='MostWd higtCmon CmonCentrEvry text-light'>Assigned Date:</div>
-          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry label-bold' style={{ paddingLeft: "7px" }}>End Date:</div>
-          <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry'></div>
-          <div className='MINWd higtCmon CmonCentrEvry'></div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry label-bold' style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd" }}>Testing</div>
-          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry'></div>
-          <div className='AvgWd2 BrderRigt higtCmon BrderBtom CmonCentrEvry text-light'>Is It Complete?</div>
-          <div className='MINWd higtCmon CmonCentrEvry label-bold BrderBtom'>Remarks:</div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry text-light'>Test By:</div>
-          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry'></div>
-          <div className='AvgWd2 BrderRigt higtCmon BrderBtom CmonCentrEvry text-light'>Is It Clear?</div>
-          <div className='MINWd higtCmon CmonCentrEvry BrderBtom'></div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry text-light'>Prarior Dev. Approval:</div>
-          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry'></div>
-          <div className='AvgWd2 BrderRigt higtCmon BrderBtom CmonCentrEvry text-light'>Is It Consistent?</div>
-          <div className='MINWd higtCmon CmonCentrEvry BrderBtom'></div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize'>
-          <div className='MostWd higtCmon CmonCentrEvry text-light'>Estimate:</div>
-          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry label-bold'>Start Date:</div>
-          <div className='AvgWd2 BrderRigt higtCmon BrderBtom CmonCentrEvry text-light'>Is It Accurate?</div>
-          <div className='MINWd higtCmon CmonCentrEvry BrderBtom'></div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize BrderBtom'>
-          <div className='MostWd higtCmon CmonCentrEvry'>
-            <div className='text-light' style={{ marginRight: "5px" }}>Local:</div>
-            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "10px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </div>
-            <div className='text-light' style={{ marginRight: "5px" }}>Live:</div>
-            <div style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd", marginRight: "5px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </div>
-          </div>
-          <div className='AvgWd1 higtCmon BrderRigt CmonCentrEvry label-bold' style={{ paddingLeft: "7px" }}>End Date:</div>
-          <div className='AvgWd2 BrderRigt higtCmon CmonCentrEvry text-light'>Is It Relevant?</div>
-          <div className='MINWd higtCmon CmonCentrEvry'></div>
-        </div>
-        <div className='CmonCentrEvry CmonFntSize higtCmon BrderBtom label-bold' style={{ textDecoration: "underline", textDecorationColor: "#bdbdbd" }}>Delivery Checklist</div>
-
-        <div className='CmonCentrEvry CmonFntSize higtCmon'>
-          <input type="checkbox" className='checkbox SpacRit text-light' />
-          <div className='text-light'>Local</div>
-          <input type="checkbox" className='checkbox SpacLft SpacRit text-light' />
-          <div className='text-light'>Live</div>
-          <input type="checkbox" className='checkbox SpacLft SpacRit text-light' />
-          <div className='text-light'>Flag Based</div>
-          <input type="checkbox" className='checkbox SpacLft SpacRit text-light' />
-          <div className='text-light'>Security</div>
-          <input type="checkbox" className='checkbox SpacLft SpacRit text-light' />
-          <div className='text-light'>Session</div>
-          <input type="checkbox" className='checkbox SpacLft SpacRit text-light' />
-          <div className='text-light'>Clone</div>
-          <input type="checkbox" className='checkbox SpacLft SpacRit text' />
-          <div className='text-light'>Transaction Log</div>
-          <input type="checkbox" className='checkbox SpacLft SpacRit text' />
-          <div className='text-light'>User Log</div>
-          <input type="checkbox" className='checkbox SpacLft SpacRit text' />
-          <div className='text-light'>Ticket Updated</div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize higtCmon BrderBtom checklist_date'>
-          <div className='SpacRitDPL text-light'>Data Loading: Yes/No</div>
-          <div className='SpacRitDPL text-light'>Performance:</div>
-          <div className='SpacRitDPL text-light'>Data Cleanup Required?</div>
-          <div className='text-light'>Setting/Setup Document</div>
-        </div>
-
-        <div className='CmonCentrEvry CmonFntSize higtCmon text-light'>Closing Statement By Stackholder:</div>
-
-        <div className='CmonCentrEvry CmonFntSize higtCmon'></div>
-      </div>
-    </div>
-  );
+    );
 });
+
 
 export default DocumentSheet;

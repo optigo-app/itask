@@ -13,7 +13,7 @@ import {
   TableSortLabel,
   Box,
 } from '@mui/material';
-import { cleanDate, commonTextFieldProps, filterNestedTasksByView, flattenTasks, formatDate3, getUserProfileData, handleAddApicall, mapKeyValuePair, priorityColors, statusColors } from '../../Utils/globalfun';
+import { cleanDate, commonTextFieldProps, flattenTasks, formatDate3, getUserProfileData, handleAddApicall, priorityColors, statusColors } from '../../Utils/globalfun';
 import { PERMISSIONS } from '../../Components/Auth/Role/permissions';
 import useAccess from '../../Components/Auth/Role/useAccess';
 
@@ -28,16 +28,15 @@ import isoWeek from "dayjs/plugin/isoWeek";
 import SplitTaskModal from '../../Components/Calendar/SplitTaskModal';
 import StatusBadge from '../../Components/ShortcutsComponent/StatusBadge';
 import TaskPriority from '../../Components/ShortcutsComponent/TaskPriority';
-import useFullTaskFormatFile from '../../Utils/TaskList/FullTasKFromatfile';
 import { SeparatorHorizontal } from 'lucide-react';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import { AddTaskDataApi } from '../../Api/TaskApi/AddTaskApi';
 import { toast } from 'react-toastify';
 import { deleteTaskDataApi } from '../../Api/TaskApi/DeleteTaskApi';
-import { fetchTaskDataFullApi } from '../../Api/TaskApi/TaskDataFullApi';
 import CalendarFilter from './CalendarFilter';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { TaskData, fetchlistApiCall } from '../../Recoil/atom';
+import { actualTaskData, fetchlistApiCall } from '../../Recoil/atom';
+import { fetchTodayTaskApi } from '../../Api/TaskApi/fetchTodayTaskApi';
 
 // Extend dayjs with plugins
 dayjs.extend(duration);
@@ -79,6 +78,7 @@ const findModuleRecursively = (tasks, targetId) => {
 };
 
 const tableHeaders = [
+  { label: "Sr #", key: "srno", width: "5%" },
   { label: "Task Title", key: "taskname", width: "26%" },
   { label: "Status", key: "status", width: "8%" },
   { label: "Priority", key: "priority", width: "8%" },
@@ -88,8 +88,121 @@ const tableHeaders = [
   { label: "End Date", key: "DeadLineDate", width: "14%" },
 ];
 
+const getSessionList = (key) => {
+  try {
+    return JSON.parse(sessionStorage.getItem(key) || '[]');
+  } catch {
+    return [];
+  }
+};
+
+const normalizeCalendarTasks = (rows = []) => {
+  const statusData = getSessionList('taskstatusData');
+  const priorityData = getSessionList('taskpriorityData');
+  const taskCategory = getSessionList('taskworkcategoryData');
+  const taskProject = getSessionList('taskprojectData');
+  const taskAssigneeData = getSessionList('taskAssigneeData');
+
+  const statusById = new Map(statusData.map((item) => [Number(item?.id), item?.labelname || '']));
+  const priorityById = new Map(priorityData.map((item) => [Number(item?.id), item?.labelname || '']));
+  const categoryById = new Map(taskCategory.map((item) => [Number(item?.id), item?.labelname || '']));
+  const projectById = new Map(taskProject.map((item) => [Number(item?.id), item?.labelname || '']));
+  const assigneeById = new Map(taskAssigneeData.map((item) => [Number(item?.id), item]));
+
+  return rows.map((task) => {
+    const assigneeIdArray = task?.assigneids
+      ?.toString()
+      ?.split(',')
+      ?.map((id) => Number(id));
+    const matchedAssignees = (assigneeIdArray || [])
+      .map((id) => assigneeById.get(id))
+      .filter(Boolean);
+
+    const fullPathParts = String(task?.FullPath || '')
+      .split('-->')
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    return {
+      ...task,
+      status: task?.status || statusById.get(Number(task?.statusid)) || '',
+      priority: task?.priority || priorityById.get(Number(task?.priorityid)) || '',
+      category: task?.category || categoryById.get(Number(task?.workcategoryid)) || '',
+      taskPr: task?.taskPr || projectById.get(Number(task?.projectid)) || task?.project || '',
+      assignee: task?.assignee || matchedAssignees,
+      moduleName: task?.moduleName || task.roottaskname || fullPathParts[0] || '-',
+    };
+  });
+};
+
+const getAssigneeIdArray = (assigneids) => {
+  if (!assigneids) return [];
+  return assigneids
+    .toString()
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
+};
+
+const buildTaskKeyValueMap = (taskList = []) => {
+  const taskById = new Map();
+  taskList.forEach((task) => {
+    const idNum = Number(task?.taskid);
+    if (!Number.isNaN(idNum)) {
+      taskById.set(idNum, task);
+    }
+    if (task?.taskid !== undefined && task?.taskid !== null) {
+      taskById.set(String(task.taskid), task);
+    }
+  });
+  return { taskById };
+};
+
+const prepareCalendarTaskList = ({
+  treeTaskData = [],
+  fallbackTaskData = [],
+  isAdmin = false,
+  userId,
+}) => {
+  const flattenedTreeTasks = Array.isArray(treeTaskData) && treeTaskData.length > 0
+    ? flattenTasks(treeTaskData)
+    : [];
+
+  const sourceTasks = flattenedTreeTasks.length > 0 ? flattenedTreeTasks : (fallbackTaskData || []);
+  const { taskById } = buildTaskKeyValueMap(sourceTasks);
+  const parentWithChildren = new Set();
+
+  sourceTasks.forEach((task) => {
+    const parentId = Number(task?.parentid);
+    if (!Number.isNaN(parentId) && parentId !== 0) {
+      parentWithChildren.add(parentId);
+      parentWithChildren.add(String(parentId));
+    }
+  });
+
+  return sourceTasks
+    .map((task) => {
+      const parentTask = taskById.get(Number(task?.parentid)) || taskById.get(String(task?.parentid));
+      const hasChildren = parentWithChildren.has(Number(task?.taskid)) || parentWithChildren.has(String(task?.taskid));
+      const inferredType = Number(task?.parentid) === 0 ? 'module' : (hasChildren ? 'major' : 'minor');
+      return {
+        ...task,
+        moduleName: task?.moduleName || parentTask?.moduleName || parentTask?.taskname || task?.taskPr || '-',
+        type: task?.type || inferredType,
+      };
+    })
+    .filter((task) => {
+      if (isAdmin) return true;
+      const assigneeIdsArray = getAssigneeIdArray(task?.assigneids);
+      return assigneeIdsArray.includes(String(userId));
+    });
+};
+
 const CalendarGridView = () => {
   const [tasks, setTasks] = useState([]);
+  const [taskDataRows, setTaskDataRows] = useState([]);
+  const [isTaskLoading, setIsTaskLoading] = useState(true);
+  const [taskAssigneeData, setTaskAssigneeData] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('Today');
   const [currentDate, setCurrentDate] = useState(dayjs());
   const [customRange, setCustomRange] = useState({
@@ -103,28 +216,64 @@ const CalendarGridView = () => {
   const [numberOfDaysToSplit, setNumberOfDaysToSplit] = useState(0);
   const [splitParts, setSplitParts] = useState([]);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState(null);
+  const [selectedModuleId, setSelectedModuleId] = useState(null);
   const [totalHours, setTotalHours] = useState({ estimate: 0, working: 0 });
   const [localWorkingEdits, setLocalWorkingEdits] = useState({});
-  const actualTaskDataValue = useRecoilValue(TaskData);
+  const actualTaskDataValue = useRecoilValue(actualTaskData);
+  const fetchTaskTrigger = useRecoilValue(fetchlistApiCall);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const { hasAccess } = useAccess();
-  const {
-    iswhTLoading,
-    taskFinalData,
-    taskAssigneeData
-  } = useFullTaskFormatFile();
+  const auth = getUserProfileData();
+  const filters = React.useMemo(() => ({
+    startdatefrom: customRange.startDate ? dayjs(customRange.startDate).format('YYYY-MM-DD') : '',
+    startdateto: customRange.endDate ? dayjs(customRange.endDate).format('YYYY-MM-DD') : '',
+    assigneeid: selectedAssigneeId?.id || auth?.id || ''
+  }), [customRange.startDate, customRange.endDate, selectedAssigneeId]);
+  const hasValidDateRange = Boolean(filters?.startdatefrom && filters?.startdateto);
+
+  useEffect(() => {
+    setTaskAssigneeData(getSessionList('taskAssigneeData'));
+  }, []);
+
+  useEffect(() => {
+    if (!hasValidDateRange) return;
+
+    const fetchGridTasks = async () => {
+      setIsTaskLoading(true);
+      try {
+        const taskRes = await fetchTodayTaskApi(
+          'order by StartDate asc',
+          '5000',
+          '1',
+          filters
+        );
+        const rows = taskRes?.rd || [];
+        const normalizedRows = normalizeCalendarTasks(rows);
+        setTaskDataRows(normalizedRows);
+      } catch (error) {
+        console.error('Error fetching calendar grid task list:', error);
+        setTaskDataRows([]);
+      } finally {
+        setIsTaskLoading(false);
+      }
+    };
+
+    fetchGridTasks();
+  }, [filters, fetchTaskTrigger, hasValidDateRange]);
 
   const filteredTasks = React.useMemo(() => {
-    if (!taskFinalData?.TaskData) return [];
+    if (!taskDataRows?.length && !actualTaskDataValue?.length) return [];
     const today = currentDate.startOf('day');
     const tomorrow = today.add(1, 'day');
     const userProfile = getUserProfileData();
     const isAdmin = userProfile.designation?.toLowerCase() === 'admin';
 
-    // Flatten all tasks or only "my" tasks
-    const rawTasks = isAdmin
-      ? flattenTasks(taskFinalData.TaskData)
-      : flattenTasks(filterNestedTasksByView(taskFinalData.TaskData, 'me', userProfile.id));
+    const rawTasks = prepareCalendarTaskList({
+      treeTaskData: [],
+      fallbackTaskData: taskDataRows?.length > 0 ? taskDataRows : (actualTaskDataValue || []),
+      isAdmin,
+      userId: userProfile?.id,
+    });
 
     let nonRootTasks = rawTasks.filter(task => task.parentid !== 0);
     // Filter to show only minor tasks (hide major tasks)
@@ -140,6 +289,13 @@ const CalendarGridView = () => {
         if (!task.assigneids) return false;
         const assigneeIdsArray = task.assigneids.split(',').map(id => id.trim());
         return assigneeIdsArray.includes(String(selectedAssigneeId.id));
+      });
+    }
+
+    // Apply module filter
+    if (selectedModuleId) {
+      nonRootTasks = nonRootTasks.filter(task => {
+        return String(task.maintaskid) === selectedModuleId;
       });
     }
     // 📅 Apply date filters
@@ -165,7 +321,7 @@ const CalendarGridView = () => {
     }
 
     return [];
-  }, [taskFinalData, selectedFilter, currentDate, selectedAssigneeId, customRange]);
+  }, [taskDataRows, actualTaskDataValue, selectedFilter, currentDate, selectedAssigneeId, customRange, selectedModuleId]);
 
   useEffect(() => {
     const applyLocalEdits = (task) => {
@@ -423,6 +579,10 @@ const CalendarGridView = () => {
     setSelectedAssigneeId(value);
   };
 
+  const handleModuleChange = (value) => {
+    setSelectedModuleId(value?.target?.value || '');
+  };
+
   const handleSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -524,7 +684,7 @@ const CalendarGridView = () => {
 
   return (
     <Box className="cal-Container">
-      {(iswhTLoading == null || iswhTLoading == true) ? (
+      {isTaskLoading ? (
         <LoadingBackdrop isLoading={true} />
       ) :
         <>
@@ -532,6 +692,7 @@ const CalendarGridView = () => {
             totalHours={totalHours}
             selectedFilter={selectedFilter}
             selectedAssigneeId={selectedAssigneeId}
+            selectedModuleId={selectedModuleId}
             customRange={customRange}
             currentDate={currentDate}
             onFilterChange={handleFilterChange}
@@ -539,6 +700,7 @@ const CalendarGridView = () => {
             taskAssigneeData={taskAssigneeData}
             handleDateChange={handleDateChange}
             handleAssigneeChange={handleAssigneeChange}
+            handleModuleChange={handleModuleChange}
           />
           <TableContainer component={Paper} className='muiTableTaContainer'>
             <Table aria-label="task table" className='muiTable'>
@@ -571,6 +733,9 @@ const CalendarGridView = () => {
                   <>
                     {sortedTasks?.map((task, index) => (
                       <TableRow key={task.taskid}>
+                        <TableCell>
+                          {index + 1}
+                        </TableCell>
                         <TableCell>
                           <strong>{task.moduleName}</strong>/{task.taskname}
                         </TableCell>
@@ -621,7 +786,7 @@ const CalendarGridView = () => {
                   </>
                   :
                   <TableRow>
-                    <TableCell colSpan={8} style={{ textAlign: 'center' }}>
+                    <TableCell colSpan={9} style={{ textAlign: 'center' }}>
                       No tasks found for today.
                     </TableCell>
                   </TableRow>
