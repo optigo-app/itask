@@ -75,6 +75,7 @@ const Task = () => {
     taskAssigneeData } = useFullTaskFormatFile();
   // console.log("taskFinalData", taskFinalData)
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showMilestonesOnly, setShowMilestonesOnly] = useState(false);
   const [localTaskEdits, setLocalTaskEdits] = useState({});
   const processingCancelledRef = useRef(false);
   const processingTimerRef = useRef(null);
@@ -317,10 +318,11 @@ const Task = () => {
   useEffect(() => {
     if (tasks) {
       setFilters({
-        category: ['Today']
+        category: ['Today'],
+        searchTerm: parsedDataObj?.fromFullTaskView ? parsedDataObj?.module : ""
       });
     }
-  }, [])
+  }, [parsedDataObj])
 
   // Filter change handler
   const handleFilterChange = (key, value) => {
@@ -572,6 +574,20 @@ const Task = () => {
           if (!isFavorite) return null;
         }
 
+        // Check milestone filter
+        if (showMilestonesOnly) {
+          const isTaskOrSubtaskMilestone = (taskItem) => {
+            if (taskItem.ismilestone == 1) return true;
+            if (taskItem.subtasks && taskItem.subtasks.length > 0) {
+              return taskItem.subtasks.some(isTaskOrSubtaskMilestone);
+            }
+            return false;
+          };
+
+          const isMilestone = isTaskOrSubtaskMilestone(item);
+          if (!isMilestone) return null;
+        }
+
         const selfTaskNoMatchesSearch = searchTerm && item?.taskno && searchMatchFn(item.taskno);
 
         const matches = matchesFilters(item, parentMatchedByTaskNo);
@@ -713,6 +729,10 @@ const Task = () => {
 
   const handleToggleFavoritesOnly = () => {
     setShowFavoritesOnly((prev) => !prev);
+  };
+
+  const handleToggleMilestonesOnly = () => {
+    setShowMilestonesOnly((prev) => !prev);
   };
 
   const hasIncompleteSubtasks = (task) => {
@@ -1142,6 +1162,8 @@ const Task = () => {
             handleArchivedTaskFilter={handleArchivedTaskFilter}
             showFavoritesOnly={showFavoritesOnly}
             onToggleFavoritesOnly={handleToggleFavoritesOnly}
+            showMilestonesOnly={showMilestonesOnly}
+            onToggleMilestonesOnly={handleToggleMilestonesOnly}
           />
 
           {/* Divider */}

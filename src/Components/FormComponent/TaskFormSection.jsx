@@ -387,13 +387,13 @@ const TaskFormSection = ({
               )
             ))}
 
-            {!hiddenFields.includes('estimates') && [{ label: 'Estimate', field: 'estimate_hrs' }, { label: 'Actual Estimate', field: 'estimate1_hrs' }, { label: 'Sr. Estimate', field: 'estimate2_hrs' }].map(({ label, field }) => (
+            {!hiddenFields.includes('estimates') && [{ label: '1st Estimate', field: 'estimate_hrs' }, { label: 'Final Estimate', field: 'estimate1_hrs' }, { label: 'Sr. Estimate', field: 'estimate2_hrs' }].map(({ label, field }) => (
               <Grid item xs={12} md={4} key={field}>
                 <Box className="form-group">
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Typography className="form-label" variant="subtitle1">{label}</Typography>
-                      {field == 'estimate2_hrs' && (srEstimateFieldDisabled || formValues?.tree_lable == 2) && (
+                      {field == 'estimate2_hrs' && srEstimateFieldDisabled && (
                         <Tooltip
                           title="Sr. Estimate cannot be changed once set for this task. Only admin can modify it."
                           arrow

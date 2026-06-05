@@ -55,7 +55,15 @@ export default function DepartmentAssigneeAutocomplete({
         );
 
     return (
-        <Box className="form-group">
+        <Box
+            className="form-group"
+            sx={{
+                fontFamily: "Calibri, Arial, Helvetica, sans-serif",
+                '& *': {
+                    fontFamily: "Calibri, Arial, Helvetica, sans-serif",
+                },
+            }}
+        >
             <Typography variant="subtitle1" className="form-label">{label}</Typography>
             <Autocomplete
                 multiple={multiple}

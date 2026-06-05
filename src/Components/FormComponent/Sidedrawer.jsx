@@ -19,7 +19,7 @@ import { fetchlistApiCall, formData, rootSubrootflag, TaskData } from "../../Rec
 import dayjs from 'dayjs';
 import utc from "dayjs/plugin/utc";
 import { useLocation } from "react-router-dom";
-import { cleanDate, commonTextFieldProps, customDatePickerProps, flattenTasks, getUserProfileData, isFormFieldLocked, isDeadlineLockedForLevelOneTask, isSrEstimateLocked, mapKeyValuePair, mapTaskLabels } from "../../Utils/globalfun";
+import { cleanDate, commonTextFieldProps, customDatePickerProps, flattenTasks, getUserProfileData, isFormFieldLocked, isDeadlineLockedForLevelOneTask, mapKeyValuePair, mapTaskLabels } from "../../Utils/globalfun";
 import timezone from 'dayjs/plugin/timezone';
 import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
 import CustomAutocomplete from "../ShortcutsComponent/CustomAutocomplete";
@@ -134,13 +134,10 @@ const SidebarDrawer = ({
     }, [formDataValue, userProfile?.designation]);
 
     const isSrEstimateFieldLocked = useMemo(() => {
-        return isFormFieldLocked({
-            task: formDataValue,
-            fieldName: 'estimate2_hrs',
-            designation: userProfile?.designation,
-            lockCondition: isSrEstimateLocked
-        });
-    }, [formDataValue, userProfile?.designation]);
+        const isAdmin = userProfile?.designation?.toLowerCase() === 'admin';
+        if (isAdmin) return false;
+        return formDataValue?.ismilestone == 1 && Number(formDataValue?.estimate2_hrs) > 0;
+    }, [formDataValue?.ismilestone, formDataValue?.estimate2_hrs, userProfile?.designation]);
 
     const [formValues, setFormValues] = React.useState({
         taskName: "",
@@ -170,6 +167,13 @@ const SidebarDrawer = ({
         estimate2_hrs: "",
     });
 
+    const isSrEstimateFieldLockedFinal = useMemo(() => {
+        const baseLocked = isSrEstimateFieldLocked;
+        const milestoneChecked = Boolean(formValues?.milestoneChecked);
+        const estimateValue = Number(formValues?.estimate2_hrs);
+        const milestoneLock = milestoneChecked && estimateValue > 0;
+        return baseLocked || milestoneLock;
+    }, [isSrEstimateFieldLocked, formValues?.milestoneChecked, formValues?.estimate2_hrs]);
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
@@ -583,7 +587,7 @@ const SidebarDrawer = ({
             meetingid: formDataValue?.meetingid ?? "",
             taskname: formValues.taskName ?? formDataValue?.taskname,
             bulkTask: formValues.bulkTask ?? formDataValue?.bulkTask,
-            statusid: formValues.status ?? formDataValue?.statusid,
+            statusid: module?.repeat ? '' : (formValues.status ?? formDataValue?.statusid),
             secstatusid: formValues.secStatus ?? formDataValue?.secstatusid,
             completion_timestamp: statusValue?.labelname?.toLowerCase() === "completed" ? date.toISOString() : "",
             priorityid: formValues.priority ?? formDataValue?.priorityid,

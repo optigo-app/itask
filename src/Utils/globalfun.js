@@ -125,14 +125,6 @@ export const isDeadlineLockedForLevelOneTask = (task, fieldName) => {
     return isLevelOneTask && hasExistingDeadline;
 };
 
-// Sr. Estimate lock function
-export const isSrEstimateLocked = (task, fieldName) => {
-    if (fieldName !== 'estimate2_hrs') return false;
-    const hasExistingEstimate = task?.estimate2_hrs != null && task?.estimate2_hrs !== '';
-    const isLevelOneOrTwoTask = task?.tree_lable == 1 || task?.tree_lable == 2;
-    return isLevelOneOrTwoTask && hasExistingEstimate;
-};
-
 // output like 01/01/2023
 export const formatDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -1607,7 +1599,7 @@ export const Datetheme = createTheme({
         secondary: {
             main: "#f50057",
         },
-        background: {
+        background: {   
             default: "#f5f5f5",
         },
     },

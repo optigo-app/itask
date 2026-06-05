@@ -40,7 +40,7 @@ const StatusCircles = ({ task }) => {
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                 <Typography variant="body2" sx={{ color: '#555', fontSize: '12px' }}>
-                    Estimate:
+                    My Estimate:
                 </Typography>
                 <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '12px', color: '#333' }}>
                     {estimate1.toFixed(2)} hrs

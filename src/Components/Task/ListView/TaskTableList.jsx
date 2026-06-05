@@ -19,7 +19,7 @@ import {
     Menu,
     MenuItem,
 } from "@mui/material";
-import { Archive, ArchiveRestore, Bug, CirclePlus, CloudUpload, Eye, MessageCircleMore, Pencil, PrinterCheck, Star, Undo2 } from "lucide-react";
+import { Archive, ArchiveRestore, Bug, CirclePlus, CloudUpload, Eye, Flag, MessageCircleMore, Pencil, PrinterCheck, Star, Undo2 } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -931,6 +931,26 @@ const TableView = ({
                                     )}
                                     {task?.taskname}
                                 </span>
+                                {task?.ismilestone == 1 && (
+                                    <Tooltip title="Milestone" arrow placement="top">
+                                        <span
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: '18px',
+                                                height: '18px',
+                                                borderRadius: '50%',
+                                                backgroundColor: '#7367f0',
+                                                color: '#fff',
+                                                marginLeft: '4px',
+                                                flexShrink: 0,
+                                            }}
+                                        >
+                                            <Flag size={10} fill="#fff" />
+                                        </span>
+                                    </Tooltip>
+                                )}
                                 {task?.subtasks?.length > 0 && (
                                     <span className="task-sub_count">
                                         {task?.subtasks?.length}

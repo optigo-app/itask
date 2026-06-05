@@ -56,6 +56,7 @@ export default function MasterBind({ taskModuleList }) {
         content: ''
     });
     const errorDialogTimeoutRef = React.useRef(null);
+    const fullBoundGroupsRef = React.useRef([]);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
 
@@ -88,6 +89,7 @@ export default function MasterBind({ taskModuleList }) {
             selectedGroupIds?.includes(item.id)
         );
         setRightGroups(filteredData);
+        fullBoundGroupsRef.current = filteredData || [];
     }, [])
 
     const handleAddApicall = async (updatedTasks) => {
@@ -114,6 +116,7 @@ export default function MasterBind({ taskModuleList }) {
         setOpenChildTask(false);
         const updatedRightGroups = rightGroups.filter((g) => g.id !== id);
         setRightGroups(updatedRightGroups);
+        fullBoundGroupsRef.current = updatedRightGroups;
         const updatedIds = updatedRightGroups.map((g) => g.id);
         const task = taskModuleList[0];
         const updatedTask = {
@@ -185,6 +188,7 @@ export default function MasterBind({ taskModuleList }) {
         }
 
         setRightGroups(updatedRightGroups);
+        fullBoundGroupsRef.current = updatedRightGroups;
         const updatedIds = updatedRightGroups.map((g) => g.id);
         const task = taskModuleList[0];
         const updatedTask = {
@@ -213,11 +217,11 @@ export default function MasterBind({ taskModuleList }) {
             );
             if (searchTarget === 'both') {
                 setLeftGroups(filtered);
-                setRightGroups(filtered.filter(g => rightGroups.some(rg => rg.id === g.id)));
+                setRightGroups(filtered.filter(g => fullBoundGroupsRef.current.some(rg => rg.id === g.id)));
             } else if (searchTarget === 'left') {
                 setLeftGroups(filtered);
             } else if (searchTarget === 'right') {
-                setRightGroups(filtered.filter(g => rightGroups.some(rg => rg.id === g.id)));
+                setRightGroups(filtered.filter(g => fullBoundGroupsRef.current.some(rg => rg.id === g.id)));
             }
         }
     };

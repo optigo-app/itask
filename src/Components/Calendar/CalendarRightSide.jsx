@@ -8,7 +8,12 @@ import interactionPlugin from '@fullcalendar/interaction';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData, FullSidebar, rootSubrootflag, TaskData, fetchlistApiCall } from '../../Recoil/atom';
-import { Box, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Divider } from '@mui/material';
+import {
+    Box, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Divider,
+    Drawer, Chip, IconButton, Typography, List, ListItem, ListItemButton
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 import { PERMISSIONS } from '../Auth/Role/permissions';
 import { toast } from 'react-toastify';
@@ -49,6 +54,33 @@ const Calendar = ({
     const [attendanceDialogRows, setAttendanceDialogRows] = useState([]);
     const [activeAssignee, setActiveAssignee] = useState(null);
     const [duplicateDialog, setDuplicateDialog] = useState({ open: false, event: null });
+    const [dayDetailOpen, setDayDetailOpen] = useState(false);
+    const [selectedDayDate, setSelectedDayDate] = useState(null);
+
+    const getEventsForDate = (targetDate) => {
+        const d = new Date(targetDate);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const dateStr = `${y}-${m}-${day}`;
+        return filteredEvents.filter(ev => {
+            const s = new Date(ev.StartDate);
+            const sy = s.getFullYear();
+            const sm = String(s.getMonth() + 1).padStart(2, '0');
+            const sd = String(s.getDate()).padStart(2, '0');
+            return `${sy}-${sm}-${sd}` === dateStr;
+        });
+    };
+
+    const openDayDetail = (date) => {
+        setSelectedDayDate(new Date(date));
+        setDayDetailOpen(true);
+    };
+
+    const closeDayDetail = () => {
+        setDayDetailOpen(false);
+        setSelectedDayDate(null);
+    };
 
     const toDateKey = (date, useUTC = true) => {
         const d = date instanceof Date ? date : new Date(date);
@@ -418,6 +450,10 @@ const Calendar = ({
         slotLabelInterval: "00:15:00",
         dayCellContent(arg) {
             const holidayLabel = getHolidayLabel(arg.date);
+            const isMonthView = arg.view?.type === 'dayGridMonth';
+            const dayEvents = isMonthView ? getEventsForDate(arg.date) : [];
+            const taskCount = dayEvents.length;
+
             if (holidayLabel) {
                 return {
                     html: `
@@ -431,6 +467,18 @@ const Calendar = ({
                     `
                 };
             }
+
+            if (isMonthView && taskCount > 0) {
+                return {
+                    html: `
+                        <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+                            <span class="fc-daygrid-day-number">${arg.dayNumberText}</span>
+                            <span class="fc-day-task-count" title="${taskCount} tasks">${taskCount}</span>
+                        </div>
+                    `
+                };
+            }
+
             return arg.dayNumberText;
         },
         dayCellClassNames: (arg) => {
@@ -467,9 +515,15 @@ const Calendar = ({
         eventResizableFromStart: true,
         resizable: true,
         dragScroll: true,
-        dayMaxEvents: 4, // Limit events per day in month view to prevent overflow
-        moreLinkClick: 'popover', // Show popover when clicking "more" link
-        navLinks: false, // Changed from true to false to prevent header clicks from triggering view changes
+        dayMaxEvents: true,
+        moreLinkClick: (info) => {
+            openDayDetail(info.date);
+            return false;
+        },
+        moreLinkContent: (arg) => {
+            return `+${arg.num} more`;
+        },
+        navLinks: false,
         weekNumbers: true, // Enable week numbers (controlled by CSS per view)
         customButtons: {
             sidebarToggle: {
@@ -741,9 +795,9 @@ const Calendar = ({
         },
 
         dateClick(info) {
-            // Prevent SideDrawer from opening on empty date clicks.
-            // We only want to handle clicks on existing events, which are handled by eventClick or other handlers.
-            return;
+            if (info.view.type === 'dayGridMonth') {
+                openDayDetail(info.date);
+            }
         },
 
         selectAllow(selectInfo) {
@@ -1050,6 +1104,149 @@ const Calendar = ({
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Day Detail Drawer */}
+            <Drawer
+                anchor="right"
+                open={dayDetailOpen}
+                onClose={closeDayDetail}
+                PaperProps={{ sx: { width: { xs: '100%', sm: 420 }, borderRadius: '12px 0 0 12px' } }}
+            >
+                {(() => {
+                    const dayEvents = selectedDayDate ? getEventsForDate(selectedDayDate) : [];
+                    const totalHours = dayEvents.reduce((sum, ev) => sum + (ev.estimate_hrs || 0), 0);
+                    const formattedDate = selectedDayDate
+                        ? selectedDayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+                        : '';
+                    return (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                                <Box>
+                                    <Typography variant="h6" fontWeight={700} fontSize="1.1rem">
+                                        {formattedDate}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 0.5 }}>
+                                        <Chip size="small" label={`${dayEvents.length} tasks`} sx={{ backgroundColor: 'rgba(115,103,240,0.12)', color: '#5a52d5', fontWeight: 600 }} />
+                                        {totalHours > 0 && (
+                                            <Chip size="small" icon={<AccessTimeIcon sx={{ fontSize: '14px !important' }} />} label={`${parseFloat(totalHours).toFixed(2)} hrs`} sx={{ backgroundColor: 'rgba(40,199,111,0.12)', color: '#28a745', fontWeight: 600 }} />
+                                        )}
+                                    </Box>
+                                </Box>
+                                <IconButton size="small" onClick={closeDayDetail} sx={{ mt: 0.5 }}>
+                                    <CloseIcon fontSize="small" />
+                                </IconButton>
+                            </Box>
+                            <Box sx={{ flex: 1, overflowY: 'auto', p: 1.5 }}>
+                                {dayEvents.length === 0 && (
+                                    <Typography color="text.secondary" align="center" sx={{ py: 4 }}>
+                                        No tasks for this day
+                                    </Typography>
+                                )}
+                                <List dense disablePadding>
+                                    {dayEvents.map((ev, idx) => {
+                                        const statusKey = (ev.status || ev.statusid || '').toString().trim().toLowerCase();
+                                        const dynamicStatus = getDynamicStatusColor?.(statusKey);
+                                        const fallbackStatus = statusColors?.[statusKey];
+                                        const statusBg = dynamicStatus?.backgroundColor || fallbackStatus?.backgroundColor || 'rgba(0,0,0,0.08)';
+                                        const statusColor = dynamicStatus?.color || fallbackStatus?.color || '#555';
+                                        const catColor = calendarsColor[ev.category] || 'primary';
+                                        const categoryColors = {
+                                            primary: '#7367f0', success: '#28c76f', error: '#ea5455',
+                                            warning: '#ff9f43', info: '#00cfe8', secondary: '#a8aaae',
+                                            support: '#8c57ff', dark: '#4b4b4b', productive: '#26c6da',
+                                            'rnd-tech': '#5e72e4', creative: '#fb6340', 'sop-correction': '#f5365c',
+                                            leave: '#f7fafc', maintenance: '#11cdef', unplanned: '#172b4d'
+                                        };
+                                        const dotColor = categoryColors[catColor] || '#7367f0';
+                                        return (
+                                            <ListItem key={`${ev.meetingid}-${idx}`} disablePadding sx={{ mb: 0.75 }}>
+                                                <ListItemButton
+                                                    sx={{
+                                                        borderRadius: 2,
+                                                        border: '1px solid #e0e0e0',
+                                                        py: 1,
+                                                        px: 1.5,
+                                                        alignItems: 'flex-start',
+                                                        gap: 1
+                                                    }}
+                                                    onClick={() => {
+                                                        const eventDetails = {
+                                                            meetingid: ev.meetingid,
+                                                            title: ev.meetingtitle || ev.title || '',
+                                                            start: new Date(ev.StartDate).toISOString(),
+                                                            end: new Date(ev.EndDate || ev.StartDate).toISOString(),
+                                                            isAllDay: ev.isAllDay ? 1 : 0,
+                                                            ismilestone: ev.ismilestone,
+                                                            descr: ev.Desc || '',
+                                                            category: ev.category || '',
+                                                            workcategoryid: ev.workcategoryid,
+                                                            statusid: ev.statusid,
+                                                            status: ev.status,
+                                                            priorityid: ev.priorityid,
+                                                            priority: ev.priority,
+                                                            estimate_hrs: ev.estimate_hrs || 0,
+                                                            estimate1_hrs: ev.estimate1_hrs || 0,
+                                                            estimate2_hrs: ev.estimate2_hrs || 0,
+                                                            workinghr: ev.workinghr || 0,
+                                                            DeadLineDate: ev.DeadLineDate,
+                                                            taskid: ev.taskid,
+                                                            parentid: ev.parentid,
+                                                            projectid: ev.projectid,
+                                                            moduleid: ev.RootTaskId,
+                                                            prModule: {
+                                                                taskid: ev.taskid,
+                                                                parentid: ev.parentid,
+                                                                projectid: ev.projectid,
+                                                                taskname: ev.taskname,
+                                                                projectname: ev.ProjectName,
+                                                                taskPr: ev.ProjectName,
+                                                            },
+                                                            guests: ev.guests || [],
+                                                            assigneids: (ev.guests || []).map(u => u.id).join(','),
+                                                            estimate: ev.estimate || ev.estimate_hrs || 1,
+                                                            description: ev.Desc || '',
+                                                        };
+                                                        setCalFormData(eventDetails);
+                                                        setFormDataValue(eventDetails);
+                                                        setRootSubroot({ Task: 'meeting' });
+                                                        setFormDrawerOpen(true);
+                                                        closeDayDetail();
+                                                    }}
+                                                >
+                                                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: dotColor, flexShrink: 0, mt: 0.6 }} />
+                                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                        <Typography fontWeight={600} fontSize="0.9rem" noWrap title={ev.meetingtitle || ev.title || ''}>
+                                                            {ev.meetingtitle || ev.title || ''}
+                                                        </Typography>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap', mt: 0.4 }}>
+                                                            {ev.status && (
+                                                                <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 999, backgroundColor: statusBg, color: statusColor, whiteSpace: 'nowrap' }}>
+                                                                    {ev.status}
+                                                                </span>
+                                                            )}
+                                                            {ev.priority && (
+                                                                <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#666', whiteSpace: 'nowrap' }}>
+                                                                    {ev.priority}
+                                                                </span>
+                                                            )}
+                                                            {ev.estimate_hrs > 0 && (
+                                                                <span style={{ fontSize: '0.7rem', color: '#888', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                                    <AccessTimeIcon sx={{ fontSize: '12px' }} />
+                                                                    {parseFloat(ev.estimate_hrs).toFixed(2)} hrs
+                                                                </span>
+                                                            )}
+                                                        </Box>
+                                                    </Box>
+                                                </ListItemButton>
+                                            </ListItem>
+                                        );
+                                    })}
+                                </List>
+                            </Box>
+                        </Box>
+                    );
+                })()}
+            </Drawer>
         </>
     );
 };
