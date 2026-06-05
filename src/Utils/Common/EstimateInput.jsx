@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Grid, TextField, Box } from "@mui/material";
 
-const EstimateInput = ({ value, onChange }) => {
+const EstimateInput = ({ value, onChange, disabled }) => {
     const [inputValue, setInputValue] = useState(
         value && value > 0 ? value.toString() : ""
     );
@@ -34,6 +34,7 @@ const EstimateInput = ({ value, onChange }) => {
                         size="small"
                         placeholder="Estimate"
                         value={inputValue}
+                        disabled={disabled}
                         onChange={handleInputChange}
                         className="textfieldsClass"
                         inputProps={{

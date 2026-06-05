@@ -338,7 +338,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                                 className="form-label"
                                                 htmlFor="taskName"
                                             >
-                                                Estimate Total
+                                                {isMilestone ? 'Final Estimate Total' : '1st Estimate Total'}
                                             </Typography>
                                             <TextField
                                                 variant="outlined"
@@ -436,7 +436,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell sx={{ width: "35%" }}><b>Task Name</b></TableCell>
-                                                <TableCell sx={{ width: "15%" }}><b>Estimate</b></TableCell>
+                                                <TableCell sx={{ width: "15%" }}><b>{isMilestone ? 'Final Estimate' : '1st Estimate'}</b></TableCell>
                                                 <TableCell sx={{ width: "20%" }}><b>Deadline</b></TableCell>
                                                 <TableCell sx={{ width: "10%", textAlign: "center" }}><b>Milestone</b></TableCell>
                                                 <TableCell sx={{ width: "20%", textAlign: "center" }}><b>Actions</b></TableCell>
@@ -465,6 +465,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                                                 type="number"
                                                                 size="small"
                                                                 fullWidth
+                                                                placeholder={task.ismilestone === 1 ? "Final Estimate" : "1st Estimate"}
                                                                 value={task.estimate}
                                                                 onChange={(e) => {
                                                                     const value = e.target.value;
@@ -570,7 +571,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                                         type="text"
                                                         size="small"
                                                         fullWidth
-                                                        placeholder="Estimate"
+                                                        placeholder={newTaskMilestone ? "Final Estimate" : "1st Estimate"}
                                                         value={newEstimate}
                                                         onChange={(e) => {
                                                             const value = e.target.value;

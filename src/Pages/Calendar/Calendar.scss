@@ -798,19 +798,19 @@
                 .fc-event {
                     margin-top: 0;
                     font-weight: 500;
-                    margin-bottom: 1px; // Minimal margin for better spacing
+                    margin-bottom: 1px;
                     border-radius: 3px;
-                    padding: 0.2rem 0.4rem; // Better padding for readability
-                    font-size: 0.75rem; // Smaller font for month view
-                    line-height: 1.3; // Better line height for readability
+                    padding: 0.15rem 0.35rem;
+                    font-size: 0.72rem;
+                    line-height: 1.2;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
-                    min-height: 20px; // Increased minimum height
-                    max-height: 22px; // Slightly increased max height
+                    min-height: 18px;
+                    max-height: 20px;
                     display: flex !important;
                     align-items: center;
-                    width: calc(100% - 2px) !important; // Ensure full width minus margins
+                    width: calc(100% - 2px) !important;
                     box-sizing: border-box;
 
                     .fc-event-main {
@@ -857,10 +857,9 @@
             }
 
             .fc-daygrid-day {
-                padding: 3px; // Reduced padding for more space
-                min-height: 120px; // Ensure minimum height for month view cells
-                max-height: 150px; // Limit maximum height to prevent overflow
-                overflow: visible; // Allow events to be visible
+                padding: 3px;
+                min-height: 120px;
+                overflow: visible;
                 position: relative;
 
                 .fc-daygrid-day-top {
@@ -878,10 +877,9 @@
                 // Month view specific styles
                 &.fc-day {
                     .fc-daygrid-day-events {
-                        max-height: 95px; // Increased event container height
-                        overflow: hidden; // Hide overflowing events
+                        overflow: hidden;
                         position: relative;
-                        margin: 0 1px; // Small horizontal margin
+                        margin: 0 1px;
 
                         // Ensure events don't get cut off
                         .fc-daygrid-event-harness {
@@ -943,18 +941,43 @@
 
             // ** More Events Link Styling
             .fc-daygrid-more-link {
-                font-size: 0.7rem !important;
-                padding: 2px 4px !important;
-                margin: 1px 2px !important;
-                background-color: rgba(115, 103, 240, 0.1) !important;
-                color: #7367f0 !important;
-                border-radius: 3px !important;
+                font-size: 0.72rem !important;
+                padding: 3px 6px !important;
+                margin: 2px 4px !important;
+                background-color: rgba(115, 103, 240, 0.12) !important;
+                color: #5a52d5 !important;
+                border-radius: 4px !important;
                 text-decoration: none !important;
-                font-weight: 500 !important;
+                font-weight: 600 !important;
+                border: 1px solid rgba(115, 103, 240, 0.2) !important;
+                cursor: pointer;
+                transition: all 0.15s ease;
 
                 &:hover {
-                    background-color: rgba(115, 103, 240, 0.2) !important;
-                    color: #5a52d5 !important;
+                    background-color: rgba(115, 103, 240, 0.25) !important;
+                    color: #4338ca !important;
+                }
+            }
+
+            // ** Task Count Badge on Day Cells
+            .fc-day-task-count {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 20px;
+                height: 20px;
+                padding: 0 5px;
+                border-radius: 10px;
+                background-color: rgba(115, 103, 240, 0.15);
+                color: #5a52d5;
+                font-size: 0.7rem;
+                font-weight: 700;
+                line-height: 1;
+                cursor: pointer;
+                transition: background-color 0.15s ease;
+
+                &:hover {
+                    background-color: rgba(115, 103, 240, 0.3);
                 }
             }
 
@@ -1145,11 +1168,6 @@
                 // Larger screens - show more events
                 .fc-daygrid-day {
                     min-height: 140px;
-                    max-height: 180px;
-
-                    .fc-daygrid-day-events {
-                        max-height: 120px;
-                    }
                 }
             }
 
@@ -1158,11 +1176,6 @@
                 // Medium screens - moderate event display
                 .fc-daygrid-day {
                     min-height: 120px;
-                    max-height: 150px;
-
-                    .fc-daygrid-day-events {
-                        max-height: 90px;
-                    }
                 }
 
                 .fc-col-header-cell {
@@ -1183,12 +1196,7 @@
                 // Tablet screens - compact display
                 .fc-daygrid-day {
                     min-height: 100px;
-                    max-height: 130px;
                     padding: 3px;
-
-                    .fc-daygrid-day-events {
-                        max-height: 70px;
-                    }
                 }
 
                 .fc-daygrid-event-harness .fc-event {
@@ -1226,12 +1234,7 @@
                 // Mobile screens - very compact display
                 .fc-daygrid-day {
                     min-height: 80px;
-                    max-height: 100px;
                     padding: 2px;
-
-                    .fc-daygrid-day-events {
-                        max-height: 50px;
-                    }
                 }
 
                 .fc-daygrid-event-harness .fc-event {

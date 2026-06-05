@@ -209,8 +209,9 @@ const CalendarGridView = () => {
     startDate: "",
     endDate: "",
   });
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'StartDate', direction: 'asc' });
   const estimateTextFieldRefs = useRef({});
+  const sortedTasksRef = useRef([]);
   const [openSplitModal, setOpenSplitModal] = useState(false);
   const [selectedTaskToSplit, setSelectedTaskToSplit] = useState(null);
   const [numberOfDaysToSplit, setNumberOfDaysToSplit] = useState(0);
@@ -529,7 +530,8 @@ const CalendarGridView = () => {
         const currentInput = estimateTextFieldRefs.current[taskId];
         if (currentInput) currentInput.blur();
         const nextTaskIndex = index + 1;
-        const nextTask = tasks[nextTaskIndex];
+        const currentSorted = sortedTasksRef.current || [];
+        const nextTask = currentSorted[nextTaskIndex];
         if (nextTask) {
           const nextInput = estimateTextFieldRefs.current[nextTask.taskid];
           if (nextInput) {
@@ -657,16 +659,30 @@ const CalendarGridView = () => {
   };
 
   const sortedTasks = React.useMemo(() => {
-    if (!tasks || tasks.length === 0) return null;
+    if (!tasks || tasks.length === 0) {
+      sortedTasksRef.current = [];
+      return null;
+    }
 
-    if (!sortConfig.key) return tasks;
+    if (!sortConfig.key) {
+      sortedTasksRef.current = tasks;
+      return tasks;
+    }
 
-    return [...tasks].sort((a, b) => {
+    const sorted = [...tasks].sort((a, b) => {
       const aVal = a[sortConfig.key];
       const bVal = b[sortConfig.key];
 
       if (aVal == null) return 1;
       if (bVal == null) return -1;
+
+      if (sortConfig.key === 'StartDate' || sortConfig.key === 'DeadLineDate') {
+        const aDate = new Date(aVal);
+        const bDate = new Date(bVal);
+        if (!isNaN(aDate.getTime()) && !isNaN(bDate.getTime())) {
+          return sortConfig.direction === 'asc' ? aDate - bDate : bDate - aDate;
+        }
+      }
 
       if (typeof aVal === 'string') {
         return sortConfig.direction === 'asc'
@@ -678,6 +694,8 @@ const CalendarGridView = () => {
         ? aVal - bVal
         : bVal - aVal;
     });
+    sortedTasksRef.current = sorted;
+    return sorted;
   }, [tasks, sortConfig]);
 
   const isValidDecimalInput = (value) => /^(\d{0,2}|\d{0,2}\.\d{0,2}|\.\d{1,2})?$/.test(value);

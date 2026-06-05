@@ -37,6 +37,7 @@ import {
   ClipboardPaste,
   Archive,
   Bug,
+  Flag,
   Kanban,
   List,
   ListFilter,
@@ -75,6 +76,8 @@ const HeaderButtons = ({
   handleArchivedTaskFilter,
   showFavoritesOnly,
   onToggleFavoritesOnly,
+  showMilestonesOnly,
+  onToggleMilestonesOnly,
 }) => {
   const { hasAccess } = useAccess();
   const navigate = useSafeRedirect()
@@ -390,6 +393,38 @@ const HeaderButtons = ({
                   size={20}
                   fill={showFavoritesOnly ? "#fff" : "transparent"}
                   color={showFavoritesOnly ? "#fff" : "#0000008a"}
+                />
+              </IconButton>
+            </Tooltip>
+          )}
+          {location?.pathname?.includes("/tasks") && (
+            <Tooltip
+              placement="top"
+              title={showMilestonesOnly ? "Show all tasks" : "Show milestones only"}
+              arrow
+              classes={{ tooltip: "custom-tooltip" }}
+            >
+              <IconButton
+                aria-label="Milestone tasks"
+                onClick={onToggleMilestonesOnly}
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: '4px',
+                  backgroundColor: showMilestonesOnly ? "#7367f0" : "white",
+                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                  "&:hover": {
+                    backgroundColor: showMilestonesOnly ? "#5a52c8" : "#f5f5f5",
+                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                  },
+                }}
+              >
+                <Flag
+                  className="iconbtn"
+                  size={20}
+                  fill={showMilestonesOnly ? "#fff" : "transparent"}
+                  color={showMilestonesOnly ? "#fff" : "#0000008a"}
                 />
               </IconButton>
             </Tooltip>

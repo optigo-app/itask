@@ -11,6 +11,14 @@ const formatDate = (date) => {
 	return d instanceof Date && !isNaN(d) ? d.toLocaleDateString("en-GB") : "";
 };
 
+const dateToLocalISO = (date) => {
+	if (!date || !(date instanceof Date) || isNaN(date.getTime())) return "";
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}T00:00:00.000Z`;
+};
+
 const CustomDateRangePicker = ({ value = {}, onChange }) => {
 	const [anchorEl, setAnchorEl] = useState(null);
 	const open = Boolean(anchorEl);
@@ -52,8 +60,8 @@ const CustomDateRangePicker = ({ value = {}, onChange }) => {
 
 	const handleApply = () => {
 		onChange({
-			startDate: tempRange.startDate instanceof Date ? tempRange.startDate.toISOString() : "",
-			endDate: tempRange.endDate instanceof Date ? tempRange.endDate.toISOString() : "",
+			startDate: dateToLocalISO(tempRange.startDate),
+			endDate: dateToLocalISO(tempRange.endDate),
 		});
 		handleClose();
 	};
@@ -72,6 +80,11 @@ const CustomDateRangePicker = ({ value = {}, onChange }) => {
 
 	return (
 		<ThemeProvider theme={Datetheme}>
+			<style>{`
+				.dateRangePicker li div p {
+					color: #333 !important;
+				}
+			`}</style>
 			<Box display="flex" alignItems="center">
 				<TextField
 					placeholder="Date Range"

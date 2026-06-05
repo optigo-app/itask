@@ -35,6 +35,14 @@ import { AddTaskDataApi } from '../../../Api/TaskApi/AddTaskApi';
 import FullTaskViewFilters from './FullTaskViewFilters';
 import FilterChips from '../FilterComponent/FilterChip';
 
+const localISODate = (date = new Date()) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}T00:00:00.000Z`;
+};
+
 const FullTaskView = () => {
     const navigate = useNavigate();
     const [data, setData] = useState([]);
@@ -74,8 +82,8 @@ const FullTaskView = () => {
         category: null,
         assignee: null,
         startDate: {
-            startDate: new Date().toISOString(),
-            endDate: new Date().toISOString()
+            startDate: localISODate(),
+            endDate: localISODate()
         },
         dueDate: null,
         module: null,
@@ -145,8 +153,8 @@ const FullTaskView = () => {
 
     const getApiOrderBy = () => `order by ${sortConfig.key} ${sortConfig.direction}`;
 
-    const normalizeData = (items) => {
-        return items.map(item => {
+    const normalizeData = (items, startIndex = 0) => {
+        return items.map((item, index) => {
             const taskAssigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData")) || [];
             const taskDepartment = JSON.parse(sessionStorage.getItem("taskdepartmentData")) || [];
             const taskProject = JSON.parse(sessionStorage.getItem("taskprojectData")) || [];
@@ -172,6 +180,7 @@ const FullTaskView = () => {
             const department = taskDepartment.find(d => d.id == item?.departmentid);
             return {
                 ...item,
+                sr_no: startIndex + index + 1,
                 status: status ? status.labelname : '',
                 priority: priority ? priority.labelname : '',
                 assignees: matchedAssignees || [],
@@ -264,6 +273,7 @@ const FullTaskView = () => {
             startdateto: filters?.startDate?.endDate ? filters.startDate.endDate.split('T')[0] : '',
             duedatefrom: filters?.dueDate?.startDate ? filters.dueDate.startDate.split('T')[0] : '',
             duedateto: filters?.dueDate?.endDate ? filters.dueDate.endDate.split('T')[0] : '',
+            sr_no: 1,
         };
     };
 
@@ -276,10 +286,13 @@ const FullTaskView = () => {
                 page.toString(),
                 getApiFilterObject()
             );
+            console.log("response?.rd", response?.rd?.length)
             if (response?.rd) {
-                const normalizedRows = normalizeData(response.rd || []);
+                const startIndex = (page - 1) * rowsPerPage;
+                const normalizedRows = normalizeData(response.rd || [], startIndex);
                 setData(normalizedRows);
-                setTotalCount(response?.rd[0]?.icount || 0);
+                const count = response?.rd?.[0]?.icount ?? 0;
+                setTotalCount(Number(count) || 0);
             } else {
                 setData([]);
                 setTotalCount(0);
@@ -338,8 +351,8 @@ const FullTaskView = () => {
             category: null,
             assignee: null,
             startDate: {
-                startDate: new Date().toISOString(),
-                endDate: new Date().toISOString()
+                startDate: localISODate(),
+                endDate: localISODate()
             },
             dueDate: null,
             module: null,
@@ -427,11 +440,11 @@ const FullTaskView = () => {
     );
 
     const displayRows = filteredRows;
-    const effectiveTotalCount = hasFrontendFilters ? filteredRows.length : totalCount;
-    const totalPages = Math.max(1, Math.ceil((effectiveTotalCount || 0) / rowsPerPage));
+    const totalPages = Math.max(1, Math.ceil((totalCount || 0) / rowsPerPage));
 
     const tableHeaders = [
-        { label: "Task Title", key: "FullPath", sortKey: "FullPath", width: "36%" },
+        { label: "Sr. No", key: "srno", sortKey: "", width: "6%" },
+        { label: "Task Title", key: "FullPath", sortKey: "FullPath", width: "32%" },
         { label: "Project", key: "project", sortKey: "projectid", width: "12%" },
         { label: "What Next", key: "secstatus", sortKey: "secstatusid", width: "12%" },
         { label: "Assignees", key: "assignees", sortKey: "assigneids", width: "12%" },
@@ -555,6 +568,7 @@ const FullTaskView = () => {
                                 <TableRow
                                     key={row.id || row.taskid || `${row.FullPath}-${index}`}
                                 >
+                                    <TableCell align="center">{row.sr_no || '-'}</TableCell>
                                     <TableCell className="fullPathCell">
                                         <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
                                             <Box
@@ -582,24 +596,26 @@ const FullTaskView = () => {
                                                     }
                                                 }}
                                             >
-                                                {!!pathFormatted.prefix && (
-                                                    <Typography component="span" variant="body2" className="fullPathPrefix">
-                                                        {pathFormatted.prefix}
+                                                <span className="fullPathLineClamp">
+                                                    {!!pathFormatted.prefix && (
+                                                        <Typography component="span" variant="body2" className="fullPathPrefix">
+                                                            {pathFormatted.prefix}
+                                                        </Typography>
+                                                    )}
+                                                    {!!pathFormatted.prefix && (
+                                                        <Typography component="span" variant="body2" className="fullPathEllipsis">
+                                                            /
+                                                        </Typography>
+                                                    )}
+                                                    <Typography
+                                                        component="span"
+                                                        variant="body2"
+                                                        className="fullPathLast"
+                                                        onClick={() => handleNavigate(row)}
+                                                    >
+                                                        {pathFormatted.last || '-'}
                                                     </Typography>
-                                                )}
-                                                {!!pathFormatted.prefix && (
-                                                    <Typography component="span" variant="body2" className="fullPathEllipsis">
-                                                        /
-                                                    </Typography>
-                                                )}
-                                                <Typography
-                                                    component="span"
-                                                    variant="body2"
-                                                    className="fullPathLast"
-                                                    onClick={() => handleNavigate(row)}
-                                                >
-                                                    {pathFormatted.last || '-'}
-                                                </Typography>
+                                                </span>
                                             </Box>
                                         </Box>
 
