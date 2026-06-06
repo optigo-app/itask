@@ -7,7 +7,7 @@
         background-color: $primary-light-bg !important;
 
         .text-primary p {
-            color: #444050 !important;
+            color: $titleColor !important;
 
         }
     }
@@ -18,7 +18,7 @@
         background-color: $success-light-bg !important;
 
         .text-success p {
-            color: #444050 !important;
+            color: $titleColor !important;
         }
     }
 
@@ -28,7 +28,7 @@
         background-color: $error-light-bg !important;
 
         .text-error p {
-            color: #444050 !important;
+            color: $titleColor !important;
         }
     }
 
@@ -38,7 +38,7 @@
         background-color: $warning-light-bg !important;
 
         .text-warning p {
-            color: #444050 !important;
+            color: $titleColor !important;
         }
     }
 
@@ -48,7 +48,7 @@
         background-color: $info-light-bg !important;
 
         .text-info p {
-            color: #444050 !important;
+            color: $titleColor !important;
         }
     }
 }

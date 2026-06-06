@@ -755,7 +755,7 @@ const CalendarGridView = () => {
                           {index + 1}
                         </TableCell>
                         <TableCell>
-                          <strong>{task.moduleName}</strong>/{task.taskname}
+                          <b>{task.moduleName}/ </b><strong>{task.maintenanceno ? task?.maintenanceno : task?.taskno}</strong> {task?.taskname}
                         </TableCell>
                         <TableCell><StatusBadge task={task} statusColors={statusColors} onStatusChange={handleStatusChange} disable={false} /></TableCell>
                         <TableCell>{TaskPriority(task?.priority, priorityColors)}</TableCell>

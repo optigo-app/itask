@@ -119,7 +119,7 @@ const TaskCard = memo(({ child, colorClass, isScheduled, calendarsColor }) => {
                         fontWeight={600}
                         sx={{ flex: 1 }}
                     >
-                        {child.taskno}{" "}{child.taskname}
+                        {child?.maintenanceno ? child?.maintenanceno : child.taskno}{" "}{child.taskname}
                     </Typography>
                     {isScheduled && (
                         <Tooltip title="Task is scheduled in calendar">

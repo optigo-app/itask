@@ -80,11 +80,6 @@ const CustomDateRangePicker = ({ value = {}, onChange }) => {
 
 	return (
 		<ThemeProvider theme={Datetheme}>
-			<style>{`
-				.dateRangePicker li div p {
-					color: #333 !important;
-				}
-			`}</style>
 			<Box display="flex" alignItems="center">
 				<TextField
 					placeholder="Date Range"

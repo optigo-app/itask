@@ -122,6 +122,7 @@ const TemplateDialog = ({ open, onClose }) => {
           backdropFilter: 'blur(4px)',
         },
       }}
+      className='tp_dialog'
     >
       <DialogContent
         sx={{
@@ -151,11 +152,11 @@ const TemplateDialog = ({ open, onClose }) => {
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                backgroundColor: '#1976d2',
+                backgroundColor: '#685dd8',
                 boxShadow: '0 0 10px rgba(25,118,210,.35)',
               }}
             />
-            <Typography sx={{ fontSize: 16, fontWeight: 800, color: '#1976d2' }}>
+            <Typography sx={{ fontSize: 16, fontWeight: 800, color: '#685dd8' }}>
               Template Manager
             </Typography>
           </Box>
