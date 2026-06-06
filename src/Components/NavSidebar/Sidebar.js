@@ -231,11 +231,11 @@ const Sidebar = () => {
                                                 <ListItemIcon className="itask_drawerItemIcon">
                                                     <Ratio size={18} className={activeItem === 'Reports' ? "iconActive1" : 'iconUnactive'} />
                                                 </ListItemIcon>
-                                                {isDrawerOpen && <ListItemText sx={{ m: 0 }} primary="Reports" />}
+                                                {isDrawerOpen && <ListItemText sx={{ m: 0, color: '#444050' }} primary="Reports" />}
                                                 {isDrawerOpen && <span style={{ paddingRight: '8px' }}>{openReports ? <ExpandLess /> : <ExpandMore />}</span>}
                                             </ListItemButton>
                                             {!isDrawerOpen && (
-                                                <Typography variant="caption" className="itask_drawerItemText">
+                                                <Typography variant="caption" className="itask_drawerItemText" sx={{ color: '#444050 !important' }}>
                                                     Reports
                                                 </Typography>
                                             )}

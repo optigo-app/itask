@@ -838,7 +838,7 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                     }}
                 >
                     <CalendarIcon size={64} style={{ opacity: 0.3, marginBottom: '16px' }} />
-                    <Typography variant="h6" sx={{ mb: 1, color: '#333' }}>
+                    <Typography variant="h6" sx={{ mb: 1, color: '#444050' }}>
                         No Employee Selected
                     </Typography>
                     <Typography variant="body2">

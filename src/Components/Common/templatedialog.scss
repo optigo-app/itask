@@ -1,5 +1,10 @@
 @import '../../theme/variable.scss';
 
+.tp_dialog{
+    p{
+        color:$titleColor;
+    }
+}
 .templatedialog-toggle-container {
     display: flex;
     align-items: center;

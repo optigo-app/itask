@@ -20,7 +20,7 @@
         h5 {
             font-size: 18px;
             font-weight: 600;
-            color: #333;
+            color: $titleColor;
             margin: 0;
         }
     }
@@ -84,7 +84,7 @@
 
                     .departmentName {
                         font-weight: 600;
-                        color: #333;
+                        color: $titleColor;
                         font-size: 15px;
                     }
 
@@ -142,7 +142,7 @@
             .employeeName {
                 font-weight: 600;
                 font-size: 14px;
-                color: #333;
+                color: $titleColor;
                 margin-bottom: 2px;
                 text-transform: capitalize;
                 white-space: nowrap;

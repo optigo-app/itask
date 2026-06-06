@@ -487,7 +487,7 @@ const Header = ({ avatarSrc = "" }) => {
         <Box sx={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px" }} className="headerContainer">
             {/* Left Section - Title and Breadcrumbs */}
             <Box>
-                <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Box className='brdm_box' sx={{ display: "flex", alignItems: "center" }}>
                     <Breadcrumbs location={location} decodedData={decodedData} matchedKey={matchedKey} dataMap={dataMap} />
                     {taskDataLength > 0 && location.pathname.includes("/tasks/") && (
                         <div className="header_task-count">{taskDataLength}</div>

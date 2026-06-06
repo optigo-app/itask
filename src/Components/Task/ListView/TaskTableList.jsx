@@ -857,6 +857,7 @@ const TableView = ({
                             id="toggle-task"
                             aria-label="toggle-task"
                             size="small"
+                            disabled={!task?.subtasks?.length}
                             onClick={() => toggleSubtasks(task.taskid, task)}
                             sx={{
                                 padding: '2px',
@@ -938,8 +939,8 @@ const TableView = ({
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                width: '18px',
-                                                height: '18px',
+                                                width: '15px',
+                                                height: '15px',
                                                 borderRadius: '50%',
                                                 backgroundColor: '#7367f0',
                                                 color: '#fff',
@@ -947,7 +948,7 @@ const TableView = ({
                                                 flexShrink: 0,
                                             }}
                                         >
-                                            <Flag size={10} fill="#fff" />
+                                            <Flag size={8} fill="#fff" />
                                         </span>
                                     </Tooltip>
                                 )}
