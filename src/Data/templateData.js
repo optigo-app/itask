@@ -5,7 +5,7 @@ export const TEMPLATE_DATA = {
       title: "Document Task Template",
       content: [
         "Long Projects - Major Topics",
-        "Requirement Gathering",
+        "Requirement gathering (BRD)",
         "Start-up Approval",
         "Data Gathering",
         "BODO",
@@ -13,8 +13,9 @@ export const TEMPLATE_DATA = {
         "Prototype / Flow Diagram",
         "Sample Data",
         "SRD / Story Line",
+        "KT-Reverse KT",
         "Document Approval / SRS",
-        "Code",
+        "Development",
         "Preview Confirmation",
         "Test",
         "Deploy",
@@ -29,7 +30,7 @@ export const TEMPLATE_DATA = {
     {
       id: 'dev_01',
       title: 'Standard Web Stack',
-      content: ['Database', 'API', 'UI/UX-FrontEnd', 'UI/UX-Backend', 'App', 'Asset Design', 'Cloud Settings']
+      content: ['Database', 'API', 'UI/UX-FrontEnd', 'UI/UX-Backend', 'Asset Design', 'Training', 'Preview', 'Bug issue solve', 'Code', 'Patch']
     },
     {
       id: 'dev_02',

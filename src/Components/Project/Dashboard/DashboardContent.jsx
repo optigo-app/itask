@@ -16,7 +16,7 @@ const MasterBind = lazy(() => import('./MasterBind'));
 const Comments = lazy(() => import('./Commnets'));
 
 const DashboardContent = ({ isCommentLoading, isAttLoding, selectedTab, decodedData, handleDtopen, taskFinalData, taskAssigneeData, background, refferenceData, comments }) => {
-  const categoryData = JSON.parse(sessionStorage.getItem('taskworkcategoryData')) || [];
+  const categoryData = JSON.parse(localStorage.getItem('taskworkcategoryData')) || [];
   const selectedTabLower = selectedTab?.toLowerCase();
   const setSelectedTask = useSetRecoilState(selectedRowData);
 

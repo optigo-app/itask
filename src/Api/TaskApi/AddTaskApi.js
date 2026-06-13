@@ -16,7 +16,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
             parentid = formValues?.parentid ?? '0';
         }
         else {
-            parentid = '0';
+            parentid = formValues?.moduleid ?? '0';
             taskid = formValues?.taskid ?? '0';
         }
         let combinedValue;

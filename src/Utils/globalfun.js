@@ -37,7 +37,6 @@ export const handleBugTrackRedirect = (taskParams = null) => {
             const encodedTaskData = encodeURIComponent(btoa(JSON.stringify(taskParams)));
             url += `&taskData=${encodedTaskData}`;
         }
-        console.log("bug tracker url", url)
         window.open(url, '_blank');
     } catch (error) {
         console.error('Error preparing bug track redirect:', error);
@@ -749,20 +748,55 @@ export const AdvancedMasterApiFunc = async () => {
 }
 
 // make structure master data function
-export const fetchMasterGlFunc = async () => {
+// force = true → clears localStorage cache and re-fetches from API (used by Reload button)
+export const fetchMasterGlFunc = async (force = false) => {
     try {
-        const advMasterData = sessionStorage.getItem('structuredAdvMasterData');
+        const MASTER_KEYS = [
+            'structuredAdvMasterData',
+            'taskAssigneeData',
+            'taskDepartments',
+            'masterData',
+            'structuredMasterData',
+            'taskstatusData',
+            'tasksecstatusData',
+            'taskpriorityData',
+            'taskdepartmentData',
+            'taskprojectData',
+            'taskworkcategoryData',
+            'taskbugstatusData',
+            'taskbugpriorityData',
+        ];
+
+        if (force) {
+            MASTER_KEYS.forEach((key) => {
+                localStorage.removeItem(key);
+                sessionStorage.removeItem(key);
+            });
+        }
+        MASTER_KEYS.forEach((key) => {
+            const sessionVal = sessionStorage.getItem(key);
+            if (!sessionVal) {
+                const localVal = localStorage.getItem(key);
+                if (localVal) {
+                    sessionStorage.setItem(key, localVal);
+                }
+            }
+        });
+
+        let advMasterData = sessionStorage.getItem('structuredAdvMasterData') || localStorage.getItem('structuredAdvMasterData');
         if (!advMasterData) {
             const mergedData = await AdvancedMasterApiFunc();
             const safeData = Array.isArray(mergedData) ? mergedData : [];
+            localStorage.setItem('structuredAdvMasterData', JSON.stringify(safeData));
             sessionStorage.setItem('structuredAdvMasterData', JSON.stringify(safeData));
+            advMasterData = JSON.stringify(safeData);
         }
-        const AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
+
+        let AssigneeMasterData = JSON?.parse(sessionStorage.getItem('taskAssigneeData') || localStorage.getItem('taskAssigneeData'));
         const AuthUrlData = getAuthData();
         const uniqueDepartments = new Set();
-        let UserProfileData
+        let UserProfileData;
 
-        // Helper function to determine storage location based on remember me
         const setUserProfileData = (data) => {
             const storageLocation = localStorage.getItem('AuthqueryParams') ? localStorage : sessionStorage;
             storageLocation.setItem('UserProfileData', JSON?.stringify(data));
@@ -777,6 +811,8 @@ export const fetchMasterGlFunc = async () => {
                     uniqueDepartments.add(item.department);
                 }
             });
+            localStorage.setItem('taskAssigneeData', JSON?.stringify(assigneeRes?.rd || []));
+            sessionStorage.setItem('taskAssigneeData', JSON?.stringify(assigneeRes?.rd || []));
         } else {
             UserProfileData = AssigneeMasterData?.find(item => item?.userid == AuthUrlData?.uid) ?? {};
             setUserProfileData(UserProfileData);
@@ -786,16 +822,21 @@ export const fetchMasterGlFunc = async () => {
                 }
             });
         }
+
         const departmentArray = Array.from(uniqueDepartments).map((department, index) => ({
             id: index + 1,
             labelname: department
         }));
+        localStorage.setItem('taskDepartments', JSON?.stringify(departmentArray));
         sessionStorage.setItem('taskDepartments', JSON?.stringify(departmentArray));
-        let masterData = JSON?.parse(sessionStorage.getItem('structuredMasterData'));
+
+        let masterData = JSON?.parse(sessionStorage.getItem('structuredMasterData') || localStorage.getItem('structuredMasterData'));
         if (!masterData || masterData?.length == 0) {
             masterData = await fetchMaster();
+            localStorage.setItem('masterData', JSON?.stringify(masterData));
             sessionStorage.setItem('masterData', JSON?.stringify(masterData));
         }
+
         if (masterData?.rd && Array?.isArray(masterData?.rd)) {
             const structuredData = [];
             for (const item of masterData?.rd) {
@@ -813,12 +854,14 @@ export const fetchMasterGlFunc = async () => {
                         ...item,
                         rowdata: filteredData || []
                     });
+                    localStorage.setItem(`${mode}Data`, JSON?.stringify(filteredData || []));
                     sessionStorage.setItem(`${mode}Data`, JSON?.stringify(filteredData || []));
                 }
             }
+            localStorage.setItem('structuredMasterData', JSON?.stringify(structuredData));
             sessionStorage.setItem('structuredMasterData', JSON?.stringify(structuredData));
         }
-        return UserProfileData
+        return UserProfileData;
     } catch (error) {
         console.error("Error fetching master data:", error);
     }

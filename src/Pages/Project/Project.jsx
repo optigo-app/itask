@@ -73,7 +73,7 @@ const Project = () => {
   }, [location])
 
   const retrieveAndSetData = (key, setter) => {
-    const data = sessionStorage.getItem(key);
+    const data = localStorage.getItem(key);
     if (data) {
       setter(JSON.parse(data));
     }
@@ -82,13 +82,13 @@ const Project = () => {
   const fetchMasterData = async () => {
     setIsLoading(true);
     try {
-      let storedStructuredData = sessionStorage.getItem("structuredMasterData");
+      let storedStructuredData = localStorage.getItem("structuredMasterData");
       let structuredData = storedStructuredData
         ? JSON.parse(storedStructuredData)
         : null;
       if (!structuredData) {
         await fetchMasterGlFunc();
-        storedStructuredData = sessionStorage.getItem("structuredMasterData");
+        storedStructuredData = localStorage.getItem("structuredMasterData");
         structuredData = storedStructuredData
           ? JSON.parse(storedStructuredData)
           : null;

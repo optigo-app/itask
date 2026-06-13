@@ -42,6 +42,8 @@ const Calendar = lazy(() => import('./Pages/Calendar/CalendarPage'));
 const CalendarGridView = lazy(() => import('./Pages/Calendar/CalendarGridView'));
 const Meeting = lazy(() => import('./Pages/Meeting/Meeting'));
 const Task = lazy(() => import('./Pages/Task/Task'));
+const TaskTabShell = lazy(() => import('./Pages/Task/TaskTabShell'));
+const PersistentTaskShell = lazy(() => import('./Pages/Task/PersistentTaskShell'));
 const FullTaskView = lazy(() => import('./Components/Task/FullTaskView/FullTaskView'));
 const Project = lazy(() => import('./Pages/Project/Project'));
 const Masters = lazy(() => import('./Pages/Master/Masters'));
@@ -78,6 +80,8 @@ const Layout = ({ children, pageDataLoaded }) => {
             }}>
                 {!pageDataLoaded && <Suspense fallback={<LoadingBackdrop />}><Header /></Suspense>}
                 <Suspense fallback={<LoadingBackdrop />}><MetaDataSet /></Suspense>
+                {/* Persistent Task Shell: always mounted, CSS-hidden on non-task routes */}
+                <PersistentTaskShell />
                 {children}
             </Box>
         </Box>
@@ -204,8 +208,10 @@ const AppWrapper = () => {
     useEffect(() => {
         const checkAndInit = async () => {
             const taskInitToken = sessionStorage.getItem("taskInit");
+            // New session detected when sessionStorage was cleared (tab closed & reopened)
+            const isNewSession = !taskInitToken;
             let roleData;
-            if (!taskInitToken) {
+            if (isNewSession) {
                 const result = await taskInit();
                 if (result?.Data?.rd1) {
                     setPageData(result.Data.rd1);
@@ -218,7 +224,8 @@ const AppWrapper = () => {
                     setPageDataLoaded(true);
                 }
             }
-            roleData = await fetchMasterGlFunc();
+            // Keep localStorage intact; only fetch missing master items so UI loads fast
+            roleData = await fetchMasterGlFunc(false);
             setRole(roleData?.designation);
         };
         if (cookieData) {
@@ -278,7 +285,8 @@ const AppWrapper = () => {
                                         <Route path="/" element={<Home />} />
                                         <Route path="/projects" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1003"><Project /></ProtectedRoute>} />
                                         <Route path="/projects/Dashboard/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1003"><ProjectDashboard /></ProtectedRoute>} />
-                                        <Route path="/tasks/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><Task /></ProtectedRoute>} />
+                                        {/* /tasks route is handled by PersistentTaskShell at Layout level */}
+                                        <Route path="/tasks/*" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><React.Fragment /></ProtectedRoute>} />
                                         <Route path="/tasks/unassigned" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><UnassignedTaskList /></ProtectedRoute>} />
                                         <Route path="/taskDetails" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1002"><TaskDetails /></ProtectedRoute>} />
                                         <Route path="/myCalendar" element={<ProtectedRoute pageData={pageData} pageDataLoaded={pageDataLoaded} pageId="-1006"><Calendar /></ProtectedRoute>} />
@@ -326,8 +334,8 @@ const appTheme = createTheme({
 const App = () => (
     <RecoilRoot>
         <ThemeProvider theme={appTheme}>
-            <Router basename="/itaskweb">
-            {/* <Router> */}
+            {/* <Router basename="/itaskweb"> */}
+            <Router>
                 <AppWrapper />
             </Router>
         </ThemeProvider>

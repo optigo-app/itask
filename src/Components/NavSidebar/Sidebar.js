@@ -83,6 +83,19 @@ const Sidebar = () => {
                 setPageList(filteredMenu);
                 setLoading(false);
                 clearInterval(intervalId);
+
+                // Prefetch commonly navigated lazy chunks when idle
+                const prefetch = () => {
+                    import('../../Pages/Project/Project');
+                    import('../../Components/Task/FullTaskView/FullTaskView');
+                    import('../../Pages/Meeting/Meeting');
+                    import('../../Pages/Calendar/CalendarPage');
+                };
+                if ('requestIdleCallback' in window) {
+                    requestIdleCallback(prefetch, { timeout: 5000 });
+                } else {
+                    setTimeout(prefetch, 2000);
+                }
             }
         };
         intervalId = setInterval(checkPageAccess, 200);
@@ -102,6 +115,23 @@ const Sidebar = () => {
     const handleMouseLeave = () => {
         if (!isFullSidebar && !isMobile) {
             setDrawerOpen(false);
+        }
+    };
+
+    const routePrefetchMap = {
+        '/projects': () => import('../../Pages/Project/Project'),
+        '/myTasks': () => import('../../Components/Task/FullTaskView/FullTaskView'),
+        '/meetings': () => import('../../Pages/Meeting/Meeting'),
+        '/myCalendar': () => import('../../Pages/Calendar/CalendarPage'),
+        '/inbox': () => import('../../Pages/Inbox/Inbox'),
+    };
+
+    const prefetchRoute = (pathname) => {
+        const prefetch = routePrefetchMap[pathname];
+        if (prefetch && 'requestIdleCallback' in window) {
+            requestIdleCallback(() => prefetch(), { timeout: 1000 });
+        } else if (prefetch) {
+            setTimeout(() => prefetch(), 100);
         }
     };
 
@@ -212,7 +242,7 @@ const Sidebar = () => {
                             <>
                                 {pageList.map(({ label, path, icon: Icon, routes }) => (
                                     label !== 'Reports' ? (
-                                        <ListItem key={label} onClick={() => handleItemClick(path, routes)} sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row' }}>
+                                        <ListItem key={label} onClick={() => handleItemClick(path, routes)} onMouseEnter={() => prefetchRoute(path)} sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row' }}>
                                             <ListItemButton className={`itask_drawerListItem ${activeItem === routes ? 'itask_drawerItemActive' : ''}`}>
                                                 <ListItemIcon className="itask_drawerItemIcon">
                                                     <Icon className={activeItem === routes ? "iconActive" : 'iconUnactive'} size={18} />
@@ -220,7 +250,7 @@ const Sidebar = () => {
                                                 {isDrawerOpen && <ListItemText primary={label} className="itask_drawerItemText" />}
                                             </ListItemButton>
                                             {!isDrawerOpen && (
-                                                <Typography variant="caption" className="itask_drawerItemText" sx={{ textAlign: "center" }}>
+                                                <Typography variant="caption" className="itask_drawerItemText" sx={{ textAlign: "center", color:'#444050' }}>
                                                     {label}
                                                 </Typography>
                                             )}

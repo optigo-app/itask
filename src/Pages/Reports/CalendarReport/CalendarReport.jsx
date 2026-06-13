@@ -20,7 +20,7 @@ const CalendarReport = () => {
     const lastRequestIdRef = useRef(0);
 
     useEffect(() => {
-        const taskCategories = JSON?.parse(sessionStorage.getItem('taskworkcategoryData')) || [];
+        const taskCategories = JSON?.parse(localStorage.getItem('taskworkcategoryData')) || [];
         const colorClasses = [
             'productive',
             'rnd-tech',
@@ -52,16 +52,16 @@ const CalendarReport = () => {
             const data = (meetingApiRes && meetingApiRes?.rd) || [];
             if (data) {
                 const taskAssigneeData = JSON.parse(
-                    sessionStorage.getItem('taskAssigneeData') || '[]'
+                    localStorage.getItem('taskAssigneeData') || '[]'
                 );
                 const taskCategory = JSON.parse(
-                    sessionStorage.getItem('taskworkcategoryData') || '[]'
+                    localStorage.getItem('taskworkcategoryData') || '[]'
                 );
                 const statusData = JSON.parse(
-                    sessionStorage.getItem('taskstatusData') || '[]'
+                    localStorage.getItem('taskstatusData') || '[]'
                 );
                 const priorityData = JSON.parse(
-                    sessionStorage.getItem('taskpriorityData') || '[]'
+                    localStorage.getItem('taskpriorityData') || '[]'
                 );
                 const enhancedMeetings = data.map((meeting) => ({
                     ...meeting,

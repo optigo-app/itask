@@ -48,13 +48,13 @@ const ModuleMilestoneReport = () => {
     // Load master data and filter dropdown sources from sessionStorage (same as Project.jsx)
     useEffect(() => {
         setIsLoading(true);
-        const structured = sessionStorage.getItem('structuredMasterData');
+        const structured = localStorage.getItem('structuredMasterData');
         if (structured) {
             setMasterData(JSON.parse(structured));
         }
 
         const get = (key, setter) => {
-            const val = sessionStorage.getItem(key);
+            const val = localStorage.getItem(key);
             if (val) setter(JSON.parse(val));
         };
 

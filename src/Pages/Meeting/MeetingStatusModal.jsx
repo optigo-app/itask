@@ -41,7 +41,7 @@ const ReadOnlyModal = ({ open, mettingData, handleClose, handleFetchMeetingDetai
     const handleMeetingStatus = async () => {
         setIsLoading(true);
         try {
-            const assigneeData = JSON.parse(sessionStorage.getItem('taskAssigneeData') ?? '[]');
+            const assigneeData = JSON.parse(localStorage.getItem('taskAssigneeData') ?? '[]');
             const rowData = await handleFetchMeetingDetails();
 
             const transformedRows = Object.entries(rowData)

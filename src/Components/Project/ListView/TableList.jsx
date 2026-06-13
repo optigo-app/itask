@@ -25,6 +25,7 @@ import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDi
 import { assigneeId, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
 import { useNavigate } from "react-router-dom";
+import { useTabStore } from "../../../Store/useTabStore";
 import SidebarDrawerFile from "../../ShortcutsComponent/Attachment/SidebarDrawerFile";
 import ProfileCardModal from "../../ShortcutsComponent/ProfileCard";
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
@@ -32,6 +33,16 @@ import AssigneeAvatarGroup from "../../ShortcutsComponent/Assignee/AssigneeAvata
 import useAccess from "../../Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
 import { GetPrTeamsApi } from "../../../Api/TaskApi/prTeamListApi";
+import { fetchTaskDataFullApi } from "../../../Api/TaskApi/TaskDataFullApi";
+import { fetchModuleDataApi } from "../../../Api/TaskApi/ModuleDataApi";
+import {
+    generateCacheKey,
+    setTabDataCache,
+} from "../../../Utils/IndexedDB/taskDataCache";
+import {
+    taskQueryKeys,
+    setTaskQueryData,
+} from "../../../Utils/QueryClient/queryClient";
 import TablePaginationFooter from "../../ShortcutsComponent/Pagination/TablePaginationFooter";
 import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 import PriorityBadge from "../../ShortcutsComponent/PriorityBadge";
@@ -290,6 +301,34 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
     const currentData =
         sortedData?.slice((page - 1) * rowsPerPage, page * rowsPerPage) || [];
 
+    const prefetchTaskData = async (queryData, tabId) => {
+        try {
+            const taskid = queryData?.taskid;
+            const hasTaskId = taskid !== undefined && taskid !== '' && taskid !== '0' && taskid !== 0;
+            let rawData;
+            if (!hasTaskId) {
+                rawData = await fetchModuleDataApi({ taskid: 0, moduleid: 0 });
+            } else {
+                rawData = await fetchTaskDataFullApi({
+                    ...queryData,
+                    isarchive: 0,
+                    iscompleted: 0,
+                });
+            }
+            if (rawData?.rd?.[0]?.stat == 0) {
+                return;
+            }
+            const cacheKey = generateCacheKey(queryData, false, false);
+            await setTabDataCache(tabId, cacheKey, {
+                rawData,
+                fetchedAt: Date.now(),
+            });
+            setTaskQueryData(queryData, false, false, rawData);
+        } catch (error) {
+            console.error('Prefetch task data failed:', error);
+        }
+    };
+
     const handleNavigate = async (task) => {
         const userLoginData = getUserProfileData();
         const teamApiRes = await GetPrTeamsApi(task, "root")
@@ -297,7 +336,7 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
 
         const isReadOnly = task?.assignee?.find(a => a.id == userLoginData?.id)?.isreadonly == 1;
 
-        let urlData = {
+        const queryData = {
             module: task?.taskname,
             project: task.taskPr,
             taskid: task?.taskid,
@@ -307,11 +346,17 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
             isLimited: isLimitedAccess ?? 0,
             isreadonly: isReadOnly ? 1 : 0,
             breadcrumbTitles: task?.breadcrumbTitles
+        };
+        const tabId = useTabStore.getState().openTaskTab({
+            title: task?.taskname || task?.taskPr || "Tasks",
+            route: "/tasks",
+            queryData,
+        });
+        if (tabId) {
+            // Fire-and-forget: navigate immediately, let prefetch warm cache in background
+            prefetchTaskData(queryData, tabId);
+            navigate('/tasks');
         }
-        const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
-        const formattedPrName = task?.taskPr?.trim()?.replace(/\s+/g, '-') || '';
-        const url = `/tasks/${formattedPrName}/?data=${encodedFormData}`;
-        navigate(url);
     };
 
     const LockButton = ({ isLocked, onClick }) => {

@@ -204,7 +204,7 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
             const res = await GetDailyReportApi();
             const rows = res?.rd || [];
 
-            const assigneeMaster = JSON.parse(sessionStorage.getItem('taskAssigneeData') || '[]');
+            const assigneeMaster = JSON.parse(localStorage.getItem('taskAssigneeData') || '[]');
             const activeMaster = assigneeMaster.filter((e) => e?.isactive === 1);
             const masterById = new Map(activeMaster.map((e) => [String(e?.id), e]));
 

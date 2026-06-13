@@ -14,11 +14,15 @@ const Filters = ({
   statusData,
   taskProject,
   taskDepartment,
+  filters: filtersProp,
+  setFilters: setFiltersProp,
 }) => {
   const location = useLocation();
   const [dynamicFilter, setDynamicFilters] = useRecoilState(dynamicFilterDrawer)
   const activetaskView = localStorage.getItem("activeTaskTab")
-  const [filters, setFilters] = useRecoilState(Advfilters);
+  const [globalFilters, setGlobalFilters] = useRecoilState(Advfilters);
+  const filters = filtersProp ?? globalFilters;
+  const setFilters = setFiltersProp ?? setGlobalFilters;
 
   const [filterVisibility, setFilterVisibility] = useState({
     status: true,

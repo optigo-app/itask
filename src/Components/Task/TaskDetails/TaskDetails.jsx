@@ -24,7 +24,6 @@ import useAccess from '../../Auth/Role/useAccess';
 import { PERMISSIONS } from '../../Auth/Role/permissions';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
 import { toast } from 'react-toastify';
-import { fetchTaskDataFullApi } from '../../../Api/TaskApi/TaskDataFullApi';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
 import CommentSection from '../../ShortcutsComponent/Comment/TaskComment';
 import SubtaskCard from './SubTaskcard';
@@ -34,7 +33,7 @@ import AttachmentSidebar from './AttachmentSidebar';
 import Breadcrumb from '../../BreadCrumbs/Breadcrumb';
 import { useLocation } from 'react-router-dom';
 
-const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
+const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite, onOpenDrawer }) => {
     const location = useLocation();
     const theme = useTheme();
     const { hasAccess } = useAccess();
@@ -249,9 +248,13 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite }) => {
     };
 
     const handleAddSubTask = (task, additionalInfo) => {
-        setRootSubroot(additionalInfo);
-        setFormDataValue(task);
-        setFormDrawerOpen(true);
+        if (onOpenDrawer) {
+            onOpenDrawer(task, additionalInfo);
+        } else {
+            setRootSubroot(additionalInfo);
+            setFormDataValue(task);
+            setFormDrawerOpen(true);
+        }
         setSelectedTask(task);
     }
 

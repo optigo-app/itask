@@ -35,7 +35,7 @@ const ProjectDashboard = () => {
 
     useEffect(() => {
         setIsAttLoding(true);
-        const assigneeMaster = JSON.parse(sessionStorage.getItem('taskAssigneeData')) || [];
+        const assigneeMaster = JSON.parse(localStorage.getItem('taskAssigneeData')) || [];
         const getAttachment = async () => {
             try {
                 const res = await getAttachmentApi(decodedData);
@@ -86,7 +86,7 @@ const ProjectDashboard = () => {
         setIsCommentLoading(true);
         const selectedRow = decodedData;
         try {
-            const assigneesMaster = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
+            const assigneesMaster = JSON?.parse(localStorage.getItem('taskAssigneeData'));
             const apiRes = await taskCommentGetApi(selectedRow);
             
             if (apiRes?.rd?.length > 0) {
