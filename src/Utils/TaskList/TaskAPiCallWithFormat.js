@@ -8,11 +8,11 @@ const TaskAPiCallWithFormat = () => {
 
     const fetchMasterData = async () => {
         try {
-            let storedStructuredData = sessionStorage.getItem('structuredMasterData');
+            let storedStructuredData = localStorage.getItem('structuredMasterData');
             let structuredData = storedStructuredData ? JSON.parse(storedStructuredData) : null;
             if (!structuredData) {
                 await fetchMasterGlFunc();
-                storedStructuredData = sessionStorage.getItem('structuredMasterData');
+                storedStructuredData = localStorage.getItem('structuredMasterData');
                 structuredData = storedStructuredData ? JSON.parse(storedStructuredData) : null;
             }
         } catch (error) {

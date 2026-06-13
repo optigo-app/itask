@@ -2,15 +2,20 @@ import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Typography, Avatar, Menu, MenuItem, Divider, Button, Chip, Tooltip, IconButton, Badge, ToggleButtonGroup, ToggleButton } from "@mui/material";
-import { Bell, MailOpen, User, LogOut, House, FileCheck } from "lucide-react";
-import { getRandomAvatarColor, ImageUrl, getUserProfileData } from "../../Utils/globalfun";
+import { Bell, MailOpen, User, LogOut, House, FileCheck, LayoutTemplate, Clock } from "lucide-react";
+import { getRandomAvatarColor, ImageUrl, getUserProfileData, fetchMasterGlFunc } from "../../Utils/globalfun";
+import { toast } from "react-toastify";
 import "./header.scss";
+import { useTabStore } from "../../Store/useTabStore";
+import { clearAllTabDataCache } from "../../Utils/IndexedDB/taskDataCache";
 import NotificationCard from "../Notification/NotificationCard";
 import { projectDatasRState, taskLength, userRoleAtom, webReload } from "../../Recoil/atom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import PendingAcceptanceDrawer from "../ShortcutsComponent/Notification/PendingAcceptanceDrawer";
 import useSafeRedirect from "../../Utils/useSafeRedirect";
 import TemplateDialog from "../Common/TemplateDialog";
+import TaskTabBar from "../Task/TaskTabBar";
+import TabLimitDialog from "../Task/TabLimitDialog";
 
 // Profile Hook
 const useProfileData = () => {
@@ -60,7 +65,16 @@ const useProfileData = () => {
         return () => clearInterval(interval);
     }, [profileData]);
 
-    const handleReload = () => setReload(true);
+    const handleReload = async () => {
+        const toastId = toast.loading("Syncing master data...");
+        try {
+            await fetchMasterGlFunc(true);
+            toast.update(toastId, { render: "Master data synced", type: "success", isLoading: false, autoClose: 2000 });
+        } catch (e) {
+            toast.update(toastId, { render: "Sync failed", type: "error", isLoading: false, autoClose: 3000 });
+        }
+        setReload(true);
+    };
 
     const handleLogout = () => {
         localStorage.removeItem("isLoggedIn");
@@ -79,16 +93,20 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
         { text: 'My Profile', icon: <User size={20} style={{ color: "#7d7f85" }} />, route: '/account-profile' },
     ];
 
-    const handleLogoutClick = () => {
+    const handleLogoutClick = async () => {
+        // Clear all persistent storage (no React re-renders)
+        await clearAllTabDataCache();
+        indexedDB.deleteDatabase('ITaskDataCache');
         localStorage.clear();
         sessionStorage.clear();
         Cookies.remove("isLoggedIn");
         Cookies.remove("skey");
-        if (process.env.REACT_APP_LOCAL_HOSTNAMES.includes(window.location.hostname)) {
-            window.location.href = "itaskweb/login";
-        } else {
-            window.location.href = "/login";
-        }
+
+        // Redirect immediately — skip clearAllTabs to avoid blank UI flicker
+        const loginUrl = process.env.REACT_APP_LOCAL_HOSTNAMES.includes(window.location.hostname)
+            ? "itaskweb/login"
+            : "/login";
+        window.location.href = loginUrl;
     };
 
     return (
@@ -142,7 +160,7 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
             <Divider />
 
             <Box textAlign="center" p={1.5}>
-                <Button size="small" className="buttonClassname" onClick={onReload} variant="contained" fullWidth sx={{ marginBottom: "10px" }}>
+                <Button size="small" className="buttonClassname" onClick={() => { onClose(); onReload(); }} variant="contained" fullWidth sx={{ marginBottom: "10px" }}>
                     Reload
                 </Button>
                 <Button size="small" className="dangerbtnClassname" onClick={handleLogoutClick} variant="contained" fullWidth endIcon={<LogOut size={20} />}>
@@ -293,20 +311,35 @@ const useDataMap = (location, decodedData) => {
 };
 
 // Breadcrumb Component
-const BreadcrumbItem = ({ label, onClick }) => (
-    <>
-        <Typography variant="h6" component="span">/</Typography>
+const MAX_BREADCRUMB_WIDTH = 140;
+
+const TruncatedBreadcrumbLabel = ({ label, onClick, color }) => (
+    <Tooltip title={label || ""} arrow placement="top">
         <Typography
             variant="h6"
             component="span"
             onClick={onClick}
             sx={{
                 cursor: onClick ? 'pointer' : 'default',
+                display: 'inline-block',
+                maxWidth: MAX_BREADCRUMB_WIDTH,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                verticalAlign: 'bottom',
+                color: color || 'inherit',
                 '&:hover': onClick ? { textDecoration: 'underline', color: '#7367f0 !important' } : {},
             }}
         >
             {label}
         </Typography>
+    </Tooltip>
+);
+
+const BreadcrumbItem = ({ label, onClick }) => (
+    <>
+        <Typography variant="h6" component="span" sx={{ mx: 0.5 }}>/</Typography>
+        <TruncatedBreadcrumbLabel label={label} onClick={onClick} />
     </>
 );
 
@@ -324,9 +357,10 @@ const Breadcrumbs = ({ location, decodedData, matchedKey, dataMap }) => {
     if (isTaskDetails) {
         return (
             <>
-                <Typography variant="h6" component="span" onClick={() => navigate("/projects")} sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline', color: '#7367f0 !important' } }}>
-                    All
-                </Typography>
+                <TruncatedBreadcrumbLabel
+                    label="All"
+                    onClick={() => navigate("/projects")}
+                />
                 {decodedData?.project && <BreadcrumbItem label={decodedData.project} onClick={() => navigate(`/projects?filter=${encodeURIComponent(decodedData.project)}`)} />}
                 {decodedData?.module && <BreadcrumbItem label={decodedData.module} onClick={() => navigate(`/projects?filter=${encodeURIComponent(decodedData.module)}`)} />}
             </>
@@ -338,9 +372,11 @@ const Breadcrumbs = ({ location, decodedData, matchedKey, dataMap }) => {
     if (isProjectDashboard) {
         return (
             <>
-                <Typography variant="h6" component="span" onClick={() => navigate("/projects")} sx={{ cursor: 'pointer', color: '#7367f0', '&:hover': { textDecoration: 'underline' } }}>
-                    Projects
-                </Typography>
+                <TruncatedBreadcrumbLabel
+                    label="Projects"
+                    onClick={() => navigate("/projects")}
+                    color="#7367f0"
+                />
                 {decodedData?.project && <BreadcrumbItem label={decodedData.project} onClick={() => navigate(`/projects?filter=${encodeURIComponent(decodedData.project)}`)} />}
                 {(decodedData?.module || decodedData?.taskname) && <BreadcrumbItem label={decodedData.module ?? decodedData.taskname} onClick={() => navigate(`/projects?filter=${encodeURIComponent(decodedData.module ?? decodedData.taskname)}`)} />}
             </>
@@ -349,7 +385,7 @@ const Breadcrumbs = ({ location, decodedData, matchedKey, dataMap }) => {
 
     // Fallback: use title from dataMap
     if (matchedKey && dataMap[matchedKey]?.title) {
-        return <Typography variant="h6">{dataMap[matchedKey].title}</Typography>;
+        return <TruncatedBreadcrumbLabel label={dataMap[matchedKey].title} />;
     }
 
     return null;
@@ -520,8 +556,15 @@ const Header = ({ avatarSrc = "" }) => {
                 </Box>
             </Box>
 
+            {/* Center - Task Tabs */}
+            {location?.pathname?.startsWith("/tasks") && (
+                <Box sx={{ flex: 1, mx: 2, minWidth: 0, display: "flex", justifyContent: "center" }}>
+                    <TaskTabBar />
+                </Box>
+            )}
+
             {/* Right Section - Controls and Profile */}
-            <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Box sx={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
                 {/* Toggle Groups */}
                 {(location?.pathname?.includes("/tasks/") || location?.pathname?.includes("/projects/")) && (
                     <ToggleGroup options={toggleOptions} selectedValue={selectedTab} onRedirection={handleRedirection} className="taskHeaderTDBox" />
@@ -532,37 +575,77 @@ const Header = ({ avatarSrc = "" }) => {
                 )}
 
                 {/* template manager */}
-                <Box className="pendingAcceptanceBtn" onClick={handleTemplateManager} sx={{ marginLeft: '10px' }}>
-                    <Typography className="pendingText">Template Manager</Typography>
-                </Box>
+                <Tooltip title="Template Manager" arrow>
+                    <IconButton
+                        onClick={handleTemplateManager}
+                        size="small"
+                        sx={{
+                            ml: 1,
+                            color: '#444050',
+                            bgcolor: 'rgba(0,0,0,0.03)',
+                            width: 34,
+                            height: 34,
+                            '&:hover': { bgcolor: 'rgba(115,103,240,0.12)', color: '#7367f0' },
+                        }}
+                    >
+                        <LayoutTemplate size={18} />
+                    </IconButton>
+                </Tooltip>
 
                 {/* pending acceptance */}
-                <Box className="pendingAcceptanceBtn" onClick={handlePendingAcceptance}>
-                    <Typography className="pendingText">Pending Acceptance</Typography>
-                </Box>
+                <Tooltip title="Pending Acceptance" arrow>
+                    <IconButton
+                        onClick={handlePendingAcceptance}
+                        size="small"
+                        sx={{
+                            ml: 0.8,
+                            color: '#444050',
+                            bgcolor: 'rgba(0,0,0,0.03)',
+                            width: 34,
+                            height: 34,
+                            '&:hover': { bgcolor: 'rgba(115,103,240,0.12)', color: '#7367f0' },
+                        }}
+                    >
+                        <Clock size={18} />
+                    </IconButton>
+                </Tooltip>
 
                 {/* Notification Bell */}
-                <Box sx={{ marginRight: "10px", cursor: "pointer" }} onClick={handleBellClick}>
-                    {notifications?.length > 0 ? (
-                        <Badge variant="dot" overlap="circular" sx={{ "& .MuiBadge-dot": { backgroundColor: "#eb0505", height: 10, width: 10, borderRadius: "50%" } }}>
-                            <Bell className="iconbtn" size={24} style={{ color: "#7d7f85" }} />
-                        </Badge>
-                    ) : (
-                        <Bell className="iconbtn" size={24} style={{ color: "#7d7f85" }} />
-                    )}
-                </Box>
-
+                <Tooltip title="Notifications" arrow>
+                    <IconButton
+                        onClick={handleBellClick}
+                        size="small"
+                        sx={{
+                            ml: 0.8,
+                            color: '#444050',
+                            bgcolor: 'rgba(0,0,0,0.03)',
+                            width: 34,
+                            height: 34,
+                            '&:hover': { bgcolor: 'rgba(115,103,240,0.12)', color: '#7367f0' },
+                        }}
+                    >
+                        {notifications?.length > 0 ? (
+                            <Badge variant="dot" overlap="circular" sx={{ "& .MuiBadge-dot": { backgroundColor: "#eb0505", height: 8, width: 8, borderRadius: "50%" } }}>
+                                <Bell size={18} />
+                            </Badge>
+                        ) : (
+                            <Bell size={18} />
+                        )}
+                    </IconButton>
+                </Tooltip>
 
                 {/* Profile Avatar */}
-                <Avatar
-                    alt={`${profileData?.firstname} ${profileData?.lastname}`}
-                    src={ImageUrl(profileData)}
-                    sx={{ backgroundColor: avatarBackgroundColor, color: "#fff", cursor: "pointer" }}
-                    onClick={handleAvatarClick}
-                    className="profile-avatar"
-                >
-                    {!avatarSrc && profileData?.firstname?.charAt(0).toUpperCase()}
-                </Avatar>
+                <Tooltip title={`${profileData?.firstname || ''} ${profileData?.lastname || ''}`} arrow>
+                    <Avatar
+                        alt={`${profileData?.firstname} ${profileData?.lastname}`}
+                        src={ImageUrl(profileData)}
+                        sx={{ ml: 0.8, backgroundColor: avatarBackgroundColor, color: "#fff", cursor: "pointer" }}
+                        onClick={handleAvatarClick}
+                        className="profile-avatar"
+                    >
+                        {!avatarSrc && profileData?.firstname?.charAt(0).toUpperCase()}
+                    </Avatar>
+                </Tooltip>
             </Box>
 
             {/* Menus */}
@@ -570,6 +653,7 @@ const Header = ({ avatarSrc = "" }) => {
             <ProfileMenu anchorEl={profileAnchorEl} open={profileOpen} onClose={handleCloseProfileMenu} profileData={profileData} avatarSrc={avatarSrc} onReload={handleReload} onLogout={handleLogout} />
             <PendingAcceptanceDrawer open={pendingAcceptanceOpen} onClose={() => setPendingAcceptanceOpen(false)} />
             <TemplateDialog open={templateDialogOpen} onClose={() => setTemplateDialogOpen(false)} />
+            <TabLimitDialog />
         </Box>
     );
 };

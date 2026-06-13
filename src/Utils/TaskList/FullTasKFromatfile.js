@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchTaskDataFullApi } from "../../Api/TaskApi/TaskDataFullApi";
+import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
 import {
   fetchMasterGlFunc,
   mapKeyValuePair,
@@ -16,11 +17,20 @@ import {
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
-const useFullTaskFormatFile = (externalFilters = {}) => {
+const useFullTaskFormatFile = (externalFilters = {}, options = {}) => {
+  const { encodedDataOverride, archivedFlagOverride, completedFlagOverride, enabled = true, refreshKey = 0, silent = false, rawDataOverride } = options;
   const location = useLocation();
   const [iswhTLoading, setIsWhTLoading] = useState(null);
   const [iswhMLoading, setIsWhMLoading] = useState(null);
   const [taskFinalData, setTaskFinalData] = useState([]);
+  const parsedDataRef = useRef(null);
+
+  // Cache to skip re-processing identical raw data on tab switches.
+  // When switching back to an already-processed tab, this avoids the
+  // expensive formatDataToTree call entirely (instant tab switch).
+  const cachedRawRef = useRef(null);
+  const cachedResultRef = useRef(null);
+  const cachedFlatRef = useRef(null);
   const [actualData, setActualData] = useRecoilState(actualTaskData);
   const [priorityData, setPriorityData] = useState([]);
   const [statusData, setStatusData] = useState([]);
@@ -32,12 +42,14 @@ const useFullTaskFormatFile = (externalFilters = {}) => {
   const [taskBugStatusData, setTaskBugStatusData] = useState([]);
   const [taskBugPriorityData, setTaskBugPriorityData] = useState([]);
   const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
-  const archivedFlag = useRecoilValue(archivedTask);
-  const completedFlag = useRecoilValue(completedTask);
+  const globalArchivedFlag = useRecoilValue(archivedTask);
+  const globalCompletedFlag = useRecoilValue(completedTask);
+  const archivedFlag = archivedFlagOverride ?? globalArchivedFlag;
+  const completedFlag = completedFlagOverride ?? globalCompletedFlag;
   const tasks = useRecoilValue(TaskData);
   const project = useRecoilValue(projectDatasRState);
   const searchParams = new URLSearchParams(location.search);
-  const encodedData = searchParams.get("data");
+  const encodedData = encodedDataOverride ?? searchParams.get("data");
 
   const statusById = useMemo(
     () => new Map((statusData || []).map((item) => [Number(item?.id), item?.labelname || ""])),
@@ -69,7 +81,7 @@ const useFullTaskFormatFile = (externalFilters = {}) => {
   );
 
   const retrieveAndSetData = (key, setter) => {
-    const data = sessionStorage.getItem(key);
+    const data = localStorage.getItem(key);
     if (data) {
       setter(JSON.parse(data));
     }
@@ -91,13 +103,13 @@ const useFullTaskFormatFile = (externalFilters = {}) => {
   const fetchMasterData = async () => {
     setIsWhMLoading(true);
     try {
-      let storedStructuredData = sessionStorage.getItem("structuredMasterData");
+      let storedStructuredData = localStorage.getItem("structuredMasterData");
       let structuredData = storedStructuredData
         ? JSON.parse(storedStructuredData)
         : null;
       if (!structuredData) {
         await fetchMasterGlFunc();
-        storedStructuredData = sessionStorage.getItem("structuredMasterData");
+        storedStructuredData = localStorage.getItem("structuredMasterData");
         structuredData = storedStructuredData
           ? JSON.parse(storedStructuredData)
           : null;
@@ -120,14 +132,77 @@ const useFullTaskFormatFile = (externalFilters = {}) => {
     }
   };
 
+  const processRawTaskData = (taskData) => {
+    if (taskData?.rd?.[0]?.stat == 0) {
+      setIsWhTLoading(false);
+      toast.error(taskData?.rd?.[0]?.stat_msg);
+      return;
+    }
+
+    // CACHE HIT: same raw data object → skip expensive tree formatting entirely.
+    // React Query returns the same object reference for cached data, so this
+    // correctly matches on tab switches without any JSON serialization cost.
+    if (cachedRawRef.current === taskData && cachedResultRef.current) {
+      setTaskFinalData(cachedResultRef.current);
+      setActualData(cachedFlatRef.current);
+      setIsWhTLoading(false);
+      return;
+    }
+
+    const labeledTasks = mapKeyValuePair(taskData);
+    const enhanceTask = (task) => {
+      const priority = priorityById.get(Number(task?.priorityid));
+      const status = statusById.get(Number(task?.statusid));
+      const secstatus = secStatusById.get(Number(task?.secstatusid));
+      const project = projectById.get(Number(task?.projectid));
+      const department = departmentById.get(Number(task?.departmentid));
+      const category = categoryById.get(Number(task?.workcategoryid));
+      const assigneeIdArray = task?.assigneids
+        ?.toString()
+        ?.split(",")
+        ?.map((id) => Number(id));
+
+      const readonlyMapping = parseIsReadonlyString(task.isreadonly);
+      const matchedAssignees = (assigneeIdArray || [])
+        .map((id) => assigneeById.get(id))
+        .filter(Boolean)
+        .map((user) => ({
+          ...user,
+          isreadonly: readonlyMapping[user.id] ?? 0,
+        }));
+      return {
+        ...task,
+        priority: priority || "",
+        status: status || "",
+        secStatus: secstatus || "",
+        taskPr: project || "",
+        taskDpt: department || "",
+        assignee: matchedAssignees ?? [],
+        category: category,
+      };
+    };
+    const data = labeledTasks?.map((task) => enhanceTask(task));
+    const finalTaskData = formatDataToTree(data, parsedDataRef.current, 'Today');
+
+    // Store in cache so tab switches back to this tab are instant
+    cachedRawRef.current = taskData;
+    cachedResultRef.current = finalTaskData;
+    cachedFlatRef.current = data;
+
+    setTaskFinalData(finalTaskData);
+    setActualData(data);
+  };
+
   const fetchTaskData = async () => {
     const filterCon = location?.pathname?.includes("/projects")
       ? project
       : tasks;
-    if (filterCon?.length > 0) {
-      setIsWhTLoading(false);
-    } else {
-      setIsWhTLoading(true);
+    if (!silent) {
+      if (filterCon?.length > 0) {
+        setIsWhTLoading(false);
+      } else {
+        setIsWhTLoading(true);
+      }
     }
     let parsedData = null;
     if (encodedData) {
@@ -135,55 +210,29 @@ const useFullTaskFormatFile = (externalFilters = {}) => {
       const jsonString = atob(decodedString);
       parsedData = JSON.parse(jsonString);
     }
+    parsedDataRef.current = parsedData;
     try {
-      const taskData = await fetchTaskDataFullApi({
-        ...(parsedData || {}),
-        ...externalFilters,
-        isarchive: archivedFlag ? 1 : 0,
-        isCompleted: completedFlag ? 1 : 0,
-      });
-      if (taskData?.rd[0]?.stat == 0) {
-        setIsWhTLoading(false);
-        return toast.error(taskData?.rd[0]?.stat_msg);
+      // If rawDataOverride is provided, skip API call and process directly
+      if (rawDataOverride) {
+        processRawTaskData(rawDataOverride);
+        return;
       }
-      const labeledTasks = mapKeyValuePair(taskData);
-      const enhanceTask = (task) => {
-        const priority = priorityById.get(Number(task?.priorityid));
-        const status = statusById.get(Number(task?.statusid));
-        const secstatus = secStatusById.get(Number(task?.secstatusid));
-        const project = projectById.get(Number(task?.projectid));
-        const department = departmentById.get(Number(task?.departmentid));
-        const category = categoryById.get(Number(task?.workcategoryid));
-        const assigneeIdArray = task?.assigneids
-          ?.toString()
-          ?.split(",")
-          ?.map((id) => Number(id));
+      // Don't call treelist without taskid — use taskmodulelist instead
+      const taskid = parsedData?.taskid;
+      const hasTaskId = taskid !== undefined && taskid !== '' && taskid !== '0' && taskid !== 0;
 
-        const readonlyMapping = parseIsReadonlyString(task.isreadonly);
-        const matchedAssignees = (assigneeIdArray || [])
-          .map((id) => assigneeById.get(id))
-          .filter(Boolean)
-          .map((user) => ({
-            ...user,
-            isreadonly: readonlyMapping[user.id] ?? 0,
-          }));
-        return {
-          ...task,
-          priority: priority || "",
-          status: status || "",
-          secStatus: secstatus || "",
-          taskPr: project || "",
-          taskDpt: department || "",
-          assignee: matchedAssignees ?? [],
-          category: category,
-        };
-      };
-      const data = labeledTasks?.map((task) => enhanceTask(task));
-      const finalTaskData = formatDataToTree(data, parsedData, 'Today');
-      console.log("finalTaskData", finalTaskData)
-
-      setTaskFinalData(finalTaskData);
-      setActualData(data);
+      let taskData;
+      if (!hasTaskId) {
+        taskData = await fetchModuleDataApi({ taskid: 0, moduleid: 0 });
+      } else {
+        taskData = await fetchTaskDataFullApi({
+          ...(parsedData || {}),
+          ...externalFilters,
+          isarchive: archivedFlag ? 1 : 0,
+          isCompleted: completedFlag ? 1 : 0,
+        });
+      }
+      processRawTaskData(taskData);
     } catch (error) {
       console.error(error);
     }
@@ -521,7 +570,21 @@ const useFullTaskFormatFile = (externalFilters = {}) => {
   }, []);
 
   useEffect(() => {
-    if (callFetchTaskApi === false) {
+    // rawDataOverride bypasses the enabled check — process cached data immediately
+    if (rawDataOverride) {
+      if (
+        priorityData &&
+        statusData &&
+        taskDepartment &&
+        taskProject &&
+        taskCategory &&
+        taskAssigneeData?.length > 0
+      ) {
+        fetchTaskData();
+      }
+      return;
+    }
+    if (!enabled || callFetchTaskApi === false) {
       return;
     }
     if (
@@ -546,6 +609,9 @@ const useFullTaskFormatFile = (externalFilters = {}) => {
     callFetchTaskApi,
     location.pathname,
     JSON.stringify(externalFilters),
+    enabled,
+    refreshKey,
+    rawDataOverride,
   ]);
 
   return {

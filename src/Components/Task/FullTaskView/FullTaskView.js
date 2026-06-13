@@ -18,6 +18,15 @@ import {
 import { fetchFullTaskReportApi } from '../../../Api/TaskApi/fetchFullTaskReportApi';
 import { GetPrTeamsApi } from '../../../Api/TaskApi/prTeamListApi';
 import { fetchModuleDataApi } from '../../../Api/TaskApi/ModuleDataApi';
+import { fetchTaskDataFullApi } from '../../../Api/TaskApi/TaskDataFullApi';
+import {
+    generateCacheKey,
+    setTabDataCache,
+} from '../../../Utils/IndexedDB/taskDataCache';
+import {
+    taskQueryKeys,
+    setTaskQueryData,
+} from '../../../Utils/QueryClient/queryClient';
 import LoadingBackdrop from '../../../Utils/Common/LoadingBackdrop';
 import StatusBadge from '../../ShortcutsComponent/StatusBadge';
 import TablePaginationFooter from '../../ShortcutsComponent/Pagination/TablePaginationFooter';
@@ -34,6 +43,7 @@ import { toast } from 'react-toastify';
 import { AddTaskDataApi } from '../../../Api/TaskApi/AddTaskApi';
 import FullTaskViewFilters from './FullTaskViewFilters';
 import FilterChips from '../FilterComponent/FilterChip';
+import { useTabStore } from '../../../Store/useTabStore';
 
 const localISODate = (date = new Date()) => {
     const d = new Date(date);
@@ -286,7 +296,6 @@ const FullTaskView = () => {
                 page.toString(),
                 getApiFilterObject()
             );
-            console.log("response?.rd", response?.rd?.length)
             if (response?.rd) {
                 const startIndex = (page - 1) * rowsPerPage;
                 const normalizedRows = normalizeData(response.rd || [], startIndex);
@@ -399,6 +408,34 @@ const FullTaskView = () => {
         return addTaskApi;
     };
 
+    const prefetchTaskData = async (queryData, tabId) => {
+        try {
+            const taskid = queryData?.taskid;
+            const hasTaskId = taskid !== undefined && taskid !== '' && taskid !== '0' && taskid !== 0;
+            let rawData;
+            if (!hasTaskId) {
+                rawData = await fetchModuleDataApi({ taskid: 0, moduleid: 0 });
+            } else {
+                rawData = await fetchTaskDataFullApi({
+                    ...queryData,
+                    isarchive: 0,
+                    iscompleted: 0,
+                });
+            }
+            if (rawData?.rd?.[0]?.stat == 0) {
+                return;
+            }
+            const cacheKey = generateCacheKey(queryData, false, false);
+            await setTabDataCache(tabId, cacheKey, {
+                rawData,
+                fetchedAt: Date.now(),
+            });
+            setTaskQueryData(queryData, false, false, rawData);
+        } catch (error) {
+            console.error('Prefetch task data failed:', error);
+        }
+    };
+
     const handleNavigate = async (task) => {
         const userLoginData = getUserProfileData();
         const teamApiRes = await GetPrTeamsApi(task, "root");
@@ -419,10 +456,36 @@ const FullTaskView = () => {
             fromFullTaskView: true,
             breadcrumbTitles: task?.breadcrumbTitles
         };
-        const encodedFormData = encodeURIComponent(btoa(JSON.stringify(urlData)));
-        const formattedPrName = task?.project?.trim()?.replace(/\s+/g, '-') || '';
-        const url = `/tasks/${formattedPrName}/?data=${encodedFormData}`;
-        navigate(url);
+
+        const tabId = useTabStore.getState().openTaskTab({
+            title: task?.taskname || task?.project || "Tasks",
+            route: "/tasks",
+            queryData: urlData,
+        });
+        if (tabId) {
+            await prefetchTaskData(urlData, tabId);
+            navigate('/tasks');
+        }
+    };
+
+    const handleProjectClick = async (row) => {
+        if (row?.projectid) {
+            const queryData = {
+                project: row.project,
+                projectid: row.projectid,
+                module: row.taskname,
+                fromFullTaskView: true,
+            };
+            const tabId = useTabStore.getState().openTaskTab({
+                title: row.project || "Project",
+                route: "/tasks",
+                queryData,
+            });
+            if (tabId) {
+                await prefetchTaskData(queryData, tabId);
+                navigate('/tasks');
+            }
+        }
     };
 
     const filteredRows = useMemo(() => {
@@ -632,7 +695,19 @@ const FullTaskView = () => {
                                         </Box>
                                     </TableCell>
 
-                                    <TableCell>
+                                    <TableCell
+                                        sx={{
+                                            cursor: row?.project ? 'pointer' : 'default',
+                                            color: row?.project ? '#7367f0' : 'inherit',
+                                            '&:hover': row?.project ? {
+                                                textDecoration: 'underline',
+                                                color: '#5e5bd6 !important'
+                                            } : {},
+                                            transition: 'color 0.2s ease',
+                                            fontWeight: row?.project ? 500 : 'inherit',
+                                        }}
+                                        onClick={() => handleProjectClick(row)}
+                                    >
                                         {row?.project || '-'}
                                     </TableCell>
                                     <TableCell>

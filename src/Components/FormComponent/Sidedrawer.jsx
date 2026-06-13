@@ -90,18 +90,23 @@ const SidebarDrawer = ({
     secStatusData,
     taskAssigneeData,
     handleMeetingDt,
-    handleRemoveMetting
+    handleRemoveMetting,
+    isActive = true,
+    onAfterSubmit,
+    formDataOverride,
+    rootSubrootOverride,
 }) => {
     const location = useLocation();
     const theme = useTheme();
     const date = new Date();
     dayjs.extend(utc);
     dayjs.extend(timezone);
-    const formDataValue = useRecoilValue(formData);
-    console.log("formDataValue",formDataValue)
+    const globalFormDataValue = useRecoilValue(formData);
+    const formDataValue = formDataOverride ?? globalFormDataValue;
     const [taskDataValue, setTaskDataValue] = useRecoilState(TaskData);
     const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
-    const rootSubrootflagval = useRecoilValue(rootSubrootflag)
+    const globalRootSubroot = useRecoilValue(rootSubrootflag);
+    const rootSubrootflagval = rootSubrootOverride ?? globalRootSubroot;
     const [taskType, setTaskType] = useState("single");
     const [decodedData, setDecodedData] = useState(null);
     const [isDuplicateTask, setIsDuplicateTask] = useState(false);
@@ -193,7 +198,7 @@ const SidebarDrawer = ({
     }, [location.pathname, location.search]);
 
     useEffect(() => {
-        const masterData = JSON?.parse(sessionStorage.getItem('structuredAdvMasterData'));
+        const masterData = JSON?.parse(localStorage.getItem('structuredAdvMasterData'));
         const selectedGroupIds = decodedData ? decodedData?.maingroupids : formDataValue?.maingroupids
             ?.split(",")
             ?.map((id) => parseInt(id, 10));
@@ -292,6 +297,12 @@ const SidebarDrawer = ({
             }
         }
     }
+
+    useEffect(() => {
+        if (!isActive && open) {
+            onClose();
+        }
+    }, [isActive, open, onClose]);
 
     useEffect(() => {
         if (open) {
@@ -559,8 +570,6 @@ const SidebarDrawer = ({
         return parsed.isValid() ? parsed.toDate().toISOString() : localValue;
     };
 
-    console.log("djskjk",rootSubrootflagval)
-
     const submitTask = async (module, deadlineOverride) => {
         const moduleData = rootSubrootflagval?.Task === "AddTask" ? decodedData : null;
         const assigneeIds = formValues.guests?.map(user => user.id)?.join(",") ?? "";
@@ -592,6 +601,7 @@ const SidebarDrawer = ({
             completion_timestamp: statusValue?.labelname?.toLowerCase() === "completed" ? date.toISOString() : "",
             priorityid: formValues.priority ?? formDataValue?.priorityid,
             projectid: moduleData?.projectid || formValues?.prModule?.projectid || formValues.project || formDataValue?.projectid,
+            moduleid: formDataValue?.moduleid || formValues?.prModule?.taskid || "",
             projectLead: formValues.projectLead ?? formDataValue?.projectLead,
             DeadLineDate: getSubmitDeadlineValue(deadlineOverride),
             workcategoryid: formValues.category ?? formDataValue?.workcategoryid,
@@ -662,7 +672,11 @@ const SidebarDrawer = ({
 
                     setTaskDataValue(updatedTasks);
                 }
-                setOpenChildTask(Date.now());
+                if (onAfterSubmit) {
+                    onAfterSubmit();
+                } else {
+                    setOpenChildTask(Date.now());
+                }
                 handleClear();
             } else {
                 console.error("Sidedrawer: Task submit failed", submitResult);

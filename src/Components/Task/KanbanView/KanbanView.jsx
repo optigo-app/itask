@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Box, Card, CardContent, Typography, IconButton, Avatar, AvatarGroup, Button, Tooltip } from "@mui/material";
-import { Circle, CircleCheck, CircleDotDashed, CirclePlus, CircleX, Plus, StickyNote, Target, Volleyball, Workflow } from "lucide-react";
-import { cleanDate, formatDate, formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors } from "../../../Utils/globalfun";
+import { Circle, CircleCheck, CircleDotDashed, CircleX, ExternalLink, Plus, StickyNote, Target, Volleyball, Workflow } from "lucide-react";
+import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors } from "../../../Utils/globalfun";
+import useSafeRedirect from "../../../Utils/useSafeRedirect";
+import { useTabStore } from "../../../Store/useTabStore";
+import { fetchTaskDataFullApi } from "../../../Api/TaskApi/TaskDataFullApi";
+import { setTaskQueryData } from "../../../Utils/QueryClient/queryClient";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi"
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
-import { fetchTaskDataFullApi } from "../../../Api/TaskApi/TaskDataFullApi";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag } from "../../../Recoil/atom";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
@@ -15,6 +18,7 @@ import { toast } from "react-toastify";
 function KanbanView({
   taskdata,
   isLoading,
+  onOpenDrawer,
 }) {
 
   const [data, setData] = useState();
@@ -27,13 +31,53 @@ function KanbanView({
   const [cnfDialogOpen, setCnfDialogOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [hoveredTaskId, setHoveredTaskId] = useState(null);
-  const taskStatusData = JSON?.parse(sessionStorage.getItem("taskstatusData")) || [];
+  const taskStatusData = JSON?.parse(localStorage.getItem("taskstatusData")) || [];
 
   const handleToggleShowAll = (task) => {
     setShowAll(prevState => ({
       ...prevState,
       [task.taskid]: !prevState[task.taskid]
     }));
+  };
+
+  const navigate = useSafeRedirect();
+
+  const handleOpenModuleInNewTab = (task) => {
+    if (!task?.moduleid && !task?.taskid) return;
+    const moduleId = task?.moduleid || task?.taskid;
+    const moduleName = task?.moduleName || task?.taskname;
+    const queryData = {
+      module: moduleName,
+      project: task?.taskPr,
+      taskid: moduleId,
+      projectid: task?.projectid,
+      moduleid: moduleId,
+      maingroupids: task?.maingroupids,
+      isLimited: 0,
+      isreadonly: 0,
+      breadcrumbTitles: task?.breadcrumbTitles,
+    };
+
+    // Prefetch task data in background so the tab opens instantly
+    const hasTaskId = moduleId !== undefined && moduleId !== '' && moduleId !== '0' && moduleId !== 0;
+    if (hasTaskId) {
+      fetchTaskDataFullApi({ ...queryData, isarchive: 0, iscompleted: 0 })
+        .then((rawData) => {
+          if (rawData?.rd?.[0]?.stat != 0) {
+            setTaskQueryData(queryData, false, false, rawData);
+          }
+        })
+        .catch(() => {});
+    }
+
+    const tabId = useTabStore.getState().openTaskTab({
+      title: moduleName || task?.taskPr || "Tasks",
+      route: "/tasks",
+      queryData,
+    });
+    if (tabId) {
+      navigate('/tasks');
+    }
   };
 
   const handleDelete = (task) => {
@@ -186,30 +230,46 @@ function KanbanView({
   };
 
   const handleAddTask = (task, additionalInfo) => {
-    setRootSubroot(additionalInfo);
-    setFormDataValue(task);
-    setFormDrawerOpen(true);
+    if (onOpenDrawer) {
+      onOpenDrawer(task, additionalInfo);
+    } else {
+      setRootSubroot(additionalInfo);
+      setFormDataValue(task);
+      setFormDrawerOpen(true);
+    }
     setSelectedTask(null);
   };
 
   const handleAddSubtask = (subtask, additionalInfo) => {
-    setRootSubroot(additionalInfo);
-    setFormDataValue(subtask);
-    setFormDrawerOpen(true);
+    if (onOpenDrawer) {
+      onOpenDrawer(subtask, additionalInfo);
+    } else {
+      setRootSubroot(additionalInfo);
+      setFormDataValue(subtask);
+      setFormDrawerOpen(true);
+    }
     setSelectedTask(null);
   }
 
   const handleEditTask = async (task, additionalInfo) => {
-    setRootSubroot(additionalInfo);
-    setFormDataValue(task);
-    setFormDrawerOpen(true);
+    if (onOpenDrawer) {
+      onOpenDrawer(task, additionalInfo);
+    } else {
+      setRootSubroot(additionalInfo);
+      setFormDataValue(task);
+      setFormDrawerOpen(true);
+    }
     setSelectedTask(null);
   };
 
   const handleEditSubtask = (subtask, additionalInfo) => {
-    setRootSubroot(additionalInfo);
-    setFormDataValue(subtask);
-    setFormDrawerOpen(true);
+    if (onOpenDrawer) {
+      onOpenDrawer(subtask, additionalInfo);
+    } else {
+      setRootSubroot(additionalInfo);
+      setFormDataValue(subtask);
+      setFormDrawerOpen(true);
+    }
     setSelectedTask(null);
   };
   return (
@@ -473,6 +533,28 @@ function KanbanView({
                                     </IconButton>
                                   </Box>
                                 </CardContent>
+                                <Tooltip title="Open module" arrow placement="top">
+                                  <IconButton
+                                    size="small"
+                                    sx={{
+                                      visibility: hoveredTaskId === task?.taskid ? "visible" : "hidden",
+                                      position: "absolute",
+                                      top: 8,
+                                      right: 32,
+                                      transition: "visibility 0.2s ease-in-out, opacity 0.2s ease-in-out",
+                                      opacity: hoveredTaskId === task?.taskid ? 1 : 0,
+                                      color: "#7367f0",
+                                      bgcolor: "rgba(115,103,240,0.08)",
+                                      '&:hover': { bgcolor: "rgba(115,103,240,0.15)" },
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenModuleInNewTab(task);
+                                    }}
+                                  >
+                                    <ExternalLink size={16} />
+                                  </IconButton>
+                                </Tooltip>
                                 <IconButton
                                   size="small"
                                   sx={{

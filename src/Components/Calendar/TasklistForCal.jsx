@@ -5,6 +5,7 @@ import {
     Tooltip,
     styled,
     IconButton,
+    Skeleton,
 } from "@mui/material";
 import { Draggable } from "@fullcalendar/interaction";
 import { useRecoilValue } from "recoil";
@@ -243,6 +244,48 @@ const TaskCard = memo(({ child, colorClass, isScheduled, calendarsColor }) => {
 
 TaskCard.displayName = 'TaskCard';
 
+const TaskCardSkeleton = memo(() => (
+    <Card
+        sx={{
+            cursor: "default",
+            mb: 1,
+            ml: 2,
+            borderRadius: 1,
+            boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+            border: "1px solid transparent",
+        }}
+    >
+        <CardContent sx={{ p: '8px !important', m: 0 }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.2}>
+                <Skeleton variant="text" width="70%" height={20} />
+                <Skeleton variant="circular" width={20} height={20} />
+            </Box>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
+                <Skeleton variant="text" width="30%" height={16} />
+                <Skeleton variant="text" width="25%" height={16} />
+            </Box>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box display="flex" alignItems="center" gap={0.5}>
+                    <Skeleton variant="rounded" width={40} height={22} sx={{ borderRadius: '4px' }} />
+                    <Skeleton variant="rounded" width={40} height={22} sx={{ borderRadius: '4px' }} />
+                    <Skeleton variant="rounded" width={40} height={22} sx={{ borderRadius: '4px' }} />
+                </Box>
+                <Skeleton variant="text" width={80} height={16} />
+            </Box>
+        </CardContent>
+    </Card>
+));
+TaskCardSkeleton.displayName = 'TaskCardSkeleton';
+
+const ModuleSkeleton = () => (
+    <Box sx={{ mb: 2 }}>
+        <Skeleton variant="text" width="60%" height={24} sx={{ ml: 1, mb: 0.5 }} />
+        <TaskCardSkeleton />
+        <TaskCardSkeleton />
+        <TaskCardSkeleton />
+    </Box>
+);
+
 const TasklistForCal = ({ calendarsColor, onDateRangeChange, onAssigneeChange }) => {
     const task = useRecoilValue(TaskData);
     const actualTaskDataValue = useRecoilValue(actualTaskData);
@@ -296,7 +339,7 @@ const TasklistForCal = ({ calendarsColor, onDateRangeChange, onAssigneeChange })
 
     useEffect(() => {
         try {
-            const statusDataFromStorage = JSON.parse(sessionStorage.getItem('taskstatusData') || '[]');
+            const statusDataFromStorage = JSON.parse(localStorage.getItem('taskstatusData') || '[]');
             setStatusData(statusDataFromStorage);
         } catch (error) {
             console.error('Error fetching status data:', error);
@@ -306,7 +349,7 @@ const TasklistForCal = ({ calendarsColor, onDateRangeChange, onAssigneeChange })
 
     useEffect(() => {
         try {
-            const priorityDataFromStorage = JSON.parse(sessionStorage.getItem('taskpriorityData') || '[]');
+            const priorityDataFromStorage = JSON.parse(localStorage.getItem('taskpriorityData') || '[]');
             setPriorityData(priorityDataFromStorage);
         } catch (error) {
             console.error('Error fetching priority data:', error);
@@ -316,7 +359,7 @@ const TasklistForCal = ({ calendarsColor, onDateRangeChange, onAssigneeChange })
 
     useEffect(() => {
         try {
-            const assigneeDataFromStorage = JSON.parse(sessionStorage.getItem('taskAssigneeData') || '[]');
+            const assigneeDataFromStorage = JSON.parse(localStorage.getItem('taskAssigneeData') || '[]');
             setAssigneeData(assigneeDataFromStorage);
         } catch (error) {
             console.error('Error fetching assignee data:', error);
@@ -601,22 +644,7 @@ const TasklistForCal = ({ calendarsColor, onDateRangeChange, onAssigneeChange })
 
     const groupedTasks = getFilteredHierarchy();
 
-    if (task === undefined) {
-        return (
-            <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                minHeight="100px"
-                role="status"
-                aria-live="polite"
-            >
-                <Typography variant="body2" color="text.secondary">
-                    Loading tasks...
-                </Typography>
-            </Box>
-        );
-    }
+    const isLoading = task === undefined || !isCalendarDataLoaded;
 
     const CustomTooltip = styled(({ className, ...props }) => (
         <Tooltip {...props} classes={{ popper: className }} />
@@ -896,33 +924,40 @@ const TasklistForCal = ({ calendarsColor, onDateRangeChange, onAssigneeChange })
                 </Box>
             </Box>
             <Box id="external-tasks" sx={{ padding: 1.25, maxHeight: '88vh', overflow: 'auto' }}>
-                {groupedTasks?.map(parent => (
-                    <Box key={parent.taskid} sx={{ mb: 2 }}>
-                        <Typography
-                            variant="body1"
-                            fontWeight="bold"
-                            color="text.primary"
-                            sx={{ ml: 1, mb: 0.5, textTransform: 'capitalize' }}
-                        >
-                            {parent.moduleName}
-                        </Typography>
+                {isLoading ? (
+                    <>
+                        <ModuleSkeleton />
+                        <ModuleSkeleton />
+                        <ModuleSkeleton />
+                    </>
+                ) : (
+                    groupedTasks?.map(parent => (
+                        <Box key={parent.taskid} sx={{ mb: 2 }}>
+                            <Typography
+                                variant="body1"
+                                fontWeight="bold"
+                                color="text.primary"
+                                sx={{ ml: 1, mb: 0.5, textTransform: 'capitalize' }}
+                            >
+                                {parent.moduleName}
+                            </Typography>
 
-                        {parent?.subtasks?.map(child => {
-                            const colorClass = calendarsColor[child.category] || "default";
-                            const isScheduled = isTaskScheduled(child.taskid);
-                            return (
-                                <TaskCard
-                                    key={child.taskid}
-                                    child={child}
-                                    colorClass={colorClass}
-                                    isScheduled={isScheduled}
-                                    // isScheduled=''
-                                    calendarsColor={calendarsColor}
-                                />
-                            );
-                        })}
-                    </Box>
-                ))}
+                            {parent?.subtasks?.map(child => {
+                                const colorClass = calendarsColor[child.category] || "default";
+                                const isScheduled = isTaskScheduled(child.taskid);
+                                return (
+                                    <TaskCard
+                                        key={child.taskid}
+                                        child={child}
+                                        colorClass={colorClass}
+                                        isScheduled={isScheduled}
+                                        calendarsColor={calendarsColor}
+                                    />
+                                );
+                            })}
+                        </Box>
+                    ))
+                )}
             </Box>
         </>
     );

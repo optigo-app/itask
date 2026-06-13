@@ -24,10 +24,10 @@ const DynamicColumnFilterDrawer = ({
 }) => {
     const [filters, setFilters] = useRecoilState(Advfilters);
     const [dynamicFilters, setDynamicFilters] = useState({});
-    const taskAssigneeData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
-    const taskWorkCategoryData = JSON?.parse(sessionStorage.getItem("taskworkcategoryData"));
-    const taskStatusData = JSON?.parse(sessionStorage.getItem("taskstatusData"));
-    const taskPriorityData = JSON?.parse(sessionStorage.getItem("taskpriorityData"));
+    const taskAssigneeData = JSON?.parse(localStorage.getItem('taskAssigneeData'));
+    const taskWorkCategoryData = JSON?.parse(localStorage.getItem("taskworkcategoryData"));
+    const taskStatusData = JSON?.parse(localStorage.getItem("taskstatusData"));
+    const taskPriorityData = JSON?.parse(localStorage.getItem("taskpriorityData"));
 
 
     // Excluded fields that shouldn't appear in dynamic filters
@@ -126,8 +126,8 @@ const DynamicColumnFilterDrawer = ({
         } else if (columnName === 'priorityid') {
             return taskPriorityData || [];
         } else if (masterColNameSet.has(columnName)) {
-            // Get structured master data from sessionStorage
-            const structuredAdvMasterData = JSON?.parse(sessionStorage.getItem('structuredAdvMasterData')) || [];
+            // Get structured master data from localStorage
+            const structuredAdvMasterData = JSON?.parse(localStorage.getItem('structuredAdvMasterData')) || [];
 
             // Find ALL matching groups by name (case-insensitive) and collect all attributes
             const allAttributes = [];

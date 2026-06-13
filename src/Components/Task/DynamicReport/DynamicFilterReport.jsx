@@ -48,11 +48,11 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
   const [qlColIdToName, setQlColIdToName] = useState({});
   const [rawRows, setRawRows] = useState([]);
   const [finalRowData, setFinalRowData] = useState([]);
-  const taskAssigneeData = JSON?.parse(sessionStorage.getItem('taskAssigneeData'));
-  const taskStatusData = JSON?.parse(sessionStorage.getItem("taskstatusData"));
-  const taskPriorityData = JSON?.parse(sessionStorage.getItem("taskpriorityData"));
-  const taskWorkCategoryData = JSON?.parse(sessionStorage.getItem("taskworkcategoryData"));
-  const taskCategory = JSON?.parse(sessionStorage.getItem("taskworkcategoryData"));
+  const taskAssigneeData = JSON?.parse(localStorage.getItem('taskAssigneeData'));
+  const taskStatusData = JSON?.parse(localStorage.getItem("taskstatusData"));
+  const taskPriorityData = JSON?.parse(localStorage.getItem("taskpriorityData"));
+  const taskWorkCategoryData = JSON?.parse(localStorage.getItem("taskworkcategoryData"));
+  const taskCategory = JSON?.parse(localStorage.getItem("taskworkcategoryData"));
   const searchParams = new URLSearchParams(location.search);
   const encodedData = searchParams.get("data");
 

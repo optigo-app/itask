@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Chip,
   IconButton,
   InputAdornment,
   TextField,
@@ -15,9 +14,8 @@ import { Add as AddIcon } from "@mui/icons-material";
 import SidebarDrawer from "../../FormComponent/Sidedrawer";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { getUserProfileData, handleBugTrackRedirect } from "../../../Utils/globalfun";
+import { getUserProfileData } from "../../../Utils/globalfun";
 import {
-  fetchlistApiCall,
   formData,
   openFormDrawer,
   rootSubrootflag,
@@ -35,19 +33,17 @@ import {
   Calendar,
   CircleCheck,
   ClipboardPaste,
-  Archive,
-  Bug,
   Flag,
   Kanban,
   List,
   ListFilter,
-  OctagonAlert,
   SearchIcon,
   Star,
   TimerIcon,
   User,
   UserPlus,
   Users,
+  RefreshCw,
 } from "lucide-react";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import { useLocation } from "react-router-dom";
@@ -78,6 +74,20 @@ const HeaderButtons = ({
   onToggleFavoritesOnly,
   showMilestonesOnly,
   onToggleMilestonesOnly,
+  filters: filtersProp,
+  queryData: queryDataProp,
+  completedFlag: completedFlagProp,
+  archivedFlag: archivedFlagProp,
+  viewMode: viewModeProp,
+  onViewModeChange: onViewModeChangeProp,
+  formDrawerOpen: formDrawerOpenProp,
+  onToggleFormDrawer: onToggleFormDrawerProp,
+  onNewTask,
+  formDataOverride: formDataOverrideProp,
+  rootSubrootOverride: rootSubrootOverrideProp,
+  isActive,
+  onAfterSubmit,
+  onRefresh,
 }) => {
   const { hasAccess } = useAccess();
   const navigate = useSafeRedirect()
@@ -86,26 +96,36 @@ const HeaderButtons = ({
   const isSmallScreen = useMediaQuery("(max-width:600px)");
   const isMediumScreen = useMediaQuery("(min-width:601px) and (max-width:960px)");
   const location = useLocation();
-  const filters = useRecoilValue(Advfilters);
+  const globalFilters = useRecoilValue(Advfilters);
+  const filters = filtersProp ?? globalFilters;
   const copyData = useRecoilValue(copyRowData);
   const searchParams = new URLSearchParams(location.search);
   const setRootSubroot = useSetRecoilState(rootSubrootflag);
   const setFormDataValue = useSetRecoilState(formData);
-  const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
-  const rootSubrootflagval = useRecoilValue(rootSubrootflag);
+  const globalRootSubroot = useRecoilValue(rootSubrootflag);
+  const rootSubrootflagval = rootSubrootOverrideProp ?? globalRootSubroot;
   const [view, setView] = useState('');
   const [lastNonArchiveView, setLastNonArchiveView] = useState('table');
   const [selectedCategory, setSelectedCategory] = useRecoilState(selectedCategoryAtom);
   const [filterDrawerOpen, setFilterDrawerOpen] = useRecoilState(filterDrawer);
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
-  const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
-  const [viewTaskMode, setViewTaskMode] = useRecoilState(viewMode);
-  const archiveFlag = useRecoilValue(archivedTask);
-  const completedFlag = useRecoilValue(completedTask);
+  const [globalFormDrawerOpen, setGlobalFormDrawerOpen] = useRecoilState(openFormDrawer);
+  const formdrawerOpen = formDrawerOpenProp ?? globalFormDrawerOpen;
+
+  const [globalViewTaskMode, setGlobalViewTaskMode] = useRecoilState(viewMode);
+  const viewTaskMode = viewModeProp ?? globalViewTaskMode;
+  const setViewTaskMode = onViewModeChangeProp ? (v) => onViewModeChangeProp(v) : setGlobalViewTaskMode;
+  const globalArchiveFlag = useRecoilValue(archivedTask);
+  const globalCompletedFlag = useRecoilValue(completedTask);
+  const archiveFlag = archivedFlagProp ?? globalArchiveFlag;
+  const completedFlag = completedFlagProp ?? globalCompletedFlag;
   const encodedData = searchParams.get("data");
   const [parsedData, setParsedData] = useState();
   const [categoryMaster, setCategoryMaster] = useState([]);
   const [searchInput, setSearchInput] = useState(filters?.searchTerm || "");
+
+  const resolvedQueryData = queryDataProp ?? parsedData;
+  const isTaskView = location?.pathname?.includes("/tasks/") || !!queryDataProp;
 
   useEffect(() => {
     if (Array.isArray(CategorySummary)) {
@@ -141,17 +161,28 @@ const HeaderButtons = ({
   }, [searchInput, filters?.searchTerm, onFilterChange]);
 
   const handleDrawerToggle = () => {
-    setFormDrawerOpen(!formdrawerOpen);
-    setFormDataValue({});
-    setRootSubroot({ Task: "AddTask" });
+    if (onToggleFormDrawerProp) {
+      onToggleFormDrawerProp();
+    } else {
+      setGlobalFormDrawerOpen(!globalFormDrawerOpen);
+    }
+    if (!queryDataProp) {
+      setFormDataValue({});
+      setRootSubroot({ Task: "AddTask" });
+    }
+  };
+
+  const handleNewButtonClick = () => {
+    if (onNewTask && queryDataProp) {
+      onNewTask();
+    } else {
+      handleDrawerToggle();
+    }
   };
 
   const handleFormSubmit = async (formValues, mode, module) => {
-    const rootflag =
-      rootSubrootflagval?.Task == "AddTask"
-        ? { Task: "subroot" }
-        : rootSubrootflagval;
-    const addTaskApi = await AddTaskDataApi(formValues, rootflag ?? {}, module);
+    const rootflag = rootSubrootflagval ?? {};
+    const addTaskApi = await AddTaskDataApi(formValues, rootflag, module);
     if (addTaskApi && addTaskApi?.rd[0]?.stat == 1) {
       setTimeout(() => {
         let message = "Task Added Successfully...";
@@ -172,7 +203,11 @@ const HeaderButtons = ({
 
   const handleViewModeChange = (event, newView) => {
     if (newView !== null) {
-      setViewTaskMode(newView);
+      if (onViewModeChangeProp) {
+        onViewModeChangeProp(newView);
+      } else {
+        setGlobalViewTaskMode(newView);
+      }
       sessionStorage?.setItem('viewTaskMode', newView);
     }
   };
@@ -229,15 +264,9 @@ const HeaderButtons = ({
         <ToggleButton value="kanban" aria-label="kanban view" sx={{ borderRadius: '8px' }}>
           <Kanban className="iconbtn" size={20} />
         </ToggleButton>
-        <ToggleButton value="bugview" aria-label="Bug View" sx={{ borderRadius: '8px' }}>
-          <OctagonAlert className="iconbtn" size={20} />
-        </ToggleButton>
         <ToggleButton value="Dynamic-Filter" aria-label="Dynamic Filter" sx={{ borderRadius: '8px' }}>
           <ListFilter className="iconbtn" size={20} />
         </ToggleButton>
-        {/* <ToggleButton value="archive" aria-label="archive tasks" sx={{ borderRadius: '8px' }}>
-          <Archive className="iconbtn" size={20} />
-        </ToggleButton> */}
         <ToggleButton value="calendar" aria-label="Calendar view" sx={{ borderRadius: '8px' }}>
           <Calendar className="iconbtn" size={20} />
         </ToggleButton>
@@ -303,40 +332,33 @@ const HeaderButtons = ({
               <FilterAltIcon className="iconbtn" color="#0000008a" fontSize="20px" />
             </IconButton>
           </Tooltip>
-          {/* {location?.pathname?.includes("/tasks") && (
+          {onRefresh && (
             <Tooltip
               placement="top"
-              title={archiveFlag ? "Exclude Archive tasks" : "Include Archive Task"}
+              title="Refresh data"
               arrow
               classes={{ tooltip: "custom-tooltip" }}
             >
-              {hasAccess(PERMISSIONS.canTaskActions) ? (
-                <IconButton
-                  aria-label="archived task"
-                  onClick={handleArchivedTaskFilter}
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    padding: '6px',
-                    backgroundColor:
-                      archiveFlag ? "#ffe0b2" : "white",
-                    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-                    "&:hover": {
-                      backgroundColor: "#f5f5f5",
-                      boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
-                    },
-                  }}
-                >
-                  <Archive className="iconbtn"
-                    color={
-                      archiveFlag ? "#ef6c00" : "#0000008a"
-                    } size={20} />
-                </IconButton>
-              ) : null}
+              <IconButton
+                aria-label="Refresh data"
+                onClick={onRefresh}
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: '4px',
+                  backgroundColor: "white",
+                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                  "&:hover": {
+                    backgroundColor: "#f5f5f5",
+                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                  },
+                }}
+              >
+                <RefreshCw className="iconbtn" color="#0000008a" size={20} />
+              </IconButton>
             </Tooltip>
-          )} */}
-
+          )}
           {location?.pathname?.includes("/tasks") && (
             <Tooltip
               placement="top"
@@ -364,7 +386,6 @@ const HeaderButtons = ({
               </IconButton>
             </Tooltip>
           )}
-
           {location?.pathname?.includes("/tasks") && (
             <Tooltip
               placement="top"
@@ -469,7 +490,7 @@ const HeaderButtons = ({
                 variant="outlined"
                 color="primary"
                 startIcon={<ClipboardPaste size={20} />}
-                onClick={() => handlePasteTask(parsedData, "main")}
+                onClick={() => handlePasteTask(resolvedQueryData, "main")}
                 className="pasteButton"
                 size={isSmallScreen ? "small" : isMediumScreen ? "medium" : "medium"}
               >
@@ -479,28 +500,28 @@ const HeaderButtons = ({
           )}
           {location?.pathname?.includes("/tasks") && (
             <Box sx={{ display: "flex", gap: 2 }}>
-              {location?.pathname?.includes("/tasks/") && (
+              {isTaskView && (
                 <Button
                   variant="contained"
                   startIcon={<AddIcon />}
                   className="buttonClassname"
-                  onClick={handleDrawerToggle}
+                  onClick={handleNewButtonClick}
                   size={isSmallScreen ? "small" : isMediumScreen ? "medium" : "medium"}
-                  disabled={parsedData?.isreadonly === 1 && profileData?.designation?.toLowerCase() !== "admin"}
+                  disabled={resolvedQueryData?.isreadonly === 1 && profileData?.designation?.toLowerCase() !== "admin"}
                 >
                   New
                 </Button>
               )}
               <ToggleButtonGroup
-                value={location?.pathname?.includes("/tasks/") ? viewTaskMode : null}
+                value={isTaskView ? viewTaskMode : null}
                 exclusive
                 size="small"
-                onChange={location?.pathname?.includes("/tasks/") ? handleViewModeChange : null}
+                onChange={isTaskView ? handleViewModeChange : null}
                 aria-label="View mode"
                 className="view-mode-toggle"
               >
                 <Tooltip
-                  title={!location?.pathname?.includes("/tasks/") ? "Available only when process with project to task page" : "My tasks view"}
+                  title={!isTaskView ? "Available only when process with project to task page" : "My tasks view"}
                   arrow
                   placement="top"
                   classes={{ tooltip: 'custom-tooltip' }}
@@ -510,7 +531,7 @@ const HeaderButtons = ({
                       value="me"
                       className="toggle-btn"
                       sx={{ borderRadius: '8px', minHeight: '40px' }}
-                      disabled={!location?.pathname?.includes("/tasks/")}
+                      disabled={!isTaskView}
                     >
                       <User size={20} className="toggle-icon" />
                     </ToggleButton>
@@ -518,9 +539,9 @@ const HeaderButtons = ({
                 </Tooltip>
                 <Tooltip
                   title={
-                    !location?.pathname?.includes("/tasks/")
+                    !isTaskView
                       ? "Available only when process with project to task page"
-                      : parsedData?.isLimited == 1
+                      : resolvedQueryData?.isLimited == 1
                         ? "Access limited: Team view disabled"
                         : "Team tasks view"
                   }
@@ -530,7 +551,7 @@ const HeaderButtons = ({
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                     <ToggleButton
-                      disabled={!location?.pathname?.includes("/tasks/") || parsedData?.isLimited == 1}
+                      disabled={!isTaskView || resolvedQueryData?.isLimited == 1}
                       value="team"
                       className="toggle-btn"
                       sx={{ borderRadius: '8px', minHeight: '40px' }}
@@ -541,9 +562,9 @@ const HeaderButtons = ({
                 </Tooltip>
                 <Tooltip
                   title={
-                    !location?.pathname?.includes("/tasks/")
+                    !isTaskView
                       ? "Available only when process with project to task page"
-                      : parsedData?.isLimited == 1
+                      : resolvedQueryData?.isLimited == 1
                         ? "Access limited: Created by view disabled"
                         : "Tasks created by me view"
                   }
@@ -553,7 +574,7 @@ const HeaderButtons = ({
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                     <ToggleButton
-                      disabled={!location?.pathname?.includes("/tasks/") || parsedData?.isLimited == 1}
+                      disabled={!isTaskView || resolvedQueryData?.isLimited == 1}
                       value="createdby"
                       className="toggle-btn"
                       sx={{ borderRadius: '8px', minHeight: '40px' }}
@@ -581,7 +602,7 @@ const HeaderButtons = ({
                   variant="contained"
                   startIcon={<AddIcon />}
                   className="buttonClassname"
-                  onClick={handleDrawerToggle}
+                  onClick={handleNewButtonClick}
                 >
                   New
                 </Button>
@@ -593,6 +614,10 @@ const HeaderButtons = ({
           open={formdrawerOpen}
           onClose={handleDrawerToggle}
           onSubmit={handleFormSubmit}
+          isActive={isActive}
+          onAfterSubmit={onAfterSubmit}
+          formDataOverride={formDataOverrideProp}
+          rootSubrootOverride={rootSubrootOverrideProp}
           isLoading={isLoading}
           masterData={masterData}
           priorityData={priorityData}

@@ -125,7 +125,7 @@ const Calendar = ({
 
             const res = await GetDailyReportApi();
             const rows = res?.rd || [];
-            const assigneeMaster = JSON.parse(sessionStorage.getItem('taskAssigneeData') || '[]');
+            const assigneeMaster = JSON.parse(localStorage.getItem('taskAssigneeData') || '[]');
             const masterById = new Map(assigneeMaster.map((e) => [String(e?.id), e]));
 
             const byDateAssignees = new Map();

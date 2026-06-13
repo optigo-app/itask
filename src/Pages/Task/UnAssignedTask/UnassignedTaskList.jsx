@@ -60,7 +60,7 @@ const UnassignedTaskList = () => {
   const fetchMasterData = async () => {
     setIsLoading(true);
     try {
-      const masterData = sessionStorage.getItem('masterData');
+      const masterData = localStorage.getItem('masterData');
       const result = JSON.parse(masterData);
       if (!result) {
         fetchMasterGlFunc();

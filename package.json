@@ -1,5 +1,4 @@
 {
-  "homepage": "/itaskweb",
   "name": "itask",
   "version": "0.1.0",
   "private": true,
@@ -20,6 +19,7 @@
     "@mui/material": "^6.4.8",
     "@mui/x-data-grid": "^7.22.3",
     "@mui/x-date-pickers": "^7.22.3",
+    "@tanstack/react-query": "^5.101.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -60,7 +60,8 @@
     "swiper": "^11.2.6",
     "web-vitals": "^2.1.4",
     "xlsx": "^0.18.5",
-    "zod": "^3.24.1"
+    "zod": "^3.24.1",
+    "zustand": "^5.0.14"
   },
   "scripts": {
     "start": "react-scripts start",

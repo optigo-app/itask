@@ -65,7 +65,7 @@ export default function MasterBind({ taskModuleList }) {
     }
     // for show all master
     useEffect(() => {
-        const masterData = JSON?.parse(sessionStorage.getItem('structuredAdvMasterData'));
+        const masterData = JSON?.parse(localStorage.getItem('structuredAdvMasterData'));
         if (masterData) {
             setLeftGroups(masterData);
         } else {
@@ -75,7 +75,7 @@ export default function MasterBind({ taskModuleList }) {
 
     // show master that associated with this module
     useEffect(() => {
-        const masterData = JSON?.parse(sessionStorage.getItem('structuredAdvMasterData'));
+        const masterData = JSON?.parse(localStorage.getItem('structuredAdvMasterData'));
         
         if (!taskModuleList || taskModuleList.length === 0) {
             return;
@@ -206,7 +206,7 @@ export default function MasterBind({ taskModuleList }) {
         }));
         if (key === "searchTerm") {
             const searchTerm = value?.toLowerCase();
-            const masterData = JSON?.parse(sessionStorage.getItem('structuredAdvMasterData')) || [];
+            const masterData = JSON?.parse(localStorage.getItem('structuredAdvMasterData')) || [];
 
             const filtered = masterData?.filter(group =>
                 group?.name?.toLowerCase().includes(searchTerm) ||

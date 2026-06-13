@@ -52,8 +52,8 @@ const Home = () => {
     try {
       const meetingApiRes = await fetchMettingListByLoginApi();
       const data = meetingApiRes?.rd || [];
-      const taskAssigneeData = JSON.parse(sessionStorage.getItem('taskAssigneeData') || '[]');
-      const taskStatusData = JSON.parse(sessionStorage.getItem('taskstatusData') || '[]');
+      const taskAssigneeData = JSON.parse(localStorage.getItem('taskAssigneeData') || '[]');
+      const taskStatusData = JSON.parse(localStorage.getItem('taskstatusData') || '[]');
       const topFiveMeetings = data?.slice(0, 5);
       const currentTime = new Date();
       const todayStr = currentTime.toISOString().split('T')[0];

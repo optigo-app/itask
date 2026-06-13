@@ -4,7 +4,7 @@ import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, Chip, Typography, useMediaQuery, Dialog, DialogContent, CircularProgress } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { Advfilters, archivedTask, completedTask, copyRowData, fetchlistApiCall, filterDrawer, masterDataValue, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
+import { Advfilters, archivedTask, completedTask, copyRowData, fetchlistApiCall, filterDrawer, masterDataValue, openFormDrawer, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
 import { filterNestedTasksByView, filterTasksByValidTaskNo, flattenTasks, formatDate2, getCategoryTaskSummary, getUserProfileData, handleAddApicall, isTaskDue, isTaskToday } from "../../Utils/globalfun";
 import { useLocation, useNavigate } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
@@ -12,12 +12,14 @@ import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
+import { useTaskDataQuery } from "../../Hooks/useTaskDataQuery";
 import { MoveTaskApi } from "../../Api/TaskApi/MoveTaskApi";
 import CloseIcon from '@mui/icons-material/Close';
 import { fetchArchiveTaskDataApi } from "../../Api/TaskApi/ArchiveTasklistApi";
 import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { AddPrintSheetCountApi } from "../../Api/TaskApi/PrintSheetApi";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
+import { useTabStore } from "../../Store/useTabStore";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
@@ -26,7 +28,13 @@ const KanbanView = React.lazy(() => import("../../Components/Task/KanbanView/Kan
 const CardView = React.lazy(() => import("../../Components/Task/CardView/CardView"));
 const DynamicFilterReport = React.lazy(() => import("../../Components/Task/DynamicReport/DynamicFilterReport"))
 
-const Task = () => {
+const Task = ({ tabId, queryDataOverride, isActive }) => {
+  const isTabMode = !!tabId;
+  const initialTabState = isTabMode ? useTabStore.getState().getTabState(tabId) : null;
+
+  // Only run data fetching/processing for the currently active tab.
+  // Inactive tabs stay frozen with their existing state (no background API calls).
+  const shouldRun = !isTabMode || isActive;
   const date = new Date();
   const isLaptop = useMediaQuery("(max-width:1150px)");
   const location = useLocation();
@@ -34,34 +42,186 @@ const Task = () => {
   const userProfile = getUserProfileData();
 
   // Check if the path is exactly /tasks
-  const isRedirectPath = location.pathname === '/tasks';
-  const [order, setOrder] = useState("asc");
-  const [orderBy, setOrderBy] = useState("entrydate");
-  const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(100);
+  const isRedirectPath = !isTabMode && location.pathname === '/tasks';
+  const [order, setOrder] = useState(initialTabState?.order || "asc");
+  const [orderBy, setOrderBy] = useState(initialTabState?.orderBy || "entrydate");
+  const [page, setPage] = useState(initialTabState?.page || 1);
+  const [rowsPerPage, setRowsPerPage] = useState(initialTabState?.rowsPerPage || 100);
   const searchParams = new URLSearchParams(location.search);
   const masterData = useRecoilValue(masterDataValue);
-  const [activeButton, setActiveButton] = useState("table");
+  const [activeButton, setActiveButton] = useState(initialTabState?.activeButton || "table");
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
-  const [filters, setFilters] = useRecoilState(Advfilters);
+
+  // ── Tab-scoped state ──
+  const [localFilters, setLocalFilters] = useState(() => {
+    if (initialTabState?.dataLoaded && initialTabState?.filters) {
+      return initialTabState.filters;
+    }
+    const defaultFilters = {
+      category: [], searchTerm: '', status: '', priority: '', department: '',
+      assignee: '', project: '', dueDate: null, startDate: null,
+    };
+    if (queryDataOverride?.fromFullTaskView && queryDataOverride?.module) {
+      defaultFilters.searchTerm = queryDataOverride.module;
+    }
+    return defaultFilters;
+  });
+  const [globalFilters, setGlobalFilters] = useRecoilState(Advfilters);
+  const filters = isTabMode ? localFilters : globalFilters;
+  const setFilters = isTabMode ? setLocalFilters : setGlobalFilters;
+
   const showAdvancedFil = useRecoilValue(filterDrawer);
-  const [tasks, setTasks] = useRecoilState(TaskData);
+
+  const [localTasks, setLocalTasks] = useState(initialTabState?.tasks || []);
+  const [globalTasks, setGlobalTasks] = useRecoilState(TaskData);
+  const tasks = isTabMode ? localTasks : globalTasks;
+  const setTasks = isTabMode ? setLocalTasks : setGlobalTasks;
+
   const setTaskDataLength = useSetRecoilState(taskLength)
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
   const [copiedData, setCopiedData] = useRecoilState(copyRowData);
-  const [completedFlag, setCompletedFlag] = useRecoilState(completedTask);
-  const setArchivedTasks = useSetRecoilState(archivedTask)
-  const encodedData = searchParams.get("data");
-  const [CategoryTSummary, setCategoryTSummary] = useState([]);
+
+  // ── Tab-scoped completed / archived flags ──
+  const [localCompletedFlag, setLocalCompletedFlag] = useState(initialTabState?.completedFlag || false);
+  const [localArchivedFlag, setLocalArchivedFlag] = useState(initialTabState?.archivedFlag || false);
+  const [globalCompletedFlag, setGlobalCompletedFlag] = useRecoilState(completedTask);
+  const globalArchivedFlag = useRecoilValue(archivedTask);
+  const setGlobalArchivedTasks = useSetRecoilState(archivedTask);
+  const completedFlag = isTabMode ? localCompletedFlag : globalCompletedFlag;
+  const setCompletedFlag = isTabMode ? setLocalCompletedFlag : setGlobalCompletedFlag;
+  const archivedFlag = isTabMode ? localArchivedFlag : globalArchivedFlag;
+  const setArchivedTasks = isTabMode ? setLocalArchivedFlag : setGlobalArchivedTasks;
+
+  // ── Tab-scoped view mode & drawer ──
+  const [localViewMode, setLocalViewMode] = useState(initialTabState?.viewMode || "me");
+  const [localFormDrawerOpen, setLocalFormDrawerOpen] = useState(false);
+  const [globalViewMode, setGlobalViewMode] = useRecoilState(viewMode);
+  const globalFormDrawerOpen = useRecoilValue(openFormDrawer);
+  const meTeamView = isTabMode ? localViewMode : globalViewMode;
+  const setMeTeamView = isTabMode ? setLocalViewMode : setGlobalViewMode;
+  const formDrawerOpen = isTabMode ? localFormDrawerOpen : globalFormDrawerOpen;
+  const toggleFormDrawer = () => {
+    if (isTabMode) setLocalFormDrawerOpen((p) => !p);
+  };
+  const [submitRefreshKey, setSubmitRefreshKey] = useState(0);
+  const silentRefreshRef = useRef(false);
+  const lastValidRawDataRef = useRef(null);
+  const handleAfterSubmit = () => {
+    if (isTabMode) {
+      silentRefreshRef.current = true;
+      setSubmitRefreshKey((k) => k + 1);
+    }
+  };
+
+  useEffect(() => {
+    silentRefreshRef.current = false;
+  });
+
+  // Track which refreshKey we've already fetched data for.
+  // -1 means "never fetched yet" → forces fetch on first active mount.
+  // After a successful fetch, this ref is updated to submitRefreshKey.
+  // When switching tabs, if the key hasn't changed, enabledForApi stays false → NO API call.
+  const lastFetchedRefreshKeyRef = useRef(
+    initialTabState?.dataLoaded ? submitRefreshKey : -1
+  );
+
+  // enabledForApi = true ONLY when we genuinely need fresh data:
+  // 1. Non-tab mode always fetches, OR
+  // 2. Tab mode: active AND (never fetched OR refreshKey changed since last fetch)
+  const enabledForApi = !isTabMode || (isActive && lastFetchedRefreshKeyRef.current !== submitRefreshKey);
+
+  // ── Tab-scoped drawer form data ──
+  const [tabDrawerFormData, setTabDrawerFormData] = useState(null);
+  const [tabDrawerRootSubroot, setTabDrawerRootSubroot] = useState(null);
+
+  const handleOpenTabDrawer = (data = null, rootSubroot = null) => {
+    setTabDrawerFormData(data);
+    setTabDrawerRootSubroot(rootSubroot);
+    if (isTabMode) setLocalFormDrawerOpen(true);
+  };
+
+  const handleNewTaskInTab = () => {
+    setTabDrawerFormData({
+      moduleid: queryDataOverride?.moduleid,
+      projectid: queryDataOverride?.projectid,
+      taskPr: queryDataOverride?.project,
+      maingroupids: queryDataOverride?.maingroupids,
+      isLimited: queryDataOverride?.isLimited,
+      isreadonly: queryDataOverride?.isreadonly,
+    });
+    setTabDrawerRootSubroot({ Task: "AddTask" });
+    if (isTabMode) setLocalFormDrawerOpen(true);
+  };
+
+  const encodedData = isTabMode
+    ? (queryDataOverride ? encodeURIComponent(btoa(JSON.stringify(queryDataOverride))) : null)
+    : searchParams.get("data");
+
+  const [CategoryTSummary, setCategoryTSummary] = useState(initialTabState?.categorySummary || []);
   const [contextMenu, setContextMenu] = useState(null);
-  const meTeamView = useRecoilValue(viewMode);
-  const [parsedDataObj, setParsedDataObj] = useState(null);
-  const [archiveTasks, setArchiveTasks] = useState([]);
+  const [parsedDataObj, setParsedDataObj] = useState(queryDataOverride || null);
+  const [archiveTasks, setArchiveTasks] = useState(initialTabState?.archiveTasks || []);
   const [archiveLoading, setArchiveLoading] = useState(false);
   const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
   const [pendingCompleteChange, setPendingCompleteChange] = useState(null);
   const [completedFilterLoading, setCompletedFilterLoading] = useState(false);
+
+  // Sync state back to useTabStore when it changes
+  useEffect(() => {
+    if (!isTabMode) return;
+    useTabStore.getState().updateTabState(tabId, {
+      order,
+      orderBy,
+      page,
+      rowsPerPage,
+      activeButton,
+      filters: localFilters,
+      tasks: localTasks,
+      completedFlag: localCompletedFlag,
+      archivedFlag: localArchivedFlag,
+      viewMode: localViewMode,
+      categorySummary: CategoryTSummary,
+      archiveTasks,
+      dataLoaded: true,
+    });
+  }, [
+    isTabMode,
+    tabId,
+    order,
+    orderBy,
+    page,
+    rowsPerPage,
+    activeButton,
+    localFilters,
+    localTasks,
+    localCompletedFlag,
+    localArchivedFlag,
+    localViewMode,
+    CategoryTSummary,
+    archiveTasks,
+  ]);
+
+  const encodedDataOverride = isTabMode && queryDataOverride
+    ? encodeURIComponent(btoa(JSON.stringify(queryDataOverride)))
+    : undefined;
+
+  // TanStack Query + IndexedDB caching layer for tab data
+  // This is the PRIMARY data source for tab mode.
+  // It fetches from API on refresh, or loads from IndexedDB on tab switch.
+  const {
+    taskRawData,
+    isFetching: isBackgroundRefreshing,
+    refetch: refetchTaskData,
+  } = useTaskDataQuery(queryDataOverride, {
+    archivedFlag,
+    completedFlag,
+    enabled: isTabMode && shouldRun && isActive,
+    refreshKey: submitRefreshKey,
+    silent: silentRefreshRef.current,
+    tabId: isTabMode ? tabId : undefined,
+  });
+
   const {
     iswhMLoading,
     iswhTLoading,
@@ -72,15 +232,42 @@ const Task = () => {
     priorityData,
     statusData,
     secStatusData,
-    taskAssigneeData } = useFullTaskFormatFile();
-  // console.log("taskFinalData", taskFinalData)
+    taskAssigneeData } = useFullTaskFormatFile({}, {
+    encodedDataOverride,
+    archivedFlagOverride: isTabMode ? archivedFlag : undefined,
+    completedFlagOverride: isTabMode ? completedFlag : undefined,
+    enabled: !isTabMode && enabledForApi, // NEVER fetch from API in tab mode
+    refreshKey: submitRefreshKey,
+    silent: silentRefreshRef.current,
+    rawDataOverride: isTabMode
+      ? (taskRawData?.rd1 ? taskRawData : lastValidRawDataRef.current)
+      : undefined,
+  });
+
+  // After a successful fetch, record the refreshKey so we don't re-fetch
+  // when this tab becomes active again (e.g., switching tabs).
+  useEffect(() => {
+    if (!iswhTLoading && taskFinalData?.length > 0) {
+      lastFetchedRefreshKeyRef.current = submitRefreshKey;
+    }
+  }, [iswhTLoading, taskFinalData, submitRefreshKey]);
+
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showMilestonesOnly, setShowMilestonesOnly] = useState(false);
   const [localTaskEdits, setLocalTaskEdits] = useState({});
   const processingCancelledRef = useRef(false);
   const processingTimerRef = useRef(null);
 
+  // Preserve last valid raw data so tab switches never blank even if
+  // taskRawData briefly becomes undefined during background revalidation.
   useEffect(() => {
+    if (taskRawData?.rd1) {
+      lastValidRawDataRef.current = taskRawData;
+    }
+  }, [taskRawData]);
+
+  useEffect(() => {
+    if (isTabMode) return;
     setTasks([]);
     setArchivedTasks(false);
     if (isRedirectPath) {
@@ -88,15 +275,16 @@ const Task = () => {
     } else {
       setOpenChildTask(true)
     }
-  }, [location.pathname]);
+  }, [location.pathname, isTabMode]);
 
   useEffect(() => {
+    if (isTabMode) return;
     // Don't load any data if on redirect path
     if (isRedirectPath) {
       setTasks([]);
       setArchivedTasks(false);
     }
-  }, [isRedirectPath]);
+  }, [isRedirectPath, isTabMode]);
 
   useEffect(() => {
     const cancelCurrentProcessing = () => {
@@ -105,17 +293,20 @@ const Task = () => {
         clearTimeout(processingTimerRef.current);
         processingTimerRef.current = null;
       }
-      setTasks([]);
-      setCategoryTSummary([]);
-      setArchiveTasks([]);
+      if (!isTabMode) {
+        setTasks([]);
+        setCategoryTSummary([]);
+        setArchiveTasks([]);
+      }
     };
     window.addEventListener("app:route-change-start", cancelCurrentProcessing);
     return () => {
       window.removeEventListener("app:route-change-start", cancelCurrentProcessing);
     };
-  }, [setTasks]);
+  }, [setTasks, isTabMode]);
 
   useEffect(() => {
+    if (!shouldRun) return;
     processingCancelledRef.current = false;
     if (processingTimerRef.current) {
       clearTimeout(processingTimerRef.current);
@@ -124,6 +315,7 @@ const Task = () => {
     const activeTab = localStorage?.getItem('activeTaskTab');
 
     const decodeData = () => {
+      if (isTabMode) return queryDataOverride || null;
       if (!encodedData) return null;
       try {
         const decoded = decodeURIComponent(encodedData);
@@ -173,7 +365,9 @@ const Task = () => {
         setTasks(activeTab === "bugview" ? flattenTasks(output) : output);
       };
 
-      const shouldDefer = (tasks?.length || 0) > 300;
+      // In tab mode, always defer to next tick so tab switch feels instant.
+      // In non-tab mode, only defer for large datasets (>300 tasks).
+      const shouldDefer = isTabMode || (tasks?.length || 0) > 300;
       if (shouldDefer) {
         processingTimerRef.current = setTimeout(run, 0);
       } else {
@@ -298,6 +492,7 @@ const Task = () => {
   };
 
   useEffect(() => {
+    if (!shouldRun) return;
     const fetchArchive = async () => {
       if (activeButton !== 'archive') return;
       setArchiveLoading(true);
@@ -316,6 +511,7 @@ const Task = () => {
   }, [activeButton, parsedDataObj, priorityData, taskDepartment, taskCategory, taskAssigneeData, taskProject]);
 
   useEffect(() => {
+    if (isTabMode) return;
     if (tasks) {
       setFilters({
         category: ['Today'],
@@ -714,7 +910,7 @@ const Task = () => {
     setActiveButton('table');
     setCompletedFilterLoading(true);
     setCompletedFlag((prev) => !prev);
-    setOpenChildTask(Date.now());
+    if (!isTabMode) setOpenChildTask(Date.now());
     // Hide loader after a short delay to allow API call to complete
     setTimeout(() => {
       setCompletedFilterLoading(false);
@@ -724,7 +920,7 @@ const Task = () => {
   const handleArchivedTaskFilter = () => {
     setActiveButton('table');
     setArchivedTasks((prev) => !prev);
-    setOpenChildTask(Date.now());
+    if (!isTabMode) setOpenChildTask(Date.now());
   };
 
   const handleToggleFavoritesOnly = () => {
@@ -1163,6 +1359,25 @@ const Task = () => {
             onToggleFavoritesOnly={handleToggleFavoritesOnly}
             showMilestonesOnly={showMilestonesOnly}
             onToggleMilestonesOnly={handleToggleMilestonesOnly}
+            filters={isTabMode ? filters : undefined}
+            queryData={isTabMode ? queryDataOverride : undefined}
+            completedFlag={isTabMode ? completedFlag : undefined}
+            archivedFlag={isTabMode ? archivedFlag : undefined}
+            viewMode={isTabMode ? meTeamView : undefined}
+            onViewModeChange={isTabMode ? setMeTeamView : undefined}
+            formDrawerOpen={isTabMode ? formDrawerOpen : undefined}
+            onToggleFormDrawer={isTabMode ? toggleFormDrawer : undefined}
+            onNewTask={isTabMode ? handleNewTaskInTab : undefined}
+            formDataOverride={tabDrawerFormData}
+            rootSubrootOverride={tabDrawerRootSubroot}
+            isActive={isActive}
+            onRefresh={() => {
+              setSubmitRefreshKey((k) => k + 1);
+              if (isTabMode && refetchTaskData) {
+                refetchTaskData();
+              }
+            }}
+            onAfterSubmit={isTabMode ? handleAfterSubmit : undefined}
           />
 
           {/* Divider */}
@@ -1186,6 +1401,8 @@ const Task = () => {
                   {/* Filters Component */}
                   <Filters
                     {...filters}
+                    filters={filters}
+                    setFilters={setFilters}
                     onFilterChange={handleFilterChange}
                     isLoading={iswhMLoading}
                     masterData={masterData}
@@ -1308,6 +1525,7 @@ const Task = () => {
                       handleDeadlineDateChange={handleDeadlineDateChange}
                       handlePageSizeChnage={handlePageSizeChnage}
                       handlePrintCount={handlePrintCount}
+                      onOpenDrawer={isTabMode ? handleOpenTabDrawer : undefined}
                     />
                   )}
 
@@ -1326,6 +1544,7 @@ const Task = () => {
                       statusData={statusData}
                       handleTaskFavorite={handleTaskFavorite}
                       handleFreezeTask={handleFreezeTask}
+                      onOpenDrawer={isTabMode ? handleOpenTabDrawer : undefined}
                     />
                   )}
 
@@ -1335,6 +1554,7 @@ const Task = () => {
                       masterData={masterData}
                       handleTaskFavorite={handleTaskFavorite}
                       handleFreezeTask={handleFreezeTask}
+                      onOpenDrawer={isTabMode ? handleOpenTabDrawer : undefined}
                     />
                   )}
                   {activeButton === "Dynamic-Filter" && (
@@ -1377,4 +1597,11 @@ const Task = () => {
   );
 };
 
-export default Task;
+export default React.memo(Task, (prev, next) => {
+  // Only re-render if tab identity, active state, or query data actually changed
+  return (
+    prev.tabId === next.tabId &&
+    prev.isActive === next.isActive &&
+    JSON.stringify(prev.queryDataOverride) === JSON.stringify(next.queryDataOverride)
+  );
+});

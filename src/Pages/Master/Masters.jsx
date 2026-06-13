@@ -54,7 +54,7 @@ const MasterToggle = () => {
 
     const fetchAdvMasterData = async (forceRefresh = false) => {
         if (!forceRefresh) {
-            const cached = sessionStorage.getItem('structuredAdvMasterData');
+            const cached = localStorage.getItem('structuredAdvMasterData');
             if (cached) {
                 setStructuredAdvMasterData(JSON.parse(cached));
                 return;
@@ -63,6 +63,7 @@ const MasterToggle = () => {
         const response = await AdvancedMasterApiFunc();
         const safeData = Array.isArray(response) ? response : [];
         setStructuredAdvMasterData(safeData);
+        localStorage.setItem('structuredAdvMasterData', JSON.stringify(safeData));
         sessionStorage.setItem('structuredAdvMasterData', JSON.stringify(safeData));
     };
 

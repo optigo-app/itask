@@ -27,7 +27,7 @@ function KanbanView({
   const [cnfDialogOpen, setCnfDialogOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [hoveredTaskId, setHoveredTaskId] = useState(null);
-  const taskStatusData = JSON?.parse(sessionStorage.getItem("taskStatusData")) || [];
+  const taskStatusData = JSON?.parse(localStorage.getItem("taskStatusData")) || [];
 
   const handleToggleShowAll = () => {
     setShowAll(prevState => !prevState);

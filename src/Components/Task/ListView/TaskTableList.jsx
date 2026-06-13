@@ -54,6 +54,9 @@ import { toast } from "react-toastify";
 import { taskRestoreApi } from "../../../Api/TaskApi/TaskRestoreApi";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { taskArchiveApi } from "../../../Api/TaskApi/TaskArchiveApi";
+import { useTabStore } from "../../../Store/useTabStore";
+import { fetchTaskDataFullApi } from "../../../Api/TaskApi/TaskDataFullApi";
+import { setTaskQueryData } from "../../../Utils/QueryClient/queryClient";
 
 const collectDescendantIds = (task) => {
     const ids = [];
@@ -156,15 +159,49 @@ const TableView = ({
     handleDeadlineDateChange,
     handlePageSizeChnage,
     handlePrintCount,
-    isLoading }) => {
+    isLoading,
+    onOpenDrawer }) => {
     const { hasAccess } = useAccess();
     const navigate = useSafeRedirect();
     const [anchorPrintEl, setAnchorPrintEl] = useState(null);
 
-    // Handle project navigation
-    const handleProjectClick = (task) => {
-        if (task?.projectid) {
-            navigate('/projects');
+    // Handle project/module navigation via internal tab store
+    const handleOpenModuleTab = (task) => {
+        if (!task?.moduleid && !task?.taskid) return;
+        const moduleId = task?.moduleid || task?.taskid;
+        const moduleName = task?.moduleName || task?.taskname;
+        const queryData = {
+            module: moduleName,
+            project: task?.taskPr,
+            taskid: moduleId,
+            projectid: task?.projectid,
+            moduleid: moduleId,
+            maingroupids: task?.maingroupids,
+            isLimited: 0,
+            isreadonly: 0,
+            breadcrumbTitles: task?.breadcrumbTitles,
+        };
+
+        // Prefetch task data in background so the tab opens instantly
+        // Fire-and-forget: navigation happens immediately, cache seeds asynchronously
+        const hasTaskId = moduleId !== undefined && moduleId !== '' && moduleId !== '0' && moduleId !== 0;
+        if (hasTaskId) {
+            fetchTaskDataFullApi({ ...queryData, isarchive: 0, iscompleted: 0 })
+                .then((rawData) => {
+                    if (rawData?.rd?.[0]?.stat != 0) {
+                        setTaskQueryData(queryData, false, false, rawData);
+                    }
+                })
+                .catch(() => {});
+        }
+
+        const tabId = useTabStore.getState().openTaskTab({
+            title: moduleName || task?.taskPr || "Tasks",
+            route: "/tasks",
+            queryData,
+        });
+        if (tabId) {
+            navigate('/tasks');
         }
     };
 
@@ -284,9 +321,13 @@ const TableView = ({
             maingroupids: task?.maingroupids,
             breadcrumbTitles: task?.breadcrumbTitles
         }
-        setRootSubroot(additionalInfo);
-        setFormDataValue(data);
-        setFormDrawerOpen(true);
+        if (onOpenDrawer) {
+            onOpenDrawer(data, additionalInfo);
+        } else {
+            setRootSubroot(additionalInfo);
+            setFormDataValue(data);
+            setFormDrawerOpen(true);
+        }
         setSelectedTask(task);
     };
 
@@ -300,17 +341,25 @@ const TableView = ({
             maingroupids: subtask?.maingroupids,
             breadcrumbTitles: subtask?.breadcrumbTitles
         }
-        setRootSubroot(additionalInfo);
-        setFormDataValue(data);
-        setFormDrawerOpen(true);
+        if (onOpenDrawer) {
+            onOpenDrawer(data, additionalInfo);
+        } else {
+            setRootSubroot(additionalInfo);
+            setFormDataValue(data);
+            setFormDrawerOpen(true);
+        }
         setSelectedTask(subtask);
     };
 
     const handleEditTask = async (task, additionalInfo) => {
-        setRootSubroot(additionalInfo);
-        setActionMode("edit");
-        setFormDataValue(task);
-        setFormDrawerOpen(true);
+        if (onOpenDrawer) {
+            onOpenDrawer(task, additionalInfo);
+        } else {
+            setRootSubroot(additionalInfo);
+            setActionMode("edit");
+            setFormDataValue(task);
+            setFormDrawerOpen(true);
+        }
         setSelectedTask(task);
     };
 
@@ -910,8 +959,11 @@ const TableView = ({
                                         />
                                     </IconButton>
                                 </Tooltip>
-                                <span
-                                    style={{
+                                <Box
+                                    component="span"
+                                    title={task?.parentid == 0 ? "Open module" : `${task?.taskno ? task.taskno + ' - ' : ''}${task?.taskname}`}
+                                    onClick={task?.parentid == 0 ? () => handleOpenModuleTab(task) : undefined}
+                                    sx={{
                                         display: '-webkit-box',
                                         WebkitLineClamp: 2,
                                         WebkitBoxOrient: 'vertical',
@@ -922,6 +974,11 @@ const TableView = ({
                                         fontSize: '14px',
                                         textDecoration: isCompleted ? 'line-through' : 'none',
                                         opacity: isCompleted ? 0.75 : 1,
+                                        cursor: task?.parentid == 0 ? 'pointer' : 'default',
+                                        '&:hover': task?.parentid == 0 ? {
+                                            color: '#7367f0',
+                                            textDecoration: isCompleted ? 'line-through underline' : 'underline',
+                                        } : {},
                                     }}
                                     className={`tasknameCl ${task?.isCopyActive ? 'cut-task-name' : ''}`}
                                 >
@@ -931,7 +988,7 @@ const TableView = ({
                                         </span>
                                     )}
                                     {task?.taskname}
-                                </span>
+                                </Box>
                                 {task?.ismilestone == 1 && (
                                     <Tooltip title="Milestone" arrow placement="top">
                                         <span
@@ -1249,10 +1306,10 @@ const TableView = ({
                     </TableCell>
                     <TableCell
                         className="taskPriorityCell"
-                        title={subtask?.taskPr}
-                        onClick={() => handleProjectClick(subtask)}
+                        title="Open module"
+                        onClick={() => handleOpenModuleTab(subtask)}
                         sx={{
-                            cursor: subtask?.projectid ? 'pointer' : 'default',
+                            cursor: subtask?.taskid ? 'pointer' : 'default',
                             color: subtask?.projectid ? '#1976d2' : 'inherit',
                             '&:hover': {
                                 color: '#7367f0 !important'
@@ -1488,10 +1545,10 @@ const TableView = ({
                                                     </TableCell>
                                                     <TableCell
                                                         className="taskPriorityCell"
-                                                        title={task?.taskPr}
-                                                        onClick={() => handleProjectClick(task)}
+                                                        title="Open module"
+                                                        onClick={() => handleOpenModuleTab(task)}
                                                         sx={{
-                                                            cursor: task?.projectid ? 'pointer' : 'default',
+                                                            cursor: task?.taskid ? 'pointer' : 'default',
                                                             color: task?.projectid ? '#1976d2' : 'inherit',
                                                             '&:hover': {
                                                                 color: '#7367f0 !important'
@@ -1611,6 +1668,7 @@ const TableView = ({
                 onClose={handleTaskModalClose}
                 taskData={selectedItem}
                 handleTaskFavorite={handleTaskFavorite}
+                onOpenDrawer={onOpenDrawer}
             />
             <AssigneeShortcutModal
                 taskData={selectedItem}
