@@ -1,6 +1,7 @@
 import axios from "axios";
 import { APIURL, getHeaders } from "./config";
 import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
+import { getAbortSignal } from "../../Utils/requestAbortController";
 
 export const taskInit = async () => {
   const headers = getHeaders();
@@ -14,7 +15,7 @@ export const taskInit = async () => {
   };
 
   try {
-    const { data } = await axios.post(APIURL, body, { headers });
+    const { data } = await axios.post(APIURL, body, { headers, signal: getAbortSignal() });
 
     if (data?.Data?.rd?.[0]) {
       sessionStorage.setItem("taskInit", JSON.stringify(data.Data.rd[0]));
@@ -25,6 +26,9 @@ export const taskInit = async () => {
 
     return data;
   } catch (error) {
+    if (axios.isCancel?.(error) || error.name === 'AbortError') {
+      return null;
+    }
     console.error("Error in taskInit:", error.message || error);
     return null;
   }

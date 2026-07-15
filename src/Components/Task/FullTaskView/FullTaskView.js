@@ -41,6 +41,8 @@ import TaskDetail from '../TaskDetails/TaskDetails';
 import SidebarDrawer from '../../FormComponent/Sidedrawer';
 import { toast } from 'react-toastify';
 import { AddTaskDataApi } from '../../../Api/TaskApi/AddTaskApi';
+import { clearAllTabDataCache } from '../../../Utils/IndexedDB/taskDataCache';
+import { invalidateTaskCache } from '../../../Utils/QueryClient/queryClient';
 import FullTaskViewFilters from './FullTaskViewFilters';
 import FilterChips from '../FilterComponent/FilterChip';
 import { useTabStore } from '../../../Store/useTabStore';
@@ -402,6 +404,9 @@ const FullTaskView = () => {
         if (addTaskApi && addTaskApi?.rd[0]?.stat == 1) {
             toast.success(formValues?.taskid ? 'Task Updated Successfully...' : 'Task Added Successfully...');
             fetchData();
+            // Clear IndexedDB + React Query caches so next load gets fresh data
+            clearAllTabDataCache().catch(() => {});
+            invalidateTaskCache();
         } else {
             toast.error("Something went wrong...");
         }

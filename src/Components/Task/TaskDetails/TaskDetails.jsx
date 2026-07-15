@@ -19,10 +19,12 @@ import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
-import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments, getUserProfileData, getAuthData, processCommentData, getAssigneeMaster } from '../../../Utils/globalfun';
+import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments, getUserProfileData, getAuthData, processCommentData, getAssigneeMaster, removeTaskRecursively } from '../../../Utils/globalfun';
 import useAccess from '../../Auth/Role/useAccess';
 import { PERMISSIONS } from '../../Auth/Role/permissions';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
+import { clearAllTabDataCache } from '../../../Utils/IndexedDB/taskDataCache';
+import { invalidateTaskCache } from '../../../Utils/QueryClient/queryClient';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../../Utils/ConfirmationDialog/ConfirmationDialog';
 import CommentSection from '../../ShortcutsComponent/Comment/TaskComment';
@@ -33,7 +35,7 @@ import AttachmentSidebar from './AttachmentSidebar';
 import Breadcrumb from '../../BreadCrumbs/Breadcrumb';
 import { useLocation } from 'react-router-dom';
 
-const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite, onOpenDrawer }) => {
+const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite, onOpenDrawer, onDeleteTask }) => {
     const location = useLocation();
     const theme = useTheme();
     const { hasAccess } = useAccess();
@@ -97,40 +99,39 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite, onOpenDrawer 
         setCnfDialogOpen(true);
     };
 
-    // remove Task
-    const removeTaskRecursively = (tasks, taskIdToRemove) => {
-        return tasks
-            .map(task => {
-                if (task.subtasks) {
-                    return {
-                        ...task,
-                        subtasks: removeTaskRecursively(task.subtasks, taskIdToRemove)
-                    };
-                }
-                return task;
-            })
-            .filter(task => task.taskid !== taskIdToRemove);
-    };
-
     const handleConfirmRemoveAll = async () => {
         setCnfDialogOpen(false);
         setIsDeleting(true);
         try {
-            const deleteTaskApi = await deleteTaskDataApi(formDataValue);
-            if (deleteTaskApi?.rd[0]?.stat === 1) {
-                const updatedTaskArr = removeTaskRecursively(taskArr, formDataValue.taskid);
-                setTaskArr(updatedTaskArr);
-
-                setOpenChildTask(Date.now());
+            const taskId = formDataValue?.taskid;
+            // If the parent provided a delete handler, let it update the UI and caches instantly.
+            if (onDeleteTask) {
+                await onDeleteTask(taskId);
                 setFormDrawerOpen(false);
                 setFormDataValue(null);
                 onClose();
-                toast.success("Task deleted successfully!");
             } else {
-                console.error("Failed to delete task");
+                // Fallback: update the global task array directly (legacy non-parented usage)
+                const deleteTaskApi = await deleteTaskDataApi(formDataValue);
+                if (deleteTaskApi?.rd[0]?.stat === 1) {
+                    const updatedTaskArr = removeTaskRecursively(taskArr, taskId);
+                    setTaskArr(updatedTaskArr);
+                    setOpenChildTask(Date.now());
+                    clearAllTabDataCache().catch(() => {});
+                    invalidateTaskCache();
+                    setFormDrawerOpen(false);
+                    setFormDataValue(null);
+                    onClose();
+                    toast.success("Task deleted successfully!");
+                } else {
+                    throw new Error("Failed to delete task");
+                }
             }
         } catch (error) {
             console.error("Error while deleting task:", error);
+            if (!onDeleteTask) {
+                toast.error("Failed to delete task.");
+            }
         } finally {
             setIsDeleting(false);
         }

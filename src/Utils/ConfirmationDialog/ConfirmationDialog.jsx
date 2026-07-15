@@ -24,12 +24,12 @@ const ConfirmationDialog = ({ open, onClose, confirmLabel, cancelLabel, onConfir
       </DialogContent>
       <Divider />
       <DialogActions>
-        <Button className='for_DialogBtn' onClick={onConfirm} autoFocus fullWidth>
-          {confirmLabel ?? "Remove"}
-        </Button>
-        <Divider orientation="vertical" flexItem />
         <Button className='for_DialogBtn' onClick={onClose} autoFocus fullWidth>
           {cancelLabel ?? "Cancel"}
+        </Button>
+        <Divider orientation="vertical" flexItem />
+        <Button className='for_DialogBtn' onClick={onConfirm} autoFocus fullWidth>
+          {confirmLabel ?? "Remove"}
         </Button>
       </DialogActions>
     </Dialog>

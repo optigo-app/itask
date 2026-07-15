@@ -33,6 +33,8 @@ import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import { AddTaskDataApi } from '../../Api/TaskApi/AddTaskApi';
 import { toast } from 'react-toastify';
 import { deleteTaskDataApi } from '../../Api/TaskApi/DeleteTaskApi';
+import { clearAllTabDataCache } from '../../Utils/IndexedDB/taskDataCache';
+import { invalidateTaskCache } from '../../Utils/QueryClient/queryClient';
 import CalendarFilter from './CalendarFilter';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { actualTaskData, fetchlistApiCall } from '../../Recoil/atom';
@@ -472,6 +474,9 @@ const CalendarGridView = () => {
       handleCloseSplitModal();
       // Trigger UI refresh
       setOpenChildTask(Date.now());
+      // Clear IndexedDB + React Query caches so next load gets fresh data
+      clearAllTabDataCache().catch(() => {});
+      invalidateTaskCache();
     } catch (error) {
       console.error('Error while splitting tasks:', error);
       toast.error('An error occurred while processing split tasks.');
@@ -526,6 +531,8 @@ const CalendarGridView = () => {
         if (apiRes) {
           toast.success('Task working hrs added successfully!');
           handleTotalHourCalculate(tasks);
+          clearAllTabDataCache().catch(() => {});
+          invalidateTaskCache();
         }
         const currentInput = estimateTextFieldRefs.current[taskId];
         if (currentInput) currentInput.blur();

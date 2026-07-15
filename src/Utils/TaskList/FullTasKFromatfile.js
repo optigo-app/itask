@@ -182,7 +182,24 @@ const useFullTaskFormatFile = (externalFilters = {}, options = {}) => {
       };
     };
     const data = labeledTasks?.map((task) => enhanceTask(task));
-    const finalTaskData = formatDataToTree(data, parsedDataRef.current, 'Today');
+    let finalTaskData;
+    try {
+      finalTaskData = formatDataToTree(data, parsedDataRef.current, 'Today');
+    } catch (err) {
+      console.error('[processRawTaskData] Tree formatting crashed:', err);
+      toast.error('Failed to build task tree. See console for details.');
+      finalTaskData = {
+        TaskData: [],
+        ProjectMilestoneData: {},
+        ProjectCategoryTasks: {},
+        ModuleList: [],
+        ModuleCategoryTasks: {},
+        ModuleMilestoneData: {},
+        ModuleProgress: {},
+      };
+    } finally {
+      setIsWhTLoading(false);
+    }
 
     // Store in cache so tab switches back to this tab are instant
     cachedRawRef.current = taskData;
@@ -234,7 +251,8 @@ const useFullTaskFormatFile = (externalFilters = {}, options = {}) => {
       }
       processRawTaskData(taskData);
     } catch (error) {
-      console.error(error);
+      console.error('[fetchTaskData] API or processing failed:', error);
+      setIsWhTLoading(false);
     }
   };
 
@@ -257,6 +275,7 @@ const useFullTaskFormatFile = (externalFilters = {}, options = {}) => {
   // Chunk 2: Task Map Processing
   const buildTaskMap = (data) => {
     const taskMap = new Map();
+    const orphanTasks = [];
 
     data?.forEach((task) => {
       task.subtasks = [];
@@ -272,9 +291,17 @@ const useFullTaskFormatFile = (externalFilters = {}, options = {}) => {
       const parentIdNum = Number(task.parentid);
       if (!Number.isNaN(parentIdNum) && parentIdNum !== 0) {
         const parent = taskMap.get(parentIdNum) || taskMap.get(String(task.parentid));
-        if (parent) parent.subtasks.push(task);
+        if (parent) {
+          parent.subtasks.push(task);
+        } else {
+          orphanTasks.push({ taskid: task.taskid, taskname: task.taskname, parentid: task.parentid });
+        }
       }
     });
+
+    if (orphanTasks.length > 0) {
+      console.warn('[buildTaskMap] Orphan tasks (parent not in dataset):', orphanTasks);
+    }
 
     return { taskMap };
   };
@@ -478,7 +505,7 @@ const useFullTaskFormatFile = (externalFilters = {}, options = {}) => {
     return (data, parsedData, dateFilter = 'All', customRange = {}) => {
       // Early return for empty data
       if (!data || data.length === 0) {
-        setTimeout(() => setIsWhTLoading(false), 50);
+        setIsWhTLoading(false);
         return {
           TaskData: [],
           ProjectMilestoneData: {},
@@ -499,6 +526,26 @@ const useFullTaskFormatFile = (externalFilters = {}, options = {}) => {
 
       // Determine TaskData based on parsedData
       let TaskData;
+      // If a specific taskid was requested but isn't in the data, the tree cannot be built
+      const requestedTaskId = parsedData?.taskid;
+      const requestedTask = requestedTaskId
+        ? taskMap.get(Number(requestedTaskId)) || taskMap.get(String(requestedTaskId))
+        : null;
+      if (requestedTaskId && !requestedTask) {
+        console.error(`[formatDataToTree] Cannot build tree: requested taskid "${requestedTaskId}" not found in API response.`);
+        toast.error(`Task data unavailable: module not found (taskid ${requestedTaskId}).`);
+        setIsWhTLoading(false);
+        return {
+          TaskData: [],
+          ProjectMilestoneData: {},
+          ProjectCategoryTasks: {},
+          ModuleList: [],
+          ModuleCategoryTasks: {},
+          ModuleMilestoneData: {},
+          ModuleProgress: {},
+        };
+      }
+
       if (parsedData?.fromFullTaskView && parsedData?.taskid) {
         const rootTaskId = Number(parsedData?.roottaskid || parsedData?.moduleid);
         const rootFromUrl = rootTaskId
@@ -550,8 +597,8 @@ const useFullTaskFormatFile = (externalFilters = {}, options = {}) => {
         ModuleProgress
       } = processModuleData(TaskData, categoryMap, taskCategory);
 
-      // Set loading state
-      setTimeout(() => setIsWhTLoading(false), 50);
+      // Clear loading state synchronously so UI updates immediately
+      setIsWhTLoading(false);
 
       return {
         TaskData,

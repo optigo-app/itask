@@ -36,6 +36,11 @@
     padding: 6px 0 !important;
     border-radius: 8px !important;
     justify-content: center !important;
+    transition: all 0.25s ease;
+
+    &:hover:not(.itask_drawerItemActive):not(.itask_drawerItemActive1) {
+        background-color: rgba(115, 103, 240, 0.06);
+    }
 }
 
 .itask_drawerItemActive {
@@ -59,6 +64,7 @@
 
 .itask_drawerItemText {
     margin-bottom: 0px;
+    margin-top: 0px;
     span{
         color:$titleColor !important
     }
@@ -127,14 +133,38 @@
 
 .iconActive {
     color: #fff !important;
+    transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .iconActive1 {
     color: $secondaryColor !important;
+    transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .iconUnactive {
     color: $secondaryColor !important;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.itask_drawerListItem:hover .itask_drawerItemIcon svg {
+    transform: scale(1.12);
+}
+
+.itask_drawerItemActive .itask_drawerItemIcon svg,
+.itask_drawerItemActive1 .itask_drawerItemIcon svg {
+    transform: scale(1);
+}
+
+.itask_drawerMiniLabel {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.2s ease, max-height 0.2s ease;
+}
+
+.MuiListItem-root:hover .itask_drawerMiniLabel {
+    opacity: 1;
+    max-height: 20px;
 }
 
 .itask_collapsable {

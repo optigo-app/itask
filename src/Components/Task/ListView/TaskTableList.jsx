@@ -22,7 +22,7 @@ import {
 import { Archive, ArchiveRestore, Bug, CirclePlus, CloudUpload, Eye, Flag, MessageCircleMore, Pencil, PrinterCheck, Star, Undo2 } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
-import { assigneeId, fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
+import { assigneeId, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { getArchiveChipStyles, getArchiveInfoFromEndDate, getRandomAvatarColor, getStatusColor, priorityColors, statusColors, formatDaysDisplay, getAuthData, getUserProfileData, handleBugTrackRedirect } from "../../../Utils/globalfun";
@@ -160,7 +160,9 @@ const TableView = ({
     handlePageSizeChnage,
     handlePrintCount,
     isLoading,
-    onOpenDrawer }) => {
+    onOpenDrawer,
+    onDeleteTask,
+    onRefresh }) => {
     const { hasAccess } = useAccess();
     const navigate = useSafeRedirect();
     const [anchorPrintEl, setAnchorPrintEl] = useState(null);
@@ -217,7 +219,6 @@ const TableView = ({
     const [hoveredTaskId, setHoveredTaskId] = useState(null);
     const [hoveredColumnname, setHoveredColumnName] = useState('');
     const [hoveredSubtaskId, setHoveredSubtaskId] = useState(null);
-    const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const setAssigneeId = useSetRecoilState(assigneeId);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -502,7 +503,7 @@ const TableView = ({
                 ? prev.filter((a) => String(a?.id) !== String(removedAssigneeId))
                 : prev
         );
-        setOpenChildTask(Date.now());
+        if (onRefresh) onRefresh();
     };
 
     const handleAssigneSubmit = (updatedRowData) => {
@@ -1413,8 +1414,6 @@ const TableView = ({
                                         className={column.id === 'actions' ? 'sticky-action-column' : ''}
                                         style={{
                                             width: `${column.width}px`,
-                                            minWidth: `${column.width}px`,
-                                            maxWidth: `${column.width}px`,
                                             overflow: "hidden",
                                         }}
                                     >
@@ -1669,6 +1668,7 @@ const TableView = ({
                 taskData={selectedItem}
                 handleTaskFavorite={handleTaskFavorite}
                 onOpenDrawer={onOpenDrawer}
+                onDeleteTask={onDeleteTask}
             />
             <AssigneeShortcutModal
                 taskData={selectedItem}
@@ -1779,7 +1779,7 @@ const TableView = ({
                         const res = await taskRestoreApi(task);
                         if (res) {
                             toast.success('Task restored');
-                            setOpenChildTask(Date.now());
+                            if (onRefresh) onRefresh();
                         } else {
                             toast.error('Restore failed');
                         }
@@ -1824,7 +1824,7 @@ const TableView = ({
                         const res = await taskArchiveApi(task);
                         if (res) {
                             toast.success('Task archived');
-                            setOpenChildTask(Date.now());
+                            if (onRefresh) onRefresh();
                         } else {
                             toast.error('Archive failed');
                         }

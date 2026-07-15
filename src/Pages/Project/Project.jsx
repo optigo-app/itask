@@ -5,12 +5,14 @@ import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, useMediaQuery } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
+  actualTaskData,
   Advfilters,
   fetchlistApiCall,
   filterDrawer,
   masterDataValue,
   projectDatasRState,
   selectedCategoryAtom,
+  TaskData,
 } from "../../Recoil/atom";
 import {
   fetchMasterGlFunc,
@@ -20,11 +22,14 @@ import {
   isTaskToday,
   mapKeyValuePair,
   mapTaskLabels,
+  removeTaskRecursively,
 } from "../../Utils/globalfun";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
 import { deleteTaskDataApi } from "../../Api/TaskApi/DeleteTaskApi";
+import { clearAllTabDataCache } from "../../Utils/IndexedDB/taskDataCache";
+import { invalidateTaskCache, queryClient, taskQueryKeys } from "../../Utils/QueryClient/queryClient";
 import { fetchTaskDataFullApi } from "../../Api/TaskApi/TaskDataFullApi";
 import { toast } from "react-toastify";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
@@ -59,6 +64,8 @@ const Project = () => {
   const callFetchTaskApi = useRecoilValue(fetchlistApiCall);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
+  const [taskData, setTaskData] = useRecoilState(TaskData);
+  const setActualTaskData = useSetRecoilState(actualTaskData);
   const [CategoryTSummary, setCategoryTSummary] = useState([]);
   const searchParams = new URLSearchParams(location.search);
 
@@ -484,17 +491,41 @@ const Project = () => {
     const taskToDelete = filteredData?.find((task) => task.taskid === id);
     if (!taskToDelete) return;
 
+    // Optimistically remove from the project UI immediately
+    setProject((prevData) => prevData.filter((task) => task.taskid !== id));
+
+    // Keep global task atoms in sync so other views (task list, calendar, reports) update instantly
+    setTaskData((prevData) => removeTaskRecursively(prevData, id));
+    setActualTaskData((prevData) => removeTaskRecursively(prevData, id));
+
+    // Remove the task from all TanStack Query task-list caches so tab switches don't restore it
+    queryClient.setQueriesData(
+      { queryKey: taskQueryKeys.all, predicate: (query) => query.queryKey[1] === 'list' },
+      (oldData) => {
+        if (!oldData || !Array.isArray(oldData?.rd1)) return oldData;
+        return {
+          ...oldData,
+          rd1: removeTaskRecursively(oldData.rd1, id),
+        };
+      }
+    );
+
     try {
       const response = await deleteTaskDataApi({ taskid: id });
       if (response?.rd[0]?.stat == 1) {
-        setProject((prevData) => prevData.filter((task) => task.taskid !== id));
         toast.success("Project Module deleted successfully");
 
         // Trigger UI refresh
         setOpenChildTask(Date.now());
+        // Clear IndexedDB + React Query caches so next load gets fresh data
+        clearAllTabDataCache().catch(() => {});
+        invalidateTaskCache();
+      } else {
+        throw new Error("Failed to delete project module");
       }
     } catch (error) {
       console.error("Error deleting task:", error);
+      toast.error("Failed to delete project module.");
     }
   };
 

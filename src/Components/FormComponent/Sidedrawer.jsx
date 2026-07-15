@@ -33,6 +33,8 @@ import Breadcrumb from "../BreadCrumbs/Breadcrumb";
 import CustomDateTimePicker from "../../Utils/DateComponent/CustomDateTimePicker";
 import TemplateDialog from "../Common/TemplateDialog"; // Import TemplateDialog component
 import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
+import { clearAllTabDataCache } from "../../Utils/IndexedDB/taskDataCache";
+import { invalidateTaskCache } from "../../Utils/QueryClient/queryClient";
 import { getAdvancedtaseditApi } from "../../Api/MasterApi/AssigneeMaster";
 
 const addTaskToParent = (tasks, parentId, newTask) => {
@@ -677,6 +679,9 @@ const SidebarDrawer = ({
                 } else {
                     setOpenChildTask(Date.now());
                 }
+                // Clear IndexedDB + React Query caches so next load gets fresh data
+                clearAllTabDataCache().catch(() => {});
+                invalidateTaskCache();
                 handleClear();
             } else {
                 console.error("Sidedrawer: Task submit failed", submitResult);

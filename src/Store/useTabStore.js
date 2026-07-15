@@ -62,11 +62,14 @@ export const useTabStore = create(
         const tabs = get().tabs;
         const maxTabs = get().maxTabs;
 
-        // check if same queryData already open
+        // check if same module/task already open (compare core IDs only,
+        // not runtime flags like isLimited/isreadonly which vary by source)
         const existing = tabs.find(
           (t) =>
             t.route === route &&
-            JSON.stringify(t.queryData) === JSON.stringify(queryData)
+            t.queryData?.taskid === queryData?.taskid &&
+            t.queryData?.moduleid === queryData?.moduleid &&
+            t.queryData?.projectid === queryData?.projectid
         );
 
         if (existing) {

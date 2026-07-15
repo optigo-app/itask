@@ -1,6 +1,5 @@
 import { Box, Typography, Avatar, Tooltip } from "@mui/material";
 import { getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 
 /* ----------------------------- Helper Utils ----------------------------- */
 const normalizeBoolean = (value) =>
@@ -95,7 +94,6 @@ const DailyReportAttendanceList = ({
                             {/* Remarks Section */}
                             {!!remark.trim() && (
                                 <Box sx={styles.remarkContainer}>
-                                    <ChatBubbleOutlineIcon sx={styles.remarkIcon} />
                                     <Typography sx={styles.remark}>
                                         {remark}
                                     </Typography>
@@ -222,16 +220,11 @@ const styles = {
         borderRadius: '6px',
     },
 
-    remarkIcon: {
-        fontSize: 14,
-        color: '#5f6368',
-        mt: '2px'
-    },
-
     remark: {
         fontSize: 13,
         color: "#444",
         lineHeight: 1.4,
         wordBreak: 'break-word',
+        whiteSpace: 'pre-wrap',
     },
 };

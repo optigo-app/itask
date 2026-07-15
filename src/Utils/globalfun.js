@@ -4,6 +4,8 @@ import { AssigneeMaster } from "../Api/MasterApi/AssigneeMaster";
 import { fetchMaster } from "../Api/MasterApi/MasterApi";
 import { fetchIndidualApiMaster } from "../Api/MasterApi/masterIndividualyApi"
 import { AddTaskDataApi } from "../Api/TaskApi/AddTaskApi";
+import { clearAllTabDataCache } from "../Utils/IndexedDB/taskDataCache";
+import { invalidateTaskCache } from "../Utils/QueryClient/queryClient";
 import { Avatar, AvatarGroup, Box, Chip, createTheme, Tooltip } from "@mui/material";
 import imageCompression from 'browser-image-compression';
 
@@ -26,12 +28,12 @@ export const handleBugTrackRedirect = (taskParams = null) => {
             uid: authParams?.uid,
             yc: authParams?.yc
         }));
-        
+
         let url = window.location.hostname?.includes('localhost')
-            ? `http://localhost:5004/auto-login?data=${encodeURIComponent(encodedAuthData)}`
+            ? `http://localhost:5013/auto-login?data=${encodeURIComponent(encodedAuthData)}`
             : window.location.hostname?.includes('nzen') ? `http://bugtracker.web/auto-login?data=${encodeURIComponent(encodedAuthData)}`
                 : `http://tecoqa.optigoapps.com/auto-login?data=${encodeURIComponent(encodedAuthData)}`;
-        
+
         // Add task parameters if provided
         if (taskParams) {
             const encodedTaskData = encodeURIComponent(btoa(JSON.stringify(taskParams)));
@@ -1395,7 +1397,6 @@ export const isValidTaskNo = (taskNo) => {
     );
 };
 
-
 export const filterTasksByValidTaskNo = (tasks = []) => {
     if (!Array.isArray(tasks)) return [];
     return tasks
@@ -1514,13 +1515,14 @@ function mergeFilterData(maingroups, groups, attributes, bindings) {
     }));
 }
 
-
 // status change
 export const handleAddApicall = async (updatedTasks) => {
     let rootSubrootflagval = { "Task": "root" }
     const addTaskApi = await AddTaskDataApi(updatedTasks, rootSubrootflagval ?? {});
     if (addTaskApi?.rd[0]?.stat == 1) {
         toast.success(addTaskApi?.rd[0]?.stat_msg);
+        clearAllTabDataCache().catch(() => { });
+        invalidateTaskCache();
     }
 }
 
@@ -1642,7 +1644,7 @@ export const Datetheme = createTheme({
         secondary: {
             main: "#f50057",
         },
-        background: {   
+        background: {
             default: "#f5f5f5",
         },
     },
@@ -1925,6 +1927,24 @@ export async function compressImagesToWebP(files, customOptions = {}) {
     return results;
 }
 
+/**
+ * Recursively remove a task and its descendants from a nested task array.
+ * Returns a new array without the matching taskid and with subtasks cleaned.
+ */
+export const removeTaskRecursively = (tasks, taskIdToRemove) => {
+    if (!Array.isArray(tasks)) return tasks;
+    return tasks
+        .map((task) => {
+            if (task?.subtasks && Array.isArray(task.subtasks)) {
+                return {
+                    ...task,
+                    subtasks: removeTaskRecursively(task.subtasks, taskIdToRemove),
+                };
+            }
+            return task;
+        })
+        .filter((task) => task?.taskid !== taskIdToRemove);
+};
 
 
 
