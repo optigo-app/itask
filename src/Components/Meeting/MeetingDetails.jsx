@@ -19,6 +19,8 @@ import { taskDescAddApi } from '../../Api/TaskApi/TaskDescAddApi';
 import AttachmentImg from "../../Assests/Attachment.webp";
 import { getRandomAvatarColor, ImageUrl, processCommentData, getAssigneeMaster } from '../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../Api/TaskApi/DeleteTaskApi';
+import { clearAllTabDataCache } from '../../Utils/IndexedDB/taskDataCache';
+import { invalidateTaskCache } from '../../Utils/QueryClient/queryClient';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
 import CommentSection from '../ShortcutsComponent/Comment/TaskComment';
@@ -75,6 +77,9 @@ const MeetingDetail = ({ open, onClose, taskData, handleMeetingEdit }) => {
                 setFormDataValue(null);
                 onClose();
                 toast.success("Task deleted successfully!");
+                // Clear IndexedDB + React Query caches so next load gets fresh data
+                clearAllTabDataCache().catch(() => {});
+                invalidateTaskCache();
             } else {
                 console.error("Failed to delete task");
             }

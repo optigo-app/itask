@@ -123,6 +123,7 @@ const HeaderButtons = ({
   const [parsedData, setParsedData] = useState();
   const [categoryMaster, setCategoryMaster] = useState([]);
   const [searchInput, setSearchInput] = useState(filters?.searchTerm || "");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const resolvedQueryData = queryDataProp ?? parsedData;
   const isTaskView = location?.pathname?.includes("/tasks/") || !!queryDataProp;
@@ -335,13 +336,20 @@ const HeaderButtons = ({
           {onRefresh && (
             <Tooltip
               placement="top"
-              title="Refresh data"
+              title={isRefreshing ? "Refreshing..." : "Refresh data"}
               arrow
               classes={{ tooltip: "custom-tooltip" }}
             >
               <IconButton
                 aria-label="Refresh data"
-                onClick={onRefresh}
+                disabled={isRefreshing}
+                onClick={() => {
+                  setIsRefreshing(true);
+                  onRefresh();
+                  // Keep spinning for at least 800ms so user sees feedback
+                  // (onRefresh is sync state setter; actual loading is in parent)
+                  setTimeout(() => setIsRefreshing(false), 800);
+                }}
                 sx={{
                   display: "flex",
                   justifyContent: "center",
@@ -355,7 +363,11 @@ const HeaderButtons = ({
                   },
                 }}
               >
-                <RefreshCw className="iconbtn" color="#0000008a" size={20} />
+                <RefreshCw
+                  className={`iconbtn ${isRefreshing ? 'spin-icon' : ''}`}
+                  color="#0000008a"
+                  size={20}
+                />
               </IconButton>
             </Tooltip>
           )}

@@ -6,6 +6,8 @@ import { formatDate, formatDate2, getRandomAvatarColor, getStatusColor, mapKeyVa
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi"
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
+import { clearAllTabDataCache } from "../../../Utils/IndexedDB/taskDataCache";
+import { invalidateTaskCache } from "../../../Utils/QueryClient/queryClient";
 import { fetchTaskDataFullApi } from "../../../Api/TaskApi/TaskDataFullApi";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag } from "../../../Recoil/atom";
 import { useRecoilState, useSetRecoilState } from "recoil";
@@ -51,6 +53,9 @@ function KanbanView({
         setOpenChildTask(Date.now());
         setSelectedTask(null);
         toast.success("Task deleted successfully!");
+        // Clear IndexedDB + React Query caches so next load gets fresh data
+        clearAllTabDataCache().catch(() => {});
+        invalidateTaskCache();
       } else {
         console.error("Failed to delete task");
         toast.error("Something went wrong...");
@@ -162,6 +167,10 @@ function KanbanView({
         };
         let rootSubrootflagval = "root"
         const addTaskApi = await AddTaskDataApi(formValues ?? {}, updatedMovedTask ?? {}, rootSubrootflagval ?? {});
+        if (addTaskApi?.rd?.[0]?.stat == 1) {
+          clearAllTabDataCache().catch(() => {});
+          invalidateTaskCache();
+        }
       }
     }
   };

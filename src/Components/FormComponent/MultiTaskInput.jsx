@@ -108,8 +108,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
         setErrorMessage("");
         const updatedTasks = [...tasks];
         if (key == 'deadLineDate' && value) {
-            const istDate = dayjs(value).tz('Asia/Kolkata');
-            updatedTasks[index][key] = istDate.format('YYYY-MM-DDTHH:mm:ss.SSS');
+            updatedTasks[index][key] = dayjs(value).toISOString();
         } else {
             updatedTasks[index][key] = value;
         }
@@ -276,14 +275,14 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
 
     const handleDateChange = (date, key) => {
         if (date) {
-            const istDate = date.tz('Asia/Kolkata');
+            const isoDate = dayjs(date).toISOString();
             setAutoDeadline((prev) => ({
                 ...prev,
-                [key]: istDate.format('YYYY-MM-DDTHH:mm:ss.SSS'),
+                [key]: isoDate,
             }));
             const updatedTasks = tasks.map(task => ({
                 ...task,
-                deadLineDate: istDate.format('YYYY-MM-DDTHH:mm:ss.SSS') ?? '',
+                deadLineDate: isoDate ?? '',
             }));
             setTasks(updatedTasks);
             onSave(updatedTasks);
@@ -613,8 +612,7 @@ const MultiTaskInput = ({ onSave, dropdownConfigs, formValues, handleDropdownCha
                                                         className="textfieldsClass"
                                                         onChange={(date) => {
                                                             if (date) {
-                                                                const formattedDate = dayjs(date).tz("Asia/Kolkata").format("YYYY-MM-DDTHH:mm:ss.SSS");
-                                                                setDeadLineDate(formattedDate);
+                                                                setDeadLineDate(dayjs(date).toISOString());
                                                             } else {
                                                                 setDeadLineDate(null);
                                                             }

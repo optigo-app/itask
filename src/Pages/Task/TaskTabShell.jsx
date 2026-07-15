@@ -161,6 +161,7 @@ const TaskTabShell = React.memo(() => {
                 overflow: "auto",
                 display: isActive ? "block" : "none",
                 height: "100%",
+                overflowY: "hidden",
                 // Skip rendering/layout for hidden tabs (major perf win)
                 contentVisibility: isActive ? "auto" : "hidden",
                 contain: isActive ? "none" : "strict",

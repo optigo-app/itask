@@ -73,7 +73,7 @@ const Layout = ({ children, pageDataLoaded }) => {
                 flexGrow: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: isMobile ? '20px 5px' : '10px',
+                padding: isMobile ? '20px 5px' : '10px 15px',
                 position: 'relative',
                 width: isMobile ? '97%' : '80%',
                 overflow: "auto"

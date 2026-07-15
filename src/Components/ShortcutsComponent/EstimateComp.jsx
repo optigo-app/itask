@@ -22,8 +22,8 @@ const StatusCircles = ({ task }) => {
     };
 
     const displayText = estimate2 > 0
-        ? `${Number.isInteger(estimate1) ? estimate1 : estimate1.toFixed(1)}/${Number.isInteger(estimate2) ? estimate2 : estimate2.toFixed(1)} hrs`
-        : `${Number.isInteger(estimate1) ? estimate1 : estimate1.toFixed(1)} hrs`;
+        ? `${Number.isInteger(estimate1) ? estimate1 : estimate1}/${Number.isInteger(estimate2) ? estimate2 : estimate2} hrs`
+        : `${Number.isInteger(estimate1) ? estimate1 : estimate1} hrs`;
 
     const tooltipContent = (
         <Box sx={{ p: 1.5, minWidth: '180px', backgroundColor: '#fff' }}>

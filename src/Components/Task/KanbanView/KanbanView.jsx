@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Box, Card, CardContent, Typography, IconButton, Avatar, AvatarGroup, Button, Tooltip } from "@mui/material";
 import { Circle, CircleCheck, CircleDotDashed, CircleX, ExternalLink, Plus, StickyNote, Target, Volleyball, Workflow } from "lucide-react";
-import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, removeTaskRecursively } from "../../../Utils/globalfun";
 import useSafeRedirect from "../../../Utils/useSafeRedirect";
 import { useTabStore } from "../../../Store/useTabStore";
 import { fetchTaskDataFullApi } from "../../../Api/TaskApi/TaskDataFullApi";
@@ -10,6 +10,8 @@ import { setTaskQueryData } from "../../../Utils/QueryClient/queryClient";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi"
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
+import { clearAllTabDataCache } from "../../../Utils/IndexedDB/taskDataCache";
+import { invalidateTaskCache } from "../../../Utils/QueryClient/queryClient";
 import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag } from "../../../Recoil/atom";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
@@ -19,6 +21,7 @@ function KanbanView({
   taskdata,
   isLoading,
   onOpenDrawer,
+  onDeleteTask,
 }) {
 
   const [data, setData] = useState();
@@ -92,18 +95,41 @@ function KanbanView({
 
   const handleConfirmRemoveAll = async () => {
     setCnfDialogOpen(false);
+    const taskId = selectedTask?.taskid;
     try {
-      const deleteTaskApi = await deleteTaskDataApi(selectedTask);
-      if (deleteTaskApi && deleteTaskApi?.rd[0]?.stat == 1) {
-        setOpenChildTask(Date.now());
+      if (onDeleteTask) {
+        // Parent handler updates the task list and caches instantly (and shows its own toast).
+        await onDeleteTask(taskId);
         setSelectedTask(null);
-        toast.success("Task deleted successfully!");
       } else {
-        console.error("Failed to delete task");
-        toast.error("Something went wrong...");
+        // Optimistically remove from local columns
+        setData((prevData) => {
+          if (!prevData?.columns) return prevData;
+          const newColumns = { ...prevData.columns };
+          Object.keys(newColumns).forEach((columnId) => {
+            newColumns[columnId] = {
+              ...newColumns[columnId],
+              tasks: removeTaskRecursively(newColumns[columnId].tasks, taskId),
+            };
+          });
+          return { ...prevData, columns: newColumns };
+        });
+        const deleteTaskApi = await deleteTaskDataApi(selectedTask);
+        if (deleteTaskApi && deleteTaskApi?.rd[0]?.stat == 1) {
+          setOpenChildTask(Date.now());
+          clearAllTabDataCache().catch(() => {});
+          invalidateTaskCache();
+          setSelectedTask(null);
+          toast.success("Task deleted successfully!");
+        } else {
+          throw new Error("Failed to delete task");
+        }
       }
     } catch (error) {
       console.error("Error while deleting task:", error);
+      if (!onDeleteTask) {
+        toast.error("Failed to delete task.");
+      }
     }
   };
 
@@ -209,6 +235,10 @@ function KanbanView({
         };
         let rootSubrootflagval = "root"
         const addTaskApi = await AddTaskDataApi(formValues ?? {}, rootSubrootflagval ?? {});
+        if (addTaskApi?.rd?.[0]?.stat == 1) {
+          clearAllTabDataCache().catch(() => {});
+          invalidateTaskCache();
+        }
       }
     }
   };

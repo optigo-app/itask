@@ -4,8 +4,8 @@ import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, Chip, Typography, useMediaQuery, Dialog, DialogContent, CircularProgress } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { Advfilters, archivedTask, completedTask, copyRowData, fetchlistApiCall, filterDrawer, masterDataValue, openFormDrawer, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
-import { filterNestedTasksByView, filterTasksByValidTaskNo, flattenTasks, formatDate2, getCategoryTaskSummary, getUserProfileData, handleAddApicall, isTaskDue, isTaskToday } from "../../Utils/globalfun";
+import { actualTaskData, Advfilters, archivedTask, completedTask, copyRowData, fetchlistApiCall, filterDrawer, masterDataValue, openFormDrawer, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
+import { filterNestedTasksByView, filterTasksByValidTaskNo, flattenTasks, formatDate2, getCategoryTaskSummary, getUserProfileData, handleAddApicall, isTaskDue, isTaskToday, removeTaskRecursively } from "../../Utils/globalfun";
 import { useLocation, useNavigate } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
@@ -14,12 +14,17 @@ import { toast } from "react-toastify";
 import useFullTaskFormatFile from "../../Utils/TaskList/FullTasKFromatfile";
 import { useTaskDataQuery } from "../../Hooks/useTaskDataQuery";
 import { MoveTaskApi } from "../../Api/TaskApi/MoveTaskApi";
+import { deleteTaskDataApi } from "../../Api/TaskApi/DeleteTaskApi";
 import CloseIcon from '@mui/icons-material/Close';
 import { fetchArchiveTaskDataApi } from "../../Api/TaskApi/ArchiveTasklistApi";
+import { fetchTaskDataFullApi } from "../../Api/TaskApi/TaskDataFullApi";
+import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
 import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { AddPrintSheetCountApi } from "../../Api/TaskApi/PrintSheetApi";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
 import { useTabStore } from "../../Store/useTabStore";
+import { generateCacheKey, setTabDataCache, clearAllTabDataCache } from "../../Utils/IndexedDB/taskDataCache";
+import { queryClient, taskQueryKeys, invalidateTaskCache } from "../../Utils/QueryClient/queryClient";
 
 
 const TaskTable = React.lazy(() => import("../../Components/Task/ListView/TaskTableList"));
@@ -78,6 +83,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
   const setTasks = isTabMode ? setLocalTasks : setGlobalTasks;
 
   const setTaskDataLength = useSetRecoilState(taskLength)
+  const setActualTaskData = useSetRecoilState(actualTaskData);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const [selectedRow, setSelectedRow] = useRecoilState(selectedRowData);
   const [copiedData, setCopiedData] = useRecoilState(copyRowData);
@@ -144,14 +150,64 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
   const handleNewTaskInTab = () => {
     setTabDrawerFormData({
       moduleid: queryDataOverride?.moduleid,
+      taskid: queryDataOverride?.taskid,
       projectid: queryDataOverride?.projectid,
       taskPr: queryDataOverride?.project,
       maingroupids: queryDataOverride?.maingroupids,
       isLimited: queryDataOverride?.isLimited,
       isreadonly: queryDataOverride?.isreadonly,
     });
-    setTabDrawerRootSubroot({ Task: "AddTask" });
+    setTabDrawerRootSubroot({ Task: "subroot" });
     if (isTabMode) setLocalFormDrawerOpen(true);
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    if (!taskId) return;
+
+    // 1. Remove from the displayed tasks immediately (tab-scoped or global)
+    setTasks((prevTasks) => removeTaskRecursively(prevTasks, taskId));
+    // 2. Keep global Recoil atoms in sync so other views (calendar, reports) don't show the deleted task
+    setGlobalTasks((prevTasks) => removeTaskRecursively(prevTasks, taskId));
+    setActualTaskData((prevTasks) => removeTaskRecursively(prevTasks, taskId));
+
+    // 3. Update the active TanStack Query cache for this tab so it doesn't restore the task on switch
+    const queryKey = taskQueryKeys.list(queryDataOverride, archivedFlag, completedFlag);
+    queryClient.setQueryData(queryKey, (oldData) => {
+      if (!oldData || !Array.isArray(oldData?.rd1)) return oldData;
+      return {
+        ...oldData,
+        rd1: removeTaskRecursively(oldData.rd1, taskId),
+      };
+    });
+
+    // 4. Update IndexedDB cache for the same tab configuration
+    if (isTabMode && tabId) {
+      const cacheKey = generateCacheKey(queryDataOverride, archivedFlag, completedFlag);
+      const updatedRawData = queryClient.getQueryData(queryKey);
+      if (updatedRawData) {
+        setTabDataCache(tabId, cacheKey, {
+          rawData: updatedRawData,
+          fetchedAt: Date.now(),
+        }).catch(() => {});
+      }
+    }
+
+    // 5. Call the delete API
+    try {
+      const response = await deleteTaskDataApi({ taskid: taskId });
+      if (response?.rd?.[0]?.stat == 1) {
+        toast.success("Task deleted successfully!");
+        // Clear all IndexedDB + React Query caches so every tab/project view is consistent
+        clearAllTabDataCache().catch(() => {});
+        invalidateTaskCache();
+        setOpenChildTask(Date.now());
+      } else {
+        throw new Error("Failed to delete task");
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("Failed to delete task. Please refresh to see the latest state.");
+    }
   };
 
   const encodedData = isTabMode
@@ -906,15 +962,48 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
     }
   }
 
-  const handleCompletedTaskFilter = () => {
+  const handleCompletedTaskFilter = async () => {
     setActiveButton('table');
     setCompletedFilterLoading(true);
-    setCompletedFlag((prev) => !prev);
-    if (!isTabMode) setOpenChildTask(Date.now());
-    // Hide loader after a short delay to allow API call to complete
+    const nextCompleted = !completedFlag;
+    setCompletedFlag(nextCompleted);
+
+    if (isTabMode) {
+      try {
+        const taskid = queryDataOverride?.taskid;
+        const hasTaskId = taskid !== undefined && taskid !== '' && taskid !== '0' && taskid !== 0;
+        const response = hasTaskId
+          ? await fetchTaskDataFullApi({
+              ...queryDataOverride,
+              isarchive: archivedFlag ? 1 : 0,
+              isCompleted: nextCompleted ? 1 : 0,
+            })
+          : await fetchModuleDataApi({ taskid: 0, moduleid: 0 });
+
+        // Seed the new cache key with the correct isCompleted data so the UI updates instantly
+        const nextQueryKey = taskQueryKeys.list(queryDataOverride, archivedFlag, nextCompleted);
+        queryClient.setQueryData(nextQueryKey, response);
+
+        if (tabId) {
+          const cacheKey = generateCacheKey(queryDataOverride, archivedFlag, nextCompleted);
+          await setTabDataCache(tabId, cacheKey, {
+            rawData: response,
+            fetchedAt: Date.now(),
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching completed tasks:", error);
+        toast.error("Failed to load completed tasks.");
+      }
+    } else {
+      // Non-tab mode: rely on the existing fetch pipeline to re-query with the new completed flag
+      setOpenChildTask(Date.now());
+    }
+
+    // Hide loader after a short delay to allow UI to settle
     setTimeout(() => {
       setCompletedFilterLoading(false);
-    }, 1500);
+    }, 500);
   };
 
   const handleArchivedTaskFilter = () => {
@@ -1224,9 +1313,72 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
     if (taskId && parentId) {
       const apiRes = await MoveTaskApi(taskId, parentId);
       if (apiRes) {
-        setOpenChildTask(Date.now());
-        toast?.success("Task pasted successfully");
+        // Build the moved task object with updated parentid
+        const movedTask = {
+          ...JSON.parse(JSON.stringify(copiedData)),
+          parentid: parentId,
+          isCopyActive: false,
+        };
+
+        const insertTaskUnderParent = (tasks, targetParentId, taskToInsert) => {
+          return tasks.map((task) => {
+            if (String(task.taskid) === String(targetParentId)) {
+              return {
+                ...task,
+                subtasks: [...(task.subtasks || []), taskToInsert],
+              };
+            }
+            if (task.subtasks?.length > 0) {
+              return {
+                ...task,
+                subtasks: insertTaskUnderParent(task.subtasks, targetParentId, taskToInsert),
+              };
+            }
+            return task;
+          });
+        };
+
+        // 1. Remove from old location and insert under new parent in all state layers
+        setTasks((prevTasks) => {
+          const removed = removeTaskRecursively(prevTasks, taskId);
+          return insertTaskUnderParent(removed, parentId, movedTask);
+        });
+        setGlobalTasks((prevTasks) => {
+          const removed = removeTaskRecursively(prevTasks, taskId);
+          return insertTaskUnderParent(removed, parentId, movedTask);
+        });
+        setActualTaskData((prevTasks) => {
+          const removed = removeTaskRecursively(prevTasks, taskId);
+          return insertTaskUnderParent(removed, parentId, movedTask);
+        });
+
+        // 2. Update the active TanStack Query cache
+        const queryKey = taskQueryKeys.list(queryDataOverride, archivedFlag, completedFlag);
+        queryClient.setQueryData(queryKey, (oldData) => {
+          if (!oldData || !Array.isArray(oldData?.rd1)) return oldData;
+          const removed = removeTaskRecursively(oldData.rd1, taskId);
+          return {
+            ...oldData,
+            rd1: insertTaskUnderParent(removed, parentId, movedTask),
+          };
+        });
+
+        // 3. Update IndexedDB cache
+        if (isTabMode && tabId) {
+          const cacheKey = generateCacheKey(queryDataOverride, archivedFlag, completedFlag);
+          const updatedRawData = queryClient.getQueryData(queryKey);
+          if (updatedRawData) {
+            setTabDataCache(tabId, cacheKey, {
+              rawData: updatedRawData,
+              fetchedAt: Date.now(),
+            }).catch(() => {});
+          }
+        }
+
+        // 4. Clear copied data
         setCopiedData({});
+
+        toast?.success("Task pasted successfully");
       }
     } else {
       toast.error('Please select a task to paste');
@@ -1237,6 +1389,15 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
   const handleRemoveCopiedData = () => {
     setCopiedData({});
   }
+
+  const handleRefreshTasks = () => {
+    if (isTabMode) {
+      setSubmitRefreshKey((k) => k + 1);
+      if (refetchTaskData) refetchTaskData();
+    } else {
+      setOpenChildTask(Date.now());
+    }
+  };
 
   useEffect(() => {
     if (filteredData) {
@@ -1488,82 +1649,87 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
           />
 
           {/* View Components */}
-          <AnimatePresence mode="wait">
-            {activeButton && (
-              <motion.div
-                key={activeButton}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: showAdvancedFil ? 0 : 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
-              >
-                <Suspense fallback={<></>}>
-                  {activeButton === "table" && (
-                    <TaskTable
-                      data={filteredData ?? null}
-                      currentData={currentData}
-                      page={page}
-                      order={order}
-                      orderBy={orderBy}
-                      rowsPerPage={rowsPerPage}
-                      totalPages={totalPages}
-                      isLoading={iswhTLoading}
-                      masterData={masterData}
-                      copiedData={copiedData}
-                      contextMenu={contextMenu}
-                      handleCopy={handleCopyTask}
-                      handlePaste={handlePasteTask}
-                      handleContextMenu={handleOpenRightMenu}
-                      handleCloseContextMenu={handleOpenRightMenu}
-                      handleTaskFavorite={handleTaskFavorite}
-                      handleFreezeTask={handleFreezeTask}
-                      handleStatusChange={handleStatusChange}
-                      handlePriorityChange={handlePriorityChange}
-                      handleAssigneeShortcutSubmit={handleAssigneeShortcutSubmit}
-                      handleRequestSort={handleRequestSort}
-                      handleChangePage={handleChangePage}
-                      handleDeadlineDateChange={handleDeadlineDateChange}
-                      handlePageSizeChnage={handlePageSizeChnage}
-                      handlePrintCount={handlePrintCount}
-                      onOpenDrawer={isTabMode ? handleOpenTabDrawer : undefined}
-                    />
-                  )}
+          <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'auto', minHeight: 0, paddingX: 0.2 }}>
+            <AnimatePresence mode="wait">
+              {activeButton && (
+                <motion.div
+                  key={activeButton}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: showAdvancedFil ? 0 : 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                >
+                  <Suspense fallback={<></>}>
+                    {activeButton === "table" && (
+                      <TaskTable
+                        data={filteredData ?? null}
+                        currentData={currentData}
+                        page={page}
+                        order={order}
+                        orderBy={orderBy}
+                        rowsPerPage={rowsPerPage}
+                        totalPages={totalPages}
+                        isLoading={iswhTLoading}
+                        masterData={masterData}
+                        copiedData={copiedData}
+                        contextMenu={contextMenu}
+                        handleCopy={handleCopyTask}
+                        handlePaste={handlePasteTask}
+                        handleContextMenu={handleOpenRightMenu}
+                        handleCloseContextMenu={handleOpenRightMenu}
+                        handleTaskFavorite={handleTaskFavorite}
+                        handleFreezeTask={handleFreezeTask}
+                        handleStatusChange={handleStatusChange}
+                        handlePriorityChange={handlePriorityChange}
+                        handleAssigneeShortcutSubmit={handleAssigneeShortcutSubmit}
+                        handleRequestSort={handleRequestSort}
+                        handleChangePage={handleChangePage}
+                        handleDeadlineDateChange={handleDeadlineDateChange}
+                        handlePageSizeChnage={handlePageSizeChnage}
+                        handlePrintCount={handlePrintCount}
+                        onOpenDrawer={isTabMode ? handleOpenTabDrawer : undefined}
+                        onDeleteTask={handleDeleteTask}
+                        onRefresh={handleRefreshTasks}
+                      />
+                    )}
 
-                  {activeButton === "archive" && (
-                    <ArchiveTable
-                      data={archiveTasks ?? []}
-                      isLoading={archiveLoading}
-                    />
-                  )}
+                    {activeButton === "archive" && (
+                      <ArchiveTable
+                        data={archiveTasks ?? []}
+                        isLoading={archiveLoading}
+                      />
+                    )}
 
-                  {activeButton === "kanban" && (
-                    <KanbanView
-                      taskdata={filteredData ?? null}
-                      isLoading={iswhTLoading}
-                      masterData={masterData}
-                      statusData={statusData}
-                      handleTaskFavorite={handleTaskFavorite}
-                      handleFreezeTask={handleFreezeTask}
-                      onOpenDrawer={isTabMode ? handleOpenTabDrawer : undefined}
-                    />
-                  )}
+                    {activeButton === "kanban" && (
+                      <KanbanView
+                        taskdata={filteredData ?? null}
+                        isLoading={iswhTLoading}
+                        masterData={masterData}
+                        statusData={statusData}
+                        handleTaskFavorite={handleTaskFavorite}
+                        handleFreezeTask={handleFreezeTask}
+                        onOpenDrawer={isTabMode ? handleOpenTabDrawer : undefined}
+                        onDeleteTask={handleDeleteTask}
+                      />
+                    )}
 
-                  {activeButton === "card" && (
-                    <CardView
-                      isLoading={iswhTLoading}
-                      masterData={masterData}
-                      handleTaskFavorite={handleTaskFavorite}
-                      handleFreezeTask={handleFreezeTask}
-                      onOpenDrawer={isTabMode ? handleOpenTabDrawer : undefined}
-                    />
-                  )}
-                  {activeButton === "Dynamic-Filter" && (
-                    <DynamicFilterReport />
-                  )}
-                </Suspense>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                    {activeButton === "card" && (
+                      <CardView
+                        isLoading={iswhTLoading}
+                        masterData={masterData}
+                        handleTaskFavorite={handleTaskFavorite}
+                        handleFreezeTask={handleFreezeTask}
+                        onOpenDrawer={isTabMode ? handleOpenTabDrawer : undefined}
+                      />
+                    )}
+                    {activeButton === "Dynamic-Filter" && (
+                      <DynamicFilterReport />
+                    )}
+                  </Suspense>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Box>
 
         </>
       )}
@@ -1589,7 +1755,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
         }}>
           <CircularProgress size={60} sx={{ color: '#7367f0', mb: 2 }} />
           <Typography variant="body1" sx={{ color: '#333', fontWeight: 500, textAlign: 'center' }}>
-            {completedFlag ? 'Hiding completed tasks...' : 'Loading completed tasks...'}
+            {completedFlag ? 'Loading completed tasks...' : 'Hiding completed tasks...'}
           </Typography>
         </DialogContent>
       </Dialog>

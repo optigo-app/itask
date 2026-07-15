@@ -20,7 +20,7 @@ import {
     ExpandLess,
     ExpandMore
 } from "@mui/icons-material";
-import { Boxes, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
+import { Boxes, BugIcon, CalendarCheck, Component, FileCheck, House, Inbox, Ratio, SquareChartGantt } from 'lucide-react';
 import logo from "../../Assests/iconLogo.png";
 import itasknewLogo from "../../Assests/tecotask.png"
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -32,6 +32,8 @@ import { motion } from "framer-motion";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { Advfilters, FullSidebar } from "../../Recoil/atom";
 import useSafeRedirect from "../../Utils/useSafeRedirect";
+import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
+import { handleBugTrackRedirect } from "../../Utils/globalfun";
 
 const Sidebar = () => {
     const navigate = useSafeRedirect();
@@ -46,6 +48,7 @@ const Sidebar = () => {
     const [openReports, setOpenReports] = useState(false);
     const drawerWidth = isFullSidebar || isDrawerOpen ? 200 : 80;
     const [reportsAnchorEl, setReportsAnchorEl] = React.useState(null);
+    const [bugTrackDialogOpen, setBugTrackDialogOpen] = React.useState(false);
     const setFilters = useSetRecoilState(Advfilters);
 
 
@@ -55,6 +58,7 @@ const Sidebar = () => {
         { pagename: "Task", label: "My Tasks", routes: "MyTasks", path: "/myTasks", icon: FileCheck },
         { pagename: "Project", label: "Project", routes: "Projects", path: "/projects", icon: SquareChartGantt },
         { pagename: "Task", label: "Task", routes: "Tasks", path: "/tasks", icon: FileCheck },
+        { pagename: "Bug Track", label: "Bug Track", routes: "external-bugtrack", path: '', icon: BugIcon },
         { pagename: "Inbox", label: "Inbox", routes: "Inbox", path: "/inbox", icon: Inbox },
         { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
         { pagename: "Calender", label: "My Calendar", routes: "MyCalendar", path: "/myCalendar", icon: CalendarCheck },
@@ -136,6 +140,13 @@ const Sidebar = () => {
     };
 
     const handleItemClick = (pathname, routes) => {
+        if (routes === 'external-bugtrack') {
+            setBugTrackDialogOpen(true);
+            if (isMobile) {
+                setDrawerOpen(false);
+            }
+            return;
+        }
         setFilters({})
         setActiveItem(routes);
         navigate(pathname);
@@ -200,7 +211,7 @@ const Sidebar = () => {
                 className="itask_Menudrawer"
             >
                 {!isLoading &&
-                    <List sx={{ overflowY: 'hidden', overflow: 'auto' }}>
+                    <List sx={{ overflowY: 'hidden', overflow: 'hidden' }}>
                         <ListItem className="itask_drawerHeader">
                             <ListItemButton className="itask_drawerListItem">
                                 <Box
@@ -245,12 +256,12 @@ const Sidebar = () => {
                                         <ListItem key={label} onClick={() => handleItemClick(path, routes)} onMouseEnter={() => prefetchRoute(path)} sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row' }}>
                                             <ListItemButton className={`itask_drawerListItem ${activeItem === routes ? 'itask_drawerItemActive' : ''}`}>
                                                 <ListItemIcon className="itask_drawerItemIcon">
-                                                    <Icon className={activeItem === routes ? "iconActive" : 'iconUnactive'} size={18} />
+                                                    <Icon className={activeItem === routes ? "iconActive" : 'iconUnactive'} size={isDrawerOpen ? 18 : 22} />
                                                 </ListItemIcon>
                                                 {isDrawerOpen && <ListItemText primary={label} className="itask_drawerItemText" />}
                                             </ListItemButton>
                                             {!isDrawerOpen && (
-                                                <Typography variant="caption" className="itask_drawerItemText" sx={{ textAlign: "center", color:'#444050' }}>
+                                                <Typography variant="caption" className="itask_drawerItemText itask_drawerMiniLabel" sx={{ textAlign: "center", color: '#444050' }}>
                                                     {label}
                                                 </Typography>
                                             )}
@@ -259,13 +270,13 @@ const Sidebar = () => {
                                         <ListItem sx={{ flexDirection: !isDrawerOpen ? 'column' : 'row' }} key="Reports">
                                             <ListItemButton onClick={isDrawerOpen ? toggleReportsMenu : handleReportsClick} className={`itask_drawerListItem ${activeItem === 'Reports' ? 'itask_drawerItemActive1' : ''}`}>
                                                 <ListItemIcon className="itask_drawerItemIcon">
-                                                    <Ratio size={18} className={activeItem === 'Reports' ? "iconActive1" : 'iconUnactive'} />
+                                                    <Ratio size={isDrawerOpen ? 18 : 22} className={activeItem === 'Reports' ? "iconActive1" : 'iconUnactive'} />
                                                 </ListItemIcon>
                                                 {isDrawerOpen && <ListItemText sx={{ m: 0, color: '#444050' }} primary="Reports" />}
                                                 {isDrawerOpen && <span style={{ paddingRight: '8px' }}>{openReports ? <ExpandLess /> : <ExpandMore />}</span>}
                                             </ListItemButton>
                                             {!isDrawerOpen && (
-                                                <Typography variant="caption" className="itask_drawerItemText" sx={{ color: '#444050 !important' }}>
+                                                <Typography variant="caption" className="itask_drawerItemText itask_drawerMiniLabel" sx={{ color: '#444050 !important' }}>
                                                     Reports
                                                 </Typography>
                                             )}
@@ -350,6 +361,18 @@ const Sidebar = () => {
                     }
                 </Box>
             </Drawer>
+            <ConfirmationDialog
+                open={bugTrackDialogOpen}
+                onClose={() => setBugTrackDialogOpen(false)}
+                onConfirm={() => {
+                    setBugTrackDialogOpen(false);
+                    handleBugTrackRedirect();
+                }}
+                title="Redirect to Bug Tracker"
+                content="You will be redirected to the Bug Tracker in a new tab. Do you want to continue?"
+                confirmLabel="Continue"
+                cancelLabel="Cancel"
+            />
         </motion.div>
     );
 };

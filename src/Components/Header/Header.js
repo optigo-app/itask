@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import "./header.scss";
 import { useTabStore } from "../../Store/useTabStore";
 import { clearAllTabDataCache } from "../../Utils/IndexedDB/taskDataCache";
+import { abortAllRequests } from "../../Utils/requestAbortController";
 import NotificationCard from "../Notification/NotificationCard";
 import { projectDatasRState, taskLength, userRoleAtom, webReload } from "../../Recoil/atom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
@@ -94,6 +95,9 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
     ];
 
     const handleLogoutClick = async () => {
+        // Abort all in-flight API requests, timeouts, intervals first so logout isn't blocked
+        abortAllRequests();
+
         // Clear all persistent storage (no React re-renders)
         await clearAllTabDataCache();
         indexedDB.deleteDatabase('ITaskDataCache');

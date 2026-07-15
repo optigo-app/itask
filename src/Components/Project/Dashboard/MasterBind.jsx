@@ -28,6 +28,8 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { AdvancedMasterApiFunc } from "../../../Utils/globalfun";
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi";
+import { clearAllTabDataCache } from "../../../Utils/IndexedDB/taskDataCache";
+import { invalidateTaskCache } from "../../../Utils/QueryClient/queryClient";
 import { toast } from "react-toastify";
 import { fetchlistApiCall, selectedRowData } from "../../../Recoil/atom";
 import { useSetRecoilState } from "recoil";
@@ -98,6 +100,8 @@ export default function MasterBind({ taskModuleList }) {
         const addTaskApi = await AddTaskDataApi(updatedTasks, rootSubrootflagval ?? {}, { module: true });
         if (addTaskApi?.rd[0]?.stat == 1) {
             toast.success(addTaskApi?.rd[0]?.stat_msg);
+            clearAllTabDataCache().catch(() => {});
+            invalidateTaskCache();
             setTimeout(() => {
                 setOpenChildTask(true);
             }, 5000);
