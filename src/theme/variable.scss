@@ -89,6 +89,26 @@ $maintenance-light-bg: rgba($maintenance-main, 0.16);
 // Unplanned - Grey
 $unplanned-main: #757575;
 $unplanned-light: #F5F5F5;
+
+$customer-maintenance-main: #009688;
+$customer-maintenance-light: #B2DFDB;
+$customer-maintenance-light-bg: rgba($customer-maintenance-main, 0.16);
+
+$challenges-main: #5e72e4;
+$challenges-light: #C5CAE9;
+$challenges-light-bg: rgba($challenges-main, 0.16);
+
+$reporting-main: #00BCD4;
+$reporting-light: #B2EBF2;
+$reporting-light-bg: rgba($reporting-main, 0.16);
+
+$meeting-main: #EC407A;
+$meeting-light: #F8BBD0;
+$meeting-light-bg: rgba($meeting-main, 0.16);
+
+$training-main: #8C57FF;
+$training-light: #D6CBFF;
+$training-light-bg: rgba($training-main, 0.16);
 $unplanned-light-bg: rgba($unplanned-main, 0.16);
 
 p,
@@ -103,10 +123,15 @@ div {
     border-color: $button-Bordercolor !important;
     text-transform: capitalize !important;
     border-radius: 8px !important;
+    cursor: pointer !important;
 
     &:hover {
         background-color: $button-color-hover;
         border-color: $button-Bordercolor;
+    }
+
+    &:disabled {
+        cursor: not-allowed !important;
     }
 }
 
@@ -128,10 +153,15 @@ div {
     border-color: #ebebed;
     text-transform: capitalize !important;
     border-radius: 8px !important;
+    cursor: pointer !important;
 
     &:hover {
         background-color: $button-color-hover;
         border-color: $button-Bordercolor;
+    }
+
+    &:disabled {
+        cursor: not-allowed !important;
     }
 }
 
@@ -142,10 +172,43 @@ div {
     border-color: $button-DangerBgcolor-hover;
     text-transform: capitalize !important;
     border-radius: 8px !important;
+    cursor: pointer !important;
 
     &:hover {
         background-color: $button-DangerBgcolor-hover !important;
         border-color: $button-DangerBgcolor-hover !important;
+    }
+
+    &:disabled {
+        cursor: not-allowed !important;
+    }
+}
+
+.permanentDeleteBtnClassname {
+    font-family: $font-family !important;
+    background: #d90429 !important;
+    color: #ffffff !important;
+    border: 1px solid #a3021f !important;
+    text-transform: capitalize !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(217, 4, 41, 0.3) !important;
+    gap: 6px;
+    cursor: pointer !important;
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    &:hover {
+        background: #a3021f !important;
+        border-color: #7a0117 !important;
+        box-shadow: 0 2px 6px rgba(217, 4, 41, 0.45) !important;
+    }
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed !important;
     }
 }
 
@@ -331,13 +394,19 @@ div {
                 font-size: 14px !important;
 
                 &[aria-selected="true"] {
-                    background: #e6e6e6;
-                    color: #000 !important;
+                    background: rgba(115, 103, 240, 0.12);
+                    color: #444050 !important;
                 }
 
-                &:hover {
-                    background-color: $button-color-hover;
-                    color: $button-color !important;
+                &:hover,
+                &.Mui-focused {
+                    background-color: rgba(115, 103, 240, 0.08);
+                    color: #444050 !important;
+                }
+
+                &.Mui-focused[aria-selected="true"] {
+                    background-color: rgba(115, 103, 240, 0.2);
+                    color: #444050 !important;
                 }
             }
         }
@@ -393,31 +462,42 @@ div {
     padding: 0px 8px 8px 8px;
     margin-top: -8px;
 
-    .filterChip {
-        background: $button-Bgcolor;
+    // Group label — sits outside the chips
+    .filterKey {
+        color: $text2ndColor !important;
         font-size: 12px !important;
-        color: #fff !important;
-        border-radius: 8px;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
 
-        .filterKey {
-            color: #fff !important;
-            font-size: 12px !important;
-            text-transform: capitalize;
+    .filterChip {
+        // Neutral chip — theme color lives on the value text, not the fill
+        background: #fff !important;
+        border: 1px solid #e4e4e8 !important;
+        font-size: 12px !important;
+        color: $titleColor !important;
+        border-radius: 8px;
+        transition: border-color 0.15s ease;
+
+        &:hover {
+            border-color: rgba(115, 103, 240, 0.45) !important;
         }
 
         .filterValue {
-            color: #fff !important;
+            color: $primary-main !important;
             font-size: 12px !important;
+            font-weight: 600;
             text-transform: capitalize;
         }
 
         .closeIcon {
             font-size: 14px !important;
-            color: #fff !important;
+            color: #b5b5bd !important;
             cursor: pointer;
+            transition: color 0.15s ease;
 
             &:hover {
-                color: $titleColor;
+                color: #dc3545 !important;
             }
         }
     }

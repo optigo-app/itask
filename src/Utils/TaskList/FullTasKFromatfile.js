@@ -533,7 +533,6 @@ const useFullTaskFormatFile = (externalFilters = {}, options = {}) => {
         : null;
       if (requestedTaskId && !requestedTask) {
         console.error(`[formatDataToTree] Cannot build tree: requested taskid "${requestedTaskId}" not found in API response.`);
-        toast.error(`Task data unavailable: module not found (taskid ${requestedTaskId}).`);
         setIsWhTLoading(false);
         return {
           TaskData: [],

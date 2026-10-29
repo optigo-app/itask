@@ -13,7 +13,8 @@ import {
     useMediaQuery,
     useTheme,
     ToggleButtonGroup,
-    ToggleButton
+    ToggleButton,
+    CircularProgress
 } from "@mui/material";
 
 import CloseIcon from "@mui/icons-material/Close";
@@ -33,6 +34,7 @@ const TaskDetailsModal = ({
     employee,
     reportType,
     viewMode,
+    tasksLoading = false,
 }) => {
     const theme = useTheme();
     const isLaptop = useMediaQuery("(max-width:1440px)");
@@ -452,6 +454,12 @@ const TaskDetailsModal = ({
                 }}
             >
                 {employee ? (
+                    tasksLoading || employee?.Tasks === null ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 2 }}>
+                            <CircularProgress size={36} sx={{ color: '#7367f0' }} />
+                            <Typography variant="body2" sx={{ color: '#7d7f85' }}>Loading tasks...</Typography>
+                        </Box>
+                    ) : (
                     <>
                         {isTreeView ? (
                             <HierarchicalTaskTreeTable
@@ -486,6 +494,7 @@ const TaskDetailsModal = ({
                             )}
                         </Box>
                     </>
+                    )
                 ) : null}
             </DialogContent>
         </Dialog>

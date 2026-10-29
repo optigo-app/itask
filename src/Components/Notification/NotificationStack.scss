@@ -1,0 +1,72 @@
+.ntf-stack {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 360px;
+    max-width: calc(100vw - 40px);
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.ntf-stack-item {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    box-sizing: border-box;
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease;
+    pointer-events: auto;
+    will-change: transform;
+}
+
+/* Expanded mode — hover fans the stack into a real column (anchored
+   at the bottom edge, grows upward) so every card is readable/actionable */
+.ntf-stack:hover {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+    padding: 14px 6px 8px 0;
+    scrollbar-width: thin;
+    scrollbar-color: #d8d8e0 transparent;
+    pointer-events: auto;
+}
+
+.ntf-stack:hover::-webkit-scrollbar {
+    width: 4px;
+}
+
+.ntf-stack:hover::-webkit-scrollbar-thumb {
+    background: #d8d8e0;
+    border-radius: 4px;
+}
+
+.ntf-stack:hover::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.ntf-stack:hover .ntf-stack-item {
+    position: relative;
+    bottom: auto;
+    transform: none !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* "+N more" counter badge under the front card (collapsed mode) */
+.ntf-stack-more {
+    position: absolute;
+    bottom: -4px;
+    right: 14px;
+    transform: translateY(100%);
+    background: #3a3f4b;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: "Public Sans", sans-serif;
+    padding: 3px 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 50;
+}

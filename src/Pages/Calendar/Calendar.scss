@@ -1,5 +1,42 @@
 @import '../../theme/variable.scss';
 
+.bulkMoveRow {
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: #fafafa !important;
+    }
+}
+
+/* Bulk & Individual move dialogs — reuse project's button classes */
+.bulkMoveDialog,
+.individualMoveDialog {
+    .MuiPaper-root {
+        border-radius: 14px !important;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .MuiDialogTitle-root {
+        font-weight: 700;
+    }
+
+    .MuiDialogContent-root {
+        padding: 0;
+    }
+
+    /* Reuse project's reusable button classes */
+    .secondaryBtnClassname {
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
+    }
+
+    .buttonClassname {
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
+    }
+}
+
 .calendarMain {
     display: flex;
     min-height: 1000px;
@@ -261,11 +298,21 @@
 
             // ** Event Colors
             .fc-event {
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
 
                 .fc-event-main,
                 .fc-event-title {
                     font-size: 13px;
                     font-weight: 600 !important;
+                }
+
+                &.fc-event-multi-selected {
+                    outline: none !important;
+                    box-shadow: 0 0 0 2px #7367f0, 0 4px 12px rgba(115, 103, 240, 0.35) !important;
+                    opacity: 0.95;
+                    filter: brightness(0.92);
                 }
 
                 &:not(.fc-list-event) {
@@ -433,6 +480,72 @@
                         .fc-event-title,
                         .fc-event-time {
                             color: $unplanned-main !important;
+                        }
+                    }
+
+                    &.bg-customer-maintenance {
+                        border-color: transparent !important;
+                        color: $customer-maintenance-main !important;
+                        background-color: $customer-maintenance-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $customer-maintenance-main !important;
+                        }
+                    }
+
+                    &.bg-challenges {
+                        border-color: transparent !important;
+                        color: $challenges-main !important;
+                        background-color: $challenges-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $challenges-main !important;
+                        }
+                    }
+
+                    &.bg-reporting {
+                        border-color: transparent !important;
+                        color: $reporting-main !important;
+                        background-color: $reporting-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $reporting-main !important;
+                        }
+                    }
+
+                    &.bg-meeting {
+                        border-color: transparent !important;
+                        color: $meeting-main !important;
+                        background-color: $meeting-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $meeting-main !important;
+                        }
+                    }
+
+                    &.bg-training {
+                        border-color: transparent !important;
+                        color: $training-main !important;
+                        background-color: $training-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $training-main !important;
+                        }
+                    }
+
+                    &.bg-default {
+                        border-color: transparent !important;
+                        color: $primary-main !important;
+                        background-color: $primary-light-bg !important;
+
+                        .fc-event-title,
+                        .fc-event-time {
+                            color: $primary-main !important;
                         }
                     }
 
@@ -641,6 +754,84 @@
 
                     &:hover td {
                         background-color: rgba($unplanned-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-customer-maintenance {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $customer-maintenance-main !important;
+                        background-color: $customer-maintenance-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($customer-maintenance-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-challenges {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $challenges-main !important;
+                        background-color: $challenges-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($challenges-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-reporting {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $reporting-main !important;
+                        background-color: $reporting-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($reporting-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-meeting {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $meeting-main !important;
+                        background-color: $meeting-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($meeting-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-training {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $training-main !important;
+                        background-color: $training-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($training-light, 0.1) !important;
+                    }
+                }
+
+                &.bg-default {
+
+                    .fc-list-event-dot,
+                    .fc-daygrid-event-dot {
+                        border-color: $primary-main !important;
+                        background-color: $primary-main !important;
+                    }
+
+                    &:hover td {
+                        background-color: rgba($primary-light, 0.1) !important;
                     }
                 }
 
@@ -1306,8 +1497,32 @@
     .calendar-filter {
         margin-bottom: 1rem;
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
+        align-items: stretch;
+
+        .cf-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+
+            &.cf-row-data {
+                padding-bottom: 4px;
+            }
+
+            &.cf-row-filters {
+                margin-top: 6px;
+                padding-top: 10px;
+                border-top: 1px dashed #ececf1;
+            }
+        }
+
+        .cf-totals {
+            color: #6b7280;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
 
         .filter-box {
             display: flex;
@@ -1477,11 +1692,12 @@
     cursor: not-allowed !important;
 }
 
-// Prevent events from being displayed on holiday dates
+// Events wrongly placed on holiday dates stay interactive so they can be moved off
 .fc-day.holiday-date .fc-event,
 .fc-timegrid-col.holiday-date .fc-event {
     opacity: 0.5 !important;
-    pointer-events: none !important;
+    pointer-events: auto !important;
+    cursor: move !important;
 }
 
 .calendarLeftMain {

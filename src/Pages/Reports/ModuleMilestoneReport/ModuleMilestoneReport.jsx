@@ -1,39 +1,35 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import useFullTaskFormatFile from '../../../Utils/TaskList/FullTasKFromatfile';
+import { ModuleMilestoneReportApi } from '../../../Api/TaskApi/ModuleMilestoneReportApi';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
     Typography,
     Box,
+    LinearProgress,
     useMediaQuery
 } from '@mui/material';
-import { formatDate2, formatDate, priorityColors, statusColors, getCategoryTaskSummary, isTaskToday } from '../../../Utils/globalfun';
-import StatusBadge from '../../../Components/ShortcutsComponent/StatusBadge';
+import { formatDate2, formatDate, statusColors, getPerformanceStatus, isTaskToday } from '../../../Utils/globalfun';
 import './ModuleMilestoneReport.scss';
-import PriorityBadge from '../../../Components/ShortcutsComponent/PriorityBadge';
-import HeaderButtons from '../../../Components/Task/FilterComponent/HeaderButtons';
 import Filters from '../../../Components/Task/FilterComponent/Filters';
 import FilterChips from '../../../Components/Task/FilterComponent/FilterChip';
-import FiltersDrawer from '../../../Components/Task/FilterComponent/FilterModal';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import { Advfilters, filterDrawer, selectedCategoryAtom } from '../../../Recoil/atom';
 import LoadingBackdrop from '../../../Utils/Common/LoadingBackdrop';
 import { motion, AnimatePresence } from 'framer-motion';
-import MileStoneTimelineModal from './MileStoneTimelineModal';
+import ModuleList from '../../../Components/Reports/MilestoneReport/ModuleList';
+import ModuleDrawer from '../../../Components/Reports/MilestoneReport/ModuleDrawer';
+import MilestoneTimeline from '../../../Components/Project/Dashboard/MilestoneTimeline';
+import { ToggleButton } from '@mui/material';
+import { LayoutPanelLeft as SplitViewIcon, Milestone as MilestoneIcon, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import './MilestoneReportCalendar.scss';
 
 const ModuleMilestoneReport = () => {
-    const { taskFinalData } = useFullTaskFormatFile();
-    const [selectedModule, setSelectedModule] = useState(null);
-    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [moduleRows, setModuleRows] = useState([]);
+    const [milestoneRows, setMilestoneRows] = useState([]);
+    const [selectedCalModule, setSelectedCalModule] = useState(null); // null = all modules
+    const [openSideDrawer, setSideDrawer] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const isLaptop = useMediaQuery('(max-width:1150px)');
     const [filters, setFilters] = useRecoilState(Advfilters);
-    const showAdvancedFil = useRecoilValue(filterDrawer);
+    const [showAdvancedFil, setShowAdvancedFil] = useRecoilState(filterDrawer);
     const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
 
     const [masterData, setMasterData] = useState(null);
@@ -43,7 +39,6 @@ const ModuleMilestoneReport = () => {
     const [taskDepartment, setTaskDepartment] = useState([]);
     const [taskProject, setTaskProject] = useState([]);
     const [taskCategory, setTaskCategory] = useState([]);
-    const [categorySummary, setCategorySummary] = useState([]);
 
     // Load master data and filter dropdown sources from sessionStorage (same as Project.jsx)
     useEffect(() => {
@@ -66,71 +61,63 @@ const ModuleMilestoneReport = () => {
         get('taskworkcategoryData', setTaskCategory);
     }, []);
 
-    const rowData = useMemo(() => {
-        const modules = {};
-        const { ModuleMilestoneData, ModuleList } = taskFinalData;
-
-        if (ModuleMilestoneData && ModuleList) {
-            ModuleList.forEach(module => {
-                const moduleMilestones = ModuleMilestoneData[module.taskid] || [];
-
-                if (moduleMilestones.length > 0) {
-                    if (!modules[module.taskid]) {
-                        modules[module.taskid] = {
-                            moduleName: `${module.taskPr} / ${module.taskname}`,
-                            milestones: [],
-                            priorities: [],
-                            statuses: [],
-                            tasknmes: [],
-                            deadlines: [],
-                            startDates: [],
-                            // identifiers for timeline
-                            taskid: module.taskid,
-                            projectid: module.projectid,
-                            // single values (will fill later)
-                            priority: null,
-                            startDate: null,
-                            deadline: null,
-                            endDate: null,
-                            assignee: null,
-                        };
-                    }
-
-                    moduleMilestones.forEach(milestone => {
-                        // push full milestone object
-                        modules[module.taskid].milestones.push(milestone);
-
-                        // arrays
-                        modules[module.taskid].priorities.push(milestone.priority);
-                        modules[module.taskid].statuses.push(milestone.status);
-                        modules[module.taskid].tasknmes.push(milestone.taskname);
-                        if (milestone.StartDate) modules[module.taskid].startDates.push(milestone.StartDate);
-                        if (milestone.DeadLineDate) modules[module.taskid].deadlines.push(milestone.DeadLineDate);
-                    });
-
-                    // Set single line values from first milestone
-                    modules[module.taskid].priority = module.priority;
-                    modules[module.taskid].StartDate = module.StartDate;
-                    modules[module.taskid].DeadLineDate = module.DeadLineDate;
-                    modules[module.taskid].EndDate = module.EndDate ?? null;
-                    modules[module.taskid].category = module.category;
-                    modules[module.taskid].assignee = module.assignee;
-                }
-            });
-        }
-        setIsLoading(false);
-        return Object.values(modules);
-    }, [taskFinalData]);
-
-    // compute CategorySummary for header tabs (similar to Project.jsx)
+    // Fetch report data from SP-side mode (no full treelist dependency)
     useEffect(() => {
-        if (Array.isArray(rowData) && rowData.length > 0 && Array.isArray(taskCategory) && taskCategory.length > 0) {
-            const summary = getCategoryTaskSummary(rowData, taskCategory);
-            setCategorySummary(summary);
-        } else {
-            setCategorySummary([]);
-        }
-    }, [rowData, taskCategory]);
+        let cancelled = false;
+        const fetchReport = async () => {
+            setIsLoading(true);
+            const res = await ModuleMilestoneReportApi();
+            if (cancelled) return;
+            setModuleRows(res?.rd ?? []);
+            setMilestoneRows(res?.rd1 ?? []);
+            setIsLoading(false);
+        };
+        fetchReport();
+        return () => { cancelled = true; };
+    }, []);
+
+    const rowData = useMemo(() => {
+        const milestonesByModule = {};
+        milestoneRows.forEach((m) => {
+            const key = m?.moduleid;
+            if (!key) return;
+            (milestonesByModule[key] ||= []).push(m);
+        });
+
+        return moduleRows
+            .map((module) => {
+                const moduleMilestones = milestonesByModule[module.taskid] || [];
+                if (moduleMilestones.length === 0) return null;
+
+                const assigneeIds = String(module.assigneids ?? '')
+                    .split(',')
+                    .map((v) => parseInt(v, 10))
+                    .filter(Boolean);
+                const assignee = assigneeData.filter((u) => assigneeIds.includes(u.id));
+
+                return {
+                    moduleName: `${module.taskPr} / ${module.taskname}`,
+                    milestones: moduleMilestones,
+                    priorities: moduleMilestones.map((m) => m.priority),
+                    statuses: moduleMilestones.map((m) => m.status),
+                    tasknmes: moduleMilestones.map((m) => m.taskname),
+                    deadlines: moduleMilestones.map((m) => m.DeadLineDate).filter(Boolean),
+                    startDates: moduleMilestones.map((m) => m.StartDate).filter(Boolean),
+                    taskid: module.taskid,
+                    projectid: module.projectid,
+                    taskPr: module.taskPr,
+                    taskDpt: module.taskDpt,
+                    priority: module.priority,
+                    StartDate: module.StartDate,
+                    DeadLineDate: module.DeadLineDate,
+                    EndDate: module.EndDate ?? null,
+                    category: module.category,
+                    assignee,
+                    isnew: module.isnew,
+                };
+            })
+            .filter(Boolean);
+    }, [moduleRows, milestoneRows, assigneeData]);
 
     const filteredRowData = useMemo(() => {
         if (!Array.isArray(rowData)) return [];
@@ -138,6 +125,7 @@ const ModuleMilestoneReport = () => {
             status = '',
             priority = '',
             assignee = '',
+            project = '',
             searchTerm = '',
             dueDate = null,
             startDate = null,
@@ -187,6 +175,30 @@ const ModuleMilestoneReport = () => {
             return !dateStr || date.toISOString().slice(0, 10) === '1900-01-01';
         };
 
+        const inDateRange = (dateStr, range) => {
+            if (!dateStr) return false;
+            const d = new Date(dateStr);
+            const s = new Date(range?.startDate);
+            const e = new Date(range?.endDate);
+            if (isNaN(d) || isNaN(s) || isNaN(e)) return false;
+            d.setHours(0, 0, 0, 0);
+            s.setHours(0, 0, 0, 0);
+            e.setHours(23, 59, 59, 999);
+            return d >= s && d <= e;
+        };
+
+        // dueDate/startDate come in as {startDate, endDate} ranges (or a single date string);
+        // match the module's own date OR any of its milestone dates
+        const matchesDate = (range, ownDate, listDates) => {
+            if (!isValidFilter(range)) return true;
+            if (typeof range === 'string') {
+                const f = formatDate(range);
+                return f === formatDate(ownDate) || (listDates || []).some((d) => formatDate(d) === f);
+            }
+            if (!range?.startDate || !range?.endDate) return true;
+            return inDateRange(ownDate, range) || (listDates || []).some((d) => inDateRange(d, range));
+        };
+
         return rowData.filter((row) => {
             if (!row) return false;
 
@@ -205,7 +217,7 @@ const ModuleMilestoneReport = () => {
                         return isTaskToday(row?.StartDate);
                     }
                     if (catLower.includes('new')) {
-                        return row?.isnew == 1;
+                        return row?.isnew === 1 || row?.isnew === '1' || row?.isnew === true;
                     }
                     return (row?.category ?? '').toLowerCase() === catLower;
                 });
@@ -214,17 +226,18 @@ const ModuleMilestoneReport = () => {
                 !isValidFilter(status) ||
                 row.statuses?.some((s) => (s ?? '').toLowerCase() === status.toLowerCase());
 
+            const projectLabel = typeof project === 'object' ? (project?.labelname || '') : project;
+            const matchesProject =
+                !isValidFilter(projectLabel) ||
+                (row?.taskPr ?? '').toLowerCase() === projectLabel.toLowerCase();
+
             const matchesPriority =
                 !isValidFilter(priority) ||
-                (row?.priority ?? '').toLowerCase() === priority.toLowerCase();
+                (row?.priority ?? '').toLowerCase() === priority.toLowerCase() ||
+                row.priorities?.some((p) => (p ?? '').toLowerCase() === priority.toLowerCase());
 
-            const matchesDueDate =
-                !isValidFilter(dueDate) ||
-                (row?.DeadLineDate && formatDate(row.DeadLineDate) === formatDate(dueDate));
-
-            const matchesStartDate =
-                !isValidFilter(startDate) ||
-                (row?.StartDate && formatDate(row.StartDate) === formatDate(startDate));
+            const matchesDueDate = matchesDate(dueDate, row?.DeadLineDate, row?.deadlines);
+            const matchesStartDate = matchesDate(startDate, row?.StartDate, row?.startDates);
 
             const matchesAssignee =
                 !isValidFilter(assignee) ||
@@ -237,6 +250,7 @@ const ModuleMilestoneReport = () => {
             const matchesSearch =
                 !searchTerm ||
                 matchText(row?.moduleName) ||
+                row.tasknmes?.some((t) => matchText(t)) ||
                 row.statuses?.some((s) => matchText(s)) ||
                 row.priorities?.some((p) => matchText(p)) ||
                 matchText(row?.priority) ||
@@ -248,6 +262,7 @@ const ModuleMilestoneReport = () => {
             return (
                 matchesCategory &&
                 matchesStatus &&
+                matchesProject &&
                 matchesPriority &&
                 matchesDueDate &&
                 matchesStartDate &&
@@ -316,223 +331,256 @@ const ModuleMilestoneReport = () => {
         setSelectedCategory([]);
     };
 
-    useEffect(() => {
-        const handleKeyDown = (event) => {
-            if (!selectedModule) return;
-            if (event.key === 'f' || event.key === 'F') {
-                event.preventDefault();
-                setIsFullscreen((prev) => !prev);
-            }
-        };
+    // Split view: milestones shown in the right panel for the selected module (or all)
+    const panelMilestones = useMemo(() => {
+        const rows = selectedCalModule
+            ? filteredRowData.filter((r) => r.taskid === selectedCalModule.taskid)
+            : filteredRowData;
+        return rows.flatMap((row) =>
+            (row?.milestones || []).map((m) => ({
+                ...m,
+                moduleid: row.taskid,
+                moduleName: row.moduleName,
+            }))
+        );
+    }, [filteredRowData, selectedCalModule]);
 
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [selectedModule]);
+    const handleModuleCalSelect = (module) => {
+        setSelectedCalModule(module);
+        setSideDrawer(false);
+    };
 
-    return (
-        <Box className="project-moduleMain module-milestone-report">
-            {/* Header Buttons (reuse Project.jsx pattern) */}
-            <HeaderButtons
-                activeButton={"table"}
-                onButtonClick={() => { }}
+    const handleAllCalSelect = () => {
+        setSelectedCalModule(null);
+        setSideDrawer(false);
+    };
+
+    // Filters live inside the left panel (toggled by the funnel icon) — no top filter row
+    const filtersPanel = showAdvancedFil ? (
+        <Box className="moduleListFilters">
+            <Filters
+                {...filters}
                 onFilterChange={handleFilterChange}
                 isLoading={isLoading}
                 masterData={masterData}
                 priorityData={priorityData}
-                projectData={taskProject}
                 statusData={statusData}
+                assigneeData={assigneeData}
+                taskDepartment={taskDepartment}
+                taskProject={taskProject}
                 taskCategory={taskCategory}
-                taskAssigneeData={assigneeData}
-                CategorySummary={categorySummary}
             />
+        </Box>
+    ) : null;
 
+    const chipsPanel = (
+        <FilterChips
+            filters={filters}
+            onClearFilter={handleClearFilter}
+            onClearAll={handleClearAllFilters}
+        />
+    );
+
+    return (
+        <Box className="project-moduleMain module-milestone-report">
             <AnimatePresence mode="wait">
                 <motion.div
-                    key="module-milestone-table"
+                    key="module-milestone-split"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
                     transition={{ duration: 0.5, ease: 'easeInOut' }}
                 >
-                    {/* Desktop Filters */}
-                    {!isLaptop && showAdvancedFil && (
-                        <>
-                            <div
-                                style={{
-                                    margin: '20px 0',
-                                    border: '1px dashed #7d7f85',
-                                    opacity: 0.3,
+                    {/* Split layout: module list | milestone panel */}
+                        <Box
+                            sx={{
+                                width: 'calc(100% + 40px)',
+                                mx: '-20px',
+                                mt: '-20px',
+                                height: 'calc(100vh - 150px)',
+                                display: 'flex',
+                                position: 'relative',
+                                backgroundColor: '#ffffff',
+                                '@media (max-width: 712px)': {
+                                    width: 'calc(100% + 20px)',
+                                    mx: '-10px',
+                                    mt: '-10px',
+                                },
+                            }}
+                        >
+                            {isLaptop ? (
+                                <ModuleDrawer
+                                    openSideDrawer={openSideDrawer}
+                                    setSideDrawer={setSideDrawer}
+                                    modules={filteredRowData}
+                                    selectedModule={selectedCalModule}
+                                    onModuleClick={handleModuleCalSelect}
+                                    onAllClick={handleAllCalSelect}
+                                    showAll={!selectedCalModule}
+                                    onFilterClick={() => setShowAdvancedFil((v) => !v)}
+                                    onFilterClose={() => setShowAdvancedFil(false)}
+                                    filtersPanel={filtersPanel}
+                                    chipsPanel={chipsPanel}
+                                    filtersOpen={showAdvancedFil}
+                                />
+                            ) : (
+                                <Box
+                                    sx={{
+                                        width: '24%',
+                                        minWidth: 260,
+                                        height: '100%',
+                                        borderRight: '1px solid #e0e0e0',
+                                        position: 'relative',
+                                        zIndex: 1,
+                                    }}
+                                >
+                                    <ModuleList
+                                        modules={filteredRowData}
+                                        selectedModule={selectedCalModule}
+                                        onModuleClick={handleModuleCalSelect}
+                                        onAllClick={handleAllCalSelect}
+                                        showAll={!selectedCalModule}
+                                        onFilterClick={() => setShowAdvancedFil((v) => !v)}
+                                        onFilterClose={() => setShowAdvancedFil(false)}
+                                        filtersPanel={filtersPanel}
+                                        chipsPanel={chipsPanel}
+                                        filtersOpen={showAdvancedFil}
+                                    />
+                                </Box>
+                            )}
+
+                            <Box
+                                sx={{
+                                    flexGrow: 1,
+                                    height: '100%',
+                                    bgcolor: '#ffffff',
+                                    padding: '12px 16px',
+                                    position: 'relative',
+                                    zIndex: 0,
+                                    overflowY: 'auto',
                                 }}
-                            />
-                            <Filters
-                                {...filters}
-                                onFilterChange={handleFilterChange}
-                                isLoading={isLoading}
-                                masterData={masterData}
-                                priorityData={priorityData}
-                                statusData={statusData}
-                                assigneeData={assigneeData}
-                                taskDepartment={taskDepartment}
-                                taskProject={taskProject}
-                                taskCategory={taskCategory}
-                            />
-                        </>
-                    )}
-
-                    {/* Mobile Filters Drawer */}
-                    {isLaptop && (
-                        <FiltersDrawer
-                            {...filters}
-                            filters={filters}
-                            setFilters={setFilters}
-                            onFilterChange={handleFilterChange}
-                            onClearAll={handleClearAllFilters}
-                            isLoading={isLoading}
-                            masterData={masterData}
-                            priorityData={priorityData}
-                            statusData={statusData}
-                            assigneeData={assigneeData}
-                            taskDepartment={taskDepartment}
-                            taskProject={taskProject}
-                            taskCategory={taskCategory}
-                        />
-                    )}
-
-                    {/* Divider */}
-                    <div
-                        style={{
-                            margin: '20px 0',
-                            border: '1px dashed #7d7f85',
-                            opacity: 0.3,
-                        }}
-                    />
-
-                    {/* Filter Chips */}
-                    <FilterChips
-                        filters={filters}
-                        onClearFilter={handleClearFilter}
-                        onClearAll={handleClearAllFilters}
-                    />
-
-                    {/* Report Table */}
-                    {isLoading && rowData?.length == 0 ? (
-                        <LoadingBackdrop isLoading={true} />
-                    ) :
-                        <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 210px)' }}>
-                            <Table stickyHeader aria-label="module milestone report">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell sx={{ width: '40%' }}>Project/Module</TableCell>
-                                        <TableCell sx={{ width: '20%' }}>Deadline</TableCell>
-                                        <TableCell sx={{ width: '40%' }}>Status</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {filteredRowData?.map((row, index) => (
-                                        <TableRow
-                                            key={index}
-                                            hover
-                                            sx={{ cursor: 'pointer' }}
-                                            onClick={() => setSelectedModule(row)}
+                            >
+                                {isLaptop && (
+                                    <Box sx={{ mb: 1 }}>
+                                        <ToggleButton
+                                            value="modules"
+                                            size="small"
+                                            onClick={() => setSideDrawer(true)}
+                                            sx={{ borderRadius: '8px', textTransform: 'none', gap: 0.5 }}
                                         >
-                                            <TableCell className="project-module-cell">
-                                                <Typography variant="body1" className='module-name'>
-                                                    {row?.moduleName?.includes(' / ') ? (
-                                                        <>
-                                                            <strong>{row?.moduleName?.split(' / ')[0]}</strong>
-                                                            {'/'}
-                                                            {row?.moduleName?.split(' / ').slice(1).join(' / ')}
-                                                        </>
-                                                    ) : (
-                                                        row.moduleName
-                                                    )}
-                                                </Typography>
-                                                <PriorityBadge
-                                                    task={row}
-                                                    priorityColors={priorityColors}
-                                                    onPriorityChange={() => { }}
-                                                    fontSize="0.6rem"
-                                                    padding="0.8px 4px"
-                                                    disable={true}
-                                                />
-                                            </TableCell>
-                                            <TableCell className="deadline-cell">
-                                                <Typography variant="body1">Dt: {formatDate2(row.DeadLineDate)}</Typography>
-                                                <Typography variant="caption">St: {formatDate2(row.StartDate)}</Typography>
-                                            </TableCell>
-                                            {/* <TableCell className="status-cell">
-                                                {row?.statuses?.map((status, i) => (
-                                                    <StatusBadge key={i} task={{ status }} statusColors={statusColors} disable={true} />
-                                                ))}
-                                            </TableCell> */}
-                                            <TableCell className="status-cell">
-                                                {row?.milestones?.map((milestone, i) => (
-                                                    <Box
-                                                        key={i}
-                                                        sx={{
-                                                            display: 'flex',
-                                                            flexDirection: 'column',
-                                                            alignItems: 'flex-start',
-                                                            gap: 0.25,
-                                                            mb: 0.5,
-                                                            p: '5px 10px',
-                                                            borderRadius: 2,
-                                                            backgroundColor: '#f8f9fb',
-                                                            border: '1px solid #eceff4',
-                                                        }}
-                                                    >
-                                                        <Typography
-                                                            variant="caption"
-                                                            sx={{
-                                                                width: '100%',
-                                                                fontSize: '14px',
-                                                                fontWeight: 500,
-                                                                whiteSpace: 'nowrap',
-                                                                overflow: 'hidden',
-                                                                textOverflow: 'ellipsis',
-                                                            }}
-                                                            title={milestone?.taskname}
-                                                        >
-                                                            {milestone?.taskname}
-                                                        </Typography>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                            {/* {milestone?.priority && (
-                                                                <PriorityBadge
-                                                                    task={milestone}
-                                                                    priorityColors={priorityColors}
-                                                                    disable={true}
-                                                                    fontSize={9}
-                                                                    padding={1}
-                                                                />
-                                                            )} */}
-                                                            {milestone?.status && (
-                                                                <StatusBadge
-                                                                    task={milestone}
-                                                                    statusColors={statusColors}
-                                                                    disable={true}
-                                                                    fontSize={9}
-                                                                    padding={1}
-                                                                />
-                                                            )}
-                                                        </Box>
-                                                    </Box>
-                                                ))}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    }
+                                            <SplitViewIcon size={16} /> Modules
+                                        </ToggleButton>
+                                    </Box>
+                                )}
 
-                    <MileStoneTimelineModal
-                        selectedModule={selectedModule}
-                        setSelectedModule={setSelectedModule}
-                        isFullscreen={isFullscreen}
-                        setIsFullscreen={setIsFullscreen}
-                    />
+                                {/* Panel header */}
+                                <Box sx={{ mb: 1.5, mt: 0.5 }}>
+                                    {selectedCalModule && (
+                                        <Typography
+                                            variant="caption"
+                                            onClick={handleAllCalSelect}
+                                            sx={{ color: '#7367f0', cursor: 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 0.25 }}
+                                        >
+                                            ← All Modules
+                                        </Typography>
+                                    )}
+                                    <Typography variant="h6" sx={{ fontSize: '16px', fontWeight: 600 }}>
+                                        {selectedCalModule ? selectedCalModule.moduleName : 'All Modules'}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: '#7d7f85' }}>
+                                        {panelMilestones.length} milestone{panelMilestones.length === 1 ? '' : 's'}
+                                    </Typography>
+                                </Box>
+
+                                {isLoading ? (
+                                    <LoadingBackdrop isLoading={true} />
+                                ) : panelMilestones.length === 0 ? (
+                                    <Box sx={{ textAlign: 'center', py: 8, color: '#7d7f85' }}>
+                                        <MilestoneIcon size={48} style={{ color: '#e0e0e0' }} />
+                                        <Typography>No milestones found</Typography>
+                                    </Box>
+                                ) : selectedCalModule ? (
+                                    /* Selected module: timeline view */
+                                    <MilestoneTimeline
+                                        milestoneData={{ [selectedCalModule.taskid]: selectedCalModule.milestones }}
+                                        decodedData={{ taskid: selectedCalModule.taskid, projectid: selectedCalModule.projectid }}
+                                    />
+                                ) : (
+                                    /* All modules: cards only — click opens that module's milestones */
+                                    <Box className="milestonePanelList">
+                                        {filteredRowData.map((row) => {
+                                            const ms = row.milestones || [];
+                                            const doneCount = ms.filter((m) => (m?.progress_per ?? 0) === 100).length;
+                                            const avgProgress = ms.length
+                                                ? Math.round(ms.reduce((s, m) => s + (m?.progress_per ?? 0), 0) / ms.length)
+                                                : 0;
+                                            const statusCounts = ms.reduce((acc, m) => {
+                                                const s = m?.status || 'No Status';
+                                                acc[s] = (acc[s] || 0) + 1;
+                                                return acc;
+                                            }, {});
+                                            const progressColor = getPerformanceStatus(avgProgress)?.color ?? '#9e9e9e';
+                                            return (
+                                                <Box
+                                                    key={row.taskid}
+                                                    className="milestonePanelItem moduleCardItem"
+                                                    onClick={() => handleModuleCalSelect(row)}
+                                                    title={`Open ${row.moduleName}`}
+                                                >
+                                                    <Box className="moduleCardItemMain">
+                                                        <Box className="moduleCardItemTop">
+                                                            <Typography className="moduleCardItemName" title={row.moduleName}>
+                                                                {row.moduleName}
+                                                            </Typography>
+                                                            <Typography
+                                                                className="moduleCardItemPercent"
+                                                                sx={{ color: progressColor }}
+                                                            >
+                                                                {avgProgress}%
+                                                            </Typography>
+                                                        </Box>
+                                                        <LinearProgress
+                                                            variant="determinate"
+                                                            value={avgProgress}
+                                                            className="moduleCardItemBar"
+                                                            sx={{
+                                                                '& .MuiLinearProgress-bar': { backgroundColor: progressColor },
+                                                                backgroundColor: '#eceff4',
+                                                            }}
+                                                        />
+                                                        <Box className="moduleCardItemMeta">
+                                                            <Typography className="moduleCardItemStat">
+                                                                {ms.length} milestone{ms.length === 1 ? '' : 's'} · {doneCount} done
+                                                            </Typography>
+                                                            <Box className="moduleCardItemStatuses">
+                                                                {Object.entries(statusCounts).map(([label, count]) => (
+                                                                    <span
+                                                                        key={label}
+                                                                        className="moduleCardItemStatus"
+                                                                        style={{
+                                                                            color: statusColors?.[label.toLowerCase()]?.color ?? '#7d7f85',
+                                                                            backgroundColor: statusColors?.[label.toLowerCase()]?.backgroundColor ?? '#f1f1f4',
+                                                                        }}
+                                                                    >
+                                                                        {label} {count}
+                                                                    </span>
+                                                                ))}
+                                                            </Box>
+                                                        </Box>
+                                                        <Typography className="moduleCardItemDates">
+                                                            {row.StartDate ? `St: ${formatDate2(row.StartDate)}` : 'St: -'}
+                                                            {' · '}
+                                                            {row.DeadLineDate ? `Due: ${formatDate2(row.DeadLineDate)}` : 'Due: -'}
+                                                        </Typography>
+                                                    </Box>
+                                                    <ChevronRightIcon size={18} className="moduleCardItemChevron" />
+                                                </Box>
+                                            );
+                                        })}
+                                    </Box>
+                                )}
+                            </Box>
+                        </Box>
                 </motion.div>
             </AnimatePresence>
         </Box>

@@ -9,7 +9,8 @@ import {
     IconButton
 } from '@mui/material';
 import { CirclePlus } from 'lucide-react';
-import { ImageUrl, getRandomAvatarColor } from '../../../Utils/globalfun';
+import { ImageUrl, getAvatarColors, getInitials } from '../../../Utils/globalfun';
+import SafeAvatar from '../SafeAvatar';
 
 const AssigneeAvatarGroup = memo(({
     assignees = [],
@@ -29,13 +30,6 @@ const AssigneeAvatarGroup = memo(({
     const visibleAssignees = assignees?.slice(0, maxVisible) || [];
     const remainingAssignees = assignees?.slice(maxVisible) || [];
     const hasOverflow = remainingAssignees.length > 0;
-
-    const background = (assignee) => {
-        const avatarBackgroundColor = assignee?.avatar
-            ? "transparent"
-            : getRandomAvatarColor(assignee);
-        return avatarBackgroundColor;
-    };
 
     const handleOpenAssigneeOverflow = (event, remainingAssignees) => {
         event.stopPropagation();
@@ -76,7 +70,7 @@ const AssigneeAvatarGroup = memo(({
                             arrow
                             classes={{ tooltip: 'custom-tooltip' }}
                         >
-                            <Avatar
+                            <SafeAvatar
                                 alt={`${assignee?.firstname} ${assignee?.lastname}`}
                                 src={ImageUrl(assignee) || null}
                                 sx={{
@@ -86,7 +80,7 @@ const AssigneeAvatarGroup = memo(({
                                     cursor: 'pointer',
                                     border: 'none',
                                     transition: 'transform 0.3s ease-in-out',
-                                    backgroundColor: background(`${assignee?.firstname + " " + assignee?.lastname}`),
+                                    ...getAvatarColors(`${assignee?.firstname + " " + assignee?.lastname}`),
                                     '&:hover': {
                                         transform: 'scale(1.2)',
                                         zIndex: 10,
@@ -94,8 +88,8 @@ const AssigneeAvatarGroup = memo(({
                                 }}
                                 onClick={(e) => handleAvatarClick(assignee, e)}
                             >
-                                {!assignee.avatar && assignee?.firstname?.charAt(0)}
-                            </Avatar>
+                                {!assignee.avatar && getInitials(assignee?.firstname, assignee?.lastname)}
+                            </SafeAvatar>
                         </Tooltip>
                     ))}
                     
@@ -137,9 +131,10 @@ const AssigneeAvatarGroup = memo(({
                         id="add-assignee"
                         aria-label="add-assignee"
                         size="small"
+                        className="hover-reveal"
                         onClick={() => onAddClick(task)}
                         style={{
-                            visibility: hoveredTaskId === task?.taskid && hoveredColumnName === 'Assignee' ? 'visible' : 'hidden',
+                            visibility: hoveredTaskId === task?.taskid && hoveredColumnName === 'Assignee' ? 'visible' : undefined,
                         }}
                     >
                         <CirclePlus size={20} color="#7367f0" />
@@ -190,18 +185,18 @@ const AssigneeAvatarGroup = memo(({
                         }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
-                            <Avatar
+                            <SafeAvatar
                                 alt={`${assignee?.firstname} ${assignee?.lastname}`}
                                 src={ImageUrl(assignee) || null}
                                 sx={{
                                     width: 32,
                                     height: 32,
                                     fontSize: '0.9rem',
-                                    backgroundColor: background(`${assignee?.firstname + " " + assignee?.lastname}`)
+                                    ...getAvatarColors(`${assignee?.firstname + " " + assignee?.lastname}`)
                                 }}
                             >
-                                {!assignee.avatar && assignee?.firstname?.charAt(0)}
-                            </Avatar>
+                                {!assignee.avatar && getInitials(assignee?.firstname, assignee?.lastname)}
+                            </SafeAvatar>
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                 <Typography 
                                     variant="body2" 

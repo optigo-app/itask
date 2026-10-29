@@ -2,7 +2,7 @@ import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { Box } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
-import { getRandomAvatarColor, mapKeyValuePair } from '../../Utils/globalfun';
+import { mapKeyValuePair } from '../../Utils/globalfun';
 import { useRecoilValue } from 'recoil';
 import { selectedRowData } from '../../Recoil/atom';
 import useFullTaskFormatFile from '../../Utils/TaskList/FullTasKFromatfile';
@@ -25,13 +25,6 @@ const ProjectDashboard = () => {
     const [comments, setComments] = useState([]);
     const [commentCount, setCommentCount] = useState(0);
     const [isCommentLoading, setIsCommentLoading] = useState(false);
-
-    const background = (assignee) => {
-        const avatarBackgroundColor = assignee?.avatar
-            ? "transparent"
-            : getRandomAvatarColor(assignee);
-        return avatarBackgroundColor;
-    };
 
     useEffect(() => {
         setIsAttLoding(true);
@@ -219,7 +212,6 @@ const ProjectDashboard = () => {
                         tabData={tabs}
                         selectedTab={selectedTab}
                         decodedData={decodedData}
-                        background={background}
                         handleDtopen={handleTaskModalOpen}
                         taskFinalData={taskFinalData}
                         taskAssigneeData={taskAssigneeData}

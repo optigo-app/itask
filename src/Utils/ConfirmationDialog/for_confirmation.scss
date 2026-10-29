@@ -2,8 +2,112 @@
 
 .DRM {
     .MuiPaper-root {
-        border-radius: 8px !important;
-        max-width: 450px !important;
+        border-radius: 14px !important;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    &.DRM-info .MuiPaper-root {
+        max-width: none !important;
+    }
+
+    .dialogIconWrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        margin: 24px auto 8px auto;
+    }
+
+    .alert-TitleCl {
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        text-align: center;
+        padding-bottom: 8px !important;
+    }
+
+    .alert-titleContent {
+        font-size: 0.9rem !important;
+        color: #666 !important;
+        text-align: center;
+        line-height: 1.5;
+    }
+
+    .for_DialogBtn {
+        font-family: $font-family !important;
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        text-transform: capitalize !important;
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .cancelDialogBtn {
+        background: #f0f0f2 !important;
+        color: #555 !important;
+        border: 1px solid #e0e0e0 !important;
+
+        &:hover {
+            background: #e4e4e7 !important;
+            border-color: #d0d0d4 !important;
+        }
+    }
+
+    .confirmBtnDefault {
+        background: $button-Bgcolor !important;
+        color: #fff !important;
+        border: 1px solid $button-Bordercolor !important;
+
+        &:hover {
+            background: $button-color-hover !important;
+        }
+    }
+
+    .confirmBtnDanger {
+        background: #d90429 !important;
+        color: #fff !important;
+        border: 1px solid #a3021f !important;
+
+        &:hover {
+            background: #a3021f !important;
+            box-shadow: 0 4px 12px rgba(217, 4, 41, 0.3) !important;
+        }
+    }
+
+    .confirmBtnWarning {
+        background: #f59e0b !important;
+        color: #fff !important;
+        border: 1px solid #d97706 !important;
+
+        &:hover {
+            background: #d97706 !important;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+        }
+    }
+
+    .confirmBtnInfo {
+        background: #7367f0 !important;
+        color: #fff !important;
+        border: 1px solid #685dd8 !important;
+
+        &:hover {
+            background: #685dd8 !important;
+            box-shadow: 0 4px 12px rgba(115, 103, 240, 0.3) !important;
+        }
+    }
+
+    .confirmBtnSuccess {
+        background: #28a745 !important;
+        color: #fff !important;
+        border: 1px solid #1e7e34 !important;
+
+        &:hover {
+            background: #1e7e34 !important;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
+        }
     }
 }
 
@@ -11,12 +115,6 @@
 .for_DialogBtn {
     font-family: $font-family !important;
     color: $titleColor !important;
-}
-
-.for_DialogBtn {
-    font-size: 18px !important;
-    font-weight: bold !important;
-    text-transform: capitalize !important;
 }
 
 @media (max-width: 600px) {
@@ -33,5 +131,4 @@
     .alert-titleContent {
         font-size: 0.875rem !important;
     }
-
 }

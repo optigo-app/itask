@@ -3,6 +3,13 @@ import * as React from "react";
 import './MomSheet.css'
 
 const MomSheet = React.forwardRef((selectedData, ref) => {
+    const notified = React.useRef(false);
+    React.useLayoutEffect(() => {
+        if (!notified.current) {
+            notified.current = true;
+            selectedData?.onReady?.();
+        }
+    }, [selectedData]);
     return (
         <div ref={ref} className='container_main'>
 

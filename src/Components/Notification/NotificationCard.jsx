@@ -1,38 +1,24 @@
 import React, { useState } from "react";
-import { Box, Typography, Avatar, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from "@mui/material";
+import { Box, Typography, Avatar, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import "./Notification.scss";
-import { toast } from "react-toastify";
-import CircleIcon from '@mui/icons-material/Circle';
-import { MailOpen } from "lucide-react";
 import MailIcon from '@mui/icons-material/Mail';
 import DraftsIcon from '@mui/icons-material/Drafts';
-import RejectReasonModal from "../../Utils/Common/RejectReasonModal";
+import { useSetRecoilState } from "recoil";
+import { notificationList } from "../../Recoil/atom";
 
 const NotificationCard = ({ notification }) => {
     const [hover, setHover] = useState(false);
-    const [openRejectModal, setOpenRejectModal] = useState(false);
-    const [rejectReason, setRejectReason] = useState("");
+    const setNotifications = useSetRecoilState(notificationList);
 
-    const handleOpenRejectModal = () => setOpenRejectModal(true);
-
-    const handleAccept = () => {
-        console.log("Accepted notification:", notification);
-        toast.success("Notification Accepted");
+    const handleToggleRead = () => {
+        setNotifications((prev) =>
+            prev.map((n) => (n.id === notification?.id ? { ...n, markAsUnread: !n.markAsUnread } : n))
+        );
     };
 
-    const handleReject = () => {
-        setOpenRejectModal(true);
-    };
-
-    const handleCloseRejectModal = () => {
-        setOpenRejectModal(false);
-        setRejectReason("");
-    };
-
-    const handleConfirmReject = () => {
-        console.log("Rejected notification:", notification, "Reason:", rejectReason);
-        handleCloseRejectModal();
+    const handleRemove = () => {
+        setNotifications((prev) => prev.filter((n) => n.id !== notification?.id));
     };
 
     return (
@@ -49,15 +35,15 @@ const NotificationCard = ({ notification }) => {
             className="notiCardCo"
         >
             <Box sx={{ display: "flex", alignItems: "center", position: "relative", width: "100%" }}>
-                <Avatar sx={{ bgcolor: "#d1e7dd", marginRight: 2 }}>
-                    {notification.avatar.includes("http") ? (
+                <Avatar sx={{ bgcolor: notification.color ? `${notification.color}1f` : "#d1e7dd", marginRight: 2, color: notification.color || '#444', fontWeight: 600 }}>
+                    {notification.avatar?.includes?.("http") ? (
                         <img
                             src={notification.avatar}
                             alt={notification.title}
                             style={{ width: "100%" }}
                         />
                     ) : (
-                        notification.avatar
+                        notification.avatar || (notification.eyebrow || notification.title || "N").slice(0, 2).toUpperCase()
                     )}
                 </Avatar>
                 <Box sx={{ flexGrow: 1 }}>
@@ -71,21 +57,16 @@ const NotificationCard = ({ notification }) => {
                         <Typography className="notiCo" variant="caption" color="text.secondary">
                             {notification.time}
                         </Typography>
-                        {notification.hasActions && (
-                            <Box sx={{ marginTop: 1, textAlign: 'end' }}>
-                                <Button className="btnAccept buttonClassname"
-                                    variant="contained" size="small" color="primary" onClick={handleAccept}>
-                                    Accept
-                                </Button>
-                                <Button className="btnReject dangerbtnClassname"
-                                    variant="contained" size="small" color="error" onClick={handleReject} sx={{ marginLeft: 1 }}>
-                                    Reject
-                                </Button>
-                            </Box>
+                        {notification.tag && (
+                            <Typography variant="caption" sx={{ fontWeight: 600, color: notification.color || '#7367f0' }}>
+                                {notification.tag}
+                            </Typography>
                         )}
                     </Box>
                 </Box>
-                <IconButton size="small" sx={{ position: "absolute", top: "-12px", right: "-12px" }}>
+                <IconButton size="small" sx={{ position: "absolute", top: "-12px", right: "-12px" }}
+                    onClick={handleToggleRead}
+                    title={notification?.markAsUnread ? "Mark as read" : "Mark as unread"}>
                     {!notification?.markAsUnread ? (
                         <DraftsIcon sx={{ color: '#7D7f85', fontSize: '20px' }} />
                     ) :
@@ -94,21 +75,13 @@ const NotificationCard = ({ notification }) => {
                 </IconButton>
                 {hover && (
                     <>
-                        <IconButton size="small" sx={{ position: "absolute", top: "20px", right: "-12px" }}>
+                        <IconButton size="small" sx={{ position: "absolute", top: "20px", right: "-12px" }}
+                            onClick={handleRemove} title="Remove notification">
                             <CloseIcon fontSize="small" />
                         </IconButton>
                     </>
                 )}
             </Box>
-
-            {/* Reject Reason Modal */}
-            <RejectReasonModal
-                open={openRejectModal}
-                onClose={handleCloseRejectModal}
-                onConfirm={handleConfirmReject}
-                rejectReason={rejectReason}
-                setRejectReason={setRejectReason}
-            />
         </Box>
     );
 };

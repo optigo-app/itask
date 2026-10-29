@@ -46,6 +46,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
         } else {
             combinedValue = JSON.stringify({
                 "ismodule": module?.module ? 1 : 0,
+                "istaskno": formValues?.istaskno ?? 0,
                 "maintaskid": formValues?.moduleid ?? formValues?.taskid ?? '',
                 "taskid": taskid ?? '',
                 "projectid": formValues?.projectid ?? 0,
@@ -66,6 +67,7 @@ export const AddTaskDataApi = async (formValues, rootSubrootflagval, module) => 
                 "descr": formValues?.descr ?? "",
                 "ismilestone": formValues?.ismilestone ?? 0,
                 "isfavourite": formValues?.isfavourite ?? 0,
+                "isblocker": formValues?.isblocker ?? 0,
                 "assigneids": formValues?.assigneids ?? "",
                 "createdbyid": (Array.isArray(formValues?.createdBy) && formValues?.createdBy.length > 0 ? formValues?.createdBy[0]?.id : formValues?.createdbyid) ?? 0,
                 "departmentAssigneelist": formValues?.departmentAssigneelist ?? "",

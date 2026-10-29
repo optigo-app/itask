@@ -7,7 +7,9 @@ import {
   TextField,
   Button,
   Menu,
-  MenuItem
+  MenuItem,
+  FormControlLabel,
+  Checkbox
 } from '@mui/material';
 import { CircleX } from 'lucide-react';
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
@@ -97,6 +99,27 @@ const ModuleDrawerForm = ({
 
       <Grid container spacing={1} className="form-row">
         <Grid item xs={12}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={Boolean(formValues?.istaskno)}
+                onChange={(e) =>
+                  handleChange({
+                    target: {
+                      name: 'istaskno',
+                      value: e.target.checked ? 1 : 0
+                    }
+                  })
+                }
+                color="primary"
+                className="textfieldsClass"
+              />
+            }
+            label="Generate TT No"
+          />
+        </Grid>
+
+        <Grid item xs={12}>
           {renderAutocomplete('Project', 'project', formValues.project, 'Select Project', projectData, handleChange)}
         </Grid>
 
@@ -169,7 +192,7 @@ const ModuleDrawerForm = ({
           />
         </Grid>
 
-        {[ 
+        {[
           { label: 'Start Date', name: 'startDate' },
           { label: 'Deadline Date', name: 'dueDate' }
         ].map(({ label, name }) => (

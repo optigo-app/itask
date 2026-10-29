@@ -1,4 +1,5 @@
 import { atom } from "recoil";
+import { getSessionToken } from "../Utils/sessionKeys";
 
 export const FullSidebar = atom({
   key: 'FullSidebar',
@@ -72,6 +73,23 @@ export const openFormDrawer = atom({
 
 export const filterDrawer = atom({
   key: 'filterDrawer',
+  default: false
+})
+
+// Inline filter-bar visibility — toggled by the funnel icon; independent of
+// the right-side filter drawer (filterDrawer).
+export const filterBarOpen = atom({
+  key: 'filterBarOpen',
+  default: false
+})
+
+export const exportDynamicFilterExcel = atom({
+  key: 'exportDynamicFilterExcel',
+  default: 0
+})
+
+export const exportDynamicFilterLoading = atom({
+  key: 'exportDynamicFilterLoading',
   default: false
 })
 
@@ -163,6 +181,45 @@ export const timerCompOpen = atom({
 export const dynamicFilterDrawer = atom({
   key: 'dynamicFilterDrawer',
   default: false
+})
+
+// Real-time socket notifications — newest first.
+// Persisted to localStorage (keyed per session token) so the bell list
+// survives refresh until notifications are stored API-side.
+const NOTIF_STORE_LIMIT = 100;
+const notificationStoreKey = () =>
+  `pms_notifications_${(getSessionToken() || 'anon').slice(0, 40)}`;
+
+export const notificationList = atom({
+  key: 'notificationList',
+  default: [],
+  effects: [
+    ({ setSelf, onSet }) => {
+      try {
+        const stored = localStorage.getItem(notificationStoreKey());
+        if (stored) setSelf(JSON.parse(stored));
+      } catch { }
+      onSet((newValue) => {
+        try {
+          localStorage.setItem(
+            notificationStoreKey(),
+            JSON.stringify((newValue || []).slice(0, NOTIF_STORE_LIMIT))
+          );
+        } catch { }
+      });
+    },
+  ],
+})
+
+export const socketConnected = atom({
+  key: 'socketConnected',
+  default: false
+})
+
+// Ephemeral in-page toast stack — newest first, auto-expires, not persisted
+export const liveNotificationStack = atom({
+  key: 'liveNotificationStack',
+  default: []
 })
 
 

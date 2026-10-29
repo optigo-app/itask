@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Box, Card, CardContent, Typography, IconButton, Avatar, AvatarGroup, Button, LinearProgress } from "@mui/material";
 import { Circle, CircleCheck, CircleDotDashed, CirclePlus, CircleX, Plus, StickyNote, Target, Volleyball, Workflow } from "lucide-react";
-import { formatDate, formatDate2, getRandomAvatarColor, getStatusColor, mapKeyValuePair, priorityColors } from "../../../Utils/globalfun";
+import { formatDate, formatDate2, getStatusColor, mapKeyValuePair, priorityColors, getAvatarColors, getInitials } from '../../../Utils/globalfun';
 import { AddTaskDataApi } from "../../../Api/TaskApi/AddTaskApi"
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { deleteTaskDataApi } from "../../../Api/TaskApi/DeleteTaskApi";
@@ -67,13 +67,6 @@ function KanbanView({
 
   const handleCloseDialog = () => {
     setCnfDialogOpen(false);
-  };
-
-  const background = (assignee) => {
-    const avatarBackgroundColor = assignee?.avatar
-      ? "transparent"
-      : getRandomAvatarColor(assignee);
-    return avatarBackgroundColor;
   };
 
   // Function to get the correct icon based on the task status
@@ -344,10 +337,10 @@ function KanbanView({
                                             alt={assignee}
                                             src={assignee.avatar}
                                             sx={{
-                                              backgroundColor: background(assignee),
+                                              ...getAvatarColors(assignee),
                                             }}
                                           >
-                                            {!assignee.avatar && assignee.charAt(0)}
+                                            {!assignee.avatar && getInitials(assignee)}
                                           </Avatar>
                                         ))}
                                       </AvatarGroup>

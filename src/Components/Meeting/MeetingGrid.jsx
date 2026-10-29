@@ -16,9 +16,10 @@ import {
     TableSortLabel,
 } from "@mui/material";
 import "./Styles/MeetingGrid.scss";
-import { formatDate3, ImageUrl, } from "../../Utils/globalfun";
+import { formatDate3, ImageUrl, getAvatarColors } from '../../Utils/globalfun';
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import TablePaginationFooter from "../ShortcutsComponent/Pagination/TablePaginationFooter";
+import SafeAvatar from "../ShortcutsComponent/SafeAvatar";
 
 const MeetingTable = ({
     meeting,
@@ -37,7 +38,7 @@ const MeetingTable = ({
     setFormData,
     setFormDataValue,
     setRootSubroot,
-    background,
+
     hanldePAvatarClick,
     handleOpenStatusModal,
     handleRemove
@@ -102,14 +103,14 @@ const MeetingTable = ({
                     arrow
                     classes={{ tooltip: "custom-tooltip" }}
                 >
-                    <Avatar
+                    <SafeAvatar
                         src={ImageUrl(user) || ""}
                         alt={user?.firstname}
-                        sx={{ backgroundColor: background(`${user?.firstname + " " + user?.lastname}`) }}
+                        sx={{ ...getAvatarColors(`${user?.firstname + " " + user?.lastname}`) }}
                         onClick={() => hanldePAvatarClick(user, user.id)}
                     >
                         {!user.avatar && user?.firstname?.[0]}
-                    </Avatar>
+                    </SafeAvatar>
                 </Tooltip>
             ))}
         </AvatarGroup>

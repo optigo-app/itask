@@ -139,6 +139,7 @@
             text-transform: capitalize;
             border-radius: 8px;
             padding: 8px 6px;
+            cursor: pointer !important;
 
             &:hover {
                 background-color: transparent;
@@ -173,11 +174,16 @@
                 padding: 4px;
                 text-transform: none;
                 transition: all 0.2s ease-in-out;
+                cursor: pointer !important;
 
                 &.Mui-selected {
                     background-color: #fff !important;
                     color: #000 !important;
                     font-weight: 700;
+                }
+
+                &:disabled {
+                    cursor: not-allowed !important;
                 }
             }
         }
@@ -188,6 +194,14 @@
         justify-content: space-between;
         align-items: center;
         position: relative;
+
+        .MuiIconButton-root {
+            cursor: pointer !important;
+
+            &:disabled {
+                cursor: not-allowed !important;
+            }
+        }
     }
 
     .drawer-title {
@@ -220,6 +234,11 @@
         color: $button-color !important;
         font-family: $font-family !important;
         border-radius: 8px !important;
+        cursor: pointer !important;
+
+        &:disabled {
+            cursor: not-allowed !important;
+        }
     }
 
     .primary-btn:hover {
@@ -231,6 +250,11 @@
         color: $button-Bordercolor !important;
         font-family: $font-family !important;
         border-radius: 8px !important;
+        cursor: pointer !important;
+
+        &:disabled {
+            cursor: not-allowed !important;
+        }
     }
 
     .secondary-btn:hover {
@@ -243,6 +267,11 @@
         color: $button-Dangercolor !important;
         font-family: $font-family !important;
         border-radius: 8px !important;
+        cursor: pointer !important;
+
+        &:disabled {
+            cursor: not-allowed !important;
+        }
     }
 
     .bulTaskTableContainer {

@@ -1,6 +1,6 @@
 // Environment variables
 const LOCAL_HOSTNAMES = (process.env.REACT_APP_LOCAL_HOSTNAMES || "localhost,nzen").split(',');
-const API_VERSION = process.env.REACT_APP_API_VERSION || "v4";
+const API_VERSION = process.env.REACT_APP_API_VERSION || "v7";
 const API_ENVIRONMENT = process.env.REACT_APP_API_ENVIRONMENT || "testing";
 const REPORT_ENDPOINT = process.env.REACT_APP_REPORT_ENDPOINT || "/api/report";
 const UPLOAD_ENDPOINT = process.env.REACT_APP_UPLOAD_ENDPOINT || "/api/upload";
@@ -36,7 +36,7 @@ export const REMOVE_FILE_URL = buildApiUrl(REMOVE_FILE_ENDPOINT);
 // Utility function to get AuthData from both localStorage and sessionStorage
 const getAuthData = () => {
   try {
-    const authData = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
+    const authData = sessionStorage.getItem("AuthqueryParams") || localStorage.getItem("AuthqueryParams");
     return authData ? JSON.parse(authData) : null;
   } catch (error) {
     console.error("Error parsing AuthData:", error);
@@ -44,15 +44,15 @@ const getAuthData = () => {
   }
 };
 
-export const getHeaders = (init = {}) => {
+export const getHeaders = (init = {}, overrides = {}) => {
   const { version = API_VERSION, token = "" } = init;
   const AuthData = getAuthData();
 
   return {
     Authorization: `Bearer ${token}`,
     Yearcode: AuthData?.yc ?? "",
-    Version: version,
+    Version: overrides.version ?? version,
     sv: AuthData?.sv ?? "1",
-    sp: "6",
+    sp: overrides.sp ?? "6",
   };
 };

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { AlertTriangle } from 'lucide-react';
 
-const SomethingWentWrong = ({ onRetry }) => {
+const SomethingWentWrong = ({ onRetry, message }) => {
   return (
     <Box
       minHeight="70vh"
@@ -36,7 +36,7 @@ const SomethingWentWrong = ({ onRetry }) => {
         </Typography>
 
         <Typography variant="body1" color="text.secondary" mb={3}>
-          We're sorry, but an unexpected error has occurred. Please try again later.
+          {message || "We're sorry, but an unexpected error has occurred. Please try again later."}
         </Typography>
 
         <Button

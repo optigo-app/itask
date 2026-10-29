@@ -95,7 +95,7 @@ const App = () => {
     useEffect(() => {
         const interval = setInterval(() => {
             const params = getQueryParams();
-            const authData = params?.yc || JSON?.parse(localStorage.getItem("AuthqueryParams"))?.yc;
+            const authData = params?.yc || JSON?.parse(sessionStorage.getItem("AuthqueryParams") || localStorage.getItem("AuthqueryParams"))?.yc;
             const isLoggedIn = authData !== '' && authData !== null && authData !== undefined;
             setIsAuthenticated(isLoggedIn);
             setIsReady(true);
@@ -104,14 +104,20 @@ const App = () => {
     }, []);
 
     const getQueryParams = () => {
-        const token = Cookies.get('skey');
+        // Pinned per-tab token wins over the shared cookie (see sessionKeys)
+        const token = sessionStorage.getItem('skey') || Cookies.get('skey');
         if (!token) {
+            sessionStorage.removeItem("AuthqueryParams");
+            sessionStorage.removeItem("token");
+            sessionStorage.removeItem("isLoggedIn");
+            sessionStorage.removeItem("UserProfileData");
             localStorage?.removeItem("AuthqueryParams");
             localStorage?.removeItem("token");
             localStorage?.removeItem("isLoggedIn");
             localStorage?.removeItem("UserProfileData");
             return null;
         }
+        try { sessionStorage.setItem('skey', token); } catch { }
 
         const decoded = jwtDecode(token);
         const decodedPayload = {
@@ -120,7 +126,7 @@ const App = () => {
         };
 
         if (decodedPayload) {
-            localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
+            sessionStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
         }
 
         return decodedPayload;

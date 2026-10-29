@@ -19,7 +19,7 @@ const dateToLocalISO = (date) => {
 	return `${year}-${month}-${day}T00:00:00.000Z`;
 };
 
-const CustomDateRangePicker = ({ value = {}, onChange }) => {
+const CustomDateRangePicker = ({ value = {}, onChange, placeholder = "Date Range" }) => {
 	const [anchorEl, setAnchorEl] = useState(null);
 	const open = Boolean(anchorEl);
 
@@ -82,7 +82,7 @@ const CustomDateRangePicker = ({ value = {}, onChange }) => {
 		<ThemeProvider theme={Datetheme}>
 			<Box display="flex" alignItems="center">
 				<TextField
-					placeholder="Date Range"
+					placeholder={placeholder}
 					value={displayValue}
 					onClick={handleOpen}
 					size="small"

@@ -1,5 +1,6 @@
-import { Box, Typography, Avatar, Tooltip } from "@mui/material";
-import { getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
+import { Box, Typography, Avatar } from "@mui/material";
+import { getAvatarColors, getInitials, ImageUrl } from "../../../Utils/globalfun";
+import SafeAvatar from "../../ShortcutsComponent/SafeAvatar";
 
 /* ----------------------------- Helper Utils ----------------------------- */
 const normalizeBoolean = (value) =>
@@ -10,8 +11,8 @@ const getEmployeeName = (emp, fallbackId) =>
         ? `${emp?.firstname || ""} ${emp?.lastname || ""}`.trim()
         : String(fallbackId ?? "");
 
-const getAvatarBg = (assignee, name) => {
-    return assignee?.avatar ? 'transparent' : getRandomAvatarColor(name);
+const getAvatarStyle = (assignee, name) => {
+    return assignee?.avatar ? { backgroundColor: 'transparent' } : getAvatarColors(name);
 };
 
 /* --------------------------- Main Component ---------------------------- */
@@ -20,6 +21,7 @@ const DailyReportAttendanceList = ({
     rows = [],
     attendanceByDate = {},
     loggedInUserId = null,
+    scrollable = true,
 }) => {
     if (!rows.length) {
         return (
@@ -32,7 +34,12 @@ const DailyReportAttendanceList = ({
     }
 
     return (
-        <Box sx={styles.container}>
+        <Box
+            sx={{
+                ...styles.container,
+                ...(scrollable ? {} : { maxHeight: 'none', overflowY: 'visible' }),
+            }}
+        >
             {rows.map((row, index) => {
                 const emp = row?.__employee;
                 const dateKey = row?.__dateKey;
@@ -51,27 +58,36 @@ const DailyReportAttendanceList = ({
                 return (
                     <Box
                         key={`${row?.ID}-${dateKey}-${row?.TakenByEmpID}`}
-                        sx={{
-                            ...styles.row,
-                            borderLeft: isDone ? '4px solid #4caf50' : '4px solid #f44336'
-                        }}
+                        sx={styles.row}
                     >
                         {/* Avatar Section */}
-                        <Avatar
+                        <SafeAvatar
                             alt={name}
                             src={ImageUrl(emp) || null}
                             sx={{
                                 ...styles.avatar,
-                                backgroundColor: getAvatarBg(emp, name),
+                                ...getAvatarStyle(emp, name),
                             }}
                         >
-                            {!emp?.avatar && name?.charAt(0).toUpperCase()}
-                        </Avatar>
+                            {!emp?.avatar && getInitials(name)}
+                        </SafeAvatar>
 
                         <Box sx={styles.contentWrapper}>
                             <Box sx={styles.headerRow}>
                                 <Box sx={{ minWidth: 0 }}>
                                     <Typography sx={styles.name}>
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                display: 'inline-block',
+                                                width: 7,
+                                                height: 7,
+                                                borderRadius: '50%',
+                                                backgroundColor: isDone ? '#4caf50' : '#f44336',
+                                                mr: 0.75,
+                                                verticalAlign: 'middle',
+                                            }}
+                                        />
                                         {name} {isMe && <Typography component="span" sx={styles.meLabel}>(You)</Typography>}
                                     </Typography>
                                     <Typography sx={styles.date}>
@@ -139,6 +155,7 @@ const styles = {
         alignItems: "flex-start",
         backgroundColor: '#ffffff',
         borderRadius: '10px',
+        border: '1px solid rgba(0,0,0,0.06)',
         boxShadow: "0 2px 4px rgba(0,0,0,0.04)",
         transition: "all 0.2s ease",
         "&:hover": {

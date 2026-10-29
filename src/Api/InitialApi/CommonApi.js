@@ -2,10 +2,10 @@ import axios from "axios";
 import { APIURL, getHeaders } from "./config";
 import { getAbortSignal } from "../../Utils/requestAbortController";
 
-export const CommonAPI = async (body) => {
+export const CommonAPI = async (body, headerOverrides = {}) => {
   try {
     const init = JSON.parse(sessionStorage.getItem("taskInit")) || {};
-    const headers = getHeaders(init);
+    const headers = getHeaders(init, headerOverrides);
 
     const { data } = await axios.post(APIURL, body, { headers, signal: getAbortSignal() });
     return data;

@@ -1,12 +1,14 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 import { getAuthData, getUserProfileData,getClientIpAddress } from "../../Utils/globalfun";
 
-export const fetchMettingListApi = async (selectedRow) => {
+export const fetchMettingListApi = async (selectedRow, dateRange) => {
     const AuthData = getAuthData();
     try {
         const ipAddress = await getClientIpAddress();
         const combinedValue = JSON.stringify({
             taskid: `${selectedRow?.taskid ?? ''}`,
+            startdatefrom: dateRange?.startdatefrom ?? '',
+            startdateto: dateRange?.startdateto ?? '',
         });
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"meetinglist\",\"appuserid\":\"${AuthData?.uid ?? ''}\",\"IPAddress\":\"${ipAddress}\"}`,
@@ -26,14 +28,18 @@ export const fetchMettingListApi = async (selectedRow) => {
 };
 
 
-export const fetchMettingListByLoginApi = async (selectedRow) => {
+export const fetchMettingListByLoginApi = async (selectedRow, dateRange) => {
     const UserProfileData = getUserProfileData()
     try {
         const ipAddress = await getClientIpAddress();
+        const combinedValue = JSON.stringify({
+            startdatefrom: dateRange?.startdatefrom ?? '',
+            startdateto: dateRange?.startdateto ?? '',
+        });
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"meetinglistbylogin\",\"appuserid\":\"${(selectedRow?.uid || selectedRow?.userid) ?? UserProfileData?.userid}\",\"IPAddress\":\"${ipAddress}\"}`,
             "f": "Task Management (tasklist)",
-            "p": "",
+            "p": combinedValue,
         };
         const response = await CommonAPI(body);
         if (response?.Data) {

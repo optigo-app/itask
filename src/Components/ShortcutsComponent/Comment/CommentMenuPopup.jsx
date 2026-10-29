@@ -1,168 +1,31 @@
-import React, { useEffect, useLayoutEffect, useRef, useState, memo } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-    Menu,
+    Drawer,
     Box,
     Typography,
     TextareaAutosize,
-    Button,
     IconButton,
-    Avatar,
-    Chip,
     CircularProgress,
-    Skeleton
+    Skeleton,
+    TextField,
+    InputAdornment,
+    Tooltip,
+    Button
 } from '@mui/material';
-import { Send, Paperclip, MessageCircle } from 'lucide-react';
+import { Paperclip, MessageCircle, X, Search, ArrowUpDown, ExternalLink } from 'lucide-react';
+
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
-import { background, formatDate4, ImageUrl, processCommentData, getAssigneeMaster } from '../../../Utils/globalfun';
+import { taskCommentUpdateApi } from '../../../Api/TaskApi/TaskCommentUpdateApi';
+import { taskCommentDeleteApi } from '../../../Api/TaskApi/TaskCommentDeleteApi';
+import { taskCommentReactionApi } from '../../../Api/TaskApi/TaskCommentReactionApi';
+import { processCommentData, getAssigneeMaster, getUserProfileData } from '../../../Utils/globalfun';
 import { uploadFilesForComment } from '../../../Utils/uploadHelpers';
 import { toast } from 'react-toastify';
 import DocsViewerModal from '../../DocumentViewer/DocsViewerModal';
-
-// Memoized CompactComment component to prevent re-renders
-const CompactComment = memo(({ comment, onClose, selectedTask, onViewAllComments, onAttachmentClick }) => (
-    <Box sx={{
-        display: 'flex',
-        gap: 1,
-        p: 1.5,
-        backgroundColor: '#f8f9fa',
-        borderRadius: '8px',
-        border: '1px solid #e9ecef'
-    }}>
-        <Avatar
-            alt={comment?.assignee?.firstname}
-            src={ImageUrl(comment?.assignee)}
-            sx={{
-                width: 25,
-                height: 25,
-                fontSize: '12px',
-                backgroundColor: background(comment?.assignee?.firstname + " " + comment?.assignee?.lastname),
-            }}
-        >
-            {!comment?.assignee?.avatar && comment?.assignee?.firstname?.charAt(0)}
-        </Avatar>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ fontWeight: 600, color: '#333' }}>
-                    {comment?.assignee?.firstname || comment?.user || 'User'}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
-                    {formatDate4(comment?.entrydate)}
-                </Typography>
-            </Box>
-            <Typography variant="body2" sx={{
-                fontSize: '13px',
-                lineHeight: 1.4,
-                color: '#555',
-                wordBreak: 'break-word',
-                whiteSpace: 'pre-line'
-            }}>
-                {comment?.comment}
-            </Typography>
-            
-            {/* Attachments Display */}
-            {comment?.attachments?.length > 0 && (
-                <Box sx={{ mt: 1 }}>
-                    <Box sx={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 0.5,
-                        maxHeight: '60px',
-                        overflowY: 'auto'
-                    }}>
-                        {comment.attachments.slice(0, 4).map((attachment, index) => (
-                            <Box key={index} sx={{
-                                position: 'relative',
-                                width: '48px',
-                                height: '48px',
-                                borderRadius: '4px',
-                                overflow: 'hidden',
-                                border: '1px solid #e1e5e9',
-                                cursor: 'pointer',
-                                '&:hover': {
-                                    transform: 'scale(1.05)',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                }
-                            }}
-                            onClick={() => {
-                                if (attachment.extension === 'url') {
-                                    window.open(attachment.url, '_blank');
-                                } else {
-                                    onAttachmentClick(attachment, comment.attachments);
-                                }
-                            }}
-                            >
-                                {attachment.isImage ? (
-                                    <img 
-                                        src={attachment.url} 
-                                        alt={attachment.filename}
-                                        style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            objectFit: 'cover'
-                                        }}
-                                    />
-                                ) : attachment.extension === 'url' ? (
-                                    <Box sx={{
-                                        width: '100%',
-                                        height: '100%',
-                                        backgroundColor: '#fff3e0',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}>
-                                        <Typography sx={{ fontSize: '8px', color: '#ff9800' }}>🔗</Typography>
-                                    </Box>
-                                ) : (
-                                    <Box sx={{
-                                        width: '100%',
-                                        height: '100%',
-                                        backgroundColor: '#e3f2fd',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}>
-                                        <Paperclip size={10} color='#1976d2' />
-                                    </Box>
-                                )}
-                            </Box>
-                        ))}
-                        {comment.attachments.length > 4 && (
-                            <Box sx={{
-                                width: '48px',
-                                height: '48px',
-                                borderRadius: '4px',
-                                backgroundColor: '#f5f5f5',
-                                border: '1px solid #e1e5e9',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                '&:hover': {
-                                    transform: 'scale(1.05)',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                    backgroundColor: '#eeeeee'
-                                }
-                            }}
-                            onClick={() => {
-                                onClose();
-                                onViewAllComments(selectedTask);
-                            }}
-                            >
-                                <Typography sx={{ fontSize: '10px', color: '#666', fontWeight: 'bold' }}>
-                                    +{comment.attachments.length - 4}
-                                </Typography>
-                            </Box>
-                        )}
-                    </Box>
-                </Box>
-            )}
-        </Box>
-    </Box>
-));
+import CommentCard from './CommentCard';
 
 const CommentMenuPopup = ({
-    anchorEl,
     open,
     onClose,
     selectedTask,
@@ -176,11 +39,15 @@ const CommentMenuPopup = ({
     const [commentsTaskId, setCommentsTaskId] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoadingComments, setIsLoadingComments] = useState(false);
-    const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
     const [currentAttachments, setCurrentAttachments] = useState([]);
     const [viewerOpen, setViewerOpen] = useState(false);
     const [initialSlideIndex, setInitialSlideIndex] = useState(0);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortAsc, setSortAsc] = useState(false);
     const activeFetchIdRef = useRef(0);
+    const listEndRef = useRef(null);
+
+    const profileData = useMemo(() => getUserProfileData(), [open]);
 
     useLayoutEffect(() => {
         if (open && selectedTask?.taskid) {
@@ -189,45 +56,39 @@ const CommentMenuPopup = ({
                 setCommentsTaskId(selectedTask.taskid);
             }
             setIsLoadingComments(true);
-            setShowLoadingIndicator(false);
         }
     }, [open, selectedTask?.taskid]);
 
-    useEffect(() => {
+    const fetchTaskComment = async ({ showLoader = true } = {}) => {
         const assigneesMaster = getAssigneeMaster();
-        const fetchTaskComment = async () => {
-            const taskId = selectedTask?.taskid;
-            const fetchId = ++activeFetchIdRef.current;
-            setIsLoadingComments(true);
-            setShowLoadingIndicator(false);
-            const loadingTimer = setTimeout(() => setShowLoadingIndicator(true), 180);
-            try {
-                const taskComment = await taskCommentGetApi(selectedTask);
-                if (fetchId !== activeFetchIdRef.current) return;
-                if (taskComment) {
-                    const processedComments = processCommentData(taskComment.rd, assigneesMaster);
-                    setComments(processedComments);
-                    setCommentsTaskId(taskId ?? null);
-                } else {
-                    setComments([]);
-                    setCommentsTaskId(taskId ?? null);
-                }
-            } catch (error) {
-                console.error('Error fetching task comments: ', error);
-            } finally {
-                if (fetchId !== activeFetchIdRef.current) return;
-                clearTimeout(loadingTimer);
-                setShowLoadingIndicator(false);
-                setIsLoadingComments(false);
+        const taskId = selectedTask?.taskid;
+        const fetchId = ++activeFetchIdRef.current;
+        if (showLoader) setIsLoadingComments(true);
+        try {
+            const taskComment = await taskCommentGetApi(selectedTask);
+            if (fetchId !== activeFetchIdRef.current) return;
+            if (taskComment) {
+                const processedComments = processCommentData(taskComment.rd, assigneesMaster);
+                setComments(processedComments);
+                setCommentsTaskId(taskId ?? null);
+            } else {
+                setComments([]);
+                setCommentsTaskId(taskId ?? null);
             }
-        };
+        } catch (error) {
+            console.error('Error fetching task comments: ', error);
+        } finally {
+            if (fetchId !== activeFetchIdRef.current) return;
+            setIsLoadingComments(false);
+        }
+    };
 
+    useEffect(() => {
         if (open && selectedTask && selectedTask.taskid) {
             fetchTaskComment();
         } else if (!open) {
             activeFetchIdRef.current += 1;
             setIsLoadingComments(false);
-            setShowLoadingIndicator(false);
         }
     }, [open, selectedTask?.taskid]);
 
@@ -243,7 +104,7 @@ const CommentMenuPopup = ({
     };
 
     const handleSendComment = async () => {
-        if (!newComment.trim() || !selectedTask || isSubmitting) return;
+        if ((!newComment.trim() && selectedFiles.length === 0) || !selectedTask || isSubmitting) return;
 
         setIsSubmitting(true);
         const assigneesMaster = getAssigneeMaster();
@@ -264,10 +125,8 @@ const CommentMenuPopup = ({
                 }
             }
 
-            // Call the API to add comment with attachments
             await taskCommentAddApi(selectedTask, newComment.trim(), attachments);
 
-            // Fetch updated comments to refresh the data
             const taskComment = await taskCommentGetApi(selectedTask);
 
             if (taskComment) {
@@ -283,8 +142,48 @@ const CommentMenuPopup = ({
             setFilePreviews([]);
         } catch (error) {
             console.error('Error adding comment:', error);
+            toast.error('Failed to add comment');
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleEditComment = async (comment, newText) => {
+        try {
+            await taskCommentUpdateApi(comment?.id, newText);
+            await fetchTaskComment({ showLoader: false });
+        } catch (error) {
+            console.error('Error updating comment:', error);
+            toast.error('Failed to update comment');
+        }
+    };
+
+    const handleDeleteComment = async (comment) => {
+        try {
+            await taskCommentDeleteApi(comment?.id);
+            await fetchTaskComment({ showLoader: false });
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+            toast.error('Failed to delete comment');
+        }
+    };
+
+    const handleToggleReaction = async (comment, emoji = '👍') => {
+        try {
+            await taskCommentReactionApi(comment?.id, selectedTask?.taskid, emoji);
+            await fetchTaskComment({ showLoader: false });
+        } catch (error) {
+            console.error('Error toggling reaction:', error);
+        }
+    };
+
+    const handleReplyComment = async (parentComment, text) => {
+        try {
+            await taskCommentAddApi(selectedTask, text, [], parentComment?.id);
+            await fetchTaskComment({ showLoader: false });
+        } catch (error) {
+            console.error('Error adding reply:', error);
+            toast.error('Failed to add reply');
         }
     };
 
@@ -350,26 +249,6 @@ const CommentMenuPopup = ({
         });
     };
 
-    // Handle attachment click from CompactComment
-    const handleAttachmentClick = (attachment, allAttachments) => {
-        const fileAttachments = allAttachments
-            .filter(att => att.extension !== 'url')
-            .map(att => ({
-                url: att.url,
-                filename: att.filename,
-                extension: att.extension,
-                fileObject: null
-            }));
-        
-        if (fileAttachments.length > 0) {
-            setCurrentAttachments(fileAttachments);
-            const attachmentIndex = fileAttachments.findIndex(att => att.url === attachment.url);
-            setInitialSlideIndex(attachmentIndex >= 0 ? attachmentIndex : 0);
-            setViewerOpen(true);
-        }
-    };
-
-    // Handle file preview click in input section
     const handleFilePreviewClick = (preview, index) => {
         const allFiles = filePreviews.map(p => ({
             url: p.url,
@@ -377,7 +256,7 @@ const CommentMenuPopup = ({
             extension: p.file.name?.split('.').pop()?.toLowerCase(),
             fileObject: p.file
         }));
-        
+
         setCurrentAttachments(allFiles);
         setInitialSlideIndex(index);
         setViewerOpen(true);
@@ -385,6 +264,8 @@ const CommentMenuPopup = ({
 
     const handleClose = () => {
         setNewComment('');
+        setSearchTerm('');
+        setSortAsc(false);
         filePreviews.forEach(preview => URL.revokeObjectURL(preview.url));
         setSelectedFiles([]);
         setFilePreviews([]);
@@ -394,8 +275,8 @@ const CommentMenuPopup = ({
         onClose();
     };
 
-    const handleViewAllComments = () => {
-        onViewAllComments(selectedTask);
+    const handleOpenTaskDetails = () => {
+        onViewAllComments?.(selectedTask);
         handleClose();
     };
 
@@ -406,394 +287,290 @@ const CommentMenuPopup = ({
         commentsTaskId !== selectedTask?.taskid;
 
     const commentsForDisplay = isStaleCommentsForAnotherTask ? [] : comments;
-    const latestComments = commentsForDisplay?.slice(-2);
 
-    const handleMenuClose = (event, reason) => {
-        if (reason === 'tabKeyDown') {
-            return;
-        }
-        handleClose();
-    };
+    const visibleComments = useMemo(() => {
+        const term = searchTerm.trim().toLowerCase();
+        const filtered = term
+            ? commentsForDisplay.filter((c) =>
+                c?.comment?.toLowerCase().includes(term) ||
+                `${c?.assignee?.firstname ?? ''} ${c?.assignee?.lastname ?? ''}`.toLowerCase().includes(term)
+            )
+            : commentsForDisplay;
 
-    const handleMenuKeyDown = (event) => {
-        if (event.key === 'c' || event.key === 'C' || 
-            event.key === 'Escape' || event.key === 'Enter' || 
-            event.key === 'Tab' || event.key === 'Shift') {
-            event.stopPropagation();
-        }
-    };
+        const byId = new Map();
+        const roots = [];
+        filtered.forEach((c) => {
+            byId.set(c?.id, { ...c, replies: [] });
+        });
+        byId.forEach((node) => {
+            const parent = node?.parentid ? byId.get(node.parentid) : null;
+            if (parent) {
+                parent.replies.push(node);
+            } else {
+                roots.push(node);
+            }
+        });
+
+        const sortByDate = (a, b) =>
+            sortAsc
+                ? new Date(a?.entrydate) - new Date(b?.entrydate)
+                : new Date(b?.entrydate) - new Date(a?.entrydate);
+        const sortTree = (nodes) => {
+            nodes.sort(sortByDate);
+            nodes.forEach((n) => {
+                if (n.replies?.length) {
+                    n.replies.sort((a, b) => new Date(a?.entrydate) - new Date(b?.entrydate));
+                    sortTree(n.replies);
+                }
+            });
+        };
+        sortTree(roots);
+        return roots;
+    }, [commentsForDisplay, searchTerm, sortAsc]);
+
 
     return (
-        <Menu
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleMenuClose}
-            onKeyDown={handleMenuKeyDown}
-            disableAutoFocus={true}
-            disableEnforceFocus={true}
-            disableRestoreFocus={true}
-            keepMounted
-            slotProps={{
-                paper: {
+        <>
+            <Drawer
+                anchor="right"
+                open={open}
+                onClose={handleClose}
+                PaperProps={{
                     sx: {
-                        width: '380px',
-                        maxWidth: '90vw',
-                        maxHeight: '65vh',
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                        border: '1px solid #e0e0e0',
+                        width: { xs: '100vw', sm: 420 },
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%',
+                        // MUI paper has overflow-y:auto by default — lock it so the
+                        // inner list is the ONLY scrollbar (prevents hidden comments
+                        // and the composer drifting away on long threads)
                         overflow: 'hidden',
-                        "& .MuiList-root": {
-                            padding: '0 !important'
-                        }
                     }
-                }
-            }}
-            transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-            }}
-            anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-            }}
-        >
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                {/* Compact Header */}
+                }}
+            >
+                {/* Header */}
                 <Box sx={{
-                    padding: '12px 16px',
+                    px: 2,
+                    py: 1.5,
                     borderBottom: '1px solid #f0f0f0',
-                    backgroundColor: '#fafafa'
+                    backgroundColor: '#fff',
+                    flexShrink: 0,
                 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.2 }}>
-                            <MessageCircle size={15} color="#7367f0" />
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#333' }}>
-                                Comments
-                            </Typography>
-                            {commentsForDisplay?.length > 0 && (
-                                <Chip
-                                    label={commentsForDisplay?.length}
-                                    size="small"
-                                    sx={{
-                                        height: '18px',
-                                        fontSize: '10px',
-                                        backgroundColor: '#7367f0',
-                                        color: 'white'
-                                    }}
-                                />
-                            )}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                        <Box sx={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: '10px',
+                            backgroundColor: 'rgba(115, 103, 240, 0.10)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}>
+                            <MessageCircle size={19} color="#7367f0" />
                         </Box>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#333', lineHeight: 1.2 }}>
+                                    Comments
+                                </Typography>
+                                {commentsForDisplay?.length > 0 && (
+                                    <Box sx={{
+                                        minWidth: 20,
+                                        height: 18,
+                                        px: 0.6,
+                                        borderRadius: '9px',
+                                        backgroundColor: 'rgba(115, 103, 240, 0.10)',
+                                        color: '#7367f0',
+                                        fontSize: '11px',
+                                        fontWeight: 700,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        lineHeight: 1,
+                                    }}>
+                                        {commentsForDisplay.length > 99 ? '99+' : commentsForDisplay.length}
+                                    </Box>
+                                )}
+                            </Box>
+                            <Typography variant="caption" color="text.secondary" sx={{
+                                fontSize: '11.5px',
+                                display: 'block',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                {selectedTask?.taskno ? `${selectedTask.taskno} · ` : ''}{selectedTask?.taskname || 'Task'}
+                            </Typography>
+                        </Box>
+                        <Tooltip title={sortAsc ? 'Oldest first — click for newest' : 'Newest first — click for oldest'} arrow>
+                            <IconButton size="small" onClick={() => setSortAsc((p) => !p)} sx={{ color: '#7367f0' }}>
+                                <ArrowUpDown size={16} />
+                            </IconButton>
+                        </Tooltip>
+                        {onViewAllComments && (
+                            <Tooltip title="Open task details" arrow>
+                                <IconButton size="small" onClick={handleOpenTaskDetails} sx={{ color: '#7367f0' }}>
+                                    <ExternalLink size={16} />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                        <IconButton size="small" onClick={handleClose}>
+                            <X size={18} />
+                        </IconButton>
                     </Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px', mt: 0.5 }}>
-                        {selectedTask?.taskname || 'Task'}
-                    </Typography>
                 </Box>
 
-                {/* Compact Comments Section */}
+                {/* Search — only when there's something to search */}
+                {commentsForDisplay?.length > 2 && (
+                    <Box sx={{ px: 2, pt: 1.5, flexShrink: 0 }}>
+                        <TextField
+                            size="small"
+                            fullWidth
+                            placeholder="Search comments or people..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Search size={15} color="#9a9a9a" />
+                                    </InputAdornment>
+                                ),
+                                sx: { borderRadius: '8px', fontSize: '13px' }
+                            }}
+                        />
+                    </Box>
+                )}
+
+                {/* Comments list — the only scroll region.
+                    NOTE: no flex-column here — column-flex children default to
+                    flex-shrink:1, so cards would compress/clip instead of overflowing
+                    and the container would never get a scrollbar. */}
                 <Box sx={{
-                    maxHeight: '240px',
-                    minHeight: '140px',
-                    overflow: 'auto',
-                    padding: '8px 12px',
-                    position: 'relative'
+                    flex: 1,
+                    minHeight: 0,
+                    overflowY: 'auto',
+                    px: 2,
+                    py: 1.5,
+                    backgroundColor: '#fff',
+                    '&::-webkit-scrollbar': { width: '5px' },
+                    '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(0,0,0,0.18)', borderRadius: '3px' },
+                    '&::-webkit-scrollbar-track': { background: 'transparent' },
                 }}>
-                    {(showLoadingIndicator && latestComments?.length === 0) ? (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                                <Skeleton variant="circular" width={25} height={25} />
+                    {isLoadingComments && commentsForDisplay.length === 0 ? (
+                        [0, 1, 2].map((i) => (
+                            <Box key={i} sx={{ display: 'flex', gap: 1.5, p: 1.5, border: '1px solid #f0f0f0', borderRadius: '10px' }}>
+                                <Skeleton variant="circular" width={32} height={32} />
                                 <Box sx={{ flex: 1 }}>
                                     <Skeleton variant="text" width="40%" height={14} />
-                                    <Skeleton variant="text" width="85%" height={16} />
-                                    <Skeleton variant="text" width="70%" height={16} />
+                                    <Skeleton variant="text" width="90%" height={16} />
+                                    <Skeleton variant="text" width="65%" height={16} />
                                 </Box>
                             </Box>
-                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                                <Skeleton variant="circular" width={25} height={25} />
-                                <Box sx={{ flex: 1 }}>
-                                    <Skeleton variant="text" width="35%" height={14} />
-                                    <Skeleton variant="text" width="80%" height={16} />
-                                    <Skeleton variant="text" width="60%" height={16} />
-                                </Box>
-                            </Box>
-                        </Box>
+                        ))
+                    ) : visibleComments.length > 0 ? (
+                        visibleComments.map((comment) => (
+                            <CommentCard
+                                key={comment?.id ?? comment?.entrydate}
+                                comment={comment}
+                                replies={comment?.replies ?? []}
+                                currentUserId={profileData?.id ?? profileData?.userid}
+                                onEditComment={handleEditComment}
+                                onDeleteComment={handleDeleteComment}
+                                onToggleReaction={handleToggleReaction}
+                                onReply={handleReplyComment}
+                            />
+                        ))
                     ) : (
                         <Box sx={{
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: 1,
-                            opacity: showLoadingIndicator ? 0.65 : 1,
-                            transition: 'opacity 150ms ease'
-                        }}>
-                            {latestComments.map((comment, index) => (
-                                <CompactComment
-                                    key={index}
-                                    comment={comment}
-                                    onClose={handleClose}
-                                    selectedTask={selectedTask}
-                                    onViewAllComments={onViewAllComments}
-                                    onAttachmentClick={handleAttachmentClick}
-                                />
-                            ))}
-
-                            {!isLoadingComments && latestComments?.length === 0 && (
-                                <Box sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    py: 2
-                                }}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px' }}>
-                                        No comments yet
-                                    </Typography>
-                                </Box>
-                            )}
-
-                            {commentsForDisplay?.length > 2 && (
-                                <Box sx={{ textAlign: 'center', mt: 1 }}>
-                                    <Button
-                                        size="small"
-                                        variant="text"
-                                        onClick={handleViewAllComments}
-                                        sx={{
-                                            color: '#7367f0',
-                                            fontSize: '11px',
-                                            textTransform: 'none',
-                                            minHeight: '28px',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(115, 103, 240, 0.08)'
-                                            }
-                                        }}
-                                    >
-                                        + {commentsForDisplay?.length - 2} more comments
-                                    </Button>
-                                </Box>
-                            )}
-                        </Box>
-                    )}
-
-                    {showLoadingIndicator && latestComments?.length > 0 && (
-                        <Box sx={{
-                            position: 'absolute',
-                            top: 8,
-                            right: 12,
-                            display: 'flex',
                             alignItems: 'center',
+                            justifyContent: 'center',
+                            flex: 1,
+                            py: 6,
                             gap: 1,
-                            pointerEvents: 'none'
+                            color: '#9a9a9a'
                         }}>
-                            <CircularProgress size={14} sx={{ color: '#7367f0' }} />
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
-                                Updating...
+                            <MessageCircle size={34} strokeWidth={1.5} />
+                            <Typography variant="body2" sx={{ fontSize: '13px' }}>
+                                {searchTerm ? 'No comments match your search' : 'No comments yet — start the conversation'}
                             </Typography>
                         </Box>
                     )}
+                    {isLoadingComments && commentsForDisplay.length > 0 && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center', py: 0.5 }}>
+                            <CircularProgress size={14} sx={{ color: '#7367f0' }} />
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
+                                Updating…
+                            </Typography>
+                        </Box>
+                    )}
+                    <div ref={listEndRef} />
                 </Box>
 
-                {/* Compact Input Section */}
+
+                {/* Composer — pinned to drawer bottom; soft shadow separator
+                    (borderTop would double up with the last card's border-bottom) */}
                 <Box sx={{
-                    padding: '12px 16px',
-                    borderTop: '1px solid #f0f0f0',
-                    backgroundColor: '#fafafa'
+                    px: 2,
+                    py: 1.5,
+                    boxShadow: '0 -2px 10px rgba(0,0,0,0.05)',
+                    backgroundColor: '#fff',
+                    flexShrink: 0,
                 }}>
-                    <TextareaAutosize
-                        value={newComment}
-                        onChange={handleCommentChange}
-                        minRows={2}
-                        maxRows={3}
-                        placeholder="Add a comment... (Press Enter to send)"
-                        onKeyPress={handleKeyPress}
-                        onKeyDown={(e) => {
-                            // Prevent event bubbling to parent Menu component
-                            e.stopPropagation();
-                        }}
-                        onFocus={(e) => {
-                            // Ensure textarea stays focused
-                            e.target.focus();
-                            // Apply focus styling
-                            e.target.style.borderColor = '#7367f0';
-                            e.target.style.boxShadow = '0 0 0 2px rgba(115, 103, 240, 0.1)';
-                        }}
-                        style={{
-                            width: '100%',
-                            maxWidth: '100%',
-                            minWidth: '100%',
-                            padding: '8px 10px',
-                            borderRadius: '6px',
-                            border: '1px solid #ddd',
-                            fontFamily: 'inherit',
-                            fontSize: '13px',
-                            resize: 'none',
-                            outline: 'none',
-                            transition: 'all 0.2s',
-                            boxSizing: 'border-box',
-                            backgroundColor: 'white'
-                        }}
-                        onBlur={(e) => {
-                            e.target.style.borderColor = '#ddd';
-                            e.target.style.boxShadow = 'none';
-                        }}
-                    />
-
-                    {/* File Attachment Section */}
-                    <Box sx={{
-                        mt: 1,
-                        pb: 1,
-                        borderBottom: selectedFiles.length > 0 ? '1px solid #f0f0f0' : 'none'
-                    }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: selectedFiles.length > 0 ? 1 : 0 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <input
-                                    type="file"
-                                    multiple
-                                    onChange={handleFileChange}
-                                    style={{ display: 'none' }}
-                                    id="comment-file-upload"
-                                />
-                                <label htmlFor="comment-file-upload">
-                                    <IconButton
-                                        component="span"
-                                        size="small"
-                                        sx={{
-                                            p: 0.5,
-                                            backgroundColor: '#f8f9fa',
-                                            border: '1px solid #e9ecef',
-                                            borderRadius: '6px',
-                                            '&:hover': {
-                                                backgroundColor: '#e9ecef',
-                                                borderColor: '#7367f0'
-                                            }
-                                        }}
-                                    >
-                                        <Paperclip size={16} color='#7367f0' />
-                                    </IconButton>
-                                </label>
-                                {selectedFiles.length > 0 && (
-                                    <Typography variant="caption" sx={{
-                                        ml: 1,
-                                        color: '#6c757d',
-                                        fontSize: '11px',
-                                        fontWeight: '500'
-                                    }}>
-                                        {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} selected
-                                    </Typography>
-                                )}
-                            </Box>
-
-                            {selectedFiles.length > 0 && (
-                                <Button
+                    {/* Selected-file previews */}
+                    {selectedFiles.length > 0 && (
+                        <Box sx={{ mb: 1, pb: 1, borderBottom: '1px solid #f0f0f0' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                <Typography variant="caption" sx={{ color: '#6c757d', fontSize: '11px', fontWeight: 500 }}>
+                                    {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} selected
+                                </Typography>
+                                <IconButton
                                     size="small"
-                                    variant="outlined"
                                     onClick={() => {
-                                        // Clear files and previews
                                         filePreviews.forEach(preview => URL.revokeObjectURL(preview.url));
                                         setSelectedFiles([]);
                                         setFilePreviews([]);
                                     }}
-                                    sx={{
-                                        color: '#dc3545',
-                                        borderColor: '#dc3545',
-                                        fontSize: '9px',
-                                        fontWeight: '500',
-                                        padding: '2px 8px',
-                                        borderRadius: '4px',
-                                        textTransform: 'none',
-                                        minWidth: 'auto',
-                                        height: '24px',
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(220, 53, 69, 0.04)',
-                                            borderColor: '#c82333'
-                                        }
-                                    }}
+                                    sx={{ color: '#dc3545', fontSize: '11px' }}
                                 >
-                                    Clear All
-                                </Button>
-                            )}
-                        </Box>
-
-                        {selectedFiles.length > 0 && (
+                                    <X size={14} />
+                                </IconButton>
+                            </Box>
                             <Box sx={{
                                 display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))',
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(56px, 1fr))',
                                 gap: 0.8,
-                                maxWidth: '320px',
-                                maxHeight: '120px',
+                                maxHeight: '130px',
                                 overflowY: 'auto',
                                 backgroundColor: '#fafbfc',
                                 padding: '8px',
                                 borderRadius: '8px',
                                 border: '1px solid #e9ecef',
-                                '&::-webkit-scrollbar': {
-                                    width: '3px',
-                                },
-                                '&::-webkit-scrollbar-track': {
-                                    background: 'transparent',
-                                },
-                                '&::-webkit-scrollbar-thumb': {
-                                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                                    borderRadius: '2px',
-                                },
                             }}>
                                 {filePreviews.map((preview, index) => {
                                     const isImage = preview.file.type.startsWith('image/');
                                     return (
-                                        <Box sx={{ position: 'relative' }}>
-                                            <Box key={index} sx={{
-                                                width: '48px',
-                                                height: '48px',
+                                        <Box key={index} sx={{ position: 'relative' }}>
+                                            <Box sx={{
+                                                width: '100%',
+                                                aspectRatio: '1',
                                                 backgroundColor: '#fff',
                                                 borderRadius: '8px',
                                                 border: '1px solid #e1e5e9',
                                                 overflow: 'hidden',
-                                                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                                                transition: 'all 0.15s ease',
                                                 cursor: 'pointer',
-                                                '&:hover': {
-                                                    transform: 'translateY(-1px)',
-                                                    boxShadow: '0 3px 8px rgba(0,0,0,0.12)',
-                                                    borderColor: '#7367f0'
-                                                }
+                                                '&:hover': { borderColor: '#7367f0' }
                                             }}
                                                 onClick={() => handleFilePreviewClick(preview, index)}
                                             >
                                                 {isImage ? (
-                                                    // Image preview - square thumbnail
-                                                    <Box sx={{
-                                                        position: 'relative',
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        '&:hover': {
-                                                            '&::after': {
-                                                                content: '"👁"',
-                                                                position: 'absolute',
-                                                                top: 0,
-                                                                left: 0,
-                                                                right: 0,
-                                                                bottom: 0,
-                                                                backgroundColor: 'rgba(115, 103, 240, 0.7)',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                fontSize: '14px',
-                                                                color: 'white',
-                                                                zIndex: 1,
-                                                                pointerEvents: 'none'
-                                                            }
-                                                        }
-                                                    }}>
-                                                        <img
-                                                            src={preview.url}
-                                                            alt={preview.file.name}
-                                                            style={{
-                                                                width: '100%',
-                                                                height: '100%',
-                                                                objectFit: 'cover',
-                                                                display: 'block'
-                                                            }}
-                                                        />
-                                                    </Box>
+                                                    <img
+                                                        src={preview.url}
+                                                        alt={preview.file.name}
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                                    />
                                                 ) : (
-                                                    // File preview - compact card
                                                     <Box sx={{
                                                         display: 'flex',
                                                         flexDirection: 'column',
@@ -801,39 +578,24 @@ const CommentMenuPopup = ({
                                                         justifyContent: 'center',
                                                         padding: '6px',
                                                         height: '100%',
-                                                        textAlign: 'center',
-                                                        '&:hover': {
-                                                            backgroundColor: 'rgba(115, 103, 240, 0.02)'
-                                                        }
+                                                        textAlign: 'center'
                                                     }}>
-                                                        <Box sx={{
-                                                            backgroundColor: '#e8f4fd',
-                                                            borderRadius: '4px',
-                                                            padding: '4px',
-                                                            marginBottom: '4px',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center'
-                                                        }}>
-                                                            <Paperclip size={12} color='#1976d2' />
-                                                        </Box>
+                                                        <Paperclip size={14} color='#1976d2' />
                                                         <Typography variant="caption" sx={{
-                                                            fontSize: '7px',
-                                                            fontWeight: '600',
-                                                            display: 'block',
+                                                            fontSize: '8px',
+                                                            fontWeight: 600,
                                                             overflow: 'hidden',
                                                             textOverflow: 'ellipsis',
                                                             whiteSpace: 'nowrap',
                                                             color: '#2c3e50',
                                                             width: '100%',
-                                                            lineHeight: 1
+                                                            mt: 0.5
                                                         }}>
-                                                            {preview.file.name.length > 8 ? preview.file.name.substring(0, 8) + '...' : preview.file.name}
+                                                            {preview.file.name.length > 10 ? preview.file.name.substring(0, 10) + '…' : preview.file.name}
                                                         </Typography>
                                                     </Box>
                                                 )}
                                             </Box>
-                                            {/* Remove button - inside top right */}
                                             <IconButton
                                                 size="small"
                                                 onClick={(e) => {
@@ -842,23 +604,17 @@ const CommentMenuPopup = ({
                                                 }}
                                                 sx={{
                                                     position: 'absolute',
-                                                    top: '-5px',
-                                                    right: '-5px',
-                                                    width: '16px',
-                                                    height: '16px',
-                                                    backgroundColor: 'rgba(220, 53, 69, 0.9)',
+                                                    top: '-6px',
+                                                    right: '-6px',
+                                                    width: '18px',
+                                                    height: '18px',
+                                                    backgroundColor: 'rgba(220, 53, 69, 0.95)',
                                                     color: 'white',
-                                                    fontSize: '10px',
-                                                    fontWeight: 'bold',
+                                                    fontSize: '12px',
                                                     borderRadius: '50%',
-                                                    border: '1px solid rgba(255,255,255,0.8)',
                                                     boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                                                    '&:hover': {
-                                                        backgroundColor: 'rgba(200, 35, 51, 0.95)',
-                                                        transform: 'scale(1.1)'
-                                                    },
+                                                    '&:hover': { backgroundColor: '#c82333' },
                                                     zIndex: 3,
-                                                    transition: 'all 0.15s ease'
                                                 }}
                                             >
                                                 ×
@@ -867,60 +623,90 @@ const CommentMenuPopup = ({
                                     );
                                 })}
                             </Box>
-                        )}
-                    </Box>
+                        </Box>
+                    )}
 
-                    {/* Action Buttons Section */}
+                    {/* Composer box: "Add a comment" + toolbar + Submit */}
                     <Box sx={{
-                        display: 'flex',
-                        gap: 0.5,
+                        border: 'none',
+                        borderRadius: '10px',
+                        backgroundColor: '#f5f5f5',
+                        px: 1.5,
                         pt: 1,
-                        justifyContent: 'flex-end'
+                        pb: 0.75,
+                        transition: 'background-color 0.2s, box-shadow 0.2s',
+                        '&:focus-within': {
+                            backgroundColor: '#eeeeee',
+                            boxShadow: '0 0 0 2px rgba(115, 103, 240, 0.15)'
+                        }
                     }}>
-                        <Button
-                            size="small"
-                            onClick={handleClose}
-                            sx={{
-                                color: '#666',
-                                fontSize: '11px',
-                                minWidth: 'auto',
-                                px: 1.5,
-                                py: 0.5,
-                                minHeight: '28px',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(0,0,0,0.04)'
-                                }
+                        <TextareaAutosize
+                            value={newComment}
+                            onChange={handleCommentChange}
+                            onKeyDown={handleKeyPress}
+                            placeholder="Add a comment"
+                            minRows={2}
+                            maxRows={6}
+                            style={{
+                                width: '100%',
+                                border: 'none',
+                                outline: 'none',
+                                resize: 'none',
+                                fontFamily: '"Public Sans", sans-serif',
+                                fontSize: '13px',
+                                lineHeight: 1.5,
+                                color: '#333',
+                                background: 'transparent',
+                                boxSizing: 'border-box',
                             }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            size="small"
-                            variant="contained"
-                            onClick={handleSendComment}
-                            disabled={!newComment.trim() || isSubmitting}
-                            startIcon={<Send size={12} />}
-                            sx={{
-                                backgroundColor: '#7367f0',
-                                fontSize: '11px',
-                                minWidth: 'auto',
-                                px: 1.5,
-                                py: 0.5,
-                                minHeight: '28px',
-                                '&:hover': {
-                                    backgroundColor: '#5e57d1'
-                                },
-                                '&:disabled': {
-                                    backgroundColor: 'rgba(0,0,0,0.12)'
-                                }
-                            }}
-                        >
-                            {isSubmitting ? 'Sending...' : 'Send'}
-                        </Button>
+                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.5 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                                <input
+                                    type="file"
+                                    multiple
+                                    onChange={handleFileChange}
+                                    style={{ display: 'none' }}
+                                    id="comment-file-upload"
+                                />
+                                <label htmlFor="comment-file-upload">
+                                    <Tooltip title="Attach files (max 10, 25MB each)" arrow>
+                                        <IconButton
+                                            component="span"
+                                            size="small"
+                                            sx={{ width: 28, height: 28, color: '#8a8a8a', '&:hover': { color: '#7367f0' } }}
+                                        >
+                                            <Paperclip size={15} />
+                                        </IconButton>
+                                    </Tooltip>
+                                </label>
+                            </Box>
+                            <Button
+                                size="small"
+                                variant="contained"
+                                onClick={handleSendComment}
+                                disabled={(!newComment.trim() && selectedFiles.length === 0) || isSubmitting}
+                                sx={{
+                                    textTransform: 'none',
+                                    fontSize: '12.5px',
+                                    fontWeight: 600,
+                                    borderRadius: '6px',
+                                    px: 2,
+                                    py: 0.4,
+                                    minWidth: 0,
+                                    backgroundColor: '#7367f0',
+                                    boxShadow: 'none',
+                                    '&:hover': { backgroundColor: '#5e57d1', boxShadow: 'none' },
+                                    '&.Mui-disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
+                                }}
+                            >
+                                {isSubmitting ? <CircularProgress size={13} sx={{ color: 'white' }} /> : 'Submit'}
+                            </Button>
+                        </Box>
                     </Box>
                 </Box>
-            </Box>
-            
+            </Drawer>
+
             <DocsViewerModal
                 attachments={currentAttachments}
                 initialSlideIndex={initialSlideIndex}
@@ -931,7 +717,7 @@ const CommentMenuPopup = ({
                     setInitialSlideIndex(0);
                 }}
             />
-        </Menu>
+        </>
     );
 };
 

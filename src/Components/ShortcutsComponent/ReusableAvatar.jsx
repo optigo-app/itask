@@ -1,6 +1,7 @@
 import React from 'react'
-import { background, ImageUrl } from '../../Utils/globalfun'
-import { Avatar, AvatarGroup, Tooltip } from '@mui/material'
+import { ImageUrl, getAvatarColors, getInitials } from '../../Utils/globalfun'
+import { AvatarGroup, Tooltip } from '@mui/material'
+import SafeAvatar from './SafeAvatar'
 
 const ReusableAvatar = ({ assineeData, width = 30, max = 5 }) => {
     return (
@@ -32,16 +33,16 @@ const ReusableAvatar = ({ assineeData, width = 30, max = 5 }) => {
                         arrow
                         classes={{ tooltip: 'custom-tooltip' }}
                     >
-                        <Avatar
+                        <SafeAvatar
                             key={teamIdx}
                             alt={`${assignee?.firstname} ${assignee?.lastname}`}
                             src={ImageUrl(assignee) || null}
                             sx={{
-                                backgroundColor: background(`${assignee?.firstname + " " + assignee?.lastname}`),
+                                ...getAvatarColors(`${assignee?.firstname + " " + assignee?.lastname}`),
                             }}
                         >
-                            {!assignee.avatar && assignee?.firstname?.charAt(0)}
-                        </Avatar>
+                            {!assignee.avatar && getInitials(assignee?.firstname, assignee?.lastname)}
+                        </SafeAvatar>
                     </Tooltip>
                 ))}
             </AvatarGroup>

@@ -8,28 +8,23 @@ import dayjs from 'dayjs';
 import ReportsGrid from '../../Components/Reports/ReportsGrid';
 import { SquareChartGantt, User } from 'lucide-react';
 import TaskReportCard from '../../Components/Reports/TaskReportCard';
-import useFullTaskFormatFile from '../../Utils/TaskList/FullTasKFromatfile';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
+import SomethingWentWrong from '../../Components/Auth/SomethingWentWrong';
 import { commonTextFieldProps } from '../../Utils/globalfun';
 import PmFilters from '../../Components/Reports/PmFilters';
-import { calculateProgress } from '../../Utils/TaskList/reusable';
-import { actualTaskData } from '../../Recoil/atom';
-import { useRecoilValue } from 'recoil';
 import FilterChips from '../../Components/Task/FilterComponent/FilterChip';
+import { PmsReportApi, PmsReportDetailApi } from '../../Api/TaskApi/PmsReportApi';
+import { mapPmsReportData, mapPmsDetailTasks, getPmsDateWindow } from '../../Utils/TaskList/pmsReportMapper';
 
 const TASK_OPTIONS = [
     { id: 1, value: "EmployeeWiseData", label: "Team", icon: <User size={18} /> },
     { id: 2, value: "ModuleWiseData", label: "Project", icon: <SquareChartGantt size={18} /> },
 ];
 
-const TASK_TYPES = {
-    MODULE: "module",
-    MAJOR: "major",
-    MINOR: "minor",
-};
-
 const PmsReport2 = () => {
-    const [pmsReportData, setPmsReportData] = useState([]);
+    const [reportRes, setReportRes] = useState(null);
+    const [reportError, setReportError] = useState(null);
+    const [retryKey, setRetryKey] = useState(0);
     const [viewMode, setViewMode] = useState('EmployeeWiseData');
     const [viewType, setViewType] = useState('table');
     const [searchText, setSearchText] = useState('');
@@ -49,238 +44,48 @@ const PmsReport2 = () => {
         project: '',
         search: ''
     });
-    const actualData = useRecoilValue(actualTaskData);
-    const { iswhTLoading, taskCategory, taskFinalData } = useFullTaskFormatFile();
-    const [isLoading, setIsLoading] = useState(iswhTLoading);
+    const [isLoading, setIsLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(100);
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
 
-
+    // Server-side aggregation (mode=pmsreport) - refetch only when the date window moves
     useEffect(() => {
-        setIsLoading(iswhTLoading);
-    }, [iswhTLoading]);
-
-    // helper function for date wise data get
-    const isWithinDateRange = (task, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
-        if (filters.timeFilter === 'All') return true;
-
-        const dateRaw = task?.[taskDateField];
-        if (!dateRaw || dateRaw === '1900-01-01T00:00:00.000Z') return false;
-
-        const date = new Date(dateRaw);
-        if (isNaN(date.getTime())) return false;
-
-        const baseDate = new Date(currentDate);
-        baseDate.setHours(0, 0, 0, 0);
-
-        const tomorrow = new Date(baseDate);
-        tomorrow.setDate(baseDate.getDate() + 1);
-
-        const startOfWeek = new Date(baseDate);
-        // Calculate Monday as start of week (getDay(): 0=Sunday, 1=Monday, ...)
-        const dayOfWeek = baseDate.getDay();
-        const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days to Monday
-        startOfWeek.setDate(baseDate.getDate() - daysFromMonday);
-
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-        switch (filters.timeFilter) {
-            case 'Today':
-                return date.toDateString() === baseDate.toDateString();
-            case 'Tomorrow':
-                return date.toDateString() === tomorrow.toDateString();
-            case 'Week':
-                return date >= startOfWeek && date <= endOfWeek;
-            case 'Date-Range': {
-                const from = new Date(filters.dateRangeFilter.startDate);
-                const to = new Date(filters.dateRangeFilter.endDate);
-                if (isNaN(from) || isNaN(to)) return false;
-                const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                const fromOnly = new Date(from.getFullYear(), from.getMonth(), from.getDate());
-                const toOnly = new Date(to.getFullYear(), to.getMonth(), to.getDate());
-
-                return dateOnly >= fromOnly && dateOnly <= toOnly;
+        let cancelled = false;
+        const fetchReport = async () => {
+            setIsLoading(true);
+            const window = getPmsDateWindow(filters, currentDate);
+            const res = await PmsReportApi(window);
+            if (cancelled) return;
+            const statRow = res?.rd?.[0];
+            // stat:0 = SP-level failure (e.g. "Contact your Admin"); missing rd = transport/API failure
+            if (statRow?.stat == 0 || !Array.isArray(res?.rd)) {
+                const msg = (statRow?.stat_msg || '').replace(/^"+|"+$/g, '').trim();
+                setReportError(msg || 'Failed to load the PMS report. Please try again.');
+                setReportRes(null);
+            } else {
+                setReportError(null);
+                setReportRes(res);
             }
-            default:
-                return true;
-        }
-    };
-
-    // Employee Data Processing
-    const processEmployeeData = (data, taskCategory, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
-        const EmployeeWiseDataMap = new Map();
-
-        data?.forEach((task) => {
-            if (!isWithinDateRange(task, taskDateField, currentDate)) return;
-
-            const estimate = task.estimate_hrs || 0;
-            const actual = task.workinghr || 0;
-            const status = (task.status || "").toLowerCase();
-
-            if (Array.isArray(task.assignee)) {
-                // Get active assignees count to divide estimates properly
-                const activeAssignees = task.assignee.filter(a => a.isactive === 1);
-                const assigneeCount = activeAssignees.length || 1;
-
-                // Divide estimate and actual hours by number of active assignees
-                const estimatePerAssignee = estimate / assigneeCount;
-                const actualPerAssignee = actual / assigneeCount;
-
-                activeAssignees.forEach((assignee) => {
-                    const empKey = assignee.userid || assignee.customercode || assignee.firstname;
-
-                    if (!EmployeeWiseDataMap.has(empKey)) {
-                        EmployeeWiseDataMap.set(empKey, {
-                            ...assignee,
-                            TotalTasks: 0,
-                            Completed: 0,
-                            InProgress: 0,
-                            TotalEstimate: 0,
-                            TotalActual: 0,
-                            TotalMajor: 0,
-                            TotalMinor: 0,
-                            TotalMajorCompleted: 0,
-                            TotalMinorCompleted: 0,
-                            Tasks: [],
-                            CategorySummaryMap: new Map(),
-                        });
-                    }
-
-                    const emp = EmployeeWiseDataMap.get(empKey);
-                    emp.TotalTasks += 1;
-                    emp.TotalEstimate += estimatePerAssignee;
-                    emp.TotalActual += actualPerAssignee;
-                    emp.Tasks.push(task);
-
-                    if (status === "completed") emp.Completed += 1;
-                    if (status === "running") emp.InProgress += 1;
-                    // ✅ Count Major & Minor
-                    if (task.type?.toLowerCase() === TASK_TYPES.MAJOR) emp.TotalMajor += 1;
-                    if (task.type?.toLowerCase() === TASK_TYPES.MINOR) emp.TotalMinor += 1;
-                    // ✅ Count Major & Minor Completed
-                    if (task.type?.toLowerCase() === TASK_TYPES.MAJOR && status === "completed") emp.TotalMajorCompleted += 1;
-                    if (task.type?.toLowerCase() === TASK_TYPES.MINOR && status === "completed") emp.TotalMinorCompleted += 1;
-
-                    const labelObj = taskCategory?.find(c => c.id === task.workcategoryid);
-                    const labelName = labelObj?.labelname || "Unknown";
-                    const currentCount = emp.CategorySummaryMap.get(labelName) || 0;
-                    emp.CategorySummaryMap.set(labelName, currentCount + 1);
-                });
-            }
-        });
-
-        return Array.from(EmployeeWiseDataMap.values()).map((emp) => {
-            const progress = calculateProgress(emp.Completed, emp.TotalTasks);
-            const diff = emp.TotalActual - emp.TotalEstimate;
-            const performance = emp.TotalEstimate > 0 && emp.TotalActual > 0
-                ? Math.round((emp.TotalActual / emp.TotalEstimate) * 100)
-                : 0;
-
-            const CategorySummary = Array.from(emp.CategorySummaryMap.entries()).map(
-                ([categoryname, count]) => ({ categoryname, count })
-            );
-
-            const { CategorySummaryMap, ...empData } = emp;
-
-            return {
-                ...empData,
-                Progress: `${progress}%`,
-                TotalDiff: diff,
-                Performance: `${performance}%`,
-                CategorySummary
-            };
-        });
-    };
-
-    // Module-wise Data Processing
-    const processModuleWiseData = (data, ModuleList, taskCategory, taskDateField = 'DeadLineDate', currentDate = new Date()) => {
-        const ModuleWiseDataMap = new Map();
-        setIsLoading(true);
-
-        data?.forEach((task) => {
-            if (!isWithinDateRange(task, taskDateField, currentDate)) return;
-            const moduleId = task.moduleid;
-            if (!moduleId) return;
-
-            if (!ModuleWiseDataMap.has(moduleId)) {
-                ModuleWiseDataMap.set(moduleId, {
-                    moduleid: moduleId,
-                    modulename: ModuleList?.find(m => m.taskid == moduleId)?.taskname || "",
-                    TotalTasks: 0,
-                    Completed: 0,
-                    InProgress: 0,
-                    TotalEstimate: 0,
-                    TotalActual: 0,
-                    TotalMajor: 0,
-                    TotalMinor: 0,
-                    TotalMajorCompleted: 0,
-                    TotalMinorCompleted: 0,
-                    Tasks: [],
-                    CategorySummaryTemp: new Map(),
-                });
-            }
-
-            const mod = ModuleWiseDataMap.get(moduleId);
-            const status = (task.status || "").toLowerCase();
-
-            mod.TotalTasks += 1;
-            mod.TotalEstimate += task.estimate_hrs || 0;
-            mod.TotalActual += task.workinghr || 0;
-            mod.Tasks.push(task);
-
-            if (status === "completed") mod.Completed += 1;
-            if (status === "running") mod.InProgress += 1;
-            // ✅ Count Major & Minor
-            if (task.type?.toLowerCase() === TASK_TYPES.MAJOR) mod.TotalMajor += 1;
-            if (task.type?.toLowerCase() === TASK_TYPES.MINOR) mod.TotalMinor += 1;
-            // ✅ Count Major & Minor Completed
-            if (task.type?.toLowerCase() === TASK_TYPES.MAJOR && status === "completed") mod.TotalMajorCompleted += 1;
-            if (task.type?.toLowerCase() === TASK_TYPES.MINOR && status === "completed") mod.TotalMinorCompleted += 1;
-
-            const labelObj = taskCategory?.find(c => c.id === task.workcategoryid);
-            const labelName = labelObj?.labelname || "Unknown";
-            const currentCount = mod.CategorySummaryTemp.get(labelName) || 0;
-            mod.CategorySummaryTemp.set(labelName, currentCount + 1);
-        });
-
-        return Array.from(ModuleWiseDataMap.values()).map((mod) => {
-            const progress = calculateProgress(mod.Completed, mod.TotalTasks);
-            const diff = mod.TotalActual - mod.TotalEstimate;
-            const performance = mod.TotalEstimate > 0 && mod.TotalActual > 0
-                ? Math.round((mod.TotalActual / mod.TotalEstimate) * 100)
-                : 0;
-
-            const CategorySummary = Array.from(mod.CategorySummaryTemp.entries()).map(
-                ([categoryname, count]) => ({ categoryname, count })
-            );
-
-            const { CategorySummaryTemp, ...modData } = mod;
-
-            return {
-                ...modData,
-                Progress: `${progress}%`,
-                TotalDiff: diff,
-                Performance: `${performance}%`,
-                CategorySummary
-            };
-        });
-    };
-
-
-    // for calling functions
-    useEffect(() => {
-        if (viewMode === "EmployeeWiseData") {
-            const empData = processEmployeeData(actualData, taskCategory, 'DeadLineDate', currentDate);
-            setPmsReportData(empData);
             setIsLoading(false);
-        } else if (taskFinalData?.ModuleList?.length > 0) {
-            const modData = processModuleWiseData(actualData, taskFinalData?.ModuleList, taskCategory, 'DeadLineDate', currentDate);
-            setPmsReportData(modData);
-            setIsLoading(false);
-        }
-    }, [currentDate, actualData, viewMode, taskCategory, taskFinalData, filters]);
+        };
+        fetchReport();
+        return () => { cancelled = true; };
+    }, [currentDate, filters.timeFilter, filters.dateRangeFilter, retryKey]);
+
+    const pmsReportData = useMemo(() => mapPmsReportData(reportRes, viewMode), [reportRes, viewMode]);
+
+    // Lazy task drill-down for the detail modal - one group's tasks only
+    const handleRowOpen = async (row) => {
+        const window = getPmsDateWindow(filters, currentDate);
+        const rows = await PmsReportDetailApi({
+            moduleid: viewMode === 'ModuleWiseData' ? (row?.moduleid || 0) : 0,
+            assigneeid: viewMode === 'ModuleWiseData' ? 0 : (row?.id || 0),
+            ...window,
+        });
+        if (rows?.[0]?.stat == 0) return [];
+        return mapPmsDetailTasks(rows);
+    };
 
 
     useEffect(() => {
@@ -555,6 +360,17 @@ const PmsReport2 = () => {
         return <LoadingBackdrop isLoading={true} />;
     }
 
+    if (reportError) {
+        return (
+            <Box className="report-container">
+                <SomethingWentWrong
+                    message={reportError}
+                    onRetry={() => setRetryKey((k) => k + 1)}
+                />
+            </Box>
+        );
+    }
+
     return (
         <Box className="report-container">
             <PmFilters
@@ -628,6 +444,7 @@ const PmsReport2 = () => {
                     onSortChange={handleSortChange}
                     viewMode={viewMode}
                     reportType="pms-report-2"
+                    onRowOpen={handleRowOpen}
                 />
 
             )}

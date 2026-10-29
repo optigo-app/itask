@@ -15,9 +15,12 @@ import { CalformData, fetchlistApiCall, formData, openFormDrawer, TaskData } fro
 import { taskDescGetApi } from '../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../Api/TaskApi/TaskCommentAddApi';
+import { taskCommentUpdateApi } from '../../Api/TaskApi/TaskCommentUpdateApi';
+import { taskCommentDeleteApi } from '../../Api/TaskApi/TaskCommentDeleteApi';
+import { taskCommentReactionApi } from '../../Api/TaskApi/TaskCommentReactionApi';
 import { taskDescAddApi } from '../../Api/TaskApi/TaskDescAddApi';
 import AttachmentImg from "../../Assests/Attachment.webp";
-import { getRandomAvatarColor, ImageUrl, processCommentData, getAssigneeMaster } from '../../Utils/globalfun';
+import { ImageUrl, processCommentData, getAssigneeMaster, getAvatarColors, getInitials } from '../../Utils/globalfun';
 import { deleteTaskDataApi } from '../../Api/TaskApi/DeleteTaskApi';
 import { clearAllTabDataCache } from '../../Utils/IndexedDB/taskDataCache';
 import { invalidateTaskCache } from '../../Utils/QueryClient/queryClient';
@@ -25,6 +28,7 @@ import { toast } from 'react-toastify';
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
 import CommentSection from '../ShortcutsComponent/Comment/TaskComment';
 import AttachmentGrid from '../ShortcutsComponent/AttachmentGrid';
+import SafeAvatar from '../ShortcutsComponent/SafeAvatar';
 import { TaskDescription } from '../ShortcutsComponent/TaskDescription';
 
 const MeetingDetail = ({ open, onClose, taskData, handleMeetingEdit }) => {
@@ -154,20 +158,47 @@ const MeetingDetail = ({ open, onClose, taskData, handleMeetingEdit }) => {
         }
     };
 
-    const handleEditComment = (comment) => {
-        setNewComment(comment.comment);
+    const refreshComments = async () => {
+        const assigneesMaster = getAssigneeMaster();
+        const taskComment = await taskCommentGetApi(taskData);
+        if (taskComment) {
+            setComments(processCommentData(taskComment.rd, assigneesMaster));
+        }
     };
 
-    const handleRemoveComment = async (commentId) => {
+    const handleEditComment = async (comment, newText) => {
         try {
-            const deleteCommentResponse = await taskCommentAddApi(taskData, commentId);
-            if (deleteCommentResponse) {
-                setComments((prevComments) => prevComments.filter(comment => comment.id !== commentId));
-            } else {
-                console.error('Failed to remove comment');
-            }
+            await taskCommentUpdateApi(comment?.id, newText);
+            await refreshComments();
+        } catch (error) {
+            console.error('Error updating comment:', error);
+        }
+    };
+
+    const handleRemoveComment = async (comment) => {
+        try {
+            await taskCommentDeleteApi(comment?.id ?? comment);
+            await refreshComments();
         } catch (error) {
             console.error('Error while removing comment:', error);
+        }
+    };
+
+    const handleToggleReaction = async (comment, emoji = '👍') => {
+        try {
+            await taskCommentReactionApi(comment?.id, taskData?.taskid, emoji);
+            await refreshComments();
+        } catch (error) {
+            console.error('Error toggling reaction:', error);
+        }
+    };
+
+    const handleReplyComment = async (parentComment, text) => {
+        try {
+            await taskCommentAddApi(taskData, text, [], parentComment?.id);
+            await refreshComments();
+        } catch (error) {
+            console.error('Error adding reply:', error);
         }
     };
 
@@ -193,13 +224,6 @@ const MeetingDetail = ({ open, onClose, taskData, handleMeetingEdit }) => {
     const handleDescCancel = () => {
         setTaskDescEdit(false);
     }
-
-    const background = (assignee) => {
-        const avatarBackgroundColor = assignee?.avatar
-            ? "transparent"
-            : getRandomAvatarColor(assignee?.firstname);
-        return avatarBackgroundColor;
-    };
 
     const colorPalette = {
         "challanges": { color: "#fff", backgroundColor: "#F5222D" },
@@ -342,16 +366,16 @@ const MeetingDetail = ({ open, onClose, taskData, handleMeetingEdit }) => {
                                                     arrow
                                                     classes={{ tooltip: 'custom-tooltip' }}
                                                 >
-                                                    <Avatar
+                                                    <SafeAvatar
                                                         key={teamIdx}
                                                         alt={assignee?.firstname + " " + assignee?.lastname}
                                                         src={ImageUrl(assignee) || null}
                                                         sx={{
-                                                            backgroundColor: background(assignee),
+                                                            ...getAvatarColors(assignee),
                                                         }}
                                                     >
-                                                        {!assignee.avatar && assignee?.firstname?.charAt(0)}
-                                                    </Avatar>
+                                                        {!assignee.avatar && getInitials(assignee?.firstname, assignee?.lastname)}
+                                                    </SafeAvatar>
                                                 </Tooltip>
                                             ))}
                                         </AvatarGroup>
@@ -396,6 +420,8 @@ const MeetingDetail = ({ open, onClose, taskData, handleMeetingEdit }) => {
                                                 onSendComment={handleSendComment}
                                                 onEditComment={handleEditComment}
                                                 onDeleteComment={handleRemoveComment}
+                                                onToggleReaction={handleToggleReaction}
+                                                onReply={handleReplyComment}
                                             />
                                         )}
                                     </Box>

@@ -4,7 +4,8 @@ import { alpha, useTheme } from "@mui/material/styles";
 import ReusableTable from "./ReusableTable";
 import { Add as AddIcon } from "@mui/icons-material";
 import TeamSidebar from "./Team/TeamSidebar";
-import { ImageUrl } from "../../../Utils/globalfun";
+import { ImageUrl, getAvatarColors } from '../../../Utils/globalfun';
+import SafeAvatar from '../../ShortcutsComponent/SafeAvatar';
 import { AddPrTeamsApi } from "../../../Api/TaskApi/AddPrTeamsApi";
 import { toast } from "react-toastify";
 import { GetPrTeamsApi } from "../../../Api/TaskApi/prTeamListApi";
@@ -16,7 +17,7 @@ import TeamTemplateInfoButton from "../../ShortcutsComponent/TeamTemplate/TeamTe
 import useAccess from "../../Auth/Role/useAccess";
 import { PERMISSIONS } from "../../Auth/Role/permissions";
 
-const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
+const TeamMembers = ({ taskAssigneeData, decodedData }) => {
     const theme = useTheme();
     const { hasAccess } = useAccess();
     const [open, setOpen] = React.useState(false);
@@ -358,11 +359,11 @@ const TeamMembers = ({ taskAssigneeData, decodedData, background }) => {
                             if (columnId === "firstname") {
                                 return (
                                     <div className="reusa_uploadedBy">
-                                        <Avatar
+                                        <SafeAvatar
                                             src={ImageUrl(row)}
                                             alt={row.firstname}
                                             className="reusa_avatar"
-                                            sx={{ backgroundColor: background(row?.firstname) }}
+                                            sx={{ ...getAvatarColors(row?.firstname) }}
                                         />
                                         <Typography>{row?.firstname + " " + row?.lastname}</Typography>
                                     </div>

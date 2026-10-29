@@ -27,6 +27,7 @@ export const AddMeetingApi = async (formValues) => {
             "isfavourite": formValues?.isfavourite ?? 0,
             "isFreez": formValues?.isFreez ?? 0,
             "ismilestone": formValues?.ismilestone ?? 0,
+            "isblocker": formValues?.isblocker ?? 0,
             "isAllDay": (formValues?.isAllDay) ? 1 : 0 ?? 0,
             "descr": (formValues?.description || formValues?.descr) ?? "",
             "repeatflag": formValues?.repeatflag ?? ""

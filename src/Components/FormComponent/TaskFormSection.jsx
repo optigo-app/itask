@@ -48,6 +48,7 @@ const TaskFormSection = ({
   handleMeetingDt,
   hiddenFields = [],
   isTaskRoute,
+  isModuleRow = false,
   deadlineFieldDisabled = false,
   srEstimateFieldDisabled = false,
 }) => {
@@ -117,6 +118,53 @@ const TaskFormSection = ({
                   }
                   label="Milestone"
                   className="milestone-label"
+                />
+              )}
+
+              {!hiddenFields.includes('blocker') && (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={Boolean(formValues?.blockerChecked)}
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: 'blockerChecked',
+                            value: e.target.checked ? 1 : 0
+                          }
+                        })
+                      }
+                      sx={{
+                        color: '#d32f2f',
+                        '&.Mui-checked': { color: '#d32f2f' },
+                      }}
+                      className="textfieldsClass blocker-checkbox"
+                    />
+                  }
+                  label="Blocker"
+                  className="blocker-label"
+                />
+              )}
+
+              {isModuleRow && !hiddenFields.includes('istaskno') && (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={Boolean(formValues?.istaskno)}
+                      onChange={(e) =>
+                        handleChange({
+                          target: {
+                            name: 'istaskno',
+                            value: e.target.checked ? 1 : 0
+                          }
+                        })
+                      }
+                      color="primary"
+                      className="textfieldsClass"
+                    />
+                  }
+                  label="Generate TT No"
+                  title="Tasks inside this module get TT#### numbers"
                 />
               )}
 

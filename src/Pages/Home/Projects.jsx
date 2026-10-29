@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
 import {
-    Card, CardContent, Typography, Table, TableBody,
-    TableCell, TableRow, Button, Box
+    Card, CardContent, Typography, LinearProgress, Button, Box
 } from '@mui/material';
-import { Plus, SquareChartGantt } from 'lucide-react';
+import RowSkeleton from './RowSkeleton';
+import { Plus, SquareChartGantt, ArrowRight } from 'lucide-react';
 import { useSetRecoilState } from 'recoil';
 import { assigneeId } from '../../Recoil/atom';
 import { Link } from 'react-router-dom';
 import { renderAssigneeAvatars } from '../../Utils/globalfun';
+
+const getProgress = (project) => {
+    const estimate = Number(project?.estimate_hrs) || 0;
+    const working = Number(project?.working_hr) || 0;
+    if (!estimate || !working) return null;
+    return Math.min(100, Math.round((working / estimate) * 100));
+};
 
 const Projects = ({ projects, navigate, isLoding }) => {
     const setAssigneeId = useSetRecoilState(assigneeId);
@@ -15,50 +22,71 @@ const Projects = ({ projects, navigate, isLoding }) => {
 
     const handleAddProject = () => navigate('/projects');
 
-    const handleAvatarClick = (id) => setAssigneeId(id);
+    const handleAvatarClick = (assignees, id) => setAssigneeId(id);
 
     const filteredProjects = projects?.filter(item => item.parentid == 0) || [];
 
-    const visibleProjects = showAll ? filteredProjects : filteredProjects.slice(0, 5);
+    const visibleProjects = showAll ? filteredProjects : filteredProjects.slice(0, 8);
 
     if (isLoding && projects == null) {
-        return <Box>
-            <Typography>Loading...</Typography>
-        </Box>
+        return (
+            <Card className="HomePageCom">
+                <CardContent sx={{ padding: '0', paddingBottom: '0 !important' }}>
+                    <Box className='cardHeader'>
+                        <Typography className='cardTitle' component="div" variant="h5">
+                            Projects
+                        </Typography>
+                    </Box>
+                    <RowSkeleton rows={3} chips={1} />
+                </CardContent>
+            </Card>
+        );
     }
 
     return (
         <Card className="HomePageCom">
             <CardContent sx={{ padding: '0', paddingBottom: '0 !important' }}>
-                <Typography className='cardTitle' component="div" variant="h5">
-                    Projects
-                </Typography>
+                <Box className='cardHeader'>
+                    <Typography className='cardTitle' component="div" variant="h5">
+                        Projects
+                    </Typography>
+                    {filteredProjects?.length > 0 && (
+                        <Typography className='viewAllLink' onClick={handleAddProject}>
+                            View all <ArrowRight size={14} />
+                        </Typography>
+                    )}
+                </Box>
                 {filteredProjects?.length > 0 ? (
                     <>
-                        <Table>
-                            <TableBody>
-                                {visibleProjects?.map((project, idx) => (
-                                    <TableRow key={idx}>
-                                        <TableCell colSpan={2}>
-                                            <Link className='prNameUrl' to={`/projects?filter=${project?.taskname}`}>
+                        <Box className='listBox'>
+                            {visibleProjects?.map((project, idx) => {
+                                const pct = getProgress(project);
+                                return (
+                                    <Box className='listRow' key={idx}>
+                                        <Box className='rowMain'>
+                                            <Link className='prNameUrl rowTitle' to={`/projects?filter=${project?.taskname}`}>
                                                 {project?.taskname}
                                             </Link>
-                                        </TableCell>
-                                        <TableCell colSpan={1}>
-                                            <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0px'
-                                            }}>
-                                                {renderAssigneeAvatars(project?.assignee, handleAvatarClick)}
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                            {pct != null && (
+                                                <LinearProgress
+                                                    variant="determinate"
+                                                    value={pct}
+                                                    className='projProgress'
+                                                />
+                                            )}
+                                        </Box>
+                                        <Box className='rowRight'>
+                                            {pct != null && (
+                                                <Typography className='pctText'>{pct}%</Typography>
+                                            )}
+                                            {renderAssigneeAvatars(project?.assignee, handleAvatarClick)}
+                                        </Box>
+                                    </Box>
+                                );
+                            })}
+                        </Box>
 
-                        {filteredProjects.length > 5 && (
+                        {filteredProjects.length > 8 && (
                             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1, mb: 2 }}>
                                 <Button
                                     onClick={() => setShowAll(!showAll)}

@@ -1,15 +1,8 @@
 import React from 'react';
 import { Card, CardContent, Typography, Table, TableBody, TableCell, TableRow, Avatar } from '@mui/material';
-import { getRandomAvatarColor } from '../../Utils/globalfun';
+import { getAvatarColors, getInitials } from '../../Utils/globalfun';
 
 const Card4_2 = ({ teamData }) => {
-
-    const background = (team) => {
-        const avatarBackgroundColor = team?.avatar
-            ? "transparent"
-            : getRandomAvatarColor(team?.name);
-        return avatarBackgroundColor;
-    }
 
     return (
         <Card className="HomePageCom">
@@ -32,14 +25,14 @@ const Card4_2 = ({ teamData }) => {
                                                 width: 35,
                                                 height: 35,
                                                 cursor: 'pointer',
-                                                background: background(team),
+                                                ...getAvatarColors(team),
                                                 transition: 'transform 0.3s ease-in-out',
                                                 '&:hover': {
                                                     transform: 'translateY(-8px)',
                                                 }
                                             }}
                                         >
-                                            {!team.avatar && team.name.charAt(0)}
+                                            {!team.avatar && getInitials(team.name)}
                                         </Avatar>
                                         {team.name}
                                     </div>

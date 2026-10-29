@@ -11,7 +11,8 @@ import {Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { background, ImageUrl } from '../../Utils/globalfun';
+import { ImageUrl, getAvatarColors } from '../../Utils/globalfun';
+import SafeAvatar from './SafeAvatar';
 
 const ProfileImageMenu = ({
     profile,
@@ -47,7 +48,7 @@ const ProfileImageMenu = ({
     const initials = (profile?.firstname?.[0] || '') + (profile?.lastname?.[0] || '');
 
     const avatarElement = (
-        <Avatar
+        <SafeAvatar
             alt={displayName}
             src={ImageUrl(profile) || undefined}
             onClick={handleAvatarClick}
@@ -57,7 +58,7 @@ const ProfileImageMenu = ({
             
                 fontSize: fontSize,
                 cursor: 'pointer',
-                backgroundColor: background(displayName),
+                ...getAvatarColors(displayName),
                 border: 'none',
                 transition: 'transform 0.3s ease-in-out',
                 '&:hover': {
@@ -69,7 +70,7 @@ const ProfileImageMenu = ({
             {...avatarProps}
         >
             {!ImageUrl(profile) && initials}
-        </Avatar>
+        </SafeAvatar>
     );
 
     return (
@@ -172,14 +173,14 @@ const ProfileImageMenu = ({
                                                 display: 'inline-block',
                                                 mb: 2
                                             }}>
-                                                <Avatar
+                                                <SafeAvatar
                                                     alt={assigneeDisplayName}
                                                     src={ImageUrl(assignee) || undefined}
                                                     sx={{
                                                         width: 70,
                                                         height: 70,
                                                         fontSize: '1.8rem',
-                                                        backgroundColor: background(assigneeDisplayName),
+                                                        ...getAvatarColors(assigneeDisplayName),
                                                         mx: 'auto',
                                                         border: '4px solid white',
                                                         boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
@@ -191,7 +192,7 @@ const ProfileImageMenu = ({
                                                     }}
                                                 >
                                                     {!ImageUrl(assignee) && assigneeInitials}
-                                                </Avatar>
+                                                </SafeAvatar>
                                             </Box>
                                             <Typography 
                                                 variant="h6" 
@@ -250,14 +251,14 @@ const ProfileImageMenu = ({
                             display: 'inline-block',
                             mb: 2
                         }}>
-                            <Avatar
+                            <SafeAvatar
                                 alt={displayName}
                                 src={ImageUrl(profile) || undefined}
                                 sx={{
                                     width: 70,
                                     height: 70,
                                     fontSize: '1.8rem',
-                                    backgroundColor: background(displayName),
+                                    ...getAvatarColors(displayName),
                                     mx: 'auto',
                                     border: '4px solid white',
                                     boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
@@ -269,7 +270,7 @@ const ProfileImageMenu = ({
                                 }}
                             >
                                 {!ImageUrl(profile) && initials}
-                            </Avatar>
+                            </SafeAvatar>
                         </Box>
                         <Typography 
                             variant="h6" 

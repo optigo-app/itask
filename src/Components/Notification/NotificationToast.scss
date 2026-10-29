@@ -1,0 +1,132 @@
+@import '../../theme/variable.scss';
+
+.ntf-toast-wrap {
+    width: 400px !important;
+    padding: 0 !important;
+    border-radius: 16px !important;
+    overflow: visible !important;
+    /* Strip the global toastStyle chrome — card handles its own look */
+    border: none !important;
+    border-left: none !important;
+    background-image: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.ntf-toast {
+    position: relative;
+    width: 100%;
+    max-width: 90vw;
+    box-sizing: border-box;
+    padding: 16px 18px 14px;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    font-family: "Public Sans", sans-serif;
+    cursor: default;
+}
+
+.ntf-toast-icons {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+
+    .ntf-icon-btn {
+        width: 22px;
+        height: 22px;
+        background: #f0f0f4;
+        color: #8a8a95;
+
+        &:hover { background: #e4e4ec; color: #555; }
+    }
+}
+
+.ntf-toast-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.ntf-doc-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ntf-eyebrow {
+    flex: 1;
+    font-size: 12.5px !important;
+    color: #9a9aa5 !important;
+    font-weight: 500 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ntf-tag {
+    height: 20px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+}
+
+.ntf-title {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #1f1f2b !important;
+    line-height: 1.3 !important;
+    margin: 2px 0 2px !important;
+}
+
+.ntf-message {
+    font-size: 13px !important;
+    color: #6b6b78 !important;
+    line-height: 1.4 !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ntf-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.ntf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+
+    &:active { transform: scale(0.97); }
+}
+
+.ntf-btn-later {
+    background: #f0f0f4;
+    color: #6b6b78;
+
+    &:hover { background: #e6e6ec; }
+}
+
+.ntf-btn-done {
+    background: $primary-main;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(115, 103, 240, 0.35);
+
+    &:hover { background: darken($primary-main, 6%); }
+}

@@ -17,16 +17,10 @@ import {
   CircularProgress,
   Tooltip,
 } from "@mui/material";
-import {
-  formatDate2,
-  statusColors,
-  getStatusColor,
-  ImageUrl,
-  background,
-  getPerformanceStatus,
-} from "../../Utils/globalfun";
+import { formatDate2, statusColors, getStatusColor, ImageUrl, getPerformanceStatus, getAvatarColors } from '../../Utils/globalfun';
 import TaskDetailsModal from "./TaskDetailsModal";
 import TablePaginationFooter from "../ShortcutsComponent/Pagination/TablePaginationFooter";
+import SafeAvatar from "../ShortcutsComponent/SafeAvatar";
 
 const ReportsGrid = ({
   columns,
@@ -39,10 +33,12 @@ const ReportsGrid = ({
   sortConfig,
   onSortChange,
   viewMode,
-  reportType
+  reportType,
+  onRowOpen
 }) => {
   const [openModal, setOpenModal] = useState(false);
-  const [selectedTaskRow, setSelectedTaskRow] = useState(null);  
+  const [selectedTaskRow, setSelectedTaskRow] = useState(null);
+  const [tasksLoading, setTasksLoading] = useState(false);
 
   const isPmsReportType = reportType === "pms-report" || reportType === "pms-report-2";
 
@@ -102,9 +98,24 @@ const ReportsGrid = ({
     return weekHasHoliday(row) ? 37 : 45; // 45 - 8 = 37
   };
 
-  const handleRowClick = (row) => {
-    setSelectedTaskRow(row);
+  const handleRowClick = async (row) => {
+    if (!onRowOpen) {
+      setSelectedTaskRow(row);
+      setOpenModal(true);
+      return;
+    }
+    // lazy detail fetch - modal opens instantly, tasks stream in via pmsreportdetail
+    setSelectedTaskRow({ ...row, Tasks: null });
     setOpenModal(true);
+    setTasksLoading(true);
+    try {
+      const tasks = await onRowOpen(row);
+      setSelectedTaskRow((prev) => (prev ? { ...prev, Tasks: tasks } : prev));
+    } catch (e) {
+      setSelectedTaskRow((prev) => (prev ? { ...prev, Tasks: [] } : prev));
+    } finally {
+      setTasksLoading(false);
+    }
   };
 
   const getCategoryCount = (summaryArray, categoryKey) => {
@@ -122,13 +133,13 @@ const ReportsGrid = ({
       if (row && typeof row === "object") {
         return (
           <Box display="flex" alignItems="center" gap={1}>
-            <Avatar
+            <SafeAvatar
               src={ImageUrl(row)}
               alt={row?.firstname}
               sx={{
                 width: 30,
                 height: 30,
-                bgcolor: background(row?.firstname),
+                ...getAvatarColors(row?.firstname),
                 fontSize: 14,
               }}
             />
@@ -545,6 +556,7 @@ const ReportsGrid = ({
         employee={selectedTaskRow}
         reportType={reportType}
         viewMode={viewMode}
+        tasksLoading={tasksLoading}
       />
     </>
   );

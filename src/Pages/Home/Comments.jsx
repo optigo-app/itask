@@ -1,15 +1,8 @@
 import React from 'react';
 import { Card, CardContent, Typography, Avatar, List, ListItem, ListItemAvatar, ListItemText } from '@mui/material';
-import { formatDate2, getRandomAvatarColor } from '../../Utils/globalfun';
+import { formatDate2, getAvatarColors, getInitials } from '../../Utils/globalfun';
 
 const CommentList = ({ comments }) => {
-
-    const background = (team) => {
-        const avatarBackgroundColor = team?.image
-            ? "transparent"
-            : getRandomAvatarColor(team?.name);
-        return avatarBackgroundColor;
-    }
 
     return (
         <Card className="HomePageCom">
@@ -25,7 +18,7 @@ const CommentList = ({ comments }) => {
                                 <Avatar
                                     src={comment?.author?.image}
                                     sx={{
-                                        background: background(comment?.author),
+                                        ...getAvatarColors(comment?.author),
                                         transition: 'transform 0.3s ease-in-out',
                                         width: 35,
                                         height: 35,
@@ -35,7 +28,7 @@ const CommentList = ({ comments }) => {
                                         }
                                     }}
                                 >
-                                    {!comment.author.image && comment.author.name.charAt(0)}
+                                    {!comment.author.image && getInitials(comment.author.name)}
                                 </Avatar>
                             </ListItemAvatar>
                             <ListItemText

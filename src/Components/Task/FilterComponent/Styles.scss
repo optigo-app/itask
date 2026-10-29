@@ -15,6 +15,44 @@
         justify-content: start;
         align-items: center;
         gap: 8px;
+
+        // Shared filter icon button styling for consistent header look
+        .MuiIconButton-root {
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12);
+            transition: background-color 0.2s ease,
+                box-shadow 0.2s ease,
+                transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.15);
+            }
+
+            &:active {
+                transform: translateY(-1px) scale(0.92);
+                box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.2);
+                transition: background-color 0.1s ease,
+                    box-shadow 0.1s ease,
+                    transform 0.08s ease;
+            }
+
+            .iconbtn {
+                transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    color 0.2s ease;
+            }
+
+            &:hover .iconbtn {
+                transform: scale(1.15);
+            }
+
+            &:active .iconbtn {
+                transform: scale(0.95);
+                transition: transform 0.08s ease;
+            }
+        }
     }
 
     .secondMainBox {
@@ -32,6 +70,20 @@
             color: $titleColor;
             outline-color: $primary-main !important;
             border-color: $primary-main !important;
+            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.2s ease;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.12);
+            }
+
+            &:active {
+                transform: translateY(-1px) scale(0.96);
+                box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.15);
+                transition: transform 0.08s ease, box-shadow 0.1s ease;
+            }
         }
     }
 
@@ -45,14 +97,20 @@
         display: flex;
         text-transform: capitalize !important;
         align-items: center;
-        transition: opacity 0.3s ease-in-out;
+        transition: opacity 0.25s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 
         &:hover {
             opacity: 0.7;
+            transform: translateY(-1px);
         }
 
         &.active {
             opacity: 1;
+        }
+
+        &:active {
+            transform: translateY(-1px) scale(0.96);
+            transition: transform 0.08s ease;
         }
     }
 
@@ -62,7 +120,24 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: background-color 0.2s ease;
+            transition: background-color 0.2s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+            &:hover {
+                transform: translateY(-1px);
+            }
+
+            &:active {
+                transform: translateY(-1px) scale(0.94);
+                transition: transform 0.08s ease;
+            }
+
+            .toggle-icon {
+                transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+
+            &:hover .toggle-icon {
+                transform: scale(1.15);
+            }
         }
 
         .toggle-btn.Mui-selected {
@@ -166,6 +241,25 @@
 
 .spin-icon {
     animation: spin 1s linear infinite;
+}
+
+@keyframes filter-pulse {
+    0%, 100% { box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12); }
+    50% { box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15); }
+}
+
+@keyframes icon-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+
+/* Subtle pulse on active filter buttons */
+.MuiIconButton-root[style*="rgb(40, 199, 111)"],   /* completed */
+.MuiIconButton-root[style*="rgb(255, 215, 0)"],    /* favorites */
+.MuiIconButton-root[style*="rgb(115, 103, 240)"],  /* milestone */
+.MuiIconButton-root[style*="rgb(211, 47, 47)"] {   /* blocker */
+    animation: filter-pulse 3s ease-in-out infinite;
 }
 
 /* Responsive styles for mobile */

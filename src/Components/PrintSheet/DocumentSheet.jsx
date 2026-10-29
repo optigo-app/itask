@@ -1,8 +1,15 @@
-import { forwardRef } from 'react';
+import { forwardRef, useLayoutEffect, useRef } from 'react';
 import './DocumentSheet.scss';
 import { formatDate3 } from '../../Utils/globalfun';
 
 const DocumentSheet  = forwardRef((selectedData, ref) => {
+    const notified = useRef(false);
+    useLayoutEffect(() => {
+        if (!notified.current) {
+            notified.current = true;
+            selectedData?.onReady?.();
+        }
+    }, [selectedData]);
     const getAssigneeNames = (assignees) => {
         if (!assignees || !Array.isArray(assignees)) return '';
         return assignees
@@ -434,8 +441,7 @@ const DocumentSheet  = forwardRef((selectedData, ref) => {
                         <div className="SRDItem_dt">  <div style={{width: "50%",marginBottom:"3px"}}><span style={{fontSize:"15px"}}>□</span> Video</div>  <span><span style={{fontSize:"15px"}}>□</span> Flag Based </span> </div>
                         <div className="SRDItem_dt">  <div style={{width: "50%",marginBottom:"3px"}}><span style={{fontSize:"15px"}}>□</span> Welcome Banner</div>  <span><span style={{fontSize:"15px"}}>□</span> WA/Email Promo </span> </div>
                         <div className="SRDItem_dt">  <div style={{width: "50%",marginBottom:"3px"}}><span style={{fontSize:"15px"}}>□</span> Ticket Update</div>   <span><span style={{fontSize:"15px"}}>□</span> Backup </span> </div>
-                        
- 
+                        <div className="SRDItem_dt">  <div style={{width: "100%",marginBottom:"3px",fontWeight:'bold'}}><span style={{fontSize:"15px"}}>□</span> Code Quality Review by Senior</div></div>
                     </div>
                 </div>
             </div>

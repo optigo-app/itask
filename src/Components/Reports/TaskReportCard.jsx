@@ -8,7 +8,8 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PermIdentityIcon from '@mui/icons-material/PermIdentity';
 
 import './TaskReportCard.scss';
-import { background, getPerformanceStatus, getStatusColor, ImageUrl } from '../../Utils/globalfun';
+import { getPerformanceStatus, getStatusColor, ImageUrl, getAvatarColors } from '../../Utils/globalfun';
+import SafeAvatar from '../ShortcutsComponent/SafeAvatar';
 import TaskDetailsModal from './TaskDetailsModal';
 
 const ProjectOverviewCard = ({ data, viewMode }) => {
@@ -63,13 +64,13 @@ const ProjectOverviewCard = ({ data, viewMode }) => {
             if (data && typeof data === "object") {
                 return (
                     <Box display="flex" alignItems="center" gap={1}>
-                        <Avatar
+                        <SafeAvatar
                             src={ImageUrl(data)}
                             alt={data?.firstname}
                             sx={{
                                 width: 32,
                                 height: 32,
-                                bgcolor: background(data?.firstname),
+                                ...getAvatarColors(data?.firstname),
                                 fontSize: 14,
                             }}
                         />

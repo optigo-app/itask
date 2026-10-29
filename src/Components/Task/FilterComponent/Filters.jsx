@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Box, TextField, Typography, MenuItem, Menu, Checkbox, ListItemText, Button, Autocomplete } from "@mui/material";
 import { useRecoilState, useSetRecoilState } from "recoil";
-import { Advfilters, dynamicFilterDrawer, selectedCategoryAtom } from "../../../Recoil/atom";
+import { Advfilters, dynamicFilterDrawer, filterDrawer, selectedCategoryAtom } from "../../../Recoil/atom";
 import { commonTextFieldProps } from "../../../Utils/globalfun";
 import DepartmentAssigneeAutocomplete from "../../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete";
 import { useLocation } from "react-router-dom";
@@ -12,13 +12,16 @@ const Filters = ({
   priorityData,
   assigneeData,
   statusData,
+  secStatusData,
   taskProject,
   taskDepartment,
   filters: filtersProp,
   setFilters: setFiltersProp,
+  isMulti = false,
 }) => {
   const location = useLocation();
   const [dynamicFilter, setDynamicFilters] = useRecoilState(dynamicFilterDrawer)
+  const setFilterDrawerOpen = useSetRecoilState(filterDrawer);
   const activetaskView = localStorage.getItem("activeTaskTab")
   const [globalFilters, setGlobalFilters] = useRecoilState(Advfilters);
   const filters = filtersProp ?? globalFilters;
@@ -26,6 +29,7 @@ const Filters = ({
 
   const [filterVisibility, setFilterVisibility] = useState({
     status: true,
+    secStatus: true,
     priority: true,
     department: true,
     assignee: true,
@@ -57,7 +61,9 @@ const Filters = ({
         ...prev,
         [key]: value,
       }));
-      newValue = `${value.firstname} ${value.lastname}`;
+      newValue = Array.isArray(value)
+        ? value.map((v) => `${v?.firstname ?? ''} ${v?.lastname ?? ''}`.trim())
+        : `${value.firstname} ${value.lastname}`;
     }
 
     // Check if it's a date range object and handle it
@@ -95,24 +101,43 @@ const Filters = ({
   };
 
 
+  // Hybrid filter bar (Jira-style): the primary filters always render inline;
+  // secondary filters only appear once they hold a value — everything is also
+  // editable in the right drawer via the "+ Filters" button.
+  const QUICK_KEYS = ['status', 'secStatus', 'priority'];
+  const hasValue = (key) => {
+    const v = filters?.[key];
+    if (v == null || v === '') return false;
+    if (Array.isArray(v)) return v.length > 0;
+    if (typeof v === 'object') return Boolean(v.startDate || v.endDate || v.firstname);
+    return true;
+  };
+  const activeCount = ['project', 'status', 'secStatus', 'priority', 'assignee', 'department', 'category', 'startDate', 'dueDate']
+    .filter(hasValue).length;
+
   return (
     <Box className="filterMainContainer">
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: 'end', gap: 2 }}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: 'flex-start', gap: 1 }}>
         <>
           {[
-            { label: "Project", key: "project", data: taskProject },
             { label: "Status", key: "status", data: statusData },
+            ...(secStatusData ? [{ label: "What Next", key: "secStatus", data: secStatusData }] : []),
             { label: "Priority", key: "priority", data: priorityData },
-          ]?.map((filter) =>
-            filterVisibility[filter.key] ? (
-              <Box key={filter.key} className="form-group" sx={{ minWidth: 180, maxWidth: 180 }}>
-                <Typography variant="subtitle1" className="filterLabletxt">
-                  {filter.label}
-                </Typography>
+          ]?.map((filter) => {
+            const selectedArr = Array.isArray(filters[filter.key])
+              ? filters[filter.key]
+              : (filters[filter.key] ? [filters[filter.key]] : []);
+            const hasSelection = isMulti ? selectedArr.length > 0 : Boolean(filters[filter.key]);
+            return filterVisibility[filter.key] && (hasSelection || !isMulti || QUICK_KEYS.includes(filter.key)) ? (
+              <Box key={filter.key} className="form-group" sx={{
+                flex: '1 1 260px',
+                minWidth: 260,
+              }}>
+                <Typography variant="subtitle1" className="filterLabletxt">{filter.label}</Typography>
                 <Autocomplete
                   size="small"
                   fullWidth
-                  value={filters[filter.key] || null}
+                  value={isMulti ? selectedArr : (filters[filter.key] || null)}
                   {...commonTextFieldProps}
                   onChange={(event, newValue) =>
                     handleFilterChange(filter.key, newValue)
@@ -122,20 +147,90 @@ const Filters = ({
                       ? `${item?.firstname} ${item?.lastname}`
                       : item?.labelname
                   )}
+                  {...(isMulti && {
+                    multiple: true,
+                    disableCloseOnSelect: true,
+                    limitTags: 1,
+                    isOptionEqualToValue: (option, val) => option === val,
+                    renderOption: (props, option, { selected }) => (
+                      <li {...props}>
+                        <Checkbox checked={selected} sx={{ p: 0.5, mr: 0.5, color: '#7367f0', '&.Mui-checked': { color: '#7367f0' } }} size="small" />
+                        <ListItemText primary={option} />
+                      </li>
+                    ),
+                    slotProps: {
+                      chip: {
+                        size: 'small',
+                        sx: {
+                          height: 20,
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          maxWidth: 120,
+                          backgroundColor: 'rgba(115, 103, 240, 0.12)',
+                          color: '#7367f0',
+                          '& .MuiChip-label': {
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          },
+                          '& .MuiChip-deleteIcon': { fontSize: 14, color: '#7367f0' },
+                        },
+                      },
+                      paper: {
+                        sx: {
+                          borderRadius: '10px',
+                          boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                          border: '1px solid #ececf1',
+                          mt: 0.5,
+                          '& .MuiAutocomplete-option': {
+                            fontSize: '13px',
+                            py: 0.5,
+                            color: '#444050',
+                            '&:hover': { backgroundColor: 'rgba(115, 103, 240, 0.08)', color: '#444050' },
+                            '&.Mui-focused': { backgroundColor: 'rgba(115, 103, 240, 0.12)', color: '#444050' },
+                            '&[aria-selected="true"]': {
+                              backgroundColor: 'rgba(115, 103, 240, 0.15)',
+                              color: '#444050',
+                              '&.Mui-focused': { backgroundColor: 'rgba(115, 103, 240, 0.2)', color: '#444050' },
+                            },
+                          },
+                        },
+                      },
+                      listbox: {
+                        sx: { maxHeight: 260, py: 0.5 },
+                      },
+                    },
+                  })}
                   renderInput={(params) => (
                     <TextField
                       {...params}
                       placeholder={`Select ${filter.label}`}
                       className="textfieldsClass"
+                      InputProps={{
+                        ...params.InputProps,
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          minHeight: 38,
+                          fontSize: '13px',
+                          borderRadius: '8px',
+                          py: 0.5,
+                          flexWrap: 'wrap',
+                          '& .MuiAutocomplete-tag': { my: 0 },
+                          backgroundColor: hasSelection ? 'rgba(115, 103, 240, 0.06)' : '#fff',
+                          '& fieldset': { borderColor: hasSelection ? 'rgba(115, 103, 240, 0.4)' : '#e0e0e0' },
+                          '&:hover fieldset': { borderColor: '#7367f0' },
+                        },
+                      }}
                     />
                   )}
                 />
               </Box>
             ) : null
-          )}
+          })}
         </>
         {assigneeVisible && (
-          <Box sx={{ maxWidth: 250 }}>
+          <Box sx={{ flex: '1 1 260px', minWidth: 260 }}>
             <DepartmentAssigneeAutocomplete
               name="assignee"
               value={guest?.assignee}
@@ -145,31 +240,61 @@ const Filters = ({
               limitTags={2}
               onChange={(newValue) => handleFilterChange('assignee', newValue)}
               minWidth={250}
-              multiple={false}
+              multiple={isMulti}
             />
           </Box>
         )}
 
         {/* start Date Filter */}
-        {startDateVisible && (
-          <Box className="form-group" sx={{ minWidth: 250, maxWidth: 250 }}>
+        {startDateVisible && (hasValue('startDate') || !isMulti) && (
+          <Box className="form-group" sx={{ minWidth: 220, maxWidth: 250 }}>
             <Typography variant="subtitle1" className="filterLabletxt">Start Date</Typography>
             <CustomDateRangePicker
               value={filters.startDate}
               onChange={(newRange) => handleFilterChange("startDate", newRange)}
+              placeholder="Start date"
             />
           </Box>
         )}
 
-        {/* Due Date Filter */}
+        {/* Due Date Filter — always visible in the opened filter section */}
         {dueDateVisible && (
-          <Box className="form-group" sx={{ minWidth: 250, maxWidth: 250 }}>
+          <Box className="form-group" sx={{ flex: '1 1 260px', minWidth: 260 }}>
             <Typography variant="subtitle1" className="filterLabletxt">Due Date</Typography>
             <CustomDateRangePicker
               value={filters.dueDate}
               onChange={(newRange) => handleFilterChange("dueDate", newRange)}
+              placeholder="Due date"
             />
           </Box>
+        )}
+
+        {/* "+ Filters" — inline, right after the quick selects (task page only;
+            single-select consumers always render their controls) */}
+        {isMulti && (
+          <Button
+            size="small"
+            variant="text"
+            onClick={() => setFilterDrawerOpen(true)}
+            sx={{
+              height: 38,
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontSize: '12.5px',
+              fontWeight: 600,
+              px: 1.5,
+              mb:'-15px',
+              alignSelf: 'center',
+              flexShrink: 0,
+              color: '#7367f0',
+              backgroundColor: activeCount > 0 ? 'rgba(115, 103, 240, 0.08)' : 'transparent',
+              '&:hover': {
+                backgroundColor: 'rgba(115, 103, 240, 0.12)',
+              },
+            }}
+          >
+            + Filters{activeCount > 0 ? ` (${activeCount})` : ''}
+          </Button>
         )}
       </Box>
 

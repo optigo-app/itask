@@ -10,7 +10,8 @@ import {
     InputAdornment,
 } from '@mui/material';
 import { ChevronDown, Users, Search } from 'lucide-react';
-import { background, ImageUrl } from '../../../Utils/globalfun';
+import { ImageUrl, getAvatarColors, getInitials } from '../../../Utils/globalfun';
+import SafeAvatar from '../../ShortcutsComponent/SafeAvatar';
 
 const EmployeeList = ({ selectedEmployee, onEmployeeClick, dailyReportRows }) => {
     const [employeeData, setEmployeeData] = useState([]);
@@ -70,7 +71,7 @@ const EmployeeList = ({ selectedEmployee, onEmployeeClick, dailyReportRows }) =>
 
     const getEmployeeAvatar = (employee) => {
         return (
-            <Avatar
+            <SafeAvatar
                 alt={`${employee?.firstname} ${employee?.lastname}`}
                 src={ImageUrl(employee) || null}
                 sx={{
@@ -80,15 +81,15 @@ const EmployeeList = ({ selectedEmployee, onEmployeeClick, dailyReportRows }) =>
                     cursor: 'pointer',
                     border: 'none',
                     transition: 'transform 0.3s ease-in-out',
-                    backgroundColor: background(`${employee?.firstname + " " + employee?.lastname}`),
+                    ...getAvatarColors(`${employee?.firstname + " " + employee?.lastname}`),
                     '&:hover': {
                         transform: 'scale(1.2)',
                         zIndex: 10,
                     },
                 }}
             >
-                {!employee.avatar && employee?.firstname?.charAt(0)}
-            </Avatar>
+                {!employee.avatar && getInitials(employee?.firstname, employee?.lastname)}
+            </SafeAvatar>
         );
     };
 

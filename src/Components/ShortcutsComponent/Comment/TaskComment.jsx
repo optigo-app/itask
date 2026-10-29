@@ -1,17 +1,38 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Box, IconButton, TextareaAutosize, Button, Typography } from '@mui/material';
-import { Eye, Paperclip, Send } from 'lucide-react';
+import { Paperclip } from 'lucide-react';
 import CommentCard from './CommentCard';
 import { uploadFilesForComment } from '../../../Utils/uploadHelpers';
+import { getUserProfileData } from '../../../Utils/globalfun';
 import { toast } from 'react-toastify';
 import DocsViewerModal from '../../DocumentViewer/DocsViewerModal';
 
-const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, onDeleteComment, onSendComment, taskData }) => {
+const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, onDeleteComment, onSendComment, onToggleReaction, onReply, taskData }) => {
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [filePreviews, setFilePreviews] = useState([]);
     const [currentAttachments, setCurrentAttachments] = useState([]);
     const [viewerOpen, setViewerOpen] = useState(false);
     const [initialSlideIndex, setInitialSlideIndex] = useState(0);
+    const profileData = useMemo(() => getUserProfileData(), []);
+
+    const sortedComments = useMemo(() => {
+        const byId = new Map();
+        const roots = [];
+        (comments || []).forEach((c) => {
+            byId.set(c?.id, { ...c, replies: [] });
+        });
+        byId.forEach((node) => {
+            const parent = node?.parentid ? byId.get(node.parentid) : null;
+            if (parent) {
+                parent.replies.push(node);
+            } else {
+                roots.push(node);
+            }
+        });
+        roots.sort((a, b) => new Date(b?.entrydate) - new Date(a?.entrydate));
+        roots.forEach((n) => n.replies?.sort((a, b) => new Date(a?.entrydate) - new Date(b?.entrydate)));
+        return roots;
+    }, [comments]);
 
     const handleFileChange = (event) => {
         const files = Array.from(event.target.files);
@@ -109,49 +130,26 @@ const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, 
     return (
         <>
             {/* Mapping through multiple comments */}
-            {comments?.map((comment, index) => (
-                <CommentCard key={index} comment={comment} onEditComment={onEditComment} onDeleteComment={onDeleteComment} />
+            {sortedComments.map((comment, index) => (
+                <CommentCard
+                    key={comment?.id ?? index}
+                    comment={comment}
+                    replies={comment?.replies ?? []}
+                    currentUserId={profileData?.id ?? profileData?.userid}
+                    onEditComment={onEditComment}
+                    onDeleteComment={onDeleteComment}
+                    onToggleReaction={onToggleReaction}
+                    onReply={onReply}
+                />
             ))}
 
             {/* Add New Comment Section */}
-            <Box sx={{ position: 'sticky', bottom: '0', background: '#fff', padding: '10px', boxShadow: '0 -2px 5px rgba(0,0,0,0.1)', borderRadius: '8px', padding: '12px', zIndex: 3 }}>
-                <TextareaAutosize
-                    value={newComment}
-                    onChange={onCommentChange}
-                    rows={4}
-                    placeholder="Add a comment..."
-                    className="textarea"
-                    style={{ padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }}
-                />
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, marginTop: '12px' }}>
+            <Box sx={{ position: 'sticky', bottom: '0', background: '#fff', boxShadow: '0 -2px 10px rgba(0,0,0,0.06)', px: 1.5, py: 1.5, zIndex: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     {/* File attachment section */}
                     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <input
-                                    type="file"
-                                    multiple
-                                    onChange={handleFileChange}
-                                    style={{ display: 'none' }}
-                                    id="file-upload"
-                                />
-                                <label htmlFor="file-upload">
-                                    <IconButton 
-                                        component="span"
-                                        sx={{
-                                            backgroundColor: '#f8f9fa',
-                                            border: '1px solid #e9ecef',
-                                            borderRadius: '8px',
-                                            padding: '8px',
-                                            '&:hover': {
-                                                backgroundColor: '#e9ecef',
-                                                borderColor: '#7367f0'
-                                            }
-                                        }}
-                                    >
-                                        <Paperclip size={18} color='#7367f0' />
-                                    </IconButton>
-                                </label>
                                 {selectedFiles.length > 0 && (
                                     <Typography variant="caption" sx={{ 
                                         color: '#6c757d',
@@ -371,38 +369,86 @@ const CommentSection = ({ comments, newComment, onCommentChange, onEditComment, 
                         )}
                     </Box>
 
-                    {/* Button section */}
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
-                        <Button
-                            size='medium'
-                            variant="contained"
-                            onClick={handleAddComment}
-                            startIcon={<Send size={18} />}
-                            disabled={!newComment.trim()}
-                            sx={{
-                                backgroundColor: '#7367f0',
-                                color: 'white',
-                                borderRadius: '8px',
-                                padding: '10px 20px',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                textTransform: 'none',
-                                boxShadow: '0 2px 8px rgba(115, 103, 240, 0.3)',
-                                '&:hover': {
-                                    backgroundColor: '#5e57d1',
-                                    boxShadow: '0 4px 12px rgba(115, 103, 240, 0.4)',
-                                    transform: 'translateY(-1px)'
-                                },
-                                '&:disabled': {
-                                    backgroundColor: '#e9ecef',
-                                    color: '#6c757d',
-                                    boxShadow: 'none'
-                                },
-                                transition: 'all 0.2s ease'
+                    {/* Composer box: "Add a comment" + toolbar + Submit */}
+                    <Box sx={{
+                        border: 'none',
+                        borderRadius: '10px',
+                        backgroundColor: '#f5f5f5',
+                        px: 1.5,
+                        pt: 1,
+                        pb: 0.75,
+                        transition: 'background-color 0.2s, box-shadow 0.2s',
+                        '&:focus-within': {
+                            backgroundColor: '#eeeeee',
+                            boxShadow: '0 0 0 2px rgba(115, 103, 240, 0.15)'
+                        }
+                    }}>
+                        <TextareaAutosize
+                            value={newComment}
+                            onChange={onCommentChange}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    if (newComment.trim()) handleAddComment();
+                                }
                             }}
-                        >
-                            Add Comment
-                        </Button>
+                            placeholder="Add a comment"
+                            minRows={2}
+                            maxRows={6}
+                            style={{
+                                width: '100%',
+                                border: 'none',
+                                outline: 'none',
+                                resize: 'none',
+                                fontFamily: '"Public Sans", sans-serif',
+                                fontSize: '13px',
+                                lineHeight: 1.5,
+                                color: '#333',
+                                background: 'transparent',
+                                boxSizing: 'border-box',
+                            }}
+                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.5 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                                <input
+                                    type="file"
+                                    multiple
+                                    onChange={handleFileChange}
+                                    style={{ display: 'none' }}
+                                    id="file-upload"
+                                />
+                                <label htmlFor="file-upload">
+                                    <IconButton
+                                        component="span"
+                                        size="small"
+                                        sx={{ width: 28, height: 28, color: '#8a8a8a', '&:hover': { color: '#7367f0' } }}
+                                    >
+                                        <Paperclip size={15} />
+                                    </IconButton>
+                                </label>
+                            </Box>
+                            <Button
+                                size="small"
+                                variant="contained"
+                                onClick={handleAddComment}
+                                disabled={!newComment.trim() && selectedFiles.length === 0}
+                                sx={{
+                                    textTransform: 'none',
+                                    fontSize: '12.5px',
+                                    fontWeight: 600,
+                                    borderRadius: '6px',
+                                    px: 2,
+                                    py: 0.4,
+                                    minWidth: 0,
+                                    backgroundColor: '#7367f0',
+                                    boxShadow: 'none',
+                                    '&:hover': { backgroundColor: '#5e57d1', boxShadow: 'none' },
+                                    '&.Mui-disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
+                                }}
+                            >
+                                Submit
+                            </Button>
+                        </Box>
                     </Box>
                 </Box>
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -10,10 +10,13 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { calendarData, calendarM, calendarSideBarOpen, CalEventsFilter, CalformData, FullSidebar, rootSubrootflag, TaskData, fetchlistApiCall } from '../../Recoil/atom';
 import {
     Box, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Divider,
-    Drawer, Chip, IconButton, Typography, List, ListItem, ListItemButton
+    Drawer, Chip, IconButton, Typography, List, ListItem, ListItemButton,
+    Menu, MenuItem, ListItemIcon, ListItemText, CircularProgress,
+    TextField, InputAdornment,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import { Trash2, Pencil, Trash, CalendarClock, X, ChevronDown, RefreshCw, Repeat, Search } from 'lucide-react';
 import DepartmentAssigneeAutocomplete from '../ShortcutsComponent/Assignee/DepartmentAssigneeAutocomplete';
 import { PERMISSIONS } from '../Auth/Role/permissions';
 import { toast } from 'react-toastify';
@@ -21,6 +24,10 @@ import { getDynamicStatusColor, statusColors, getUserProfileData, formatUTCDateT
 import DailyReportAttendance from '../Reports/CalendarReport/DailyReportAttendance';
 import { GetDailyReportApi } from '../../Api/TaskApi/GetDailyReportApi';
 import DailyReportAttendanceList from '../Reports/CalendarReport/DailyReportAttendanceList';
+import EventContextMenu from './EventContextMenu';
+import CommentMenuPopup from '../ShortcutsComponent/Comment/CommentMenuPopup';
+import dayjs from 'dayjs';
+import CustomDateTimePicker from '../../Utils/DateComponent/CustomDateTimePicker';
 
 const Calendar = ({
     isLoding,
@@ -33,6 +40,13 @@ const Calendar = ({
     setFormDrawerOpen,
     setFormDataValue,
     onCalendarRangeChange,
+    handleRemoveEvent,
+    handlePermanentDelete,
+    handleBulkDelete,
+    handleBulkPermanentDelete,
+    handleBulkMoveNextWeek,
+    handleIndividualMove,
+    onRefreshEvents,
 }) => {
     const isFullSidebar = useRecoilValue(FullSidebar);
     const setSidebarToggle = useSetRecoilState(calendarSideBarOpen);
@@ -42,6 +56,7 @@ const Calendar = ({
     const date = useRecoilValue(calendarM);
     const setCalFormData = useSetRecoilState(CalformData);
     const selectedEventfilter = useRecoilValue(CalEventsFilter)
+    const setSelectedEventfilter = useSetRecoilState(CalEventsFilter);
     const [calEvData, setCalEvData] = useRecoilState(calendarData);
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
@@ -53,9 +68,28 @@ const Calendar = ({
     const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
     const [attendanceDialogRows, setAttendanceDialogRows] = useState([]);
     const [activeAssignee, setActiveAssignee] = useState(null);
-    const [duplicateDialog, setDuplicateDialog] = useState({ open: false, event: null });
+    const [duplicateDialog, setDuplicateDialog] = useState({ open: false, event: null, bulk: false, dateStep: false });
+    const [repeatDate, setRepeatDate] = useState(null);
     const [dayDetailOpen, setDayDetailOpen] = useState(false);
     const [selectedDayDate, setSelectedDayDate] = useState(null);
+    const [calendarViewType, setCalendarViewType] = useState('timeGridWeek');
+    const [visibleRange, setVisibleRange] = useState({ start: null, end: null });
+    const [reportSearch, setReportSearch] = useState('');
+    const [contextMenu, setContextMenu] = useState({ mouseX: null, mouseY: null, event: null });
+    const [selectedEventIds, setSelectedEventIds] = useState(new Set());
+    const [bulkDeleteMenuAnchor, setBulkDeleteMenuAnchor] = useState(null);
+    const [repeatLoading, setRepeatLoading] = useState(false);
+    const [bulkRepeating, setBulkRepeating] = useState(false);
+
+    // Initialize category filter with all categories so events are visible by default
+    useEffect(() => {
+        const keys = Object.keys(calendarsColor || {});
+        if (keys.length > 0) {
+            setSelectedEventfilter((prev) =>
+                prev.length === 0 ? keys : prev
+            );
+        }
+    }, [calendarsColor, setSelectedEventfilter]);
 
     const getEventsForDate = (targetDate) => {
         const d = new Date(targetDate);
@@ -80,6 +114,7 @@ const Calendar = ({
     const closeDayDetail = () => {
         setDayDetailOpen(false);
         setSelectedDayDate(null);
+        setReportSearch('');
     };
 
     const toDateKey = (date, useUTC = true) => {
@@ -193,25 +228,60 @@ const Calendar = ({
 
     // Load holiday dates from session storage
     useEffect(() => {
-        try {
-            const holidayDataRaw = JSON.parse(sessionStorage.getItem('taskholidayData') || '[]');
+        const loadHolidays = () => {
+            try {
+                const holidayDataRaw = JSON.parse(sessionStorage.getItem('taskholidayData') || '[]');
 
-            const holidays = holidayDataRaw
-                .filter(holiday => holiday.isdelete !== 1 && holiday.holidaydate)
-                .map(holiday => ({
-                    date: holiday.holidaydate.split('T')[0],
-                    labelname: holiday.labelname || 'Holiday'
-                }));
+                const holidays = holidayDataRaw
+                    .filter(holiday => holiday.isdelete !== 1 && holiday.holidaydate)
+                    .map(holiday => ({
+                        date: holiday.holidaydate.split('T')[0],
+                        labelname: holiday.labelname || 'Holiday'
+                    }));
 
-            const dates = holidays.map(h => h.date);
-            setHolidayDates(dates);
-            setHolidayData(holidays);
+                const dates = holidays.map(h => h.date);
+                setHolidayDates((prev) =>
+                    prev.length === dates.length && prev.every((d, i) => d === dates[i]) ? prev : dates
+                );
+                setHolidayData((prev) =>
+                    prev.length === holidays.length &&
+                    prev.every((h, i) => h.date === holidays[i].date && h.labelname === holidays[i].labelname)
+                        ? prev
+                        : holidays
+                );
+                return holidays.length > 0;
+            } catch (error) {
+                console.error('Error loading holiday dates:', error);
+                setHolidayDates([]);
+                setHolidayData([]);
+                return false;
+            }
+        };
 
-        } catch (error) {
-            console.error('Error loading holiday dates:', error);
-            setHolidayDates([]);
-            setHolidayData([]);
-        }
+        const hasData = loadHolidays();
+
+        // Master data may still be loading async — retry briefly until it arrives
+        let tries = 0;
+        const interval = !hasData ? setInterval(() => {
+            tries += 1;
+            if (loadHolidays() || tries >= 30) {
+                clearInterval(interval);
+            }
+        }, 1000) : null;
+
+        // Re-read on focus/visibility — a holiday may have been added via masters
+        const handleFocus = () => loadHolidays();
+        const handleVisibility = () => {
+            if (document.visibilityState === 'visible') loadHolidays();
+        };
+        window.addEventListener('focus', handleFocus);
+        document.addEventListener('visibilitychange', handleVisibility);
+
+        return () => {
+            if (interval) clearInterval(interval);
+            window.removeEventListener('focus', handleFocus);
+            document.removeEventListener('visibilitychange', handleVisibility);
+        };
     }, []);
 
     // Helper function to check if a date is a holiday
@@ -288,10 +358,13 @@ const Calendar = ({
         if (calendarApi && date) {
             const validDate = new Date(date);
             if (!isNaN(validDate?.getTime())) {
-                calendarApi.gotoDate(validDate);
+                // Defer gotoDate to avoid flushSync warning during lifecycle
                 setTimeout(() => {
-                    smoothScrollToTime();
-                }, 500);
+                    calendarApi.gotoDate(validDate);
+                    setTimeout(() => {
+                        smoothScrollToTime();
+                    }, 300);
+                }, 0);
             } else {
                 console.error('Invalid date:', date);
             }
@@ -299,13 +372,51 @@ const Calendar = ({
     }, [date, calendarApi]);
 
 
+    const openDuplicateDialog = (event) => {
+        // Open straight into the date step — the context menu already offers
+        // Edit/Repeat as separate actions, so the Edit-vs-Repeat choice step
+        // was just an extra click.
+        const evStart = event?.start ?? event?.StartDate;
+        setRepeatDate(evStart ? dayjs(evStart) : dayjs());
+        setDuplicateDialog({ open: true, event, bulk: false, dateStep: true });
+    };
+
+    const closeDuplicateDialog = () => {
+        setDuplicateDialog({ open: false, event: null, bulk: false, dateStep: false });
+        setRepeatDate(null);
+    };
+
     const handleDuplicate = (event) => {
-        setDuplicateDialog({ open: true, event });
+        openDuplicateDialog(event);
+    };
+
+    // Event comments popup - bound to the event's linked taskid
+    const [commentAnchorPos, setCommentAnchorPos] = useState(null);
+    const [commentEvent, setCommentEvent] = useState(null);
+
+    const openEventComments = (event, mouseEvent) => {
+        const details = mapEventDetails(event);
+        setCommentEvent({ ...details, taskname: details?.title });
+        setCommentAnchorPos({ top: mouseEvent.clientY, left: mouseEvent.clientX });
+    };
+
+    const handleCloseCommentMenu = () => {
+        setCommentAnchorPos(null);
+        setCommentEvent(null);
+    };
+
+    const handleViewAllComments = (task) => {
+        handleCloseCommentMenu();
+        setCalFormData(commentEvent);
+        setFormDataValue(commentEvent);
+        setRootSubroot({ Task: "meeting" });
+        setFormDrawerOpen(true);
     };
 
     const filterEvents = (events, selectedCalendars) => {
+        const hasFilters = Array.isArray(selectedCalendars) && selectedCalendars.length > 0;
         return events?.filter(event => {
-            const categoryMatch = !event?.category || selectedCalendars?.includes(event.category);
+            const categoryMatch = !event?.category || !hasFilters || selectedCalendars?.includes(event.category);
             const favoriteMatch = showFavoritesOnly ? Number(event?.isfavourite) === 1 : true;
             return categoryMatch && favoriteMatch;
         }) || [];
@@ -313,6 +424,46 @@ const Calendar = ({
 
     const filteredEvents = filterEvents(calEvData, selectedEventfilter);
     // const filteredEvents = calEvData
+
+    // Month-view daily report: all report rows in the visible month, grouped by date (view only)
+    const monthReportGroups = useMemo(() => {
+        if (calendarViewType !== 'dayGridMonth' || !visibleRange?.start || !visibleRange?.end) return [];
+        const start = dayjs(visibleRange.start);
+        const end = dayjs(visibleRange.end);
+        const map = new Map();
+        (dailyReportRows || []).forEach((r) => {
+            const dk = r?.__dateKey;
+            if (!dk) return;
+            const d = dayjs(dk);
+            if (d.isBefore(start, 'day') || !d.isBefore(end, 'day')) return;
+            const list = map.get(dk) || [];
+            list.push(r);
+            map.set(dk, list);
+        });
+        return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    }, [calendarViewType, visibleRange, dailyReportRows]);
+
+    // Search the monthly report — matches the date (any format) or remark/reporter name
+    const filteredMonthReportGroups = useMemo(() => {
+        const q = reportSearch.trim().toLowerCase();
+        if (!q) return monthReportGroups;
+        return monthReportGroups
+            .map(([dk, rows]) => {
+                const dateMatch =
+                    dk.includes(q) ||
+                    dayjs(dk).format('ddd, DD MMM YYYY').toLowerCase().includes(q) ||
+                    dayjs(dk).format('DD-MM-YYYY').includes(q) ||
+                    dayjs(dk).format('MMMM YYYY').toLowerCase().includes(q);
+                if (dateMatch) return [dk, rows];
+                const matchRows = rows.filter((r) => {
+                    const emp = r?.__employee;
+                    const empName = `${emp?.firstname || ''} ${emp?.lastname || ''}`.trim().toLowerCase();
+                    return (r?.remarks || '').toLowerCase().includes(q) || empName.includes(q);
+                });
+                return matchRows.length ? [dk, matchRows] : null;
+            })
+            .filter(Boolean);
+    }, [monthReportGroups, reportSearch]);
 
     useEffect(() => {
         if (hasAccess(PERMISSIONS.CALENDAR_A_DROPDOWN)) {
@@ -351,7 +502,9 @@ const Calendar = ({
             start: new Date(start).toISOString(),
             end: new Date(end).toISOString(),
             isAllDay: event?.allDay ? 1 : (event?.isAllDay ? 1 : 0),
-            ismilestone: event?.ismilestone,
+            ismilestone: event?.extendedProps?.ismilestone ?? event?.ismilestone ?? 0,
+            isblocker: event?.extendedProps?.isblocker ?? event?.isblocker ?? 0,
+            isfavourite: event?.extendedProps?.isfavourite ?? event?.isfavourite ?? 0,
             descr: event?.extendedProps?.descr ?? event?.Desc ?? '',
             category: event?.extendedProps?.category ?? event?.category ?? '',
             workcategoryid: event?.extendedProps?.workcategoryid ?? event?.workcategoryid,
@@ -377,7 +530,9 @@ const Calendar = ({
                 taskPr: event?.ProjectName
             },
             guests: event?.extendedProps?.guests ?? event?.guests ?? [],
-            assigneids: event?.extendedProps?.guests?.map(u => u.id)?.join(',') ?? '',
+            assigneids: (event?.extendedProps?.assigneids ?? event?.assigneids)?.toString()
+                ?? event?.extendedProps?.guests?.map(u => u.id)?.join(',')
+                ?? '',
             estimate: event?.extendedProps?.estimate ?? (event?.extendedProps?.estimate_hrs || 1),
             description: event?.extendedProps?.description ?? event?.Desc ?? '',
         };
@@ -392,6 +547,8 @@ const Calendar = ({
             end: event?.EndDate,
             isAllDay: event?.isAllDay ? 1 : 0,
             ismilestone: event?.ismilestone,
+            isblocker: event?.isblocker,
+            isfavourite: event?.isfavourite,
             descr: event?.Desc,
             category: event?.category || '',
             workcategoryid: event?.workcategoryid,
@@ -404,8 +561,10 @@ const Calendar = ({
             estimate2_hrs: event?.estimate2_hrs || 0,
             workinghr: event?.workinghr || 0,
             DeadLineDate: event?.DeadLineDate,
+            assigneids: event?.assigneids,
             extendedProps: {
                 guests: event?.guests,
+                assigneids: event?.assigneids,
                 estimate: 1,
                 prModule: {
                     taskid: event?.taskid,
@@ -427,14 +586,22 @@ const Calendar = ({
                 estimate_hrs: event?.estimate_hrs || 0,
                 estimate1_hrs: event?.estimate1_hrs || 0,
                 estimate2_hrs: event?.estimate2_hrs || 0,
+                workinghr: event?.workinghr || 0,
                 DeadLineDate: event?.DeadLineDate,
                 descr: event?.Desc,
                 ismilestone: event?.ismilestone,
+                isblocker: event?.isblocker,
+                isfavourite: event?.isfavourite,
             },
         })),
         plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
         initialView: 'timeGridWeek',
         datesSet: (dateInfo) => {
+            setCalendarViewType(dateInfo?.view?.type || '');
+            setVisibleRange({
+                start: dateInfo?.view?.currentStart || dateInfo?.start || null,
+                end: dateInfo?.view?.currentEnd || dateInfo?.end || null,
+            });
             if (typeof onCalendarRangeChange !== 'function') return;
             onCalendarRangeChange({
                 viewType: dateInfo?.view?.type || '',
@@ -468,15 +635,23 @@ const Calendar = ({
                 };
             }
 
-            if (isMonthView && taskCount > 0) {
-                return {
-                    html: `
+            if (isMonthView) {
+                const reportKey = toAttendanceDateKey(arg.date, false);
+                const report = attendanceByDate[reportKey] || {};
+                const hasReport = !!report.checked || !!(report.remark || '').trim();
+                const reportDot = hasReport
+                    ? '<span class="fc-day-report-dot" title="Daily report" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#7367f0;margin-left:4px;vertical-align:middle;"></span>'
+                    : '';
+                if (taskCount > 0 || hasReport) {
+                    return {
+                        html: `
                         <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-                            <span class="fc-daygrid-day-number">${arg.dayNumberText}</span>
-                            <span class="fc-day-task-count" title="${taskCount} tasks">${taskCount}</span>
+                            <span class="fc-daygrid-day-number">${arg.dayNumberText}${reportDot}</span>
+                            ${taskCount > 0 ? `<span class="fc-day-task-count" title="${taskCount} tasks">${taskCount}</span>` : ''}
                         </div>
                     `
-                };
+                    };
+                }
             }
 
             return arg.dayNumberText;
@@ -544,7 +719,8 @@ const Calendar = ({
         eventClassNames({ event }) {
             const category = event.extendedProps.category || 'ETC';
             const colorClass = calendarsColor[category] || 'primary';
-            return [`bg-${colorClass}`];
+            const isSelected = selectedEventIds.has(String(event.id));
+            return [`bg-${colorClass}`, isSelected ? 'fc-event-multi-selected' : ''];
         },
 
         dayHeaderContent(arg) {
@@ -726,6 +902,11 @@ const Calendar = ({
                                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2 2v1"></path>
                             </svg>
                         </button>
+                        <button class="comment-btn" data-event-id="${event.id}" title="Comments">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                        </button>
                         <style>
                             .calendar-event-container {
                                 position: relative;
@@ -757,6 +938,33 @@ const Calendar = ({
                                 transform: scale(1.1);
                                 box-shadow: 0 4px 8px rgba(115, 103, 240, 0.3);
                             }
+                            .comment-btn {
+                                position: absolute;
+                                top: 2px;
+                                right: 40px;
+                                width: 34px;
+                                height: 34px;
+                                border-radius: 50%;
+                                border: 1px solid #ccc;
+                                background: rgba(255, 255, 255, 0.9);
+                                color: #666;
+                                cursor: pointer;
+                                display: none;
+                                align-items: center;
+                                justify-content: center;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                                transition: all 0.2s ease;
+                                z-index: 10;
+                            }
+                            .calendar-event-container:hover .comment-btn {
+                                display: flex;
+                            }
+                            .comment-btn:hover {
+                                background: #7367f0;
+                                color: white;
+                                transform: scale(1.1);
+                                box-shadow: 0 4px 8px rgba(115, 103, 240, 0.3);
+                            }
                         </style>
                     </div>
                 `
@@ -771,18 +979,27 @@ const Calendar = ({
                     handleDuplicate(info.event);
                 });
             }
+            const commentBtn = info.el.querySelector('.comment-btn');
+            if (commentBtn) {
+                commentBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openEventComments(info.event, e);
+                });
+            }
             info.el.addEventListener('contextmenu', (e) => {
+                // Prevent native text selection / overlay on the event element
                 e.preventDefault();
                 e.stopPropagation();
-                return false;
-            }, true);
-
-            info.el.addEventListener('mousedown', (e) => {
-                if (e.button === 2) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
+                // Clear any active browser selection caused by right-click
+                if (window.getSelection) {
+                    window.getSelection().removeAllRanges();
                 }
+                // Remove FullCalendar selection state if present
+                info.el.classList.remove('fc-event-selected');
+                if (document.activeElement && document.activeElement.blur) {
+                    document.activeElement.blur();
+                }
+                handleContextMenu(e, info.event);
             }, true);
         },
 
@@ -816,11 +1033,32 @@ const Calendar = ({
             return true;
         },
 
-        eventClick({ event }) {
+        eventClick({ event, jsEvent }) {
             // Prevent opening events on holidays
             if (isHolidayDate(event.start)) {
                 toast.warning('Cannot edit events on holidays');
                 return;
+            }
+
+            // Ctrl/Cmd+Click toggles multi-select
+            if (jsEvent?.ctrlKey || jsEvent?.metaKey) {
+                jsEvent.preventDefault();
+                setSelectedEventIds(prev => {
+                    const next = new Set(prev);
+                    const eid = event.id;
+                    if (next.has(eid)) {
+                        next.delete(eid);
+                    } else {
+                        next.add(eid);
+                    }
+                    return next;
+                });
+                return;
+            }
+
+            // Normal click: clear multi-select and open edit
+            if (selectedEventIds.size > 0) {
+                setSelectedEventIds(new Set());
             }
 
             const eventDetails = mapEventDetails(event);
@@ -922,7 +1160,6 @@ const Calendar = ({
         },
 
         eventReceive({ event }) {
-            debugger
             if (!event) return;
 
             // Create a unique key for this event to prevent duplicate processing
@@ -945,7 +1182,6 @@ const Calendar = ({
             event.setEnd(snappedEnd);
             eventDetails.end = snappedEnd.toISOString();
             eventDetails.estimate_hrs = snappedHours;
-            debugger
             const updatedData = calEvData?.map(ev =>
                 ev?.meetingid == eventDetails?.meetingid
                     ? {
@@ -979,19 +1215,97 @@ const Calendar = ({
         }
     }, [showFavoritesOnly]);
 
-    const handleDuplicateEdit = () => {
-        const { event } = duplicateDialog;
-        const eventDetails = mapEventDetails(event);
-
-        setCalFormData(eventDetails);
-        setFormDataValue(eventDetails);
-        setRootSubroot({ Task: "meeting" });
-        setFormDrawerOpen(true);
-        setDuplicateDialog({ open: false, event: null });
+    const handleContextMenu = (e, fcEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const eventDetails = mapEventDetails(fcEvent);
+        setContextMenu({
+            mouseX: e.clientX,
+            mouseY: e.clientY,
+            event: eventDetails,
+        });
     };
 
-    const handleDuplicateRepeat = async () => {
-        const { event } = duplicateDialog;
+    const handleContextMenuClose = () => {
+        setContextMenu({ mouseX: null, mouseY: null, event: null });
+        // Clear any lingering browser selection / overlay after menu closes
+        if (window.getSelection) {
+            window.getSelection().removeAllRanges();
+        }
+    };
+
+    const handleContextEdit = (event) => {
+        handleContextMenuClose();
+        if (!event) return;
+        setCalFormData(event);
+        setFormDataValue(event);
+        setRootSubroot({ Task: "meeting" });
+        setFormDrawerOpen(true);
+    };
+
+    const handleContextDelete = (event) => {
+        handleContextMenuClose();
+        if (!event) return;
+        if (handleRemoveEvent) {
+            handleRemoveEvent(event);
+        }
+    };
+
+    const handleContextPermanentDelete = (event) => {
+        handleContextMenuClose();
+        if (!event) return;
+        if (handlePermanentDelete) {
+            handlePermanentDelete(event);
+        }
+    };
+
+    const handleContextMoveToDate = (event) => {
+        handleContextMenuClose();
+        if (!event) return;
+        if (handleIndividualMove) {
+            handleIndividualMove(event);
+        }
+    };
+
+    const handleContextRepeat = (event) => {
+        handleContextMenuClose();
+        if (!event) return;
+        openDuplicateDialog(event);
+    };
+
+    // --- Multi-select bulk actions ---
+    const selectedEventsData = useMemo(() => {
+        if (selectedEventIds.size === 0) return [];
+        return calEvData.filter(ev => selectedEventIds.has(String(ev?.meetingid)));
+    }, [selectedEventIds, calEvData]);
+
+    const handleClearSelection = () => {
+        setSelectedEventIds(new Set());
+    };
+
+    const handleBulkDeleteClick = () => {
+        if (handleBulkDelete) {
+            handleBulkDelete(selectedEventsData);
+        }
+        handleClearSelection();
+    };
+
+    const handleBulkPermanentDeleteClick = () => {
+        if (handleBulkPermanentDelete) {
+            handleBulkPermanentDelete(selectedEventsData);
+        }
+        handleClearSelection();
+    };
+
+    const handleBulkMoveClick = () => {
+        if (handleBulkMoveNextWeek) {
+            handleBulkMoveNextWeek(selectedEventsData);
+        }
+        // Clear selection after passing events to parent
+        setSelectedEventIds(new Set());
+    };
+
+    const buildDuplicatedEvent = (event, targetDate) => {
         const eventDetails = mapEventDetails(event);
         const now = new Date();
         const parentId = eventDetails?.parentid || eventDetails?.taskid || eventDetails?.meetingid;
@@ -1001,27 +1315,105 @@ const Calendar = ({
             moduleid = foundModuleId || eventDetails?.RootTaskId || eventDetails?.projectid || parentId;
         }
 
-        const duplicatedEvent = {
+        // When a target date is picked, shift start/end to it while preserving duration
+        const duration = Math.max(new Date(eventDetails.end) - new Date(eventDetails.start), 0);
+        const newStart = targetDate ? dayjs(targetDate).toISOString() : eventDetails.start;
+        const newEnd = targetDate ? dayjs(targetDate).add(duration, 'ms').toISOString() : eventDetails.end;
+
+        // Repeated events always start as Pending — resolve the id from status master data
+        const statusData = JSON.parse(
+            sessionStorage.getItem('taskstatusData') || localStorage.getItem('taskstatusData') || '[]'
+        );
+        const pendingStatus = statusData.find(
+            (s) => (s?.labelname ?? '').toLowerCase() === 'pending'
+        );
+
+        return {
             ...eventDetails,
             meetingid: "",
+            // Must NOT carry the source taskid — taskmeetingsave treats a non-zero
+            // taskid as an UPDATE, which would wipe the parent's workinghr/status.
+            // 0 = insert a fresh task copy (already Pending + workinghr 0 below).
+            taskid: 0,
             title: eventDetails.title,
+            start: newStart,
+            end: newEnd,
+            StartDate: newStart,
+            EndDate: newEnd,
             entrydate: now.toISOString(),
-            DeadLineDate: mergeDateWithTime(eventDetails.DeadLineDate || eventDetails.end),
+            DeadLineDate: mergeDateWithTime(eventDetails.DeadLineDate || newEnd),
             repeatflag: "repeat",
-            statusid: "",
+            statusid: pendingStatus?.id ?? "",
+            status: pendingStatus ? 'Pending' : eventDetails?.status,
+            workinghr: 0,
             duplicated: true,
             moduleid: moduleid,
         };
+    };
 
-        const apiRes = await handleCaleFormSubmit(duplicatedEvent);
-        if (apiRes && apiRes?.rd[0]?.stat == 1) {
-            setDuplicateDialog({ open: false, event: null });
-            toast.success("Event repeated successfully");
+    // Pick a date for all selected events
+    const handleBulkRepeatStepClick = () => {
+        if (selectedEventsData.length === 0) return;
+        setRepeatDate(dayjs().add(7, 'day'));
+        setDuplicateDialog({ open: true, event: null, bulk: true, dateStep: true });
+    };
 
-            // Trigger UI refresh
-            setOpenChildTask(Date.now());
-        } else {
-            toast.error("Error repeating event");
+    const handleDuplicateRepeat = async () => {
+        if (repeatLoading) return;
+        const { event } = duplicateDialog;
+        if (!repeatDate) {
+            toast.error("Please select a date and time");
+            return;
+        }
+        setRepeatLoading(true);
+        try {
+            const apiRes = await handleCaleFormSubmit(buildDuplicatedEvent(event, repeatDate));
+            if (apiRes && apiRes?.rd[0]?.stat == 1) {
+                closeDuplicateDialog();
+                toast.success("Event repeated successfully");
+
+                // Trigger UI refresh
+                setOpenChildTask(Date.now());
+            } else {
+                toast.error("Error repeating event");
+            }
+        } finally {
+            setRepeatLoading(false);
+        }
+    };
+
+    // Repeat all multi-selected events — sequential submits, one refresh + toast at the end
+    const handleBulkRepeatClick = async () => {
+        if (bulkRepeating || selectedEventsData.length === 0) return;
+        if (!repeatDate) {
+            toast.error("Please select a date and time");
+            return;
+        }
+        setBulkRepeating(true);
+        try {
+            let successCount = 0;
+            for (const ev of selectedEventsData) {
+                // Keep each event's own time-of-day on the picked day
+                const src = dayjs(ev?.StartDate ?? ev?.start);
+                const target = dayjs(repeatDate).hour(src.hour()).minute(src.minute()).second(0).millisecond(0);
+                const res = await handleCaleFormSubmit(
+                    buildDuplicatedEvent(ev, target),
+                    { skipRefresh: true, suppressToast: true }
+                );
+                if (res?.rd?.[0]?.stat == 1) successCount++;
+            }
+            if (successCount > 0) {
+                onRefreshEvents?.();
+                toast.success(`${successCount} event(s) repeated successfully`);
+                setOpenChildTask(Date.now());
+            }
+            if (successCount < selectedEventsData.length) {
+                toast.error(`${selectedEventsData.length - successCount} event(s) failed to repeat`);
+            }
+            closeDuplicateDialog();
+            handleClearSelection();
+        } finally {
+            setBulkRepeating(false);
         }
     };
 
@@ -1067,43 +1459,77 @@ const Calendar = ({
                 </DialogActions>
             </Dialog>
 
-            {/* Duplicate Dialog */}
+            {/* Duplicate / Repeat Dialog */}
             <Dialog
                 open={duplicateDialog.open}
-                onClose={() => setDuplicateDialog({ open: false, event: null })}
+                onClose={() => !(repeatLoading || bulkRepeating) && closeDuplicateDialog()}
                 aria-labelledby="duplicate-dialog-title"
                 aria-describedby="duplicate-dialog-description"
                 className='DRM'
+                maxWidth="xs"
+                fullWidth
             >
-                <DialogTitle id="duplicate-dialog-title" className='alert-TitleCl'>
-                    Duplicate Event
+                <div className="dialogIconWrap" style={{ background: 'rgba(115, 103, 240, 0.1)' }}>
+                    <span style={{ color: '#7367f0', display: 'flex' }}>
+                        <CalendarClock size={28} />
+                    </span>
+                </div>
+                <DialogTitle id="duplicate-dialog-title" className='alert-TitleCl' sx={{ color: '#7367f0', pt: 0 }}>
+                    {duplicateDialog.bulk ? 'Repeat Events' : 'Repeat Event'}
                 </DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="duplicate-dialog-description" className='alert-titleContent'>
-                        How would you like to duplicate this event?
+                <DialogContent sx={{ pb: 3 }}>
+                    <DialogContentText id="duplicate-dialog-description" className='alert-titleContent' sx={{ mb: 2 }}>
+                        {duplicateDialog.bulk
+                            ? `Pick a date for ${selectedEventsData.length} selected event(s)`
+                            : 'Pick a new date & time for this event'}
                     </DialogContentText>
+                    <CustomDateTimePicker
+                        name="repeatDate"
+                        value={repeatDate}
+                        width="100%"
+                        textFieldProps={{
+                            label: 'New Date & Time',
+                            InputLabelProps: { shrink: true },
+                            sx: {
+                                width: '100%',
+                                '& .MuiOutlinedInput-root': { borderRadius: '10px', fontSize: '0.85rem' },
+                            },
+                        }}
+                        onChange={setRepeatDate}
+                    />
                 </DialogContent>
                 <Divider />
-                <DialogActions>
+                <DialogActions sx={{ px: 2.5, pb: 2, pt: 1.5, gap: 1.5 }}>
                     <Button
-                        className='for_DialogBtn'
-                        onClick={handleDuplicateEdit}
-                        autoFocus
+                        className='for_DialogBtn cancelDialogBtn'
+                        onClick={closeDuplicateDialog}
                         fullWidth
+                        disabled={repeatLoading || bulkRepeating}
                     >
-                        Edit
+                        Cancel
                     </Button>
-                    <Divider orientation="vertical" flexItem />
                     <Button
-                        className='for_DialogBtn'
-                        onClick={handleDuplicateRepeat}
+                        className='for_DialogBtn confirmBtnInfo'
+                        onClick={duplicateDialog.bulk ? handleBulkRepeatClick : handleDuplicateRepeat}
                         autoFocus
                         fullWidth
+                        disabled={!repeatDate || repeatLoading || bulkRepeating}
+                        startIcon={(repeatLoading || bulkRepeating) ? <CircularProgress size={16} /> : null}
                     >
-                        Repeat
+                        {(repeatLoading || bulkRepeating) ? 'Repeating...' : 'Repeat'}
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Event Comments Popup */}
+            <CommentMenuPopup
+                anchorPosition={commentAnchorPos}
+                open={Boolean(commentAnchorPos)}
+                onClose={handleCloseCommentMenu}
+                selectedTask={commentEvent}
+                onCommentAdded={() => { }}
+                onViewAllComments={handleViewAllComments}
+            />
 
             {/* Day Detail Drawer */}
             <Drawer
@@ -1155,7 +1581,9 @@ const Calendar = ({
                                             warning: '#ff9f43', info: '#00cfe8', secondary: '#a8aaae',
                                             support: '#8c57ff', dark: '#4b4b4b', productive: '#26c6da',
                                             'rnd-tech': '#5e72e4', creative: '#fb6340', 'sop-correction': '#f5365c',
-                                            leave: '#f7fafc', maintenance: '#11cdef', unplanned: '#172b4d'
+                                            leave: '#f7fafc', maintenance: '#11cdef', unplanned: '#172b4d',
+                                            'customer-maintenance': '#009688', challenges: '#5e72e4', reporting: '#00BCD4',
+                                            meeting: '#EC407A', training: '#8C57FF'
                                         };
                                         const dotColor = categoryColors[catColor] || '#7367f0';
                                         return (
@@ -1177,6 +1605,8 @@ const Calendar = ({
                                                             end: new Date(ev.EndDate || ev.StartDate).toISOString(),
                                                             isAllDay: ev.isAllDay ? 1 : 0,
                                                             ismilestone: ev.ismilestone,
+                                                            isblocker: ev.isblocker,
+                                                            isfavourite: ev.isfavourite,
                                                             descr: ev.Desc || '',
                                                             category: ev.category || '',
                                                             workcategoryid: ev.workcategoryid,
@@ -1202,7 +1632,7 @@ const Calendar = ({
                                                                 taskPr: ev.ProjectName,
                                                             },
                                                             guests: ev.guests || [],
-                                                            assigneids: (ev.guests || []).map(u => u.id).join(','),
+                                                            assigneids: ev.assigneids ?? (ev.guests || []).map(u => u.id).join(','),
                                                             estimate: ev.estimate || ev.estimate_hrs || 1,
                                                             description: ev.Desc || '',
                                                         };
@@ -1242,11 +1672,232 @@ const Calendar = ({
                                         );
                                     })}
                                 </List>
+
+                                {/* Month view — whole-month daily report grouped by date (view only) */}
+                                {calendarViewType === 'dayGridMonth' && (
+                                    <Box sx={{ mt: 1.5 }}>
+                                        <Divider sx={{ mb: 1.5 }} />
+                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 0.5, mb: 1 }}>
+                                            <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: '#444050', letterSpacing: 0.3 }}>
+                                                DAILY REPORT{visibleRange?.start ? ` — ${dayjs(visibleRange.start).format('MMMM YYYY')}` : ''}
+                                            </Typography>
+                                            <Chip
+                                                size="small"
+                                                label={`${filteredMonthReportGroups.length} ${filteredMonthReportGroups.length === 1 ? 'day' : 'days'}`}
+                                                sx={{ backgroundColor: 'rgba(115,103,240,0.12)', color: '#5a52d5', fontWeight: 600, height: 22 }}
+                                            />
+                                        </Box>
+                                        <TextField
+                                            size="small"
+                                            fullWidth
+                                            placeholder="Search date or remark..."
+                                            value={reportSearch}
+                                            onChange={(e) => setReportSearch(e.target.value)}
+                                            InputProps={{
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <Search size={16} color="#7367f0" />
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                            sx={{
+                                                mb: 1.5,
+                                                '& .MuiOutlinedInput-root': {
+                                                    borderRadius: '8px',
+                                                    fontSize: '0.85rem',
+                                                    backgroundColor: '#fff',
+                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#7367f0' },
+                                                },
+                                            }}
+                                        />
+                                        {filteredMonthReportGroups.length === 0 ? (
+                                            <Typography color="text.secondary" align="center" sx={{ py: 3, fontSize: '0.85rem' }}>
+                                                {reportSearch.trim() ? `No reports match "${reportSearch.trim()}"` : 'No daily reports for this month'}
+                                            </Typography>
+                                        ) : (
+                                            filteredMonthReportGroups.map(([dk, rows]) => (
+                                                <Box key={dk} sx={{ mb: 2 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 0.5, mb: 0.75 }}>
+                                                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#7367f0', flexShrink: 0 }} />
+                                                        <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#7367f0' }}>
+                                                            {dayjs(dk).format('ddd, DD MMM YYYY')}
+                                                        </Typography>
+                                                    </Box>
+                                                    <DailyReportAttendanceList
+                                                        rows={rows}
+                                                        attendanceByDate={attendanceByDate}
+                                                        loggedInUserId={getUserProfileData()?.id}
+                                                        scrollable={false}
+                                                    />
+                                                </Box>
+                                            ))
+                                        )}
+                                    </Box>
+                                )}
                             </Box>
                         </Box>
                     );
                 })()}
             </Drawer>
+            {/* Floating bulk action bar when multiple events are selected */}
+            {selectedEventIds.size > 0 && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        bottom: 24,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 1300,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        background: '#fff',
+                        borderRadius: '14px',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)',
+                        padding: '10px 16px',
+                    }}
+                >
+                    <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#333', whiteSpace: 'nowrap' }}>
+                        {selectedEventIds.size} selected
+                    </Typography>
+                    <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+                    <Button
+                        size="small"
+                        onClick={(e) => setBulkDeleteMenuAnchor(e.currentTarget)}
+                        sx={{
+                            textTransform: 'capitalize',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            color: '#d90429',
+                            borderRadius: '10px',
+                            padding: '6px 14px',
+                            gap: 1,
+                            '&:hover': { background: 'rgba(217, 4, 41, 0.08)' },
+                        }}
+                        startIcon={<Trash2 size={16} />}
+                        endIcon={<ChevronDown size={14} />}
+                    >
+                        Delete
+                    </Button>
+                    <Menu
+                        anchorEl={bulkDeleteMenuAnchor}
+                        open={Boolean(bulkDeleteMenuAnchor)}
+                        onClose={() => setBulkDeleteMenuAnchor(null)}
+                        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+                        transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                        PaperProps={{
+                            sx: {
+                                mt: 1,
+                                minWidth: 240,
+                                borderRadius: '12px',
+                                boxShadow: '0 8px 24px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04)',
+                                py: 1,
+                                px: 0.5,
+                            },
+                        }}
+                    >
+                        <MenuItem
+                            onClick={() => {
+                                setBulkDeleteMenuAnchor(null);
+                                handleBulkDeleteClick();
+                            }}
+                            sx={{
+                                py: 1.25,
+                                px: 1.5,
+                                borderRadius: '8px',
+                                mx: 0.5,
+                                mb: 0.5,
+                                '&:hover': { backgroundColor: 'rgba(115, 103, 240, 0.08)' },
+                            }}
+                        >
+                            <ListItemIcon sx={{ minWidth: 36, color: '#7367f0' }}>
+                                <Trash size={18} />
+                            </ListItemIcon>
+                            <ListItemText
+                                primary="Delete All"
+                                secondary="Remove from calendar only"
+                                primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}
+                                secondaryTypographyProps={{ fontSize: 11, color: '#888' }}
+                            />
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => {
+                                setBulkDeleteMenuAnchor(null);
+                                handleBulkPermanentDeleteClick();
+                            }}
+                            sx={{
+                                py: 1.25,
+                                px: 1.5,
+                                borderRadius: '8px',
+                                mx: 0.5,
+                                color: '#d90429',
+                                '&:hover': { backgroundColor: 'rgba(217, 4, 41, 0.08)' },
+                            }}
+                        >
+                            <ListItemIcon sx={{ minWidth: 36, color: '#d90429' }}>
+                                <Trash2 size={18} />
+                            </ListItemIcon>
+                            <ListItemText
+                                primary="Permanent Delete"
+                                secondary="Delete calendar + task permanently"
+                                primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}
+                                secondaryTypographyProps={{ fontSize: 11, color: '#a3021f' }}
+                            />
+                        </MenuItem>
+                    </Menu>
+                    <Button
+                        size="small"
+                        onClick={handleBulkMoveClick}
+                        disabled={bulkRepeating}
+                        sx={{
+                            textTransform: 'capitalize',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            color: '#7367f0',
+                            borderRadius: '10px',
+                            padding: '6px 14px',
+                            gap: 1,
+                            '&:hover': { background: 'rgba(115, 103, 240, 0.08)' },
+                        }}
+                        startIcon={<CalendarClock size={16} />}
+                    >
+                        Move To
+                    </Button>
+                    <Button
+                        size="small"
+                        onClick={handleBulkRepeatStepClick}
+                        disabled={bulkRepeating}
+                        sx={{
+                            textTransform: 'capitalize',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            color: '#7367f0',
+                            borderRadius: '10px',
+                            padding: '6px 14px',
+                            gap: 1,
+                            '&:hover': { background: 'rgba(115, 103, 240, 0.08)' },
+                        }}
+                        startIcon={bulkRepeating ? <CircularProgress size={14} /> : <Repeat size={16} />}
+                    >
+                        {bulkRepeating ? 'Repeating...' : 'Repeat'}
+                    </Button>
+                    <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+                    <IconButton size="small" onClick={handleClearSelection} sx={{ color: '#888' }}>
+                        <X size={18} />
+                    </IconButton>
+                </Box>
+            )}
+            <EventContextMenu
+                contextMenu={contextMenu}
+                onClose={handleContextMenuClose}
+                onEdit={handleContextEdit}
+                onDelete={handleContextDelete}
+                onPermanentDelete={handleContextPermanentDelete}
+                onMoveToDate={handleContextMoveToDate}
+                onRepeat={handleContextRepeat}
+                showMove={!!handleIndividualMove}
+                showPermanentDelete={!!contextMenu?.event?.taskid && !!handlePermanentDelete}
+            />
         </>
     );
 };

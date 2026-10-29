@@ -11,7 +11,7 @@ import { Draggable } from "@fullcalendar/interaction";
 import { useRecoilValue } from "recoil";
 import Fuse from "fuse.js";
 import dayjs from "dayjs";
-import { Calendar, ListTodo, Flag, User } from "lucide-react";
+import { ListFilter, OctagonAlert, X } from "lucide-react";
 
 import './TasklistForCal.scss';
 import { TaskData, actualTaskData, calendarData } from "../../Recoil/atom";
@@ -115,6 +115,15 @@ const TaskCard = memo(({ child, colorClass, isScheduled, calendarsColor }) => {
                 sx={{ p: '8px !important', m: 0 }}
             >
                 <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.2}>
+                    {child?.isblocker == 1 && (
+                        <Tooltip title="Blocker task" arrow>
+                            <OctagonAlert
+                                size={15}
+                                color="#d32f2f"
+                                style={{ flexShrink: 0, marginRight: 4 }}
+                            />
+                        </Tooltip>
+                    )}
                     <Typography
                         variant="body2"
                         fontWeight={600}
@@ -293,11 +302,9 @@ const TasklistForCal = ({ calendarsColor, onDateRangeChange, onAssigneeChange })
     const [calTasksList, setCalTasksList] = useState([]);
     const draggableRef = React.useRef(null);
     const [showDraggedTasks, setShowDraggedTasks] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
     const [showTodayOnly, setShowTodayOnly] = useState(false);
     const [isCalendarDataLoaded, setIsCalendarDataLoaded] = useState(false);
-    const [showDateFilter, setShowDateFilter] = useState(false);
-    const [showStatusFilter, setShowStatusFilter] = useState(false);
-    const [showPriorityFilter, setShowPriorityFilter] = useState(false);
     const [dateRange, setDateRange] = useState({
         startDate: "",
         endDate: "",
@@ -316,6 +323,10 @@ const TasklistForCal = ({ calendarsColor, onDateRangeChange, onAssigneeChange })
 
     const handleDateRangeChange = useCallback((newDateRange) => {
         setDateRange(newDateRange);
+        // Applying a new range should show everything in it — clear the stale
+        // start:/due: search term + today-only flag that would silently narrow it
+        setSearchQuery('');
+        setShowTodayOnly(false);
         if (onDateRangeChange) {
             onDateRangeChange(newDateRange);
         }
@@ -443,6 +454,7 @@ const TasklistForCal = ({ calendarsColor, onDateRangeChange, onAssigneeChange })
                             status: dragtask?.status ?? "",
                             DeadLineDate: dragtask?.DeadLineDate,
                             ismilestone: dragtask?.ismilestone ?? 0,
+                            isblocker: dragtask?.isblocker ?? 0,
                             workcategoryid: dragtask?.workcategoryid ?? 0,
                             RootTaskId: dragtask?.RootTaskId ?? '',
                             extendedProps: {
@@ -465,6 +477,7 @@ const TasklistForCal = ({ calendarsColor, onDateRangeChange, onAssigneeChange })
                                 workcategoryid: dragtask?.workcategoryid ?? 0,
                                 DeadLineDate: dragtask?.DeadLineDate,
                                 ismilestone: dragtask?.ismilestone ?? 0,
+                            isblocker: dragtask?.isblocker ?? 0,
                                 RootTaskId: dragtask?.RootTaskId ?? '',
                                 prModule: {
                                     taskid: dragtask?.taskid ?? 0,
@@ -664,6 +677,7 @@ const TasklistForCal = ({ calendarsColor, onDateRangeChange, onAssigneeChange })
     return (
         <>
             <Box sx={{ px: 1.25, my: 1 }}>
+                {/* Header — title + scheduled/unscheduled toggle */}
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
                     <Typography
                         variant="h6"
@@ -675,252 +689,149 @@ const TasklistForCal = ({ calendarsColor, onDateRangeChange, onAssigneeChange })
                     >
                         Task List
                     </Typography>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        <Tooltip
-                            arrow
-                            placement="top"
-                            title={showDateFilter ? "Hide date filter" : "Show date filter"}
-                        >
-                            <IconButton
-                                onClick={() => setShowDateFilter(!showDateFilter)}
-                                sx={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    padding: '4px',
-                                    backgroundColor:
-                                        showDateFilter ? "#7367f0" : "white",
-                                    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-                                    "&:hover": {
-                                        backgroundColor: "#7367f0",
-                                        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
-                                    },
-                                }}
-                            >
-                                <Calendar
-                                    size={18}
-                                    color={showDateFilter ? "#fff" : "#0000008a"}
-                                />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip
-                            arrow
-                            placement="top"
-                            title={showStatusFilter ? "Hide status filter" : "Show status filter"}
-                        >
-                            <IconButton
-                                onClick={() => setShowStatusFilter(!showStatusFilter)}
-                                sx={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    padding: '4px',
-                                    backgroundColor:
-                                        showStatusFilter ? "#7367f0" : "white",
-                                    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-                                    "&:hover": {
-                                        backgroundColor: "#7367f0",
-                                        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
-                                    },
-                                }}
-                            >
-                                <ListTodo
-                                    size={18}
-                                    color={showStatusFilter ? "#fff" : "#0000008a"}
-                                />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip
-                            arrow
-                            placement="top"
-                            title={showPriorityFilter ? "Hide priority filter" : "Show priority filter"}
-                        >
-                            <IconButton
-                                onClick={() => setShowPriorityFilter(!showPriorityFilter)}
-                                sx={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    padding: '4px',
-                                    backgroundColor:
-                                        showPriorityFilter ? "#7367f0" : "white",
-                                    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-                                    "&:hover": {
-                                        backgroundColor: "#7367f0",
-                                        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
-                                    },
-                                }}
-                            >
-                                <Flag
-                                    size={18}
-                                    color={showPriorityFilter ? "#fff" : "#0000008a"}
-                                />
-                            </IconButton>
-                        </Tooltip>
-                    </Box>
-                </Box>
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 1.5,
-                        p: 1.5,
-                        backgroundColor: '#f8f8f8',
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0'
-                    }}
-                >
-                    {showDateFilter && (
-                        <>
-                            <Box>
-                                <Typography
-                                    variant="caption"
-                                    sx={{
-                                        fontWeight: 500,
-                                        mb: 0.5,
-                                        color: '#6d6b77',
-                                        display: 'block'
-                                    }}
-                                >
-                                    Date Range
-                                </Typography>
-                                <CustomDateRangePicker
-                                    value={dateRange}
-                                    onChange={handleDateRangeChange}
-                                />
-                            </Box>
-                            <Box sx={{ borderBottom: '1px solid #e0e0e0', my: 0.5 }} />
-                        </>
-                    )}
-                    {showStatusFilter && (
-                        <>
-                            <Box>
-                                <Typography
-                                    variant="caption"
-                                    sx={{
-                                        fontWeight: 500,
-                                        mb: 0.5,
-                                        color: '#6d6b77',
-                                        display: 'block'
-                                    }}
-                                >
-                                    Status
-                                </Typography>
-                                <CustomAutocomplete
-                                    name="status"
-                                    label=""
-                                    value={selectedStatusId}
-                                    options={statusData}
-                                    placeholder="Select status"
-                                    onChange={(e) => setSelectedStatusId(e.target.value)}
-                                    width="100%"
-                                />
-                            </Box>
-                            <Box sx={{ borderBottom: '1px solid #e0e0e0', my: 0.5 }} />
-                        </>
-                    )}
-                    {showPriorityFilter && (
-                        <>
-                            <Box>
-                                <Typography
-                                    variant="caption"
-                                    sx={{
-                                        fontWeight: 500,
-                                        mb: 0.5,
-                                        color: '#6d6b77',
-                                        display: 'block'
-                                    }}
-                                >
-                                    Priority
-                                </Typography>
-                                <CustomAutocomplete
-                                    name="priority"
-                                    label=""
-                                    value={selectedPriorityId}
-                                    options={priorityData}
-                                    placeholder="Select priority"
-                                    onChange={(e) => setSelectedPriorityId(e.target.value)}
-                                    width="100%"
-                                />
-                            </Box>
-                            <Box sx={{ borderBottom: '1px solid #e0e0e0', my: 0.5 }} />
-                        </>
-                    )}
-                    <Box>
-                        <Typography
-                            variant="caption"
+                    <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                    <Tooltip
+                        arrow
+                        placement="top"
+                        title={showFilters ? "Hide filters" : "Show filters"}
+                    >
+                        <IconButton
+                            aria-label="Filters"
+                            onClick={() => setShowFilters(!showFilters)}
                             sx={{
-                                fontWeight: 500,
-                                mb: 0.5,
-                                color: '#6d6b77',
-                                display: 'block'
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                padding: '4px',
+                                backgroundColor:
+                                    (showFilters || selectedStatusId || selectedPriorityId || (dateRange?.startDate && dateRange?.endDate)) ? "#7367f0" : "white",
+                                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                                "&:hover": {
+                                    backgroundColor: "#7367f0",
+                                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                                },
                             }}
                         >
-                            Search
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <TextField
-                                fullWidth
-                                variant="outlined"
-                                size="small"
-                                placeholder="Search tasks..."
-                                value={searchQuery}
-                                onChange={handleSearchChange}
-                                {...commonTextFieldProps}
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <CustomTooltip
-                                                title={`Enhanced Search Guide:\n
-• Normal text: type keywords (e.g., task name, description)\n
-• Exact match: use single quotes 'Task Name' (exact task name)\n
-• Related search: use double quotes "keyword" (name + description)\n
-• Start date: "start:jan", "start:2024", "start:15" (day/month/year)\n
-• Due date: "due:feb", "due:2024", "due:28" (day/month/year)\n
-• Fuzzy search: type partial text for flexible matching\n
-• Toggle: use "Show dragged tasks" to include already scheduled tasks in this list`}
-                                                placement="left"
-                                            >
-                                                <IconButton edge="end">
-                                                    <Info fontSize="small" />
-                                                </IconButton>
-                                            </CustomTooltip>
-                                        </InputAdornment>
-                                    )
-                                }}
+                            <ListFilter
+                                size={18}
+                                color={(showFilters || selectedStatusId || selectedPriorityId || (dateRange?.startDate && dateRange?.endDate)) ? "#fff" : "#0000008a"}
                             />
-                            <Tooltip
-                                arrow
-                                placement="top"
-                                title={showDraggedTasks
-                                    ? "Showing scheduled tasks (click to show unscheduled)"
-                                    : "Showing unscheduled tasks (click to show scheduled)"}
-                            >
-                                <IconButton
-                                    aria-label="Completed tasks"
-                                    onClick={() => setShowDraggedTasks(!showDraggedTasks)}
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: "center",
-                                        alignItems: "center",
-                                        padding: '4px',
-                                        backgroundColor:
-                                            showDraggedTasks ? "#7367f0" : "white",
-                                        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-                                        "&:hover": {
-                                            backgroundColor: "#7367f0",
-                                            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
-                                        },
-                                    }}
-                                >
-                                    <CircleCheck className="iconbtn"
-                                        color={
-                                            showDraggedTasks ? "#fff" : "#0000008a"
-                                        } />
-                                </IconButton>
-                            </Tooltip>
-                        </Box>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip
+                        arrow
+                        placement="top"
+                        title={showDraggedTasks
+                            ? "Showing scheduled tasks (click to show unscheduled)"
+                            : "Showing unscheduled tasks (click to show scheduled)"}
+                    >
+                        <IconButton
+                            aria-label="Completed tasks"
+                            onClick={() => setShowDraggedTasks(!showDraggedTasks)}
+                            sx={{
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                padding: '4px',
+                                backgroundColor:
+                                    showDraggedTasks ? "#7367f0" : "white",
+                                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                                "&:hover": {
+                                    backgroundColor: "#7367f0",
+                                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                                },
+                            }}
+                        >
+                            <CircleCheck className="iconbtn"
+                                color={
+                                    showDraggedTasks ? "#fff" : "#0000008a"
+                                } />
+                        </IconButton>
+                    </Tooltip>
                     </Box>
+                </Box>
+
+                {/* Filters — always visible, all local: search, status+priority, date range */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <TextField
+                        fullWidth
+                        variant="outlined"
+                        size="small"
+                        placeholder="Search tasks..."
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        {...commonTextFieldProps}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    {Boolean(searchQuery?.trim()) && (
+                                        <IconButton
+                                            size="small"
+                                            edge="end"
+                                            onClick={() => setSearchQuery('')}
+                                            title="Clear search"
+                                        >
+                                            <X size={14} />
+                                        </IconButton>
+                                    )}
+                                    <CustomTooltip
+                                        title={`Enhanced Search Guide:
+
+• Normal text: type keywords (e.g., task name, description)
+
+• Exact match: use single quotes 'Task Name' (exact task name)
+
+• Related search: use double quotes "keyword" (name + description)
+
+• Start date: "start:jan", "start:2024", "start:15" (day/month/year)
+
+• Due date: "due:feb", "due:2024", "due:28" (day/month/year)
+
+• Fuzzy search: type partial text for flexible matching
+
+• Toggle: use "Show dragged tasks" to include already scheduled tasks in this list`}
+                                        placement="left"
+                                    >
+                                        <IconButton edge="end">
+                                            <Info fontSize="small" />
+                                        </IconButton>
+                                    </CustomTooltip>
+                                </InputAdornment>
+                            )
+                        }}
+                    />
+                    {showFilters && (
+                        <>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <CustomAutocomplete
+                                        name="status"
+                                        label=""
+                                        value={selectedStatusId}
+                                        options={statusData}
+                                        placeholder="Status"
+                                        onChange={(e) => setSelectedStatusId(e.target.value)}
+                                        width="100%"
+                                    />
+                                </Box>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <CustomAutocomplete
+                                        name="priority"
+                                        label=""
+                                        value={selectedPriorityId}
+                                        options={priorityData}
+                                        placeholder="Priority"
+                                        onChange={(e) => setSelectedPriorityId(e.target.value)}
+                                        width="100%"
+                                    />
+                                </Box>
+                            </Box>
+                            <CustomDateRangePicker
+                                value={dateRange}
+                                onChange={handleDateRangeChange}
+                            />
+                        </>
+                    )}
                 </Box>
             </Box>
             <Box id="external-tasks" sx={{ padding: 1.25, maxHeight: '88vh', overflow: 'auto' }}>

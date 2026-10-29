@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Box, Card, CardContent, Typography, IconButton, Avatar, AvatarGroup, Button, Tooltip } from "@mui/material";
 import { Circle, CircleCheck, CircleDotDashed, CircleX, ExternalLink, Plus, StickyNote, Target, Volleyball, Workflow } from "lucide-react";
-import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, priorityColors, removeTaskRecursively } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, ImageUrl, priorityColors, removeTaskRecursively, getAvatarColors, getInitials } from '../../../Utils/globalfun';
+import SafeAvatar from '../../ShortcutsComponent/SafeAvatar';
 import useSafeRedirect from "../../../Utils/useSafeRedirect";
 import { useTabStore } from "../../../Store/useTabStore";
 import { fetchTaskDataFullApi } from "../../../Api/TaskApi/TaskDataFullApi";
@@ -135,13 +136,6 @@ function KanbanView({
 
   const handleCloseDialog = () => {
     setCnfDialogOpen(false);
-  };
-
-  const background = (assignee) => {
-    const avatarBackgroundColor = assignee?.avatar
-      ? "transparent"
-      : getRandomAvatarColor(assignee);
-    return avatarBackgroundColor;
   };
 
   // Function to get the correct icon based on the task status
@@ -440,16 +434,16 @@ function KanbanView({
                                             arrow
                                             classes={{ tooltip: 'custom-tooltip' }}
                                           >
-                                            <Avatar
+                                            <SafeAvatar
                                               key={teamIdx}
                                               alt={assignee?.firstname + " " + assignee?.lastname}
                                               src={ImageUrl(assignee) || null}
                                               sx={{
-                                                backgroundColor: background(assignee?.firstname),
+                                                ...getAvatarColors(assignee?.firstname),
                                               }}
                                             >
-                                              {!assignee.avatar && assignee?.firstname?.charAt(0)}
-                                            </Avatar>
+                                              {!assignee.avatar && getInitials(assignee?.firstname, assignee?.lastname)}
+                                            </SafeAvatar>
                                           </Tooltip>
                                         ))}
                                       </AvatarGroup>

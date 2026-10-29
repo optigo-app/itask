@@ -192,14 +192,14 @@ $text-muted: #8080808f;
     @include flex-center;
 
     .image-container {
-        width: 80%;
-        height: 80%;
+        width: 100%;
+        height: 100%;
         border-radius: 20px;
         @include flex-center;
 
         .login-image {
             width: 100%;
-            border-radius: 15px;
+            object-fit: cover;
         }
     }
 }

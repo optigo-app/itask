@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./TaskTable.scss";
 import {
     Table,
@@ -19,13 +19,13 @@ import {
     Menu,
     MenuItem,
 } from "@mui/material";
-import { Archive, ArchiveRestore, Bug, CirclePlus, CloudUpload, Eye, Flag, MessageCircleMore, Pencil, PrinterCheck, Star, Undo2 } from "lucide-react";
+import { Archive, ArchiveRestore, Bug, CirclePlus, CloudUpload, Eye, Flag, Layers, MessageCircleMore, OctagonAlert, Pencil, PrinterCheck, Star, Undo2 } from "lucide-react";
 import "react-resizable/css/styles.css";
 import { useSetRecoilState } from "recoil";
 import { assigneeId, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
 import TaskDetail from "../TaskDetails/TaskDetails";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { getArchiveChipStyles, getArchiveInfoFromEndDate, getRandomAvatarColor, getStatusColor, priorityColors, statusColors, formatDaysDisplay, getAuthData, getUserProfileData, handleBugTrackRedirect } from "../../../Utils/globalfun";
+import { getArchiveChipStyles, getArchiveInfoFromEndDate, getStatusColor, priorityColors, statusColors, formatDaysDisplay, getAuthData, getUserProfileData, handleBugTrackRedirect } from "../../../Utils/globalfun";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AssigneeShortcutModal from "../../ShortcutsComponent/Assignee/AssigneeShortcutModal";
 import AssigneeAvatarGroup from "../../ShortcutsComponent/Assignee/AssigneeAvatarGroup";
@@ -119,8 +119,7 @@ const findPathToTask = (tasks = [], targetId) => {
 };
 
 const initialColumns = [
-    { id: "taskname", label: "Task Name", width: 285 },
-    { id: "taskPr", label: "Project", width: 110 },
+    { id: "taskname", label: "Task Name", width: 395 },
     { id: "progress", label: "Progress", width: 75 },
     { id: "status", label: "Status", width: 100 },
     { id: "secStatus", label: "What Next", width: 100 },
@@ -134,6 +133,112 @@ const initialColumns = [
 const INITIAL_SUBTASK_BATCH = 220;
 const SUBTASK_BATCH_STEP = 320;
 const MAX_SKELETON_ROWS = 6;
+
+// Memoized row — menu/dialog state changes in TableView skip row rendering entirely.
+// Every render helper flows through a stable ref so helpers.current always holds the
+// latest closures; memoization can't produce stale UI. Only real per-row changes
+// (task object, expansion, subtask list/limit, timer, resize) re-render the row.
+const TaskTreeRow = React.memo(function TaskTreeRow({
+    task,
+    expanded,
+    visibleSubtasks,
+    subtaskLimit,
+    taskRunning,
+    isResizingTask,
+    isFullAccess,
+    helpers
+}) {
+    const H = helpers.current;
+    const isFrozen = task?.isFreez == 1;
+    const access = isFrozen && !isFullAccess;
+    const archiveInfo = task?.Completion_timestamp ? getArchiveInfoFromEndDate(task, 7) : null;
+    const isReadOnlyAssignee = task?.assignee?.find(a => a.id == H.userId)?.isreadonly === 1;
+    return (
+        <React.Fragment>
+            <TableRow
+                className={task?.isCopyActive ? 'cut-task-row' : ''}
+                sx={{
+                    pointerEvents: task?.isCopyActive ? 'none' : 'auto',
+                    cursor: task?.isCopyActive ? 'not-allowed' : 'default',
+                    backgroundColor: (() => {
+                        if (task?.isCopyActive) return undefined;
+                        if (expanded) return '#f5f5f5';
+                        if (!archiveInfo) return 'inherit';
+                        return archiveInfo?.isReady ? 'rgba(245, 124, 0, 0.10)' : 'rgba(255, 215, 0, 0.10)';
+                    })(),
+                    '&:hover': {
+                        backgroundColor: !task?.isCopyActive ? '#f8f9fa' : 'inherit'
+                    }
+                }}
+                onContextMenu={(e) => H.handleContextMenu(e, task)}
+            >
+                <TableCell>
+                    {H.renderTaskNameSection(
+                        task,
+                        H.expandedTasks,
+                        H.toggleSubtasks,
+                        H.handleAddTask,
+                        isResizingTask,
+                        0,
+                        null,
+                        false,
+                        H.handleTaskFavorite
+                    )}
+                </TableCell>
+                <TableCell>
+                    {H.renderTaskProgressBar(
+                        task?.progress_per,
+                        task?.isNotShowProgress,
+                    )}
+                </TableCell>
+                <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <StatusBadge task={task} statusColors={statusColors} onStatusChange={H.onStatusChange}
+                            disable={((isReadOnlyAssignee && !H.canTaskActions)) || access} />
+                    </Box>
+                </TableCell>
+                <TableCell>
+                    <StatusBadge task={task} statusColors={statusColors} onStatusChange={H.onStatusChange}
+                        disable={((isReadOnlyAssignee && !H.canTaskActions)) || access} flag="secondaryStatus" />
+                </TableCell>
+                <TableCell>
+                    {H.renderAssigneeAvatars(task?.assignee, task, null, null, H.hanldePAvatarClick, H.handleAssigneeShortcut)}
+                </TableCell>
+                <TableCell
+                    data-deadline-column="true"
+                    onClick={(e) => {
+                        const isFull = H.canTaskActions || H.isAdminUser;
+                        if (!isReadOnlyAssignee || isFull) H.handleDeadlineClick(e, task, access);
+                    }}
+                    sx={{
+                        cursor: (access || (isReadOnlyAssignee && !(H.canTaskActions))) ? 'default' : 'pointer',
+                        '&:hover': {
+                            backgroundColor: (access || (isReadOnlyAssignee && !(H.canTaskActions))) ? 'inherit' : '#e3f2fd',
+                            borderRadius: '4px'
+                        },
+                        transition: 'background-color 0.2s ease',
+                        padding: '8px 16px'
+                    }}
+                >
+                    {formatDaysDisplay(task?.DeadLineDate, task)}
+                </TableCell>
+                <TableCell>
+                    <PriorityBadge task={task} priorityColors={priorityColors} onPriorityChange={H.onPriorityChange} disable={((isReadOnlyAssignee && !H.canTaskActions)) || access} />
+                </TableCell>
+                <TableCell>
+                    <StatusCircles task={task} />
+                </TableCell>
+                <TableCell align="center" className="sticky-last-col">
+                    {H.renderTaskActions(task, H.taskTimeRunning, H.handleTimeTrackModalOpen, H.handleEditTask, H.handleViewTask)}
+                </TableCell>
+            </TableRow>
+            {(visibleSubtasks || [])
+                .slice(0, subtaskLimit)
+                .map((row) => H.renderSubtaskRow(row))}
+            {H.renderSubtaskSkeletonRows(task.taskid)}
+        </React.Fragment>
+    );
+});
 
 
 const TableView = ({
@@ -164,6 +269,12 @@ const TableView = ({
     onDeleteTask,
     onRefresh }) => {
     const { hasAccess } = useAccess();
+    // Cached once per render — avoids ~20 localStorage reads + JSON.parse calls per row
+    const userProfile = getUserProfileData();
+    const userId = userProfile?.id;
+    const isAdminUser = userProfile?.designation?.toLowerCase() === "admin";
+    const canTaskActions = hasAccess(PERMISSIONS.canTaskActions);
+    const isFullAccess = canTaskActions || isAdminUser;
     const navigate = useSafeRedirect();
     const [anchorPrintEl, setAnchorPrintEl] = useState(null);
 
@@ -216,9 +327,6 @@ const TableView = ({
     const setFormDataValue = useSetRecoilState(formData);
     const setRootSubroot = useSetRecoilState(rootSubrootflag);
     const [expandedTasks, setExpandedTasks] = useState({});
-    const [hoveredTaskId, setHoveredTaskId] = useState(null);
-    const [hoveredColumnname, setHoveredColumnName] = useState('');
-    const [hoveredSubtaskId, setHoveredSubtaskId] = useState(null);
     const setSelectedTask = useSetRecoilState(selectedRowData);
     const setAssigneeId = useSetRecoilState(assigneeId);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -278,13 +386,6 @@ const TableView = ({
         }
     }, [data, selectedItem?.taskid]);
 
-    const background = (assignee) => {
-        const avatarBackgroundColor = assignee?.avatar
-            ? "transparent"
-            : getRandomAvatarColor(assignee);
-        return avatarBackgroundColor;
-    };
-
     const handleTimeTrackModalOpen = (task) => {
         setTimeTrackMOpen(true);
         setSelectedItem(task)
@@ -292,24 +393,6 @@ const TableView = ({
 
     const handleTaskModalClose = () => {
         setTaskDetailModalOpen(false);
-    };
-
-    const handleTaskMouseEnter = (taskId, value) => {
-        setHoveredColumnName(value?.Tbcell)
-        setHoveredTaskId(taskId);
-    };
-
-    const handleTaskMouseLeave = () => {
-        setHoveredTaskId(null);
-        setHoveredColumnName('')
-    };
-
-    const handleSubtaskMouseEnter = (subtaskId) => {
-        setHoveredSubtaskId(subtaskId);
-    };
-
-    const handleSubtaskMouseLeave = () => {
-        setHoveredSubtaskId(null);
     };
 
     const handleAddTask = (task, additionalInfo) => {
@@ -371,9 +454,11 @@ const TableView = ({
         setSelectedItem(task);
     };
 
+    const [printJob, setPrintJob] = useState(null); // { type: 'mom'|'maintenance'|'document', key }
+
     const handleOpenPrintMenu = (event, task) => {
         setAnchorPrintEl(event.currentTarget);
-        setSelectedItem(task);
+        setSelectedItem(prev => (prev?.taskid === task?.taskid ? prev : task));
     };
 
     const handleClosePrintMenu = () => {
@@ -435,6 +520,7 @@ const TableView = ({
         contentRef: printRef1,
         documentTitle: "MOMSheet",
         onAfterPrint: async () => {
+            setPrintJob(null);
             if (selectedItem && selectedItem.taskid) {
                 await handlePrintCount(selectedItem);
             }
@@ -445,6 +531,7 @@ const TableView = ({
         contentRef: printRef2,
         documentTitle: "MaintenanceSheet",
         onAfterPrint: async () => {
+            setPrintJob(null);
             if (selectedItem && selectedItem.taskid) {
                 await handlePrintCount(selectedItem);
             }
@@ -455,24 +542,27 @@ const TableView = ({
         contentRef: printRef3,
         documentTitle: "DocumentSheet",
         onAfterPrint: async () => {
+            setPrintJob(null);
             if (selectedItem && selectedItem.taskid) {
                 await handlePrintCount(selectedItem);
             }
         }
     });
 
+    // Print sheets are heavy DOM — mount only the requested sheet; each sheet
+    // fires onReady once its content is committed, which triggers the print.
     const printOptions = [
         {
             label: "MOM Sheet",
-            onClick: handlePrintA,
+            onClick: () => setPrintJob({ type: 'mom', key: Date.now() }),
         },
         {
             label: "Maintenance Sheet",
-            onClick: handlePrintB,
+            onClick: () => setPrintJob({ type: 'maintenance', key: Date.now() }),
         },
         {
             label: "Document Sheet",
-            onClick: handlePrintC,
+            onClick: () => setPrintJob({ type: 'document', key: Date.now() }),
         },
     ];
 
@@ -705,8 +795,8 @@ const TableView = ({
     ) => {
         // ===== FLAGS =====
         const isParentFrozen = task?.isFreez == 1;
-        const hasTaskActionAccess = hasAccess(PERMISSIONS.canTaskActions);
-        const isAdmin = getUserProfileData()?.designation?.toLowerCase() === "admin";
+        const hasTaskActionAccess = canTaskActions;
+        const isAdmin = isAdminUser;
         const isFullAccess = hasTaskActionAccess || isAdmin;
 
         const isArchived = (task?.status || '').toString().trim().toLowerCase() === 'completed' && task?.Completion_timestamp != null;
@@ -888,8 +978,6 @@ const TableView = ({
         expandedTasks,
         toggleSubtasks,
         handleAddTask,
-        hoveredTaskId,
-        hoveredColumnname,
         isResizing = false,
         paddingLeft = 0,
         parentArchiveInfo = null,
@@ -983,6 +1071,9 @@ const TableView = ({
                                     }}
                                     className={`tasknameCl ${task?.isCopyActive ? 'cut-task-name' : ''}`}
                                 >
+                                    {task?.parentid == 0 && (
+                                        <Layers size={13} style={{ color: '#7367f0', marginRight: '4px', flexShrink: 0 }} />
+                                    )}
                                     {task?.taskno && task.taskno != 0 && (
                                         <span style={{ color: '#666', fontWeight: '500', marginRight: '8px' }}>
                                             {task.taskno}
@@ -1010,12 +1101,62 @@ const TableView = ({
                                         </span>
                                     </Tooltip>
                                 )}
+                                {task?.isblocker == 1 && (
+                                    <Tooltip title="Blocker" arrow placement="top">
+                                        <span
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: '15px',
+                                                height: '15px',
+                                                borderRadius: '50%',
+                                                backgroundColor: '#d32f2f',
+                                                color: '#fff',
+                                                marginLeft: '4px',
+                                                flexShrink: 0,
+                                            }}
+                                        >
+                                            <OctagonAlert size={8} fill="#fff" />
+                                        </span>
+                                    </Tooltip>
+                                )}
                                 {task?.subtasks?.length > 0 && (
                                     <span className="task-sub_count">
                                         {task?.subtasks?.length}
                                     </span>
                                 )}
                             </div>
+                            {/* Project name — small light second line under the task name
+                                (replaces the removed standalone Project column) */}
+                            {task?.taskPr && (
+                                <span
+                                    title="Open module"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenModuleTab(task);
+                                    }}
+                                    style={{
+                                        marginLeft: '23px',
+                                        width: 'fit-content',
+                                        maxWidth: '100%',
+                                        fontSize: '11px',
+                                        fontWeight: 400,
+                                        color: '#9e9e9e',
+                                        lineHeight: 1.3,
+                                        marginTop: '1px',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        cursor: 'pointer',
+                                        transition: 'color 0.15s ease',
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.color = '#7367f0'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.color = '#9e9e9e'; }}
+                                >
+                                    {task.taskPr}
+                                </span>
+                            )}
                             {/* <Tooltip title={task?.isfavourite === 1 ? "Remove from favorites" : "Add to favorites"} arrow placement="top">
                                     <IconButton
                                         onClick={(e) => {
@@ -1186,17 +1327,12 @@ const TableView = ({
                         id="add-task"
                         aria-label="add-task"
                         size="small"
+                        className="hover-reveal"
                         onClick={() => handleAddTask(task, { Task: 'subroot' })}
-                        style={{
-                            visibility:
-                                hoveredTaskId === task?.taskid && hoveredColumnname === 'TaskName'
-                                    ? 'visible'
-                                    : 'hidden',
-                        }}
-                        disabled={task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 || parentArchived}
+                        disabled={task?.assignee?.find(a => a.id == userId)?.isreadonly === 1 || parentArchived}
                     >
                         <CirclePlus size={20} color={
-                            (task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1)
+                            (task?.assignee?.find(a => a.id == userId)?.isreadonly === 1)
                                 ? "#e0e0e0"
                                 : "#7367f0"
                         } />
@@ -1234,6 +1370,7 @@ const TableView = ({
     };
 
     const renderSubtaskRow = ({ subtask, parentArchiveInfo, parentArchived, depth }) => {
+        const archiveInfo = (subtask?.Completion_timestamp ? getArchiveInfoFromEndDate(subtask, 7) : null) || parentArchiveInfo;
         return (
             <React.Fragment key={`${subtask.taskid}-${depth}`}>
                 <TableRow
@@ -1243,20 +1380,14 @@ const TableView = ({
                         cursor: subtask?.isCopyActive ? 'not-allowed' : 'default',
                         backgroundColor: (() => {
                             if (subtask?.isCopyActive) return undefined;
-                            if (hoveredSubtaskId === subtask?.taskid) return '#f5f5f5';
                             if (expandedTasks[subtask.taskid]) return '#f5f5f5';
-
-                            const ownInfo = subtask?.Completion_timestamp ? getArchiveInfoFromEndDate(subtask, 7) : null;
-                            const info = ownInfo || parentArchiveInfo;
-                            if (!info) return 'inherit';
-                            return info?.isReady ? 'rgba(245, 124, 0, 0.10)' : 'rgba(255, 215, 0, 0.10)';
+                            if (!archiveInfo) return 'inherit';
+                            return archiveInfo?.isReady ? 'rgba(245, 124, 0, 0.10)' : 'rgba(255, 215, 0, 0.10)';
                         })(),
                         '&:hover': {
                             backgroundColor: !subtask?.isCopyActive ? '#f8f9fa' : 'inherit'
                         }
                     }}
-                    onMouseEnter={() => handleSubtaskMouseEnter(subtask?.taskid, { Tbcell: 'TaskName' })}
-                    onMouseLeave={handleSubtaskMouseLeave}
                     onContextMenu={(e) => handleContextMenu(e, subtask)}
                 >
                     <TableCell >
@@ -1270,8 +1401,6 @@ const TableView = ({
                                 expandedTasks,
                                 toggleSubtasks,
                                 handleAddTask,
-                                hoveredTaskId,
-                                hoveredColumnname,
                                 false,
                                 `${15 * (depth + 1)}`,
                                 parentArchiveInfo,
@@ -1283,10 +1412,8 @@ const TableView = ({
                                 aria-label="add-task"
                                 aria-labelledby="add-task"
                                 size="small"
+                                className="hover-reveal"
                                 onClick={() => handleAddSubtask(subtask, { Task: 'subroot' })}
-                                style={{
-                                    visibility: hoveredSubtaskId === subtask?.taskid ? "visible" : "hidden",
-                                }}
                                 sx={{
                                     width: '32px',
                                     height: '32px',
@@ -1295,30 +1422,15 @@ const TableView = ({
                                         boxShadow: 'none',
                                     }
                                 }}
-                                disabled={subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 || parentArchived}
+                                disabled={subtask?.assignee?.find(a => a.id == userId)?.isreadonly === 1 || parentArchived}
                             >
                                 <CirclePlus size={20} color={
-                                    (subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1)
+                                    (subtask?.assignee?.find(a => a.id == userId)?.isreadonly === 1)
                                         ? "#e0e0e0"
                                         : "#7367f0"
                                 } />
                             </IconButton>
                         </div>
-                    </TableCell>
-                    <TableCell
-                        className="taskPriorityCell"
-                        title="Open module"
-                        onClick={() => handleOpenModuleTab(subtask)}
-                        sx={{
-                            cursor: subtask?.taskid ? 'pointer' : 'default',
-                            color: subtask?.projectid ? '#1976d2' : 'inherit',
-                            '&:hover': {
-                                color: '#7367f0 !important'
-                            },
-                            transition: 'all 0.2s ease'
-                        }}
-                    >
-                        {subtask?.taskPr}
                     </TableCell>
                     <TableCell>
                         {renderTaskProgressBar(subtask?.progress_per, subtask?.isNotShowProgress)}
@@ -1326,7 +1438,7 @@ const TableView = ({
                     <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange}
-                                disable={(subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))} />
+                                disable={(subtask?.assignee?.find(a => a.id == userId)?.isreadonly === 1 && !canTaskActions)} />
                             {/* <ArchiveRestoreButton
                                 task={subtask}
                                 setSelectedArchiveTask={setSelectedArchiveTask}
@@ -1342,24 +1454,21 @@ const TableView = ({
                     </TableCell>
                     <TableCell>
                         <StatusBadge task={subtask} statusColors={statusColors} onStatusChange={onStatusChange}
-                            disable={(subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))} flag="secondaryStatus" />
+                            disable={(subtask?.assignee?.find(a => a.id == userId)?.isreadonly === 1 && !canTaskActions)} flag="secondaryStatus" />
                     </TableCell>
-                    <TableCell
-                        onMouseEnter={() => handleTaskMouseEnter(subtask?.taskid, { Tbcell: 'Assignee' })}
-                        onMouseLeave={handleTaskMouseLeave}>
-                        {renderAssigneeAvatars(subtask?.assignee, subtask, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut, !parentArchived)}
+                    <TableCell>
+                        {renderAssigneeAvatars(subtask?.assignee, subtask, null, null, hanldePAvatarClick, handleAssigneeShortcut, !parentArchived)}
                     </TableCell>
                     <TableCell
                         data-deadline-column="true"
                         onClick={(e) => {
-                            const isReadOnly = subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1;
-                            const isFullAccess = hasAccess(PERMISSIONS.canTaskActions) || getUserProfileData()?.designation?.toLowerCase() === "admin";
+                            const isReadOnly = subtask?.assignee?.find(a => a.id == userId)?.isreadonly === 1;
                             if (!isReadOnly || isFullAccess) handleDeadlineClick(e, subtask);
                         }}
                         sx={{
-                            cursor: (subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !(hasAccess(PERMISSIONS.canTaskActions))) ? 'default' : 'pointer',
+                            cursor: (subtask?.assignee?.find(a => a.id == userId)?.isreadonly === 1 && !(canTaskActions)) ? 'default' : 'pointer',
                             '&:hover': {
-                                backgroundColor: (subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !(hasAccess(PERMISSIONS.canTaskActions))) ? 'inherit' : '#e3f2fd',
+                                backgroundColor: (subtask?.assignee?.find(a => a.id == userId)?.isreadonly === 1 && !(canTaskActions)) ? 'inherit' : '#e3f2fd',
                                 borderRadius: '4px'
                             },
                             transition: 'background-color 0.2s ease',
@@ -1370,7 +1479,7 @@ const TableView = ({
                     </TableCell>
                     <TableCell>
                         <PriorityBadge task={subtask} priorityColors={priorityColors} onPriorityChange={onPriorityChange}
-                            disable={(subtask?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))} />
+                            disable={(subtask?.assignee?.find(a => a.id == userId)?.isreadonly === 1 && !canTaskActions)} />
                     </TableCell>
                     <TableCell>
                         <StatusCircles task={subtask} />
@@ -1392,6 +1501,50 @@ const TableView = ({
         []
     );
 
+    // Pad the header by the body's scrollbar width so columns stay aligned
+    const gridHeadRef = useRef(null);
+    const gridBodyRef = useRef(null);
+    useEffect(() => {
+        const syncGutter = () => {
+            if (gridHeadRef.current && gridBodyRef.current) {
+                gridHeadRef.current.style.paddingRight =
+                    `${gridBodyRef.current.offsetWidth - gridBodyRef.current.clientWidth}px`;
+            }
+        };
+        syncGutter();
+        window.addEventListener('resize', syncGutter);
+        return () => window.removeEventListener('resize', syncGutter);
+    }, [currentData, isLoading]);
+
+    // Stable ref — memoized rows always read the latest closures through it,
+    // so menu/dialog state changes never re-render the grid rows.
+    const rowHelpersRef = useRef({});
+    rowHelpersRef.current = {
+        expandedTasks,
+        toggleSubtasks,
+        handleAddTask,
+        handleTaskFavorite,
+        handleContextMenu,
+        handleDeadlineClick,
+        handleAssigneeShortcut,
+        hanldePAvatarClick,
+        handleTimeTrackModalOpen,
+        handleEditTask,
+        handleViewTask,
+        onStatusChange,
+        onPriorityChange,
+        renderTaskNameSection,
+        renderTaskProgressBar,
+        renderAssigneeAvatars,
+        renderTaskActions,
+        renderSubtaskRow,
+        renderSubtaskSkeletonRows,
+        userId,
+        isAdminUser,
+        canTaskActions,
+        taskTimeRunning,
+    };
+
     return (
         <>
             {(isLoading == null || isLoading == true || (!data && isLoading !== false)) ? (
@@ -1405,7 +1558,8 @@ const TableView = ({
                     }}
                     className="TaskTVMain"
                 >
-                    <Table size="small" aria-label="task details" sx={{ tableLayout: "fixed", width: "100%" }}>
+                    <div className="grid-head" ref={gridHeadRef}>
+                        <Table size="small" aria-label="task details" sx={{ tableLayout: "fixed", width: "100%" }}>
                         <TableHead className="sticky-table-head">
                             <TableRow>
                                 {columns?.map((column, index) => (
@@ -1495,136 +1649,39 @@ const TableView = ({
                                 ))}
                             </TableRow>
                         </TableHead>
+                        </Table>
+                    </div>
+                    <div
+                        className="grid-body"
+                        ref={gridBodyRef}
+                        onScroll={(e) => {
+                            if (gridHeadRef.current) {
+                                gridHeadRef.current.scrollLeft = e.currentTarget.scrollLeft;
+                            }
+                        }}
+                    >
+                        <Table size="small" sx={{ tableLayout: "fixed", width: "100%" }}>
+                        <colgroup>
+                            {columns?.map((col) => (
+                                <col key={col.id} style={{ width: `${col.width}px` }} />
+                            ))}
+                        </colgroup>
                         <TableBody>
                             {data && data?.length !== 0 ? (
                                 <>
-                                    {currentData?.map((task, taskIndex) => {
-                                        const access = task?.isFreez === 0;
-                                        return (
-                                            <React.Fragment key={taskIndex}>
-                                                <TableRow
-                                                    className={task?.isCopyActive ? 'cut-task-row' : ''}
-                                                    sx={{
-                                                        pointerEvents: task?.isCopyActive ? 'none' : 'auto',
-                                                        cursor: task?.isCopyActive ? 'not-allowed' : 'default',
-                                                        backgroundColor: (() => {
-                                                            if (task?.isCopyActive) return undefined;
-                                                            if (hoveredTaskId === task?.taskid) return '#f5f5f5';
-                                                            if (expandedTasks[task.taskid]) return '#f5f5f5';
-
-                                                            const info = task?.Completion_timestamp ? getArchiveInfoFromEndDate(task, 7) : null;
-                                                            if (!info) return 'inherit';
-                                                            return info?.isReady ? 'rgba(245, 124, 0, 0.10)' : 'rgba(255, 215, 0, 0.10)';
-                                                        })(),
-                                                        '&:hover': {
-                                                            backgroundColor: !task?.isCopyActive ? '#f8f9fa' : 'inherit'
-                                                        }
-                                                    }}
-                                                    onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
-                                                    onMouseLeave={handleTaskMouseLeave}
-                                                    onContextMenu={(e) => handleContextMenu(e, task)}
-                                                >
-                                                    <TableCell
-                                                        onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'TaskName' })}
-                                                        onMouseLeave={handleTaskMouseLeave}
-                                                    >
-                                                        {renderTaskNameSection(
-                                                            task,
-                                                            expandedTasks,
-                                                            toggleSubtasks,
-                                                            handleAddTask,
-                                                            hoveredTaskId,
-                                                            hoveredColumnname,
-                                                            resizingColumnId === 'task',
-                                                            0,
-                                                            null,
-                                                            false,
-                                                            handleTaskFavorite
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell
-                                                        className="taskPriorityCell"
-                                                        title="Open module"
-                                                        onClick={() => handleOpenModuleTab(task)}
-                                                        sx={{
-                                                            cursor: task?.taskid ? 'pointer' : 'default',
-                                                            color: task?.projectid ? '#1976d2' : 'inherit',
-                                                            '&:hover': {
-                                                                color: '#7367f0 !important'
-                                                            },
-                                                            transition: 'all 0.2s ease'
-                                                        }}
-                                                    >
-                                                        {task?.taskPr}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {renderTaskProgressBar(
-                                                            task?.progress_per,
-                                                            task?.isNotShowProgress,
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                            <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange}
-                                                                disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))) || access} />
-                                                            {/* <ArchiveRestoreButton
-                                                                task={task}
-                                                                setSelectedArchiveTask={setSelectedArchiveTask}
-                                                                setConfirmArchiveOpen={setConfirmArchiveOpen}
-                                                                setArchivingIds={setArchivingIds}
-                                                                setSelectedUnarchiveTask={setSelectedUnarchiveTask}
-                                                                setConfirmUnarchiveOpen={setConfirmUnarchiveOpen}
-                                                                setRestoringIds={setRestoringIds}
-                                                                hasAccess={hasAccess}
-                                                                PERMISSIONS={PERMISSIONS}
-                                                            /> */}
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <StatusBadge task={task} statusColors={statusColors} onStatusChange={onStatusChange}
-                                                            disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))) || access} flag="secondaryStatus" />
-                                                    </TableCell>
-                                                    <TableCell
-                                                        onMouseEnter={() => handleTaskMouseEnter(task?.taskid, { Tbcell: 'Assignee' })}
-                                                        onMouseLeave={handleTaskMouseLeave}>
-                                                        {renderAssigneeAvatars(task?.assignee, task, hoveredTaskId, hoveredColumnname, hanldePAvatarClick, handleAssigneeShortcut)}
-                                                    </TableCell>
-                                                    <TableCell
-                                                        data-deadline-column="true"
-                                                        onClick={(e) => {
-                                                            const isReadOnly = task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1;
-                                                            const isFullAccess = hasAccess(PERMISSIONS.canTaskActions) || getUserProfileData()?.designation?.toLowerCase() === "admin";
-                                                            if (!isReadOnly || isFullAccess) handleDeadlineClick(e, task, access);
-                                                        }}
-                                                        sx={{
-                                                            cursor: (access || (task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !(hasAccess(PERMISSIONS.canTaskActions)))) ? 'default' : 'pointer',
-                                                            '&:hover': {
-                                                                backgroundColor: (access || (task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !(hasAccess(PERMISSIONS.canTaskActions)))) ? 'inherit' : '#e3f2fd',
-                                                                borderRadius: '4px'
-                                                            },
-                                                            transition: 'background-color 0.2s ease',
-                                                            padding: '8px 16px'
-                                                        }}
-                                                    >
-                                                        {formatDaysDisplay(task?.DeadLineDate, task)}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <PriorityBadge task={task} priorityColors={priorityColors} onPriorityChange={onPriorityChange} disable={((task?.assignee?.find(a => a.id == getUserProfileData()?.id)?.isreadonly === 1 && !hasAccess(PERMISSIONS.canTaskActions))) || access} />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <StatusCircles task={task} />
-                                                    </TableCell>
-                                                    <TableCell align="center" className="sticky-last-col">
-                                                        {renderTaskActions(task, taskTimeRunning, handleTimeTrackModalOpen, handleEditTask, handleViewTask)}
-                                                    </TableCell>
-                                                </TableRow>
-                                                {(visibleSubtasksByRoot.get(task.taskid) || [])
-                                                    .slice(0, subtaskRenderLimits[task.taskid] || INITIAL_SUBTASK_BATCH)
-                                                    .map((row) => renderSubtaskRow(row))}
-                                                {renderSubtaskSkeletonRows(task.taskid)}
-                                            </React.Fragment>
-                                        )
-                                    })}
+                                    {currentData?.map((task) => (
+                                        <TaskTreeRow
+                                            key={task.taskid}
+                                            task={task}
+                                            expanded={!!expandedTasks[task.taskid]}
+                                            visibleSubtasks={visibleSubtasksByRoot.get(task.taskid)}
+                                            subtaskLimit={subtaskRenderLimits[task.taskid] || INITIAL_SUBTASK_BATCH}
+                                            taskRunning={taskTimeRunning[task.taskid]}
+                                            isResizingTask={resizingColumnId === 'task'}
+                                            isFullAccess={isFullAccess}
+                                            helpers={rowHelpersRef}
+                                        />
+                                    ))}
                                 </>
                             ) :
                                 <TableRow>
@@ -1633,25 +1690,21 @@ const TableView = ({
                                     </TableCell>
                                 </TableRow>
                             }
-                            {!isLoading && data?.length !== 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={columns.length}>
-                                        {currentData?.length !== 0 && (
-                                            <TablePaginationFooter
-                                                page={page}
-                                                rowsPerPage={rowsPerPage}
-                                                totalCount={data?.length}
-                                                totalPages={totalPages}
-                                                onPageChange={handleChangePage}
-                                                onPageSizeChange={handlePageSizeChnage}
-                                            />
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            )}
-
                         </TableBody>
-                    </Table>
+                        </Table>
+                    </div>
+                    {!isLoading && data?.length !== 0 && currentData?.length !== 0 && (
+                        <div className="grid-foot-wrap">
+                            <TablePaginationFooter
+                                page={page}
+                                rowsPerPage={rowsPerPage}
+                                totalCount={data?.length}
+                                totalPages={totalPages}
+                                onPageChange={handleChangePage}
+                                onPageSizeChange={handlePageSizeChnage}
+                            />
+                        </div>
+                    )}
                 </TableContainer >
             }
             <CutPasetContextMenu
@@ -1687,7 +1740,7 @@ const TableView = ({
                 open={profileOpen}
                 onClose={() => setProfileOpen(false)}
                 profileData={selectedItem}
-                background={background}
+
                 taskId={profileTaskId}
                 onRemoved={handleProfileRemoved}
             />
@@ -1845,9 +1898,9 @@ const TableView = ({
             />
 
             <div style={{ display: 'none' }}>
-                <MomSheet selectedData={selectedItem} ref={printRef1} />
-                <MaintenanceSheet selectedData={selectedItem} ref={printRef2} />
-                <DocumentSheet selectedData={selectedItem} ref={printRef3} />
+                {printJob?.type === 'mom' && <MomSheet selectedData={selectedItem} onReady={handlePrintA} ref={printRef1} />}
+                {printJob?.type === 'maintenance' && <MaintenanceSheet selectedData={selectedItem} onReady={handlePrintB} ref={printRef2} />}
+                {printJob?.type === 'document' && <DocumentSheet selectedData={selectedItem} onReady={handlePrintC} ref={printRef3} />}
             </div>
 
         </>
