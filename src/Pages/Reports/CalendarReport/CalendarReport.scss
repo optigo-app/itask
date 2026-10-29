@@ -198,6 +198,51 @@
         display: none;
     }
 
+    // Month-wise daily report — icon + label pill.
+    // FullCalendar renders `text` only for custom buttons, so the
+    // bi-journal-text glyph is injected via ::before (\f444).
+    .fc-monthlyReport-button {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        height: 35px !important;
+        border-radius: 18px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 0 14px !important;
+        background-color: #fff !important;
+        color: #666 !important;
+        border: 1px solid #ddd !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+        margin-right: 8px !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+
+        &::before {
+            content: "\f444";
+            font-family: 'bootstrap-icons' !important;
+            font-size: 15px;
+            line-height: 1;
+            color: #BDBDBD;
+            transition: color 0.3s ease;
+        }
+
+        &:hover {
+            background-color: #f8f9fa !important;
+            border-color: #bbb !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+            color: #333 !important;
+
+            &::before {
+                color: #333;
+            }
+        }
+    }
+
+    // Keep spacing consistent between the two round icon buttons
+    .fc-favoritesToggle-button {
+        margin-right: 8px !important;
+    }
+
     .fc-event {
         cursor: default !important;
 

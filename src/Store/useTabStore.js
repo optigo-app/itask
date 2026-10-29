@@ -20,7 +20,7 @@ const defaultTaskTabState = {
   activeButton: 'table',
   page: 1,
   rowsPerPage: 100,
-  order: 'asc',
+  order: 'desc',
   orderBy: 'entrydate',
   showFavoritesOnly: false,
   showMilestonesOnly: false,
@@ -55,24 +55,44 @@ export const useTabStore = create(
       // state buckets keyed by tabId
       tabState: {},
 
+      // non-persisted refresh callback registered by Task.jsx
+      _tabRefreshFn: null,
+      setTabRefreshFn: (fn) => set({ _tabRefreshFn: fn }),
+      triggerTabRefresh: () => {
+        const fn = get()._tabRefreshFn;
+        if (typeof fn === 'function') fn();
+      },
+
       // ─── Actions ───
 
       openTaskTab: (payload) => {
-        const { title, route = '/tasks', queryData = null } = payload;
+        const { title, route = '/tasks', queryData = null, tabname = null } = payload;
         const tabs = get().tabs;
         const maxTabs = get().maxTabs;
 
-        // check if same module/task already open (compare core IDs only,
-        // not runtime flags like isLimited/isreadonly which vary by source)
-        const existing = tabs.find(
-          (t) =>
-            t.route === route &&
-            t.queryData?.taskid === queryData?.taskid &&
-            t.queryData?.moduleid === queryData?.moduleid &&
-            t.queryData?.projectid === queryData?.projectid
-        );
+        // If tabname is provided, deduplicate by tabname — only one tab
+        // with that name can exist at a time (e.g. 'bugtrack').
+        // Otherwise, fall back to comparing core IDs (taskid/moduleid/projectid).
+        const existing = tabname
+          ? tabs.find((t) => t.tabname === tabname)
+          : tabs.find(
+              (t) =>
+                t.route === route &&
+                t.queryData?.taskid === queryData?.taskid &&
+                t.queryData?.moduleid === queryData?.moduleid &&
+                t.queryData?.projectid === queryData?.projectid
+            );
 
         if (existing) {
+          // Re-open with a new deep-link search: merge queryData so the mounted
+          // Task sees the new searchtask (existing filters are preserved).
+          if (queryData?.searchtask && existing.queryData?.searchtask !== queryData.searchtask) {
+            set((state) => ({
+              tabs: state.tabs.map((t) =>
+                t.id === existing.id ? { ...t, queryData: { ...t.queryData, ...queryData } } : t
+              ),
+            }));
+          }
           set({ activeTabId: existing.id });
           return existing.id;
         }
@@ -87,7 +107,7 @@ export const useTabStore = create(
         }
 
         const id = generateTabId();
-        const newTab = { id, title, route, queryData, createdAt: Date.now() };
+        const newTab = { id, title, route, queryData, tabname, createdAt: Date.now() };
 
         set((state) => ({
           tabs: [...state.tabs, newTab],
@@ -120,7 +140,7 @@ export const useTabStore = create(
         }
 
         const id = generateTabId();
-        const newTab = { id, title: payload.title, route: payload.route, queryData: payload.queryData, createdAt: Date.now() };
+        const newTab = { id, title: payload.title, route: payload.route, queryData: payload.queryData, tabname: payload.tabname, createdAt: Date.now() };
 
         set({
           tabs: [...filtered, newTab],
@@ -168,6 +188,64 @@ export const useTabStore = create(
           get().openTaskTab(state.pendingTabPayload);
           set({ tabLimitDialogOpen: false, pendingTabPayload: null });
         }
+      },
+
+      closeTabsToLeft: (id) => {
+        const state = get();
+        const idx = state.tabs.findIndex((t) => t.id === id);
+        if (idx === -1) return;
+        const idsToClose = state.tabs.slice(0, idx).map((t) => t.id);
+        if (idsToClose.length === 0) return;
+
+        const filtered = state.tabs.filter((t) => !idsToClose.includes(t.id));
+        const nextTabState = { ...state.tabState };
+        idsToClose.forEach((tid) => delete nextTabState[tid]);
+
+        let nextActive = state.activeTabId;
+        if (idsToClose.includes(state.activeTabId)) {
+          nextActive = id;
+        }
+
+        set({ tabs: filtered, activeTabId: nextActive, tabState: nextTabState });
+      },
+
+      closeTabsToRight: (id) => {
+        const state = get();
+        const idx = state.tabs.findIndex((t) => t.id === id);
+        if (idx === -1) return;
+        const idsToClose = state.tabs.slice(idx + 1).map((t) => t.id);
+        if (idsToClose.length === 0) return;
+
+        const filtered = state.tabs.filter((t) => !idsToClose.includes(t.id));
+        const nextTabState = { ...state.tabState };
+        idsToClose.forEach((tid) => delete nextTabState[tid]);
+
+        let nextActive = state.activeTabId;
+        if (idsToClose.includes(state.activeTabId)) {
+          nextActive = id;
+        }
+
+        set({ tabs: filtered, activeTabId: nextActive, tabState: nextTabState });
+      },
+
+      closeOtherTabs: (id) => {
+        const state = get();
+        const idsToClose = state.tabs.filter((t) => t.id !== id).map((t) => t.id);
+        if (idsToClose.length === 0) return;
+
+        const filtered = state.tabs.filter((t) => t.id === id);
+        const nextTabState = { ...state.tabState };
+        idsToClose.forEach((tid) => delete nextTabState[tid]);
+
+        set({ tabs: filtered, activeTabId: id, tabState: nextTabState });
+      },
+
+      closeAllTabs: () => {
+        set({
+          tabs: [],
+          activeTabId: null,
+          tabState: {},
+        });
       },
 
       // scoped update: only touches one tab's bucket
@@ -243,7 +321,7 @@ export const useTabStore = create(
           });
         }
         return {
-          tabs: state.tabs,
+          tabs: state.tabs.map((t) => ({ ...t, tabname: t.tabname || null })),
           activeTabId: state.activeTabId,
           tabState: prunedTabState,
         };

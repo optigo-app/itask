@@ -16,7 +16,8 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "./ProfileCardModal.scss";
-import { commonTextFieldProps, getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
+import { commonTextFieldProps, getRandomAvatarColor, ImageUrl, getAvatarColors } from '../../Utils/globalfun';
+import SafeAvatar from './SafeAvatar';
 import { useRecoilValue } from "recoil";
 import { assigneeId } from "../../Recoil/atom";
 import { Trash2 } from "lucide-react";
@@ -26,7 +27,7 @@ import { DelPrTeamsApi } from "../../Api/TaskApi/DelPrTeamsApi";
 import useAccess from "../Auth/Role/useAccess";
 import { PERMISSIONS } from "../Auth/Role/permissions";
 
-const ProfileCardModal = ({ open, onClose, profileData = [], background, taskId = "", onRemoved }) => {
+const ProfileCardModal = ({ open, onClose, profileData = [], taskId = "", onRemoved }) => {
     const { hasAccess } = useAccess();
     const assigneeIDvalue = useRecoilValue(assigneeId);
     const [editIndex, setEditIndex] = useState(null);
@@ -130,7 +131,7 @@ const ProfileCardModal = ({ open, onClose, profileData = [], background, taskId 
                                         )}
                                         {/* Profile Image */}
                                         <Box className="image">
-                                            <Avatar
+                                            <SafeAvatar
                                                 src={ImageUrl(profile) || ""}
                                                 alt={
                                                     profile?.firstname + " " + profile?.lastname || "Employee"
@@ -138,13 +139,13 @@ const ProfileCardModal = ({ open, onClose, profileData = [], background, taskId 
                                                 className="profile-pic"
                                                 sx={{
                                                     fontSize: "60px",
-                                                    backgroundColor: background(`${profile?.firstname + " " + profile?.lastname}`),
+                                                    ...getAvatarColors(`${profile?.firstname + " " + profile?.lastname}`),
                                                 }}
                                             >
                                                 {!ImageUrl(profile) &&
                                                     (profile?.firstname?.[0] || "") +
                                                     (profile?.lastname?.[0] || "")}
-                                            </Avatar>
+                                            </SafeAvatar>
                                         </Box>
 
                                         {/* Profile Data */}

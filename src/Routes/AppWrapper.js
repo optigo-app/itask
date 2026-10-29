@@ -14,8 +14,9 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import 'react-toastify/dist/ReactToastify.css';
 import { jwtDecode } from "jwt-decode";
-import Cookies from 'js-cookie';
+
 import { fetchMasterGlFunc } from '../Utils/globalfun';
+import { getSessionToken, pinSessionToken, setAuthParams, clearSession } from '../Utils/sessionKeys';
 import LoadingBackdrop from '../Utils/Common/LoadingBackdrop';
 import { taskInit } from '../Api/InitialApi/TaskInitApi';
 
@@ -97,12 +98,15 @@ const AppWrapper = () => {
 
     useEffect(() => {
         const initAuth = () => {
-            const token = Cookies.get('skey');
+            // This tab's pinned session wins — a shared skey cookie changed by
+            // another tab's login must not hijack this tab's session
+            const token = getSessionToken();
             if (!token) {
-                localStorage.clear();
+                clearSession();
                 navigate('/error_401', { replace: true });
                 return;
             }
+            pinSessionToken(token);
 
             try {
                 const decoded = jwtDecode(token);
@@ -111,12 +115,12 @@ const AppWrapper = () => {
                     uid: decodeBase64(decoded.uid),
                 };
                 if (decodedPayload) {
-                    localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
+                    setAuthParams(JSON.stringify(decodedPayload));
                     setIsAuthenticated(true);
                 }
             } catch (error) {
                 console.error("JWT decode failed:", error);
-                localStorage.clear();
+                clearSession();
                 navigate('/error_401', { replace: true });
             }
             setIsReady(true);
@@ -142,11 +146,8 @@ const AppWrapper = () => {
     }, []);
 
     useEffect(() => {
-        const handleStorageChange = () => {
-            setIsAuthenticated(localStorage.getItem("isLoggedIn") === "true");
-        };
-        window.addEventListener("storage", handleStorageChange);
-        return () => window.removeEventListener("storage", handleStorageChange);
+        // Per-tab session — this tab's sessionStorage is authoritative
+        setIsAuthenticated(sessionStorage.getItem("isLoggedIn") === "true");
     }, []);
 
     const decodeBase64 = (str) => {

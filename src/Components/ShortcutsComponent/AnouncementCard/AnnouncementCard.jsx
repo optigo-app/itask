@@ -1,25 +1,19 @@
 import React, { useState } from "react";
-import { Card, Grid, Typography, Box, IconButton, Avatar, Link } from "@mui/material";
+import { Card, Typography, Box, IconButton, Avatar, Link } from "@mui/material";
 import { Download, MoreVertical, FileText, Image, Video, File, Eye, ExternalLink } from "lucide-react";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ImageIcon from "@mui/icons-material/Image";
 import VideoFileIcon from "@mui/icons-material/VideoFile";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import { formatDate4, getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
+import { formatDate4, ImageUrl, getAvatarColors, getInitials } from '../../../Utils/globalfun';
 import DocsViewerModal from '../../DocumentViewer/DocsViewerModal';
+import SafeAvatar from '../SafeAvatar';
 import './style.scss';
 
 const AnnouncementCard = ({announcement}) => {
     const [currentAttachments, setCurrentAttachments] = useState([]);
     const [viewerOpen, setViewerOpen] = useState(false);
     const [initialSlideIndex, setInitialSlideIndex] = useState(0);
-    
-    const background = (assignee) => {
-        const avatarBackgroundColor = assignee?.avatar
-            ? "transparent"
-            : getRandomAvatarColor(assignee);
-        return avatarBackgroundColor;
-    };
 
     // Helper function to get file extension
     const getFileExtension = (filename) => {
@@ -67,33 +61,30 @@ const AnnouncementCard = ({announcement}) => {
     };
     return (
         <Card className="commentCard">
-            <Grid container spacing={2} alignItems="start">
-                {/* User Profile & Name */}
-                <Grid item>
-                    <Avatar
-                        alt={announcement?.user?.firstname}
-                        src={ImageUrl(announcement?.user)}
-                        sx={{
-                            width: 30,
-                            height: 30,
-                            backgroundColor: background(announcement?.user?.firstname + " " + announcement?.user?.lastname),
-                        }}
-                    >
-                        {!announcement?.user?.avatar && announcement?.user?.firstname?.charAt(0)}
-                    </Avatar>
-                </Grid>
-                <Grid item xs>
+            <Box className="commentHead">
+                <SafeAvatar
+                    alt={announcement?.user?.firstname}
+                    src={ImageUrl(announcement?.user)}
+                    sx={{
+                        width: 36,
+                        height: 36,
+                        ...getAvatarColors(announcement?.user?.firstname + " " + announcement?.user?.lastname),
+                    }}
+                >
+                    {!announcement?.user?.avatar && getInitials(announcement?.user?.firstname, announcement?.user?.lastname)}
+                </SafeAvatar>
+                <Box className="commentMeta">
                     <Typography className="title">
                         {announcement?.user?.firstname + " " + announcement?.user?.lastname}
                     </Typography>
                     <Typography className="caption">
                         {formatDate4(announcement?.entrydate)}
                     </Typography>
-                </Grid>
-            </Grid>
+                </Box>
+            </Box>
 
             {/* Comment Text */}
-            <Typography variant="body1" sx={{ marginTop: 1, color: "#444" }}>
+            <Typography variant="body1" className="commentBody">
                 {announcement?.comment}
             </Typography>
 

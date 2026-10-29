@@ -19,7 +19,7 @@ const getProgressColor = (progress) => {
 const MilestoneTimeline = ({ milestoneData, decodedData }) => {
     const filteredMileStone = milestoneData[decodedData?.taskid ? decodedData.taskid : decodedData.projectid] ?? [];
 
-    const sortedMilestones = filteredMileStone?.sort((a, b) => {
+    const sortedMilestones = [...(filteredMileStone ?? [])].sort((a, b) => {
         if (a.progress_per === 100) return -1;
         if (b.progress_per === 100) return 1;
         if (a.progress_per === 0) return 1;
@@ -40,7 +40,7 @@ const MilestoneTimeline = ({ milestoneData, decodedData }) => {
                         <TimelineItem key={index}>
                             <TimelineSeparator>
                                 <TimelineDot className={`dot-${getProgressColor(milestone?.progress_per)}`} />
-                                {index !== milestone?.length - 1 && <TimelineConnector />}
+                                {index !== sortedMilestones.length - 1 && <TimelineConnector />}
                             </TimelineSeparator>
                             <TimelineContent>
                                 <Card className="milestone-card">

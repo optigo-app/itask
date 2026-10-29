@@ -7,12 +7,13 @@ import { AddTaskDataApi } from "../Api/TaskApi/AddTaskApi";
 import { clearAllTabDataCache } from "../Utils/IndexedDB/taskDataCache";
 import { invalidateTaskCache } from "../Utils/QueryClient/queryClient";
 import { Avatar, AvatarGroup, Box, Chip, createTheme, Tooltip } from "@mui/material";
+import SafeAvatar from "../Components/ShortcutsComponent/SafeAvatar";
 import imageCompression from 'browser-image-compression';
 
 // Utility function to get AuthData from both localStorage and sessionStorage
 export const getAuthData = () => {
     try {
-        const authData = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
+        const authData = sessionStorage.getItem("AuthqueryParams") || localStorage.getItem("AuthqueryParams");
         return authData ? JSON.parse(authData) : null;
     } catch (error) {
         console.error("Error parsing AuthData:", error);
@@ -20,31 +21,63 @@ export const getAuthData = () => {
     }
 };
 
-// Utility function to redirect to bug tracker with auto-login
-export const handleBugTrackRedirect = (taskParams = null) => {
+// Utility function to get UserProfileData from both localStorage and sessionStorage
+export const getUserProfileData = () => {
     try {
-        const authParams = JSON.parse(localStorage.getItem('AuthqueryParams') || sessionStorage.getItem('AuthqueryParams'));
-        const encodedAuthData = btoa(JSON.stringify({
-            uid: authParams?.uid,
-            yc: authParams?.yc
-        }));
-
-        let url = window.location.hostname?.includes('localhost')
-            ? `http://localhost:5013/auto-login?data=${encodeURIComponent(encodedAuthData)}`
-            : window.location.hostname?.includes('nzen') ? `http://bugtracker.web/auto-login?data=${encodeURIComponent(encodedAuthData)}`
-                : `http://tecoqa.optigoapps.com/auto-login?data=${encodeURIComponent(encodedAuthData)}`;
-
-        // Add task parameters if provided
-        if (taskParams) {
-            const encodedTaskData = encodeURIComponent(btoa(JSON.stringify(taskParams)));
-            url += `&taskData=${encodedTaskData}`;
-        }
-        window.open(url, '_blank');
+        const userProfileData = localStorage.getItem("UserProfileData") || sessionStorage.getItem("UserProfileData");
+        return userProfileData ? JSON.parse(userProfileData) : null;
     } catch (error) {
-        console.error('Error preparing bug track redirect:', error);
-        window.open('http://tecoqa.optigoapps.com/', '_blank');
+        console.error("Error parsing UserProfileData:", error);
+        return null;
     }
 };
+
+const handleExternalRedirect = (baseUrl, windowName, taskParams = null) => {
+    try {
+        const authParams = getAuthData();
+        const uData = getUserProfileData();
+        const encodedAuthData = btoa(
+            JSON.stringify({
+                uid: authParams?.uid,
+                yc: authParams?.yc,
+                userId: uData?.id ?? "",
+            }),
+        );
+        let url = `${baseUrl}/auto-login?data=${encodeURIComponent(encodedAuthData)}`;
+        if (taskParams) {
+            const encodedTaskData = encodeURIComponent(
+                btoa(JSON.stringify(taskParams)),
+            );
+            url += `&taskData=${encodedTaskData}`;
+        }
+        const win = window.open(url, windowName);
+        if (win) {
+            win.focus();
+        }
+    } catch (error) {
+        console.error(`Error preparing ${windowName} redirect:`, error);
+        window.open(baseUrl, windowName);
+    }
+};
+
+
+export const handleBugTrackRedirect = (taskParams = null) => {
+    const baseUrl = window.location.hostname?.includes("localhost")
+        ? "http://localhost:5013"
+        : window.location.hostname?.includes("nzen")
+            ? "http://bugtracker.web"
+            : "http://tecoqa.optigoapps.com";
+    handleExternalRedirect(baseUrl, "bugtrack", taskParams);
+};
+export const handleTecoChatRedirect = () => {
+    const baseUrl = window.location.hostname?.includes("localhost")
+        ? "http://localhost:6026"
+        : window.location.hostname?.includes("nzen")
+            ? "http://newtecochat.web"
+            : "http://tecochat.optigoapps.com";
+    handleExternalRedirect(baseUrl, "tecochat");
+};
+
 
 export const getArchiveChipStyles = (archiveInfo) => {
     try {
@@ -98,16 +131,7 @@ export const getArchiveChipStyles = (archiveInfo) => {
     }
 };
 
-// Utility function to get UserProfileData from both localStorage and sessionStorage
-export const getUserProfileData = () => {
-    try {
-        const userProfileData = localStorage.getItem("UserProfileData") || sessionStorage.getItem("UserProfileData");
-        return userProfileData ? JSON.parse(userProfileData) : null;
-    } catch (error) {
-        console.error("Error parsing UserProfileData:", error);
-        return null;
-    }
-};
+
 // other filed lock function
 export const isFormFieldLocked = ({ task, fieldName, designation, lockCondition }) => {
     if (!task) return false;
@@ -179,6 +203,27 @@ export const formatDate4 = (date) => {
         console.error('Error formatting date:', error);
         return 'N/A';
     }
+};
+
+export const formatTimeAgo = (date) => {
+    if (!date) return '';
+    const normalized = typeof date === 'string' && !/([zZ]|[+-]\d{2}:?\d{2})$/.test(date.trim())
+        ? date.trim().replace(' ', 'T') + 'Z'
+        : date;
+    const entryDate = new Date(normalized);
+    if (isNaN(entryDate.getTime())) return '';
+    const diffMs = Date.now() - entryDate.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    if (diffSec < 60) return 'just now';
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr}h ago`;
+    const diffDay = Math.floor(diffHr / 24);
+    if (diffDay < 30) return `${diffDay}d ago`;
+    const diffMonth = Math.floor(diffDay / 30);
+    if (diffMonth < 12) return `${diffMonth}mo ago`;
+    return `${Math.floor(diffMonth / 12)}y ago`;
 };
 
 export const normalizeAttendanceBoolean = (value) => value === 1 || value === "1" || value === true;
@@ -615,17 +660,52 @@ export const colorMaster = {
 
 // Legacy colors array for backward compatibility
 export const colors = [
-    "#FF5722", "#4CAF50", "#2196F3", "#FFC107", "#E91E63", "#9C27B0", "#3F51B5", "#00BCD4",
-    "#FF9800", "#9E9E9E", "#795548", "#607D8B", "#8BC34A", "#FFEB3B", "#FF4081", "#673AB7",
-    "#ff7f50", "#F44336", "#3F51B5", "#CDDC39", "#03A9F4", "#9C27B0", "#FF1744", "#00E5FF",
-    "#9E9E9E", "#4CAF50", "#00BCD4", "#8B4513", "#6A5ACD", "#F08080", "#32CD32", "#FF6347"
+    "#FF5722", "#4CAF50", "#2196F3", "#F59E0B", "#E91E63", "#9C27B0", "#3F51B5", "#00BCD4",
+    "#FF9800", "#64748B", "#795548", "#607D8B", "#8BC34A", "#D97706", "#FF4081", "#673AB7",
+    "#ff7f50", "#F44336", "#3F51B5", "#65A30D", "#03A9F4", "#9C27B0", "#FF1744", "#0891B2",
+    "#64748B", "#4CAF50", "#00BCD4", "#8B4513", "#6A5ACD", "#E11D48", "#32CD32", "#FF6347"
 ];
 
+// Pastel bg + matching dark text — avatar initials style.
+// Deliberately avoids red/green/amber hues so an avatar never reads
+// as a status/priority chip when shown beside one.
+export const avatarColorPairs = [
+    { backgroundColor: '#e0e7ff', color: '#4338ca' },   // indigo
+    { backgroundColor: '#ede9fe', color: '#6d28d9' },   // violet
+    { backgroundColor: '#f3e8ff', color: '#7e22ce' },   // purple
+    { backgroundColor: '#fae8ff', color: '#a21caf' },   // fuchsia
+    { backgroundColor: '#fce7f3', color: '#be185d' },   // pink
+    { backgroundColor: '#ccfbf1', color: '#0f766e' },   // teal
+    { backgroundColor: '#cffafe', color: '#0e7490' },   // cyan
+    { backgroundColor: '#e0f2fe', color: '#0369a1' },   // sky
+    { backgroundColor: '#e8eaf6', color: '#3949ab' },   // indigo-50
+    { backgroundColor: '#e8e4f8', color: '#5e35b1' },   // deep lavender
+    { backgroundColor: '#d9f2f3', color: '#115e59' },   // seafoam
+    { backgroundColor: '#e7ecfa', color: '#3f51b5' },   // periwinkle
+    { backgroundColor: '#f0e6f6', color: '#8e24aa' },   // orchid
+    { backgroundColor: '#f1f5f9', color: '#475569' },   // slate
+    { backgroundColor: '#eceff1', color: '#455a64' },   // blue grey
+    { backgroundColor: '#e6e9f2', color: '#4a4e8f' },   // muted iris
+];
+
+export const getAvatarColors = (name) => {
+    const str = typeof name === 'string' ? name : '';
+    const charSum = str.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    return avatarColorPairs[charSum % avatarColorPairs.length];
+};
+
 export const getRandomAvatarColor = (name) => {
-    const charSum = name
-        ?.split("")
-        ?.reduce((sum, char) => sum + char?.charCodeAt(0), 0);
-    return colors[charSum % colors.length];
+    return getAvatarColors(name)?.backgroundColor;
+};
+
+// 2-char initials: "John Dev" -> "JD", single word -> first 2 letters
+export const getInitials = (first = '', last = '') => {
+    const f = String(first || '').trim();
+    const l = String(last || '').trim();
+    if (f && l) return (f[0] + l[0]).toUpperCase();
+    const parts = (f || l).split(/\s+/).filter(Boolean);
+    if (parts.length > 1) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return (parts[0] || '').slice(0, 2).toUpperCase();
 };
 
 // Dynamic Priority Color Function
@@ -800,7 +880,7 @@ export const fetchMasterGlFunc = async (force = false) => {
         let UserProfileData;
 
         const setUserProfileData = (data) => {
-            const storageLocation = localStorage.getItem('AuthqueryParams') ? localStorage : sessionStorage;
+            const storageLocation = sessionStorage.getItem('AuthqueryParams') ? sessionStorage : localStorage;
             storageLocation.setItem('UserProfileData', JSON?.stringify(data));
         };
 
@@ -1047,6 +1127,47 @@ export const commonSelectProps = {
                             },
                         },
                     },
+                },
+            },
+        },
+    },
+};
+
+// Reusable context menu props (matches theme MuiPaper + commonSelectProps styling)
+export const contextMenuProps = {
+    transitionDuration: 200,
+    slotProps: {
+        paper: {
+            elevation: 0,
+            sx: {
+                minWidth: 220,
+                mt: 0.5,
+                p: 1,
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: 'rgba(90, 90, 90, 0.1) 0px 4px 12px',
+                '& .MuiMenuItem-root': {
+                    borderRadius: '8px',
+                    margin: '4px 6px',
+                    padding: '8px 12px',
+                    fontSize: '14px',
+                    fontFamily: '"Public Sans", sans-serif',
+                    color: '#444050',
+                    minHeight: '40px',
+                    gap: '12px',
+                    transition: 'background-color 0.18s ease, color 0.18s ease',
+                    '&:hover': {
+                        backgroundColor: '#7367f0',
+                        color: '#fff',
+                    },
+                    '& .MuiListItemIcon-root': {
+                        minWidth: 0,
+                        mr: 1,
+                    },
+                },
+                '& .MuiDivider-root': {
+                    margin: '4px 8px',
                 },
             },
         },
@@ -1780,17 +1901,17 @@ export const renderAssigneeAvatars = (assignees, hanldePAvatarClick) => (
                     arrow
                     classes={{ tooltip: 'custom-tooltip' }}
                 >
-                    <Avatar
+                    <SafeAvatar
                         key={teamIdx}
                         alt={`${assignee?.firstname} ${assignee?.lastname}`}
                         src={ImageUrl(assignee) || null}
                         sx={{
-                            backgroundColor: background(`${assignee?.firstname + " " + assignee?.lastname}`)
+                            ...getAvatarColors(`${assignee?.firstname + " " + assignee?.lastname}`)
                         }}
                         onClick={() => hanldePAvatarClick(assignees, assignee?.id)}
                     >
-                        {!assignee.avatar && assignee?.firstname?.charAt(0)}
-                    </Avatar>
+                        {!assignee.avatar && getInitials(assignee?.firstname, assignee?.lastname)}
+                    </SafeAvatar>
                 </Tooltip>
             ))}
         </AvatarGroup>

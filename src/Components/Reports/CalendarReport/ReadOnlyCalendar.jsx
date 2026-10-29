@@ -5,8 +5,10 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
-import { Box, Typography, CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Avatar, Tooltip } from '@mui/material';
-import { Calendar as CalendarIcon, List, Plus } from 'lucide-react';
+import { Box, Typography, CircularProgress, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Avatar, Tooltip, Drawer, Chip, Divider, List as MuiList, ListItem, ListItemButton, InputAdornment } from '@mui/material';
+import { Calendar as CalendarIcon, List, Plus, X, Search } from 'lucide-react';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import dayjs from 'dayjs';
 import TaskDetail from '../../Task/TaskDetails/TaskDetails';
 import { useRecoilValue } from 'recoil';
 import { FullSidebar } from '../../../Recoil/atom';
@@ -51,6 +53,17 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
     const [holidayDates, setHolidayDates] = useState([]);
     const [holidayData, setHolidayData] = useState([]);
     const lastRequestIdRef = useRef(0);
+    const [dayDetailOpen, setDayDetailOpen] = useState(false);
+    const [selectedDayDate, setSelectedDayDate] = useState(null);
+    const [calendarViewType, setCalendarViewType] = useState('timeGridWeek');
+    const [visibleRange, setVisibleRange] = useState({ start: null, end: null });
+    const [reportSearch, setReportSearch] = useState('');
+
+    const closeDayDetail = () => {
+        setDayDetailOpen(false);
+        setSelectedDayDate(null);
+        setReportSearch('');
+    };
 
     const getEventsForDate = (dateKey) => {
         if (!dateKey) return [];
@@ -294,6 +307,46 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
         hydrateAttendanceFromApi();
     }, [selectedEmployee?.id]);
 
+    // Month-view daily report: all report rows in the visible month, grouped by date (view only)
+    const monthReportGroups = React.useMemo(() => {
+        if (calendarViewType !== 'dayGridMonth' || !visibleRange?.start || !visibleRange?.end) return [];
+        const start = dayjs(visibleRange.start);
+        const end = dayjs(visibleRange.end);
+        const map = new Map();
+        (dailyReportRows || []).forEach((r) => {
+            const dk = r?.__dateKey;
+            if (!dk) return;
+            const d = dayjs(dk);
+            if (d.isBefore(start, 'day') || !d.isBefore(end, 'day')) return;
+            const list = map.get(dk) || [];
+            list.push(r);
+            map.set(dk, list);
+        });
+        return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    }, [calendarViewType, visibleRange, dailyReportRows]);
+
+    // Search the monthly report — matches the date (any format) or remark/reporter name
+    const filteredMonthReportGroups = React.useMemo(() => {
+        const q = reportSearch.trim().toLowerCase();
+        if (!q) return monthReportGroups;
+        return monthReportGroups
+            .map(([dk, rows]) => {
+                const dateMatch =
+                    dk.includes(q) ||
+                    dayjs(dk).format('ddd, DD MMM YYYY').toLowerCase().includes(q) ||
+                    dayjs(dk).format('DD-MM-YYYY').includes(q) ||
+                    dayjs(dk).format('MMMM YYYY').toLowerCase().includes(q);
+                if (dateMatch) return [dk, rows];
+                const matchRows = rows.filter((r) => {
+                    const emp = r?.__employee;
+                    const empName = `${emp?.firstname || ''} ${emp?.lastname || ''}`.trim().toLowerCase();
+                    return (r?.remarks || '').toLowerCase().includes(q) || empName.includes(q);
+                });
+                return matchRows.length ? [dk, matchRows] : null;
+            })
+            .filter(Boolean);
+    }, [monthReportGroups, reportSearch]);
+
     const calendarOptions = React.useMemo(() => {
         const filteredEvents = calendarEvents?.filter(event => {
             if (!showFavoritesOnly) return true;
@@ -359,13 +412,25 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
             headerToolbar: {
                 start: 'employeeSidebarToggle,prev,next title',
                 center: '',
-                end: 'favoritesToggle | dayGridMonth,timeGridWeek,timeGridDay,listMonth',
+                end: 'monthlyReport favoritesToggle | dayGridMonth,timeGridWeek,timeGridDay,listMonth',
             },
             customButtons: {
                 employeeSidebarToggle: {
-                    text: '☰',
+                    icon: 'bi bi-list',
                     click() {
                         setSideDrawer(prev => !prev);
+                    }
+                },
+                monthlyReport: {
+                    text: 'Monthly Report',
+                    hint: 'Open month-wise daily report',
+                    click() {
+                        const api = calendarRef.current?.getApi?.();
+                        if (api && api.view?.type !== 'dayGridMonth') {
+                            api.changeView('dayGridMonth');
+                        }
+                        setSelectedDayDate(null);
+                        setDayDetailOpen(true);
                     }
                 },
                 favoritesToggle: {
@@ -395,6 +460,27 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
             navLinks: false,
             weekNumbers: true,
             dayCellContent(arg) {
+                const isMonthView = arg.view?.type === 'dayGridMonth';
+                if (isMonthView) {
+                    const dateKey = toAttendanceDateKey(arg.date, false);
+                    const taskCount = filteredEvents.filter(
+                        (ev) => new Date(ev.StartDate).toDateString() === arg.date.toDateString()
+                    ).length;
+                    const hasReport = (dailyReportRows || []).some((r) => r?.__dateKey === dateKey);
+                    const reportDot = hasReport
+                        ? '<span class="fc-day-report-dot" title="Daily report" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#7367f0;margin-left:4px;vertical-align:middle;"></span>'
+                        : '';
+                    if (taskCount > 0 || hasReport) {
+                        return {
+                            html: `
+                            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+                                <span class="fc-daygrid-day-number">${arg.dayNumberText}${reportDot}</span>
+                                ${taskCount > 0 ? `<span class="fc-day-task-count" title="${taskCount} tasks">${taskCount}</span>` : ''}
+                            </div>
+                        `,
+                        };
+                    }
+                }
                 return arg.dayNumberText;
             },
             dayCellClassNames: (arg) => {
@@ -409,7 +495,12 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                 }
                 return classes;
             },
-            datesSet() {
+            datesSet(dateInfo) {
+                setCalendarViewType(dateInfo?.view?.type || '');
+                setVisibleRange({
+                    start: dateInfo?.view?.currentStart || dateInfo?.start || null,
+                    end: dateInfo?.view?.currentEnd || dateInfo?.end || null,
+                });
                 const btn = document.querySelector('.fc-favoritesToggle-button');
                 if (btn) {
                     btn.setAttribute('data-active', showFavoritesOnly);
@@ -723,11 +814,15 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                 setSelectedTaskData(eventDetails);
                 setTaskDetailOpen(true);
             },
-            dateClick() {
+            dateClick(info) {
+                if (info?.view?.type === 'dayGridMonth') {
+                    setSelectedDayDate(new Date(info.date));
+                    setDayDetailOpen(true);
+                }
                 return false;
             },
         };
-    }, [calendarEvents, calendarsColor, attendanceByDate, assigneesByDate, showFavoritesOnly]);
+    }, [calendarEvents, calendarsColor, attendanceByDate, assigneesByDate, showFavoritesOnly, dailyReportRows]);
 
     useEffect(() => {
         if (calendarRef?.current) {
@@ -1061,6 +1156,202 @@ const ReadOnlyCalendar = ({ calendarEvents, calendarsColor, isLoading, selectedE
                     </Button>
                 </DialogActions>
             </Dialog>
+            {/* Day Detail + Monthly Daily Report Drawer (month view) */}
+            <Drawer
+                anchor="right"
+                open={dayDetailOpen}
+                onClose={closeDayDetail}
+                PaperProps={{ sx: { width: { xs: '100%', sm: 420 }, borderRadius: '12px 0 0 12px' } }}
+            >
+                {(() => {
+                    const dayDateKey = selectedDayDate ? toAttendanceDateKey(selectedDayDate, false) : null;
+                    const dayEvents = dayDateKey ? getEventsForDate(dayDateKey) : [];
+                    const totalHours = dayEvents.reduce((sum, ev) => sum + (ev.estimate_hrs || 0), 0);
+                    const formattedDate = selectedDayDate
+                        ? selectedDayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+                        : (visibleRange?.start ? dayjs(visibleRange.start).format('MMMM YYYY') : 'Monthly Report');
+                    const employeeName = `${selectedEmployee?.firstname || ''} ${selectedEmployee?.lastname || ''}`.trim();
+                    const categoryColors = {
+                        primary: '#7367f0', success: '#28c76f', error: '#ea5455',
+                        warning: '#ff9f43', info: '#00cfe8', secondary: '#a8aaae',
+                        support: '#8c57ff', dark: '#4b4b4b', productive: '#26c6da',
+                        'rnd-tech': '#5e72e4', creative: '#fb6340', 'sop-correction': '#f5365c',
+                        leave: '#f7fafc', maintenance: '#11cdef', unplanned: '#172b4d'
+                    };
+                    return (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                                <Box>
+                                    <Typography variant="h6" fontWeight={700} fontSize="1.1rem">
+                                        {formattedDate}
+                                    </Typography>
+                                    {employeeName && (
+                                        <Typography sx={{ fontSize: '0.78rem', color: '#7367f0', fontWeight: 600, mt: 0.25 }}>
+                                            {employeeName}
+                                        </Typography>
+                                    )}
+                                    {selectedDayDate && (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 0.5 }}>
+                                            <Chip size="small" label={`${dayEvents.length} tasks`} sx={{ backgroundColor: 'rgba(115,103,240,0.12)', color: '#5a52d5', fontWeight: 600 }} />
+                                            {totalHours > 0 && (
+                                                <Chip size="small" icon={<AccessTimeIcon sx={{ fontSize: '14px !important' }} />} label={`${parseFloat(totalHours).toFixed(2)} hrs`} sx={{ backgroundColor: 'rgba(40,199,111,0.12)', color: '#28a745', fontWeight: 600 }} />
+                                            )}
+                                        </Box>
+                                    )}
+                                </Box>
+                                <IconButton size="small" onClick={closeDayDetail} sx={{ mt: 0.5 }}>
+                                    <X size={18} />
+                                </IconButton>
+                            </Box>
+                            <Box sx={{ flex: 1, overflowY: 'auto', p: 1.5 }}>
+                                {selectedDayDate && dayEvents.length === 0 && (
+                                    <Typography color="text.secondary" align="center" sx={{ py: 2, fontSize: '0.85rem' }}>
+                                        No tasks for this day
+                                    </Typography>
+                                )}
+                                <MuiList dense disablePadding>
+                                    {dayEvents.map((ev, idx) => {
+                                        const statusKey = (ev.status || ev.statusid || '').toString().trim().toLowerCase();
+                                        const dynamicStatus = getDynamicStatusColor?.(statusKey);
+                                        const fallbackStatus = statusColors?.[statusKey];
+                                        const statusBg = dynamicStatus?.backgroundColor || fallbackStatus?.backgroundColor || 'rgba(0,0,0,0.08)';
+                                        const statusColor = dynamicStatus?.color || fallbackStatus?.color || '#555';
+                                        const catColor = calendarsColor[ev.category] || 'primary';
+                                        const dotColor = categoryColors[catColor] || '#7367f0';
+                                        return (
+                                            <ListItem key={`${ev.meetingid}-${idx}`} disablePadding sx={{ mb: 0.75 }}>
+                                                <ListItemButton
+                                                    sx={{
+                                                        borderRadius: 2,
+                                                        border: '1px solid #e0e0e0',
+                                                        py: 1,
+                                                        px: 1.5,
+                                                        alignItems: 'flex-start',
+                                                        gap: 1
+                                                    }}
+                                                    onClick={() => {
+                                                        setSelectedTaskData({
+                                                            meetingid: ev.meetingid,
+                                                            title: ev.meetingtitle || ev.taskname || '',
+                                                            start: new Date(ev.StartDate).toISOString(),
+                                                            end: new Date(ev.EndDate || ev.StartDate).toISOString(),
+                                                            isAllDay: ev.isAllDay ? 1 : 0,
+                                                            assignee: ev.guests || [],
+                                                            taskid: ev.taskid,
+                                                            parentid: ev.parentid,
+                                                            projectid: ev.projectid,
+                                                            workcategoryid: ev.workcategoryid,
+                                                            category: ev.category || '',
+                                                            statusid: ev.statusid,
+                                                            status: ev.status,
+                                                            priorityid: ev.priorityid,
+                                                            priority: ev.priority,
+                                                            estimate_hrs: ev.estimate_hrs || 0,
+                                                            workinghr: ev.workinghr || 0,
+                                                            DeadLineDate: ev.DeadLineDate,
+                                                            descr: ev.Desc,
+                                                            ismilestone: ev.ismilestone,
+                                                        });
+                                                        setTaskDetailOpen(true);
+                                                        closeDayDetail();
+                                                    }}
+                                                >
+                                                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: dotColor, flexShrink: 0, mt: 0.6 }} />
+                                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                        <Typography fontWeight={600} fontSize="0.9rem" noWrap title={ev.meetingtitle || ev.taskname || ''}>
+                                                            {ev.meetingtitle || ev.taskname || ''}
+                                                        </Typography>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap', mt: 0.4 }}>
+                                                            {ev.status && (
+                                                                <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 999, backgroundColor: statusBg, color: statusColor, whiteSpace: 'nowrap' }}>
+                                                                    {ev.status}
+                                                                </span>
+                                                            )}
+                                                            {ev.priority && (
+                                                                <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#666', whiteSpace: 'nowrap' }}>
+                                                                    {ev.priority}
+                                                                </span>
+                                                            )}
+                                                            {ev.estimate_hrs > 0 && (
+                                                                <span style={{ fontSize: '0.7rem', color: '#888', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                                    <AccessTimeIcon sx={{ fontSize: '12px' }} />
+                                                                    {parseFloat(ev.estimate_hrs).toFixed(2)} hrs
+                                                                </span>
+                                                            )}
+                                                        </Box>
+                                                    </Box>
+                                                </ListItemButton>
+                                            </ListItem>
+                                        );
+                                    })}
+                                </MuiList>
+
+                                {/* Month view — whole-month daily report grouped by date (view only) */}
+                                {calendarViewType === 'dayGridMonth' && (
+                                    <Box sx={{ mt: selectedDayDate ? 1.5 : 0 }}>
+                                        {selectedDayDate && <Divider sx={{ mb: 1.5 }} />}
+                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 0.5, mb: 1 }}>
+                                            <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: '#444050', letterSpacing: 0.3 }}>
+                                                DAILY REPORT{visibleRange?.start ? ` — ${dayjs(visibleRange.start).format('MMMM YYYY')}` : ''}
+                                            </Typography>
+                                            <Chip
+                                                size="small"
+                                                label={`${filteredMonthReportGroups.length} ${filteredMonthReportGroups.length === 1 ? 'day' : 'days'}`}
+                                                sx={{ backgroundColor: 'rgba(115,103,240,0.12)', color: '#5a52d5', fontWeight: 600, height: 22 }}
+                                            />
+                                        </Box>
+                                        <TextField
+                                            size="small"
+                                            fullWidth
+                                            placeholder="Search date or remark..."
+                                            value={reportSearch}
+                                            onChange={(e) => setReportSearch(e.target.value)}
+                                            InputProps={{
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <Search size={16} color="#7367f0" />
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                            sx={{
+                                                mb: 1.5,
+                                                '& .MuiOutlinedInput-root': {
+                                                    borderRadius: '8px',
+                                                    fontSize: '0.85rem',
+                                                    backgroundColor: '#fff',
+                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#7367f0' },
+                                                },
+                                            }}
+                                        />
+                                        {filteredMonthReportGroups.length === 0 ? (
+                                            <Typography color="text.secondary" align="center" sx={{ py: 3, fontSize: '0.85rem' }}>
+                                                {reportSearch.trim() ? `No reports match "${reportSearch.trim()}"` : 'No daily reports for this month'}
+                                            </Typography>
+                                        ) : (
+                                            filteredMonthReportGroups.map(([dk, rows]) => (
+                                                <Box key={dk} sx={{ mb: 2 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 0.5, mb: 0.75 }}>
+                                                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#7367f0', flexShrink: 0 }} />
+                                                        <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#7367f0' }}>
+                                                            {dayjs(dk).format('ddd, DD MMM YYYY')}
+                                                        </Typography>
+                                                    </Box>
+                                                    <DailyReportAttendanceList
+                                                        rows={rows}
+                                                        attendanceByDate={attendanceByDate}
+                                                        loggedInUserId={getUserProfileData()?.id}
+                                                        scrollable={false}
+                                                    />
+                                                </Box>
+                                            ))
+                                        )}
+                                    </Box>
+                                )}
+                            </Box>
+                        </Box>
+                    );
+                })()}
+            </Drawer>
             <ConfirmationDialog
                 open={uncheckDialogOpen}
                 onClose={() => {

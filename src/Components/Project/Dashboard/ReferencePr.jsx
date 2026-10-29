@@ -21,7 +21,8 @@ import {
     Link,
     Button
 } from "@mui/material";
-import { getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
+import { getRandomAvatarColor, ImageUrl, getAvatarColors } from '../../../Utils/globalfun';
+import SafeAvatar from '../../ShortcutsComponent/SafeAvatar';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { Link as Linkicons } from 'lucide-react';
 import pdfIcon from '../../../Assests/pdf.png';
@@ -30,7 +31,7 @@ import Document from '../../../Assests/document.png'
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import DocsViewerModal from "../../DocumentViewer/DocsViewerModal";
 
-const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
+const ReferencePr = ({ Loading, refferenceData, decodedData }) => {
     const [expanded, setExpanded] = useState(null);
     const [selectedFolder, setSelectedFolder] = useState("");
     const [reffData, setReffData] = useState([]);
@@ -201,13 +202,13 @@ const ReferencePr = ({ Loading, background, refferenceData, decodedData }) => {
                                                     <TableCell>{item.foldername}</TableCell>
                                                     <TableCell>
                                                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                            <Avatar
+                                                            <SafeAvatar
                                                                 src={ImageUrl(item?.guest)}
                                                                 alt={item?.guest?.firstname}
                                                                 sx={{
-                                                                    width: 28,
-                                                                    height: 28,
-                                                                    backgroundColor: background(`${item?.guest?.firstname + " " + item?.guest?.lastname}`),
+                                                                    width: 36,
+                                                                    height: 36,
+                                                                    ...getAvatarColors(`${item?.guest?.firstname + " " + item?.guest?.lastname}`),
                                                                 }}
                                                             />
                                                             <Typography variant="body2">

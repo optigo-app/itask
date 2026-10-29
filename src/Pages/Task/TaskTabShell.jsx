@@ -88,13 +88,80 @@ const TaskTabShell = React.memo(() => {
     }
   }, [location.search, navigate]);
 
-  // default open one empty tab if none exist
+  // default open one empty "Tasks" tab if none exist — this loads all data first
   useEffect(() => {
     const store = useTabStore.getState();
     if (store.tabs.length === 0) {
       store.openTaskTab({ title: "Tasks", route: "/tasks", queryData: null });
     }
   }, [tabs.length]);
+
+  // Once the first "Tasks" tab has loaded its data, auto-open the Maintenance
+  // module tab — but ONLY if a "Maintenance" module actually exists in the data.
+  // We find the module's taskid from loaded data and pass it to queryData so
+  // the API loads module-specific data (same as manually clicking the module).
+  const maintenanceTabOpenedRef = useRef(false);
+  const maintenanceModuleData = useTabStore((s) => {
+    if (s.tabs.length === 0) return null;
+    const firstTab = s.tabs[0];
+    // Only trigger from the default "Tasks" tab (no queryData / no tabname)
+    if (firstTab.queryData !== null) return null;
+    const state = s.tabState[firstTab.id];
+    if (!state?.dataLoaded || !state?.tasks?.length) return null;
+    // Find the "Maintenance" module in the loaded task data (case-insensitive, partial match)
+    return state.tasks.find(
+      (task) => (task?.taskname || "").toLowerCase().includes("maintenance")
+    ) || null;
+  });
+
+  useEffect(() => {
+    if (maintenanceTabOpenedRef.current) return;
+    if (!maintenanceModuleData) return;
+
+    const store = useTabStore.getState();
+    // Don't open if a maintenance tab already exists (e.g. from session restore)
+    const alreadyExists = store.tabs.some((t) => t.tabname === "maintenance");
+    if (alreadyExists) {
+      maintenanceTabOpenedRef.current = true;
+      return;
+    }
+
+    const moduleId = maintenanceModuleData.moduleid || maintenanceModuleData.taskid;
+    const moduleName = maintenanceModuleData.moduleName || maintenanceModuleData.taskname;
+
+    // Build queryData the same way as manual module clicks (TaskTableList handleOpenModuleTab)
+    // so the API loads module-specific data via fetchTaskDataFullApi.
+    const queryData = {
+      module: moduleName,
+      project: maintenanceModuleData.taskPr,
+      taskid: moduleId,
+      projectid: maintenanceModuleData.projectid,
+      moduleid: moduleId,
+      maingroupids: maintenanceModuleData.maingroupids,
+      isLimited: 0,
+      isreadonly: 0,
+      breadcrumbTitles: maintenanceModuleData.breadcrumbTitles,
+    };
+
+    maintenanceTabOpenedRef.current = true;
+    const tabId = store.openTaskTab({
+      title: moduleName || "Maintenance",
+      route: "/tasks",
+      queryData,
+      tabname: "maintenance",
+    });
+
+    // Prefetch module data so the tab loads instantly (same as manual clicks)
+    if (tabId) {
+      fetchTaskDataFullApi({ ...queryData, isarchive: 0, iscompleted: 0 })
+        .then((rawData) => {
+          if (rawData?.rd?.[0]?.stat != 0) {
+            setTaskQueryData(queryData, false, false, rawData);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [maintenanceModuleData]);
 
   // restore scroll when switching back to a tab
   useEffect(() => {

@@ -1,18 +1,90 @@
 @import "../../../theme/variable.scss";
 
 .commentCard {
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 8px !important;
-    box-shadow: $box-shadow-value !important;
+    flex-shrink: 0;
+    padding: 4px 2px 14px;
+    margin-bottom: 14px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+
+    .commentHead {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .commentMeta {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1;
+    }
 
     .title {
-        font-size: 14px;
-        font-weight: bold;
+        font-size: 13px;
+        font-weight: 600;
+        color: $titleColor;
+        line-height: 1.2;
         text-transform: capitalize;
     }
+
     .caption {
-        font-size: 10px !important;
+        font-size: 11px !important;
         color: $text2ndColor !important;
+        margin-top: 1px;
+    }
+
+    // Content below the header indents to align under the name
+    .commentContent {
+        margin-left: 42px;
+        margin-top: 2px;
+    }
+
+    .replyToLabel {
+        font-size: 11px;
+        color: #7367f0;
+        font-weight: 500;
+        line-height: 1.2;
+        margin-bottom: 1px;
+    }
+
+    .commentBody {
+        margin-top: 0;
+        color: #444a58;
+        font-size: 13.5px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .commentReplies {
+        margin-top: 12px;
+        // Pull back into the avatar column: each level only indents ~28px
+        // (Reddit-style thread line under the parent's avatar)
+        margin-left: -28px;
+        padding-left: 12px;
+        border-left: 1px solid #e8eaed; // thin neutral light-grey thread line
+
+        // Safety cap for extreme depth: replies align to the parent's
+        // avatar column instead of indenting further
+        &.flat {
+            margin-left: -42px;
+            padding-left: 0;
+            border-left: none;
+        }
+
+        .commentCard {
+            margin-bottom: 12px;
+            padding-bottom: 4px;
+            background: transparent !important;
+            border-bottom: none !important;
+            box-shadow: none !important;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
     }
 }

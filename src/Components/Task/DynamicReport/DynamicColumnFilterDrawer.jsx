@@ -13,6 +13,7 @@ import { X } from 'lucide-react';
 import { useRecoilState } from 'recoil';
 import { Advfilters } from '../../../Recoil/atom';
 import { commonTextFieldProps } from '../../../Utils/globalfun';
+import CustomDateRangePicker from '../../ShortcutsComponent/DateRangePicker';
 
 const DynamicColumnFilterDrawer = ({
     open,
@@ -20,9 +21,13 @@ const DynamicColumnFilterDrawer = ({
     availableColumns = [],
     masterData = {},
     idToAttr = new Map(),
-    masterColNameSet = new Set()
+    masterColNameSet = new Set(),
+    filters: filtersProp,
+    setFilters: setFiltersProp
 }) => {
-    const [filters, setFilters] = useRecoilState(Advfilters);
+    const [recoilFilters, setRecoilFilters] = useRecoilState(Advfilters);
+    const filters = filtersProp ?? recoilFilters;
+    const setFilters = setFiltersProp ?? setRecoilFilters;
     const [dynamicFilters, setDynamicFilters] = useState({});
     const taskAssigneeData = JSON?.parse(localStorage.getItem('taskAssigneeData'));
     const taskWorkCategoryData = JSON?.parse(localStorage.getItem("taskworkcategoryData"));
@@ -44,7 +49,8 @@ const DynamicColumnFilterDrawer = ({
         "taskno",
         'statusid',
         'priorityid',
-        "createdbyid"
+        "createdbyid",
+        "projectid"
     ];
 
     // Get filterable columns (exclude the specified fields and group columns like G1, G2, etc.)
@@ -287,6 +293,15 @@ const DynamicColumnFilterDrawer = ({
                                         )}
                                     />
                                 )
+                                    /* Entry Date — range picker; filtering an entry
+                                       date restricts rows to MM-numbered tasks */
+                                    : column === 'entrydate' ? (
+                                        <CustomDateRangePicker
+                                            value={dynamicFilters[column]}
+                                            onChange={(newRange) => handleFilterChange(column, newRange)}
+                                            placeholder="Entry date range"
+                                        />
+                                    )
                                     /* Text Input Fields */
                                     : (
                                         <TextField

@@ -1,304 +1,347 @@
-import { forwardRef } from 'react';
-import './MaintenanceSheet.css';
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import './MaintenanceSheet.scss';
 import { cleanDate, formatDate3 } from '../../Utils/globalfun';
+import { taskDescGetApi } from '../../Api/TaskApi/TaskDescGetApi';
 
 const MaintenanceSheet = forwardRef((selectedData, ref) => {
+  const d = selectedData?.selectedData;
+  const onReady = selectedData?.onReady;
+  const [desc, setDesc] = useState('');
+  const [descReady, setDescReady] = useState(false);
+  const descRef = useRef(null);
+  const notified = useRef(false);
+
+  // Assignees filtered by designation — first name shown, "+N" for the rest
+  const getRoleAssignee = (keywords) => {
+    const list = Array.isArray(d?.assignee) ? d.assignee : [];
+    const matched = list.filter((a) => {
+      const desig = (a?.designation ?? '').toLowerCase();
+      return keywords.some((k) => desig.includes(k));
+    });
+    if (!matched.length) return '';
+    const first = `${matched[0]?.firstname ?? ''} ${matched[0]?.lastname ?? ''}`.trim();
+    return matched.length > 1 ? `${first} +${matched.length - 1}` : first;
+  };
+
+  const supportName = getRoleAssignee(['support']);
+  const testerName = getRoleAssignee(['tester']);
+  const coderName = getRoleAssignee(['coder', 'dev']);
+
+  // Normalize \r\n, drop empty lines so they don't leave blank rows in print
+  const cleanDesc = (t) => (t ?? '')
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((l) => l.trimEnd())
+    .filter((l) => l.trim() !== '')
+    .join('\n');
+
+  useEffect(() => {
+    const fallback = cleanDesc(d?.descr ?? d?.description ?? '');
+    setDesc(fallback);
+    if (!d?.taskid) {
+      setDescReady(true);
+      return;
+    }
+    let active = true;
+    // Safety: never hold the print forever if the API stalls
+    const timer = setTimeout(() => { if (active) setDescReady(true); }, 4000);
+    taskDescGetApi(d)
+      .then((res) => {
+        if (active) setDesc(cleanDesc(res?.rd?.[0]?.descr) || fallback);
+      })
+      .catch(() => {})
+      .finally(() => {
+        clearTimeout(timer);
+        if (active) setDescReady(true);
+      });
+    return () => { active = false; clearTimeout(timer); };
+  }, [d?.taskid]);
+
+  // Truncate description to the 5-row block, appending "..." when it overflows
+  useLayoutEffect(() => {
+    const el = descRef.current;
+    if (el) {
+    el.textContent = desc;
+    if (el.scrollHeight > el.clientHeight + 1) {
+      let lo = 0, hi = desc.length;
+      while (lo < hi) {
+        const mid = Math.ceil((lo + hi) / 2);
+        el.textContent = `${desc.slice(0, mid)}...`;
+        if (el.scrollHeight <= el.clientHeight + 1) lo = mid; else hi = mid - 1;
+      }
+      el.textContent = `${desc.slice(0, lo)}...`;
+    }
+    }
+    // Content is committed to the DOM — safe to hand off to the printer
+    if (descReady && !notified.current) {
+      notified.current = true;
+      onReady?.();
+    }
+  }, [desc, descReady, onReady]);
   return (
-    <div ref={ref} className='containerdp10_pcl7'>
-      <div className='sheetheader'>
-        MAINTENANCE SHEET
-      </div>
+    <div ref={ref} className="page_ms">
 
-      <div className='mainh'>
-        <div className='hfirst' style={{ borderTop: '1px solid #000' }}>
-          <div>Topic :<br />
-            <p className='hfirstValue ellipsis-2'>{selectedData?.selectedData && selectedData?.selectedData?.taskname}</p>
+      {/* ── HEADER ── */}
+      <div className="headerBox_ms">
+        <div className="headerTitle_ms">
+          MAINTENANCE SHEET
+          <div className="headerTitleRight_ms">
+            {String(d?.taskno ?? '').toLowerCase().includes('mm') ? <b className="maintNoVal_ms">{d?.taskno}</b> : null}
+            <div
+              className="priorityTag_ms"
+              style={{ color: d?.priority ? 'black' : '#dbdbdb' }}
+            >
+              {d?.priority ? d?.priority : 'Priority'}
+            </div>
           </div>
         </div>
-        <div className='hsecond' style={{ borderBottom: 'none', width: '16.30%', color: ' #313131' }}>
-          Ticket#
+
+        {/* Row 1: Topic | Ticket# | Critical | Today | Approval */}
+        <div className="headerRow_ms">
+          <div className="hTopic_ms noBorderBottom_ms">
+            Topic:
+            <p className="topicValue_ms ellipsis-2_ms">{d?.taskname}</p>
+          </div>
+          <div className="hTicket_ms noBorderTop_ms noBorderLeft_ms">Ticket#</div>
+          <div className="hCritical_ms centerCell_ms">
+            <input type="checkbox" className="checkbox_ms" /> Critical
+          </div>
+          <div className="hDay_ms noBorderBottom_ms" style={{ paddingTop: '4px' }}>
+            <input type="checkbox" className="checkbox_ms" /> Today
+          </div>
+          <div className="hApproval_ms">Approval</div>
         </div>
-        <div className='hthird' style={{ borderTop: '1px solid #000', fontSize: '10px' }}>
-          <div style={{ marginTop: '7px', marginLeft: '12px', color: '#292929' }}>
-            <input type="checkbox" className='checkbox' />
-            <label style={{ marginLeft: '4px' }}>Critical</label>
+
+        {/* Row 2: (topic cont) | (ticket cont) | Invoice# | Tomorrow | Approval by tester */}
+        <div className="headerRow_ms">
+          <div className="hTopic_ms noBorderBottom_ms noBorderTop_ms noBorderRight_ms"></div>
+          <div className="hTicket_ms noBorderTop_ms noBorderBottom_ms noBorderLeft_ms"></div>
+          <div className="hCritical_ms">Invoice#</div>
+          <div className="hDay_ms noBorderBottom_ms">
+            <input type="checkbox" className="checkbox_ms" /> Tomorrow
+          </div>
+          <div className="hApproval_ms">Approval by tester</div>
+        </div>
+
+        {/* Row 3: (topic cont) | (ticket cont) | Bag# | This Week | Date & Time In */}
+        <div className="headerRow_ms">
+          <div className="hTopic_ms noBorderTop_ms noBorderRight_ms"></div>
+          <div className="hTicket_ms"></div>
+          <div className="hCritical_ms">Bag#</div>
+          <div className="hDay_ms noBorderTop_ms">
+            <input type="checkbox" className="checkbox_ms" /> This Week
+          </div>
+          <div className="hApproval_ms">
+            Date &amp; Time In
+            <p className="topicValue_ms">
+              {d?.StartDate && cleanDate(d.StartDate) ? formatDate3(cleanDate(d.StartDate)) : ''}
+            </p>
           </div>
         </div>
-        <div className='hfourth' style={{ borderTop: '1px solid #000' }}>
-          <span><input type="checkbox" className='checkbox' /></span>
-          <span style={{ marginLeft: '4px' }}>Today</span>
-        </div>
-        <div className='hfifth' style={{ width: '11.30%' }}>Approval
-        </div>
-      </div>
-      <div className='mainh'>
-        <div className='hfirst'>
-        </div>
-        <div className='hsecond' style={{ border: 'none', borderTop: '1px solid #000' }}>
-        </div>
-        <div className='hthird' style={{ paddingLeft: '1.5px' }}>Invoice#
-        </div>
-        <div className='hfourth'>
-          <span><input type="checkbox" className='checkbox' /></span>
-          <span style={{ marginLeft: '4px' }}>Tommorow</span>
-        </div>
-        <div className='hfifth'>Approval by tester
-        </div>
-      </div>
-      <div className='mainh'>
-        <div className='hfirst'>
-        </div>
-        <div className='hsecond' style={{ border: 'none' }}>
-        </div>
-        <div className='hthird' style={{ paddingLeft: '1.5px' }}>
-          Bag#
-        </div>
-        <div className='hfourth'>
-          <span><input type="checkbox" className='checkbox' /></span>
-          <span style={{ marginLeft: '4px' }}>This Week</span>
-        </div>
-        <div className='hfifth'>Date & Time In
-          <p className='hfifthValue'>
-            {selectedData?.selectedData?.StartDate && cleanDate(selectedData?.selectedData?.StartDate)
-              ? formatDate3(cleanDate(selectedData?.selectedData?.StartDate))
-              : ''}
-          </p>
-        </div>
-      </div>
-      <div className='mainh'>
-        <div style={{ width: '29.50%', border: '1px solid #000', borderRight: 'none', fontSize: '10px', color: ' #292929' }}>
-          <div className='mtml'>Client :</div>
-        </div>
-        <div style={{ width: '15.50%', fontSize: '10px', border: '1px solid #000', borderRight: 'none', color: ' #292929' }}>
-          <div className='mtml'>Upload# :</div>
-        </div>
-        <div className='hsecond' style={{ borderTop: '1px solid #000', fontSize: '10px', color: ' #292929' }}>
-          <div className='mtml' style={{ marginLeft: '1px' }}>Monitoring :</div>
-        </div>
-        <div className='hthird' style={{ borderBottom: '1px solid #000', paddingLeft: '1.5px' }}>
-          job#
-        </div>
-        <div className='hfourth' style={{ borderBottom: '1px solid #000', paddingLeft: '3px', width: '13.10%' }}>
-          <div style={{ marginBottom: '3px', letterSpacing: '0px' }}>Next _____________</div>
-        </div>
-        <div className='hfifth' style={{ borderBottom: '1px solid #000', width: '11.28%' }}>
-          App
+
+        {/* INFO ROW: Client | Upload# | Monitoring | job# | Next | App
+            job# aligns under Critical/Invoice#/Bag# column */}
+        <div className="headerRow_ms">
+          <div className="hTopic_ms noBorderRight_ms" style={{ display: 'flex' }}>
+            <div className="infoClient_ms">Client:</div>
+            <div className="infoUpload_ms">Upload#:</div>
+          </div>
+          <div className="hTicket_ms noBorderTop_ms noBorderLeft_ms" style={{ fontSize: '10px', alignItems: 'center', fontWeight: 700, display: 'flex', minHeight: '24px' }}>Monitoring:</div>
+          <div className="hCritical_ms">job#</div>
+          <div className="hDay_ms noBorderTop_ms" style={{ alignItems: 'flex-end', paddingBottom: '4px' }}>Next _____________</div>
+          <div className="hApproval_ms">App</div>
         </div>
       </div>
 
-      <div style={{ border: '1px solid #000', borderTop: 'none', width: '98.10%' }}>
-        <div style={{ display: 'flex' }}>
-          <div className='col1'>
-            <div style={{ marginTop: '1.5px', marginLeft: '1.5px' }}>Action/Steps :</div>
-          </div>
-          <div className='col2 mlfirst'>
-            Doc migration
-          </div>
-          <div className='col3 mlsecond'>
-            <b>^ CR</b>
-          </div>
+      {/* ── BODY ── */}
+      <div className="bodyBox_ms">
+
+        {/* Action/Steps header + first item */}
+        <div className="bodyRow_ms">
+          <div className="bAction_ms">Action/Steps:</div>
+          <div className="bCol2_ms">Doc migration</div>
+          <div className="bCol3_ms"><b>^ CR</b></div>
         </div>
-        <div style={{ display: 'flex' }}>
-          <div className='col1'>
-          </div>
-          <div className='col2 mlfirst'>
-            Doc Limitation
-          </div>
-          <div className='col3 mlsecond'>
-            <b>^ Bug</b>
-          </div>
+        <div className="bodyRow_ms">
+          <div className="bAction_ms"></div>
+          <div className="bCol2_ms">Doc Upload</div>
+          <div className="bCol3_ms"><b>^ Issue</b></div>
         </div>
-        <div style={{ display: 'flex' }}>
-          <div className='col1'>
-          </div>
-          <div className='col2 mlfirst'>
-            Doc Gape
-          </div>
-          <div className='col3 mlsecond'>
-            <b>^ SP Error</b>
-          </div>
+        <div className="bodyRow_ms">
+          <div className="bAction_ms"></div>
+          <div className="bCol2_ms">Doc Limitation</div>
+          <div className="bCol3_ms"><b>^ Bug</b></div>
         </div>
-        <div style={{ display: 'flex' }}>
-          <div className='col1'>
-          </div>
-          <div className='col2 mlfirst'>
-            Training Gape
-          </div>
-          <div className='col3 mlsecond'>
-            Code Error
-          </div>
+        <div className="bodyRow_ms">
+          <div className="bAction_ms"></div>
+          <div className="bCol2_ms">Doc Gape</div>
+          <div className="bCol3_ms"><b>^ SP Error</b></div>
         </div>
-        <div style={{ display: 'flex' }}>
-          <div className='col1'>
-          </div>
-          <div className='col2 mlfirst'>
-            Flow not develop
-          </div>
-          <div className='col3 mlsecond'>
-            Slowness
-          </div>
+        <div className="bodyRow_ms">
+          <div className="bAction_ms"></div>
+          <div className="bCol2_ms">Training Gape</div>
+          <div className="bCol3_ms">Code Error</div>
         </div>
-        <div style={{ display: 'flex' }}>
-          <div className='col1'>
-          </div>
-          <div className='col2 mlfirst'>
-            Central Upload
-          </div>
-          <div className='col3 mlsecond'>
-            Patch Upload
-          </div>
+        <div className="bodyRow_ms">
+          <div className="bAction_ms"></div>
+          <div className="bCol2_ms">Flow not develop</div>
+          <div className="bCol3_ms">Slowness</div>
         </div>
-        <div style={{ display: 'flex' }}>
-          <div className='col1'>
-          </div>
-          <div className='col2 mlfirst'>
-            Local Account
-          </div>
-          <div className='col3 mlsecond'>
-            Store Setting
-          </div>
+        <div className="bodyRow_ms">
+          <div className="bAction_ms"></div>
+          <div className="bCol2_ms">Central Upload</div>
+          <div className="bCol3_ms">Patch Upload</div>
+        </div>
+        <div className="bodyRow_ms">
+          <div className="bAction_ms"></div>
+          <div className="bCol2_ms">Local Account</div>
+          <div className="bCol3_ms">Store Setting</div>
         </div>
 
-        <div style={{ display: 'flex' }}>
-          <div className='col1' style={{ display: 'flex', borderTop: '1px solid #000', borderBottom: 'none' }}>
-            <div className='subcol1' style={{ marginTop: '5px', borderRight: 'none', color: ' #000000' }}>
-              <span style={{ marginLeft: '12px' }}>Checked Local</span> &nbsp;
-              <span style={{ marginLeft: '4.5px' }}><label sty>BQ</label>
-                <input type="checkbox" className='checkbox' disabled />&nbsp; &nbsp;</span>
-              <span><label sty>AQ</label>
-                <input type="checkbox" className='checkbox' disabled /></span>
+        {/* Checked Local + Tester Remark | Testing Account | Testing Gape */}
+        <div className="bodyRow_ms">
+          <div className="bAction_ms noBorderBottom_ms" style={{ display: 'flex' }}>
+            <div className="subLeftLabel_ms noBorderBottom_ms">
+              Checked Local&nbsp;
+              <label>BQ</label> <input type="checkbox" className="checkbox_ms" disabled />&nbsp;
+              <label>AQ</label> <input type="checkbox" className="checkbox_ms" disabled />
             </div>
-            <div style={{ width: '71.75%', borderBottom: '1px solid #BDBDBD', borderLeft: '1px solid #000' }}>
-              <div style={{ marginTop: '1.5px', marginLeft: '1.5px' }}>Tester Remark :</div>
-            </div>
+            <div className="subLeftRemark_ms devRemarkBorder_ms">Tester Remark:</div>
           </div>
-          <div className='col2 mlfirst'>
-            Testing Account
-          </div>
-          <div className='col3 mlsecond'>
-            Testing Gape
-          </div>
+          <div className="bCol2_ms noBorderBottom_ms">Testing Account</div>
+          <div className="bCol3_ms noBorderBottom_ms">Testing Gape</div>
         </div>
 
-        <div style={{ display: 'flex' }}>
-          <div className='col1' style={{ display: 'flex', borderBottom: 'none' }}>
-            <div className='subcol1' style={{ marginTop: '3px', borderRight: 'none', color: ' #000000' }}>
-              <span style={{ marginLeft: '12px' }}>Test Account</span> &nbsp; &nbsp;
-              <span style={{ marginLeft: '5.5px' }}><label sty>BQ</label>
-                <input type="checkbox" className='checkbox' disabled />&nbsp; &nbsp;</span>
-              <span><label sty>AQ</label>
-                <input type="checkbox" className='checkbox' disabled /></span>
+        {/* Test Account | Client's Account | Apply to all */}
+        <div className="bodyRow_ms">
+          <div className="bAction_ms noBorderBottom_ms" style={{ display: 'flex' }}>
+            <div className="subLeftLabel_ms noBorderBottom_ms">
+              Test Account&nbsp;&nbsp;
+              <label>BQ</label> <input type="checkbox" className="checkbox_ms" disabled />&nbsp;
+              <label>AQ</label> <input type="checkbox" className="checkbox_ms" disabled />
             </div>
-            <div style={{ width: '71.80%', borderBottom: '1px solid #BDBDBD', borderLeft: '1px solid #000' }}></div>
+            <div className="subLeftRemark_ms devRemarkBorder_ms"></div>
           </div>
-          <div className='col2 mlfirst'>
-            Client's Account
-          </div>
-          <div className='col3 mlsecond'>
-            Apply to all
-          </div>
+          <div className="bCol2_ms noBorderBottom_ms">Client's Account</div>
+          <div className="bCol3_ms noBorderBottom_ms">Apply to all</div>
         </div>
 
-        <div style={{ display: 'flex' }}>
-          <div className='col1' style={{ display: 'flex' }}>
-            <div className='subcol1' style={{ width: '27.50%', marginTop: '1px', marginRight: '3px', borderRight: 'none', color: ' #000000' }}>
-              <span style={{ marginLeft: '11px' }}>Client Account</span> &nbsp;
-              <span style={{ marginLeft: '4px' }}><label sty>BQ</label>
-                <input type="checkbox" className='checkbox' disabled />&nbsp; &nbsp;</span>
-              <span><label sty>AQ</label>
-                <input type="checkbox" className='checkbox' disabled /></span>
+        {/* Client Account | All Client Account | Client support */}
+        <div className="bodyRow_ms">
+          <div className="bAction_ms" style={{ display: 'flex' }}>
+            <div className="subLeftLabel_ms">
+              Client Account&nbsp;
+              <label>BQ</label> <input type="checkbox" className="checkbox_ms" disabled />&nbsp;
+              <label>AQ</label> <input type="checkbox" className="checkbox_ms" disabled />
             </div>
-            <div style={{ width: '72%', borderLeft: '1px solid #000' }}></div>
+            <div className="subLeftRemark_ms devRemarkBorder_ms noBorderBottom_ms"></div>
           </div>
-          <div className='col2 mlfirst'>
-            All Client Account
-          </div>
-          <div className='col3 mlsecond'>
-            Client support
-          </div>
+          <div className="bCol2_ms noBorderBottom_ms">All Client Account</div>
+          <div className="bCol3_ms noBorderBottom_ms">Client support</div>
         </div>
 
-        <div style={{ display: 'flex' }}>
-          <div className='col1' style={{ display: 'flex', borderBottom: 'none' }}>
-            <div className='subcol1' style={{ color: ' #313131', borderTop: '1px solid #000', width: '29.10%', paddingTop: '4.5px', paddingBottom: '3px', paddingLeft: '1px' }}>
-              Repeat count :
-            </div>
-            <div style={{ width: '75%', borderBottom: '1px solid #BDBDBD' }}>
-              <div style={{ marginTop: '1.5px', marginLeft: '1.5px' }}>Dev Remark :</div>
+        {/* Repeat count + Dev Remark | Estimate By | Time */}
+        <div className="bodyRow_ms">
+          <div className="bAction_ms noBorderBottom_ms" style={{ display: 'flex' }}>
+            <div className="subLeftLabel_ms noBorderBottom_ms">Repeat count:</div>
+            <div className="subLeftRemark_ms devRemarkBorder_ms">Dev Remark:</div>
+          </div>
+          <div className="bCol2_ms noBorderRight_ms borderTop_ms"><b>Estimate By</b></div>
+          <div className="bCol3_ms borderTop_ms"><b>Time</b></div>
+        </div>
+
+        {/* Affected jobs | Support | (empty) */}
+        <div className="bodyRow_ms estRow_ms">
+          <div className="bAction_ms noBorderBottom_ms noBorderTop_ms" style={{ display: 'flex' }}>
+            <div className="subLeftLabel_ms">Affected jobs:</div>
+            <div className="subLeftRemark_ms devRemarkBorder_ms"></div>
+          </div>
+          <div className="bCol2_ms noBorderBottom_ms noBorderTop_ms noBorderRight_ms">
+            <div className="estRoleCell_ms">
+              <span>Support:</span>
+              <span className="estNameLine_ms">{supportName}</span>
             </div>
           </div>
-          <div className='row1' style={{ borderTop: '1px solid #000', borderRight: '1px solid #000' }}>
-            <div style={{ paddingBottom: '11px', paddingLeft: '24px' }}>Estimate By</div>
-          </div>
-          <div className='row2' style={{ borderTop: '1px solid #000' }}>
-            <div style={{ paddingLeft: '31px' }}>Time</div>
-          </div>
+          <div className="bCol3_ms noBorderBottom_ms noBorderTop_ms"></div>
         </div>
 
-        <div style={{ display: 'flex' }}>
-          <div className='col1' style={{ display: 'flex', borderBottom: 'none' }}>
-            <div className='subcol1' style={{ width: '29.30%', paddingTop: '4.5px', paddingBottom: '3px', paddingLeft: '1px', color: ' #383838' }}>
-              Affected jobs :
+        {/* (empty left) | Tester | (empty) */}
+        <div className="bodyRow_ms estRow_ms">
+          <div className="bAction_ms noBorderBottom_ms noBorderTop_ms" style={{ display: 'flex' }}>
+            <div className="subLeftLabel_ms"></div>
+            <div className="subLeftRemark_ms devRemarkBorder_ms"></div>
+          </div>
+          <div className="bCol2_ms noBorderBottom_ms noBorderTop_ms noBorderRight_ms">
+            <div className="estRoleCell_ms">
+              <span>Tester:</span>
+              <span className="estNameLine_ms">{testerName}</span>
             </div>
-            <div style={{ width: '75%', paddingLeft: '3px', borderBottom: '1px solid #BDBDBD' }}></div>
           </div>
-          <div className='col2' style={{ width: '13.60%', fontSize: '8.5px' }}>
-            <div style={{ marginTop: '1px', marginBottom: '14px', marginLeft: '1px', color: '#313131' }}>Support</div>
-          </div>
-          <div className='col3 mlsecond'>
-          </div>
+          <div className="bCol3_ms noBorderBottom_ms noBorderTop_ms"></div>
         </div>
 
-        <div style={{ display: 'flex' }}>
-          <div className='col1' style={{ display: 'flex' }}>
-            <div className='subcol1' style={{ width: '29.50%' }}></div>
-            <div style={{ width: '75%', paddingLeft: '3px' }}></div>
+        {/* Forward To | Coder | (empty) */}
+        <div className="bodyRow_ms estRow_ms">
+          <div className="bAction_ms noBorderTop_ms" style={{ display: 'flex' }}>
+            <div className="subLeftLabel_ms" style={{ fontWeight: 700 }}>Forward To</div>
+            <div className="subLeftRemark_ms devRemarkBorder_ms noBorderBottom_ms"></div>
           </div>
-          <div className='col2' style={{ width: '13.60%', fontSize: '8.5px' }}>
-            <div style={{ marginTop: '1px', marginBottom: '15px', marginLeft: '1px', color: ' #313131' }}>Tester</div>
-          </div>
-          <div className='col3 mlsecond'>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex' }}>
-          <div className='col1' style={{ display: 'flex' }}>
-            <div className='subcol1' style={{ borderTop: '1px solid #000', width: '28%' }}>
-              <div style={{ marginTop: '1px', marginBottom: '5px', marginLeft: '1.5px', fontWeight: '800', fontSize: '8.5px' }}>Forward To</div>
+          <div className="bCol2_ms noBorderTop_ms noBorderRight_ms">
+            <div className="estRoleCell_ms">
+              <span>Coder:</span>
+              <span className="estNameLine_ms">{coderName}</span>
             </div>
-            <div style={{ width: '40%', paddingLeft: '3px' }}></div>
           </div>
-          <div className='col2' style={{ width: '13.60%', borderTop: 'none', fontSize: '8.5px' }}>
-            <div style={{ marginTop: '1px', marginBottom: '14px', marginLeft: '1px', color: ' #313131' }}>Coder</div>
-          </div>
-          <div className='col3 mlsecond'>
+          <div className="bCol3_ms noBorderTop_ms"></div>
+        </div>
+
+        {/* Closing Remark | Root cause report | Paid */}
+        <div className="closingRow_ms">
+          <div className="closingRemark_ms noBorderBottom_ms">Closing Remark:</div>
+          <div className="closingRoot_ms">Root cause report</div>
+          <div className="closingPaidLabel_ms">Paid</div>
+        </div>
+
+        {/* Yes | No (under Paid) */}
+        <div className="closingRow_ms">
+          <div className="closingRemarkEmpty_ms"></div>
+          <div className="closingRootEmpty_ms"></div>
+          <div className="closingPaidYesNo_ms">
+            <div className="paidYes_ms">Yes</div>
+            <div className="paidNo_ms">No</div>
           </div>
         </div>
 
-        <div style={{ display: 'flex' }}>
-          <div className='col1' style={{ fontSize: '7px', display: 'flex', borderTop: '1px solid #000', borderBottom: 'none' }}>
-            <div style={{ marginTop: '1px', marginLeft: '1.5px' }}>Closing Remark :</div>
-          </div>
-          <div className='row1' style={{ borderTop: '1px solid #000', borderRight: '1px solid #000' }}>
-            <div style={{ paddingTop: '5px', paddingBottom: '7px', paddingLeft: '13px' }}>Root cause report</div>
-          </div>
-          <div className='row2' style={{ borderTop: '1px solid #000' }}>
-            <div style={{ paddingTop: '5px', paddingBottom: '7px', paddingLeft: '32px' }}>Paid</div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex' }}>
-          <div className='col1' style={{ borderBottom: 'none' }}>
-          </div>
-          <div className='col2' style={{ width: '13.60%' }}>
-          </div>
-          <div className='col3' style={{ display: 'flex', width: '11.60%' }}>
-            <span className='lastcompo' style={{ width: '50%', borderRight: '1px solid #000' }}>Yes</span>
-            <span className='lastcompo' style={{ width: '50%' }}>No</span>
-          </div>
-        </div>
       </div>
+
+      {/* ── TRACKING STEP ── */}
+      <div className="trackingBox_ms">
+        <div className="trackingRow_ms trackingLabelRow_ms">
+          <div className="trackingLabel_ms">Tracking step</div>
+          <div className="trackingSpace_ms"></div>
+        </div>
+        <div ref={descRef} className="trackingDescOverlay_ms">{desc}</div>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="trackingRow_ms"></div>
+        ))}
+        {['Support', 'Tester', 'Coder'].map((role) => (
+          <div key={role} className="assignBlock_ms">
+            <div className="assignRow_ms">
+              <div className="assignLabel_ms"><b>{role}</b></div>
+              <div className="assignRemark_ms"><b>Remark</b></div>
+            </div>
+            {['Assign Date:', 'Start Date:', 'End Date:', 'Assign to _______________'].map((lbl) => (
+              <div key={lbl} className="assignRow_ms">
+                <div className="assignLabel_ms">{lbl}</div>
+                <div className="assignRemark_ms"></div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 });
+
 export default MaintenanceSheet;

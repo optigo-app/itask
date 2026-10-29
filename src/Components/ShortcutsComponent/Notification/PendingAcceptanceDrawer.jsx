@@ -19,8 +19,9 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import styles from './PendingAcceptanceDrawer.module.scss';
-import { background, ImageUrl, priorityColors } from '../../../Utils/globalfun';
+import { ImageUrl, priorityColors, getAvatarColors, getInitials } from '../../../Utils/globalfun';
 import PriorityBadge from '../PriorityBadge';
+import SafeAvatar from '../SafeAvatar';
 import RejectReasonModal from '../../../Utils/Common/RejectReasonModal';
 
 const initialMockData = [
@@ -273,19 +274,19 @@ const PendingAcceptanceDrawer = ({ open, onClose }) => {
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Avatar
+                    <SafeAvatar
                       key={task.id}
                       alt={`${task?.assignedTo?.firstname} ${task?.assignedTo?.lastname}`}
                       src={ImageUrl(task.assignedTo) || null}
                       sx={{
-                        backgroundColor: background(`${task?.assignedTo?.firstname + " " + task?.assignedTo?.lastname}`),
+                        ...getAvatarColors(`${task?.assignedTo?.firstname + " " + task?.assignedTo?.lastname}`),
                         width: 30,
                         height: 30,
                         fontSize: '14px',
                       }}
                     >
-                      {!task.assignedTo?.avatar && task?.assignedTo?.firstname?.charAt(0)}
-                    </Avatar>
+                      {!task.assignedTo?.avatar && getInitials(task?.assignedTo?.firstname, task?.assignedTo?.lastname)}
+                    </SafeAvatar>
                   </TableCell>
                   <TableCell>
                     <PriorityBadge

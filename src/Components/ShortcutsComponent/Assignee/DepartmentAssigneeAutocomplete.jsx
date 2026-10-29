@@ -7,7 +7,8 @@ import {
     Box,
     Avatar,
 } from "@mui/material";
-import { commonTextFieldProps, getRandomAvatarColor, ImageUrl } from "../../../Utils/globalfun";
+import { commonTextFieldProps, ImageUrl, getAvatarColors, getInitials } from '../../../Utils/globalfun';
+import SafeAvatar from '../SafeAvatar';
 
 export default function DepartmentAssigneeAutocomplete({
     options,
@@ -35,15 +36,19 @@ export default function DepartmentAssigneeAutocomplete({
         }
     };
 
-    const background = (assignee) => {
-        const avatarBackgroundColor = assignee?.avatar
-            ? "transparent"
-            : getRandomAvatarColor(assignee);
-        return avatarBackgroundColor;
-    };
-
     const getFullName = (emp) => `${emp?.firstname || ''} ${emp?.lastname || ''}`;
     const getDeptAssignee = (emp) => `${emp?.department || ''} / ${getFullName(emp)}`;
+
+    // Chip avatar size — one place to tune width/height for selected-assignee chips.
+    // !important needed: MUI's .MuiChip-avatar class also sets w/h/fontSize on the avatar.
+    const chipAvatarSx = {
+        width: '22px !important',
+        height: '22px !important',
+        fontSize: '10.5px !important',
+        fontWeight: 700,
+        marginLeft: '4px !important',
+        marginRight: '-4px !important',
+    };
 
     const filterOptions = (options, { inputValue }) =>
         options.filter(
@@ -94,16 +99,16 @@ export default function DepartmentAssigneeAutocomplete({
                                         key={key}
                                         avatar={
                                             imageSrc ? (
-                                                <Avatar src={imageSrc} alt={option?.firstname || ''} />
+                                                <SafeAvatar src={imageSrc} alt={option?.firstname || ''} sx={chipAvatarSx} />
                                             ) : (
                                                 <Avatar
                                                     sx={{
-                                                        fontSize: "14px",
                                                         textTransform: "capitalize",
-                                                        backgroundColor: background(option?.firstname || ''),
+                                                        ...chipAvatarSx,
+                                                        ...getAvatarColors(option?.firstname || ''),
                                                     }}
                                                 >
-                                                    {option?.firstname?.charAt(0) || ''}
+                                                    {getInitials(option?.firstname, option?.lastname)}
                                                 </Avatar>
                                             )
                                         }
@@ -136,7 +141,7 @@ export default function DepartmentAssigneeAutocomplete({
                     const imageSrc = ImageUrl(option);
                     return (
                         <li {...props} key={option.id} style={{ display: 'flex', alignItems: 'center' }}>
-                            <Avatar
+                            <SafeAvatar
                                 src={imageSrc}
                                 alt={option.firstname}
                                 sx={{
@@ -145,11 +150,11 @@ export default function DepartmentAssigneeAutocomplete({
                                     marginRight: 1,
                                     fontSize: "14px",
                                     textTransform: "capitalize",
-                                    backgroundColor: background(option?.firstname),
+                                    ...getAvatarColors(option?.firstname),
                                 }}
                             >
-                                {!imageSrc && option.firstname.charAt(0)}
-                            </Avatar>
+                                {!imageSrc && getInitials(option.firstname, option.lastname)}
+                            </SafeAvatar>
                             <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>
                                 <span style={{ fontSize: '14px', fontWeight: 'bold', maxWidth: 200, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'bottom' }}>
                                     {option.department}

@@ -1,0 +1,455 @@
+.page_ms {
+  width: 210mm;
+  height: 297mm;
+  background: white;
+  margin: 0 auto;
+  padding: 6mm;
+  box-sizing: border-box;
+  color: black;
+  overflow: hidden;
+  font-family: Calibri, Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* ── Header ── */
+.headerBox_ms {
+  border: 1px solid #bdbdbd;
+  border-bottom: none;
+}
+
+.headerTitle_ms {
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 4px 0;
+  border-bottom: 1px solid #bdbdbd;
+  position: relative;
+}
+
+/* Maint No + Priority at right edge of the title row */
+.headerTitleRight_ms {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.maintNoVal_ms {
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+/* Same treatment as DocumentSheet — bold underlined, light gray when empty */
+.priorityTag_ms {
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.headerRow_ms {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.headerRow_ms > div {
+  padding: 0 5px;
+  border-right: 1px solid #bdbdbd;
+  border-bottom: 1px solid #bdbdbd;
+  box-sizing: border-box;
+}
+
+/* Add top/bottom padding only for main header cells */
+.hTopic_ms, .hCritical_ms, .hDay_ms, .hApproval_ms {
+  padding: 3px 5px;
+}
+
+.headerRow_ms > div:last-child {
+  border-right: none;
+}
+
+.headerRow_ms > div.noBorderBottom_ms,
+.bodyRow_ms > div.noBorderBottom_ms,
+.closingRow_ms > div.noBorderBottom_ms,
+.bAction_ms > div.noBorderBottom_ms,
+.subLeftLabel_ms.noBorderBottom_ms,
+.subLeftRemark_ms.noBorderBottom_ms {
+  border-bottom: none !important;
+}
+
+/* This Week / Next cells: no top border so they merge with Today/Tomorrow above */
+.headerRow_ms > div.noBorderTop_ms,
+.bodyRow_ms > div.noBorderTop_ms {
+  border-top: none !important;
+}
+
+/* Force border top */
+.bodyRow_ms > div.borderTop_ms {
+  border-top: 1px solid #bdbdbd !important;
+}
+
+/* Remove vertical border between col2 and col3 */
+.headerRow_ms > div.noBorderRight_ms,
+.bodyRow_ms > div.noBorderRight_ms {
+  border-right: none !important;
+}
+
+/* Remove left border */
+.headerRow_ms > div.noBorderLeft_ms,
+.bodyRow_ms > div.noBorderLeft_ms {
+  border-left: none !important;
+}
+
+.hTopic_ms { width: 36%; font-weight: 700; }
+.hTicket_ms { width: 17%; font-size: 8px; color: #292929; vertical-align: top; align-items: flex-start; padding-top: 0; }
+.hCritical_ms { width: 12%; font-size: 8px; color: #292929; vertical-align: top; align-items: flex-start; padding-top: 0; }
+
+/* Only Critical cell — bigger and centered */
+.hCritical_ms.centerCell_ms {
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+}
+.hDay_ms { width: 17%; font-size: 8px; color: #292929; vertical-align: top; align-items: flex-start; padding-top: 0; min-height: 24px; display: flex; }
+.hApproval_ms { width: 18%; font-size: 8px; color: #292929; vertical-align: top; align-items: flex-start; padding-top: 0; min-height: 24px; display: flex; }
+
+.topicValue_ms {
+  padding: 0;
+  margin: 2px 0 0;
+  font-weight: normal;
+  word-break: normal;
+  font-size: 11px;
+}
+
+.ellipsis-2_ms {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Checkbox ── */
+.checkbox_ms {
+  display: inline-block;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #353535;
+  background-color: #fff;
+  vertical-align: middle;
+  box-sizing: border-box;
+  margin: 0 2px;
+}
+
+.infoClient_ms { width: 50%; border-right: 1px solid #bdbdbd; padding: 0 5px; box-sizing: border-box; font-size: 10px; color: #292929; font-weight: 700; display: flex; align-items: center; min-height: 24px; }
+.infoUpload_ms { width: 50%; border-right: 1px solid #bdbdbd; padding: 0 5px; box-sizing: border-box; font-size: 10px; color: #292929; font-weight: 700; display: flex; align-items: center; min-height: 24px; }
+
+.bodyBox_ms {
+  border: 1px solid #bdbdbd;
+  border-top: none;
+}
+
+.bodyRow_ms {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bodyRow_ms > div {
+  padding: 0 0 0 6px;
+  border-right: 1px solid #bdbdbd;
+  border-bottom: 1px solid #e0e0e0;
+  box-sizing: border-box;
+  font-size: 10px;
+  color: #292929;
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+}
+
+.bodyRow_ms > div:last-child {
+  border-right: none;
+}
+
+/* Consistent row height for Estimate/Support/Tester/Coder rows */
+.estRow_ms > div {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+/* Estimate By / Time row — same height as estRow for alignment */
+.bodyRow_ms > div.bCol2_ms,
+.bodyRow_ms > div.bCol3_ms {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+/* Body column widths — bCol2 aligns with Day(17%), bCol3 aligns with Approval(18%) */
+.bAction_ms { width: 65%; font-weight: 600; }
+.bCol2_ms { width: 17%; }
+.bCol3_ms { width: 18%; }
+
+/* ── Sub-row (Checked Local / Tester Remark etc.) ── */
+.subRow_ms {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.subRow_ms > div {
+  padding: 4px 6px;
+  border-right: 1px solid #bdbdbd;
+  box-sizing: border-box;
+  font-size: 10px;
+  color: #292929;
+}
+
+.subRow_ms > div:last-child {
+  border-right: none;
+}
+
+.subLeft_ms { width: 56%; display: flex; }
+.subLeftLabel_ms { width: 40%; border-right: 1px solid #bdbdbd; padding: 4px 6px; box-sizing: border-box; display: flex; align-items: center; min-height: 24px; }
+.subLeftRemark_ms { width: 60%; padding: 4px 6px; box-sizing: border-box; font-size: 10px; display: flex; align-items: center; min-height: 24px; }
+
+/* Dev Remark / Tester Remark column area — border on all rows */
+.subLeftRemark_ms.devRemarkBorder_ms {
+  border-bottom: 1px solid #e0e0e0 !important;
+}
+
+/* ── Estimate row ── */
+.estRow_ms {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.estRow_ms > div {
+  border-right: 1px solid #bdbdbd;
+  box-sizing: border-box;
+  font-size: 10px;
+  color: #292929;
+}
+
+.estRow_ms > div:last-child {
+  border-right: none;
+}
+
+.estLeft_ms { width: 72%; display: flex; }
+.estLeftLabel_ms { width: 40%; border-right: 1px solid #bdbdbd; padding: 4px 6px; box-sizing: border-box; }
+.estLeftRemark_ms { width: 60%; padding: 4px 6px; box-sizing: border-box; font-size: 10px; }
+.estBy_ms { width: 14%; }
+.estTime_ms { width: 14%; }
+
+/* Role + assignee cell in Estimate By column — "Role: Name_______" inline fill line */
+.estRoleCell_ms {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Fixed label width so every name line starts at the same position */
+.estRoleCell_ms > span:first-child {
+  min-width: 46px;
+  flex-shrink: 0;
+}
+
+/* Name sits on a short underline — same width across all rows */
+.estNameLine_ms {
+  flex: 1;
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 4px;
+  border-bottom: 1px solid #9a9a9a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Forward To / Closing ── */
+.closingRow_ms {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.closingRow_ms > div {
+  padding: 0 6px;
+  border-right: 1px solid #bdbdbd;
+  box-sizing: border-box;
+  font-size: 10px;
+  color: #292929;
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+.closingRow_ms > div:last-child {
+  border-right: none;
+}
+
+.closingRemark_ms { width: 65%; border-bottom: 1px solid #bdbdbd; }
+.closingRoot_ms { width: 17%; border-right: 1px solid #bdbdbd; border-bottom: 1px solid #bdbdbd; }
+.closingPaidLabel_ms { width: 18%; text-align: center; font-size: 10px; font-weight: 700; justify-content: center; border-bottom: 1px solid #bdbdbd; }
+
+.closingRemarkEmpty_ms { width: 65%; border-top: none; }
+.closingRootEmpty_ms { width: 17%; border-top: none; border-right: 1px solid #bdbdbd; }
+.closingPaidYesNo_ms { width: 18%; display: flex; padding: 0; }
+
+.paidYes_ms, .paidNo_ms {
+  width: 50%;
+  text-align: center;
+  padding: 0;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+}
+
+.paidYes_ms { border-right: 1px solid #bdbdbd; }
+
+/* ── Tracking Step ── */
+.trackingBox_ms {
+  border: 1px solid #bdbdbd;
+  border-top: none;
+  position: relative;
+}
+
+.trackingRow_ms {
+  width: 100%;
+  min-height: 26px;
+  border-bottom: 1px solid #e8e8e8;
+  box-sizing: border-box;
+}
+
+.trackingRow_ms:last-child {
+  border-bottom: none;
+}
+
+.trackingLabelRow_ms {
+  display: flex;
+}
+
+/* Description overlay — floats over first 5 rows incl. label row (5 x 26px).
+   Rows keep their normal style/lines. One text line per row (line-height = row
+   height). text-indent indents only the first line beside the "Tracking step"
+   label; all following lines use full width. Text clipped with "..." via JS */
+.trackingDescOverlay_ms {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 130px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  font-size: 10px;
+  line-height: 26px;
+  color: #292929;
+  white-space: pre-line;
+  word-break: break-word;
+  overflow: hidden;
+  text-indent: calc(20% + 6px);
+}
+
+.trackingLabel_ms {
+  width: 20%;
+  padding: 3px 6px;
+  font-weight: 700;
+  font-size: 11px;
+  color: #292929;
+  border-right: 1px solid #bdbdbd;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+.trackingSpace_ms {
+  width: 80%;
+  box-sizing: border-box;
+}
+
+/* ── Assign blocks (Support / Tester / Coder) — same 26px row, 50/50 split ── */
+.assignRow_ms {
+  display: flex;
+  width: 100%;
+  min-height: 26px;
+  border-bottom: 1px solid #e8e8e8;
+  box-sizing: border-box;
+}
+
+.assignBlock_ms:last-child .assignRow_ms:last-child {
+  border-bottom: none;
+}
+
+.assignRow_ms > div {
+  width: 50%;
+  padding: 0 6px;
+  font-size: 10px;
+  color: #292929;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.assignLabel_ms {
+  border-right: 1px solid #bdbdbd;
+}
+
+/* ── Print ── */
+@media print {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Calibri, Arial, Helvetica, sans-serif;
+  }
+
+  @page {
+    margin: 0px !important;
+  }
+
+  body {
+    background: white;
+  }
+
+  .page_ms,
+  .page_ms * {
+    font-family: Calibri, Arial, Helvetica, sans-serif !important;
+  }
+
+  .page_ms {
+    margin: 0;
+    width: 210mm;
+    height: 297mm;
+    page-break-after: avoid;
+  }
+
+  .checkbox_ms {
+    border: 1px solid #2e2e2e !important;
+    background-color: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .trackingBox_ms,
+  .trackingRow_ms,
+  .trackingNum_ms,
+  .trackingLine_ms {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

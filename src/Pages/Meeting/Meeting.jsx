@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { lazy, Suspense } from "react";
 import { Box, Typography, Button, Grid } from "@mui/material";
 import { Calendar, Plus } from "lucide-react";
-import { getRandomAvatarColor, getUserProfileData, ImageUrl } from "../../Utils/globalfun";
+import { getUserProfileData, ImageUrl } from "../../Utils/globalfun";
 import CalendarForm from "../../Components/Calendar/SideBar/CalendarForm";
 import { assigneeId, CalformData, filterDrawer, formData, masterDataValue, openFormDrawer, rootSubrootflag } from "../../Recoil/atom";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
@@ -487,13 +487,6 @@ const MeetingPage = () => {
     setCaledrawerOpen(true);
   }
 
-  const background = (assignee) => {
-    const avatarBackgroundColor = assignee?.avatar
-      ? "transparent"
-      : getRandomAvatarColor(assignee);
-    return avatarBackgroundColor;
-  };
-
   const StatusCircles = (meeting, { redCount, yellowCount, greenCount }) => {
     const circleStyle = {
       minWidth: 30,
@@ -647,7 +640,6 @@ const MeetingPage = () => {
                           setMeetingDetailModalOpen={setMeetingDetailModalOpen}
                           StatusCircles={StatusCircles}
                           ImageUrl={ImageUrl}
-                          background={background}
                           handleOpenStatusModal={handleOpenStatusModal}
                           handleAcceptMeeting={handleAcceptMeeting}
                           handleReject={handleReject}
@@ -673,7 +665,6 @@ const MeetingPage = () => {
                     setRootSubroot={setRootSubroot}
                     setMeetingDetailModalOpen={setMeetingDetailModalOpen}
                     StatusCircles={StatusCircles}
-                    background={background}
                     handleOpenStatusModal={handleOpenStatusModal}
                     handleAcceptMeeting={handleAcceptMeeting}
                     handleReject={handleReject}
@@ -755,7 +746,6 @@ const MeetingPage = () => {
           open={profileOpen}
           onClose={() => setProfileOpen(false)}
           profileData={calFormData}
-          background={background}
         />
         <SidebarDrawer
           open={formdrawerOpen}

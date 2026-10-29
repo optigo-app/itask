@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Autocomplete, TextField, Chip, Box, Typography, Avatar } from "@mui/material";
-import { commonTextFieldProps, getRandomAvatarColor, ImageUrl } from "../../Utils/globalfun";
+import { commonTextFieldProps, ImageUrl, getAvatarColors, getInitials } from '../../Utils/globalfun';
 
 const MultiSelectChipWithLimit = ({
     options,
@@ -25,13 +25,6 @@ const MultiSelectChipWithLimit = ({
         if (onChange) {
             onChange(newValue);
         }
-    };
-
-    const background = (assignee) => {
-        const avatarBackgroundColor = assignee?.avatar
-            ? "transparent"
-            : getRandomAvatarColor(assignee);
-        return avatarBackgroundColor;
     };
 
     return (
@@ -65,10 +58,10 @@ const MultiSelectChipWithLimit = ({
                                             sx={{
                                                 fontSize: "14px",
                                                 textTransform: "capitalize",
-                                                backgroundColor: background(option?.firstname),
+                                                ...getAvatarColors(option?.firstname),
                                             }}
                                         >
-                                            {option.firstname.charAt(0)}
+                                            {getInitials(option.firstname, option.lastname)}
                                         </Avatar>
                                     )
                                 }
@@ -104,10 +97,10 @@ const MultiSelectChipWithLimit = ({
                                     marginRight: 1,
                                     fontSize: "14px",
                                     textTransform: "capitalize",
-                                    backgroundColor: background(option?.firstname),
+                                    ...getAvatarColors(option?.firstname),
                                 }}
                             >
-                                {!imageSrc && option.firstname.charAt(0)}
+                                {!imageSrc && getInitials(option.firstname, option.lastname)}
                             </Avatar>
                             {option.firstname} {option.lastname}
                         </li>

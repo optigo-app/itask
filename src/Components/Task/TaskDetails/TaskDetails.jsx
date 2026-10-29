@@ -8,8 +8,10 @@ import {
     AvatarGroup,
     Tooltip,
     CircularProgress,
+    TextField,
+    InputAdornment,
 } from '@mui/material';
-import { CircleX } from 'lucide-react';
+import { CircleX, Search } from 'lucide-react';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import './TaskDetails.scss';
@@ -18,8 +20,12 @@ import { fetchlistApiCall, formData, openFormDrawer, rootSubrootflag, selectedRo
 import { taskDescGetApi } from '../../../Api/TaskApi/TaskDescGetApi';
 import { taskCommentGetApi } from '../../../Api/TaskApi/TaskCommentGetApi';
 import { taskCommentAddApi } from '../../../Api/TaskApi/TaskCommentAddApi';
+import { taskCommentUpdateApi } from '../../../Api/TaskApi/TaskCommentUpdateApi';
+import { taskCommentDeleteApi } from '../../../Api/TaskApi/TaskCommentDeleteApi';
+import { taskCommentReactionApi } from '../../../Api/TaskApi/TaskCommentReactionApi';
 import { taskDescAddApi } from '../../../Api/TaskApi/TaskDescAddApi';
-import { cleanDate, formatDate2, getRandomAvatarColor, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments, getUserProfileData, getAuthData, processCommentData, getAssigneeMaster, removeTaskRecursively } from '../../../Utils/globalfun';
+import { cleanDate, formatDate2, ImageUrl, mapKeyValuePair, priorityColors, statusColors, transformAttachments, getUserProfileData, getAuthData, processCommentData, getAssigneeMaster, removeTaskRecursively, getAvatarColors, getInitials } from '../../../Utils/globalfun';
+import SafeAvatar from '../../ShortcutsComponent/SafeAvatar';
 import useAccess from '../../Auth/Role/useAccess';
 import { PERMISSIONS } from '../../Auth/Role/permissions';
 import { deleteTaskDataApi } from '../../../Api/TaskApi/DeleteTaskApi';
@@ -65,6 +71,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite, onOpenDrawer,
     const [taskDesc, setTaskDesc] = useState('');
     const [taskDescEdit, setTaskDescEdit] = useState(false);
     const [comments, setComments] = useState([]);
+    const [subtaskSearch, setSubtaskSearch] = useState('');
     const [newComment, setNewComment] = useState('');
     const [activeTab, setActiveTab] = useState(0);
     const [cnfDialogOpen, setCnfDialogOpen] = React.useState(false);
@@ -201,20 +208,47 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite, onOpenDrawer,
         }
     };
 
-    const handleEditComment = (comment) => {
-        setNewComment(comment.comment);
+    const refreshComments = async () => {
+        const assigneesMaster = getAssigneeMaster();
+        const taskComment = await taskCommentGetApi(taskData);
+        if (taskComment) {
+            setComments(processCommentData(taskComment.rd, assigneesMaster));
+        }
     };
 
-    const handleRemoveComment = async (commentId) => {
+    const handleEditComment = async (comment, newText) => {
         try {
-            const deleteCommentResponse = await taskCommentAddApi(taskData, commentId);
-            if (deleteCommentResponse) {
-                setComments((prevComments) => prevComments.filter(comment => comment.id !== commentId));
-            } else {
-                console.error('Failed to remove comment');
-            }
+            await taskCommentUpdateApi(comment?.id, newText);
+            await refreshComments();
+        } catch (error) {
+            console.error('Error updating comment:', error);
+        }
+    };
+
+    const handleRemoveComment = async (comment) => {
+        try {
+            await taskCommentDeleteApi(comment?.id ?? comment);
+            await refreshComments();
         } catch (error) {
             console.error('Error while removing comment:', error);
+        }
+    };
+
+    const handleToggleReaction = async (comment, emoji = '👍') => {
+        try {
+            await taskCommentReactionApi(comment?.id, taskData?.taskid, emoji);
+            await refreshComments();
+        } catch (error) {
+            console.error('Error toggling reaction:', error);
+        }
+    };
+
+    const handleReplyComment = async (parentComment, text) => {
+        try {
+            await taskCommentAddApi(taskData, text, [], parentComment?.id);
+            await refreshComments();
+        } catch (error) {
+            console.error('Error adding reply:', error);
         }
     };
 
@@ -240,13 +274,6 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite, onOpenDrawer,
     const handleDescCancel = () => {
         setTaskDescEdit(false);
     }
-
-    const background = (assignee) => {
-        const avatarBackgroundColor = assignee?.avatar
-            ? "transparent"
-            : getRandomAvatarColor(assignee);
-        return avatarBackgroundColor;
-    };
 
     const handleAddSubTask = (task, additionalInfo) => {
         if (onOpenDrawer) {
@@ -420,16 +447,16 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite, onOpenDrawer,
                                                     arrow
                                                     classes={{ tooltip: 'custom-tooltip' }}
                                                 >
-                                                    <Avatar
+                                                    <SafeAvatar
                                                         key={teamIdx}
                                                         alt={`${assignee?.firstname} ${assignee?.lastname}`}
                                                         src={ImageUrl(assignee) || null}
                                                         sx={{
-                                                            backgroundColor: background(`${assignee?.firstname + " " + assignee?.lastname}`),
+                                                            ...getAvatarColors(`${assignee?.firstname + " " + assignee?.lastname}`),
                                                         }}
                                                     >
-                                                        {!assignee.avatar && assignee?.firstname?.charAt(0)}
-                                                    </Avatar>
+                                                        {!assignee.avatar && getInitials(assignee?.firstname, assignee?.lastname)}
+                                                    </SafeAvatar>
                                                 </Tooltip>
                                             ))}
                                         </AvatarGroup>
@@ -472,6 +499,8 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite, onOpenDrawer,
                                                 onSendComment={handleSendComment}
                                                 onEditComment={handleEditComment}
                                                 onDeleteComment={handleRemoveComment}
+                                                onToggleReaction={handleToggleReaction}
+                                                onReply={handleReplyComment}
                                                 taskData={taskData}
                                             />
                                         )}
@@ -484,13 +513,37 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite, onOpenDrawer,
 
                                         {activeTab === 2 &&
                                             <Box className="subtask_CardBox">
-                                                <Box className="addNewTaskBtn">
+                                                <Box className="addNewTaskBtn" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.5 }}>
+                                                    <TextField
+                                                        placeholder="Search subtasks..."
+                                                        value={subtaskSearch}
+                                                        onChange={(e) => setSubtaskSearch(e.target.value)}
+                                                        size="small"
+                                                        className="textfieldsClass"
+                                                        sx={{ width: '50%' }}
+                                                        InputProps={{
+                                                            startAdornment: (
+                                                                <InputAdornment position="start">
+                                                                    <Search size={16} color="#9a9ab0" />
+                                                                </InputAdornment>
+                                                            ),
+                                                        }}
+                                                    />
                                                     <Button
                                                         variant="contained"
                                                         size="small"
                                                         onClick={() => handleAddSubTask(taskData, { Task: 'subroot' })}
                                                         className="buttonClassname"
-                                                        sx={{ fontSize: '12px', marginTop: '5px' }}
+                                                        sx={{
+                                                            fontSize: '13px',
+                                                            fontWeight: 500,
+                                                            px: 2.5,
+                                                            py: 0.75,
+                                                            mr: 1.5,
+                                                            borderRadius: '8px',
+                                                            textTransform: 'none',
+                                                            flexShrink: 0,
+                                                        }}
                                                     >
                                                         Add task
                                                     </Button>
@@ -502,7 +555,7 @@ const TaskDetail = ({ open, onClose, taskData, handleTaskFavorite, onOpenDrawer,
                                                         opacity: 0.3,
                                                     }}
                                                 />
-                                                <SubtaskCard subtasks={taskData?.subtasks} onAddDubTask={handleAddSubTask} />
+                                                <SubtaskCard subtasks={taskData?.subtasks} onAddDubTask={handleAddSubTask} searchTerm={subtaskSearch} />
                                             </Box>
                                         }
                                     </Box>

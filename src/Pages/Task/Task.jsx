@@ -1,10 +1,10 @@
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import "./Task.scss";
 import HeaderButtons from "../../Components/Task/FilterComponent/HeaderButtons";
 import Filters from "../../Components/Task/FilterComponent/Filters";
 import { Box, Chip, Typography, useMediaQuery, Dialog, DialogContent, CircularProgress } from "@mui/material";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { actualTaskData, Advfilters, archivedTask, completedTask, copyRowData, fetchlistApiCall, filterDrawer, masterDataValue, openFormDrawer, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
+import { actualTaskData, Advfilters, archivedTask, completedTask, copyRowData, exportDynamicFilterExcel, fetchlistApiCall, filterBarOpen, filterDrawer, masterDataValue, openFormDrawer, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
 import { filterNestedTasksByView, filterTasksByValidTaskNo, flattenTasks, formatDate2, getCategoryTaskSummary, getUserProfileData, handleAddApicall, isTaskDue, isTaskToday, removeTaskRecursively } from "../../Utils/globalfun";
 import { useLocation, useNavigate } from "react-router-dom";
 import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
@@ -20,6 +20,7 @@ import { fetchArchiveTaskDataApi } from "../../Api/TaskApi/ArchiveTasklistApi";
 import { fetchTaskDataFullApi } from "../../Api/TaskApi/TaskDataFullApi";
 import { fetchModuleDataApi } from "../../Api/TaskApi/ModuleDataApi";
 import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
+import CompleteTaskDialog from "../../Components/Task/CompleteTaskDialog";
 import { AddPrintSheetCountApi } from "../../Api/TaskApi/PrintSheetApi";
 import { TaskFrezzeApi } from "../../Api/TaskApi/TasKFrezzeAPI";
 import { useTabStore } from "../../Store/useTabStore";
@@ -48,7 +49,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
 
   // Check if the path is exactly /tasks
   const isRedirectPath = !isTabMode && location.pathname === '/tasks';
-  const [order, setOrder] = useState(initialTabState?.order || "asc");
+  const [order, setOrder] = useState(initialTabState?.order || "desc");
   const [orderBy, setOrderBy] = useState(initialTabState?.orderBy || "entrydate");
   const [page, setPage] = useState(initialTabState?.page || 1);
   const [rowsPerPage, setRowsPerPage] = useState(initialTabState?.rowsPerPage || 100);
@@ -58,24 +59,45 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
   const setSelectedCategory = useSetRecoilState(selectedCategoryAtom);
 
   // ── Tab-scoped state ──
+  // Detect maintenance module once (used by both filters and viewMode defaults)
+  const isMaintenanceModule = queryDataOverride?.module &&
+    queryDataOverride.module.toLowerCase().includes('maintenance');
+
   const [localFilters, setLocalFilters] = useState(() => {
     if (initialTabState?.dataLoaded && initialTabState?.filters) {
       return initialTabState.filters;
     }
     const defaultFilters = {
-      category: [], searchTerm: '', status: '', priority: '', department: '',
-      assignee: '', project: '', dueDate: null, startDate: null,
+      category: [], searchTerm: '', status: '', secStatus: '', priority: '', department: '',
+      assignee: '', project: '', dueDate: null,
+            entrydate: null, startDate: null,
     };
-    if (queryDataOverride?.fromFullTaskView && queryDataOverride?.module) {
+    // Set searchTerm only for non-maintenance modules opened from FullTaskView.
+    // Maintenance module loads data via API (with taskid), so no search needed.
+    if (queryDataOverride?.fromFullTaskView && queryDataOverride?.module && !isMaintenanceModule) {
       defaultFilters.searchTerm = queryDataOverride.module;
+    }
+    // Dashboard deep-link: search the clicked task name inside the bound module
+    // tab — takes priority over the module name and applies to maintenance too.
+    if (queryDataOverride?.searchtask) {
+      defaultFilters.searchTerm = queryDataOverride.searchtask;
+    }
+    // Maintenance module: default to "Running" status + "Today" chip
+    if (isMaintenanceModule) {
+      defaultFilters.status = 'Running';
+      defaultFilters.category = ['Today'];
     }
     return defaultFilters;
   });
+  // Tracks the searchtask already seeded into initial filters; when a dedup'd
+  // tab is re-opened with a different one, the effect below applies it.
+  const appliedSearchTaskRef = useRef(queryDataOverride?.searchtask);
   const [globalFilters, setGlobalFilters] = useRecoilState(Advfilters);
   const filters = isTabMode ? localFilters : globalFilters;
   const setFilters = isTabMode ? setLocalFilters : setGlobalFilters;
 
   const showAdvancedFil = useRecoilValue(filterDrawer);
+  const showFilterBar = useRecoilValue(filterBarOpen);
 
   const [localTasks, setLocalTasks] = useState(initialTabState?.tasks || []);
   const [globalTasks, setGlobalTasks] = useRecoilState(TaskData);
@@ -100,7 +122,14 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
   const setArchivedTasks = isTabMode ? setLocalArchivedFlag : setGlobalArchivedTasks;
 
   // ── Tab-scoped view mode & drawer ──
-  const [localViewMode, setLocalViewMode] = useState(initialTabState?.viewMode || "me");
+  // Maintenance module: default to "team" view
+  // Only use initialTabState.viewMode if data was already loaded (returning tab);
+  // for a fresh tab, apply the maintenance default.
+  const [localViewMode, setLocalViewMode] = useState(
+    initialTabState?.dataLoaded
+      ? initialTabState?.viewMode
+      : (isMaintenanceModule ? "team" : "me")
+  );
   const [localFormDrawerOpen, setLocalFormDrawerOpen] = useState(false);
   const [globalViewMode, setGlobalViewMode] = useRecoilState(viewMode);
   const globalFormDrawerOpen = useRecoilValue(openFormDrawer);
@@ -111,6 +140,8 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
     if (isTabMode) setLocalFormDrawerOpen((p) => !p);
   };
   const [submitRefreshKey, setSubmitRefreshKey] = useState(0);
+  const [reportRefreshKey, setReportRefreshKey] = useState(0);
+  const setExportExcel = useSetRecoilState(exportDynamicFilterExcel);
   const silentRefreshRef = useRef(false);
   const lastValidRawDataRef = useRef(null);
   const handleAfterSubmit = () => {
@@ -153,6 +184,8 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
       taskid: queryDataOverride?.taskid,
       projectid: queryDataOverride?.projectid,
       taskPr: queryDataOverride?.project,
+      // module name lets the drawer detect maintenance context (e.g. category default)
+      module: queryDataOverride?.module,
       maingroupids: queryDataOverride?.maingroupids,
       isLimited: queryDataOverride?.isLimited,
       isreadonly: queryDataOverride?.isreadonly,
@@ -221,7 +254,9 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
   const [archiveLoading, setArchiveLoading] = useState(false);
   const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
   const [pendingCompleteChange, setPendingCompleteChange] = useState(null);
+  const [completeDialogChange, setCompleteDialogChange] = useState(null);
   const [completedFilterLoading, setCompletedFilterLoading] = useState(false);
+  const [tabRefreshLoading, setTabRefreshLoading] = useState(false);
 
   // Sync state back to useTabStore when it changes
   useEffect(() => {
@@ -310,6 +345,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
 
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showMilestonesOnly, setShowMilestonesOnly] = useState(false);
+  const [showBlockersOnly, setShowBlockersOnly] = useState(false);
   const [localTaskEdits, setLocalTaskEdits] = useState({});
   const processingCancelledRef = useRef(false);
   const processingTimerRef = useRef(null);
@@ -571,10 +607,30 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
     if (tasks) {
       setFilters({
         category: ['Today'],
-        searchTerm: parsedDataObj?.fromFullTaskView ? parsedDataObj?.module : ""
+        searchTerm: parsedDataObj?.searchtask || (parsedDataObj?.fromFullTaskView ? parsedDataObj?.module : "")
       });
     }
   }, [parsedDataObj])
+
+  // Maintenance default "Today" chip — HeaderButtons toggles chips off the
+  // selectedCategoryAtom, so sync it with the seeded filters.category once.
+  useEffect(() => {
+    if (isTabMode && isMaintenanceModule && !initialTabState?.dataLoaded) {
+      setSelectedCategory(['Today']);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Dashboard deep-link into an ALREADY-OPEN tab: openTaskTab dedup merges the
+  // new queryData into the mounted tab — apply its searchtask to filters.
+  useEffect(() => {
+    if (!isTabMode) return;
+    const term = queryDataOverride?.searchtask;
+    if (term && term !== appliedSearchTaskRef.current) {
+      appliedSearchTaskRef.current = term;
+      setLocalFilters((prev) => ({ ...prev, searchTerm: term }));
+    }
+  }, [isTabMode, queryDataOverride?.searchtask]);
 
   // Filter change handler
   const handleFilterChange = (key, value) => {
@@ -608,6 +664,11 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
       const updatedCategory = value ? filters.category.filter((cat) => cat !== value) : [];
       setFilters((prev) => ({ ...prev, category: updatedCategory }));
       setSelectedCategory(updatedCategory);
+    } else if (Array.isArray(filters?.[filterKey])) {
+      setFilters((prev) => ({
+        ...prev,
+        [filterKey]: value ? prev[filterKey].filter((v) => v !== value) : [],
+      }));
     } else if (filterKey === 'dueDate') {
       setFilters((prev) => ({ ...prev, dueDate: null }));
     } else if (filterKey === 'startDate') {
@@ -628,11 +689,13 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
       category: [],
       searchTerm: '',
       status: '',
+      secStatus: '',
       priority: '',
       department: '',
       assignee: '',
       project: '',
       dueDate: null,
+            entrydate: null,
       startDate: null,
     })
     setSelectedCategory('');
@@ -675,21 +738,39 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
     setOrderBy(property);
   };
 
-  const sortedData = recursiveSort(tasks, getComparator(order, orderBy));
+  const sortedData = useMemo(
+    () => recursiveSort(tasks, getComparator(order, orderBy)),
+    [tasks, order, orderBy]
+  );
 
-  const filteredData = sortedData
+  // Defer the heavy recursive filter so multi-select clicks stay instant —
+  // the grid re-filters one frame behind instead of blocking the checkbox.
+  const deferredFilters = useDeferredValue(filters);
+
+  const filteredData = useMemo(() => sortedData
     ?.map((task) => {
       const {
         status,
+        secStatus,
         priority,
         assignee,
         searchTerm,
         dueDate,
         startDate,
+        entrydate,
         department,
         project,
         category,
-      } = filters;
+      } = deferredFilters;
+
+      // Multi-select aware: a filter may be '', a single string, or an array
+      // of selected labels. Empty/unset → match everything.
+      const matchesMulti = (filterVal, itemVal) => {
+        if (!filterVal || (Array.isArray(filterVal) && filterVal.length === 0)) return true;
+        const item = (itemVal ?? '').toLowerCase();
+        const selected = Array.isArray(filterVal) ? filterVal : [filterVal];
+        return selected.some((sel) => item === (sel ?? '').toLowerCase());
+      };
 
       const normalizedSearchTerm = searchTerm?.trim()?.toLowerCase();
       const isQuoted =
@@ -701,8 +782,8 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
         : normalizedSearchTerm;
 
       const resetInvalidFilters = () => {
-        Object.keys(filters).forEach((key) => {
-          const value = filters[key];
+        Object.keys(deferredFilters).forEach((key) => {
+          const value = deferredFilters[key];
           if (
             value === "Select Department" ||
             value === "Select Status" ||
@@ -710,7 +791,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
             value === "Select Assignee" ||
             value === "Select Project"
           ) {
-            filters[key] = "";
+            deferredFilters[key] = "";
           }
         });
       };
@@ -758,17 +839,35 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
 
         return (
           matchesCategory &&
-          (status ? item?.status?.toLowerCase() === status?.toLowerCase() : true) &&
-          (priority ? item?.priority?.toLowerCase() === priority?.toLowerCase() : true) &&
-          (department ? item?.taskDpt?.toLowerCase() === department?.toLowerCase() : true) &&
-          (project ? item?.taskPr?.toLowerCase() === project?.toLowerCase() : true) &&
+          matchesMulti(status, item?.status) &&
+          matchesMulti(secStatus, item?.secStatus) &&
+          matchesMulti(priority, item?.priority) &&
+          matchesMulti(department, item?.taskDpt) &&
+          matchesMulti(project, item?.taskPr) &&
           (dueDate ? isWithinRange(item?.DeadLineDate, dueDate) : true) &&
           (startDate ? isWithinRange(item?.StartDate, startDate) : true) &&
+          (entrydate ? (() => {
+            // Single date → day match; range object → isWithinRange
+            if (!item?.entrydate) return false;
+            const loose = (d) => {
+              const dt = new Date(d);
+              if (!Number.isNaN(dt.getTime())) return dt;
+              const m = String(d || '').match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/);
+              return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+            };
+            const a = loose(item.entrydate), b = loose(entrydate);
+            if (!a || !b) return true; // unparseable → don't hide rows
+            if (typeof entrydate === 'object' && entrydate.startDate) {
+              return isWithinRange(item.entrydate, entrydate);
+            }
+            return a.toDateString() === b.toDateString();
+          })() : true) &&
           (assignee
-            ? item?.assignee?.some((a) => {
-              const fullName = `${a?.firstname} ${a?.lastname}`?.toLowerCase();
-              return fullName?.includes(assignee?.toLowerCase());
-            })
+            ? (Array.isArray(assignee) ? assignee : [assignee]).some((sel) =>
+              item?.assignee?.some((a) => {
+                const fullName = `${a?.firstname} ${a?.lastname}`?.toLowerCase();
+                return fullName?.includes(sel?.toLowerCase());
+              }))
             : true)
         );
       };
@@ -840,6 +939,20 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
           if (!isMilestone) return null;
         }
 
+        // Check blocker filter
+        if (showBlockersOnly) {
+          const isTaskOrSubtaskBlocker = (taskItem) => {
+            if (taskItem.isblocker == 1) return true;
+            if (taskItem.subtasks && taskItem.subtasks.length > 0) {
+              return taskItem.subtasks.some(isTaskOrSubtaskBlocker);
+            }
+            return false;
+          };
+
+          const isBlocker = isTaskOrSubtaskBlocker(item);
+          if (!isBlocker) return null;
+        }
+
         const selfTaskNoMatchesSearch = searchTerm && item?.taskno && searchMatchFn(item.taskno);
 
         const matches = matchesFilters(item, parentMatchedByTaskNo);
@@ -860,7 +973,9 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
 
       return filterRecursive(task);
     })
-    ?.filter(Boolean);
+    ?.filter(Boolean),
+    [sortedData, deferredFilters, showFavoritesOnly, showMilestonesOnly, showBlockersOnly]
+  );
 
 
   const handleTabBtnClick = (button) => {
@@ -963,7 +1078,6 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
   }
 
   const handleCompletedTaskFilter = async () => {
-    setActiveButton('table');
     setCompletedFilterLoading(true);
     const nextCompleted = !completedFlag;
     setCompletedFlag(nextCompleted);
@@ -1007,7 +1121,6 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
   };
 
   const handleArchivedTaskFilter = () => {
-    setActiveButton('table');
     setArchivedTasks((prev) => !prev);
     if (!isTabMode) setOpenChildTask(Date.now());
   };
@@ -1018,6 +1131,10 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
 
   const handleToggleMilestonesOnly = () => {
     setShowMilestonesOnly((prev) => !prev);
+  };
+
+  const handleToggleBlockersOnly = () => {
+    setShowBlockersOnly((prev) => !prev);
   };
 
   const hasIncompleteSubtasks = (task) => {
@@ -1032,7 +1149,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
     return children.some(check);
   };
 
-  const applyStatusChange = (taskId, status, flag) => {
+  const applyStatusChange = (taskId, status, flag, completionDate = null) => {
     setTasks((prevTasks) => {
       const updateTasksRecursively = (tasks) => {
         return tasks?.map((task) => {
@@ -1053,11 +1170,15 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
                 },
               }));
             } else {
+              const isCompletedStatus = status?.labelname?.toLowerCase() === "completed";
+              const endDateValue = isCompletedStatus
+                ? (completionDate || date.toISOString())
+                : "";
               updatedTask = {
                 ...task,
                 statusid: status?.id,
                 status: status?.labelname,
-                EndDate: status?.labelname?.toLowerCase() === "completed" ? date.toISOString() : "",
+                EndDate: endDateValue,
               };
               setLocalTaskEdits((prev) => ({
                 ...prev,
@@ -1065,7 +1186,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
                   ...(prev[task.taskid] || {}),
                   statusid: status?.id,
                   status: status?.labelname,
-                  EndDate: status?.labelname?.toLowerCase() === "completed" ? date.toISOString() : "",
+                  EndDate: endDateValue,
                 },
               }));
             }
@@ -1096,6 +1217,11 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
     if (isCompleting && taskId && hasIncompleteSubtasks(taskId)) {
       setPendingCompleteChange({ taskId, status, flag });
       setConfirmCompleteOpen(true);
+      return;
+    }
+
+    if (isCompleting && taskId) {
+      setCompleteDialogChange({ taskId, status, flag });
       return;
     }
 
@@ -1391,6 +1517,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
   }
 
   const handleRefreshTasks = () => {
+    setReportRefreshKey((k) => k + 1);
     if (isTabMode) {
       setSubmitRefreshKey((k) => k + 1);
       if (refetchTaskData) refetchTaskData();
@@ -1398,6 +1525,85 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
       setOpenChildTask(Date.now());
     }
   };
+
+  // Refresh from tab context menu — also clears all selected filters/toggles
+  const handleTabRefresh = async () => {
+    setTabRefreshLoading(true);
+    setReportRefreshKey((k) => k + 1);
+    // Clear all filters
+    setFilters({
+      category: [],
+      searchTerm: '',
+      status: '',
+      priority: '',
+      department: '',
+      assignee: '',
+      project: '',
+      dueDate: null,
+            entrydate: null,
+      startDate: null,
+    });
+    setSelectedCategory('');
+    // Clear quick toggle filters
+    setShowFavoritesOnly(false);
+    setShowMilestonesOnly(false);
+    setShowBlockersOnly(false);
+    // Clear completed / archived flags
+    setLocalCompletedFlag(false);
+    setLocalArchivedFlag(false);
+    if (!isTabMode) {
+      setGlobalCompletedFlag(false);
+      setGlobalArchivedTasks(false);
+    }
+    // Reset sort to default (newest first)
+    setOrder('desc');
+    setOrderBy('entrydate');
+    setPage(1);
+
+    // In tab mode, fetch fresh data with completed=false and seed the cache
+    // so the UI updates instantly (same pattern as handleCompletedTaskFilter)
+    if (isTabMode) {
+      try {
+        const taskid = queryDataOverride?.taskid;
+        const hasTaskId = taskid !== undefined && taskid !== '' && taskid !== '0' && taskid !== 0;
+        const response = hasTaskId
+          ? await fetchTaskDataFullApi({
+              ...queryDataOverride,
+              isarchive: 0,
+              isCompleted: 0,
+            })
+          : await fetchModuleDataApi({ taskid: 0, moduleid: 0 });
+
+        const nextQueryKey = taskQueryKeys.list(queryDataOverride, false, false);
+        queryClient.setQueryData(nextQueryKey, response);
+
+        if (tabId) {
+          const cacheKey = generateCacheKey(queryDataOverride, false, false);
+          await setTabDataCache(tabId, cacheKey, {
+            rawData: response,
+            fetchedAt: Date.now(),
+          });
+        }
+      } catch (error) {
+        console.error("Error refreshing tab data:", error);
+      }
+    } else {
+      setOpenChildTask(Date.now());
+    }
+    setTabRefreshLoading(false);
+  };
+
+  // Register the tab refresh callback so TaskTabBar context menu can trigger it
+  useEffect(() => {
+    if (!isTabMode) return;
+    useTabStore.getState().setTabRefreshFn(handleTabRefresh);
+    return () => {
+      // Only clear if we're still the registered callback
+      if (useTabStore.getState()._tabRefreshFn === handleTabRefresh) {
+        useTabStore.getState().setTabRefreshFn(null);
+      }
+    };
+  }, [isTabMode, handleTabRefresh]);
 
   useEffect(() => {
     if (filteredData) {
@@ -1503,7 +1709,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
             activeButton={activeButton}
             onButtonClick={handleTabBtnClick}
             onFilterChange={handleFilterChange}
-            isLoading={iswhTLoading}
+            isLoading={iswhTLoading || tabRefreshLoading}
             masterData={masterData}
             priorityData={priorityData}
             projectData={taskProject}
@@ -1520,6 +1726,9 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
             onToggleFavoritesOnly={handleToggleFavoritesOnly}
             showMilestonesOnly={showMilestonesOnly}
             onToggleMilestonesOnly={handleToggleMilestonesOnly}
+            showBlockersOnly={showBlockersOnly}
+            onToggleBlockersOnly={handleToggleBlockersOnly}
+            isTabMode={isTabMode}
             filters={isTabMode ? filters : undefined}
             queryData={isTabMode ? queryDataOverride : undefined}
             completedFlag={isTabMode ? completedFlag : undefined}
@@ -1539,27 +1748,21 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
               }
             }}
             onAfterSubmit={isTabMode ? handleAfterSubmit : undefined}
+            onExportExcel={() => setExportExcel((k) => k + 1)}
           />
 
-          {/* Divider */}
-          {!isLaptop &&
-            <AnimatePresence mode="wait">
-              {showAdvancedFil && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                >
-                  <div
-                    style={{
-                      margin: "20px 0",
-                      border: "1px dashed #7d7f85",
-                      opacity: 0.3,
-                    }}
-                  />
-
-                  {/* Filters Component */}
+          {/* Chip-bar filter row — hidden by default; funnel icon toggles it.
+              "+ Filters" inside opens the right drawer. */}
+          <AnimatePresence mode="wait">
+            {showFilterBar && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
+                style={{ overflow: "hidden" }}
+              >
+                <Box sx={{ mt: 1.5 }}>
                   <Filters
                     {...filters}
                     filters={filters}
@@ -1569,18 +1772,21 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
                     masterData={masterData}
                     priorityData={priorityData}
                     statusData={statusData}
+                    secStatusData={secStatusData}
                     assigneeData={taskAssigneeData}
                     taskDepartment={taskDepartment}
                     taskProject={taskProject}
                     taskCategory={taskCategory}
+                    isMulti
                   />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          }
+                </Box>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {isLaptop &&
-            <FiltersDrawer {...filters}
+          {/* Filter drawer mounted on all breakpoints — the inline panel's
+              "+ Filters" button opens it on mobile too */}
+          <FiltersDrawer {...filters}
               filters={filters}
               setFilters={setFilters}
               onFilterChange={handleFilterChange}
@@ -1589,12 +1795,13 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
               masterData={masterData}
               priorityData={priorityData}
               statusData={statusData}
+              secStatusData={secStatusData}
               assigneeData={taskAssigneeData}
               taskDepartment={taskDepartment}
               taskProject={taskProject}
               taskCategory={taskCategory}
+              isMulti
             />
-          }
 
           {/* Divider */}
           <div
@@ -1640,7 +1847,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
               setConfirmCompleteOpen(false);
               setPendingCompleteChange(null);
               if (!pending) return;
-              applyStatusChange(pending.taskId, pending.status, pending.flag);
+              setCompleteDialogChange(pending);
             }}
             title="Complete parent task"
             content="This task has incomplete sub tasks. Completing it will also complete the task tree. Do you want to proceed?"
@@ -1648,8 +1855,28 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
             cancelLabel="Cancel"
           />
 
+          <CompleteTaskDialog
+            open={!!completeDialogChange}
+            onClose={() => setCompleteDialogChange(null)}
+            onComplete={(completionDate) => {
+              const pending = completeDialogChange;
+              setCompleteDialogChange(null);
+              if (!pending) return;
+              applyStatusChange(pending.taskId, pending.status, pending.flag, completionDate);
+            }}
+          />
+
           {/* View Components */}
-          <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'auto', minHeight: 0, paddingX: 0.2 }}>
+          <Box sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            overflowY: 'auto',
+            overflowX: 'auto',
+            minHeight: 0,
+            paddingX: 0.2,
+            '& > div': { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 },
+          }}>
             <AnimatePresence mode="wait">
               {activeButton && (
                 <motion.div
@@ -1669,7 +1896,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
                         orderBy={orderBy}
                         rowsPerPage={rowsPerPage}
                         totalPages={totalPages}
-                        isLoading={iswhTLoading}
+                        isLoading={iswhTLoading || tabRefreshLoading}
                         masterData={masterData}
                         copiedData={copiedData}
                         contextMenu={contextMenu}
@@ -1703,7 +1930,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
                     {activeButton === "kanban" && (
                       <KanbanView
                         taskdata={filteredData ?? null}
-                        isLoading={iswhTLoading}
+                        isLoading={iswhTLoading || tabRefreshLoading}
                         masterData={masterData}
                         statusData={statusData}
                         handleTaskFavorite={handleTaskFavorite}
@@ -1715,7 +1942,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
 
                     {activeButton === "card" && (
                       <CardView
-                        isLoading={iswhTLoading}
+                        isLoading={iswhTLoading || tabRefreshLoading}
                         masterData={masterData}
                         handleTaskFavorite={handleTaskFavorite}
                         handleFreezeTask={handleFreezeTask}
@@ -1723,7 +1950,18 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
                       />
                     )}
                     {activeButton === "Dynamic-Filter" && (
-                      <DynamicFilterReport />
+                      <DynamicFilterReport
+                        queryData={parsedDataObj}
+                        completedFlag={completedFlag}
+                        archivedFlag={archivedFlag}
+                        filtersProp={filters}
+                        setFiltersProp={setFilters}
+                        isActiveProp={isActive}
+                        refreshKey={reportRefreshKey}
+                        showFavoritesOnly={showFavoritesOnly}
+                        showMilestonesOnly={showMilestonesOnly}
+                        showBlockersOnly={showBlockersOnly}
+                      />
                     )}
                   </Suspense>
                 </motion.div>

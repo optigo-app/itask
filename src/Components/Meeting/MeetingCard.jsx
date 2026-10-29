@@ -12,6 +12,8 @@ import {
   Typography
 } from '@mui/material';
 import dayjs from 'dayjs';
+import { getAvatarColors, getInitials } from '../../Utils/globalfun';
+import SafeAvatar from '../ShortcutsComponent/SafeAvatar';
 
 const MeetingCard = ({
   meeting,
@@ -19,7 +21,6 @@ const MeetingCard = ({
   setCalFormData,
   StatusCircles,
   ImageUrl,
-  background,
   handleAcceptMeeting,
   handleAttendMeeting,
   handleReject,
@@ -123,17 +124,17 @@ const MeetingCard = ({
                 arrow
                 classes={{ tooltip: 'custom-tooltip' }}
               >
-                <Avatar
+                <SafeAvatar
                   key={participant?.id}
                   alt={participant?.firstname + " " + participant?.lastname}
                   src={ImageUrl(participant) || null}
                   sx={{
-                    backgroundColor: background(`${participant?.firstname + " " + participant?.lastname}`),
+                    ...getAvatarColors(`${participant?.firstname + " " + participant?.lastname}`),
                   }}
                   onClick={() => hanldePAvatarClick(meeting?.guests, meeting?.id)}
                 >
-                  {!participant.avatar && participant?.firstname?.charAt(0)}
-                </Avatar>
+                  {!participant.avatar && getInitials(participant?.firstname, participant?.lastname)}
+                </SafeAvatar>
               </Tooltip>
             ))}
           </AvatarGroup>

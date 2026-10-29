@@ -10,7 +10,7 @@ import {
     Checkbox,
     FormControlLabel
 } from "@mui/material";
-import loginImage from "../../Assests/loginImage.webp";
+import loginImage from "../../Assests/loginImage1.webp";
 import { commonTextFieldProps } from "../../Utils/globalfun";
 import Cookies from 'js-cookie';
 import { fetchLoginApi } from "../../Api/AuthApi/loginApi";
@@ -106,11 +106,14 @@ const LoginPage = () => {
                 yc: loginData?.rd[0]?.yearcode
             }
             if (loginData?.rd[0]?.stat == 1) {
+                // This tab's session always lives in sessionStorage — unique per
+                // tab so another tab's login can't conflict. localStorage is only
+                // the remember-me seed for fresh tabs after a browser restart.
+                sessionStorage.setItem("AuthqueryParams", JSON.stringify(formatData));
                 if (rememberMe) {
                     localStorage.setItem("AuthqueryParams", JSON.stringify(formatData));
-                } else {
-                    sessionStorage.setItem("AuthqueryParams", JSON.stringify(formatData));
                 }
+                sessionStorage.setItem("isLoggedIn", "true");
 
                 const cookieExpiry = rememberMe ? { expires: new Date(formatData.exp * 1000) } : {};
                 Cookies.set('isLoggedIn', 'true', cookieExpiry);

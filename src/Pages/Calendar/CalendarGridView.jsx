@@ -12,6 +12,10 @@ import {
   TextField,
   TableSortLabel,
   Box,
+  CircularProgress,
+  Tooltip,
+  Typography,
+  Skeleton,
 } from '@mui/material';
 import { cleanDate, commonTextFieldProps, flattenTasks, formatDate3, getUserProfileData, handleAddApicall, priorityColors, statusColors } from '../../Utils/globalfun';
 import { PERMISSIONS } from '../../Components/Auth/Role/permissions';
@@ -28,7 +32,7 @@ import isoWeek from "dayjs/plugin/isoWeek";
 import SplitTaskModal from '../../Components/Calendar/SplitTaskModal';
 import StatusBadge from '../../Components/ShortcutsComponent/StatusBadge';
 import TaskPriority from '../../Components/ShortcutsComponent/TaskPriority';
-import { SeparatorHorizontal } from 'lucide-react';
+import { SeparatorHorizontal, Check, AlertTriangle } from 'lucide-react';
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import { AddTaskDataApi } from '../../Api/TaskApi/AddTaskApi';
 import { toast } from 'react-toastify';
@@ -39,6 +43,11 @@ import CalendarFilter from './CalendarFilter';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { actualTaskData, fetchlistApiCall } from '../../Recoil/atom';
 import { fetchTodayTaskApi } from '../../Api/TaskApi/fetchTodayTaskApi';
+import { useTabStore } from '../../Store/useTabStore';
+import useSafeRedirect from '../../Utils/useSafeRedirect';
+import { fetchTaskDataFullApi } from '../../Api/TaskApi/TaskDataFullApi';
+import { setTaskQueryData } from '../../Utils/QueryClient/queryClient';
+import { taskDescGetApi } from '../../Api/TaskApi/TaskDescGetApi';
 
 // Extend dayjs with plugins
 dayjs.extend(duration);
@@ -200,6 +209,74 @@ const prepareCalendarTaskList = ({
     });
 };
 
+// Session cache for hover descriptions — taskid -> descr string ('' = none).
+// Lives outside the component so re-hovers and row re-renders never refetch.
+const taskDescCache = new Map();
+
+// Hover preview card — mounts only while the tooltip is open, so the API call
+// fires exactly once per task per session (after the hover delay, not on every
+// mouse pass). Shows skeleton lines while loading, then the description.
+const TaskDescHoverCard = ({ task }) => {
+  const [state, setState] = useState(() => {
+    const cached = taskDescCache.get(task?.taskid);
+    return cached !== undefined ? { loading: false, text: cached } : { loading: true, text: '' };
+  });
+
+  useEffect(() => {
+    if (!state.loading || !task?.taskid) return;
+    let active = true;
+    taskDescGetApi(task)
+      .then((res) => {
+        const text = (res?.rd?.[0]?.descr || '').trim();
+        taskDescCache.set(task.taskid, text);
+        if (active) setState({ loading: false, text });
+      })
+      .catch(() => {
+        if (active) setState({ loading: false, text: '' });
+      });
+    return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task?.taskid]);
+
+  return (
+    <Box sx={{ minWidth: 240, maxWidth: 340 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
+        <Typography sx={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.6px', color: '#7367f0' }}>
+          DESCRIPTION
+        </Typography>
+        <Typography sx={{ fontSize: '11px', color: '#9b9aa1', fontWeight: 600 }}>
+          {task?.maintenanceno || task?.taskno || ''}
+        </Typography>
+      </Box>
+      {state.loading ? (
+        <Box>
+          <Skeleton variant="text" sx={{ fontSize: '13px' }} />
+          <Skeleton variant="text" sx={{ fontSize: '13px', width: '88%' }} />
+          <Skeleton variant="text" sx={{ fontSize: '13px', width: '60%' }} />
+        </Box>
+      ) : state.text ? (
+        <Typography
+          sx={{
+            fontSize: '13px',
+            color: '#444050',
+            lineHeight: 1.55,
+            whiteSpace: 'pre-line',
+            maxHeight: 180,
+            overflowY: 'auto',
+            pr: 0.5,
+          }}
+        >
+          {state.text}
+        </Typography>
+      ) : (
+        <Typography sx={{ fontSize: '12.5px', color: '#9b9aa1', fontStyle: 'italic' }}>
+          No description added for this task.
+        </Typography>
+      )}
+    </Box>
+  );
+};
+
 const CalendarGridView = () => {
   const [tasks, setTasks] = useState([]);
   const [taskDataRows, setTaskDataRows] = useState([]);
@@ -220,11 +297,49 @@ const CalendarGridView = () => {
   const [splitParts, setSplitParts] = useState([]);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState(null);
   const [selectedModuleId, setSelectedModuleId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [totalHours, setTotalHours] = useState({ estimate: 0, working: 0 });
   const [localWorkingEdits, setLocalWorkingEdits] = useState({});
   const actualTaskDataValue = useRecoilValue(actualTaskData);
   const fetchTaskTrigger = useRecoilValue(fetchlistApiCall);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
+  const navigate = useSafeRedirect();
+
+  // Task click → open the parent module's /tasks tab (same payload as
+  // TaskTableList.handleOpenModuleTab, so it dedups with an existing tab).
+  const handleTaskClick = (task) => {
+    const moduleId = task?.maintaskid || task?.RootTaskId || task?.moduleid;
+    if (!moduleId) return;
+    const moduleName = task?.moduleName || task?.taskPr || 'Tasks';
+    const queryData = {
+      module: moduleName,
+      project: task?.taskPr,
+      taskid: moduleId,
+      projectid: task?.projectid,
+      moduleid: moduleId,
+      maingroupids: task?.maingroupids,
+      isLimited: 0,
+      isreadonly: 0,
+      breadcrumbTitles: [moduleName],
+      // clicked task name → seeded as the module tab's search filter so the
+      // subtask is findable inside large module datasets
+      searchtask: task?.taskname,
+    };
+    // Prefetch in background so the tab opens warm
+    fetchTaskDataFullApi({ ...queryData, isarchive: 0, iscompleted: 0 })
+      .then((rawData) => {
+        if (rawData?.rd?.[0]?.stat != 0) {
+          setTaskQueryData(queryData, false, false, rawData);
+        }
+      })
+      .catch(() => {});
+    useTabStore.getState().openTaskTab({
+      title: moduleName,
+      route: '/tasks',
+      queryData,
+    });
+    navigate('/tasks');
+  };
   const { hasAccess } = useAccess();
   const auth = getUserProfileData();
   const filters = React.useMemo(() => ({
@@ -302,20 +417,21 @@ const CalendarGridView = () => {
       });
     }
     // 📅 Apply date filters
+    let dateFilteredTasks = [];
     if (selectedFilter === 'Today') {
-      return nonRootTasks.filter(task => dayjs(task.StartDate).isSame(today, 'day'));
+      dateFilteredTasks = nonRootTasks.filter(task => dayjs(task.StartDate).isSame(today, 'day'));
     } else if (selectedFilter === 'Tomorrow') {
-      return nonRootTasks.filter(task => dayjs(task.StartDate).isSame(tomorrow, 'day'));
+      dateFilteredTasks = nonRootTasks.filter(task => dayjs(task.StartDate).isSame(tomorrow, 'day'));
     } else if (selectedFilter === 'Week') {
       // Calculate Monday-based week range
       const startOfWeek = today.startOf('week').add(1, 'day'); // Monday
       const endOfWeek = startOfWeek.add(6, 'day'); // Sunday
-      return nonRootTasks.filter(task =>
+      dateFilteredTasks = nonRootTasks.filter(task =>
         dayjs(task.StartDate).isSameOrAfter(startOfWeek, 'day') &&
         dayjs(task.StartDate).isSameOrBefore(endOfWeek, 'day')
       );
     } else if (selectedFilter === 'Custom') {
-      return nonRootTasks.filter(task => {
+      dateFilteredTasks = nonRootTasks.filter(task => {
         const taskDate = dayjs(task.StartDate).startOf('day');
         const startDate = dayjs(customRange.startDate).startOf('day');
         const endDate = dayjs(customRange.endDate).startOf('day');
@@ -323,8 +439,24 @@ const CalendarGridView = () => {
       });
     }
 
-    return [];
-  }, [taskDataRows, actualTaskDataValue, selectedFilter, currentDate, selectedAssigneeId, customRange, selectedModuleId]);
+    const term = searchTerm?.trim()?.toLowerCase();
+    if (!term) return dateFilteredTasks;
+    return dateFilteredTasks.filter((task) => {
+      const haystack = [
+        task?.taskname,
+        task?.moduleName,
+        task?.taskno,
+        task?.maintenanceno,
+        task?.status,
+        task?.priority,
+        task?.taskPr,
+        ...(Array.isArray(task?.assignee)
+          ? task.assignee.map((a) => `${a?.firstname ?? ''} ${a?.lastname ?? ''}`.trim())
+          : []),
+      ].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [taskDataRows, actualTaskDataValue, selectedFilter, currentDate, selectedAssigneeId, customRange, selectedModuleId, searchTerm]);
 
   useEffect(() => {
     const applyLocalEdits = (task) => {
@@ -498,6 +630,54 @@ const CalendarGridView = () => {
     setSplitParts(autoSplitParts);
   }, [selectedTaskToSplit, numberOfDaysToSplit]);
 
+  // ── Optimistic working-hr save ─────────────────────────────────
+  // Enter queues the row's save and moves on instantly — a per-task pump
+  // drains the queue in the background so rapid edits coalesce into the
+  // latest payload instead of firing a request per keystroke-commit.
+  const saveQueueRef = useRef({});          // taskid -> latest task payload
+  const saveBusyRef = useRef(new Set());    // taskids with an active pump
+  const [saveState, setSaveState] = useState({}); // taskid -> 'saving'|'saved'|'error'
+
+  const queueWorkingHrSave = (task) => {
+    saveQueueRef.current[task.taskid] = task;
+    if (saveBusyRef.current.has(task.taskid)) return;
+    saveBusyRef.current.add(task.taskid);
+    setSaveState((prev) => ({ ...prev, [task.taskid]: 'saving' }));
+
+    const pump = async () => {
+      let hadError = false;
+      while (saveQueueRef.current[task.taskid]) {
+        const payload = saveQueueRef.current[task.taskid];
+        delete saveQueueRef.current[task.taskid];
+        try {
+          const apiRes = await AddTaskDataApi({ ...payload, workinghr: payload.workinghr }, { Task: 'root' });
+          if (!apiRes) throw new Error('save failed');
+          if (!saveQueueRef.current[task.taskid]) {
+            setSaveState((prev) => ({ ...prev, [task.taskid]: 'saved' }));
+            setTimeout(() => {
+              setSaveState((prev) => (prev[task.taskid] === 'saved' ? { ...prev, [task.taskid]: undefined } : prev));
+            }, 1500);
+          }
+        } catch (error) {
+          console.error('Error updating task estimate:', error);
+          hadError = true;
+          if (!saveQueueRef.current[task.taskid]) {
+            setSaveState((prev) => ({ ...prev, [task.taskid]: 'error' }));
+          }
+        }
+      }
+      if (hadError) {
+        toast.error('Error while saving working hrs — value kept, press Enter to retry');
+      } else {
+        // invalidate caches once per drain instead of once per save
+        clearAllTabDataCache().catch(() => {});
+        invalidateTaskCache();
+      }
+      saveBusyRef.current.delete(task.taskid);
+    };
+    pump();
+  };
+
   const handleEstimateChange = (taskId, newEstimate) => {
     setLocalWorkingEdits((prev) => ({
       ...prev,
@@ -516,43 +696,29 @@ const CalendarGridView = () => {
     );
   };
 
-  const handleKeyDown = async (e, taskId, index) => {
+  const handleKeyDown = (e, taskId, index) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       const task = tasks.find(t => t.taskid === taskId);
       if (!task) return;
-      const updatedTask = {
-        ...task,
-        workinghr: task.workinghr,
-      };
-      try {
-        const rootSubrootflagval = { Task: 'root' };
-        const apiRes = await AddTaskDataApi(updatedTask, rootSubrootflagval);
-        if (apiRes) {
-          toast.success('Task working hrs added successfully!');
-          handleTotalHourCalculate(tasks);
-          clearAllTabDataCache().catch(() => {});
-          invalidateTaskCache();
+      // queue save in background — no await, UI stays instant
+      queueWorkingHrSave({ ...task, workinghr: task.workinghr });
+      handleTotalHourCalculate(tasks);
+      const currentInput = estimateTextFieldRefs.current[taskId];
+      if (currentInput) currentInput.blur();
+      const nextTaskIndex = index + 1;
+      const currentSorted = sortedTasksRef.current || [];
+      const nextTask = currentSorted[nextTaskIndex];
+      if (nextTask) {
+        const nextInput = estimateTextFieldRefs.current[nextTask.taskid];
+        if (nextInput) {
+          nextInput.focus();
         }
-        const currentInput = estimateTextFieldRefs.current[taskId];
-        if (currentInput) currentInput.blur();
-        const nextTaskIndex = index + 1;
-        const currentSorted = sortedTasksRef.current || [];
-        const nextTask = currentSorted[nextTaskIndex];
-        if (nextTask) {
-          const nextInput = estimateTextFieldRefs.current[nextTask.taskid];
-          if (nextInput) {
-            nextInput.focus();
-          }
-        } else {
-          Object.values(estimateTextFieldRefs.current).forEach((input) => {
-            input?.blur();
-          });
-          window.getSelection()?.removeAllRanges();
-        }
-      } catch (error) {
-        console.error('Error updating task estimate:', error);
-        toast.error('Error while saving estimate!');
+      } else {
+        Object.values(estimateTextFieldRefs.current).forEach((input) => {
+          input?.blur();
+        });
+        window.getSelection()?.removeAllRanges();
       }
     }
   };
@@ -639,7 +805,6 @@ const CalendarGridView = () => {
     }
   };
 
-  // Helper function to update date picker based on selected filter
   const updateDatePickerBasedOnFilter = (filter, date) => {
     const targetDate = date || currentDate;
 
@@ -655,7 +820,6 @@ const CalendarGridView = () => {
         endDate: tomorrow.endOf('day').toISOString()
       });
     } else if (filter === 'Week') {
-      // Set Monday as start of week
       const startOfWeek = targetDate.startOf('week').add(1, 'day');
       const endOfWeek = targetDate.endOf('week').add(1, 'day');
       setCustomRange({
@@ -726,6 +890,8 @@ const CalendarGridView = () => {
             handleDateChange={handleDateChange}
             handleAssigneeChange={handleAssigneeChange}
             handleModuleChange={handleModuleChange}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
           />
           <TableContainer component={Paper} className='muiTableTaContainer'>
             <Table aria-label="task table" className='muiTable'>
@@ -762,30 +928,74 @@ const CalendarGridView = () => {
                           {index + 1}
                         </TableCell>
                         <TableCell>
-                          <b>{task.moduleName}/ </b><strong>{task.maintenanceno ? task?.maintenanceno : task?.taskno}</strong> {task?.taskname}
+                          <Tooltip
+                            title={<TaskDescHoverCard task={task} />}
+                            arrow
+                            placement="bottom-start"
+                            enterDelay={350}
+                            leaveDelay={150}
+                            describeChild
+                            slotProps={{
+                              tooltip: {
+                                sx: {
+                                  bgcolor: '#fff',
+                                  color: '#444050',
+                                  border: '1px solid #e7e5f4',
+                                  borderRadius: '10px',
+                                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                                  p: 1.5,
+                                  maxWidth: 'none',
+                                },
+                              },
+                              arrow: { sx: { color: '#fff', '&::before': { border: '1px solid #e7e5f4' } } },
+                              popper: { sx: { zIndex: 1500 } },
+                            }}
+                          >
+                            <Box
+                              component="span"
+                              onClick={() => handleTaskClick(task)}
+                              sx={{
+                                cursor: 'pointer',
+                                '&:hover': { color: '#7367f0', textDecoration: 'underline' },
+                              }}
+                            >
+                              <b>{task.moduleName}/ </b><strong>{task.maintenanceno ? task?.maintenanceno : task?.taskno}</strong> {task?.taskname}
+                            </Box>
+                          </Tooltip>
                         </TableCell>
                         <TableCell><StatusBadge task={task} statusColors={statusColors} onStatusChange={handleStatusChange} disable={false} /></TableCell>
                         <TableCell>{TaskPriority(task?.priority, priorityColors)}</TableCell>
                         <TableCell>{task.estimate_hrs}</TableCell>
                         <TableCell>
-                          <TextField
-                            variant="outlined"
-                            size="small"
-                            type="text"
-                            placeholder="Enter Working hrs"
-                            sx={{ width: '100px' }}
-                            value={task?.workinghr}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (isValidDecimalInput(value)) {
-                                handleEstimateChange(task.taskid, e.target.value)
-                              }
-                            }}
-                            inputRef={(el) => (estimateTextFieldRefs.current[task.taskid] = el)}
-                            onKeyDown={(e) => handleKeyDown(e, task.taskid, index)}
-                            disabled={!hasAccess(PERMISSIONS.canWorkinghrEdit) && !isDateEditable(task.StartDate)}
-                            {...commonTextFieldProps}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <TextField
+                              variant="outlined"
+                              size="small"
+                              type="text"
+                              placeholder="Enter Working hrs"
+                              sx={{ width: '100px' }}
+                              value={task?.workinghr}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (isValidDecimalInput(value)) {
+                                  handleEstimateChange(task.taskid, e.target.value)
+                                }
+                              }}
+                              inputRef={(el) => (estimateTextFieldRefs.current[task.taskid] = el)}
+                              onKeyDown={(e) => handleKeyDown(e, task.taskid, index)}
+                              disabled={!hasAccess(PERMISSIONS.canWorkinghrEdit) && !isDateEditable(task.StartDate)}
+                              {...commonTextFieldProps}
+                            />
+                            <Box sx={{ width: 16, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+                              {saveState[task.taskid] === 'saving' && (
+                                <CircularProgress size={12} sx={{ color: '#7367f0' }} />
+                              )}
+                              {saveState[task.taskid] === 'saved' && <Check size={14} color="#28c76f" />}
+                              {saveState[task.taskid] === 'error' && (
+                                <AlertTriangle size={14} color="#ea5455" />
+                              )}
+                            </Box>
+                          </Box>
                         </TableCell>
                         <TableCell>
                           {task.StartDate ? formatDate3(task.StartDate) : 'N/A'}
@@ -812,7 +1022,7 @@ const CalendarGridView = () => {
                   :
                   <TableRow>
                     <TableCell colSpan={9} style={{ textAlign: 'center' }}>
-                      No tasks found for today.
+                      {searchTerm?.trim() ? 'No tasks found matching your search.' : 'No tasks found for today.'}
                     </TableCell>
                   </TableRow>
                 }

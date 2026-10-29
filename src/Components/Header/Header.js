@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from "react";
-import Cookies from "js-cookie";
+
 import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Typography, Avatar, Menu, MenuItem, Divider, Button, Chip, Tooltip, IconButton, Badge, ToggleButtonGroup, ToggleButton } from "@mui/material";
-import { Bell, MailOpen, User, LogOut, House, FileCheck, LayoutTemplate, Clock } from "lucide-react";
-import { getRandomAvatarColor, ImageUrl, getUserProfileData, fetchMasterGlFunc } from "../../Utils/globalfun";
+import { Bell, MailOpen, User, LogOut, House, FileCheck, LayoutTemplate, Clock, Bug, Trash2 } from "lucide-react";
+import { getAvatarColors, getInitials, ImageUrl, getUserProfileData, fetchMasterGlFunc } from "../../Utils/globalfun";
+import SafeAvatar from "../ShortcutsComponent/SafeAvatar";
 import { toast } from "react-toastify";
 import "./header.scss";
 import { useTabStore } from "../../Store/useTabStore";
 import { clearAllTabDataCache } from "../../Utils/IndexedDB/taskDataCache";
 import { abortAllRequests } from "../../Utils/requestAbortController";
+import { getLoginUrl, clearSession } from "../../Utils/sessionKeys";
+import LoadingBackdrop from "../../Utils/Common/LoadingBackdrop";
 import NotificationCard from "../Notification/NotificationCard";
-import { projectDatasRState, taskLength, userRoleAtom, webReload } from "../../Recoil/atom";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { notificationList, projectDatasRState, taskLength, userRoleAtom, webReload } from "../../Recoil/atom";
+import { useRecoilValue, useSetRecoilState, useRecoilState } from "recoil";
+import { emitNotificationReadAll } from "../../Socket/socket";
 import PendingAcceptanceDrawer from "../ShortcutsComponent/Notification/PendingAcceptanceDrawer";
 import useSafeRedirect from "../../Utils/useSafeRedirect";
 import TemplateDialog from "../Common/TemplateDialog";
 import TaskTabBar from "../Task/TaskTabBar";
 import TabLimitDialog from "../Task/TabLimitDialog";
+import { getBugDashboardApi } from "../../Api/BugApi/bugApi";
+import BugDashboardDialog from "../Bugs/BugDashboardDialog";
 
 // Profile Hook
 const useProfileData = () => {
@@ -86,34 +92,43 @@ const useProfileData = () => {
 
 // Profile Menu Component
 const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload }) => {
-    const avatarBackgroundColor = avatarSrc
-        ? "transparent"
-        : getRandomAvatarColor(`${profileData?.firstname} ${profileData?.lastname}`);
+    const [loggingOut, setLoggingOut] = useState(false);
+    const avatarColors = avatarSrc
+        ? { backgroundColor: 'transparent' }
+        : getAvatarColors(`${profileData?.firstname} ${profileData?.lastname}`);
 
     const menuItems = [
         { text: 'My Profile', icon: <User size={20} style={{ color: "#7d7f85" }} />, route: '/account-profile' },
     ];
 
     const handleLogoutClick = async () => {
-        // Abort all in-flight API requests, timeouts, intervals first so logout isn't blocked
-        abortAllRequests();
+        // Nothing below may block or throw — the redirect must always run
+        const loginUrl = getLoginUrl();
+        setLoggingOut(true);
 
-        // Clear all persistent storage (no React re-renders)
-        await clearAllTabDataCache();
-        indexedDB.deleteDatabase('ITaskDataCache');
-        localStorage.clear();
-        sessionStorage.clear();
-        Cookies.remove("isLoggedIn");
-        Cookies.remove("skey");
+        try {
+            // Abort all in-flight API requests, timeouts, intervals first so logout isn't blocked
+            abortAllRequests();
+
+            // Clear all persistent storage (no React re-renders).
+            // Best-effort with a timeout — a hung IndexedDB open (e.g. blocked by
+            // another tab) must not prevent logout.
+            await Promise.race([
+                clearAllTabDataCache().catch(() => { }),
+                new Promise((r) => setTimeout(r, 1500)),
+            ]);
+            try { indexedDB.deleteDatabase('ITaskDataCache'); } catch { }
+            // This tab's sessionStorage + shared auth keys only — other tabs keep their own sessions
+            clearSession();
+        } catch { }
 
         // Redirect immediately — skip clearAllTabs to avoid blank UI flicker
-        const loginUrl = process.env.REACT_APP_LOCAL_HOSTNAMES.includes(window.location.hostname)
-            ? "itaskweb/login"
-            : "/login";
         window.location.href = loginUrl;
     };
 
     return (
+        <>
+        {loggingOut && <LoadingBackdrop isLoading={true} />}
         <Menu
             id="profile-menu"
             anchorEl={anchorEl}
@@ -134,13 +149,14 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
         >
             {profileData !== null &&
                 <Box sx={{ display: "flex", alignItems: "center", padding: "16px", borderBottom: "1px solid #e0e0e0" }}>
-                    <Avatar
+                    <SafeAvatar
                         alt={`${profileData?.firstname} ${profileData?.lastname}`}
                         src={ImageUrl(profileData)}
-                        sx={{ backgroundColor: avatarBackgroundColor, color: "#fff", width: 40, height: 40, marginRight: "12px" }}
+                        className="profile-avatar"
+                        sx={{ ...avatarColors, marginRight: "12px" }}
                     >
-                        {!avatarSrc && profileData?.firstname?.charAt(0).toUpperCase()}
-                    </Avatar>
+                        {!avatarSrc && getInitials(profileData?.firstname, profileData?.lastname)}
+                    </SafeAvatar>
                     <Box>
                         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                             {`${profileData?.firstname} ${profileData?.lastname}`}
@@ -172,6 +188,7 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
                 </Button>
             </Box>
         </Menu>
+        </>
     );
 };
 
@@ -179,51 +196,27 @@ const ProfileMenu = ({ anchorEl, open, onClose, profileData, avatarSrc, onReload
 const useNotifications = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
+    const [notifications, setNotifications] = useRecoilState(notificationList);
 
-    const notifications = [
-        {
-            id: 1,
-            avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-            title: "Task Assigned: Design Homepage 🎨",
-            message: "You have been assigned to design the homepage for Project X.",
-            time: "2h ago",
-            markAsUnread: true,
-            hasActions: true,
-        },
-        {
-            id: 2,
-            avatar: "MJ",
-            title: "Task Update: API Integration",
-            message: "Mark Johnson updated the API integration task.",
-            time: "4hr ago",
-            markAsUnread: false,
-        },
-        {
-            id: 3,
-            avatar: "https://randomuser.me/api/portraits/women/2.jpg",
-            title: "New Comment on Task 📩",
-            message: "Sarah left a comment on the database optimization task.",
-            time: "30min ago",
-            markAsUnread: true,
-        },
-        {
-            id: 4,
-            avatar: "TS",
-            title: "Task Completed ✅",
-            message: "The UI/UX design for the dashboard has been completed.",
-            time: "1 day ago",
-            markAsUnread: false,
-        },
-    ];
+    const unreadCount = notifications.filter((n) => n.markAsUnread).length;
 
     const handleBellClick = (event) => setAnchorEl(event.currentTarget);
     const handleCloseMenu = () => setAnchorEl(null);
 
-    return { anchorEl, open, notifications, handleBellClick, handleCloseMenu };
+    const handleMarkAllRead = () => {
+        setNotifications((prev) => prev.map((n) => ({ ...n, markAsUnread: false })));
+        emitNotificationReadAll();
+    };
+
+    const handleClearAll = () => {
+        setNotifications([]);
+    };
+
+    return { anchorEl, open, notifications, unreadCount, handleBellClick, handleCloseMenu, handleMarkAllRead, handleClearAll };
 };
 
 // Notification Menu Component
-const NotificationMenu = ({ anchorEl, open, onClose, notifications }) => {
+const NotificationMenu = ({ anchorEl, open, onClose, notifications, unreadCount, onMarkAllRead, onClearAll }) => {
     const navigate = useNavigate();
 
     const handleViewAllNoti = () => {
@@ -252,24 +245,41 @@ const NotificationMenu = ({ anchorEl, open, onClose, notifications }) => {
             <Box p={2} display="flex" justifyContent="space-between" sx={{ borderBottom: "1px solid #e0e0e0" }}>
                 <Typography variant="subtitle1" fontWeight="bold">Notification</Typography>
                 <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                    <Chip label="8 New" sx={{ background: "#e9e7fd", color: "#7367f0", fontWeight: "bold", borderRadius: "8px", height: "25px" }} />
+                    {unreadCount > 0 && (
+                        <Chip label={`${unreadCount} New`} sx={{ background: "#e9e7fd", color: "#7367f0", fontWeight: "bold", borderRadius: "8px", height: "25px" }} />
+                    )}
                     <Tooltip title="Mark all as read" placement="top" arrow classes={{ tooltip: 'custom-tooltip' }}>
-                        <IconButton><MailOpen size={20} style={{ cursor: "pointer" }} /></IconButton>
+                        <IconButton onClick={onMarkAllRead}><MailOpen size={20} style={{ cursor: "pointer" }} /></IconButton>
                     </Tooltip>
+                    {notifications?.length > 0 && (
+                        <Tooltip title="Clear all" placement="top" arrow classes={{ tooltip: 'custom-tooltip' }}>
+                            <IconButton onClick={onClearAll}><Trash2 size={19} style={{ cursor: "pointer", color: '#d32f2f' }} /></IconButton>
+                        </Tooltip>
+                    )}
                 </div>
             </Box>
 
-            {notifications?.map((notification) => (
-                <MenuItem key={notification.id} sx={{ display: "block", margin: "0", padding: "0" }}>
-                    <NotificationCard notification={notification} />
-                </MenuItem>
-            ))}
-
-            <Box textAlign="center" p={1.5} onClick={handleViewAllNoti}>
-                <Button size="small" className="buttonClassname" variant="contained" fullWidth>
-                    View all notifications
-                </Button>
+            <Box sx={{ maxHeight: "60vh", overflowY: "auto", overflowX: "hidden" }}>
+                {notifications?.length > 0 ? (
+                    notifications.map((notification) => (
+                        <MenuItem key={notification.id} sx={{ display: "block", margin: "0", padding: "0", '&:hover': { backgroundColor: 'rgba(115, 103, 240, 0.04)' } }}>
+                            <NotificationCard notification={notification} />
+                        </MenuItem>
+                    ))
+                ) : (
+                    <Box p={4} textAlign="center">
+                        <Typography variant="body2" color="text.secondary">No notifications yet</Typography>
+                    </Box>
+                )}
             </Box>
+
+            {notifications?.length > 0 && (
+                <Box textAlign="center" p={1.5} onClick={handleViewAllNoti}>
+                    <Button size="small" className="buttonClassname" variant="contained" fullWidth>
+                        View all notifications
+                    </Button>
+                </Box>
+            )}
         </Menu>
     );
 };
@@ -488,10 +498,25 @@ const Header = ({ avatarSrc = "" }) => {
     const projects = useRecoilValue(projectDatasRState);
     const [pendingAcceptanceOpen, setPendingAcceptanceOpen] = useState(false);
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+    const [bugDashboardOpen, setBugDashboardOpen] = useState(false);
+    const [bugData, setBugData] = useState(null);
+
+    // Bug count for header badge
+    useEffect(() => {
+        let mounted = true;
+        getBugDashboardApi()
+            .then((res) => {
+                if (mounted) setBugData(res);
+            })
+            .catch(() => { });
+        return () => { mounted = false; };
+    }, []);
+
+    const bugCount = bugData?.rd?.[0]?.totalBugs ?? 0;
     // Custom hooks
     const { decodedData } = useUrlData(location);
     const { profileData, handleReload, handleLogout } = useProfileData();
-    const { anchorEl: notificationAnchorEl, open: notificationOpen, notifications, handleBellClick, handleCloseMenu: handleCloseNotificationMenu } = useNotifications();
+    const { anchorEl: notificationAnchorEl, open: notificationOpen, notifications, unreadCount, handleBellClick, handleCloseMenu: handleCloseNotificationMenu, handleMarkAllRead, handleClearAll } = useNotifications();
     const { dataMap, matchedKey } = useDataMap(location, decodedData);
     const { selectedTab, selectedCalTab, handleRedirection, toggleOptions, toggleCalOptions } = useToggleNavigation(location, decodedData);
 
@@ -513,7 +538,7 @@ const Header = ({ avatarSrc = "" }) => {
     if (!matchedKey) return null;
 
     const { title, subtitle } = dataMap[matchedKey];
-    const avatarBackgroundColor = avatarSrc ? "transparent" : getRandomAvatarColor(`${profileData?.firstname} ${profileData?.lastname}`);
+    const avatarColors = avatarSrc ? { backgroundColor: 'transparent' } : getAvatarColors(`${profileData?.firstname} ${profileData?.lastname}`);
 
     const handlePendingAcceptance = () => {
         setPendingAcceptanceOpen(true);
@@ -521,6 +546,29 @@ const Header = ({ avatarSrc = "" }) => {
 
     const handleTemplateManager = () => {
         setTemplateDialogOpen(true);
+    };
+
+    // Shared right-side icon button style — one visual system for all icons
+    const headerIconBtnSx = {
+        color: '#444050',
+        bgcolor: 'rgba(0,0,0,0.03)',
+        width: 34,
+        height: 34,
+        '&:hover': { bgcolor: 'rgba(115,103,240,0.12)', color: '#7367f0' },
+    };
+    // Compact corner pill for count badges — less shouty than MUI's default
+    const miniBadgeSx = {
+        '& .MuiBadge-badge': {
+            fontSize: '9.5px',
+            fontWeight: 700,
+            height: 15,
+            minWidth: 15,
+            padding: '0 3px',
+            borderRadius: 8,
+            top: 2,
+            right: 2,
+            boxShadow: '0 0 0 1.5px #fff',
+        },
     };
 
     return (
@@ -568,7 +616,7 @@ const Header = ({ avatarSrc = "" }) => {
             )}
 
             {/* Right Section - Controls and Profile */}
-            <Box sx={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: '6px', flexShrink: 0 }}>
                 {/* Toggle Groups */}
                 {(location?.pathname?.includes("/tasks/") || location?.pathname?.includes("/projects/")) && (
                     <ToggleGroup options={toggleOptions} selectedValue={selectedTab} onRedirection={handleRedirection} className="taskHeaderTDBox" />
@@ -580,56 +628,39 @@ const Header = ({ avatarSrc = "" }) => {
 
                 {/* template manager */}
                 <Tooltip title="Template Manager" arrow>
-                    <IconButton
-                        onClick={handleTemplateManager}
-                        size="small"
-                        sx={{
-                            ml: 1,
-                            color: '#444050',
-                            bgcolor: 'rgba(0,0,0,0.03)',
-                            width: 34,
-                            height: 34,
-                            '&:hover': { bgcolor: 'rgba(115,103,240,0.12)', color: '#7367f0' },
-                        }}
-                    >
+                    <IconButton onClick={handleTemplateManager} size="small" sx={headerIconBtnSx}>
                         <LayoutTemplate size={18} />
                     </IconButton>
                 </Tooltip>
 
                 {/* pending acceptance */}
                 <Tooltip title="Pending Acceptance" arrow>
+                    <IconButton onClick={handlePendingAcceptance} size="small" sx={headerIconBtnSx}>
+                        <Clock size={18} />
+                    </IconButton>
+                </Tooltip>
+
+                {/* Bug dashboard */}
+                <Tooltip title={`${bugCount} open bug${bugCount === 1 ? '' : 's'}`} arrow>
                     <IconButton
-                        onClick={handlePendingAcceptance}
+                        onClick={() => setBugDashboardOpen(true)}
                         size="small"
                         sx={{
-                            ml: 0.8,
-                            color: '#444050',
-                            bgcolor: 'rgba(0,0,0,0.03)',
-                            width: 34,
-                            height: 34,
-                            '&:hover': { bgcolor: 'rgba(115,103,240,0.12)', color: '#7367f0' },
+                            ...headerIconBtnSx,
+                            '&:hover': { bgcolor: 'rgba(211,47,47,0.1)', color: '#d32f2f' },
                         }}
                     >
-                        <Clock size={18} />
+                        <Badge badgeContent={bugCount} color="error" max={99} invisible={bugCount === 0} sx={miniBadgeSx}>
+                            <Bug size={18} />
+                        </Badge>
                     </IconButton>
                 </Tooltip>
 
                 {/* Notification Bell */}
                 <Tooltip title="Notifications" arrow>
-                    <IconButton
-                        onClick={handleBellClick}
-                        size="small"
-                        sx={{
-                            ml: 0.8,
-                            color: '#444050',
-                            bgcolor: 'rgba(0,0,0,0.03)',
-                            width: 34,
-                            height: 34,
-                            '&:hover': { bgcolor: 'rgba(115,103,240,0.12)', color: '#7367f0' },
-                        }}
-                    >
-                        {notifications?.length > 0 ? (
-                            <Badge variant="dot" overlap="circular" sx={{ "& .MuiBadge-dot": { backgroundColor: "#eb0505", height: 8, width: 8, borderRadius: "50%" } }}>
+                    <IconButton onClick={handleBellClick} size="small" sx={headerIconBtnSx}>
+                        {unreadCount > 0 ? (
+                            <Badge variant="dot" overlap="circular" sx={{ "& .MuiBadge-dot": { backgroundColor: "#eb0505", height: 7, width: 7, borderRadius: "50%", boxShadow: '0 0 0 1.5px #fff' } }}>
                                 <Bell size={18} />
                             </Badge>
                         ) : (
@@ -640,23 +671,28 @@ const Header = ({ avatarSrc = "" }) => {
 
                 {/* Profile Avatar */}
                 <Tooltip title={`${profileData?.firstname || ''} ${profileData?.lastname || ''}`} arrow>
-                    <Avatar
+                    <SafeAvatar
                         alt={`${profileData?.firstname} ${profileData?.lastname}`}
                         src={ImageUrl(profileData)}
-                        sx={{ ml: 0.8, backgroundColor: avatarBackgroundColor, color: "#fff", cursor: "pointer" }}
+                        sx={{ ...avatarColors, cursor: "pointer" }}
                         onClick={handleAvatarClick}
                         className="profile-avatar"
                     >
-                        {!avatarSrc && profileData?.firstname?.charAt(0).toUpperCase()}
-                    </Avatar>
+                        {!avatarSrc && getInitials(profileData?.firstname, profileData?.lastname)}
+                    </SafeAvatar>
                 </Tooltip>
             </Box>
 
             {/* Menus */}
-            <NotificationMenu anchorEl={notificationAnchorEl} open={notificationOpen} onClose={handleCloseNotificationMenu} notifications={notifications} />
+            <NotificationMenu anchorEl={notificationAnchorEl} open={notificationOpen} onClose={handleCloseNotificationMenu} notifications={notifications} unreadCount={unreadCount} onMarkAllRead={handleMarkAllRead} onClearAll={handleClearAll} />
             <ProfileMenu anchorEl={profileAnchorEl} open={profileOpen} onClose={handleCloseProfileMenu} profileData={profileData} avatarSrc={avatarSrc} onReload={handleReload} onLogout={handleLogout} />
             <PendingAcceptanceDrawer open={pendingAcceptanceOpen} onClose={() => setPendingAcceptanceOpen(false)} />
             <TemplateDialog open={templateDialogOpen} onClose={() => setTemplateDialogOpen(false)} />
+            <BugDashboardDialog
+                open={bugDashboardOpen}
+                onClose={() => setBugDashboardOpen(false)}
+                data={bugData}
+            />
             <TabLimitDialog />
         </Box>
     );

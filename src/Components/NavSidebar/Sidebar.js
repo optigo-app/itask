@@ -33,7 +33,7 @@ import { useRecoilState, useSetRecoilState } from "recoil";
 import { Advfilters, FullSidebar } from "../../Recoil/atom";
 import useSafeRedirect from "../../Utils/useSafeRedirect";
 import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
-import { handleBugTrackRedirect } from "../../Utils/globalfun";
+import { handleBugTrackRedirect, handleTecoChatRedirect } from "../../Utils/globalfun";
 
 const Sidebar = () => {
     const navigate = useSafeRedirect();
@@ -49,6 +49,7 @@ const Sidebar = () => {
     const drawerWidth = isFullSidebar || isDrawerOpen ? 200 : 80;
     const [reportsAnchorEl, setReportsAnchorEl] = React.useState(null);
     const [bugTrackDialogOpen, setBugTrackDialogOpen] = React.useState(false);
+    const [tecochatDialogOpen, setTecochatDialogOpen] = React.useState(false);
     const setFilters = useSetRecoilState(Advfilters);
 
 
@@ -59,12 +60,12 @@ const Sidebar = () => {
         { pagename: "Project", label: "Project", routes: "Projects", path: "/projects", icon: SquareChartGantt },
         { pagename: "Task", label: "Task", routes: "Tasks", path: "/tasks", icon: FileCheck },
         { pagename: "Bug Track", label: "Bug Track", routes: "external-bugtrack", path: '', icon: BugIcon },
-        { pagename: "Inbox", label: "Inbox", routes: "Inbox", path: "/inbox", icon: Inbox },
+        { pagename: "Inbox", label: "TecoChat", routes: "external-tecochat", path: "", icon: Inbox },
         { pagename: "Meeting", label: "Meeting", routes: "Meetings", path: "/meetings", icon: Component },
         { pagename: "Calender", label: "My Calendar", routes: "MyCalendar", path: "/myCalendar", icon: CalendarCheck },
         { pagename: "Maters", label: "Masters", routes: "Masters", path: "/masters", icon: Boxes },
         { pagename: "Team Cal View", label: "Team Cal View", routes: "TeamCalReport", path: "/teamCalReport", icon: Ratio },
-        // { pagename: "Milestone Report", label: "Milestone Report", routes: "MilestoneReport", path: "/milestoneReport", icon: Ratio },
+        { pagename: "Milestone Report", label: "Milestone Report", routes: "MilestoneReport", path: "/milestoneReport", icon: Ratio },
         { pagename: "Doc Estimate", label: "Doc Estimate", routes: "DocsEstimateReport", path: "/docs-estimate-report", icon: FileCheck },
         { pagename: "Reports", label: "Reports", routes: "Reports", path: "/reports", icon: Ratio },
     ];
@@ -140,14 +141,18 @@ const Sidebar = () => {
     };
 
     const handleItemClick = (pathname, routes) => {
-        if (routes === 'external-bugtrack') {
-            setBugTrackDialogOpen(true);
+        const dialogActions = {
+            'external-bugtrack': () => setBugTrackDialogOpen(true),
+            'external-tecochat': () => setTecochatDialogOpen(true),
+        };
+        if (dialogActions[routes]) {
+            dialogActions[routes]();
             if (isMobile) {
                 setDrawerOpen(false);
             }
             return;
         }
-        setFilters({})
+        setFilters({});
         setActiveItem(routes);
         navigate(pathname);
         if (isMobile) {
@@ -370,6 +375,18 @@ const Sidebar = () => {
                 }}
                 title="Redirect to Bug Tracker"
                 content="You will be redirected to the Bug Tracker in a new tab. Do you want to continue?"
+                confirmLabel="Continue"
+                cancelLabel="Cancel"
+            />
+            <ConfirmationDialog
+                open={tecochatDialogOpen}
+                onClose={() => setTecochatDialogOpen(false)}
+                onConfirm={() => {
+                    setTecochatDialogOpen(false);
+                    handleTecoChatRedirect();
+                }}
+                title="Redirect to TecoChat"
+                content="You will be redirected to TecoChat in a new tab. Do you want to continue?"
                 confirmLabel="Continue"
                 cancelLabel="Cancel"
             />

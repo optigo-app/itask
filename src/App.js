@@ -17,14 +17,17 @@ import { taskInit } from './Api/InitialApi/TaskInitApi';
 import { fetchMasterGlFunc } from './Utils/globalfun';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingBackdrop from './Utils/Common/LoadingBackdrop';
-import { jwtDecode } from "jwt-decode";
-import Cookies from 'js-cookie';
+import SocketListener from './Components/Notification/SocketListener';
+import NotificationStack from './Components/Notification/NotificationStack';
+
 import NotificationTable from './Pages/Notification/NotificationTable';
 import { userRoleAtom, webReload } from './Recoil/atom';
+import { isLoggedInSession, getAuthParams, clearSession } from './Utils/sessionKeys';
 import LoginPage from './Components/Auth/LoginForm';
 import TemplateDialog from './Components/Common/TemplateDialog';
 import TestPage from './Components/Examples/testpage';
 import DocumentSheet from './Components/PrintSheet/DocumentSheet';
+import MaintenanceSheet from './Components/PrintSheet/MaintenanceSheet';
 // import CalendarComparisonDemo from './Backup/CalendarComparisonDemo';
 // import CalendarViewDemo from './Backup/CalendarViewDemo';
 // import SampleQuickForm from './Backup/sampleQuickForm';
@@ -68,6 +71,8 @@ const Layout = ({ children, pageDataLoaded }) => {
 
     return (
         <Box sx={{ display: 'flex', overflow: "auto" }}>
+            <SocketListener />
+            <NotificationStack />
             {!pageDataLoaded && <Suspense fallback={<LoadingBackdrop />}><Sidebar /></Suspense>}
             <Box sx={{
                 flexGrow: 1,
@@ -134,23 +139,10 @@ const AppWrapper = () => {
         };
     }, []);
 
-    const decodeBase64 = (str) => {
-        if (!str) return null;
-        try {
-            return atob(str);
-        } catch (e) {
-            console.error("Error decoding base64:", e);
-            return null;
-        }
-    };
-
     const getQueryParams = () => {
-        const isLoggedIn = Cookies.get('isLoggedIn');
-
-        // If isLoggedIn is true, bypass skey token reading
-        if (isLoggedIn === 'true') {
-            // Check both localStorage and sessionStorage for AuthqueryParams
-            const authQueryParams = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
+        if (isLoggedInSession()) {
+            // This tab's session wins; remember-me seed in localStorage is the fallback
+            const authQueryParams = getAuthParams();
             if (authQueryParams) {
                 const decodedPayload = JSON.parse(authQueryParams);
                 setCookieData(decodedPayload);
@@ -166,43 +158,11 @@ const AppWrapper = () => {
             }
         }
 
-        // If isLoggedIn is false or not present, read skey token
-        const token = Cookies.get('skey');
-        if (!token) {
-            // Check both localStorage and sessionStorage for AuthqueryParams
-            const authQueryParams = localStorage.getItem("AuthqueryParams") || sessionStorage.getItem("AuthqueryParams");
-            if (authQueryParams && isLoggedIn) {
-                const decodedPayload = JSON.parse(authQueryParams);
-                setCookieData(decodedPayload);
-                setIsReady(true);
-                setPageDataLoaded(true);
-                setIsLoggedIn(true);
-                return decodedPayload;
-            } else {
-                if (!isLoggedIn) {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                }
-                setIsReady(true);
-                setPageDataLoaded(true);
-                return navigate('/login', { replace: true });
-            }
-        }
-
-        const decoded = jwtDecode(token);
-        const decodedPayload = {
-            ...decoded,
-            uid: decodeBase64(decoded.uid),
-        };
-
-        if (decodedPayload) {
-            localStorage.setItem("AuthqueryParams", JSON.stringify(decodedPayload));
-            setCookieData(decodedPayload);
-            setIsReady(true);
-            setPageDataLoaded(true);
-        }
-
-        return decodedPayload;
+        // Not logged in: clear stored auth and redirect to login
+        clearSession();
+        setIsReady(true);
+        setPageDataLoaded(true);
+        return navigate('/login', { replace: true });
     };
 
     useEffect(() => {
@@ -264,6 +224,8 @@ const AppWrapper = () => {
                 position="bottom-right"
                 closeButton={false}
                 autoClose={2000}
+                limit={3}
+                newestOnTop
             />
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><LoadingBackdrop /></Box>}>
@@ -310,7 +272,7 @@ const AppWrapper = () => {
                                         {/* <Route path="/test3" element={<SampleQuickFormVersion2 />} /> */}
                                         {/* <Route path="/test4321" element={<StructuredQuickTask />} /> */}
                                         {/* <Route path="/test4322" element={<CalendarReport />} /> */}
-                                        {/* <Route path="/test4323" element={<DocumentSheet />} /> */}
+                                        <Route path="/test4323" element={<MaintenanceSheet />} />
                                         <Route path="*" element={<PagenotFound />} />
                                     </Routes>
                                 </Layout>
@@ -334,8 +296,8 @@ const appTheme = createTheme({
 const App = () => (
     <RecoilRoot>
         <ThemeProvider theme={appTheme}>
-            {/* <Router basename="/itaskweb"> */}
-            <Router>
+            <Router basename="/itaskweb">
+            {/* <Router> */}
                 <AppWrapper />
             </Router>
         </ThemeProvider>

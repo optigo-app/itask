@@ -11,8 +11,13 @@ import {
     ToggleButtonGroup,
     ToggleButton,
     CircularProgress,
+    Menu,
+    MenuItem,
+    ListItemIcon,
+    ListItemText,
+    Tooltip,
 } from "@mui/material";
-import { CircleX, Grid2x2, ListTodo, NotepadTextDashed } from "lucide-react";
+import { CircleX, Grid2x2, Layers, ListTodo, NotepadTextDashed, Trash2, ChevronDown, Trash } from "lucide-react";
 import "./SidebarDrawer.scss";
 import { useRecoilValue, useRecoilState, useSetRecoilState } from "recoil";
 import { fetchlistApiCall, formData, rootSubrootflag, TaskData } from "../../Recoil/atom";
@@ -93,6 +98,7 @@ const SidebarDrawer = ({
     taskAssigneeData,
     handleMeetingDt,
     handleRemoveMetting,
+    handlePermanentDelete,
     isActive = true,
     onAfterSubmit,
     formDataOverride,
@@ -128,6 +134,7 @@ const SidebarDrawer = ({
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false); // TemplateDialog modal state
     const [deadlineConfirmDialogOpen, setDeadlineConfirmDialogOpen] = useState(false); // Deadline final confirmation dialog
     const [pendingSubmitData, setPendingSubmitData] = useState(null); // Store pending submit data for confirmation
+    const [deleteMenuAnchorEl, setDeleteMenuAnchorEl] = useState(null); // Delete options menu anchor
 
     // Field lock logic
     const userProfile = getUserProfileData();
@@ -157,6 +164,7 @@ const SidebarDrawer = ({
         projectLead: "",
         status: "",
         secstatus: "",
+        istaskno: 0,
         priority: "",
         description: "",
         attachment: null,
@@ -169,10 +177,24 @@ const SidebarDrawer = ({
         prModule: {},
         workcategoryid: "",
         milestoneChecked: 0,
+        blockerChecked: 0,
         estimate_hrs: "",
         estimate1_hrs: "",
         estimate2_hrs: "",
     });
+
+    // Maintenance module → default the Category field to the "Maintenance"
+    // work-category. Detection mirrors Task.jsx: the bound module name contains
+    // 'maintenance' (covers tab-mode formData, URL ?data=, and task rows that
+    // carry their root module name).
+    const isMaintenanceCtx = useMemo(() => {
+        const moduleName = decodedData?.module || formDataValue?.module || formDataValue?.moduleName || formDataValue?.roottaskname || '';
+        return String(moduleName).toLowerCase().includes('maintenance');
+    }, [decodedData, formDataValue]);
+    const maintenanceCategoryId = useMemo(
+        () => taskCategory?.find((cat) => cat.labelname?.toLowerCase().trim() === 'maintenance')?.id ?? '',
+        [taskCategory]
+    );
 
     const isSrEstimateFieldLockedFinal = useMemo(() => {
         const baseLocked = isSrEstimateFieldLocked;
@@ -308,6 +330,7 @@ const SidebarDrawer = ({
 
     useEffect(() => {
         if (open) {
+            setDynamicFilterData([]);
             handleGetTeamMembers();
             handleGetDynamicFilterValue();
         }
@@ -333,8 +356,14 @@ const SidebarDrawer = ({
             taskname: formDataValue?.taskname ?? decodedData?.module,
         };
         const isAddMode = ["AddTask", "root", "meeting"].includes(rootSubrootflagval?.Task);
+        const defaultStatusId = statusData?.find(
+            (st) => st?.labelname?.toLowerCase() === 'pending'
+        )?.id ?? "";
         if (open && isAddMode) {
             setDeadlineCleared(false);
+            setIsTaskNameEmpty(false);
+            setIsCategoryEmpty(false);
+            setIsDuplicateTask(false);
             setFormValues(prev => ({
                 ...prev,
                 taskName: formDataValue?.taskname || formDataValue?.title || formDataValue?.meetingtitle || "",
@@ -347,7 +376,7 @@ const SidebarDrawer = ({
                 createdBy: createdByUsers.length ? createdByUsers : [loggedAssignee],
                 projectLead: formDataValue?.projectLead ?? "",
                 assignee: formDataValue?.assigneids ?? loggedAssignee?.id,
-                status: formDataValue?.statusid ?? "",
+                status: formDataValue?.statusid || defaultStatusId,
                 secStatus: formDataValue?.secstatusid ?? "",
                 priority: formDataValue?.priorityid ?? "",
                 project: (formDataValue?.projectid || formValues?.prModule?.priorityid) ?? "",
@@ -357,10 +386,15 @@ const SidebarDrawer = ({
                 attachment: formDataValue?.attachment ?? null,
                 progress: formDataValue?.progress ?? "",
                 startDate: cleanDate(formDataValue?.StartDate || formDataValue?.start) ?? date?.toISOString(),
-                category: categoryflag ? category?.id : (formDataValue?.workcategoryid || formDataValue?.category) ?? "",
+                category: categoryflag ? category?.id : (formDataValue?.workcategoryid || formDataValue?.category || (isMaintenanceCtx ? maintenanceCategoryId : "")),
                 estimate: formDataValue?.estimate ?? [""],
                 actual: formDataValue?.actual ?? [""],
                 milestoneChecked: formDataValue?.ismilestone ? 1 : 0,
+                blockerChecked: formDataValue?.isblocker ? 1 : 0,
+                istaskno: formDataValue?.istaskno != null
+                    ? (formDataValue?.istaskno ? 1 : 0)
+                    : ((formDataValue?.taskno && formDataValue.taskno != 0) ? 1
+                        : (location?.pathname?.includes('/projects') ? 1 : 0)),
                 estimate_hrs: formDataValue?.estimate_hrs ?? 0,
                 estimate1_hrs: formDataValue?.estimate1_hrs ?? 0,
                 estimate2_hrs: formDataValue?.estimate2_hrs ?? 0,
@@ -375,9 +409,33 @@ const SidebarDrawer = ({
                 createdBy: createdByUsers.length ? createdByUsers : [loggedAssignee],
                 prModule: formDataValue?.prModule || (fallbackPrModule?.projectid && fallbackPrModule) || null,
                 startDate: cleanDate(formDataValue?.StartDate || formDataValue?.start) ?? date?.toISOString(),
+                status: formDataValue?.statusid || defaultStatusId,
+                category: formDataValue?.workcategoryid || formDataValue?.category || (isMaintenanceCtx ? maintenanceCategoryId : prev.category),
             }));
         }
-    }, [open, formDataValue, rootSubrootflagval, dynamicFilterData]);
+    }, [open, formDataValue, rootSubrootflagval]);
+
+    // Default status to "Pending" once status master loads (covers drawer opened before masters arrived)
+    useEffect(() => {
+        if (open && !formValues.status && statusData?.length) {
+            const pendingId = statusData.find(
+                (st) => st?.labelname?.toLowerCase() === 'pending'
+            )?.id;
+            if (pendingId) {
+                setFormValues(prev => (prev.status ? prev : { ...prev, status: pendingId }));
+            }
+        }
+    }, [statusData, open]);
+
+    // Update dynamic dropdowns separately when filter data loads (avoids re-running full form population)
+    useEffect(() => {
+        if (open && dynamicFilterData?.length > 0) {
+            setFormValues(prev => ({
+                ...prev,
+                dynamicDropdowns: dynamicFilterData,
+            }));
+        }
+    }, [dynamicFilterData, open]);
 
     const taskName = useMemo(() => formValues?.taskName?.trim() || "", [formValues?.taskName]);
 
@@ -616,6 +674,8 @@ const SidebarDrawer = ({
             departmentAssigneelist: departmentAssigneeList ?? formDataValue?.assigneids,
             descr: formValues.description ?? formDataValue?.descr,
             ismilestone: formValues.milestoneChecked ? 1 : 0,
+            isblocker: formValues.blockerChecked ? 1 : 0,
+            istaskno: formValues.istaskno ? 1 : 0,
             isAllDay: formValues?.isAllDay ?? formDataValue?.isAllDay,
             estimate_hrs: formValues.estimate_hrs ?? formDataValue?.estimate_hrs,
             estimate1_hrs: formValues.estimate1_hrs ?? formDataValue?.estimate1_hrs,
@@ -649,6 +709,7 @@ const SidebarDrawer = ({
                                 DeadLineDate: updatedFormDataValue.bulkTask[index].deadLineDate,
                                 estimate_hrs: updatedFormDataValue.bulkTask[index].estimate,
                                 ismilestone: updatedFormDataValue.bulkTask[index].milestone,
+                                statusid: updatedFormDataValue.statusid,
                             }
                             : updatedFormDataValue;
 
@@ -774,11 +835,13 @@ const SidebarDrawer = ({
             guests: [logedAssignee],
             progress: "",
             startDate: null,
-            category: "",
+            category: isMaintenanceCtx ? maintenanceCategoryId : "",
             estimate_hrs: "",
             estimate1_hrs: "",
             estimate2_hrs: "",
             milestoneChecked: false,
+            blockerChecked: false,
+            istaskno: location?.pathname?.includes('/projects') ? 1 : 0,
         });
         setIsTaskNameEmpty(false);
         setIsCategoryEmpty(false);
@@ -858,16 +921,87 @@ const SidebarDrawer = ({
                     justifyContent: formValues?.taskName && location?.pathname?.includes('/myCalendar') ? 'space-between' : 'flex-end'
                 }}>
                     {formValues?.taskName && location?.pathname?.includes('/myCalendar') &&
-                        <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                             <Button
                                 variant="contained"
                                 color="primary"
-                                onClick={() => handleRemoveMetting(formDataValue)}
+                                onClick={(e) => setDeleteMenuAnchorEl(e.currentTarget)}
                                 disabled={isLoading || isSubmitting}
                                 className="dangerbtnClassname"
+                                endIcon={<ChevronDown size={16} />}
                             >
                                 Delete
                             </Button>
+                            <Menu
+                                anchorEl={deleteMenuAnchorEl}
+                                open={Boolean(deleteMenuAnchorEl)}
+                                onClose={() => setDeleteMenuAnchorEl(null)}
+                                anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+                                transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                                PaperProps={{
+                                    sx: {
+                                        mt: 1,
+                                        minWidth: 240,
+                                        borderRadius: '12px',
+                                        boxShadow: '0 8px 24px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04)',
+                                        py: 1,
+                                        px: 0.5,
+                                    },
+                                }}
+                            >
+                                <MenuItem
+                                    onClick={() => {
+                                        setDeleteMenuAnchorEl(null);
+                                        handleRemoveMetting(formDataValue);
+                                    }}
+                                    disabled={isLoading || isSubmitting}
+                                    sx={{
+                                        py: 1.25,
+                                        px: 1.5,
+                                        borderRadius: '8px',
+                                        mx: 0.5,
+                                        mb: 0.5,
+                                        '&:hover': { backgroundColor: 'rgba(115, 103, 240, 0.08)' },
+                                    }}
+                                >
+                                    <ListItemIcon sx={{ minWidth: 36, color: '#7367f0' }}>
+                                        <Trash size={18} />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary="Delete"
+                                        secondary="Remove from calendar only"
+                                        primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}
+                                        secondaryTypographyProps={{ fontSize: 11, color: '#888' }}
+                                    />
+                                </MenuItem>
+                                {formDataValue?.taskid && handlePermanentDelete && (
+                                    <MenuItem
+                                        onClick={() => {
+                                            setDeleteMenuAnchorEl(null);
+                                            handlePermanentDelete(formDataValue);
+                                        }}
+                                        disabled={isLoading || isSubmitting}
+                                        sx={{
+                                            py: 1.25,
+                                            px: 1.5,
+                                            borderRadius: '8px',
+                                            mx: 0.5,
+                                            color: '#d90429',
+                                            '&:hover': { backgroundColor: 'rgba(217, 4, 41, 0.08)' },
+                                        }}
+                                    >
+                                        <ListItemIcon sx={{ minWidth: 36, color: '#d90429' }}>
+                                            <Trash2 size={18} />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary="Permanent Delete"
+                                            secondary="Delete calendar + task permanently"
+                                            primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}
+                                            secondaryTypographyProps={{ fontSize: 11, color: '#a3021f' }}
+                                        />
+                                    </MenuItem>
+                                )}
+                            </Menu>
                             <Button
                                 variant="contained"
                                 color="primary"
@@ -955,8 +1089,13 @@ const SidebarDrawer = ({
         return (
             <>
                 <Box className="drawer-header">
-                    <Typography variant="h6" className="drawer-title">
+                    <Typography variant="h6" className="drawer-title" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         {getTitle()}
+                        {formDataValue?.taskid && (formDataValue?.parentid == 0 || formDataValue?.parentid == null) && (
+                            <Tooltip title="Module" arrow>
+                                <Layers size={16} style={{ color: '#7367f0' }} />
+                            </Tooltip>
+                        )}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                         {taskType === "multi_input" && (
@@ -1082,6 +1221,7 @@ const SidebarDrawer = ({
                                             isDuplicateTask={isDuplicateTask}
                                             isCategoryEmpty={isCategoryEmpty}
                                             isTaskRoute={location?.pathname?.includes("/tasks")}
+                                            isModuleRow={Boolean(formDataValue?.taskid) && Number(formDataValue?.parentid ?? 0) === 0}
                                             taskCategory={taskCategory}
                                             statusData={statusData}
                                             secStatusData={secStatusData}

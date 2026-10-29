@@ -46,7 +46,7 @@ const FullTaskViewFilters = ({
 
     const handleApply = () => {
         // Apply drawer-specific filters to the parent state
-        const drawerFields = ['category', 'module', 'dueDate'];
+        const drawerFields = ['category', 'module', 'dueDate', 'entrydate'];
         drawerFields.forEach(field => {
             if (localFilters[field] !== filters[field]) {
                 onFilterChange(field, localFilters[field]);
@@ -60,6 +60,7 @@ const FullTaskViewFilters = ({
             category: null,
             module: null,
             dueDate: null,
+            entrydate: null,
         };
         setLocalFilters(prev => ({ ...prev, ...cleared }));
         // Immediately reset parent state for these fields
@@ -77,7 +78,8 @@ const FullTaskViewFilters = ({
     const activeFilterCount = [
         filters.category,
         filters.module,
-        filters.dueDate
+        filters.dueDate,
+        filters.entrydate
     ].filter(v => v !== null && (Array.isArray(v) ? v.length > 0 : true)).length;
 
     const handleQuickFilter = (type) => {
@@ -383,6 +385,14 @@ const FullTaskViewFilters = ({
                             <CustomDateRangePicker
                                 value={localFilters.dueDate}
                                 onChange={(range) => setLocalFilters(prev => ({ ...prev, dueDate: range }))}
+                            />
+                        </Box>
+
+                        <Box className="form-group" sx={{ mb: 2 }}>
+                            <Typography variant="subtitle2">Created Date</Typography>
+                            <CustomDateRangePicker
+                                value={localFilters.entrydate}
+                                onChange={(range) => setLocalFilters(prev => ({ ...prev, entrydate: range }))}
                             />
                         </Box>
                     </Box>

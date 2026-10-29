@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
+  CircularProgress,
   IconButton,
   InputAdornment,
   TextField,
@@ -21,12 +22,14 @@ import {
   rootSubrootflag,
   selectedCategoryAtom,
   filterDrawer,
+  filterBarOpen as filterBarOpenAtom,
   timerCompOpen,
   Advfilters,
   viewMode,
   copyRowData,
   completedTask,
   archivedTask,
+  exportDynamicFilterLoading,
 } from "../../../Recoil/atom";
 import { toast } from "react-toastify";
 import {
@@ -44,6 +47,8 @@ import {
   UserPlus,
   Users,
   RefreshCw,
+  OctagonAlert,
+  FileSpreadsheet,
 } from "lucide-react";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import { useLocation } from "react-router-dom";
@@ -57,6 +62,7 @@ import useSafeRedirect from "../../../Utils/useSafeRedirect";
 const HeaderButtons = ({
   onFilterChange,
   onButtonClick,
+  activeButton,
   isLoading,
   masterData,
   priorityData,
@@ -74,6 +80,9 @@ const HeaderButtons = ({
   onToggleFavoritesOnly,
   showMilestonesOnly,
   onToggleMilestonesOnly,
+  showBlockersOnly,
+  onToggleBlockersOnly,
+  isTabMode,
   filters: filtersProp,
   queryData: queryDataProp,
   completedFlag: completedFlagProp,
@@ -88,6 +97,10 @@ const HeaderButtons = ({
   isActive,
   onAfterSubmit,
   onRefresh,
+  onExportExcel,
+  extraButtons,
+  hideSearch,
+  searchPlaceholder,
 }) => {
   const { hasAccess } = useAccess();
   const navigate = useSafeRedirect()
@@ -108,6 +121,7 @@ const HeaderButtons = ({
   const [lastNonArchiveView, setLastNonArchiveView] = useState('table');
   const [selectedCategory, setSelectedCategory] = useRecoilState(selectedCategoryAtom);
   const [filterDrawerOpen, setFilterDrawerOpen] = useRecoilState(filterDrawer);
+  const [filterBarOpen, setFilterBarOpen] = useRecoilState(filterBarOpenAtom);
   const setTimerComponentOpen = useSetRecoilState(timerCompOpen);
   const [globalFormDrawerOpen, setGlobalFormDrawerOpen] = useRecoilState(openFormDrawer);
   const formdrawerOpen = formDrawerOpenProp ?? globalFormDrawerOpen;
@@ -117,6 +131,7 @@ const HeaderButtons = ({
   const setViewTaskMode = onViewModeChangeProp ? (v) => onViewModeChangeProp(v) : setGlobalViewTaskMode;
   const globalArchiveFlag = useRecoilValue(archivedTask);
   const globalCompletedFlag = useRecoilValue(completedTask);
+  const isExportingExcel = useRecoilValue(exportDynamicFilterLoading);
   const archiveFlag = archivedFlagProp ?? globalArchiveFlag;
   const completedFlag = completedFlagProp ?? globalCompletedFlag;
   const encodedData = searchParams.get("data");
@@ -132,9 +147,14 @@ const HeaderButtons = ({
     if (Array.isArray(CategorySummary)) {
       setCategoryMaster(CategorySummary);
     }
-    const viewMode = 'table';
-    setView(viewMode);
   }, [CategorySummary, location, isLoading]);
+
+  // Keep the view-toggle icon in sync with the actually rendered view
+  useEffect(() => {
+    if (activeButton && activeButton !== view) {
+      setView(activeButton);
+    }
+  }, [activeButton]);
 
   useEffect(() => {
     if (encodedData) {
@@ -239,11 +259,12 @@ const HeaderButtons = ({
   };
 
   const handleFilterDrOpen = () => {
-    setFilterDrawerOpen(!filterDrawerOpen);
+    setFilterBarOpen((prev) => !prev);
   };
 
   useEffect(() => {
     setFilterDrawerOpen(false);
+    setFilterBarOpen(false);
   }, [location]);
 
   const handleTimerCompOpen = () => {
@@ -279,9 +300,10 @@ const HeaderButtons = ({
     <>
       <Box className="headerButtons">
         <Box className="FirstMainBox">
+          {!hideSearch && (
           <Box sx={{ display: "flex", justifyContent: "end" }}>
             <TextField
-              placeholder="Search tasks..."
+              placeholder={searchPlaceholder || "Search tasks..."}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               size="small"
@@ -297,9 +319,10 @@ const HeaderButtons = ({
                   </InputAdornment>
                 ),
               }}
-              aria-label="Search tasks..."
+              aria-label={searchPlaceholder || "Search tasks..."}
             />
           </Box>
+          )}
           {!isLaptop && (
             <ScrollableCategoryTabs
               taskCategory={categoryMaster}
@@ -322,7 +345,7 @@ const HeaderButtons = ({
                 justifyContent: "center",
                 alignItems: "center",
                 padding: '4px',
-                backgroundColor: filterDrawerOpen ? "#ffd700" : "white",
+                backgroundColor: filterBarOpen ? "#ffd700" : "white",
                 boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
                 "&:hover": {
                   backgroundColor: "#f5f5f5",
@@ -333,7 +356,7 @@ const HeaderButtons = ({
               <FilterAltIcon className="iconbtn" color="#0000008a" fontSize="20px" />
             </IconButton>
           </Tooltip>
-          {onRefresh && (
+          {onRefresh && !isTabMode && (
             <Tooltip
               placement="top"
               title={isRefreshing ? "Refreshing..." : "Refresh data"}
@@ -458,6 +481,38 @@ const HeaderButtons = ({
                   size={20}
                   fill={showMilestonesOnly ? "#fff" : "transparent"}
                   color={showMilestonesOnly ? "#fff" : "#0000008a"}
+                />
+              </IconButton>
+            </Tooltip>
+          )}
+          {location?.pathname?.includes("/tasks") && (
+            <Tooltip
+              placement="top"
+              title={showBlockersOnly ? "Show all tasks" : "Show blockers only"}
+              arrow
+              classes={{ tooltip: "custom-tooltip" }}
+            >
+              <IconButton
+                aria-label="Blocker tasks"
+                onClick={onToggleBlockersOnly}
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: '4px',
+                  backgroundColor: showBlockersOnly ? "#d32f2f" : "white",
+                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                  "&:hover": {
+                    backgroundColor: showBlockersOnly ? "#b71c1c" : "#f5f5f5",
+                    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                  },
+                }}
+              >
+                <OctagonAlert
+                  className="iconbtn"
+                  size={20}
+                  fill={showBlockersOnly ? "#fff" : "transparent"}
+                  color={showBlockersOnly ? "#fff" : "#0000008a"}
                 />
               </IconButton>
             </Tooltip>
@@ -596,6 +651,34 @@ const HeaderButtons = ({
                   </span>
                 </Tooltip>
               </ToggleButtonGroup>
+              {activeButton === "Dynamic-Filter" && onExportExcel && (
+                <Tooltip title={isExportingExcel ? "Exporting..." : "Export to Excel"} arrow placement="top" classes={{ tooltip: 'custom-tooltip' }}>
+                  <IconButton
+                    onClick={() => { if (!isExportingExcel) onExportExcel(); }}
+                    aria-label="Export to Excel"
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      padding: '4px',
+                      borderRadius: "8px",
+                      width: "36px",
+                      height: "36px",
+                      backgroundColor: isExportingExcel ? "#ececec" : "white",
+                      boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                      "&:hover": {
+                        backgroundColor: "#f5f5f5",
+                        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+                      },
+                    }}
+                  >
+                    {isExportingExcel
+                      ? <CircularProgress size={20} sx={{ color: "#666" }} />
+                      : <FileSpreadsheet className="iconbtn" size={20} color="#0000008a" />}
+                  </IconButton>
+                </Tooltip>
+              )}
+              {/* Time tracker hidden per request — uncomment to re-enable
               <IconButton
                 className="buttonClassname"
                 onClick={handleTimerCompOpen}
@@ -604,6 +687,7 @@ const HeaderButtons = ({
               >
                 <TimerIcon className="iconbtn" sx={{ color: "#fff" }} />
               </IconButton>
+              */}
               <ViewToggleButtons view={view} onViewChange={handleViewChange} />
             </Box>
           )}
@@ -619,6 +703,11 @@ const HeaderButtons = ({
                   New
                 </Button>
               }
+            </Box>
+          )}
+          {extraButtons && (
+            <Box sx={{ display: "flex", justifyContent: "end", alignItems: "center" }}>
+              {extraButtons}
             </Box>
           )}
         </Box>

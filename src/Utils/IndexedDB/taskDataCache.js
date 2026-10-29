@@ -16,8 +16,17 @@ const openDB = () => {
   dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => { dbPromise = null; reject(request.error); };
+    // Open blocked by another tab holding an old-version connection —
+    // reject instead of hanging forever (and don't cache the dead promise)
+    request.onblocked = () => { dbPromise = null; reject(new Error('IndexedDB open blocked')); };
+    request.onsuccess = () => {
+      const db = request.result;
+      // Close our connection when another tab requests a version upgrade
+      // so their open isn't blocked by us
+      db.onversionchange = () => db.close();
+      resolve(db);
+    };
 
     request.onupgradeneeded = (event) => {
       const db = event.target.result;

@@ -66,4 +66,15 @@
             color: #888;
         }
     }
+
+    // dashed separator — touches the card edges despite container padding
+    .edgeDivider {
+        margin: 20px -20px;
+        border-top: 1px dashed $secondaryColor;
+        opacity: 0.3;
+
+        @media (max-width: 712px) {
+            margin: 10px -10px;
+        }
+    }
 }

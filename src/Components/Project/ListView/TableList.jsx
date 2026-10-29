@@ -19,7 +19,7 @@ import { useTheme } from "@mui/material/styles";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import "react-resizable/css/styles.css";
 import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
-import { cleanDate, formatDate2, formatDaysDisplay, getRandomAvatarColor, getStatusColor, getUserProfileData, priorityColors, statusColors, } from "../../../Utils/globalfun";
+import { cleanDate, formatDate2, formatDaysDisplay, getStatusColor, getUserProfileData, priorityColors, statusColors, } from "../../../Utils/globalfun";
 import { Eye, Pencil, Plus, Lock, Paperclip, Star, Trash, Unlock } from "lucide-react";
 import ConfirmationDialog from "../../../Utils/ConfirmationDialog/ConfirmationDialog";
 import { assigneeId, formData, openFormDrawer, rootSubrootflag, selectedRowData, taskActionMode } from "../../../Recoil/atom";
@@ -79,13 +79,6 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
         { id: "DeadLineDate", label: "Deadline", width: 100 },
         { id: "actions", label: "Actions", width: 150 },
     ];
-
-    const background = (assignee) => {
-        const avatarBackgroundColor = assignee?.avatar
-            ? "transparent"
-            : getRandomAvatarColor(assignee);
-        return avatarBackgroundColor;
-    };
 
     const [toggleState, setToggleState] = useState({});
     const [autoExpandedOnce, setAutoExpandedOnce] = useState(false);
@@ -822,7 +815,6 @@ const TableView = ({ data, moduleProgress, page, rowsPerPage, handleChangePage, 
                 open={profileOpen}
                 onClose={() => setProfileOpen(false)}
                 profileData={selectedRow}
-                background={background}
                 taskId={profileTaskId}
                 onRemoved={handleProfileRemoved}
             />

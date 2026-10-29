@@ -100,6 +100,14 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData, attachments = [], in
   const handleKeyDown = useCallback((event) => {
     if (!modalOpen) return;
 
+    // Let Home/End scroll inside scrollable previews (e.g. Word docs) instead of jumping slides
+    if (
+      (event.key === 'Home' || event.key === 'End') &&
+      event.target?.closest?.('.word-preview-container')
+    ) {
+      return;
+    }
+
     const keyActions = {
       '+': handleZoomIn,
       '=': handleZoomIn,
@@ -140,16 +148,13 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData, attachments = [], in
   useEffect(() => {
     if (modalOpen) {
       document.addEventListener('keydown', handleKeyDown);
-      const modalElement = document.querySelector('.docs-viewer-modal');
-      if (modalElement) {
-        modalElement.addEventListener('wheel', handleWheel, { passive: false });
-      }
+      // Attach at document level (non-passive) so Ctrl+Wheel is always intercepted,
+      // even over Swiper slides - otherwise the browser zooms the whole page
+      document.addEventListener('wheel', handleWheel, { passive: false });
 
       return () => {
         document.removeEventListener('keydown', handleKeyDown);
-        if (modalElement) {
-          modalElement.removeEventListener('wheel', handleWheel);
-        }
+        document.removeEventListener('wheel', handleWheel);
       };
     }
   }, [modalOpen, handleKeyDown, handleWheel]);
@@ -256,7 +261,7 @@ const DocsViewerModal = ({ modalOpen, closeModal, fileData, attachments = [], in
     }
 
     if (isWord) {
-      return <WordPreview url={url} filename={filename} fileObject={fileObject} />;
+      return <WordPreview url={url} filename={filename} fileObject={fileObject} zoomLevel={zoomLevel} />;
     }
 
     if (isText) {

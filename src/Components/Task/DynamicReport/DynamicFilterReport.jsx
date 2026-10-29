@@ -1,20 +1,21 @@
-import React, { memo, useEffect, useMemo, useState } from "react";
-import { Box, Typography } from "@mui/material";
+import React, { memo, useEffect, useMemo, useRef, useState } from "react";
+import { Box, Typography, Tooltip, useMediaQuery, Skeleton } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { DynamicFilterMasterApi } from "../../../Api/TaskApi/DynamicFilterMasterApi";
 import { DynamicFilterApi } from "../../../Api/TaskApi/DynamicFilterApi";
-import { Advfilters, dynamicFilterDrawer } from "../../../Recoil/atom";
-import { useRecoilState } from "recoil";
+import { Advfilters, dynamicFilterDrawer, exportDynamicFilterExcel, exportDynamicFilterLoading, filterDrawer } from "../../../Recoil/atom";
+import * as XLSX from "xlsx";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { cleanDate, formatDate2, getcolorsData, priorityColors, statusColors } from "../../../Utils/globalfun";
 import DynamicFilterBadge from "../../ShortcutsComponent/DynamincBadge";
 import { toast } from "react-toastify";
-import LoadingBackdrop from "../../../Utils/Common/LoadingBackdrop";
 import { DynamicFilterEditApi } from "../../../Api/TaskApi/DynamicFilterEditApi";
 import ReusableAvatar from "../../ShortcutsComponent/ReusableAvatar";
 import DynamicColumnFilterDrawer from "./DynamicColumnFilterDrawer";
 import { useLocation } from "react-router-dom";
 import StatusBadge from "../../ShortcutsComponent/StatusBadge";
 import PriorityBadge from "../../ShortcutsComponent/PriorityBadge";
+import { Star, Flag, OctagonAlert, Folder } from "lucide-react";
 
 const normalize = (s) => (s || "").toString().trim().toLowerCase().replace(/\s+/g, "");
 
@@ -29,12 +30,22 @@ const columnHeaderOverrides = {
   statusid: "STATUS",
   createdbyid: "CREATED BY",
   priorityid: "PRIORITY",
+  taskno: "TASK / MM NO",
+  entrydate: "ENTRY DATE",
 };
 
-const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId = {} }) => {
+const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId = {}, queryData = null, completedFlag = false, archivedFlag = false, filtersProp = null, setFiltersProp = null, isActiveProp, refreshKey = 0, showFavoritesOnly = false, showMilestonesOnly = false, showBlockersOnly = false }) => {
   const location = useLocation();
   const [dynamicFilterOpen, setDynamicFiltersOpen] = useRecoilState(dynamicFilterDrawer);
-  const [filters] = useRecoilState(Advfilters);
+  const [globalFilters, setGlobalFilters] = useRecoilState(Advfilters);
+  const filters = filtersProp ?? globalFilters;
+  const setFilters = setFiltersProp ?? setGlobalFilters;
+  const showAdvancedFil = useRecoilValue(filterDrawer);
+  const isLaptop = useMediaQuery("(max-width:1150px)");
+  const gridOffset = showAdvancedFil && !isLaptop ? 395 : 250;
+  const exportKey = useRecoilValue(exportDynamicFilterExcel);
+  const setExportLoading = useSetRecoilState(exportDynamicFilterLoading);
+  const isPaneActive = isActiveProp !== false;
   const [isLoading, setIsLoading] = useState(false);
   const [status500, setStatus500] = useState(false);
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 100 });
@@ -47,10 +58,12 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
   const [rd3, setRd3] = useState([]);
   const [qlColIdToName, setQlColIdToName] = useState({});
   const [rawRows, setRawRows] = useState([]);
+  const gridWrapRef = useRef(null);
   const [finalRowData, setFinalRowData] = useState([]);
   const taskAssigneeData = JSON?.parse(localStorage.getItem('taskAssigneeData'));
   const taskStatusData = JSON?.parse(localStorage.getItem("taskstatusData"));
   const taskPriorityData = JSON?.parse(localStorage.getItem("taskpriorityData"));
+  const taskProjectData = JSON?.parse(sessionStorage.getItem("taskprojectData") || localStorage.getItem("taskprojectData") || "[]");
   const taskWorkCategoryData = JSON?.parse(localStorage.getItem("taskworkcategoryData"));
   const taskCategory = JSON?.parse(localStorage.getItem("taskworkcategoryData"));
   const searchParams = new URLSearchParams(location.search);
@@ -61,8 +74,8 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
   }, [dynamicFilterOpen])
 
   useEffect(() => {
-    let parsedData = null;
-    if (encodedData) {
+    let parsedData = queryData || null;
+    if (!parsedData && encodedData) {
       try {
         const decodedString = decodeURIComponent(encodedData);
         const jsonString = atob(decodedString);
@@ -81,7 +94,17 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
         setRd2(masterRes?.rd2 ?? []);
         setRd3(masterRes?.rd3 ?? []);
 
-        const dataRes = await DynamicFilterApi(parsedData?.taskid);
+        // Entry-date filter → fdate/tdate (supports range object or single ISO date)
+        const entryF = typeof filters?.entrydate === 'object' && filters?.entrydate ? filters.entrydate.startDate : filters?.entrydate;
+        const entryT = typeof filters?.entrydate === 'object' && filters?.entrydate ? filters.entrydate.endDate : filters?.entrydate;
+
+        const dataRes = await DynamicFilterApi({
+          ...parsedData,
+          isCompleted: completedFlag ? 1 : 0,
+          isarchive: archivedFlag ? 1 : 0,
+          fdate: entryF || '',
+          tdate: entryT || '',
+        });
         if (dataRes?.rd[0]?.stat == 0) {
           toast.error(dataRes?.rd[0]?.stat_msg);
           setRawRows([]);
@@ -97,7 +120,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
       }
     };
     fetchData();
-  }, [location.pathname]);
+  }, [location.pathname, queryData?.taskid, completedFlag, archivedFlag, refreshKey, filters?.entrydate]);
 
   // Map attribute IDs to labels
   const idToAttr = useMemo(() => {
@@ -127,8 +150,23 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
   // Grid columns
   const gridColumns = useMemo(() => {
     // Dynamic data columns (exclude technical/id & group columns)
+    const flagIcons = {
+      isfavourite: <Star size={15} color="#FFD700" fill="#FFD700" />,
+      ismilestone: <Flag size={15} color="#7367f0" fill="#7367f0" />,
+      isblocker: <OctagonAlert size={15} color="#d32f2f" />,
+    };
+    const flagTooltips = {
+      isfavourite: "Favourite",
+      ismilestone: "Milestone",
+      isblocker: "Blocker",
+    };
+    const hiddenFlagFields = ["isfavourite", "ismilestone", "isblocker"];
+
     const dynamicColumns = allColumnNames
-      ?.filter((name) => !/^G\d+$/i.test(name) && name !== "taskno" && name !== "id")
+      ?.filter((name) => !/^G\d+$/i.test(name) && name !== "taskno" && name !== "maintenanceno" && name !== "id" && name !== "projectid"
+        && name !== "createdbyid" // Created By hidden — remove this + uncomment its renderCell below to re-show
+        && name !== "entrydate" // Entry Date hidden from grid — still filterable via drawer + exported to Excel
+        && !hiddenFlagFields.includes(name))
       .map((name) => {
         const isTaskName = name === "taskname";
         const isHourColumn = name === "estimate_hrs" || name === "working_hr";
@@ -177,35 +215,109 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
           };
         }
 
+        if (name === "entrydate") {
+          return {
+            ...base,
+            renderCell: (params) =>
+              params?.row?.entrydate && cleanDate(params?.row?.entrydate)
+                ? formatDate2(cleanDate(params?.row?.entrydate))
+                : "-",
+          };
+        }
+
         if (name === "taskname") {
           return {
             ...base,
             renderCell: (params) => {
               const taskno = params?.row?.taskno;
+              const displayNo = params?.row?.maintenanceno ? params?.row?.maintenanceno : taskno;
               const taskname = params?.row?.taskname;
+              const projectLabel = taskProjectData?.find(
+                (item) => item?.id == params?.row?.projectid
+              )?.labelname;
+              const activeFlags = hiddenFlagFields.filter((f) => params?.row?.[f] == 1);
+              const hasProject = params?.row?.projectid && params?.row?.projectid != 0;
               return (
                 <Box
                   sx={{
                     display: "flex",
-                    alignItems: "center",
+                    flexDirection: "column",
+                    justifyContent: "center",
                     overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
+                    lineHeight: 1.25,
                   }}
                 >
-                  {taskno && taskno !== 0 && taskno !== "0" && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.75,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {displayNo && displayNo !== 0 && displayNo !== "0" && (
+                      <Box
+                        component="span"
+                        sx={{
+                          marginRight: "4px",
+                          color: "#666",
+                          fontWeight: "500",
+                        }}
+                      >
+                        {displayNo}
+                      </Box>
+                    )}
+                    <Box component="span">{taskname || "-"}</Box>
+                  </Box>
+                  {(hasProject || activeFlags.length > 0) && (
                     <Box
                       component="span"
                       sx={{
-                        marginRight: "8px",
-                        color: "#666",
-                        fontWeight: "500",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: "11px",
+                        fontWeight: 400,
+                        color: "#9a97a5",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
                       }}
                     >
-                      {taskno}
+                      {hasProject && (
+                        <Tooltip title="Project" arrow>
+                          <Box
+                            component="span"
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <Folder size={12} color="#7367f0" style={{ flexShrink: 0 }} />
+                            <Box
+                              component="span"
+                              sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+                            >
+                              {projectLabel || params?.row?.projectid}
+                            </Box>
+                          </Box>
+                        </Tooltip>
+                      )}
+                      {activeFlags.map((f) => (
+                        <Tooltip key={f} title={flagTooltips[f]} arrow>
+                          <Box
+                            component="span"
+                            sx={{ display: "inline-flex", alignItems: "center", flexShrink: 0 }}
+                          >
+                            {flagIcons[f]}
+                          </Box>
+                        </Tooltip>
+                      ))}
                     </Box>
                   )}
-                  <Box component="span">{taskname || "-"}</Box>
                 </Box>
               );
             },
@@ -227,18 +339,19 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
           };
         }
 
-        if (name === "createdbyid") {
-          return {
-            ...base,
-            renderCell: (params) => {
-              const assigneeIdArray = params?.row?.createdbyid
-              const matchedAssignees = taskAssigneeData?.filter((user) =>
-                assigneeIdArray == user.id
-              );
-              return <ReusableAvatar assineeData={matchedAssignees} width={25} max={4} />;
-            },
-          };
-        }
+        // Created By column hidden — uncomment this block and remove "createdbyid" from the filter above to re-show
+        // if (name === "createdbyid") {
+        //   return {
+        //     ...base,
+        //     renderCell: (params) => {
+        //       const assigneeIdArray = params?.row?.createdbyid
+        //       const matchedAssignees = taskAssigneeData?.filter((user) =>
+        //         assigneeIdArray == user.id
+        //       );
+        //       return <ReusableAvatar assineeData={matchedAssignees} width={25} max={4} />;
+        //     },
+        //   };
+        // }
 
         if (name === "workcategoryid") {
           return {
@@ -292,6 +405,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
             },
           };
         }
+
         return base;
       });
 
@@ -323,6 +437,122 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
     setFinalRowData(originalRows);
   }, [originalRows]);
 
+  // MUI X v7 known bug (mui-x#16667): a DataGrid that mounts inside a hidden
+  // container (display:none pane / route shell) calculates wrong column widths
+  // and never recovers — resize()/forceUpdate() don't fix it. Gate mounting on
+  // IntersectionObserver instead: elements inside display:none ancestors are
+  // NOT intersecting, so the grid only mounts while genuinely visible and
+  // remounts clean on every hide → show. rootMargin lets it mount slightly
+  // before scrolling into view.
+  const [gridIntersecting, setGridIntersecting] = useState(false);
+  useEffect(() => {
+    const el = gridWrapRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setGridIntersecting(entry.isIntersecting && entry.boundingClientRect.width > 0),
+      { rootMargin: "300px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  // Excel export — triggered from HeaderButtons via exportDynamicFilterExcel atom
+  useEffect(() => {
+    if (!exportKey || !isPaneActive || isLoading) return;
+    const hidden = ["id", "projectid", "createdbyid", "isfavourite", "ismilestone", "isblocker", "maintenanceno"];
+    const filteredNames = allColumnNames.filter(
+      (name) => !/^G\d+$/i.test(name) && !hidden.includes(name)
+    );
+    const visibleNames = filteredNames.includes("taskno")
+      ? ["taskno", ...filteredNames.filter((n) => n !== "taskno")]
+      : filteredNames;
+    const getCellValue = (row, name) => {
+      if (name === "taskname") {
+        return row?.taskname ?? "";
+      }
+      if (name === "taskno") {
+        const no = row?.maintenanceno ? row?.maintenanceno : row?.taskno;
+        return no && no !== 0 && no !== "0" ? no : "";
+      }
+      if (name === "assignee") {
+        return (row?.assignee || "").split(",").map((id) => {
+          const u = taskAssigneeData?.find((u) => u.id == id);
+          return u ? `${u?.firstname ?? ""} ${u?.lastname ?? ""}`.trim() : "";
+        }).filter(Boolean).join(", ");
+      }
+      if (name === "deadline" || name === "start_date" || name === "entrydate") {
+        return row?.[name] && cleanDate(row?.[name]) ? formatDate2(cleanDate(row?.[name])) : "";
+      }
+      if (name === "statusid") return taskStatusData?.find((s) => s.id == row?.statusid)?.labelname ?? "";
+      if (name === "priorityid") return taskPriorityData?.find((p) => p.id == row?.priorityid)?.labelname ?? "";
+      if (name === "workcategoryid") return taskWorkCategoryData?.find((c) => c.id == row?.workcategoryid)?.labelname ?? "";
+      if (masterColNameSet.has(name)) return row?.[name] ? (idToAttr.get(Number(row?.[name])) ?? row?.[name]) : "";
+      return row?.[name] ?? "";
+    };
+    setExportLoading(true);
+    let cancelled = false;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    // Large exports go out as CSV — a Blob of text chunks stays small in memory,
+    // while XLSX would need ~1.5M cell objects for 1 lakh rows and can crash the tab
+    const useCsv = filteredRows.length > 20000;
+
+    const timer = setTimeout(async () => {
+      try {
+        const headers = ["SR#", ...visibleNames.map(
+          (name) => (columnHeaderOverrides[name?.toLowerCase()] || name?.replace(/_/g, " "))?.toUpperCase()
+        )];
+        const CHUNK = 5000;
+
+        if (useCsv) {
+          const esc = (v) => {
+            const s = v == null ? "" : String(v);
+            return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+          };
+          // BOM (\uFEFF) so Excel reads UTF-8 correctly
+          const parts = ["﻿" + headers.map(esc).join(",") + "\r\n"];
+          for (let i = 0; i < filteredRows.length; i += CHUNK) {
+            if (cancelled) return;
+            parts.push(
+              filteredRows.slice(i, i + CHUNK)
+                .map((row) => [row.srNo, ...visibleNames.map((n) => getCellValue(row, n))].map(esc).join(","))
+                .join("\r\n") + "\r\n"
+            );
+            await new Promise((r) => setTimeout(r, 0));
+          }
+          if (cancelled) return;
+          const blob = new Blob(parts, { type: "text/csv;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `DynamicFilterReport_${dateStr}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } else {
+          const ws = XLSX.utils.aoa_to_sheet([headers]);
+          for (let i = 0; i < filteredRows.length; i += CHUNK) {
+            if (cancelled) return;
+            const aoa = filteredRows.slice(i, i + CHUNK).map(
+              (row) => [row.srNo, ...visibleNames.map((name) => getCellValue(row, name))]
+            );
+            XLSX.utils.sheet_add_aoa(ws, aoa, { origin: -1 });
+            await new Promise((r) => setTimeout(r, 0));
+          }
+          if (cancelled) return;
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Tasks");
+          XLSX.writeFile(wb, `DynamicFilterReport_${dateStr}.xlsx`);
+        }
+      } catch (error) {
+        console.error("Excel export failed:", error);
+        toast.error("Export failed");
+      } finally {
+        setExportLoading(false);
+      }
+    }, 50);
+    return () => { cancelled = true; clearTimeout(timer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exportKey]);
+
   const handleDataChnage = async (task, col, newVal) => {
     try {
       const data = {
@@ -348,6 +578,11 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
   // Filtered rows
   const filteredRows = useMemo(() => {
     const filtered = finalRowData.filter((row) => {
+      // Quick toggle filters (favourite / milestone / blocker)
+      if (showFavoritesOnly && row?.isfavourite != 1) return false;
+      if (showMilestonesOnly && row?.ismilestone != 1) return false;
+      if (showBlockersOnly && row?.isblocker != 1) return false;
+
       const matchesGroups = Object.entries(selectedAttrsByGroupId).every(([gid, vals]) => {
         if (!vals?.length) return true;
         const colKey = groupIdToColumnKey[gid];
@@ -362,27 +597,49 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
       });
       if (!matchesGroups) return false;
 
+      // Date filters — Filters.jsx writes a range object { startDate, endDate };
+      // clearing emits { startDate: "", endDate: "" } (truthy!) so must validate first
+      const isValidRange = (v) => v && typeof v === 'object' && v.startDate && v.endDate;
+      const dateFilterActive = (f) => isValidRange(f) || (f && typeof f !== 'object');
+      const withinRange = (dateStr, range) => {
+        const d = new Date(dateStr); d.setHours(0, 0, 0, 0);
+        const s = new Date(range.startDate); s.setHours(0, 0, 0, 0);
+        const e = new Date(range.endDate); e.setHours(23, 59, 59, 999);
+        return d >= s && d <= e;
+      };
+
       // Date filtering for start_date
-      if (filters?.startDate) {
-        const rowStartDate = row?.start_date;
-        if (rowStartDate && cleanDate(rowStartDate)) {
-          const filterStartDate = formatDate2(filters.startDate);
-          const rowFormattedStartDate = formatDate2(cleanDate(rowStartDate));
-          if (filterStartDate !== rowFormattedStartDate) return false;
-        } else {
-          return false; // No start date in row, but filter is applied
+      if (dateFilterActive(filters?.startDate)) {
+        const rowStartDate = row?.start_date && cleanDate(row.start_date);
+        if (!rowStartDate) return false;
+        if (isValidRange(filters.startDate)) {
+          if (!withinRange(rowStartDate, filters.startDate)) return false;
+        } else if (formatDate2(filters.startDate) !== formatDate2(rowStartDate)) {
+          return false;
         }
       }
 
       // Date filtering for deadline
-      if (filters?.dueDate) {
-        const rowDeadline = row?.deadline;
-        if (rowDeadline && cleanDate(rowDeadline)) {
-          const filterDueDate = formatDate2(filters.dueDate);
-          const rowFormattedDeadline = formatDate2(cleanDate(rowDeadline));
-          if (filterDueDate !== rowFormattedDeadline) return false;
-        } else {
-          return false; // No deadline in row, but filter is applied
+      if (dateFilterActive(filters?.dueDate)) {
+        const rowDeadline = row?.deadline && cleanDate(row.deadline);
+        if (!rowDeadline) return false;
+        if (isValidRange(filters.dueDate)) {
+          if (!withinRange(rowDeadline, filters.dueDate)) return false;
+        } else if (formatDate2(filters.dueDate) !== formatDate2(rowDeadline)) {
+          return false;
+        }
+      }
+
+      // Entry-date filtering — only MM-numbered (maintenance module) tasks
+      // qualify; subtasks carry no maintenanceno and drop out.
+      if (dateFilterActive(filters?.entrydate)) {
+        if (!row?.maintenanceno) return false;
+        const rowEntry = row?.entrydate && cleanDate(row.entrydate);
+        if (!rowEntry) return false;
+        if (isValidRange(filters.entrydate)) {
+          if (!withinRange(rowEntry, filters.entrydate)) return false;
+        } else if (formatDate2(filters.entrydate) !== formatDate2(rowEntry)) {
+          return false;
         }
       }
 
@@ -435,6 +692,18 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
         } else {
           const rowPriorityLabel = taskPriorityData?.find(pr => pr.id == rowPriorityId)?.labelname;
           if (!rowPriorityLabel || normalize(rowPriorityLabel) !== normalize(filters.priority)) return false;
+        }
+      }
+
+      // Project filtering (filters.project -> row.projectid)
+      if (filters?.project) {
+        const rowProjectId = row?.projectid;
+        const filterProject = taskProjectData?.find(pr => pr.labelname === filters.project);
+        if (filterProject) {
+          if (rowProjectId != filterProject.id) return false;
+        } else {
+          const rowProjectLabel = taskProjectData?.find(pr => pr.id == rowProjectId)?.labelname;
+          if (!rowProjectLabel || normalize(rowProjectLabel) !== normalize(filters.project)) return false;
         }
       }
 
@@ -570,9 +839,16 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
       return true;
     });
 
+    // Latest start_date first; rows without a valid start date sink to the bottom
+    filtered.sort((a, b) => {
+      const aTime = a?.start_date && cleanDate(a.start_date) ? new Date(cleanDate(a.start_date)).getTime() || 0 : 0;
+      const bTime = b?.start_date && cleanDate(b.start_date) ? new Date(cleanDate(b.start_date)).getTime() || 0 : 0;
+      return bTime - aTime;
+    });
+
     // Add sequential SR NO based on current filtered order (1-based)
     return filtered.map((row, index) => ({ ...row, srNo: index + 1 }));
-  }, [finalRowData, selectedAttrsByGroupId, groupIdToColumnKey, idToAttr, filters, masterColNameSet, taskAssigneeData, taskWorkCategoryData, taskCategory, taskStatusData, taskPriorityData]);
+  }, [finalRowData, selectedAttrsByGroupId, groupIdToColumnKey, idToAttr, filters, masterColNameSet, taskAssigneeData, taskWorkCategoryData, taskCategory, taskStatusData, taskPriorityData, taskProjectData, showFavoritesOnly, showMilestonesOnly, showBlockersOnly]);
 
   // Count active filters
   const activeFiltersCount = Object.keys(filters).filter(key =>
@@ -581,20 +857,20 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
 
   return (
     <Box sx={{ pt: 2 }}>
-      {isLoading && filteredRows?.length == 0 && (
-        <Box sx={{ textAlign: "center", my: 2 }}>
-          <LoadingBackdrop isLoading={isLoading ? 'true' : 'false'} />
-        </Box>
-      )}
       {status500 && (
         <Typography color="error" sx={{ mb: 2 }}>
           Something went wrong while fetching data.
         </Typography>
       )}
-      {filteredRows?.length != 0 &&
-        <Box sx={{ height: "calc(100vh - 250px)" }}>
+      {
+        <Box ref={gridWrapRef} sx={{ height: `calc(100vh - ${gridOffset}px)`, width: "100%", minWidth: 0 }}>
+          {allColumnNames.length === 0 || !gridIntersecting ? (
+            <Skeleton variant="rounded" width="100%" height="100%" sx={{ transform: "translateY(-10px)", borderRadius: 2 }} />
+          ) : (
           <DataGrid
             rows={filteredRows}
+            loading={isLoading}
+            localeText={{ noRowsLabel: 'No matching records found' }}
             columns={gridColumns}
             getRowId={(r) => r.id}
             pageSize={paginationModel.pageSize}
@@ -626,6 +902,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
               }
             }}
           />
+          )}
         </Box>
       }
 
@@ -634,6 +911,8 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
         open={filterDrawerOpen}
         onClose={() => { setFilterDrawerOpen(false); setDynamicFiltersOpen(false) }}
         availableColumns={allColumnNames}
+        filters={filters}
+        setFilters={setFilters}
         masterData={{}}
         idToAttr={idToAttr}
         masterColNameSet={masterColNameSet}

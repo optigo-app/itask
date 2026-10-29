@@ -30,7 +30,7 @@ import {
 import LoadingBackdrop from '../../../Utils/Common/LoadingBackdrop';
 import StatusBadge from '../../ShortcutsComponent/StatusBadge';
 import TablePaginationFooter from '../../ShortcutsComponent/Pagination/TablePaginationFooter';
-import { background, formatDate2, formatDaysDisplay, getUserProfileData, mapTaskLabels, priorityColors, statusColors } from '../../../Utils/globalfun';
+import { formatDate2, formatDaysDisplay, getUserProfileData, mapTaskLabels, priorityColors, statusColors } from '../../../Utils/globalfun';
 import PriorityBadge from '../../ShortcutsComponent/PriorityBadge';
 import AssigneeAvatarGroup from '../../ShortcutsComponent/Assignee/AssigneeAvatarGroup';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
@@ -98,6 +98,7 @@ const FullTaskView = () => {
             endDate: localISODate()
         },
         dueDate: null,
+        entrydate: null,
         module: null,
     });
 
@@ -319,7 +320,7 @@ const FullTaskView = () => {
 
     useEffect(() => {
         fetchData();
-    }, [page, rowsPerPage, sortConfig, searchQuery, filters?.status, filters?.priority, filters?.category, filters?.assignee, filters?.startDate, filters?.dueDate, filters?.module, showCompleted]);
+    }, [page, rowsPerPage, sortConfig, searchQuery, filters?.status, filters?.priority, filters?.category, filters?.assignee, filters?.startDate, filters?.dueDate, filters?.entrydate, filters?.module, showCompleted]);
 
     const handleChangePage = (newPage) => {
         setPage(newPage);
@@ -366,6 +367,7 @@ const FullTaskView = () => {
                 endDate: localISODate()
             },
             dueDate: null,
+            entrydate: null,
             module: null,
         });
         setSearchInput('');
@@ -500,7 +502,7 @@ const FullTaskView = () => {
 
             return matchesStartDate && matchesDueDate;
         });
-    }, [data, filters?.startDate, filters?.dueDate]);
+    }, [data, filters?.startDate, filters?.dueDate, filters?.entrydate]);
 
     const hasFrontendFilters = Boolean(
         filters?.startDate?.startDate ||
@@ -752,7 +754,6 @@ const FullTaskView = () => {
                 open={profileOpen}
                 onClose={() => setProfileOpen(false)}
                 profileData={selectedItem}
-                background={background}
                 taskId={profileTaskId}
                 onRemoved={() => { }}
             />

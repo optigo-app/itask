@@ -1,13 +1,14 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 import { getAuthData, getClientIpAddress } from "../../Utils/globalfun";
 
-export const taskCommentAddApi = async (selectedRow, newCommentData, attachments = []) => {
+export const taskCommentAddApi = async (selectedRow, newCommentData, attachments = [], parentId = 0) => {
     const AuthData = getAuthData();
     const ipAddress = await getClientIpAddress();
     try {
         const combinedValue = JSON.stringify({
             taskid: `${selectedRow?.taskid ?? '0'}`,
             comment: `${newCommentData ?? ''}`,
+            parentid: `${parentId ?? 0}`,
             folders: attachments ?? [],
         });
 
