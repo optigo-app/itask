@@ -8,7 +8,6 @@ import {
     Popover,
     Typography, 
     Tooltip,
-    Drawer,
     Divider,
     Button,
     Badge,
@@ -335,88 +334,74 @@ const FullTaskViewFilters = ({
                 </Box>
             </Box>
 
-            {/* Filter Drawer */}
-            <Drawer anchor="right" open={showAdvancedFilters} onClose={() => setShowAdvancedFilters(false)}>
-                <Box className="filterDrawerModal" sx={{ width: 350, padding: '10px 20px', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <Box sx={{ flexGrow: 1 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography variant="h6" gutterBottom>Filters</Typography>
-                            <IconButton onClick={() => setShowAdvancedFilters(false)}>
-                                <CircleX />
-                            </IconButton>
-                        </Box>
-                        <Divider sx={{ mb: 2, mt: 1 }} />
-
-                        <Box className="form-group" sx={{ mb: 2 }}>
-                            <Typography variant="subtitle2">Category</Typography>
-                            <Autocomplete
-                                size="small"
-                                sx={{ width: '100%' }}
-                                value={localFilters.category}
-                                onChange={(_, value) => setLocalFilters(prev => ({ ...prev, category: value }))}
-                                options={taskCategory || []}
-                                getOptionLabel={(option) => option?.labelname || ''}
-                                isOptionEqualToValue={(option, value) => option?.id === value?.id}
-                                renderInput={(params) => <TextField {...params} placeholder="Category" className="textfieldsClass" />}
-                                className="filterAutocomplete"
-                                {...commonTextFieldProps}
-                            />
-                        </Box>
-
-                        <Box className="form-group" sx={{ mb: 2 }}>
-                            <Typography variant="subtitle2">Module</Typography>
-                            <Autocomplete
-                                size="small"
-                                sx={{ width: '100%' }}
-                                value={localFilters.module}
-                                onChange={(_, value) => setLocalFilters(prev => ({ ...prev, module: value }))}
-                                options={moduleData || []}
-                                getOptionLabel={(option) => option?.taskname || option?.labelname || option?.projectname || ''}
-                                isOptionEqualToValue={(option, value) => option?.taskid === value?.taskid}
-                                renderInput={(params) => <TextField {...params} placeholder="Module" className="textfieldsClass" />}
-                                className="filterAutocomplete"
-                                {...commonTextFieldProps}
-                            />
-                        </Box>
-
-
-                        <Box className="form-group" sx={{ mb: 2 }}>
-                            <Typography variant="subtitle2">Due Date</Typography>
-                            <CustomDateRangePicker
-                                value={localFilters.dueDate}
-                                onChange={(range) => setLocalFilters(prev => ({ ...prev, dueDate: range }))}
-                            />
-                        </Box>
-
-                        <Box className="form-group" sx={{ mb: 2 }}>
-                            <Typography variant="subtitle2">Created Date</Typography>
-                            <CustomDateRangePicker
-                                value={localFilters.entrydate}
-                                onChange={(range) => setLocalFilters(prev => ({ ...prev, entrydate: range }))}
-                            />
-                        </Box>
+            {/* inline filters — shown on screen in 2 lines, no drawer */}
+            {showAdvancedFilters && (
+                <Box sx={{
+                    mt: 1.5, p: 1.5, borderRadius: '10px',
+                    border: '1px solid #ececf1', background: '#fafafc',
+                    display: 'flex', flexWrap: 'wrap', gap: 1.25, rowGap: 1.25,
+                    alignItems: 'flex-end',
+                }}>
+                    <Box className="form-group" sx={{ flex: '1 1 160px', minWidth: 160 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.5, fontSize: '0.72rem', color: '#6b7280' }}>Category</Typography>
+                        <Autocomplete
+                            size="small"
+                            sx={{ width: '100%' }}
+                            value={localFilters.category}
+                            onChange={(_, value) => setLocalFilters(prev => ({ ...prev, category: value }))}
+                            options={taskCategory || []}
+                            getOptionLabel={(option) => option?.labelname || ''}
+                            isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                            renderInput={(params) => <TextField {...params} placeholder="Category" className="textfieldsClass" />}
+                            className="filterAutocomplete"
+                            {...commonTextFieldProps}
+                        />
                     </Box>
 
-                    <Box sx={{ pt: 2, pb: 1, display: 'flex', gap: 2 }}>
-                        <Button
-                            variant="contained"
-                            fullWidth
-                            onClick={handleReset}
-                            className='secondaryBtnClassname'
-                        >
+                    <Box className="form-group" sx={{ flex: '1 1 160px', minWidth: 160 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.5, fontSize: '0.72rem', color: '#6b7280' }}>Module</Typography>
+                        <Autocomplete
+                            size="small"
+                            sx={{ width: '100%' }}
+                            value={localFilters.module}
+                            onChange={(_, value) => setLocalFilters(prev => ({ ...prev, module: value }))}
+                            options={moduleData || []}
+                            getOptionLabel={(option) => option?.taskname || option?.labelname || option?.projectname || ''}
+                            isOptionEqualToValue={(option, value) => option?.taskid === value?.taskid}
+                            renderInput={(params) => <TextField {...params} placeholder="Module" className="textfieldsClass" />}
+                            className="filterAutocomplete"
+                            {...commonTextFieldProps}
+                        />
+                    </Box>
+
+                    <Box className="form-group" sx={{ flex: '1 1 200px', minWidth: 200 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.5, fontSize: '0.72rem', color: '#6b7280' }}>Due Date</Typography>
+                        <CustomDateRangePicker
+                            value={localFilters.dueDate}
+                            onChange={(range) => setLocalFilters(prev => ({ ...prev, dueDate: range }))}
+                        />
+                    </Box>
+
+                    <Box className="form-group" sx={{ flex: '1 1 200px', minWidth: 200 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.5, fontSize: '0.72rem', color: '#6b7280' }}>Created Date</Typography>
+                        <CustomDateRangePicker
+                            value={localFilters.entrydate}
+                            onChange={(range) => setLocalFilters(prev => ({ ...prev, entrydate: range }))}
+                        />
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
+                        <Button variant="outlined" size="small" onClick={handleReset}
+                            className='secondaryBtnClassname' sx={{ textTransform: 'none' }}>
                             Reset
                         </Button>
-                        <Button
-                            variant="contained"
-                            fullWidth
-                            onClick={handleApply}
-                            className='buttonClassname'
-                        >
+                        <Button variant="contained" size="small" onClick={handleApply}
+                            className='buttonClassname' sx={{ textTransform: 'none' }}>
                             Apply
                         </Button>
                     </Box>
                 </Box>
-            </Drawer>
+            )}
 
             <Popover
                 id={infoId}

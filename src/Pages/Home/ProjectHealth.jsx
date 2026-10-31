@@ -54,7 +54,7 @@ const ProjectHealth = ({ projects, navigate, isLoding }) => {
                                                 )}
                                             </Box>
                                             {/* progress + pct — same fixed share on every row */}
-                                            <Box sx={{ flex: 1, minWidth: 120, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Box sx={{ flex: 0.5, minWidth: 80, display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <LinearProgress
                                                     variant="determinate"
                                                     value={p.pct}
@@ -76,9 +76,11 @@ const ProjectHealth = ({ projects, navigate, isLoding }) => {
                                             >
                                                 {health.label}
                                             </Box>
-                                            <Typography variant='caption' sx={{ color: '#7d7f85', width: 48, textAlign: 'right', flexShrink: 0 }}>
-                                                {p.done}/{p.total}
-                                            </Typography>
+                                            <Tooltip title={`${p.done} completed of ${p.total} tasks`} arrow>
+                                                <Typography variant='caption' sx={{ color: '#7d7f85', minWidth: 48, textAlign: 'right', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                                    {p.done}/{p.total}
+                                                </Typography>
+                                            </Tooltip>
                                         </Box>
                                     );
                                 })}

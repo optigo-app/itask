@@ -1,3 +1,4 @@
+import { useTabStore } from '../Store/useTabStore';
 import { toast } from "react-toastify";
 import { AttrGroupApi, AttrListApi, AttrMasterNameApi, BindAttrGroupApi } from "../Api/MasterApi/AddAdvFilterGroupAttrApi";
 import { AssigneeMaster } from "../Api/MasterApi/AssigneeMaster";
@@ -439,7 +440,7 @@ export const priorityColors = {
     },
     normal: {
         color: "#212529",
-        bgcolor: "#e2e6ea"
+        backgroundColor: "#e2e6ea",
     },
 };
 
@@ -655,7 +656,32 @@ export const colorMaster = {
     "rust": { "light": "#fbe9e7", "dark": "#b7410e", "name": "Rust" },
     "stoneGrey": { "light": "#eceff1", "dark": "#6c7a89", "name": "Stone Grey" },
     "midnightBlue": { "light": "#e8eaf6", "dark": "#191970", "name": "Midnight Blue" },
-    "cerulean": { "light": "#e3f2fd", "dark": "#007BA7", "name": "Cerulean" }
+    "cerulean": { "light": "#e3f2fd", "dark": "#007BA7", "name": "Cerulean" },
+    "critical": { "light": "#b71c1c", "dark": "#ffffff", "name": "Critical" },
+    "urgent": { "light": "#ffcccb", "dark": "#d32f2f", "name": "Urgent" },
+    "medium": { "light": "#fff3e0", "dark": "#ff9800", "name": "Medium" },
+    // app defaults — exact colors the product uses today (match live seeds)
+    "appRed": { "light": "#ffebee", "dark": "#f44336", "name": "App Red" },
+    "appGreen": { "light": "#dcedc8", "dark": "#388e3c", "name": "App Green" },
+    "appBlue": { "light": "#b3e5fc", "dark": "#0277bd", "name": "App Blue" },
+    "appPurple": { "light": "#e1bee7", "dark": "#6a1b9a", "name": "App Purple" },
+    "appIndigo": { "light": "#c5cae9", "dark": "#3949ab", "name": "App Indigo" },
+    "appAmber": { "light": "#ffecb3", "dark": "#ffa000", "name": "App Amber" },
+    "appOrange": { "light": "#ffe0b2", "dark": "#ef6c00", "name": "App Orange" },
+    "appTeal": { "light": "#b2dfdb", "dark": "#00796b", "name": "App Teal" },
+    "appGrey": { "light": "#e2e6ea", "dark": "#212529", "name": "App Grey" },
+    "appSkyBlue": { "light": "#e1f5fe", "dark": "#03a9f4", "name": "App Sky Blue" },
+    "appViolet": { "light": "#f3e5f5", "dark": "#9c27b0", "name": "App Violet" },
+    "appCoral": { "light": "#fee9e4", "dark": "#fb6340", "name": "App Coral" },
+    "appMint": { "light": "#e5f8ed", "dark": "#28c76f", "name": "App Mint" },
+    "appCrimson": { "light": "#fdeaeb", "dark": "#ea5455", "name": "App Crimson" },
+    "appGold": { "light": "#fff8e1", "dark": "#ffc107", "name": "App Gold" },
+    "appSeaGreen": { "light": "#e0f2f1", "dark": "#009688", "name": "App Sea Green" },
+    "appSlate": { "light": "#eeeeee", "dark": "#757575", "name": "App Slate" },
+    "appLavender": { "light": "#e8eaf6", "dark": "#5e72e4", "name": "App Lavender" },
+    "appAqua": { "light": "#e0f7fa", "dark": "#00bcd4", "name": "App Aqua" },
+    "appPink": { "light": "#fce4ec", "dark": "#ec407a", "name": "App Pink" },
+    "appGrape": { "light": "#ede7f6", "dark": "#8c57ff", "name": "App Grape" }
 };
 
 // Legacy colors array for backward compatibility
@@ -709,51 +735,100 @@ export const getInitials = (first = '', last = '') => {
 };
 
 // Dynamic Priority Color Function
+// sessionStorage masters parsed once and memoized — badges call these per row,
+// so parsing on every call made grids lag. raw-string compare = cheap invalidation.
+const _masterCache = {};
+export const cachedMaster = (key) => {
+    const raw = sessionStorage.getItem(key);
+    const hit = _masterCache[key];
+    if (hit && hit.raw === raw) return hit;
+    let data = JSON.parse(raw || '[]');
+    if (data && !Array.isArray(data)) data = Object.values(data);
+    const byLabel = {};
+    (data || []).forEach((m) => {
+        if (m?.labelname) byLabel[m.labelname.toLowerCase().trim()] = m.colorkey;
+    });
+    _masterCache[key] = { raw, data: data || [], byLabel };
+    return _masterCache[key];
+};
+export const cachedObj = (key) => {
+    const raw = sessionStorage.getItem(key);
+    const hit = _masterCache[key];
+    if (hit && hit.raw === raw) return hit.data;
+    const data = raw ? JSON.parse(raw) : {};
+    _masterCache[key] = { raw, data };
+    return data;
+};
+
+// '#rrggbb' colorkeys (custom picker) render directly; palette keys look up colorMaster
+const keyToColors = (key) => {
+    if (!key) return null;
+    // '#dark;#light' — explicit pair, exact colors (live seeds use this form)
+    if (key.startsWith('#') && key.includes(';')) {
+        const [dark, light] = key.split(';');
+        return { color: dark, backgroundColor: light || dark + '22', colorKey: key };
+    }
+    if (key.startsWith('#')) return { color: key, backgroundColor: key + '22', colorKey: key };
+    const c = colorMaster[key];
+    return c ? { color: c.dark, backgroundColor: c.light, colorKey: key } : null;
+};
+
+// resolve a label's persisted colorkey from a sessionStorage master list (API-sourced)
+const masterColorKey = (storageKey, label) => {
+    try {
+        const list = JSON.parse(sessionStorage.getItem(storageKey) || '[]');
+        const row = list?.find?.(m => (m?.labelname || '').toLowerCase().trim() === (label || '').toLowerCase().trim());
+        return row?.colorkey || null;
+    } catch { return null; }
+};
+
 export const getDynamicPriorityColor = (priorityName, colorKey = null) => {
     // Get stored priority colors from sessionStorage
-    const storedPriorityColors = JSON.parse(sessionStorage.getItem('priorityMasterColors') || '{}');
+    const storedPriorityColors = cachedObj('priorityMasterColors');
 
-    if (colorKey && colorMaster[colorKey]) {
-        return {
-            color: colorMaster[colorKey].dark,
-            backgroundColor: colorMaster[colorKey].light,
-            colorKey: colorKey
-        };
+    if (colorKey) {
+        const c = keyToColors(colorKey);
+        if (c) return c;
     }
 
     if (storedPriorityColors[priorityName?.toLowerCase()]) {
         const colorKey = storedPriorityColors[priorityName?.toLowerCase()];
-        return {
-            color: colorMaster[colorKey].dark,
-            backgroundColor: colorMaster[colorKey].light,
-            colorKey: colorKey
-        };
+        const c = keyToColors(colorKey);
+        if (c) return c;
+    }
+
+    // API-persisted colorkey on the master row
+    const apiKey = masterColorKey('taskpriorityData', priorityName);
+    if (apiKey) {
+        const c = keyToColors(apiKey);
+        if (c) return c;
     }
 
     // Fallback to existing priority colors
-    return priorityColors[priorityName?.toLowerCase()] || priorityColors.normal;
+    return priorityColors[priorityName?.toLowerCase()?.trim()] || priorityColors.normal;
 };
 
 // Dynamic Status Color Function
 export const getDynamicStatusColor = (statusName, colorKey = null) => {
     // Get stored status colors from sessionStorage
-    const storedStatusColors = JSON.parse(sessionStorage.getItem('statusMasterColors') || '{}');
+    const storedStatusColors = cachedObj('statusMasterColors');
 
-    if (colorKey && colorMaster[colorKey]) {
-        return {
-            color: colorMaster[colorKey].dark,
-            backgroundColor: colorMaster[colorKey].light,
-            colorKey: colorKey
-        };
+    if (colorKey) {
+        const c = keyToColors(colorKey);
+        if (c) return c;
     }
 
     if (storedStatusColors[statusName?.toLowerCase()]) {
         const colorKey = storedStatusColors[statusName?.toLowerCase()];
-        return {
-            color: colorMaster[colorKey].dark,
-            backgroundColor: colorMaster[colorKey].light,
-            colorKey: colorKey
-        };
+        const c = keyToColors(colorKey);
+        if (c) return c;
+    }
+
+    // API-persisted colorkey on the master row (status + secstatus share the map)
+    const apiKey = masterColorKey('taskstatusData', statusName) || masterColorKey('tasksecstatusData', statusName);
+    if (apiKey) {
+        const c = keyToColors(apiKey);
+        if (c) return c;
     }
 
     // Fallback to existing status colors
@@ -2069,3 +2144,30 @@ export const removeTaskRecursively = (tasks, taskIdToRemove) => {
 
 
 
+
+
+// Shared "open task as module tab" redirect — same payload as a manual module
+// click (Home handleTaskClick). Pass root task fields so the MODULE opens as
+// a tab; searchtask seeds the clicked subtask into the tab's search filter.
+export const openTaskModuleTab = (navigate, { taskid, taskname, rootTaskid, rootTaskname, projectid, project, maingroupids, maintaskid, istaskno } = {}) => {
+    const rootId = rootTaskid || taskid;
+    useTabStore.getState().openTaskTab({
+        title: rootTaskname || taskname || 'Tasks',
+        route: '/tasks',
+        queryData: {
+            module: rootTaskname || taskname,
+            project,
+            taskid: rootId,
+            projectid,
+            moduleid: rootId,
+            maintaskid,
+            istaskno,
+            maingroupids,
+            isLimited: 0,
+            isreadonly: 0,
+            breadcrumbTitles: rootTaskname ? [rootTaskname] : undefined,
+            searchtask: taskname,
+        },
+    });
+    navigate('/tasks');
+};

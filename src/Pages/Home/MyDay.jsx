@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import { Box, Button, Card, CardContent, Typography } from '@mui/material'
+import { Box, Button, Card, CardContent, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import { getDynamicStatusColor, renderAssigneeAvatars } from '../../Utils/globalfun'
 import { ArrowRight, CalendarCheck } from 'lucide-react'
 import DueChip from './DueChip'
 import RowSkeleton from './RowSkeleton'
 
-const MyDay = ({ tasks, navigate, isLoding, onTaskClick }) => {
+const MyDay = ({ tasks, navigate, isLoding, onTaskClick, mode = 'deadline', onModeChange }) => {
     const handleViewAll = () => navigate('/tasks')
     const [showAll, setShowAll] = useState(false);
     const visibleTasks = showAll ? tasks : tasks?.slice(0, 8);
@@ -19,11 +19,50 @@ const MyDay = ({ tasks, navigate, isLoding, onTaskClick }) => {
                     <Typography className='cardTitle' component="div" variant="h5">
                         My Day
                     </Typography>
-                    {tasks?.length > 0 && (
-                        <Typography className='viewAllLink' onClick={handleViewAll}>
-                            View all <ArrowRight size={14} />
-                        </Typography>
-                    )}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <ToggleButtonGroup
+                            size="small"
+                            exclusive
+                            value={mode}
+                            onChange={(e, v) => v && onModeChange?.(v)}
+                            sx={{
+                                backgroundColor: "#f5f5f5",
+                                borderRadius: "8px",
+                                padding: "3px",
+                                gap: "3px",
+                                "& .MuiToggleButton-root": {
+                                    display: "flex",
+                                    alignItems: "center",
+                                    fontSize: "12px",
+                                    fontWeight: 500,
+                                    color: "#666",
+                                    border: "none",
+                                    borderRadius: "7px",
+                                    lineHeight: 1.2,
+                                    padding: "4px 12px",
+                                    minHeight: "24px",
+                                    textTransform: "none",
+                                    transition: "all 0.2s ease-in-out",
+                                    "&:hover": { backgroundColor: "rgba(255,255,255,0.7)" },
+                                    "&.Mui-selected": {
+                                        backgroundColor: "#fff",
+                                        color: "#000",
+                                        fontWeight: 600,
+                                        boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+                                        "&:hover": { backgroundColor: "#fff" },
+                                    },
+                                },
+                            }}
+                        >
+                            <ToggleButton value="start">Start</ToggleButton>
+                            <ToggleButton value="deadline">Deadline</ToggleButton>
+                        </ToggleButtonGroup>
+                        {tasks?.length > 0 && (
+                            <Typography className='viewAllLink' onClick={handleViewAll}>
+                                View all <ArrowRight size={14} />
+                            </Typography>
+                        )}
+                    </Box>
                 </Box>
                 {!isLoding && tasks != null ? (
                     <>
@@ -46,7 +85,7 @@ const MyDay = ({ tasks, navigate, isLoding, onTaskClick }) => {
                                                     )}
                                                 </Box>
                                                 <Box className='metaSlot chip'>
-                                                    <DueChip date={task?.DeadLineDate} task={task} />
+                                                    <DueChip date={mode === 'start' ? task?.StartDate : task?.DeadLineDate} task={task} />
                                                 </Box>
                                                 <Box className='metaSlot avatars'>
                                                     {renderAssigneeAvatars(task?.assignee, () => { })}
@@ -77,10 +116,12 @@ const MyDay = ({ tasks, navigate, isLoding, onTaskClick }) => {
                             >
                                 <CalendarCheck size={34} color="#7d7f85" />
                                 <Typography variant="body" sx={{ mt: 1, mb: 0.5, color: '#6D6B77' }}>
-                                    Nothing due today
+                                    {mode === 'start' ? 'Nothing starting today' : 'Nothing due today'}
                                 </Typography>
                                 <Typography variant="caption" sx={{ color: '#7d7f85', mb: 1 }}>
-                                    No tasks due today or overdue — plan ahead or take a breather.
+                                    {mode === 'start'
+                                        ? 'No child tasks scheduled to start today.'
+                                        : 'No tasks due today or overdue — plan ahead or take a breather.'}
                                 </Typography>
                             </Box>
                         )}

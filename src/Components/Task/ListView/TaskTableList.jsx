@@ -1407,29 +1407,6 @@ const TableView = ({
                                 parentArchived,
                                 handleTaskFavorite
                             )}
-                            <IconButton
-                                id="add-task"
-                                aria-label="add-task"
-                                aria-labelledby="add-task"
-                                size="small"
-                                className="hover-reveal"
-                                onClick={() => handleAddSubtask(subtask, { Task: 'subroot' })}
-                                sx={{
-                                    width: '32px',
-                                    height: '32px',
-                                    '&:hover': {
-                                        backgroundColor: 'transparent',
-                                        boxShadow: 'none',
-                                    }
-                                }}
-                                disabled={subtask?.assignee?.find(a => a.id == userId)?.isreadonly === 1 || parentArchived}
-                            >
-                                <CirclePlus size={20} color={
-                                    (subtask?.assignee?.find(a => a.id == userId)?.isreadonly === 1)
-                                        ? "#e0e0e0"
-                                        : "#7367f0"
-                                } />
-                            </IconButton>
                         </div>
                     </TableCell>
                     <TableCell>

@@ -104,17 +104,28 @@ export default function SummaryDashboard({ view = 'category', expanded = false, 
     const labelsReady = taskWorkCategoryData?.length > 0 && taskStatusData?.length > 0;
     const isLoading = summary === null || !labelsReady;
 
+    // Pinned category order — these always lead, everything else follows
+    // in API order after them.
+    const CATEGORY_ORDER = ['maintenance', 'creative', 'rnd-tech', 'unplanned'];
+
     const categoryCards = (summary?.rd || []).map((row, idx) => {
         const category = taskWorkCategoryData?.find((c) => c.id == row?.workcategoryid);
         const label = category?.labelname ?? `Category ${row?.workcategoryid ?? ''}`;
         const colors = palette[idx % palette.length];
         return {
             title: `${label} Tasks`,
+            catKey: norm(label),
             value: row?.Total ?? 0,
             newTasks: row?.TodayTask ?? 0,
             icon: categoryIconMapping[norm(label)] || Package,
             ...colors,
         };
+    }).sort((a, b) => {
+        const rank = (key) => {
+            const i = CATEGORY_ORDER.indexOf(key);
+            return i === -1 ? CATEGORY_ORDER.length : i;
+        };
+        return rank(a.catKey) - rank(b.catKey);
     });
 
     const statusCards = (summary?.rd3 || []).map((row, idx) => {

@@ -229,3 +229,10 @@ export const liveNotificationStack = atom({
 
 
 
+
+
+// Global task search dialog
+export const taskSearchOpen = atom({
+    key: 'taskSearchOpen',
+    default: false,
+});

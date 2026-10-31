@@ -1,10 +1,19 @@
 import React, { useState } from "react";
 import { Button } from "@mui/material";
 import CustomMenu from "./CustomMenuFun";
+import { getDynamicPriorityColor, cachedMaster } from "../../Utils/globalfun";
 
 const PriorityBadge = ({ task, priorityColors, onPriorityChange, fontSize, padding, minWidth, disable }) => {
     const [anchorEl, setAnchorEl] = useState(null);
-    const priorityMaster = JSON.parse(sessionStorage.getItem("taskpriorityData")) || {};
+    const priorityMaster = cachedMaster("taskpriorityData").data || {};
+    const masterList = Array.isArray(priorityMaster) ? priorityMaster : (priorityMaster?.data || []);
+    // task.priority may hold an id or be missing — resolve the label via priorityid
+    const priorityLabel = (priorityColors[(task?.priority || '').toLowerCase().trim()]
+        ? task?.priority
+        : (masterList?.find?.((m) => String(m?.id) === String(task?.priorityid))?.labelname || task?.priority)) || '';
+    const lookup = priorityLabel.toLowerCase().trim();
+    // API-persisted colorkey first; passed map stays the fallback
+    const apiColor = getDynamicPriorityColor(priorityLabel, task?.colorkey);
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -22,8 +31,8 @@ const PriorityBadge = ({ task, priorityColors, onPriorityChange, fontSize, paddi
             <Button
                 onClick={handleClick}
                 style={{
-                    color: (priorityColors[(task?.priority)?.toLowerCase()]?.color) ?? "#7d7f85",
-                    backgroundColor: (priorityColors[(task?.priority)?.toLowerCase()]?.backgroundColor) ?? "#7d7f8559",
+                    color: apiColor?.color ?? (priorityColors[lookup]?.color) ?? "#7d7f85",
+                    backgroundColor: apiColor?.backgroundColor ?? (priorityColors[lookup]?.backgroundColor) ?? "#7d7f8559",
                     fontFamily: '"Public Sans", sans-serif',
                     width: "fit-content",
                     minWidth: minWidth ?? "inherit",
@@ -41,7 +50,7 @@ const PriorityBadge = ({ task, priorityColors, onPriorityChange, fontSize, paddi
                 }}
                 className="status-badge"
             >
-                {task?.priority != "" ? task?.priority : '-'}
+                {priorityLabel != "" ? priorityLabel : '-'}
             </Button>
             <CustomMenu
                 anchorEl={anchorEl}

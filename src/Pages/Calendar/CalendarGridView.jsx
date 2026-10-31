@@ -45,6 +45,7 @@ import { actualTaskData, fetchlistApiCall } from '../../Recoil/atom';
 import { fetchTodayTaskApi } from '../../Api/TaskApi/fetchTodayTaskApi';
 import { useTabStore } from '../../Store/useTabStore';
 import useSafeRedirect from '../../Utils/useSafeRedirect';
+import { useLocation } from 'react-router-dom';
 import { fetchTaskDataFullApi } from '../../Api/TaskApi/TaskDataFullApi';
 import { setTaskQueryData } from '../../Utils/QueryClient/queryClient';
 import { taskDescGetApi } from '../../Api/TaskApi/TaskDescGetApi';
@@ -304,6 +305,19 @@ const CalendarGridView = () => {
   const fetchTaskTrigger = useRecoilValue(fetchlistApiCall);
   const setOpenChildTask = useSetRecoilState(fetchlistApiCall);
   const navigate = useSafeRedirect();
+  const location = useLocation();
+
+  // Team Today redirect — seed assignee + today's range, then clear router state
+  useEffect(() => {
+    const st = location.state;
+    if (st?.assigneeId) {
+      const assignee = getSessionList('taskAssigneeData')?.find((u) => Number(u.id) === Number(st.assigneeId));
+      if (assignee) setSelectedAssigneeId(assignee);
+      const today = dayjs().format('YYYY-MM-DD');
+      setCustomRange({ startDate: today, endDate: today });
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, []);
 
   // Task click → open the parent module's /tasks tab (same payload as
   // TaskTableList.handleOpenModuleTab, so it dedups with an existing tab).

@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Button } from "@mui/material";
 import CustomMenu from "./CustomMenuFun";
+import { getDynamicStatusColor, cachedMaster } from "../../Utils/globalfun";
 
 const StatusBadge = ({ task, statusColors, onStatusChange, fontSize, padding, minWidth, disable, flag }) => {
     const [anchorEl, setAnchorEl] = useState(null);
-    const statusMaster = flag === "secondaryStatus" ? JSON.parse(sessionStorage.getItem("tasksecstatusData")) || {} : JSON.parse(sessionStorage.getItem("taskstatusData")) || {};
+    const statusMaster = cachedMaster(flag === "secondaryStatus" ? "tasksecstatusData" : "taskstatusData").data;
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -19,7 +20,8 @@ const StatusBadge = ({ task, statusColors, onStatusChange, fontSize, padding, mi
 
     const statusKey = flag === "secondaryStatus" ? task?.secStatus : task?.status;
     const normalizedKey = (statusKey || "").toLowerCase();
-    const colorConfig = statusColors[normalizedKey] || {};
+    // API-persisted colorkey first (sessionStorage masters); map is the fallback
+    const colorConfig = getDynamicStatusColor(statusKey, task?.colorkey) || statusColors[normalizedKey] || {};
     const displayStatus = statusKey?.trim() ? statusKey : "-";
 
     return (

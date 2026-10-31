@@ -2,8 +2,10 @@ import React, { useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Pagination, IconButton, TableSortLabel, Chip, Popover } from '@mui/material';
 import { Pencil, Trash, ArchiveRestore, Trash2, Palette } from 'lucide-react';
 import { cleanDate, formatDate2, getDynamicPriorityColor, getDynamicStatusColor } from '../../Utils/globalfun';
-import ColorPicker from '../../Components/Common/ColorPicker';
+import LabelColorDialog from './LabelColorDialog';
 import './Master.scss';
+
+const COLOR_MASTERS = ['task_priority', 'task_status', 'task_secstatus', 'task_workcategory'];
 
 const Mastergrid = ({
     data,
@@ -17,10 +19,12 @@ const Mastergrid = ({
     rowsPerPage,
     totalRows,
     masterType = '', // Add masterType prop to identify priority/status
+    masterTitle = '',
+    onColorApply, // batch apply from LabelColorDialog: (changes, masterType)
     onColorChange // Add callback for color changes
 }) => {
     const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
-    const [colorPickerAnchor, setColorPickerAnchor] = useState(null);
+    const [colorDialogOpen, setColorDialogOpen] = useState(false);
     const [selectedRowForColor, setSelectedRowForColor] = useState(null);
     // Custom Footer Component for Pagination
     const CustomFooter = ({ totalRows, paginationCount, paginationPage, onPaginationChange }) => {
@@ -98,7 +102,7 @@ const Mastergrid = ({
                             {masterType === 'task_holiday' && (
                                 <TableCell width={160}>Holiday Date</TableCell>
                             )}
-                            {(masterType === "task_priority" || masterType === "task_status") && (
+                            {COLOR_MASTERS.includes(masterType) && (
                                 <TableCell width={120}>Color</TableCell>
                             )}
                             <TableCell className='actionCell'>Actions</TableCell>
@@ -110,7 +114,7 @@ const Mastergrid = ({
                             let colorInfo = null;
                             if (masterType === "task_priority") {
                                 colorInfo = getDynamicPriorityColor(row.labelname, row.colorkey);
-                            } else if (masterType === "task_status") {
+                            } else {
                                 colorInfo = getDynamicStatusColor(row.labelname, row.colorkey);
                             }
                             return (
@@ -129,7 +133,7 @@ const Mastergrid = ({
                                             {row?.holidaydate ? cleanDate(formatDate2(row?.holidaydate)) : ''}
                                         </TableCell>
                                     )}
-                                    {(masterType === "task_priority" || masterType === "task_status") && (
+                                    {COLOR_MASTERS.includes(masterType) && (
                                         <TableCell>
                                             <Box
                                                 sx={{
@@ -143,8 +147,8 @@ const Mastergrid = ({
                                                         backgroundColor: '#f5f5f5'
                                                     }
                                                 }}
-                                                onClick={(e) => {
-                                                    setColorPickerAnchor(e.currentTarget);
+                                                onClick={() => {
+                                                    setColorDialogOpen(true);
                                                     setSelectedRowForColor(row);
                                                 }}
                                             >
@@ -229,7 +233,7 @@ const Mastergrid = ({
                             );
                         })}
                         <TableRow className='paginationRow'>
-                            <TableCell colSpan={(masterType === 'task_priority' || masterType === 'task_status' || masterType === 'task_holiday') ? 5 : 4}>
+                            <TableCell colSpan={(COLOR_MASTERS.includes(masterType) || masterType === 'task_holiday') ? 5 : 4}>
                                 <CustomFooter
                                     totalRows={totalRows}
                                     paginationCount={paginationCount}
@@ -242,68 +246,18 @@ const Mastergrid = ({
                 </Table>
             </TableContainer>
 
-            {/* Color Picker Popover */}
-            <Popover
-                open={Boolean(colorPickerAnchor)}
-                anchorEl={colorPickerAnchor}
+            {/* Label color editor — list all labels on the left, picker on the right */}
+            <LabelColorDialog
+                open={colorDialogOpen}
                 onClose={() => {
-                    setColorPickerAnchor(null);
+                    setColorDialogOpen(false);
                     setSelectedRowForColor(null);
                 }}
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'center',
-                }}
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'center',
-                }}
-                PaperProps={{
-                    sx: {
-                        borderRadius: '20px',
-                        boxShadow: '0 24px 48px rgba(0,0,0,0.15), 0 12px 24px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.05)',
-                        border: '1px solid rgba(255,255,255,0.3)',
-                        backdropFilter: 'blur(12px)',
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
-                        overflow: 'visible',
-                        '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: -10,
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            width: 20,
-                            height: 20,
-                            background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
-                            border: '1px solid rgba(255,255,255,0.3)',
-                            borderBottom: 'none',
-                            borderRight: 'none',
-                            borderRadius: '6px 0 0 0',
-                            rotate: '45deg',
-                            zIndex: -1,
-                            backdropFilter: 'blur(12px)'
-                        }
-                    }
-                }}
-            >
-                <Box sx={{
-                    p: 3,
-                    background: 'transparent'
-                }}>
-                    <ColorPicker
-                        selectedColor={selectedRowForColor?.colorkey || ''}
-                        onColorSelect={(colorKey) => {
-                            if (selectedRowForColor && onColorChange) {
-                                onColorChange(selectedRowForColor, colorKey, masterType);
-                            }
-                            setColorPickerAnchor(null);
-                            setSelectedRowForColor(null);
-                        }}
-                        label={`Select color for ${selectedRowForColor?.labelname}`}
-                        size="small"
-                    />
-                </Box>
-            </Popover>
+                items={sortedMaster || []}
+                masterTitle={masterTitle}
+                initialId={selectedRowForColor?.id}
+                onApply={(changes) => onColorApply?.(changes, masterType)}
+            />
         </Box>
     );
 };

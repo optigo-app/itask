@@ -3,11 +3,13 @@ import { Box, Card, CardContent, Typography } from '@mui/material'
 import { ArrowRight, Bug } from 'lucide-react'
 import RowSkeleton from './RowSkeleton'
 import { getBugDashboardApi } from '../../Api/BugApi/bugApi'
-import { getDynamicStatusColor } from '../../Utils/globalfun'
+import { getDynamicStatusColor, handleBugTrackRedirect } from '../../Utils/globalfun'
+import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog'
 
 const BugsOverview = ({ navigate }) => {
     const [bugData, setBugData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [bugTrackDialogOpen, setBugTrackDialogOpen] = useState(false);
 
     useEffect(() => {
         let mounted = true;
@@ -29,7 +31,7 @@ const BugsOverview = ({ navigate }) => {
         return { label, colors };
     };
 
-    const handleViewAll = () => navigate('/bugtrack');
+    const handleViewAll = () => setBugTrackDialogOpen(true);
 
     return (
         <Card className='HomePageCom'>
@@ -85,6 +87,18 @@ const BugsOverview = ({ navigate }) => {
                     </Box>
                 )}
             </CardContent>
+            <ConfirmationDialog
+                open={bugTrackDialogOpen}
+                onClose={() => setBugTrackDialogOpen(false)}
+                onConfirm={() => {
+                    setBugTrackDialogOpen(false);
+                    handleBugTrackRedirect();
+                }}
+                title="Redirect to Bug Tracker"
+                content="You will be redirected to the Bug Tracker in a new tab. Do you want to continue?"
+                confirmLabel="Continue"
+                cancelLabel="Cancel"
+            />
         </Card>
     )
 }

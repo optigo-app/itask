@@ -31,7 +31,7 @@ const columnHeaderOverrides = {
   createdbyid: "CREATED BY",
   priorityid: "PRIORITY",
   taskno: "TASK / MM NO",
-  entrydate: "ENTRY DATE",
+  entrydate: "CREATED DATE",
 };
 
 const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId = {}, queryData = null, completedFlag = false, archivedFlag = false, filtersProp = null, setFiltersProp = null, isActiveProp, refreshKey = 0, showFavoritesOnly = false, showMilestonesOnly = false, showBlockersOnly = false }) => {
@@ -165,7 +165,7 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
     const dynamicColumns = allColumnNames
       ?.filter((name) => !/^G\d+$/i.test(name) && name !== "taskno" && name !== "maintenanceno" && name !== "id" && name !== "projectid"
         && name !== "createdbyid" // Created By hidden — remove this + uncomment its renderCell below to re-show
-        && name !== "entrydate" // Entry Date hidden from grid — still filterable via drawer + exported to Excel
+        && name !== "entrydate" // Created Date merged into the Start Date cell below
         && !hiddenFlagFields.includes(name))
       .map((name) => {
         const isTaskName = name === "taskname";
@@ -208,10 +208,21 @@ const DynamicFilterReport = ({ selectedMainGroupId = "", selectedAttrsByGroupId 
         if (name === "start_date") {
           return {
             ...base,
-            renderCell: (params) =>
-              params?.row?.start_date && cleanDate(params?.row?.start_date)
-                ? formatDate2(cleanDate(params?.row?.start_date))
-                : "-",
+            renderCell: (params) => {
+              const start = params?.row?.start_date && cleanDate(params?.row?.start_date)
+                ? formatDate2(cleanDate(params?.row?.start_date)) : "-";
+              const created = params?.row?.entrydate && cleanDate(params?.row?.entrydate)
+                ? formatDate2(cleanDate(params?.row?.entrydate)) : "-";
+              return (
+                <Box
+                  title={`Created Date: ${created} | Start Date: ${start}`}
+                  sx={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25, justifyContent: 'center' }}
+                >
+                  <span style={{ fontSize: '11px', color: '#8a8a96' }}>{created}</span>
+                  <span>{start}</span>
+                </Box>
+              );
+            },
           };
         }
 

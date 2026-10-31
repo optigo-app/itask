@@ -5,6 +5,19 @@
     color: $text2ndColor !important;
     box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important;
     border-radius: 8px !important;
+    // dashboard list cards keep layout while data+aggregates resolve —
+    // skeleton reserves real height; summary/compact cards unaffected
+    &:has(.listBox) {
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+
+        > .MuiCardContent-root {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+    }
 
     .cardTitle {
         padding: 16px 16px 10px 16px !important;

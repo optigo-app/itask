@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './FullTaskView.scss';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Table,
     TableBody,
@@ -57,6 +57,7 @@ const localISODate = (date = new Date()) => {
 
 const FullTaskView = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [totalCount, setTotalCount] = useState(0);
@@ -105,6 +106,24 @@ const FullTaskView = () => {
     // Custom tooltip refs
     const hoverTooltipRef = useRef(null);
     const hoverTooltipHandlersRef = useRef(new Map());
+
+    // Seeded filters from Home "Team Today" row click: { assigneeId, mode }
+    // start → startDate = today; deadline → dueDate = today (startDate cleared
+    // so the two don't over-constrain the result)
+    useEffect(() => {
+        const st = location.state;
+        if (!st?.assigneeId && !st?.mode) return;
+        const assigneeData = JSON.parse(sessionStorage.getItem("taskAssigneeData") || "[]");
+        const person = assigneeData.find((u) => u.id == st.assigneeId) || null;
+        const today = localISODate();
+        setFilters((prev) => ({
+            ...prev,
+            assignee: person,
+            startDate: st.mode === 'start' ? { startDate: today, endDate: today } : null,
+            dueDate: st.mode === 'deadline' ? { startDate: today, endDate: today } : null,
+        }));
+        navigate(location.pathname, { replace: true, state: null });
+    }, []);
 
     useEffect(() => {
         const retrieveData = (key, setter) => {
@@ -723,7 +742,14 @@ const FullTaskView = () => {
                                     <TableCell>
                                         {renderAssigneeAvatars(row.assignees, row, null, null, hanldePAvatarClick, null, false)}
                                     </TableCell>
-                                    <TableCell>{row.StartDate ? formatDate2(row.StartDate) : '-'}</TableCell>
+                                    <TableCell title={'Created Date: ' + (row.entrydate ? formatDate2(row.entrydate) : '-') + ' | Start Date: ' + (row.StartDate ? formatDate2(row.StartDate) : '-')}>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25 }}>
+                                            <span style={{ fontSize: '11px', color: '#8a8a96' }}>
+                                                {row.entrydate ? formatDate2(row.entrydate) : '-'}
+                                            </span>
+                                            <span>{row.StartDate ? formatDate2(row.StartDate) : '-'}</span>
+                                        </Box>
+                                    </TableCell>
                                     <TableCell>{row.DeadLineDate ? formatDaysDisplay(row?.DeadLineDate, row) : '-'}</TableCell>
                                     <TableCell>{row.estimate_hrs}</TableCell>
                                     <TableCell>

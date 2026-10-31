@@ -115,17 +115,6 @@ const PmFilters = ({
             <ChevronLeft fontSize="small" />
           </IconButton>
 
-          {/* <Box className="date-display">
-            {selectedFilter?.timeFilter === 'Week'
-              ? `Week ${dayjs(currentDate).week()}`
-              : selectedFilter?.timeFilter === 'Today'
-                ? dayjs(currentDate).format('MMM DD, YYYY')
-                : selectedFilter?.timeFilter === 'Tomorrow'
-                  ? dayjs(currentDate).add(1, 'day').format('MMM DD, YYYY')
-                  : 'Custom Range'
-            }
-          </Box> */}
-
           <IconButton
             onClick={() => onNavigate('next')}
             size="small"

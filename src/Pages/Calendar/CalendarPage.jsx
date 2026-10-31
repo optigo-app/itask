@@ -32,7 +32,7 @@ import SidebarDrawer from "../../Components/FormComponent/Sidedrawer";
 import MeetingDetail from "../../Components/Meeting/MeetingDetails";
 import ConfirmationDialog from "../../Utils/ConfirmationDialog/ConfirmationDialog";
 import dayjs from "dayjs";
-import { getUserProfileData } from "../../Utils/globalfun";
+import { getUserProfileData, colorMaster } from "../../Utils/globalfun";
 import { fetchTodayTaskApi } from "../../Api/TaskApi/fetchTodayTaskApi";
 import CustomDateTimePicker from "../../Utils/DateComponent/CustomDateTimePicker";
 import MoveEventDialog from "../../Components/Calendar/MoveEventDialog";
@@ -111,6 +111,7 @@ const Calendar = () => {
   const isLaptop1 = useMediaQuery("(max-width:1600px) and (min-width:1421px)");
   const setSelectedMon = useSetRecoilState(calendarM);
   const [calendarsColor, setCalendarsColor] = useState({});
+  const [calendarsColorHex, setCalendarsColorHex] = useState({});
   const [calEvData, setCalEvData] = useRecoilState(calendarData);
   const setCalFormData = useSetRecoilState(CalformData);
   const [formdrawerOpen, setFormDrawerOpen] = useRecoilState(openFormDrawer);
@@ -234,18 +235,32 @@ const Calendar = () => {
       "productive", "rnd-tech", "creative", "sop-correction",
       "customer-maintenance", "challenges", "reporting", "meeting", "training",
     ];
+    // API-persisted colorkey wins; name/id maps remain the fallback
+    const hexMap = {};
     const dynamicCalendarsColor = taskCategories.reduce(
       (acc, category) => {
         const categoryName = category.labelname;
         const key = (categoryName || "").trim().toLowerCase();
         acc[categoryName] = CATEGORY_COLOR_MAP[key]
           || FALLBACK_PALETTE[(category?.id ?? 0) % FALLBACK_PALETTE.length];
+        const ck = category?.colorkey;
+        if (ck?.startsWith?.('#')) {
+          const [cd, cl] = ck.split(';');
+          hexMap[categoryName] = { backgroundColor: cl || cd + '22', borderColor: cd, textColor: cd };
+        } else if (ck && colorMaster[ck]) {
+          hexMap[categoryName] = {
+            backgroundColor: colorMaster[ck].light,
+            borderColor: colorMaster[ck].dark,
+            textColor: colorMaster[ck].dark,
+          };
+        }
         return acc;
       },
       {}
     );
 
     setCalendarsColor(dynamicCalendarsColor);
+    setCalendarsColorHex(hexMap);
     setSelectedMon(new Date());
   }, []);
 
@@ -678,6 +693,7 @@ const Calendar = () => {
       {isLaptop ? (
         <CalendarDrawer
           calendarsColor={calendarsColor}
+          calendarsColorHex={calendarsColorHex}
           handleCaleFormSubmit={handleCaleFormSubmit}
           isLoding={isLoding}
         />
@@ -695,6 +711,7 @@ const Calendar = () => {
         >
           <CalendarLeftSide
             calendarsColor={calendarsColor}
+          calendarsColorHex={calendarsColorHex}
             handleCaleFormSubmit={handleCaleFormSubmit}
             isLoding={isLoding}
             setFormDrawerOpen={setFormDrawerOpen}
@@ -720,6 +737,7 @@ const Calendar = () => {
       >
         <CalendarRightSide
           calendarsColor={calendarsColor}
+          calendarsColorHex={calendarsColorHex}
           handleCaleFormSubmit={handleCaleFormSubmit}
           isLoding={isLoding}
           assigneeData={assigneeData?.filter((emp) => emp.isactive === 1)}

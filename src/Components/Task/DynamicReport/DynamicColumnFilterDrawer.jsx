@@ -50,7 +50,8 @@ const DynamicColumnFilterDrawer = ({
         'statusid',
         'priorityid',
         "createdbyid",
-        "projectid"
+        "projectid",
+        "entrydate"
     ];
 
     // Get filterable columns (exclude the specified fields and group columns like G1, G2, etc.)

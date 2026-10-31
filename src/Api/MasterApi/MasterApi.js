@@ -53,6 +53,7 @@ export const addEditDelMaster = async (payload) => {
             master_id: `${editMode ?? ''}`,
             master_labelvalue: `${payload?.name ?? ''}`,
             master_displayorder: `${payload?.displayorder ?? ''}`,
+            master_colorkey: `${payload?.colorkey ?? ''}`,
             ...(isHolidayMaster ? { holidaydate: getIsoDate(payload?.date) } : {}),
         });
 

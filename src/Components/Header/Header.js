@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Typography, Avatar, Menu, MenuItem, Divider, Button, Chip, Tooltip, IconButton, Badge, ToggleButtonGroup, ToggleButton } from "@mui/material";
-import { Bell, MailOpen, User, LogOut, House, FileCheck, LayoutTemplate, Clock, Bug, Trash2 } from "lucide-react";
+import { Bell, MailOpen, User, LogOut, House, FileCheck, LayoutTemplate, Clock, Bug, Trash2, Search } from "lucide-react";
 import { getAvatarColors, getInitials, ImageUrl, getUserProfileData, fetchMasterGlFunc } from "../../Utils/globalfun";
 import SafeAvatar from "../ShortcutsComponent/SafeAvatar";
 import { toast } from "react-toastify";
@@ -13,10 +13,11 @@ import { abortAllRequests } from "../../Utils/requestAbortController";
 import { getLoginUrl, clearSession } from "../../Utils/sessionKeys";
 import LoadingBackdrop from "../../Utils/Common/LoadingBackdrop";
 import NotificationCard from "../Notification/NotificationCard";
-import { notificationList, projectDatasRState, taskLength, userRoleAtom, webReload } from "../../Recoil/atom";
+import { notificationList, projectDatasRState, taskLength, taskSearchOpen, userRoleAtom, webReload } from "../../Recoil/atom";
 import { useRecoilValue, useSetRecoilState, useRecoilState } from "recoil";
 import { emitNotificationReadAll } from "../../Socket/socket";
 import PendingAcceptanceDrawer from "../ShortcutsComponent/Notification/PendingAcceptanceDrawer";
+import TaskSearchDialog from "../ShortcutsComponent/TaskSearchDialog";
 import useSafeRedirect from "../../Utils/useSafeRedirect";
 import TemplateDialog from "../Common/TemplateDialog";
 import TaskTabBar from "../Task/TaskTabBar";
@@ -494,6 +495,7 @@ const ToggleGroup = ({ options, selectedValue, onRedirection, className }) => (
 // Main Header Component
 const Header = ({ avatarSrc = "" }) => {
     const location = useLocation();
+    const setTaskSearchOpen = useSetRecoilState(taskSearchOpen);
     const taskDataLength = useRecoilValue(taskLength);
     const projects = useRecoilValue(projectDatasRState);
     const [pendingAcceptanceOpen, setPendingAcceptanceOpen] = useState(false);
@@ -656,6 +658,13 @@ const Header = ({ avatarSrc = "" }) => {
                     </IconButton>
                 </Tooltip>
 
+                {/* Global task search */}
+                <Tooltip title="Task Search" arrow>
+                    <IconButton onClick={() => setTaskSearchOpen(true)} size="small" sx={headerIconBtnSx}>
+                        <Search size={18} />
+                    </IconButton>
+                </Tooltip>
+
                 {/* Notification Bell */}
                 <Tooltip title="Notifications" arrow>
                     <IconButton onClick={handleBellClick} size="small" sx={headerIconBtnSx}>
@@ -687,6 +696,7 @@ const Header = ({ avatarSrc = "" }) => {
             <NotificationMenu anchorEl={notificationAnchorEl} open={notificationOpen} onClose={handleCloseNotificationMenu} notifications={notifications} unreadCount={unreadCount} onMarkAllRead={handleMarkAllRead} onClearAll={handleClearAll} />
             <ProfileMenu anchorEl={profileAnchorEl} open={profileOpen} onClose={handleCloseProfileMenu} profileData={profileData} avatarSrc={avatarSrc} onReload={handleReload} onLogout={handleLogout} />
             <PendingAcceptanceDrawer open={pendingAcceptanceOpen} onClose={() => setPendingAcceptanceOpen(false)} />
+            <TaskSearchDialog />
             <TemplateDialog open={templateDialogOpen} onClose={() => setTemplateDialogOpen(false)} />
             <BugDashboardDialog
                 open={bugDashboardOpen}
