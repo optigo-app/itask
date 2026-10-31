@@ -317,7 +317,7 @@
 
                 &:not(.fc-list-event) {
                     &.bg-primary {
-                        border-color: transparent !important;
+                        border-color: $primary-light !important;
                         color: $primary-main !important;
                         background-color: $primary-light-bg !important;
 
@@ -329,7 +329,7 @@
                     }
 
                     &.bg-success {
-                        border-color: transparent !important;
+                        border-color: $success-light !important;
                         color: $success-main !important;
                         background-color: $success-light-bg !important;
 
@@ -340,7 +340,7 @@
                     }
 
                     &.bg-error {
-                        border-color: transparent !important;
+                        border-color: $error-light !important;
                         color: $error-main !important;
                         background-color: $error-light-bg !important;
 
@@ -351,7 +351,7 @@
                     }
 
                     &.bg-warning {
-                        border-color: transparent !important;
+                        border-color: $warning-light !important;
                         color: $warning-main !important;
                         background-color: $warning-light-bg !important;
 
@@ -362,7 +362,7 @@
                     }
 
                     &.bg-info {
-                        border-color: transparent !important;
+                        border-color: $info-light !important;
                         color: $info-main;
                         background-color: $info-light-bg !important;
 
@@ -375,7 +375,7 @@
                     &.bg-secondary {
                         background-color: $new-main !important;
                         color: $new-light !important;
-                        border-color: transparent !important;
+                        border-color: $new-light !important;
 
                         .fc-event-title,
                         .fc-event-time {
@@ -386,7 +386,7 @@
                     &.bg-support {
                         background-color: $support-bg !important;
                         color: $support-main !important;
-                        border-color: transparent !important;
+                        border-color: $support-light !important;
 
                         .fc-event-title,
                         .fc-event-time {
@@ -397,7 +397,7 @@
                     &.bg-dark {
                         background-color: $dark-bg !important;
                         color: $dark-main !important;
-                        border-color: transparent !important;
+                        border-color: $dark-light !important;
 
                         .fc-event-title,
                         .fc-event-time {
@@ -407,7 +407,7 @@
 
                     // Category-specific color classes
                     &.bg-productive {
-                        border-color: transparent !important;
+                        border-color: $productive-light !important;
                         color: $productive-main !important;
                         background-color: $productive-light-bg !important;
 
@@ -418,7 +418,7 @@
                     }
 
                     &.bg-rnd-tech {
-                        border-color: transparent !important;
+                        border-color: $rnd-tech-light !important;
                         color: $rnd-tech-main !important;
                         background-color: $rnd-tech-light-bg !important;
 
@@ -429,7 +429,7 @@
                     }
 
                     &.bg-creative {
-                        border-color: transparent !important;
+                        border-color: $creative-light !important;
                         color: $creative-main !important;
                         background-color: $creative-light-bg !important;
 
@@ -440,7 +440,7 @@
                     }
 
                     &.bg-sop-correction {
-                        border-color: transparent !important;
+                        border-color: $sop-correction-light !important;
                         color: $sop-correction-main !important;
                         background-color: $sop-correction-light-bg !important;
 
@@ -451,7 +451,7 @@
                     }
 
                     &.bg-leave {
-                        border-color: transparent !important;
+                        border-color: $leave-light !important;
                         color: $leave-main !important;
                         background-color: $leave-light-bg !important;
 
@@ -462,7 +462,7 @@
                     }
 
                     &.bg-maintenance {
-                        border-color: transparent !important;
+                        border-color: $maintenance-light !important;
                         color: $maintenance-main !important;
                         background-color: $maintenance-light-bg !important;
 
@@ -473,7 +473,7 @@
                     }
 
                     &.bg-unplanned {
-                        border-color: transparent !important;
+                        border-color: $unplanned-light !important;
                         color: $unplanned-main !important;
                         background-color: $unplanned-light-bg !important;
 
@@ -484,7 +484,7 @@
                     }
 
                     &.bg-customer-maintenance {
-                        border-color: transparent !important;
+                        border-color: $customer-maintenance-light !important;
                         color: $customer-maintenance-main !important;
                         background-color: $customer-maintenance-light-bg !important;
 
@@ -495,7 +495,7 @@
                     }
 
                     &.bg-challenges {
-                        border-color: transparent !important;
+                        border-color: $challenges-light !important;
                         color: $challenges-main !important;
                         background-color: $challenges-light-bg !important;
 
@@ -506,7 +506,7 @@
                     }
 
                     &.bg-reporting {
-                        border-color: transparent !important;
+                        border-color: $reporting-light !important;
                         color: $reporting-main !important;
                         background-color: $reporting-light-bg !important;
 
@@ -517,7 +517,7 @@
                     }
 
                     &.bg-meeting {
-                        border-color: transparent !important;
+                        border-color: $meeting-light !important;
                         color: $meeting-main !important;
                         background-color: $meeting-light-bg !important;
 
@@ -528,7 +528,7 @@
                     }
 
                     &.bg-training {
-                        border-color: transparent !important;
+                        border-color: $training-light !important;
                         color: $training-main !important;
                         background-color: $training-light-bg !important;
 
@@ -539,7 +539,7 @@
                     }
 
                     &.bg-default {
-                        border-color: transparent !important;
+                        border-color: $primary-light !important;
                         color: $primary-main !important;
                         background-color: $primary-light-bg !important;
 
@@ -1497,8 +1497,11 @@
     .calendar-filter {
         margin-bottom: 1rem;
         display: flex;
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
 
         .cf-row {
             display: flex;
@@ -1537,8 +1540,9 @@
         .summaryCard {
             display: flex;
             align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
+            gap: 12px;
+            flex-wrap: nowrap;
+            min-width: 0;
 
             .summaryBox {
                 display: flex;
@@ -1546,7 +1550,7 @@
                 align-items: center;
                 justify-content: center;
                 gap: 6px;
-                min-width: 150px;
+                min-width: fit-content;
                 padding: 6px 10px;
                 background-color: #f9fafb;
                 border-radius: 8px;

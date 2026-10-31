@@ -296,8 +296,8 @@ const appTheme = createTheme({
 const App = () => (
     <RecoilRoot>
         <ThemeProvider theme={appTheme}>
-            <Router basename="/itaskweb">
-            {/* <Router> */}
+            {/* <Router basename="/itaskweb"> */}
+            <Router>
                 <AppWrapper />
             </Router>
         </ThemeProvider>

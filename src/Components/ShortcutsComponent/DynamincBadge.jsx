@@ -1,3 +1,4 @@
+import { cachedObj } from '../../Utils/globalfun';
 import { useState } from "react";
 import { Button } from "@mui/material";
 import CustomMenu from "./CustomMenuFun";
@@ -16,9 +17,7 @@ const DynamicFilterBadge = ({
     const [anchorEl, setAnchorEl] = useState(null);
     const [statusMaster, setStatusMaster] = useState([]);
 
-    const structuredData = JSON.parse(
-        sessionStorage.getItem("structuredAdvMasterData")
-    ) || [];
+    const structuredData = cachedObj("structuredAdvMasterData") || [];
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);

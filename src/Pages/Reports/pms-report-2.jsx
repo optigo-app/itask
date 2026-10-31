@@ -36,8 +36,8 @@ const PmsReport2 = () => {
     const [filters, setFilters] = useState({
         timeFilter: 'Week',
         dateRangeFilter: {
-            startDate: '',
-            endDate: ''
+            startDate: dayjs().startOf('week').add(1, 'day').toISOString(),
+            endDate: dayjs().endOf('week').add(1, 'day').toISOString()
         },
         department: '',
         assignee: '',

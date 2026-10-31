@@ -5,7 +5,7 @@ import { UserX, ArrowRight } from 'lucide-react'
 import DueChip from './DueChip'
 import RowSkeleton from './RowSkeleton'
 
-const UnassignedPool = ({ tasks, navigate, isLoding, onTaskClick }) => {
+const UnassignedPool = ({ tasks, totalCount, navigate, isLoding, onTaskClick }) => {
     const handleViewAll = () => navigate('/tasks')
     const [showAll, setShowAll] = useState(false);
     const visibleTasks = showAll ? tasks : tasks?.slice(0, 8);
@@ -17,7 +17,7 @@ const UnassignedPool = ({ tasks, navigate, isLoding, onTaskClick }) => {
                     <Typography className='cardTitle' component="div" variant="h5">
                         Unassigned
                         {tasks?.length > 0 && (
-                            <Box component="span" className='countBadge' sx={{ ml: 1, verticalAlign: 'middle' }}>{tasks.length}</Box>
+                            <Box component="span" className='countBadge' sx={{ ml: 1, verticalAlign: 'middle' }}>{totalCount ?? tasks.length}</Box>
                         )}
                     </Typography>
                     {tasks?.length > 0 && (

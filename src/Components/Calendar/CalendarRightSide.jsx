@@ -35,6 +35,7 @@ const Calendar = ({
     selectedAssignee,
     hasAccess,
     calendarsColor,
+    calendarsColorHex,
     handleCaleFormSubmit,
     handleAssigneeChange,
     setFormDrawerOpen,
@@ -716,11 +717,26 @@ const Calendar = ({
                 }
             }
         },
+        // API colorkey (calendarsColorHex) injects inline colors via eventDataTransform;
+        // when present, the class-based bg-* is skipped so the two never fight.
         eventClassNames({ event }) {
             const category = event.extendedProps.category || 'ETC';
             const colorClass = calendarsColor[category] || 'primary';
             const isSelected = selectedEventIds.has(String(event.id));
+            if (calendarsColorHex?.[category]) {
+                return [isSelected ? 'fc-event-multi-selected' : ''];
+            }
             return [`bg-${colorClass}`, isSelected ? 'fc-event-multi-selected' : ''];
+        },
+
+        eventDataTransform(event) {
+            const hex = calendarsColorHex?.[event?.extendedProps?.category];
+            if (hex) {
+                event.backgroundColor = hex.backgroundColor;
+                event.borderColor = 'transparent';
+                event.textColor = hex.textColor;
+            }
+            return event;
         },
 
         dayHeaderContent(arg) {
@@ -1576,6 +1592,7 @@ const Calendar = ({
                                         const statusBg = dynamicStatus?.backgroundColor || fallbackStatus?.backgroundColor || 'rgba(0,0,0,0.08)';
                                         const statusColor = dynamicStatus?.color || fallbackStatus?.color || '#555';
                                         const catColor = calendarsColor[ev.category] || 'primary';
+                                        const hexOverride = calendarsColorHex?.[ev.category];
                                         const categoryColors = {
                                             primary: '#7367f0', success: '#28c76f', error: '#ea5455',
                                             warning: '#ff9f43', info: '#00cfe8', secondary: '#a8aaae',
@@ -1585,7 +1602,7 @@ const Calendar = ({
                                             'customer-maintenance': '#009688', challenges: '#5e72e4', reporting: '#00BCD4',
                                             meeting: '#EC407A', training: '#8C57FF'
                                         };
-                                        const dotColor = categoryColors[catColor] || '#7367f0';
+                                        const dotColor = hexOverride?.borderColor || categoryColors[catColor] || '#7367f0';
                                         return (
                                             <ListItem key={`${ev.meetingid}-${idx}`} disablePadding sx={{ mb: 0.75 }}>
                                                 <ListItemButton

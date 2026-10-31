@@ -5,7 +5,7 @@ import { OctagonAlert, ArrowRight } from 'lucide-react'
 import DueChip from './DueChip'
 import RowSkeleton from './RowSkeleton'
 
-const BlockersBoard = ({ tasks, navigate, isLoding, onTaskClick }) => {
+const BlockersBoard = ({ tasks, totalCount, navigate, isLoding, onTaskClick }) => {
     const handleViewAll = () => navigate('/tasks')
     const [showAll, setShowAll] = useState(false);
     const visibleTasks = showAll ? tasks : tasks?.slice(0, 8);
@@ -17,7 +17,7 @@ const BlockersBoard = ({ tasks, navigate, isLoding, onTaskClick }) => {
                     <Typography className='cardTitle' component="div" variant="h5">
                         Blockers
                         {tasks?.length > 0 && (
-                            <Box component="span" className='countBadge danger'>{tasks.length}</Box>
+                            <Box component="span" className='countBadge danger'>{totalCount ?? tasks.length}</Box>
                         )}
                     </Typography>
                     {tasks?.length > 0 && (

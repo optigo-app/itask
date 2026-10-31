@@ -1,7 +1,11 @@
 
+import { getDynamicPriorityColor } from '../../Utils/globalfun';
+
 const TaskPriority = (priority, priorityColors) => {
-    const color = priority && priorityColors[priority]?.color || '#fff';
-    const backgroundColor = priority && priorityColors[priority]?.backgroundColor || '#7d7f85a1';
+    const key = (priority || '').toLowerCase().trim();
+    const apiColor = getDynamicPriorityColor(priority);
+    const color = priority && (apiColor?.color || priorityColors[key]?.color) || '#fff';
+    const backgroundColor = priority && (apiColor?.backgroundColor || priorityColors[key]?.backgroundColor) || '#7d7f85a1';
 
     return (
         <div style={{

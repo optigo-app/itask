@@ -15,6 +15,7 @@ const Filters = ({
   secStatusData,
   taskProject,
   taskDepartment,
+  taskCategory,
   filters: filtersProp,
   setFilters: setFiltersProp,
   isMulti = false,
@@ -123,15 +124,18 @@ const Filters = ({
             { label: "Status", key: "status", data: statusData },
             ...(secStatusData ? [{ label: "What Next", key: "secStatus", data: secStatusData }] : []),
             { label: "Priority", key: "priority", data: priorityData },
+            { label: "Category", key: "category", data: taskCategory },
+            { label: "Department", key: "department", data: taskDepartment },
           ]?.map((filter) => {
             const selectedArr = Array.isArray(filters[filter.key])
               ? filters[filter.key]
               : (filters[filter.key] ? [filters[filter.key]] : []);
             const hasSelection = isMulti ? selectedArr.length > 0 : Boolean(filters[filter.key]);
-            return filterVisibility[filter.key] && (hasSelection || !isMulti || QUICK_KEYS.includes(filter.key)) ? (
+            return (
               <Box key={filter.key} className="form-group" sx={{
                 flex: '1 1 260px',
                 minWidth: 260,
+                maxWidth: 300,
               }}>
                 <Typography variant="subtitle1" className="filterLabletxt">{filter.label}</Typography>
                 <Autocomplete
@@ -226,11 +230,11 @@ const Filters = ({
                   )}
                 />
               </Box>
-            ) : null
+            );
           })}
         </>
-        {assigneeVisible && (
-          <Box sx={{ flex: '1 1 260px', minWidth: 260 }}>
+        {(
+          <Box sx={{ flex: '1 1 260px', minWidth: 260, maxWidth: 300 }}>
             <DepartmentAssigneeAutocomplete
               name="assignee"
               value={guest?.assignee}
@@ -246,8 +250,8 @@ const Filters = ({
         )}
 
         {/* start Date Filter */}
-        {startDateVisible && (hasValue('startDate') || !isMulti) && (
-          <Box className="form-group" sx={{ minWidth: 220, maxWidth: 250 }}>
+        {(
+          <Box className="form-group" sx={{ flex: '1 1 260px', minWidth: 260, maxWidth: 300 }}>
             <Typography variant="subtitle1" className="filterLabletxt">Start Date</Typography>
             <CustomDateRangePicker
               value={filters.startDate}
@@ -258,8 +262,8 @@ const Filters = ({
         )}
 
         {/* Due Date Filter — always visible in the opened filter section */}
-        {dueDateVisible && (
-          <Box className="form-group" sx={{ flex: '1 1 260px', minWidth: 260 }}>
+        {(
+          <Box className="form-group" sx={{ flex: '1 1 260px', minWidth: 260, maxWidth: 300 }}>
             <Typography variant="subtitle1" className="filterLabletxt">Due Date</Typography>
             <CustomDateRangePicker
               value={filters.dueDate}
@@ -269,9 +273,21 @@ const Filters = ({
           </Box>
         )}
 
+        {/* Created Date Filter */}
+        {(
+          <Box className="form-group" sx={{ flex: '1 1 260px', minWidth: 260, maxWidth: 300 }}>
+            <Typography variant="subtitle1" className="filterLabletxt">Created Date</Typography>
+            <CustomDateRangePicker
+              value={filters.entrydate}
+              onChange={(newRange) => handleFilterChange("entrydate", newRange)}
+              placeholder="Created date"
+            />
+          </Box>
+        )}
+
         {/* "+ Filters" — inline, right after the quick selects (task page only;
             single-select consumers always render their controls) */}
-        {isMulti && (
+        {false && isMulti && (
           <Button
             size="small"
             variant="text"

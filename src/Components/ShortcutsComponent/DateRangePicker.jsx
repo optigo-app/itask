@@ -87,6 +87,9 @@ const CustomDateRangePicker = ({ value = {}, onChange, placeholder = "Date Range
 					onClick={handleOpen}
 					size="small"
 					sx={{
+						"& .MuiOutlinedInput-root": {
+							minHeight: 38,
+						},
 						"& .MuiInputBase-input": {
 							padding: "8.5px 12px",
 						},

@@ -10,6 +10,7 @@ import { fetchIndidualApiMaster } from '../../Api/MasterApi/masterIndividualyApi
 import LoadingBackdrop from '../../Utils/Common/LoadingBackdrop';
 import { Add as AddIcon } from "@mui/icons-material";
 import ConfirmationDialog from '../../Utils/ConfirmationDialog/ConfirmationDialog';
+import { colorMaster } from '../../Utils/globalfun';
 import { toast } from 'react-toastify';
 import MasterAdvFormDrawer from "./MasterAdvFormDrawer";
 import ScrollableToggleGroup from "../../Components/Common/ScrollableToggleGroup";
@@ -47,6 +48,7 @@ const MasterToggle = () => {
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [cnfDelDialogOpen, setCnfDelDialogOpen] = React.useState(false);
+    const [colorConfirm, setColorConfirm] = React.useState(null); // {row, colorKey, masterType}
     const [deleteType, setDeleteType] = useState('');
     const [editType, setEditType] = useState('');
     const [masterType, setMasterType] = useState("single");
@@ -529,22 +531,64 @@ const MasterToggle = () => {
         }
     };
 
-    const handleColorChange = async (row, colorKey, masterType) => {
+    // batch apply from LabelColorDialog — one confirm for every changed label
+    const handleColorApply = (changes, masterType) => {
+        if (!changes?.length) return;
+        setColorConfirm({ changes, masterType });
+    };
+
+    const confirmColorChange = async () => {
+        const { changes = [], masterType } = colorConfirm || {};
+        setColorConfirm(null);
+        if (!changes.length) return;
         try {
-            const updatedRow = { ...row, colorkey: colorKey };
-            const result = await addEditDelMaster(updatedRow);
-
-            if (result?.rd) {
-                const updatedData = formattedData.map(item =>
-                    item.id === row.id ? { ...item, colorkey: colorKey } : item
-                );
-                setFormattedData(updatedData);
-                const storageKey = masterType === 'priority' ? 'priorityMasterColors' : 'statusMasterColors';
-                const existingColors = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+            // optimistic: apply locally first so the grid/session updates instantly
+            const toHex = (k) => (k?.startsWith?.('#') ? k
+                : colorMaster[k] ? `${colorMaster[k].dark};${colorMaster[k].light}` : k);
+            const storedChanges = changes.map((c) => ({ ...c, colorKey: toHex(c.colorKey) }));
+            const idToKey = Object.fromEntries(storedChanges.map((c) => [c.row.id, c.colorKey]));
+            setFormattedData(formattedData.map((item) =>
+                idToKey[item.id] !== undefined ? { ...item, colorkey: idToKey[item.id] } : item
+            ));
+            // sync the API masters in sessionStorage so badge resolvers see the new colorkey
+            const masterStorageKey = {
+                task_priority: 'taskpriorityData',
+                task_status: 'taskstatusData',
+                task_secstatus: 'tasksecstatusData',
+                task_workcategory: 'taskworkcategoryData',
+            }[masterType];
+            if (masterStorageKey) {
+                const list = JSON.parse(sessionStorage.getItem(masterStorageKey) || '[]');
+                const labelToKey = Object.fromEntries(storedChanges.map((c) => [c.row.labelname?.toLowerCase().trim(), c.colorKey]));
+                sessionStorage.setItem(masterStorageKey, JSON.stringify(
+                    list.map((m) => labelToKey[m?.labelname?.toLowerCase()?.trim?.()] !== undefined
+                        ? { ...m, colorkey: labelToKey[m.labelname.toLowerCase().trim()] }
+                        : m)
+                ));
+            }
+            const storageKey = masterType === 'task_priority' ? 'priorityMasterColors'
+                : masterType === 'task_workcategory' ? 'categoryMasterColors'
+                    : 'statusMasterColors';
+            const existingColors = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+            storedChanges.forEach(({ row, colorKey }) => {
                 existingColors[row.labelname.toLowerCase()] = colorKey;
-                sessionStorage.setItem(storageKey, JSON.stringify(existingColors));
+            });
+            sessionStorage.setItem(storageKey, JSON.stringify(existingColors));
 
-                toast.success(`Color updated for ${row.labelname}!`);
+            // background save — API returns Data.rd = [{stat:1}], not {rd}
+            const results = await Promise.all(changes.map(({ row, colorKey }) =>
+                addEditDelMaster({
+                    mode: 'edit',
+                    id: row.id,
+                    name: row.labelname,
+                    displayorder: row.displayorder ?? 0,
+                    colorkey: toHex(colorKey),
+                    tabData: { table_name: masterType },
+                })
+            ));
+            const ok = results.some((r) => (Array.isArray(r) ? r[0]?.stat : r?.stat) === 1 || r?.rd);
+            if (ok) {
+                toast.success(`Color updated for ${changes.length} label${changes.length > 1 ? 's' : ''}!`);
             } else {
                 toast.error('Failed to update color');
             }
@@ -698,7 +742,8 @@ const MasterToggle = () => {
                                                     onPaginationChange={handlePageChange}
                                                     handleFinalDelete={handleFinalDelete}
                                                     masterType={masterType_display}
-                                                    onColorChange={handleColorChange}
+                                                    masterTitle={categoryStates?.title}
+                                                    onColorApply={handleColorApply}
                                                 />
                                             )}
                                         </>
@@ -755,6 +800,17 @@ const MasterToggle = () => {
                 cancelLabel="Cancel"
                 confirmLabel="Remove"
                 content={getDeleteMessage()}
+            />
+            <ConfirmationDialog
+                open={Boolean(colorConfirm)}
+                onClose={() => setColorConfirm(null)}
+                onConfirm={confirmColorChange}
+                title="Change Color"
+                cancelLabel="Cancel"
+                confirmLabel="Apply"
+                content={colorConfirm?.changes?.length > 1
+                    ? `Apply picked colors to ${colorConfirm.changes.length} labels?`
+                    : `Apply this color to "${colorConfirm?.changes?.[0]?.row?.labelname}"?`}
             />
         </>
     );

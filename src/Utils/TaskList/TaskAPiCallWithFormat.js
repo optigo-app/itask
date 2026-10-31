@@ -1,5 +1,5 @@
 import { useSetRecoilState } from "recoil";
-import { fetchTaskDataApi } from "../../Api/TaskApi/TaskDataApi";
+import { fetchTodayTaskApi } from "../../Api/TaskApi/fetchTodayTaskApi";
 import { TaskData } from "../../Recoil/atom";
 import { fetchMasterGlFunc } from "../globalfun";
 
@@ -32,9 +32,20 @@ const TaskAPiCallWithFormat = () => {
                 fetchMasterData();
                 return;
             }
-            const taskData = await fetchTaskDataApi({});
-            const labeledTasks = mapTaskLabels(taskData);
-            let finalTaskData = [...labeledTasks]
+            const d = new Date();
+            const fmt = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+            const today = fmt(d);
+            const weekEnd = fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 6));
+            const [startRes, dueRes] = await Promise.all([
+                fetchTodayTaskApi('order by StartDate asc', '500', '1', { startdatefrom: today, startdateto: today }),
+                fetchTodayTaskApi('order by DeadLineDate asc', '500', '1', { dueDateFrom: '2000-01-01', dueDateTo: weekEnd }),
+            ]);
+            const seen = new Set();
+            const finalTaskData = [...(startRes?.rd || []), ...(dueRes?.rd || [])].filter((row) => {
+                if (seen.has(row?.taskid)) return false;
+                seen.add(row?.taskid);
+                return true;
+            });
 
             const enhanceTask = (task) => {
                 const priority = priorityData?.find(item => item?.id == task?.priorityid);
@@ -93,56 +104,15 @@ const TaskAPiCallWithFormat = () => {
                     if (!Array.isArray(prevTasks) || prevTasks.length === 0) {
                         return [...enhancedTasks];
                     }
-                    return newTasks;
+                    const mergedIds = new Set(newTasks.map((t) => t.taskid));
+                    const added = enhancedTasks.filter((t) => !mergedIds.has(t.taskid));
+                    return [...newTasks, ...added];
                 });
 
         } catch (error) {
             console.error(error);
         }
     };
-    function mapTaskLabels(data) {
-        const labels = data?.rd[0];
-        const tasks = data?.rd1;
-        const labelMap = {};
-        Object.keys(labels).forEach((key, index) => {
-            labelMap[index + 1] = key;
-        });
-        function convertTask(task) {
-            let taskObj = {};
-            for (let key in task) {
-                if (task.hasOwnProperty(key)) {
-                    const label = labelMap[key];
-                    if (label) {
-                        taskObj[label] = task[key];
-                    }
-                }
-            }
-            if (task.subtasks) {
-                try {
-                    const parsedSubtasks = JSON.parse(task.subtasks);
-                    taskObj.subtasks = parsedSubtasks.map(subtask => {
-                        let subtaskObj = {};
-                        for (let key in subtask) {
-                            if (subtask.hasOwnProperty(key)) {
-                                const label = labelMap[key];
-                                if (label) {
-                                    subtaskObj[label] = subtask[key];
-                                }
-                            }
-                        }
-                        return subtaskObj;
-                    });
-                } catch (error) {
-                    console.error("Error parsing subtasks:", error);
-                }
-            }
-
-            return taskObj;
-        }
-        let taskData = tasks?.map(task => convertTask(task))
-
-        return taskData;
-    }
     return { fetchTaskData}
 }
 

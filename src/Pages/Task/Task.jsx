@@ -7,7 +7,6 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { actualTaskData, Advfilters, archivedTask, completedTask, copyRowData, exportDynamicFilterExcel, fetchlistApiCall, filterBarOpen, filterDrawer, masterDataValue, openFormDrawer, selectedCategoryAtom, selectedRowData, TaskData, taskLength, viewMode } from "../../Recoil/atom";
 import { filterNestedTasksByView, filterTasksByValidTaskNo, flattenTasks, formatDate2, getCategoryTaskSummary, getUserProfileData, handleAddApicall, isTaskDue, isTaskToday, removeTaskRecursively } from "../../Utils/globalfun";
 import { useLocation, useNavigate } from "react-router-dom";
-import FiltersDrawer from "../../Components/Task/FilterComponent/FilterModal";
 import FilterChips from "../../Components/Task/FilterComponent/FilterChip";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
@@ -849,6 +848,9 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
           (entrydate ? (() => {
             // Single date → day match; range object → isWithinRange
             if (!item?.entrydate) return false;
+            if (typeof entrydate === 'object' && entrydate.startDate) {
+              return isWithinRange(item.entrydate, entrydate);
+            }
             const loose = (d) => {
               const dt = new Date(d);
               if (!Number.isNaN(dt.getTime())) return dt;
@@ -857,9 +859,6 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
             };
             const a = loose(item.entrydate), b = loose(entrydate);
             if (!a || !b) return true; // unparseable → don't hide rows
-            if (typeof entrydate === 'object' && entrydate.startDate) {
-              return isWithinRange(item.entrydate, entrydate);
-            }
             return a.toDateString() === b.toDateString();
           })() : true) &&
           (assignee
@@ -1784,24 +1783,7 @@ const Task = ({ tabId, queryDataOverride, isActive }) => {
             )}
           </AnimatePresence>
 
-          {/* Filter drawer mounted on all breakpoints — the inline panel's
-              "+ Filters" button opens it on mobile too */}
-          <FiltersDrawer {...filters}
-              filters={filters}
-              setFilters={setFilters}
-              onFilterChange={handleFilterChange}
-              onClearAll={handleClearAllFilters}
-              isLoading={iswhMLoading}
-              masterData={masterData}
-              priorityData={priorityData}
-              statusData={statusData}
-              secStatusData={secStatusData}
-              assigneeData={taskAssigneeData}
-              taskDepartment={taskDepartment}
-              taskProject={taskProject}
-              taskCategory={taskCategory}
-              isMulti
-            />
+
 
           {/* Divider */}
           <div
